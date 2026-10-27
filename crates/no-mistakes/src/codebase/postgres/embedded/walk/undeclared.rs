@@ -102,9 +102,10 @@ impl ScopeVisitor<'_> {
 
     pub(super) fn record_undeclared_executor_call(&mut self, call: &CallExpression<'_>) {
         let (receiver, method) = match unwrap_ts_wrappers(&call.callee) {
-            Expression::StaticMemberExpression(member) => {
-                (&member.object, member.property.name.as_str())
-            }
+            Expression::StaticMemberExpression(member) => (
+                &member.object,
+                std::borrow::Cow::Borrowed(member.property.name.as_str()),
+            ),
             Expression::ComputedMemberExpression(member) => {
                 let Some(key) = static_method_name(&member.expression) else {
                     return;
@@ -113,7 +114,11 @@ impl ScopeVisitor<'_> {
             }
             _ => return,
         };
-        if !self.executor_methods.iter().any(|name| name == method) {
+        if !self
+            .executor_methods
+            .iter()
+            .any(|name| name == method.as_ref())
+        {
             return;
         }
         let Some((name, path)) = super::undeclared_receivers::receiver_path(receiver) else {
@@ -159,20 +164,13 @@ impl ScopeVisitor<'_> {
     }
 }
 
-fn static_method_name<'e>(expression: &'e Expression<'_>) -> Option<&'e str> {
+fn static_method_name<'e>(expression: &'e Expression<'e>) -> Option<std::borrow::Cow<'e, str>> {
     match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(key) => Some(key.value.as_str()),
+        Expression::StringLiteral(key) => Some(crate::ast::js_literal(key)),
         Expression::TemplateLiteral(template)
             if template.expressions.is_empty() && template.quasis.len() == 1 =>
         {
-            let value = &template.quasis[0].value;
-            Some(
-                value
-                    .cooked
-                    .as_ref()
-                    .map(|cooked| cooked.as_str())
-                    .unwrap_or(value.raw.as_str()),
-            )
+            Some(crate::ast::template_quasi_text(&template.quasis[0]))
         }
         _ => None,
     }

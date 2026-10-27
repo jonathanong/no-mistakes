@@ -150,10 +150,7 @@ fn collect_query_params_from_parameter_pattern(
     match pattern {
         BindingPattern::ObjectPattern(object) => {
             for property in &object.properties {
-                if property
-                    .key
-                    .static_name()
-                    .is_some_and(|name| name == "query")
+                if crate::ast::property_key_name(&property.key).is_some_and(|name| name == "query")
                 {
                     collect_query_object_destructure_names(&property.value, params);
                 } else {

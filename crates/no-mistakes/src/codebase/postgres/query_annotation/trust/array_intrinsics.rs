@@ -23,7 +23,7 @@ impl<'a> Visit<'a> for Exposure {
     }
     fn visit_computed_member_expression(&mut self, value: &ComputedMemberExpression<'a>) {
         self.0 |= matches!(unwrap_ts_wrappers(&value.expression),
-            Expression::StringLiteral(value) if sensitive_member(value.value.as_str()));
+            Expression::StringLiteral(value) if sensitive_member(&crate::ast::js_literal(value)));
         walk::walk_computed_member_expression(self, value);
     }
 }

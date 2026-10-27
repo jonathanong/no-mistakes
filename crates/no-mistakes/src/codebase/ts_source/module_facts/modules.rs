@@ -21,7 +21,7 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
         match node.kind() {
             AstKind::ImportDeclaration(value) if root_module => imports::collect(value, facts),
             AstKind::TSImportType(value) => facts.imports.push(ModuleImport {
-                specifier: value.source.value.to_string(),
+                specifier: crate::ast::js_literal(&value.source).into_owned(),
                 type_only: true,
                 span: value.span.into(),
                 bindings: Vec::new(),
@@ -63,7 +63,7 @@ fn name(value: &ModuleExportName<'_>) -> String {
     match value {
         ModuleExportName::IdentifierName(value) => value.name.to_string(),
         ModuleExportName::IdentifierReference(value) => value.name.to_string(),
-        ModuleExportName::StringLiteral(value) => value.value.to_string(),
+        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(value).into_owned(),
     }
 }
 fn unsupported(facts: &mut TypeScriptModuleFacts, span: oxc_span::Span, message: &str) {

@@ -30,14 +30,14 @@ impl WrapperBindings {
             if import.import_kind.is_type() {
                 continue;
             }
-            let imported_module = import.source.value.as_str();
+            let imported_module = crate::ast::js_literal(&import.source);
             let configured = wrappers
                 .iter()
                 .filter(|wrapper| match (importing_file, module_resolution) {
                     (Some(importing_file), Some(resolution)) => {
-                        resolution.modules_match(&wrapper.module, imported_module, importing_file)
+                        resolution.modules_match(&wrapper.module, &imported_module, importing_file)
                     }
-                    _ => wrapper.module == imported_module,
+                    _ => wrapper.module == imported_module.as_ref(),
                 })
                 .collect::<Vec<_>>();
             if configured.is_empty() {
@@ -48,7 +48,7 @@ impl WrapperBindings {
                     ImportDeclarationSpecifier::ImportSpecifier(specifier)
                         if !specifier.import_kind.is_type() =>
                     {
-                        let imported = specifier.imported.name();
+                        let imported = crate::ast::module_export_name(&specifier.imported);
                         for wrapper in configured
                             .iter()
                             .filter(|wrapper| imported == wrapper.export)

@@ -139,13 +139,13 @@ fn record_object_member_calls(
         if property.kind == PropertyKind::Get {
             if let Some(name) = crate::codebase::ts_source::static_property_key_name(&property.key)
             {
-                collector.insert_object_getter_member(object_id, name);
+                collector.insert_object_getter_member(object_id, &name);
             }
         }
         if property.kind == PropertyKind::Set {
             if let Some(name) = crate::codebase::ts_source::static_property_key_name(&property.key)
             {
-                collector.insert_object_setter_member(object_id, name);
+                collector.insert_object_setter_member(object_id, &name);
             }
         }
         let callable_id = match &property.value {
@@ -156,8 +156,8 @@ fn record_object_member_calls(
         let Some(name) = crate::codebase::ts_source::static_property_key_name(&property.key) else {
             continue;
         };
-        collector.record_aggregate_callable_member_id(object_id, name, callable_id);
-        record_member_call(collector, object_scope, object_id, Some(name));
+        collector.record_aggregate_callable_member_id(object_id, &name, callable_id);
+        record_member_call(collector, object_scope, object_id, Some(&name));
     }
 }
 

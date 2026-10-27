@@ -73,7 +73,7 @@ impl<'a> ResourceVisitor<'a> {
             },
             Expression::CallExpression(_) if !self.is_shadowed("require") => {
                 let module = require_module(callee)?;
-                match import_binding(module, "default") {
+                match import_binding(&module, "default") {
                     Some(Binding::GlobMethod(kind)) => Some(("require", kind)),
                     _ => None,
                 }

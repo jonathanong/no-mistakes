@@ -24,7 +24,7 @@ pub(crate) struct TemplateHelper {
 /// One string-literal argument. `at` is the literal's physical location;
 /// `None` keeps the helper `${param}` line (a synthetic site with no caller).
 pub(crate) struct Spliced<'a> {
-    pub(crate) text: &'a str,
+    pub(crate) text: std::borrow::Cow<'a, str>,
     pub(crate) at: Option<Marker>,
 }
 
@@ -32,7 +32,7 @@ impl TemplateHelper {
     /// Splices one string literal per parameter. `None` for any other call shape.
     pub(crate) fn apply(&self, literals: &[Spliced<'_>]) -> Option<RecoveredSql> {
         if literals.len() != self.parameters
-            || !literals.iter().all(|literal| splice_safe(literal.text))
+            || !literals.iter().all(|literal| splice_safe(&literal.text))
         {
             return None;
         }

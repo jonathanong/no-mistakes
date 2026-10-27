@@ -35,7 +35,7 @@ pub(super) fn collect(value: &ImportDeclaration<'_>, facts: &mut TypeScriptModul
         })
         .collect();
     facts.imports.push(ModuleImport {
-        specifier: value.source.value.to_string(),
+        specifier: crate::ast::js_literal(&value.source).into_owned(),
         type_only: type_only
             || (!bindings.is_empty() && bindings.iter().all(|binding| binding.type_only)),
         span: value.span.into(),

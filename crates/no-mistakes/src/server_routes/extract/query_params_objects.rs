@@ -1,10 +1,10 @@
 fn query_param_from_call(call: &oxc_ast::ast::CallExpression<'_>) -> Option<String> {
     let member = call.callee.as_member_expression()?;
-    let property = member.static_property_name()?;
-    if !matches!(property, "query" | "queries" | "get") {
+    let property = crate::ast::member_property_name(member)?;
+    if !matches!(property.as_ref(), "query" | "queries" | "get") {
         return None;
     }
-    if matches!(property, "query" | "queries") && !is_query_call_object(member.object()) {
+    if matches!(property.as_ref(), "query" | "queries") && !is_query_call_object(member.object()) {
         return None;
     }
     let first = call.arguments.first()?;
@@ -14,7 +14,7 @@ fn query_param_from_call(call: &oxc_ast::ast::CallExpression<'_>) -> Option<Stri
     if property == "get" && !member_object_is_url_search_params(member.object()) {
         return None;
     }
-    Some(value.value.as_str().to_string())
+    Some(crate::ast::js_literal(value).into_owned())
 }
 
 fn expression_is_query_object(expr: &Expression<'_>, query_aliases: &BTreeSet<String>) -> bool {
@@ -23,13 +23,15 @@ fn expression_is_query_object(expr: &Expression<'_>, query_aliases: &BTreeSet<St
         Expression::StaticMemberExpression(member) => {
             member.property.name == "query" && is_request_object_expr(&member.object, 0)
         }
-        Expression::ChainExpression(chain) => chain
-            .expression
-            .as_member_expression()
-            .is_some_and(|member| {
-                member.static_property_name() == Some("query")
-                    && is_request_object_expr(member.object(), 0)
-            }),
+        Expression::ChainExpression(chain) => {
+            chain
+                .expression
+                .as_member_expression()
+                .is_some_and(|member| {
+                    crate::ast::member_property_name(member).as_deref() == Some("query")
+                        && is_request_object_expr(member.object(), 0)
+                })
+        }
         _ => false,
     }
 }
@@ -59,10 +61,13 @@ fn is_request_query_object_from_chain_element(chain: &ChainElement<'_>) -> bool 
 }
 
 fn is_request_object_member_expr(member: &oxc_ast::ast::MemberExpression<'_>) -> bool {
-    let Some(property) = member.static_property_name() else {
+    let Some(property) = crate::ast::member_property_name(member) else {
         return false;
     };
-    if !matches!(property, "req" | "request" | "ctx" | "context" | "c") {
+    if !matches!(
+        property.as_ref(),
+        "req" | "request" | "ctx" | "context" | "c"
+    ) {
         return false;
     }
     is_request_object_expr(member.object(), 1)
@@ -128,7 +133,7 @@ fn collect_query_object_destructure_names(
         BindingPattern::BindingIdentifier(_) => {}
         BindingPattern::ObjectPattern(object) => {
             for property in &object.properties {
-                if let Some(name) = property.key.static_name() {
+                if let Some(name) = crate::ast::property_key_name(&property.key) {
                     params.insert(name.to_string());
                 } else {
                     collect_query_object_destructure_names(&property.value, params);

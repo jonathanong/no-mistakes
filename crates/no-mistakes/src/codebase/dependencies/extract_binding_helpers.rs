@@ -151,9 +151,9 @@ impl ImportCollector {
                     self.imported_bindings
                         .insert(specifier.local.name.to_string());
                     self.call_import_bindings.push(ImportedBinding {
-                        specifier: import.source.value.to_string(),
+                        specifier: crate::ast::js_literal(&import.source).into_owned(),
                         local: specifier.local.name.to_string(),
-                        imported: specifier.imported.name().to_string(),
+                        imported: crate::ast::module_export_name(&specifier.imported).into_owned(),
                         kind: ImportedBindingKind::Named,
                         is_type_only: import.import_kind.is_type()
                             || specifier.import_kind.is_type(),
@@ -163,7 +163,7 @@ impl ImportCollector {
                     self.imported_bindings
                         .insert(specifier.local.name.to_string());
                     self.call_import_bindings.push(ImportedBinding {
-                        specifier: import.source.value.to_string(),
+                        specifier: crate::ast::js_literal(&import.source).into_owned(),
                         local: specifier.local.name.to_string(),
                         imported: "default".to_string(),
                         kind: ImportedBindingKind::Default,
@@ -174,7 +174,7 @@ impl ImportCollector {
                     self.imported_bindings
                         .insert(specifier.local.name.to_string());
                     self.call_import_bindings.push(ImportedBinding {
-                        specifier: import.source.value.to_string(),
+                        specifier: crate::ast::js_literal(&import.source).into_owned(),
                         local: specifier.local.name.to_string(),
                         imported: "*".to_string(),
                         kind: ImportedBindingKind::Namespace,

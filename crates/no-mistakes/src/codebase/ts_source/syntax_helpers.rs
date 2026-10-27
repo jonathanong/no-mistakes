@@ -9,10 +9,10 @@ pub fn unwrap_ts_wrappers<'a>(expr: &'a Expression<'a>) -> &'a Expression<'a> {
     }
 }
 
-pub fn static_property_key_name<'a>(key: &'a PropertyKey<'a>) -> Option<&'a str> {
+pub fn static_property_key_name<'a>(key: &'a PropertyKey<'a>) -> Option<std::borrow::Cow<'a, str>> {
     match key {
-        PropertyKey::StaticIdentifier(id) => Some(id.name.as_str()),
-        PropertyKey::StringLiteral(s) => Some(s.value.as_str()),
+        PropertyKey::StaticIdentifier(id) => Some(std::borrow::Cow::Borrowed(id.name.as_str())),
+        PropertyKey::StringLiteral(s) => Some(crate::ast::js_literal(s)),
         _ => None,
     }
 }
@@ -59,4 +59,3 @@ pub fn is_test_file(relative: &str) -> bool {
     ];
     SUFFIXES.iter().any(|s| relative.ends_with(s))
 }
-

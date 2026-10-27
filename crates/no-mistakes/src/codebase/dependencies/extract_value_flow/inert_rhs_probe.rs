@@ -61,6 +61,7 @@ pub(super) fn old_rhs(
                     if property.computed
                         || property.kind != oxc_ast::ast::PropertyKind::Init
                         || crate::codebase::ts_source::static_property_key_name(&property.key)
+                            .as_deref()
                             == Some("__proto__")
                     {
                         return false;

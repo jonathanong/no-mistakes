@@ -87,7 +87,9 @@ fn app_selector_values_inner(
     };
     match value {
         oxc_ast::ast::JSXAttributeValue::StringLiteral(lit) => {
-            vec![literal(AppSelectorValue::Exact(lit.value.to_string()))]
+            vec![literal(AppSelectorValue::Exact(
+                crate::ast::js_literal(lit).into_owned(),
+            ))]
         }
         oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
             jsx_expression_values_inner(
@@ -113,7 +115,9 @@ fn jsx_expression_values_inner(
 ) -> Vec<ResolvedAppValue> {
     match expression {
         oxc_ast::ast::JSXExpression::StringLiteral(lit) => {
-            vec![literal(AppSelectorValue::Exact(lit.value.to_string()))]
+            vec![literal(AppSelectorValue::Exact(
+                crate::ast::js_literal(lit).into_owned(),
+            ))]
         }
         oxc_ast::ast::JSXExpression::TemplateLiteral(template) => {
             let raw = ast::template_literal_text(template, source);

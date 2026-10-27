@@ -58,9 +58,10 @@ impl ScopeCollector {
             return;
         };
         for property in &object.properties {
-            let (Some(key), BindingPattern::BindingIdentifier(local)) =
-                (property.key.static_name(), &property.value)
-            else {
+            let (Some(key), BindingPattern::BindingIdentifier(local)) = (
+                crate::ast::property_key_name(&property.key),
+                &property.value,
+            ) else {
                 continue;
             };
             let mut hit = NameHit {
@@ -71,7 +72,7 @@ impl ScopeCollector {
                 let TSSignature::TSPropertySignature(signature) = member else {
                     return false;
                 };
-                if signature.key.static_name().as_deref() != Some(key.as_ref()) {
+                if crate::ast::property_key_name(&signature.key).as_deref() != Some(key.as_ref()) {
                     return false;
                 }
                 let Some(annotation) = &signature.type_annotation else {

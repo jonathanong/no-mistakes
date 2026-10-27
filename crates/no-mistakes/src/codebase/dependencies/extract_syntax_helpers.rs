@@ -56,7 +56,7 @@ fn simple_computed_member_name(
         return None;
     };
     let property = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression) {
-        Expression::StringLiteral(property) => property.value.as_str(),
+        Expression::StringLiteral(property) => crate::ast::js_literal(property),
         _ => return None,
     };
     Some(format!("{}.{property}", object.name.as_str()))
@@ -136,12 +136,10 @@ fn all_export_specifiers_are_type(specifiers: &[ExportSpecifier<'_>]) -> bool {
     !specifiers.is_empty() && specifiers.iter().all(|s| s.export_kind.is_type())
 }
 
-fn module_export_name_name<'a>(name: &'a ModuleExportName<'a>) -> Option<&'a str> {
-    match name {
-        ModuleExportName::IdentifierReference(identifier) => Some(identifier.name.as_str()),
-        ModuleExportName::IdentifierName(identifier) => Some(identifier.name.as_str()),
-        ModuleExportName::StringLiteral(literal) => Some(literal.value.as_str()),
-    }
+fn module_export_name_name<'a>(
+    name: &'a ModuleExportName<'a>,
+) -> Option<std::borrow::Cow<'a, str>> {
+    Some(crate::ast::module_export_name(name))
 }
 
 fn is_require_callee(expr: &Expression<'_>) -> bool {
@@ -156,11 +154,11 @@ fn is_require_resolve_callee(expr: &Expression<'_>) -> bool {
 
 pub(crate) fn static_import_specifier(expr: &Expression<'_>) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(s) => Some(s.value.as_str().to_string()),
+        Expression::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             let mut specifier = String::new();
             for quasi in &template.quasis {
-                specifier.push_str(quasi.value.cooked.as_ref().unwrap_or(&quasi.value.raw));
+                specifier.push_str(crate::ast::template_quasi_text(quasi).as_ref());
             }
             Some(specifier)
         }
@@ -170,7 +168,7 @@ pub(crate) fn static_import_specifier(expr: &Expression<'_>) -> Option<String> {
 
 fn static_path_argument(arg: &Argument<'_>) -> Option<String> {
     match arg {
-        Argument::StringLiteral(s) => Some(s.value.as_str().to_string()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(tl) if tl.expressions.is_empty() => {
             Some(crate::codebase::ts_routes::refs::normalize_template(tl))
         }
@@ -188,12 +186,15 @@ fn static_process_cwd_arg(callee: &str, args: &[Argument<'_>]) -> Option<String>
     crate::codebase::ts_process_spawn::extract_cwd_from_opts(args, opts_index)
 }
 
-fn visit_jsx_opening_element_with_value_reference<'a>(collector: &mut ImportCollector, opening: &JSXOpeningElement<'a>) {
-        if let Some(name) = jsx_element_reference_name(&opening.name) {
-            if name.chars().next().is_some_and(char::is_uppercase) {
-                collector.record_callable_name_value_use(&name);
-                collector.push_value_symbol_reference(name);
-            }
+fn visit_jsx_opening_element_with_value_reference<'a>(
+    collector: &mut ImportCollector,
+    opening: &JSXOpeningElement<'a>,
+) {
+    if let Some(name) = jsx_element_reference_name(&opening.name) {
+        if name.chars().next().is_some_and(char::is_uppercase) {
+            collector.record_callable_name_value_use(&name);
+            collector.push_value_symbol_reference(name);
         }
-        walk::walk_jsx_opening_element(collector, opening);
+    }
+    walk::walk_jsx_opening_element(collector, opening);
 }

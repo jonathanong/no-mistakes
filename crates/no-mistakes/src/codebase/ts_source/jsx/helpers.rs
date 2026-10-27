@@ -33,7 +33,7 @@ pub fn jsx_identifier_name<'a>(opening: &'a JSXOpeningElement) -> Option<&'a str
 pub fn find_string_attr<'a>(
     opening: &'a JSXOpeningElement,
     name: &str,
-) -> Option<(bool, Option<&'a str>)> {
+) -> Option<(bool, Option<std::borrow::Cow<'a, str>>)> {
     for item in &opening.attributes {
         let JSXAttributeItem::Attribute(attr) = item else {
             continue;
@@ -50,13 +50,15 @@ pub fn find_string_attr<'a>(
     None
 }
 
-fn jsx_attr_value<'a>(value: &'a Option<JSXAttributeValue<'a>>) -> (bool, Option<&'a str>) {
+fn jsx_attr_value<'a>(
+    value: &'a Option<JSXAttributeValue<'a>>,
+) -> (bool, Option<std::borrow::Cow<'a, str>>) {
     match value {
         None => (true, None),
-        Some(JSXAttributeValue::StringLiteral(s)) => (true, Some(s.value.as_str())),
+        Some(JSXAttributeValue::StringLiteral(s)) => (true, Some(crate::ast::js_literal(s))),
         Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
             Some(expr) => match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
-                Expression::StringLiteral(s) => (true, Some(s.value.as_str())),
+                Expression::StringLiteral(s) => (true, Some(crate::ast::js_literal(s))),
                 _ => (true, None),
             },
             None => (true, None),
@@ -64,4 +66,3 @@ fn jsx_attr_value<'a>(value: &'a Option<JSXAttributeValue<'a>>) -> (bool, Option
         Some(_) => (true, None),
     }
 }
-

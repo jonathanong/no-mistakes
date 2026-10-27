@@ -58,14 +58,17 @@ fn is_listen_callee(callee: &Expression<'_>) -> bool {
         Expression::StaticMemberExpression(member) => member.property.name.as_str() == "listen",
         Expression::ComputedMemberExpression(member) => {
             match unwrap_ts_wrappers(&member.expression) {
-                Expression::StringLiteral(literal) => literal.value.as_str() == "listen",
+                Expression::StringLiteral(literal) => {
+                    crate::ast::js_literal(literal).as_ref() == "listen"
+                }
                 Expression::TemplateLiteral(template) => {
                     template.expressions.is_empty()
                         && template
                             .quasis
                             .first()
-                            .and_then(|quasi| quasi.value.cooked.as_ref())
-                            .is_some_and(|value| value.as_str() == "listen")
+                            .filter(|quasi| quasi.value.cooked.is_some())
+                            .map(|quasi| crate::ast::template_quasi_text(quasi))
+                            .is_some_and(|value| value == "listen")
                 }
                 _ => false,
             }
@@ -93,7 +96,7 @@ fn object_has_port_zero(object: &ObjectExpression<'_>) -> bool {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             return false;
         };
-        static_property_key_name(&property.key) == Some("port")
+        static_property_key_name(&property.key).as_deref() == Some("port")
             && expression_is_numeric_zero(&property.value)
     })
 }

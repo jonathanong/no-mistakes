@@ -43,10 +43,10 @@ fn build_import_table_inner(
         let resolved = match visible_files {
             Some(visible) => crate::fetch::resolve::resolve_import_from_visible(
                 abs_path,
-                import.source.value.as_str(),
+                crate::ast::js_literal(&import.source).as_ref(),
                 visible,
             ),
-            None => resolve_import(abs_path, import.source.value.as_str()),
+            None => resolve_import(abs_path, crate::ast::js_literal(&import.source).as_ref()),
         };
         let Some(resolved) = resolved else {
             continue;
@@ -79,7 +79,7 @@ fn build_import_table_inner(
                         s.local.name.to_string(),
                         ImportEntry {
                             resolved_path: resolved.clone(),
-                            exported_name: s.imported.name().to_string(),
+                            exported_name: crate::ast::module_export_name(&s.imported).into_owned(),
                         },
                     );
                 }

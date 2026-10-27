@@ -17,20 +17,29 @@ pub(super) fn head<'a>(
     appended: bool,
 ) -> Option<TextHead> {
     let (text, tagged, interpolated) = match expression {
-        Expression::StringLiteral(value) => (value.value.as_str(), false, false),
+        Expression::StringLiteral(value) => (crate::ast::js_literal(value), false, false),
         Expression::TemplateLiteral(value) => (
-            value.quasis.first()?.value.cooked.as_ref()?.as_str(),
+            value
+                .quasis
+                .first()
+                .filter(|part| part.value.cooked.is_some())
+                .map(crate::ast::template_quasi_text)?,
             false,
             !value.expressions.is_empty(),
         ),
         Expression::TaggedTemplateExpression(value) => (
-            value.quasi.quasis.first()?.value.cooked.as_ref()?.as_str(),
+            value
+                .quasi
+                .quasis
+                .first()
+                .filter(|part| part.value.cooked.is_some())
+                .map(crate::ast::template_quasi_text)?,
             true,
             !value.quasi.expressions.is_empty(),
         ),
         _ => return None,
     };
-    let (complete, continued_proof) = classify(text);
+    let (complete, continued_proof) = classify(&text);
     Some(TextHead {
         tagged: tagged || appended,
         appended,

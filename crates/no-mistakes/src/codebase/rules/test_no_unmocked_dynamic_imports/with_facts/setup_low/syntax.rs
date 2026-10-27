@@ -87,7 +87,7 @@ pub(super) fn literal_arg(argument: &Argument<'_>) -> Option<String> {
 
 pub(super) fn literal_expr(expression: &Expression<'_>) -> Option<String> {
     match expression {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
         Expression::TemplateLiteral(template) => static_template(template),
         _ => None,
     }
@@ -99,7 +99,7 @@ fn static_template(template: &TemplateLiteral<'_>) -> Option<String> {
     }
     let mut value = String::new();
     for quasi in &template.quasis {
-        value.push_str(quasi.value.cooked.as_ref().unwrap_or(&quasi.value.raw));
+        value.push_str(crate::ast::template_quasi_text(quasi).as_ref());
     }
     Some(value)
 }

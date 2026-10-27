@@ -13,14 +13,17 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
                 .source
                 .get(at.start as usize + 1..at.end as usize - 1);
             if raw.is_none_or(|raw| {
-                !super::super::super::literal_projection::literal_matches(raw, value.value.as_str())
+                !super::super::super::literal_projection::literal_matches(
+                    raw,
+                    crate::ast::js_literal(value).as_ref(),
+                )
             }) {
                 return Expr::Opaque;
             }
             Expr::Lit(RecoveredSql::literal(
                 node,
                 scope.ctx.source,
-                value.value.to_string(),
+                crate::ast::js_literal(value).into_owned(),
             ))
         }
         Expression::BooleanLiteral(value) => Expr::Bool(value.value),
@@ -54,7 +57,7 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
             };
             Expr::Member(
                 Box::new(scope.expression(&value.object)),
-                key.value.to_string(),
+                crate::ast::js_literal(key).into_owned(),
             )
         }
         Expression::ObjectExpression(_)

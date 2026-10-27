@@ -85,11 +85,13 @@ fn jsx_attr_string(
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
 ) -> Option<String> {
     match value? {
-        oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => Some(literal.value.to_string()),
+        oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => {
+            Some(crate::ast::js_literal(literal).into_owned())
+        }
         oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
             match &container.expression {
                 oxc_ast::ast::JSXExpression::StringLiteral(literal) => {
-                    Some(literal.value.to_string())
+                    Some(crate::ast::js_literal(literal).into_owned())
                 }
                 oxc_ast::ast::JSXExpression::TemplateLiteral(template)
                     if template.expressions.is_empty() =>
@@ -133,7 +135,9 @@ fn jsx_expression_string(
     source: &str,
 ) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
-        oxc_ast::ast::Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        oxc_ast::ast::Expression::StringLiteral(literal) => {
+            Some(crate::ast::js_literal(literal).into_owned())
+        }
         oxc_ast::ast::Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(ast::template_literal_text(template, source))
         }

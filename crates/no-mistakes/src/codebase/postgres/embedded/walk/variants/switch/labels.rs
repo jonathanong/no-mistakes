@@ -163,7 +163,7 @@ fn invocation_target<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
         }
         Expression::ComputedMemberExpression(member)
             if matches!(unwrap_ts_wrappers(&member.expression), Expression::StringLiteral(property)
-                if matches!(property.value.as_str(), "call" | "apply")) =>
+                if matches!(crate::ast::js_literal(property).as_ref(), "call" | "apply")) =>
         {
             &member.object
         }

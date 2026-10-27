@@ -199,14 +199,11 @@ pub fn test_callback_identity(call: &CallExpression<'_>) -> Option<String> {
 
 fn first_string_arg(arg: &Argument<'_>) -> Option<String> {
     match arg {
-        Argument::StringLiteral(s) => Some(s.value.to_string()),
-        Argument::TemplateLiteral(t) if t.expressions.is_empty() => t.quasis.first().map(|q| {
-            q.value
-                .cooked
-                .as_ref()
-                .map(|c| c.to_string())
-                .unwrap_or_else(|| q.value.raw.to_string())
-        }),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
+        Argument::TemplateLiteral(t) if t.expressions.is_empty() => t
+            .quasis
+            .first()
+            .map(|q| crate::ast::template_quasi_text(q).into_owned()),
         _ => None,
     }
 }

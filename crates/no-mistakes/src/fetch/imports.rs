@@ -107,10 +107,12 @@ fn collect_runtime_imports_from_program_inner<'a>(
                 continue;
             }
             let resolved = match visible_files {
-                Some(visible) => {
-                    resolve_import_from_visible(abs_path, import.source.value.as_str(), visible)
-                }
-                None => resolve_import(abs_path, import.source.value.as_str()),
+                Some(visible) => resolve_import_from_visible(
+                    abs_path,
+                    crate::ast::js_literal(&import.source).as_ref(),
+                    visible,
+                ),
+                None => resolve_import(abs_path, crate::ast::js_literal(&import.source).as_ref()),
             };
             if let Some(resolved) = resolved {
                 imports.push(resolved);

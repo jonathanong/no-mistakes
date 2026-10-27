@@ -116,7 +116,7 @@ fn object_path(object: &oxc_ast::ast::ObjectExpression<'_>) -> Option<String> {
         match prop {
             ObjectPropertyKind::SpreadProperty(_) => spread = true,
             ObjectPropertyKind::ObjectProperty(property)
-                if property.key.static_name().as_deref() == Some("path") =>
+                if crate::ast::property_key_name(&property.key).as_deref() == Some("path") =>
             {
                 path = Some(super::const_string(&property.value)?);
             }

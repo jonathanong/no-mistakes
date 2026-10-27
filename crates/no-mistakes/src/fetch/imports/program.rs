@@ -29,14 +29,18 @@ fn collect_imports_from_program_inner<'a>(
         match stmt {
             Statement::ImportDeclaration(import) if is_runtime_import(import) => {
                 if let Some(resolved) = resolve_import_with_visibility(
-                    abs_path, import.source.value.as_str(), visible_files,
+                    abs_path,
+                    crate::ast::js_literal(&import.source).as_ref(),
+                    visible_files,
                 ) {
                     imports.push(resolved);
                 }
             }
             Statement::ExportFromDeclaration(export) if is_runtime_export(export) => {
                 if let Some(resolved) = resolve_import_with_visibility(
-                    abs_path, export.source.value.as_str(), visible_files,
+                    abs_path,
+                    crate::ast::js_literal(&export.source).as_ref(),
+                    visible_files,
                 ) {
                     imports.push(resolved);
                 }
@@ -45,7 +49,9 @@ fn collect_imports_from_program_inner<'a>(
                 if export.export_kind != ImportOrExportKind::Type =>
             {
                 if let Some(resolved) = resolve_import_with_visibility(
-                    abs_path, export.source.value.as_str(), visible_files,
+                    abs_path,
+                    crate::ast::js_literal(&export.source).as_ref(),
+                    visible_files,
                 ) {
                     imports.push(resolved);
                 }

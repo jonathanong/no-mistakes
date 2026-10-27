@@ -75,7 +75,7 @@ impl ClientHttpVisitor<'_> {
             BindingPattern::ObjectPattern(object) => {
                 for prop in &object.properties {
                     self.add_client_binding_for_property(
-                        prop.key.static_name().as_deref(),
+                        crate::ast::property_key_name(&prop.key).as_deref(),
                         binding_names(&prop.value),
                     );
                 }
@@ -116,8 +116,8 @@ impl ClientHttpVisitor<'_> {
                 self.client_object_method_expr(&expr.expression)
             }
             _ => expr.as_member_expression().is_some_and(|member| {
-                member
-                    .static_property_name()
+                crate::ast::member_property_name(member)
+                    .as_deref()
                     .is_some_and(is_client_method_name)
                     && self.client_expr(member.object())
             }),
@@ -130,8 +130,8 @@ impl ClientHttpVisitor<'_> {
                 self.client_factory_method_expr(&expr.expression)
             }
             _ => expr.as_member_expression().is_some_and(|member| {
-                member
-                    .static_property_name()
+                crate::ast::member_property_name(member)
+                    .as_deref()
                     .is_some_and(is_client_factory_member)
                     && self.client_expr(member.object())
             }),
@@ -143,6 +143,6 @@ impl ClientHttpVisitor<'_> {
 fn module_export_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(id) => id.name.to_string(), ModuleExportName::IdentifierReference(id) => id.name.to_string(),
-        ModuleExportName::StringLiteral(value) => value.value.to_string(),
+        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(value).into_owned(),
     }
 }

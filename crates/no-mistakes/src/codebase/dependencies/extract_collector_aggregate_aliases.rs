@@ -155,7 +155,7 @@ impl ImportCollector {
                     else {
                         continue;
                     };
-                    members.retain(|(existing, _)| existing != member);
+                    members.retain(|(existing, _)| existing.as_str() != member.as_ref());
                     if let Some(target) = self.callable_alias_target(&property.value) {
                         members.push((member.to_string(), target));
                     }

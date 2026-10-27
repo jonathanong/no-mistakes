@@ -8,6 +8,7 @@ mod compose;
 pub(in crate::codebase::postgres::embedded) mod origins;
 mod variants;
 pub(in crate::codebase::postgres::embedded) use variants::piece;
+mod defaults;
 mod escapes;
 #[cfg(test)]
 mod tests;
@@ -48,7 +49,7 @@ pub(super) fn for_expression_with_offset(
     match expr {
         Expression::StringLiteral(literal) => {
             let raw = &source[literal.span.start as usize + 1..literal.span.end as usize - 1];
-            out.append(raw, literal.value.as_str(), line, false);
+            out.append(raw, crate::ast::js_literal(literal).as_ref(), line, false);
         }
         Expression::TemplateLiteral(template) => {
             template_positions(template, source, line, &mut out, false)
@@ -87,13 +88,13 @@ fn template_positions(
         }
         line += newlines(&source[end..start]);
         let raw = &source[start..quasi.span.end as usize];
-        let cooked = quasi.value.cooked.as_ref().map(|value| value.as_str());
-        let decoded = if raw_mode {
-            quasi.value.raw.as_str()
-        } else {
-            cooked.unwrap_or(quasi.value.raw.as_str())
-        };
-        out.append(raw, decoded, line, raw_mode || cooked.is_none());
+        let decoded = super::tags::quasi_text(quasi, raw_mode);
+        out.append(
+            raw,
+            &decoded,
+            line,
+            raw_mode || quasi.value.cooked.is_none(),
+        );
         line += newlines(raw);
         end = quasi.span.end as usize;
     }
@@ -109,17 +110,6 @@ struct Positions {
     column: u32,
     origin: u32,
     placeholder_offset: usize,
-}
-impl Default for Positions {
-    fn default() -> Self {
-        Self {
-            positions: Vec::new(),
-            line: 1,
-            column: 1,
-            origin: 1,
-            placeholder_offset: 0,
-        }
-    }
 }
 impl Positions {
     fn record(&mut self, source_line: u32) {

@@ -1,0 +1,239 @@
+[
+  {
+    "file": "flow-first.js",
+    "diagnostics": [
+      {
+        "message": "Flow is not supported",
+        "labels": [
+          [
+            0,
+            8
+          ]
+        ]
+      }
+    ],
+    "flow": true
+  },
+  {
+    "file": "flow-second.js",
+    "diagnostics": [
+      {
+        "message": "An export name cannot include a unicode lone surrogate",
+        "labels": [
+          [
+            39,
+            18
+          ]
+        ]
+      }
+    ],
+    "flow": false
+  },
+  {
+    "file": "flow-later.js",
+    "diagnostics": [
+      {
+        "message": "An export name cannot include a unicode lone surrogate",
+        "labels": [
+          [
+            18,
+            18
+          ]
+        ]
+      }
+    ],
+    "flow": false
+  },
+  {
+    "file": "flow-trivia.js",
+    "diagnostics": [
+      {
+        "message": "Flow is not supported",
+        "labels": [
+          [
+            37,
+            11
+          ]
+        ]
+      }
+    ],
+    "flow": true
+  },
+  {
+    "file": "flow-prior.js",
+    "diagnostics": [
+      {
+        "message": "Flow is not supported",
+        "labels": [
+          [
+            0,
+            8
+          ]
+        ]
+      }
+    ],
+    "flow": true
+  },
+  {
+    "file": "flow-html.js",
+    "diagnostics": [
+      {
+        "message": "Flow is not supported",
+        "labels": [
+          [
+            0,
+            10
+          ]
+        ]
+      },
+      {
+        "message": "HTML comments are not allowed in modules",
+        "labels": [
+          [
+            0,
+            4
+          ]
+        ]
+      }
+    ],
+    "flow": true
+  },
+  {
+    "file": "unterminated-comment.ts",
+    "diagnostics": [
+      {
+        "message": "Unterminated multiline comment",
+        "labels": [
+          [
+            37,
+            15
+          ]
+        ]
+      }
+    ],
+    "flow": false
+  },
+  {
+    "file": "unterminated-string.ts",
+    "diagnostics": [
+      {
+        "message": "Unterminated string",
+        "labels": [
+          [
+            37,
+            13
+          ]
+        ]
+      }
+    ],
+    "flow": false
+  },
+  {
+    "file": "invalid-next-character.ts",
+    "diagnostics": [
+      {
+        "message": "An export name cannot include a unicode lone surrogate",
+        "labels": [
+          [
+            18,
+            18
+          ]
+        ]
+      }
+    ],
+    "flow": false
+  },
+  {
+    "file": "unterminated-flow-comment.js",
+    "diagnostics": [
+      {
+        "message": "Unterminated multiline comment",
+        "labels": [
+          [
+            37,
+            21
+          ]
+        ]
+      }
+    ],
+    "flow": false
+  },
+  {
+    "file": "flow-typescript.ts",
+    "diagnostics": [
+      {
+        "message": "An export name cannot include a unicode lone surrogate",
+        "labels": [
+          [
+            27,
+            18
+          ]
+        ]
+      }
+    ],
+    "flow": false
+  },
+  {
+    "file": "flow-script.cjs",
+    "diagnostics": [
+      {
+        "message": "Flow is not supported",
+        "labels": [
+          [
+            0,
+            8
+          ]
+        ]
+      }
+    ],
+    "flow": true
+  },
+  {
+    "file": "html-prefix.js",
+    "diagnostics": [
+      {
+        "message": "An export name cannot include a unicode lone surrogate",
+        "labels": [
+          [
+            32,
+            18
+          ]
+        ]
+      },
+      {
+        "message": "HTML comments are not allowed in modules",
+        "labels": [
+          [
+            0,
+            4
+          ]
+        ]
+      }
+    ],
+    "flow": false
+  },
+  {
+    "file": "html-trivia.js",
+    "diagnostics": [
+      {
+        "message": "An export name cannot include a unicode lone surrogate",
+        "labels": [
+          [
+            18,
+            18
+          ]
+        ]
+      },
+      {
+        "message": "HTML comments are not allowed in modules",
+        "labels": [
+          [
+            37,
+            4
+          ]
+        ]
+      }
+    ],
+    "flow": false
+  }
+]

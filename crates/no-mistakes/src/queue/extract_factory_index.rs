@@ -79,7 +79,7 @@ impl<'a> Visit<'a> for Collector<'_> {
         for spec in import.specifiers.iter().flatten() {
             if let ImportDeclarationSpecifier::ImportSpecifier(spec) = spec {
                 let imported = export_name(&spec.imported);
-                let binding = if is_queue_package(import.source.value.as_str())
+                let binding = if is_queue_package(crate::ast::js_literal(&import.source).as_ref())
                     && matches!(imported.as_str(), "Worker" | "TestWorker")
                 {
                     Binding::Constructor

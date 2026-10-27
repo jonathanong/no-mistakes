@@ -1,7 +1,8 @@
 fn extract_route_from_chain(expr: &Expression, register_object: &str) -> Option<String> {
     if let Expression::CallExpression(call) = expr {
         if let Some(member) = call.callee.as_member_expression() {
-            let prop = member.static_property_name().unwrap_or("");
+            let prop =
+                crate::ast::member_property_name(member).unwrap_or(std::borrow::Cow::Borrowed(""));
             if prop == "route" {
                 if let Expression::Identifier(ident) = member.object() {
                     if ident.name.as_str() == register_object {
@@ -32,7 +33,7 @@ fn direct_route_arg(
 
 fn route_arg(arg: Option<&Argument>) -> Option<String> {
     match arg? {
-        Argument::StringLiteral(s) => Some(s.value.as_str().to_string()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(tpl) if tpl.expressions.is_empty() => {
             Some(static_template_literal(tpl))
         }
@@ -43,8 +44,12 @@ fn route_arg(arg: Option<&Argument>) -> Option<String> {
 fn static_template_literal(tpl: &TemplateLiteral) -> String {
     tpl.quasis
         .iter()
-        .filter_map(|quasi| quasi.value.cooked.as_deref())
+        .filter_map(|quasi| {
+            quasi
+                .value
+                .cooked
+                .map(|_| crate::ast::template_quasi_text(quasi))
+        })
         .collect::<Vec<_>>()
         .join("")
 }
-

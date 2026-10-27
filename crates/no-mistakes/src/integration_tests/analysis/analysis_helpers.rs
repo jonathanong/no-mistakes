@@ -19,7 +19,7 @@ impl AnalysisCollector<'_, '_> {
             }
             ImportDeclarationSpecifier::ImportSpecifier(named) => (
                 named.local.name.to_string(),
-                ImportedName::Named(named.imported.name().to_string()),
+                ImportedName::Named(crate::ast::module_export_name(&named.imported).into_owned()),
             ),
         };
         self.result.imports.insert(

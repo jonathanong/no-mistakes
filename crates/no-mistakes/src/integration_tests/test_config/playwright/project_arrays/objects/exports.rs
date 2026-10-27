@@ -2,6 +2,7 @@ use super::super::{
     import_bindings, shared, top_level_function_bodies, Ctx, ExprMap, ImportBinding, Options,
 };
 use super::expression_object;
+use crate::ast::module_export_name as js_name;
 use anyhow::Result;
 use oxc_ast::ast::{Declaration, ObjectExpression, Statement};
 use std::collections::BTreeSet;
@@ -55,18 +56,19 @@ fn exported_object_options(
                     continue;
                 }
                 for specifier in &export.specifiers {
-                    if specifier.export_kind.is_type() || specifier.exported.name() != exported {
+                    if specifier.export_kind.is_type() || js_name(&specifier.exported) != exported {
                         continue;
                     }
                 }
             }
             Statement::ExportFromDeclaration(export) if !export.export_kind.is_type() => {
                 for specifier in &export.specifiers {
-                    if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
+                    if !specifier.export_kind.is_type() && js_name(&specifier.exported) == exported
+                    {
                         return imported_object_options_from(
                             &ImportBinding {
-                                source: export.source.value.to_string(),
-                                imported: specifier.local.name().to_string(),
+                                source: crate::ast::js_literal(&export.source).into_owned(),
+                                imported: js_name(&specifier.local).into_owned(),
                             },
                             path,
                             ctx,
@@ -79,7 +81,7 @@ fn exported_object_options(
                     && export.exported.is_none()
                     && !export.export_kind.is_type() =>
             {
-                export_all_sources.push(export.source.value.to_string());
+                export_all_sources.push(crate::ast::js_literal(&export.source).into_owned());
             }
             _ => {}
         }
@@ -140,10 +142,10 @@ fn imported_reexport(program: &oxc_ast::ast::Program<'_>, exported: &str) -> Opt
             continue;
         }
         for specifier in &export.specifiers {
-            if specifier.export_kind.is_type() || specifier.exported.name() != exported {
+            if specifier.export_kind.is_type() || js_name(&specifier.exported) != exported {
                 continue;
             }
-            if let Some(import) = imports.get(specifier.local.name().as_str()) {
+            if let Some(import) = imports.get(js_name(&specifier.local).as_ref()) {
                 return Some(import.clone());
             }
         }
@@ -182,12 +184,12 @@ fn named_export_object<'a>(
             continue;
         };
         for specifier in &export.specifiers {
-            if specifier.export_kind.is_type() || specifier.exported.name() != exported {
+            if specifier.export_kind.is_type() || js_name(&specifier.exported) != exported {
                 continue;
             }
-            let local = specifier.local.name();
+            let local = js_name(&specifier.local);
             if let Some(object) = bindings
-                .get(local.as_str())
+                .get(local.as_ref())
                 .and_then(|expression| expression_object(expression, bindings))
             {
                 return Some(object);

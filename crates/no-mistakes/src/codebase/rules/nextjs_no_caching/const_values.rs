@@ -58,7 +58,9 @@ fn insert_new(scopes: &mut [ConstMap], name: &str, value: StaticValue) {
 
 pub(super) fn static_value(expr: &Expression<'_>, scopes: &[ConstMap]) -> Option<StaticValue> {
     match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => Some(StaticValue::String(literal.value.to_string())),
+        Expression::StringLiteral(literal) => Some(StaticValue::String(
+            crate::ast::js_literal(literal).into_owned(),
+        )),
         Expression::BooleanLiteral(literal) => Some(StaticValue::Bool(literal.value)),
         Expression::NumericLiteral(literal) => Some(StaticValue::Number(literal.value)),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
@@ -100,13 +102,6 @@ fn template_text(template: &TemplateLiteral<'_>) -> String {
     template
         .quasis
         .iter()
-        .map(|quasi| {
-            quasi
-                .value
-                .cooked
-                .as_ref()
-                .unwrap_or(&quasi.value.raw)
-                .as_str()
-        })
+        .map(|quasi| crate::ast::template_quasi_text(quasi))
         .collect()
 }

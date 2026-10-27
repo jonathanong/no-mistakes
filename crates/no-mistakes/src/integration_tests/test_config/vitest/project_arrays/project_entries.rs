@@ -33,10 +33,10 @@ pub(super) fn selected_string_project_paths(
         let Expression::StringLiteral(project_config) = unwrap_ts_wrappers(expression) else {
             continue;
         };
-        let specifier = project_config.value.as_str();
+        let specifier = crate::ast::js_literal(project_config);
         let (specifier, paths) = match specifier.strip_prefix('!') {
             Some(pattern) => (pattern, &mut excluded),
-            None => (specifier, &mut included),
+            None => (specifier.as_ref(), &mut included),
         };
         paths.extend(string_project_paths(specifier, ctx));
     }
@@ -57,9 +57,10 @@ pub(super) fn selected_string_project_roots(
         let Expression::StringLiteral(project) = unwrap_ts_wrappers(expression) else {
             continue;
         };
-        let (specifier, roots) = match project.value.as_str().strip_prefix('!') {
+        let project = crate::ast::js_literal(project);
+        let (specifier, roots) = match project.strip_prefix('!') {
             Some(pattern) => (pattern, &mut excluded),
-            None => (project.value.as_str(), &mut included),
+            None => (project.as_ref(), &mut included),
         };
         roots.extend(string_project_roots(specifier, ctx));
     }

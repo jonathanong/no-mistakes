@@ -53,7 +53,8 @@ pub(super) fn extend_global_exclusions(
         extend_expression_exclusions(expression, ctx, excluded);
         return;
     };
-    let Some(specifier) = project_config.value.as_str().strip_prefix('!') else {
+    let project_config = crate::ast::js_literal(project_config);
+    let Some(specifier) = project_config.strip_prefix('!') else {
         return;
     };
     excluded.paths.extend(string_project_paths(specifier, ctx));

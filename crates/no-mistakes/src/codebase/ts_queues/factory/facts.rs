@@ -64,7 +64,7 @@ fn collect_factory_import_bindings(program: &Program<'_>) -> HashMap<String, (St
         let Some(specifiers) = &import_decl.specifiers else {
             continue;
         };
-        let src = import_decl.source.value.as_str();
+        let src = crate::ast::js_literal(&import_decl.source);
         for specifier in specifiers {
             let ImportDeclarationSpecifier::ImportSpecifier(spec) = specifier else {
                 continue;
@@ -100,7 +100,10 @@ fn collect_const_string_bindings(stmts: &[Statement<'_>]) -> HashMap<String, Str
                 continue;
             };
             if let Some(Expression::StringLiteral(s)) = &decl.init {
-                map.insert(id.name.as_str().to_string(), s.value.as_str().to_string());
+                map.insert(
+                    id.name.as_str().to_string(),
+                    crate::ast::js_literal(s).into_owned(),
+                );
             }
         }
     }
@@ -184,22 +187,4 @@ fn nested_factory_call_line(
         is_factory_callee(&inner.callee, walk)
             .then(|| byte_offset_to_line(walk.source, inner.span.start as usize))
     })
-}
-
-fn resolve_queue_name(
-    call: &oxc_ast::ast::CallExpression<'_>,
-    const_strings: &HashMap<String, String>,
-) -> String {
-    match call.arguments.first() {
-        Some(oxc_ast::ast::Argument::StringLiteral(s)) => s.value.as_str().to_string(),
-        Some(oxc_ast::ast::Argument::Identifier(id)) => const_strings
-            .get(id.name.as_str())
-            .cloned()
-            .unwrap_or_else(|| "<unknown>".to_string()),
-        _ => "<unknown>".to_string(),
-    }
-}
-
-fn module_export_name_str(name: &ModuleExportName) -> String {
-    name.name().as_str().to_string()
 }

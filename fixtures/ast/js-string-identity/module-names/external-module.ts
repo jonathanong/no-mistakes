@@ -1,0 +1,1 @@
+declare module "package" { export { value as "\u{D800}\u{DC00}" }; }

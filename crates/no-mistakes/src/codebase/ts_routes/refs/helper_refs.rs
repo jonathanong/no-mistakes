@@ -8,7 +8,7 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                 if import.import_kind.is_type() {
                     continue;
                 }
-                let source = import.source.value.as_str();
+                let source = crate::ast::js_literal(&import.source);
                 let Some(specifiers) = &import.specifiers else {
                     continue;
                 };
@@ -19,7 +19,8 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                         {
                             imports.push(RouteHelperImport {
                                 local: specifier.local.name.as_str().to_string(),
-                                imported: specifier.imported.name().to_string(),
+                                imported: crate::ast::module_export_name(&specifier.imported)
+                                    .into_owned(),
                                 source: source.to_string(),
                             });
                         }
@@ -41,16 +42,15 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                     }
                 }
             }
-            Statement::ExportFromDeclaration(export) if !export.export_kind.is_type() =>
-            {
-                let source = export.source.value.as_str();
+            Statement::ExportFromDeclaration(export) if !export.export_kind.is_type() => {
+                let source = crate::ast::js_literal(&export.source);
                 for specifier in &export.specifiers {
                     if specifier.export_kind.is_type() {
                         continue;
                     }
                     imports.push(RouteHelperImport {
-                        local: specifier.exported.name().to_string(),
-                        imported: specifier.local.name().to_string(),
+                        local: crate::ast::module_export_name(&specifier.exported).into_owned(),
+                        imported: crate::ast::module_export_name(&specifier.local).into_owned(),
                         source: source.to_string(),
                     });
                 }
@@ -60,10 +60,10 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                     local: export
                         .exported
                         .as_ref()
-                        .map(|name| name.name().to_string())
+                        .map(|name| crate::ast::module_export_name(name).into_owned())
                         .unwrap_or_else(|| "*".to_string()),
                     imported: "*".to_string(),
-                    source: export.source.value.as_str().to_string(),
+                    source: crate::ast::js_literal(&export.source).into_owned(),
                 });
             }
             Statement::ExportDefaultDeclaration(export) => {
@@ -71,29 +71,27 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                     default_aliases.push(alias.to_string());
                 }
             }
-            Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() =>
-            {
+            Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => {
                 for specifier in &export.specifiers {
                     if !specifier.export_kind.is_type() {
                         named_aliases.push((
-                            specifier.local.name().to_string(),
-                            specifier.exported.name().to_string(),
+                            crate::ast::module_export_name(&specifier.local).into_owned(),
+                            crate::ast::module_export_name(&specifier.exported).into_owned(),
                         ));
                     }
                 }
             }
-            Statement::ExportDeclaration(export) =>
-            {
-                imports.extend(exported_imported_helper_wrapper(&export.declaration, &imports));
+            Statement::ExportDeclaration(export) => {
+                imports.extend(exported_imported_helper_wrapper(
+                    &export.declaration,
+                    &imports,
+                ));
             }
             _ => {}
         }
     }
     for alias in default_aliases {
-        let forwarded = imports
-            .iter()
-            .find(|import| import.local == alias)
-            .cloned();
+        let forwarded = imports.iter().find(|import| import.local == alias).cloned();
         if let Some(import) = forwarded {
             imports.push(RouteHelperImport {
                 local: "default".to_string(),
@@ -103,10 +101,7 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
         }
     }
     for (local, exported) in named_aliases {
-        let forwarded = imports
-            .iter()
-            .find(|import| import.local == local)
-            .cloned();
+        let forwarded = imports.iter().find(|import| import.local == local).cloned();
         if let Some(import) = forwarded {
             imports.push(RouteHelperImport {
                 local: exported,
@@ -115,7 +110,9 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
             });
         }
     }
-    imports.sort_by(|a, b| (&a.local, &a.imported, &a.source).cmp(&(&b.local, &b.imported, &b.source)));
+    imports.sort_by(|a, b| {
+        (&a.local, &a.imported, &a.source).cmp(&(&b.local, &b.imported, &b.source))
+    });
     imports.dedup();
     imports
 }

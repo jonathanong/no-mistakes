@@ -33,7 +33,7 @@ impl ScopeCollector {
         }
         if let (Some(scope), Some(name), Some(annotation)) = (
             self.classes.last().copied(),
-            property.key.static_name(),
+            crate::ast::property_key_name(&property.key),
             &property.type_annotation,
         ) {
             self.record_path_annotation(

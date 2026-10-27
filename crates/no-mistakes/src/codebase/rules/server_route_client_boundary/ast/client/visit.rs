@@ -14,11 +14,11 @@ impl<'a> Visit<'a> for ClientHttpVisitor<'a> {
     }
 
     fn visit_import_declaration(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
-        let source = import.source.value.as_str();
-        if is_client_http_module(source) {
+        let source = crate::ast::js_literal(&import.source);
+        if is_client_http_module(&source) {
             if let Some(specifiers) = &import.specifiers {
                 for specifier in specifiers {
-                    self.add_client_import_specifier(source, specifier);
+                    self.add_client_import_specifier(&source, specifier);
                 }
             }
         }
@@ -30,7 +30,7 @@ impl<'a> Visit<'a> for ClientHttpVisitor<'a> {
             && matches!(
                 &import.module_reference,
                 TSModuleReference::ExternalModuleReference(reference)
-                    if is_client_http_module(reference.expression.value.as_str())
+                    if is_client_http_module(crate::ast::js_literal(&reference.expression).as_ref())
             )
             && !self.is_shadowed_name(import.id.name.as_str())
         {

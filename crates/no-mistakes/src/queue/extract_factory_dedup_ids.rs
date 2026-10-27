@@ -17,7 +17,7 @@ pub(super) fn note_destructured_ids(
     let frame = &mut visitor.job_frames[index];
     for property in &object.properties {
         // A computed key can still have a static name (`['id']`). Ignore it.
-        let Some(key) = property.key.static_name() else {
+        let Some(key) = crate::ast::property_key_name(&property.key) else {
             continue;
         };
         if property.computed {

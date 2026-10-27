@@ -4,10 +4,12 @@ use oxc_ast::ast::{
 };
 use std::path::{Path, PathBuf};
 const EXTENSIONS: &[&str] = &["ts", "mts", "cts", "tsx", "js", "mjs", "cjs", "jsx"];
-pub(super) fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<(&'a str, u32)> {
+pub(super) fn default_module_specifier<'a>(
+    program: &'a Program<'a>,
+) -> Option<(std::borrow::Cow<'a, str>, u32)> {
     let mut imported = Vec::new();
     let mut exported_ident: Option<&str> = None;
-    let mut reexport: Option<(&str, u32)> = None;
+    let mut reexport: Option<(std::borrow::Cow<'a, str>, u32)> = None;
     for statement in &program.body {
         match statement {
             Statement::ImportDeclaration(import) => {
@@ -19,7 +21,10 @@ pub(super) fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<(
                     {
                         imported.push((
                             specifier.local.name.as_str(),
-                            (import.source.value.as_str(), import.source.span.start),
+                            (
+                                crate::ast::js_literal(&import.source),
+                                import.source.span.start,
+                            ),
                         ));
                     }
                 }
@@ -47,19 +52,17 @@ pub(super) fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<(
         .map(|(_, specifier)| specifier)
 }
 
-fn default_reexport_specifier<'a>(export: &'a ExportFromDeclaration<'a>) -> Option<&'a str> {
+fn default_reexport_specifier<'a>(
+    export: &'a ExportFromDeclaration<'a>,
+) -> Option<std::borrow::Cow<'a, str>> {
     let reexports_default = export.specifiers.iter().any(|specifier| {
         export_name(&specifier.local) == "default" && export_name(&specifier.exported) == "default"
     });
-    reexports_default.then_some(export.source.value.as_str())
+    reexports_default.then_some(crate::ast::js_literal(&export.source))
 }
 
-fn export_name<'a>(name: &'a ModuleExportName<'a>) -> &'a str {
-    match name {
-        ModuleExportName::IdentifierName(identifier) => identifier.name.as_str(),
-        ModuleExportName::IdentifierReference(identifier) => identifier.name.as_str(),
-        ModuleExportName::StringLiteral(literal) => literal.value.as_str(),
-    }
+fn export_name<'a>(name: &'a ModuleExportName<'a>) -> std::borrow::Cow<'a, str> {
+    crate::ast::module_export_name(name)
 }
 
 pub(super) fn resolve_relative(from: &Path, specifier: &str, files: &[PathBuf]) -> Option<PathBuf> {

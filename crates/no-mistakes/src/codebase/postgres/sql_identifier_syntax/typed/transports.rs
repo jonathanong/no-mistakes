@@ -73,7 +73,8 @@ impl Typed {
         } else if let BindingPattern::ObjectPattern(object) = &variable.id {
             if object.properties.len() == 1
                 && object.rest.is_none()
-                && object.properties[0].key.static_name().as_deref() == Some("query")
+                && crate::ast::property_key_name(&object.properties[0].key).as_deref()
+                    == Some("query")
             {
                 self.unknown_bindings(&object.properties[0].value);
                 self.transports.insert(at);

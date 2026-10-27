@@ -21,7 +21,7 @@ pub fn extract_fetch_cache_options(obj: &oxc_ast::ast::ObjectExpression<'_>) -> 
         let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
         };
-        let Some(name) = property.key.static_name() else {
+        let Some(name) = crate::ast::property_key_name(&property.key) else {
             continue;
         };
 
@@ -42,7 +42,8 @@ pub fn extract_fetch_cache_options(obj: &oxc_ast::ast::ObjectExpression<'_>) -> 
                         else {
                             continue;
                         };
-                        let Some(next_name) = next_property.key.static_name() else {
+                        let Some(next_name) = crate::ast::property_key_name(&next_property.key)
+                        else {
                             continue;
                         };
                         match next_name.as_ref() {

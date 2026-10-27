@@ -111,7 +111,7 @@ fn later_named_type_exports<'a>(
             if let Some(name) = module_export_name_name(&specifier.local) {
                 if !export.export_kind.is_type()
                     && !specifier.export_kind.is_type()
-                    && !local_type_names.contains(name)
+                    && !local_type_names.contains(name.as_ref())
                 {
                     continue;
                 }

@@ -12,18 +12,18 @@ impl ServerRouteVisitor<'_> {
         let Some(member) = call.callee.as_member_expression() else {
             return;
         };
-        let Some(method) = member.static_property_name() else {
+        let Some(method) = crate::ast::member_property_name(member) else {
             return;
         };
         let object = member.object();
         if method == "use" || method == "route" {
-            self.record_mount_or_api_route(call, object, method);
+            self.record_mount_or_api_route(call, object, method.as_ref());
         } else if method == "prefix" || method == "basePath" {
             self.record_prefix(call, object);
         } else if method == "on" {
             self.record_hono_on(call, object);
-        } else if VERBS.contains(&method) {
-            self.record_verb(call, object, method);
+        } else if VERBS.contains(&method.as_ref()) {
+            self.record_verb(call, object, method.as_ref());
         }
     }
 

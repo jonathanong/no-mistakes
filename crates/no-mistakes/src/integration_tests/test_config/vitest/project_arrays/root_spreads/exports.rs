@@ -31,10 +31,10 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn named_e
 
 pub(in crate::integration_tests::test_config::vitest::project_arrays) fn star_barrel_sources<'a>(
     program: &'a Program<'a>,
-) -> impl Iterator<Item = &'a str> {
+) -> impl Iterator<Item = std::borrow::Cow<'a, str>> {
     program.body.iter().filter_map(|s| match s {
         Statement::ExportAllDeclaration(e) if !e.export_kind.is_type() && e.exported.is_none() => {
-            Some(e.source.value.as_str())
+            Some(crate::ast::js_literal(&e.source))
         }
         _ => None,
     })

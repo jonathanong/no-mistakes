@@ -139,11 +139,11 @@ fn extract_named_specifiers(
 ) {
     // `export { Foo, Bar }` resolves specifiers against local component declarations.
     for spec in &export.specifiers {
-        let local_name = spec.local.name();
+        let local_name = crate::ast::module_export_name(&spec.local);
         if let Some(&var_span) = local_vars.get(local_name.as_ref()) {
-            let exported_name = spec.exported.name();
+            let exported_name = crate::ast::module_export_name(&spec.exported);
             components.push(ComponentDef {
-                name: exported_name.as_ref().to_string(),
+                name: exported_name.into_owned(),
                 span: var_span,
             });
         }

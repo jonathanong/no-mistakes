@@ -26,7 +26,8 @@ fn collect_from_expression<'a>(
             remove_shadowed_parameters(&arrow.params, &mut scoped_bindings);
             if let Some(expression) = arrow.body.as_expression() {
                 collect_from_expression(expression, source, file, &mut scoped_bindings, refs);
-            } else if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+            } else if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body)
+            {
                 collect_router_bindings_for_scope(statements, &mut scoped_bindings);
                 for s in statements {
                     collect_from_statement(s, source, file, &mut scoped_bindings, refs);
@@ -120,7 +121,9 @@ fn collect_from_jsx_element<'a>(
         let line = byte_offset_to_line(source, attr.span.start as usize);
 
         let pattern = match &attr.value {
-            Some(JSXAttributeValue::StringLiteral(s)) => Some(s.value.as_str().to_string()),
+            Some(JSXAttributeValue::StringLiteral(s)) => {
+                Some(crate::ast::js_literal(s).into_owned())
+            }
             Some(JSXAttributeValue::ExpressionContainer(container)) => {
                 extract_pattern_from_jsx_expression(&container.expression)
             }

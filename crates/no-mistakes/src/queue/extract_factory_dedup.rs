@@ -69,7 +69,7 @@ fn debounce_with_ttl(expr: &Expression<'_>) -> bool {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             return false;
         };
-        property.key.static_name().as_deref() == Some("deduplication")
+        crate::ast::property_key_name(&property.key).as_deref() == Some("deduplication")
             && debounce_object(&property.value)
     })
 }
@@ -84,7 +84,7 @@ fn debounce_object(expr: &Expression<'_>) -> bool {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
         };
-        match property.key.static_name().as_deref() {
+        match crate::ast::property_key_name(&property.key).as_deref() {
             Some("mode") => {
                 debounce = matches!(
                     &property.value,
@@ -106,7 +106,7 @@ fn dedup_uses_active_job(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> b
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             return false;
         };
-        match property.key.static_name().as_deref() {
+        match crate::ast::property_key_name(&property.key).as_deref() {
             Some("jobId") => visitor.tracks_job_token(&property.value),
             Some("deduplication") => dedup_id_token(visitor, &property.value),
             _ => false,
@@ -122,7 +122,7 @@ fn dedup_id_token(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> bool {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             return false;
         };
-        property.key.static_name().as_deref() == Some("id")
+        crate::ast::property_key_name(&property.key).as_deref() == Some("id")
             && visitor.tracks_job_token(&property.value)
     })
 }

@@ -12,8 +12,10 @@ Each module includes imports (default, named, namespace, side-effect, and type-o
 exports (named, local, default, star, and namespace re-exports), literal dynamic import
 and global `require` loads, lexical scopes, bindings, and bound references. Import
 specifier `bindingId` identifies its entry in `bindings`. `runtime` on a binding
-means the declaration is syntactically a value; on a reference it means evaluation
-uses that value. `typeOnly` distinguishes type uses, including `typeof Value` in a
+means the declaration is syntactically a value; on a reference it marks a value
+use in the established lexical projection. That projection preserves named
+`arguments` bindings; it does not model the implicit invocation arguments object.
+`typeOnly` distinguishes type uses, including `typeof Value` in a
 type query. A value import used only in annotations has no runtime references.
 Local named exports of type declarations are type-only even without an explicit
 `type` modifier; source re-exports retain their syntactic flags.
@@ -31,6 +33,11 @@ A default-export expression has an empty `local` name when its identifier does
 not resolve to a binding in the selected file. No AST or raw source is
 returned. Ambient declarations are not runtime values.
 The facts do not prove that an imported value exists in another module.
+Decoded literal and static-name identities retain their existing representation
+across parser upgrades, including lone surrogate escapes; they are not converted
+through diagnostic display text. Source spans remain offsets into the original
+UTF-8 bytes. See the [parser boundary](../architecture.md#literal-identity-at-the-parser-boundary).
+
 
 Check `complete` and `diagnostics` before relying on a module. Non-literal module
 loads, shadowed or indirect `require`, direct `eval`, `with`, TypeScript import-equals and legacy

@@ -50,7 +50,7 @@ impl ImportCollector {
         let Some(origins) = &mut self.receiver_only_bindings else {
             return false;
         };
-        let value = origins.single_named_field(field, identifier.name.as_str(), value_scope, read);
+        let value = origins.single_named_field(&field, identifier.name.as_str(), value_scope, read);
         self.fresh_receiver_effects.rebind(scope, name);
         self.retain_receiver_origin(
             scope,

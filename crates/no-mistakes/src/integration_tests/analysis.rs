@@ -55,7 +55,7 @@ struct AnalysisCollector<'a, 'p> {
 
 impl<'a> Visit<'a> for AnalysisCollector<'a, '_> {
     fn visit_import_declaration(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
-        let source = import.source.value.to_string();
+        let source = crate::ast::js_literal(&import.source).into_owned();
         if let Some(specifiers) = import.specifiers.as_ref() {
             for specifier in specifiers {
                 self.collect_import(specifier, &source);
@@ -163,6 +163,6 @@ fn module_export_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(id) => id.name.to_string(),
         ModuleExportName::IdentifierReference(id) => id.name.to_string(),
-        ModuleExportName::StringLiteral(value) => value.value.to_string(),
+        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(value).into_owned(),
     }
 }

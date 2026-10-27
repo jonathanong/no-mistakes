@@ -52,7 +52,7 @@ fn lower_object(scope: &mut Scope<'_>, object: &oxc_ast::ast::ObjectExpression<'
         }
         let key = match &prop.key {
             PropertyKey::StaticIdentifier(key) => key.name.to_string(),
-            PropertyKey::StringLiteral(key) => key.value.to_string(),
+            PropertyKey::StringLiteral(key) => crate::ast::js_literal(key).into_owned(),
             _ => return Expr::Opaque,
         };
         // Special prototype setters do not form plain own data properties.

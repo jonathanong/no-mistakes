@@ -8,13 +8,13 @@ pub(super) fn template(value: &TemplateLiteral<'_>, source: &str) -> Expr {
         if index > 0 {
             parts.push(expression(&value.expressions[index - 1], source));
         }
+        quasi
+            .value
+            .cooked
+            .as_ref()
+            .expect("successful untagged templates have cooked text");
         parts.push(Expr::Text(
-            quasi
-                .value
-                .cooked
-                .as_ref()
-                .expect("successful untagged templates have cooked text")
-                .to_string(),
+            crate::ast::template_quasi_text(quasi).into_owned(),
         ));
     }
     Expr::Template(parts)
@@ -53,10 +53,9 @@ pub(super) fn tagged(
                     super::super::super::embedded::INTERNAL_PLACEHOLDER
                 )));
             }
-            parts.push(Expr::Text(quasi.value.cooked.as_ref().map_or_else(
-                || quasi.value.raw.to_string(),
-                |value| value.to_string(),
-            )));
+            parts.push(Expr::Text(
+                crate::ast::template_quasi_text(quasi).into_owned(),
+            ));
         }
         parts
     };

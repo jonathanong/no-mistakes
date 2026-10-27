@@ -132,8 +132,8 @@ impl Projector<'_, '_> {
             return ArgumentValue::Unknown;
         }
         match expression.get_inner_expression() {
-            Expression::StringLiteral(value) if value.value.len() <= 4096 => {
-                ArgumentValue::Scalar(Value::String(value.value.to_string()))
+            Expression::StringLiteral(value) if crate::ast::js_literal(value).len() <= 4096 => {
+                ArgumentValue::Scalar(Value::String(crate::ast::js_literal(value).into_owned()))
             }
             Expression::NumericLiteral(value) => serde_json::Number::from_f64(value.value)
                 .map_or(ArgumentValue::Unknown, |value| {
@@ -158,10 +158,11 @@ impl Projector<'_, '_> {
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => template
                 .quasis
                 .first()
-                .and_then(|part| part.value.cooked.as_ref())
+                .filter(|part| part.value.cooked.is_some())
+                .map(crate::ast::template_quasi_text)
                 .filter(|text| text.len() <= 4096)
                 .map_or(ArgumentValue::Unknown, |text| {
-                    ArgumentValue::Scalar(Value::String(text.to_string()))
+                    ArgumentValue::Scalar(Value::String(text.into_owned()))
                 }),
             Expression::Identifier(identifier) => self.named(identifier, depth),
             Expression::ArrayExpression(array) if array.elements.len() <= 256 => {
@@ -183,7 +184,7 @@ impl Projector<'_, '_> {
                     if property.kind != PropertyKind::Init || property.method || property.computed {
                         return ArgumentValue::Unknown;
                     }
-                    let Some(key) = property.key.static_name() else {
+                    let Some(key) = crate::ast::property_key_name(&property.key) else {
                         return ArgumentValue::Unknown;
                     };
                     if key == "__proto__" || key.len() > 128 {

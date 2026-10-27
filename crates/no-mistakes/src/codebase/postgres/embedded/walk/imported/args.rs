@@ -54,7 +54,7 @@ fn is_builder(visitor: &ScopeVisitor<'_>, name: &str) -> bool {
 fn value(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>, nested: bool) -> Option<SiteArg> {
     Some(match unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(literal) => SiteArg::Literal(LiteralArg {
-            text: literal.value.to_string(),
+            text: crate::ast::js_literal(literal).into_owned(),
             line: byte_offset_to_line(visitor.source, literal.span.start as usize),
             origin: literal.span.start + 1,
         }),
@@ -95,8 +95,8 @@ fn value(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>, nested: bool) 
 }
 
 fn cooked_template(template: &oxc_ast::ast::TemplateLiteral<'_>) -> Option<String> {
-    let cooked = template.quasis.first()?.value.cooked.as_ref()?;
-    Some(cooked.as_str().to_string())
+    template.quasis.first()?.value.cooked.as_ref()?;
+    Some(crate::ast::template_quasi_text(template.quasis.first()?).into_owned())
 }
 
 fn object_literal(
@@ -113,7 +113,7 @@ fn object_literal(
         }
         let key = match &property.key {
             PropertyKey::StaticIdentifier(ident) => ident.name.to_string(),
-            PropertyKey::StringLiteral(literal) => literal.value.to_string(),
+            PropertyKey::StringLiteral(literal) => crate::ast::js_literal(literal).into_owned(),
             _ => return None,
         };
         props.push((key, value(visitor, &property.value, false)?));

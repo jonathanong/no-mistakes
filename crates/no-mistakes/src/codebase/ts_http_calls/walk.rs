@@ -87,7 +87,7 @@ impl<'a> Visit<'a> for HttpCallVisitor<'a, '_> {
 
 fn static_path_arg(args: &[Argument], index: usize) -> Option<String> {
     match args.get(index)? {
-        Argument::StringLiteral(s) => Some(s.value.as_str().to_string()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(tl) if tl.expressions.is_empty() => Some(normalize_template(tl)),
         _ => None,
     }

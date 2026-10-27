@@ -17,8 +17,7 @@ fn check_call_for_route_ref(
     // Detect router.push('/path') / router.replace('/path') where router is
     // bound to useRouter().
     if let Some(member) = call.callee.as_member_expression() {
-        let is_router_method = member
-            .static_property_name()
+        let is_router_method = crate::ast::member_property_name(member)
             .is_some_and(|prop| prop == "push" || prop == "replace" || prop == "prefetch");
         if is_router_method {
             if let Expression::Identifier(ident) = member.object() {
@@ -28,12 +27,12 @@ fn check_call_for_route_ref(
                     if let Some(pattern) =
                         first_arg_pattern(&call.arguments).filter(|p| !should_skip(p))
                     {
-	                    refs.push(RouteRef {
-	                        pattern,
-	                        file: file.to_string(),
-	                        line,
-	                        method: Some("GET".to_string()),
-	                    });
+                        refs.push(RouteRef {
+                            pattern,
+                            file: file.to_string(),
+                            line,
+                            method: Some("GET".to_string()),
+                        });
                     }
                 }
             }
@@ -45,12 +44,12 @@ fn check_call_for_route_ref(
         if router_bindings.redirects.contains(name) || router_bindings.methods.contains(name) {
             let line = byte_offset_to_line(source, call.span.start as usize);
             if let Some(pattern) = first_arg_pattern(&call.arguments).filter(|p| !should_skip(p)) {
-	                refs.push(RouteRef {
-	                    pattern,
-	                    file: file.to_string(),
-	                    line,
-	                    method: Some("GET".to_string()),
-	                });
+                refs.push(RouteRef {
+                    pattern,
+                    file: file.to_string(),
+                    line,
+                    method: Some("GET".to_string()),
+                });
             }
         }
     }
@@ -59,7 +58,7 @@ fn check_call_for_route_ref(
         Expression::Identifier(id) => id.name.as_str() == "fetch",
         other => other
             .as_member_expression()
-            .and_then(|m| m.static_property_name())
+            .and_then(|m| crate::ast::member_property_name(m))
             .map(|n| n == "fetch")
             .unwrap_or(false),
     };
@@ -89,9 +88,9 @@ fn fetch_method(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
         };
-        if property.key.static_name().is_some_and(|name| name == "method") {
+        if crate::ast::property_key_name(&property.key).is_some_and(|name| name == "method") {
             if let Expression::StringLiteral(value) = &property.value {
-                return Some(value.value.to_ascii_uppercase());
+                return Some(crate::ast::js_literal(value).to_ascii_uppercase());
             }
             return None;
         }
@@ -102,7 +101,7 @@ fn fetch_method(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
 fn first_arg_pattern(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
     let first = arguments.first()?;
     match first {
-        Argument::StringLiteral(s) => Some(s.value.as_str().to_string()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(tpl) => Some(normalize_template(tpl)),
         _ => {
             if let Some(expr) = first.as_expression() {
@@ -116,7 +115,9 @@ fn first_arg_pattern(arguments: &oxc_allocator::Vec<Argument>) -> Option<String>
 
 fn extract_pattern_from_expression(expr: &Expression) -> Option<String> {
     match expr {
-        Expression::StringLiteral(s) => Some(normalize_next_pathname_pattern(s.value.as_str())),
+        Expression::StringLiteral(s) => Some(normalize_next_pathname_pattern(
+            crate::ast::js_literal(s).as_ref(),
+        )),
         Expression::TemplateLiteral(tpl) => Some(normalize_template(tpl)),
         Expression::ObjectExpression(obj) => object_route_pattern(obj),
         Expression::TSTypeAssertion(ts_assertion) => {
@@ -162,8 +163,8 @@ pub(crate) fn normalize_next_pathname_pattern(path: &str) -> String {
 pub fn normalize_template(tpl: &TemplateLiteral) -> String {
     let mut result = String::new();
     for (i, quasi) in tpl.quasis.iter().enumerate() {
-        if let Some(cooked) = quasi.value.cooked {
-            result.push_str(cooked.as_str());
+        if quasi.value.cooked.is_some() {
+            result.push_str(crate::ast::template_quasi_text(quasi).as_ref());
         }
         if i < tpl.expressions.len() {
             result.push_str(":param");

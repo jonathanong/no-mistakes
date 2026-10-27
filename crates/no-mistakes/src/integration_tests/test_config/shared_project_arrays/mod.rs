@@ -173,7 +173,7 @@ pub(super) fn add_es_import_bindings(
             }
             ImportDeclarationSpecifier::ImportSpecifier(specifier) => (
                 specifier.local.name.to_string(),
-                specifier.imported.name().to_string(),
+                crate::ast::module_export_name(&specifier.imported).into_owned(),
             ),
             ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
                 (specifier.local.name.to_string(), "*".to_string())
@@ -182,7 +182,7 @@ pub(super) fn add_es_import_bindings(
         bindings.insert(
             local,
             ImportBinding {
-                source: import.source.value.to_string(),
+                source: crate::ast::js_literal(&import.source).into_owned(),
                 imported,
             },
         );

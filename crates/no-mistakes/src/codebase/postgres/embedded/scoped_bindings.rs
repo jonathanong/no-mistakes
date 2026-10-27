@@ -110,7 +110,7 @@ pub(super) fn matched_names(
             continue;
         };
         if !candidates::from_configured_module(
-            import.source.value.as_str(),
+            crate::ast::js_literal(&import.source).as_ref(),
             &options.import_specifier,
         ) {
             continue;
@@ -119,15 +119,15 @@ pub(super) fn matched_names(
             let ImportDeclarationSpecifier::ImportSpecifier(named) = specifier else {
                 continue;
             };
-            let imported = named.imported.name();
+            let imported = crate::ast::module_export_name(&named.imported);
             let type_only = import.import_kind == ImportOrExportKind::Type
                 || named.import_kind == ImportOrExportKind::Type;
             if !type_only
-                && candidates::contains(&options.executor_factory_names, imported.as_str())
+                && candidates::contains(&options.executor_factory_names, imported.as_ref())
             {
                 factories.push(imported.to_string());
             }
-            if candidates::contains(&options.executor_type_names, imported.as_str()) {
+            if candidates::contains(&options.executor_type_names, imported.as_ref()) {
                 types.push(imported.to_string());
             }
         }

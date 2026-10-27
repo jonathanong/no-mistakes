@@ -1,6 +1,6 @@
 fn evaluate_helper_def<'a>(
     def: &HelperDef<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
+    defs: &HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     provided: &HashMap<String, Vec<String>>,
     depth: usize,
@@ -21,7 +21,7 @@ fn evaluate_helper_def<'a>(
 
 fn evaluate_route_expression<'a>(
     expr: &'a Expression<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
+    defs: &HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &HashMap<String, Vec<String>>,
     depth: usize,
@@ -30,7 +30,9 @@ fn evaluate_route_expression<'a>(
         return vec!["*".to_string()];
     }
     match expr {
-        Expression::StringLiteral(s) => vec![normalize_next_pathname_pattern(s.value.as_str())],
+        Expression::StringLiteral(s) => vec![normalize_next_pathname_pattern(
+            crate::ast::js_literal(s).as_ref(),
+        )],
         Expression::TemplateLiteral(tpl) => {
             evaluate_template_literal(tpl, defs, imported_helpers, env, depth)
         }
@@ -81,15 +83,13 @@ fn evaluate_route_expression<'a>(
         Expression::TSAsExpression(ts_as) => {
             evaluate_route_expression(&ts_as.expression, defs, imported_helpers, env, depth + 1)
         }
-        Expression::TSTypeAssertion(ts_assertion) => {
-            evaluate_route_expression(
-                &ts_assertion.expression,
-                defs,
-                imported_helpers,
-                env,
-                depth + 1,
-            )
-        }
+        Expression::TSTypeAssertion(ts_assertion) => evaluate_route_expression(
+            &ts_assertion.expression,
+            defs,
+            imported_helpers,
+            env,
+            depth + 1,
+        ),
         Expression::TSNonNullExpression(ts_nn) => {
             evaluate_route_expression(&ts_nn.expression, defs, imported_helpers, env, depth + 1)
         }

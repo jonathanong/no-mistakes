@@ -53,7 +53,7 @@ fn collect_procedures(object: &ObjectExpression<'_>, prefix: &str, out: &mut Vec
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
         };
-        let Some(key) = property.key.static_name() else {
+        let Some(key) = crate::ast::property_key_name(&property.key) else {
             continue;
         };
         let path = if prefix.is_empty() {

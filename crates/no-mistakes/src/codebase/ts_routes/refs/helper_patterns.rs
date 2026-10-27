@@ -1,6 +1,5 @@
 #[derive(Clone, Copy)]
 struct HelperDef<'a> {
-    name: &'a str,
     params: &'a oxc_ast::ast::FormalParameters<'a>,
     body: Option<&'a oxc_ast::ast::FunctionBody<'a>>,
     expression: Option<&'a Expression<'a>>,
@@ -16,13 +15,7 @@ fn collect_route_helpers<'a>(
         collect_helper_def_from_statement(stmt, &mut defs, &mut default_alias);
     }
     if let Some(def) = default_alias.and_then(|alias| defs.get(alias).copied()) {
-        defs.insert(
-            "default",
-            HelperDef {
-                name: "default",
-                ..def
-            },
-        );
+        defs.insert(std::borrow::Cow::Borrowed("default"), def);
     }
     for stmt in &program.body {
         collect_helper_alias_exports_from_statement(stmt, &mut defs);
@@ -30,11 +23,11 @@ fn collect_route_helpers<'a>(
 
     let imported_helpers = collect_route_helper_bindings(&[], imports);
     let mut helpers: Vec<RouteHelper> = defs
-        .values()
-        .filter_map(|def| {
+        .iter()
+        .filter_map(|(name, def)| {
             let patterns = evaluate_helper_def(def, &defs, &imported_helpers, &HashMap::new(), 0);
             (!patterns.is_empty()).then(|| RouteHelper {
-                name: def.name.to_string(),
+                name: name.to_string(),
                 patterns,
             })
         })
@@ -45,16 +38,15 @@ fn collect_route_helpers<'a>(
 
 fn collect_helper_def_from_statement<'a>(
     stmt: &'a Statement<'a>,
-    defs: &mut HashMap<&'a str, HelperDef<'a>>,
+    defs: &mut HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     default_alias: &mut Option<&'a str>,
 ) {
     match stmt {
         Statement::FunctionDeclaration(func) => {
             if let (Some(id), Some(body)) = (&func.id, &func.body) {
                 defs.insert(
-                    id.name.as_str(),
+                    std::borrow::Cow::Borrowed(id.name.as_str()),
                     HelperDef {
-                        name: id.name.as_str(),
                         params: &func.params,
                         body: Some(body),
                         expression: None,
@@ -69,9 +61,8 @@ fn collect_helper_def_from_statement<'a>(
             oxc_ast::ast::Declaration::FunctionDeclaration(func) => {
                 if let (Some(id), Some(body)) = (&func.id, &func.body) {
                     defs.insert(
-                        id.name.as_str(),
+                        std::borrow::Cow::Borrowed(id.name.as_str()),
                         HelperDef {
-                            name: id.name.as_str(),
                             params: &func.params,
                             body: Some(body),
                             expression: None,
@@ -89,9 +80,8 @@ fn collect_helper_def_from_statement<'a>(
                 if let Some(body) = &func.body {
                     if let Some(id) = &func.id {
                         defs.insert(
-                            id.name.as_str(),
+                            std::borrow::Cow::Borrowed(id.name.as_str()),
                             HelperDef {
-                                name: id.name.as_str(),
                                 params: &func.params,
                                 body: Some(body),
                                 expression: None,
@@ -119,7 +109,7 @@ fn collect_helper_def_from_statement<'a>(
 
 fn collect_default_helper_def_from_expression<'a>(
     expr: &'a Expression<'a>,
-    defs: &mut HashMap<&'a str, HelperDef<'a>>,
+    defs: &mut HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
 ) {
     match expr {
         Expression::ArrowFunctionExpression(arrow) => insert_default_arrow_helper_def(defs, arrow),
@@ -136,14 +126,13 @@ fn collect_default_helper_def_from_expression<'a>(
 }
 
 fn insert_default_helper_def<'a>(
-    defs: &mut HashMap<&'a str, HelperDef<'a>>,
+    defs: &mut HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     params: &'a oxc_ast::ast::FormalParameters<'a>,
     body: &'a oxc_ast::ast::FunctionBody<'a>,
 ) {
     defs.insert(
-        "default",
+        std::borrow::Cow::Borrowed("default"),
         HelperDef {
-            name: "default",
             params,
             body: Some(body),
             expression: None,

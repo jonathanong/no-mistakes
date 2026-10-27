@@ -47,7 +47,7 @@ pub(super) fn destructure(
         }
         let key = match &property.key {
             PropertyKey::StaticIdentifier(key) => key.name.to_string(),
-            PropertyKey::StringLiteral(key) => key.value.to_string(),
+            PropertyKey::StringLiteral(key) => crate::ast::js_literal(key).into_owned(),
             _ => return None,
         };
         if key == "__proto__" {

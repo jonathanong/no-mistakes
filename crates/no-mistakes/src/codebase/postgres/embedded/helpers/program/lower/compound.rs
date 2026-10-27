@@ -20,7 +20,7 @@ pub(super) fn member_expression(scope: &mut Scope<'_, '_>, node: &Expression<'_>
             match unwrap_ts_wrappers(&member.expression) {
                 Expression::StringLiteral(key) => Expr::Member(
                     Box::new(lower(scope, &member.object)),
-                    key.value.to_string(),
+                    crate::ast::js_literal(key).into_owned(),
                 ),
                 _ => Expr::Opaque,
             }
@@ -114,7 +114,9 @@ pub(super) fn object_literal(
                     PropertyKey::StaticIdentifier(ident) if !property.computed => {
                         ident.name.to_string()
                     }
-                    PropertyKey::StringLiteral(literal) => literal.value.to_string(),
+                    PropertyKey::StringLiteral(literal) => {
+                        crate::ast::js_literal(literal).into_owned()
+                    }
                     _ => return Expr::Opaque,
                 };
                 if property.kind != PropertyKind::Init || property.method {

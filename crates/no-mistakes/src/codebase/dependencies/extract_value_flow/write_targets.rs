@@ -131,7 +131,7 @@ fn expression_path(expression: &Expression<'_>) -> Option<(String, ValueMutation
 }
 pub(in super::super) fn static_key(expression: &Expression<'_>) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
         Expression::NumericLiteral(literal) => Some(literal.value.to_string()),
         _ => None,
     }
@@ -141,6 +141,6 @@ pub(super) fn property_key(key: &oxc_ast::ast::PropertyKey<'_>) -> Option<String
     if let oxc_ast::ast::PropertyKey::NumericLiteral(literal) = key {
         Some(literal.value.to_string())
     } else {
-        crate::codebase::ts_source::static_property_key_name(key).map(str::to_string)
+        crate::codebase::ts_source::static_property_key_name(key).map(std::borrow::Cow::into_owned)
     }
 }

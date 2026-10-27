@@ -129,7 +129,7 @@ impl<'a> Collector<'a> {
     pub(crate) fn export_named_declaration(&mut self, export: &ExportNamedDeclaration<'a>) {
         if self.segment {
             for specifier in &export.specifiers {
-                if segment_name(specifier.exported.name().as_str()) {
+                if segment_name(crate::ast::module_export_name(&specifier.exported).as_ref()) {
                     self.unknown(specifier.span.start);
                 }
             }

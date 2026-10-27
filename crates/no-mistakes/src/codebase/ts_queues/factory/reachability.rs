@@ -46,13 +46,13 @@ pub fn collect_import_specifiers(source: &str) -> Vec<String> {
     for stmt in &ret.program.body {
         match stmt {
             Statement::ImportDeclaration(import_decl) => {
-                specifiers.push(import_decl.source.value.to_string());
+                specifiers.push(crate::ast::js_literal(&import_decl.source).into_owned());
             }
             Statement::ExportFromDeclaration(export) => {
-                specifiers.push(export.source.value.to_string());
+                specifiers.push(crate::ast::js_literal(&export.source).into_owned());
             }
             Statement::ExportAllDeclaration(export) => {
-                specifiers.push(export.source.value.to_string());
+                specifiers.push(crate::ast::js_literal(&export.source).into_owned());
             }
             _ => {}
         }

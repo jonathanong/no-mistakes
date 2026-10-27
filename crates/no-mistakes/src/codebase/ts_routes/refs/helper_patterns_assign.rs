@@ -1,6 +1,6 @@
 fn apply_helper_assignment_expression<'a>(
     assignment: &'a oxc_ast::ast::AssignmentExpression<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
+    defs: &HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,
     depth: usize,
@@ -8,7 +8,8 @@ fn apply_helper_assignment_expression<'a>(
     let oxc_ast::ast::AssignmentTarget::AssignmentTargetIdentifier(ident) = &assignment.left else {
         return;
     };
-    let value = evaluate_route_expression(&assignment.right, defs, imported_helpers, env, depth + 1);
+    let value =
+        evaluate_route_expression(&assignment.right, defs, imported_helpers, env, depth + 1);
     if assignment.operator == oxc_ast::ast::AssignmentOperator::Addition {
         let current = env
             .get(ident.name.as_str())

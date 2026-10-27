@@ -1,6 +1,6 @@
 fn evaluate_helper_try_statement<'a>(
     try_stmt: &'a oxc_ast::ast::TryStatement<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
+    defs: &HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,
     depth: usize,
@@ -44,13 +44,8 @@ fn evaluate_helper_try_statement<'a>(
         replace_helper_env_with_branches(env, branch_envs);
     }
     if let Some(finalizer) = &try_stmt.finalizer {
-        let finalizer_evaluation = evaluate_helper_block_returns(
-            finalizer,
-            defs,
-            imported_helpers,
-            env,
-            depth + 1,
-        );
+        let finalizer_evaluation =
+            evaluate_helper_block_returns(finalizer, defs, imported_helpers, env, depth + 1);
         if !finalizer_evaluation.values.is_empty() {
             return HelperStatementEvaluation::returning(finalizer_evaluation.values);
         }
@@ -64,20 +59,15 @@ fn evaluate_helper_try_statement<'a>(
 
 fn evaluate_helper_block_returns<'a>(
     block: &'a oxc_ast::ast::BlockStatement<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
+    defs: &HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,
     depth: usize,
 ) -> HelperStatementEvaluation {
     let mut values = Vec::new();
     for stmt in &block.body {
-        let evaluation = evaluate_helper_return_statement(
-            stmt,
-            defs,
-            imported_helpers,
-            env,
-            depth + 1,
-        );
+        let evaluation =
+            evaluate_helper_return_statement(stmt, defs, imported_helpers, env, depth + 1);
         values.extend(evaluation.values);
         if !evaluation.can_continue {
             return HelperStatementEvaluation::returning(values);

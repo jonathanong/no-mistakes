@@ -84,7 +84,7 @@ pub(super) fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     }
 }
 
-pub(super) fn require_module<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
+pub(super) fn require_module<'a>(expr: &'a Expression<'a>) -> Option<std::borrow::Cow<'a, str>> {
     let Expression::CallExpression(call) = expr else {
         return None;
     };
@@ -95,12 +95,14 @@ pub(super) fn require_module<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
         return None;
     }
     match call.arguments.first() {
-        Some(Argument::StringLiteral(value)) => Some(value.value.as_str()),
+        Some(Argument::StringLiteral(value)) => Some(crate::ast::js_literal(value)),
         _ => None,
     }
 }
 
-pub(super) fn require_module_or_promises<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
+pub(super) fn require_module_or_promises<'a>(
+    expr: &'a Expression<'a>,
+) -> Option<std::borrow::Cow<'a, str>> {
     if let Some(module) = require_module(expr) {
         return Some(module);
     }
@@ -110,8 +112,8 @@ pub(super) fn require_module_or_promises<'a>(expr: &'a Expression<'a>) -> Option
     if member.property.name != "promises" {
         return None;
     }
-    match require_module(&member.object) {
-        Some("fs" | "node:fs") => Some("node:fs/promises"),
+    match require_module(&member.object).as_deref() {
+        Some("fs" | "node:fs") => Some(std::borrow::Cow::Borrowed("node:fs/promises")),
         _ => None,
     }
 }
@@ -121,7 +123,7 @@ pub(super) fn require_member_binding(expr: &Expression<'_>) -> Option<Binding> {
         return None;
     };
     import_binding(
-        require_module_or_promises(&member.object)?,
+        &require_module_or_promises(&member.object)?,
         member.property.name.as_str(),
     )
 }
@@ -139,7 +141,7 @@ pub(super) fn register_require_binding(
         }
         BindingPattern::ObjectPattern(object) => {
             for property in &object.properties {
-                let Some(key) = property.key.static_name() else {
+                let Some(key) = crate::ast::property_key_name(&property.key) else {
                     continue;
                 };
                 match &property.value {
@@ -153,7 +155,7 @@ pub(super) fn register_require_binding(
                     {
                         for nested in &inner.properties {
                             let (Some(key), BindingPattern::BindingIdentifier(id)) =
-                                (nested.key.static_name(), &nested.value)
+                                (crate::ast::property_key_name(&nested.key), &nested.value)
                             else {
                                 continue;
                             };

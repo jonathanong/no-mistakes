@@ -33,13 +33,13 @@ fn process_export_all_declaration(
     source: &str,
     out: &mut FileSymbols,
 ) {
-    let source_str = export.source.value.as_str().to_string();
+    let source_str = crate::ast::js_literal(&export.source).into_owned();
     let line = byte_offset_to_line(source, export.span.start as usize);
     out.exports.push(Export {
         name: export
             .exported
             .as_ref()
-            .map(|name| name.name().to_string())
+            .map(|name| crate::ast::module_export_name(name).into_owned())
             .unwrap_or_else(|| "*".to_string()),
         local: None,
         kind: ExportKind::ReExport {

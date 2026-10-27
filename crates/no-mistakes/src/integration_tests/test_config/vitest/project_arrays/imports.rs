@@ -99,15 +99,15 @@ pub(in crate::integration_tests::test_config::vitest) fn import_sources(
             Statement::ImportDeclaration(import)
                 if crate::fetch::import_shape::is_runtime_import(import) =>
             {
-                Some(import.source.value.to_string())
+                Some(crate::ast::js_literal(&import.source).into_owned())
             }
             Statement::ExportFromDeclaration(export)
                 if crate::fetch::import_shape::is_runtime_export(export) =>
             {
-                Some(export.source.value.to_string())
+                Some(crate::ast::js_literal(&export.source).into_owned())
             }
             Statement::ExportAllDeclaration(export) if !export.export_kind.is_type() => {
-                Some(export.source.value.to_string())
+                Some(crate::ast::js_literal(&export.source).into_owned())
             }
             _ => None,
         })

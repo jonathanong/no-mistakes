@@ -16,7 +16,7 @@ fn record_class_member_calls(
             ClassElement::MethodDefinition(method) => {
                 let name = crate::codebase::ts_source::static_property_key_name(&method.key);
                 if let Some(class_name) = class_name {
-                    record_member_call(collector, class_name, class_id, name);
+                    record_member_call(collector, class_name, class_id, name.as_deref());
                 }
             }
             ClassElement::PropertyDefinition(property)
@@ -34,7 +34,8 @@ fn record_class_member_calls(
                         collector,
                         class_name,
                         class_id,
-                        crate::codebase::ts_source::static_property_key_name(&property.key),
+                        crate::codebase::ts_source::static_property_key_name(&property.key)
+                            .as_deref(),
                     );
                 }
             }

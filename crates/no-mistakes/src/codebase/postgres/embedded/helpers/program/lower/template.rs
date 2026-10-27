@@ -18,10 +18,10 @@ fn piece(scope: &Scope<'_, '_>, quasi: &TemplateElement<'_>, raw_mode: bool) -> 
     with_origin_entry(RecoveredSql {
         sql: decoded.to_string(),
         line,
-        positions: source_positions::piece(raw, decoded, line, broken || raw_mode),
+        positions: source_positions::piece(raw, &decoded, line, broken || raw_mode),
         origins: source_positions::origins::piece(
             raw,
-            decoded,
+            &decoded,
             quasi.span.start,
             broken || raw_mode,
         ),

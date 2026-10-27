@@ -1,0 +1,110 @@
+[
+  {
+    "raw": "\\u{D800}\\u{DC00}\\r\\b\\f\\v\\141\\77\\7\\400\\377\\8\\9\\q",
+    "expected": "�d800�dc00\r\b\f\u000ba?\u0007 0ÿ89q",
+    "template": false,
+    "needs": true
+  },
+  {
+    "raw": "A\r\nB\rC\\u{D800}\\u{DC00}",
+    "expected": "A\nB\nC�d800�dc00",
+    "template": true,
+    "needs": true
+  },
+  {
+    "raw": "\\u{D800}\\u{DC00}\\\r\nX\\\rY\\ Z\\ ",
+    "expected": "�d800�dc00XYZ",
+    "template": false,
+    "needs": true
+  },
+  {
+    "raw": "\\u{D800}\\u{DC00}\\uD800\\u0041\\uD800a\\uD800\\u{1234}",
+    "expected": "�d800�dc00�d800A�d800a�d800ሴ",
+    "template": false,
+    "needs": true
+  },
+  {
+    "raw": "\\u{1f600}",
+    "expected": "😀",
+    "template": false,
+    "needs": false
+  },
+  {
+    "raw": "\\u{0000000000000000000000000001f600}",
+    "expected": "😀",
+    "template": false,
+    "needs": false
+  },
+  {
+    "raw": "plain",
+    "expected": "plain",
+    "template": false,
+    "needs": false
+  },
+  {
+    "raw": "\\",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": null
+  },
+  {
+    "raw": "\\u{110000}",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": null
+  },
+  {
+    "raw": "\\u{not}",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": null
+  },
+  {
+    "raw": "\\u{}",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": null
+  },
+  {
+    "raw": "\\u{D800",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": null
+  },
+  {
+    "raw": "\\x0",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": null
+  },
+  {
+    "raw": "\\xGG",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": null
+  },
+  {
+    "raw": "\\uGGGG",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": null
+  },
+  {
+    "raw": "\\u{D800}\\u{DC00}\\uD800\\uzzzz",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": null
+  },
+  {
+    "raw": "\\u{D800",
+    "expected": "fallback😀",
+    "template": false,
+    "needs": false
+  },
+  {
+    "raw": "\\u{000}",
+    "expected": "\u0000",
+    "template": false,
+    "needs": false
+  }
+]

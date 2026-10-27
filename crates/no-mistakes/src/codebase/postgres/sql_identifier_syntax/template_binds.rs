@@ -87,10 +87,11 @@ impl TemplateBinds {
         let mut positions = Vec::new();
         let (mut sql_line, mut sql_column) = (1, 1);
         for (index, quasi) in tagged.quasi.quasis.iter().enumerate() {
-            let Some(cooked) = &quasi.value.cooked else {
+            let Some(_) = &quasi.value.cooked else {
                 return Input::Unknown;
             };
-            if !super::literal_projection::literal_matches(quasi.value.raw.as_str(), cooked) {
+            let cooked = crate::ast::template_quasi_text(quasi);
+            if !super::literal_projection::literal_matches(quasi.value.raw.as_str(), &cooked) {
                 return Input::Unknown;
             }
             positions.push(super::super::EmbeddedSqlSourcePosition {
@@ -107,7 +108,7 @@ impl TemplateBinds {
                     sql_column += 1;
                 }
             }
-            text.push_str(cooked);
+            text.push_str(&cooked);
             if index < tagged.quasi.expressions.len() {
                 let placeholder = format!("${}", index + 1);
                 sql_column += placeholder.len() as u32;

@@ -94,7 +94,7 @@ impl ServerRouteVisitor<'_> {
             return;
         };
         for prop in &object.properties {
-            let Some(key) = prop.key.static_name() else {
+            let Some(key) = crate::ast::property_key_name(&prop.key) else {
                 continue;
             };
             for local in binding_names(&prop.value) {
@@ -144,8 +144,8 @@ impl ServerRouteVisitor<'_> {
             return;
         };
         let local = import.id.name.as_str();
-        self.record_commonjs_module(local, source);
-        if is_client_http_module(source) {
+        self.record_commonjs_module(local, source.as_ref());
+        if is_client_http_module(source.as_ref()) {
             self.client_http_names.insert(local.to_string());
         }
         self.facts.imports.push(ImportBinding {
@@ -156,10 +156,12 @@ impl ServerRouteVisitor<'_> {
     }
 }
 
-fn ts_external_module_reference<'a>(reference: &'a TSModuleReference<'a>) -> Option<&'a str> {
+fn ts_external_module_reference<'a>(
+    reference: &'a TSModuleReference<'a>,
+) -> Option<std::borrow::Cow<'a, str>> {
     match reference {
         TSModuleReference::ExternalModuleReference(reference) => {
-            Some(reference.expression.value.as_str())
+            Some(crate::ast::js_literal(&reference.expression))
         }
         _ => None,
     }

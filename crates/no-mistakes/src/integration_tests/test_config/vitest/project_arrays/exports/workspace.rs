@@ -50,10 +50,15 @@ pub(super) fn workspace_exported_options(
             }
             Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => {
                 for specifier in &export.specifiers {
-                    if specifier.export_kind.is_type() || specifier.exported.name() != exported {
+                    if specifier.export_kind.is_type()
+                        || crate::ast::module_export_name(&specifier.exported) != exported
+                    {
                         continue;
                     }
-                    return workspace_local_options(specifier.local.name().as_str(), ctx);
+                    return workspace_local_options(
+                        crate::ast::module_export_name(&specifier.local).as_ref(),
+                        ctx,
+                    );
                 }
             }
             Statement::ExportDeclaration(export) => {
@@ -65,11 +70,14 @@ pub(super) fn workspace_exported_options(
             }
             Statement::ExportFromDeclaration(export) if !export.export_kind.is_type() => {
                 for specifier in &export.specifiers {
-                    if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
+                    if !specifier.export_kind.is_type()
+                        && crate::ast::module_export_name(&specifier.exported) == exported
+                    {
                         return imported_workspace_options(
                             &ImportBinding {
-                                source: export.source.value.to_string(),
-                                imported: specifier.local.name().to_string(),
+                                source: crate::ast::js_literal(&export.source).into_owned(),
+                                imported: crate::ast::module_export_name(&specifier.local)
+                                    .into_owned(),
                             },
                             ctx,
                         );
@@ -81,7 +89,7 @@ pub(super) fn workspace_exported_options(
                     && export.exported.is_none()
                     && !export.export_kind.is_type() =>
             {
-                star_sources.push(export.source.value.to_string());
+                star_sources.push(crate::ast::js_literal(&export.source).into_owned());
             }
             _ => {}
         }

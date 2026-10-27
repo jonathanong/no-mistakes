@@ -39,7 +39,7 @@ pub(super) fn bind(pattern: &BindingPattern<'_>, value: Value, env: &mut Environ
             };
             for property in &object.properties {
                 let value = static_property_key_name(&property.key)
-                    .and_then(|name| values.get(name))
+                    .and_then(|name| values.get(name.as_ref()))
                     .map(|(value, _)| value.clone())
                     .unwrap_or(Value::Unknown);
                 bind(&property.value, value, env);

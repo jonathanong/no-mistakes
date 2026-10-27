@@ -78,7 +78,8 @@ impl ImportCollector {
                             return None;
                         };
                         (crate::codebase::ts_source::static_property_key_name(&candidate.key)
-                            == Some(key))
+                            .as_deref()
+                            == Some(key.as_ref()))
                         .then_some(&candidate.value)
                     }) else {
                         continue;

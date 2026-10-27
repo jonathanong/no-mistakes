@@ -104,7 +104,12 @@ impl<'a> Visit<'a> for Runtime<'_> {
         member: &oxc_ast::ast::ComputedMemberExpression<'a>,
     ) {
         if let Expression::StringLiteral(key) = unwrap_ts_wrappers(&member.expression) {
-            self.record(&member.object, false, key.value.as_str(), member.span);
+            self.record(
+                &member.object,
+                false,
+                crate::ast::js_literal(key).as_ref(),
+                member.span,
+            );
         }
         walk::walk_computed_member_expression(self, member);
     }
@@ -125,7 +130,7 @@ impl<'a> Visit<'a> for Runtime<'_> {
 fn field_name(key: &oxc_ast::ast::PropertyKey<'_>) -> Option<(bool, String)> {
     match key {
         oxc_ast::ast::PropertyKey::PrivateIdentifier(name) => Some((true, name.name.to_string())),
-        _ => key.static_name().map(|name| (false, name.to_string())),
+        _ => crate::ast::property_key_name(key).map(|name| (false, name.to_string())),
     }
 }
 impl Runtime<'_> {

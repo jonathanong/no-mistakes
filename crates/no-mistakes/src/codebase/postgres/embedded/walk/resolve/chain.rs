@@ -2,7 +2,10 @@ use super::super::super::tags::{interpolating_untrusted_tag, SqlTagNames};
 use super::super::super::unpublished_sql_text;
 use super::functions::provenance::RecoveredSql;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{Argument, BinaryOperator, CallExpression, Expression};
+use oxc_ast::ast::{BinaryOperator, CallExpression, Expression};
+
+mod helpers;
+use helpers::{append_argument, is_identifier};
 
 /// Resolves a fluent `.append()` chain (or `+` composition, or a call into
 /// a same-file statically-composed function) into its SQL text.
@@ -30,7 +33,7 @@ pub(super) fn resolve_expr(
         Expression::StringLiteral(literal) => Some(RecoveredSql::literal(
             expr,
             source,
-            literal.value.to_string(),
+            crate::ast::js_literal(literal).into_owned(),
         )),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => Some(
             RecoveredSql::literal(expr, source, unpublished_sql_text(expr)?),
@@ -188,17 +191,4 @@ fn resolve_call(
         Expression::Identifier(ident) => lookup(call, ident.name.as_str(), depth),
         _ => None,
     }
-}
-
-fn append_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a>> {
-    match call.arguments.first()? {
-        Argument::SpreadElement(_) => None,
-        other => other.as_expression(),
-    }
-}
-
-/// `name.append(..)` mutates the builder `name` in place and returns it, so a
-/// bare name is never a copy to resolve as the chain's base.
-fn is_identifier(expr: &Expression<'_>) -> bool {
-    matches!(unwrap_ts_wrappers(expr), Expression::Identifier(_))
 }

@@ -10,7 +10,7 @@ pub fn sql_text(expr: &Expression<'_>) -> Option<String> {
 
 pub(in crate::codebase::postgres) fn unpublished_sql_text(expr: &Expression<'_>) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
         Expression::TemplateLiteral(template) => Some(template_sql_text(template, false)),
         Expression::TaggedTemplateExpression(tagged) => {
             let use_raw = tags::is_string_raw_tag_spelling(&tagged.tag);
@@ -44,7 +44,7 @@ fn template_sql_text(template: &TemplateLiteral<'_>, use_raw: bool) -> String {
         if index > 0 {
             out.push_str(&placeholders::internal_placeholder(index));
         }
-        out.push_str(tags::quasi_text(quasi, use_raw));
+        out.push_str(&tags::quasi_text(quasi, use_raw));
     }
     out
 }

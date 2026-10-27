@@ -41,7 +41,7 @@ pub(crate) fn extract_program_with_references(
         }
         let Some(specifiers) = &import.specifiers else {
             side_effect_imports.push(StorybookSideEffectImport {
-                source: import.source.value.as_str().to_string(),
+                source: crate::ast::js_literal(&import.source).into_owned(),
                 line: crate::codebase::ts_source::byte_offset_to_line(
                     source,
                     import.span.start as usize,
@@ -58,7 +58,7 @@ pub(crate) fn extract_program_with_references(
                 continue;
             }
             used_runtime_imports.push(UsedRuntimeImport {
-                source: import.source.value.as_str().to_string(),
+                source: crate::ast::js_literal(&import.source).into_owned(),
                 imported,
                 local: local.to_string(),
                 namespace: matches!(
@@ -85,7 +85,7 @@ fn imported_name(specifier: &ImportDeclarationSpecifier<'_>) -> Option<String> {
         ImportDeclarationSpecifier::ImportSpecifier(specifier)
             if !specifier.import_kind.is_type() =>
         {
-            Some(specifier.imported.name().to_string())
+            Some(crate::ast::module_export_name(&specifier.imported).into_owned())
         }
         ImportDeclarationSpecifier::ImportSpecifier(_) => None,
     }

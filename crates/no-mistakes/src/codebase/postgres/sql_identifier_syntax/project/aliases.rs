@@ -57,7 +57,8 @@ impl<'a> Visit<'a> for Aliases<'_, '_> {
                             && object.rest.is_none() =>
                     {
                         let property = &object.properties[0];
-                        if property.key.static_name().as_deref() != Some("query") {
+                        if crate::ast::property_key_name(&property.key).as_deref() != Some("query")
+                        {
                             continue;
                         }
                         let BindingPattern::BindingIdentifier(alias) = &property.value else {

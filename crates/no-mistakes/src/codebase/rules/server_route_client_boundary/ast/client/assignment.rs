@@ -73,15 +73,11 @@ impl<'a> ClientHttpVisitor<'a> {
             }
             AssignmentTargetProperty::AssignmentTargetPropertyProperty(prop) => {
                 let names = assignment_target_maybe_default_names(&prop.binding);
-                if prop
-                    .name
-                    .static_name()
+                if crate::ast::property_key_name(&prop.name)
                     .is_some_and(|key| is_client_method_name(key.as_ref()))
                 {
                     self.assign_client_callee_names(names);
-                } else if prop
-                    .name
-                    .static_name()
+                } else if crate::ast::property_key_name(&prop.name)
                     .is_some_and(|key| is_client_factory_member(&key))
                 {
                     self.assign_client_factory_callee_names(names);

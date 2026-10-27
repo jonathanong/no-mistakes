@@ -55,7 +55,7 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
         span: (outer.span.start, outer.span.end),
         export,
         proof: text.map_or(HeadProof::Unproven, |sql| {
-            if crate::codebase::postgres::sql_requires_query_annotation(sql) {
+            if crate::codebase::postgres::sql_requires_query_annotation(&sql) {
                 HeadProof::Missing
             } else {
                 HeadProof::Literal
@@ -65,16 +65,14 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
 }
 
 // Share the exact literal grammar for SQL arguments and computed export keys.
-fn literal_text<'a>(expression: &'a Expression<'a>) -> Option<&'a str> {
+fn literal_text<'a>(expression: &'a Expression<'a>) -> Option<std::borrow::Cow<'a, str>> {
     match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(literal) => Some(literal.value.as_str()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal)),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => template
             .quasis
-            .first()?
-            .value
-            .cooked
-            .as_ref()
-            .map(|text| text.as_str()),
+            .first()
+            .filter(|part| part.value.cooked.is_some())
+            .map(crate::ast::template_quasi_text),
         _ => None,
     }
 }

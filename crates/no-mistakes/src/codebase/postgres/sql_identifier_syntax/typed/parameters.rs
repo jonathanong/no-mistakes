@@ -67,7 +67,7 @@ impl Typed {
     }
     fn object_parameter(&mut self, object: &ObjectPattern<'_>, ty: Option<&TSType<'_>>) {
         for property in &object.properties {
-            let Some(key) = property.key.static_name() else {
+            let Some(key) = crate::ast::property_key_name(&property.key) else {
                 // An unresolved key retains possible uses without proving an executor.
                 if let Some(ty) = ty {
                     self.unknown_pattern(&property.value, ty);
@@ -79,7 +79,7 @@ impl Typed {
                     let TSSignature::TSPropertySignature(signature) = member else {
                         return None;
                     };
-                    (signature.key.static_name().as_deref() == Some(key.as_ref()))
+                    (crate::ast::property_key_name(&signature.key).as_deref() == Some(key.as_ref()))
                         .then(|| {
                             signature
                                 .type_annotation

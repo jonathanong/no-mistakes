@@ -16,7 +16,7 @@ pub(super) fn receiver_path<'e>(expression: &'e Expression<'_>) -> Option<(&'e s
             match unwrap_ts_wrappers(&member.expression) {
                 Expression::StringLiteral(key) => {
                     path.push('.');
-                    path.push_str(key.value.as_str());
+                    path.push_str(crate::ast::js_literal(key).as_ref());
                 }
                 _ => path.push_str("[]"),
             }

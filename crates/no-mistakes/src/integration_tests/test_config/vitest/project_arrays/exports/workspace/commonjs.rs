@@ -51,5 +51,5 @@ fn direct_literal_require(expression: &Expression<'_>) -> Option<String> {
     let [Argument::StringLiteral(source)] = call.arguments.as_slice() else {
         return None;
     };
-    Some(source.value.to_string())
+    Some(crate::ast::js_literal(source).into_owned())
 }

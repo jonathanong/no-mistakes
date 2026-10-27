@@ -1,4 +1,5 @@
 use super::{shared, Options};
+use crate::ast::js_literal;
 use crate::codebase::ts_resolver::ImportResolution;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
@@ -31,7 +32,7 @@ mod exports;
 mod expression_options;
 mod function_returns;
 pub(in crate::integration_tests::test_config::vitest) mod imports;
-use crate::integration_tests::test_config::shared_project_arrays::members::{self, MemberOps};
+use crate::integration_tests::test_config::shared_project_arrays::members;
 mod objects;
 mod project_entries;
 mod root_options;
@@ -40,7 +41,9 @@ mod string_projects;
 
 use crate::integration_tests::test_config::shared_project_arrays::top_level_function_bodies;
 use crate::integration_tests::test_config::shared_project_arrays::{Context as Ctx, ExprMap};
-use expression_options::{expression_options, helper_expression_options, imported_options};
+use expression_options::{
+    expression_options, helper_expression_options, imported_options, member_ops,
+};
 use function_returns::body_return_options;
 use imports::{direct_literal_require_binding, import_bindings, ImportBinding};
 use project_entries::{
@@ -53,17 +56,6 @@ pub(in crate::integration_tests::test_config::vitest) use string_projects::{
     string_project_roots_with_resolver,
 };
 use string_projects::{string_project_options_for_paths, string_project_paths};
-
-fn member_ops() -> MemberOps<Options> {
-    MemberOps {
-        expression_options,
-        imported_options,
-        exported_options: exports::exported_options,
-        expression_object: objects::expression_object,
-        import_bindings,
-        default_identifier_reexport: true,
-    }
-}
 
 pub(super) fn project_options(
     program: &Program<'_>,
@@ -160,7 +152,7 @@ pub(super) fn array_options(
                     if let Expression::StringLiteral(project_config) =
                         unwrap_ts_wrappers(expression)
                     {
-                        for path in string_project_paths(project_config.value.as_str(), ctx) {
+                        for path in string_project_paths(js_literal(project_config).as_ref(), ctx) {
                             if string_paths.included.contains(&path)
                                 && !excluded_paths.contains(&path)
                                 && parsed_string_paths.insert(path.clone())
@@ -172,7 +164,7 @@ pub(super) fn array_options(
                             }
                         }
                         for root in string_projects::string_project_roots(
-                            project_config.value.as_str().trim_start_matches('!'),
+                            js_literal(project_config).as_ref().trim_start_matches('!'),
                             ctx,
                         ) {
                             if string_roots.included.contains(&root)
