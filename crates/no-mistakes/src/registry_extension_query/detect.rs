@@ -20,7 +20,7 @@ impl<'a> Visit<'a> for ImportCollector {
         for spec in specifiers {
             let (symbol, local, kind) = match spec {
                 ImportDeclarationSpecifier::ImportSpecifier(s) => (
-                    s.imported.name().to_string(),
+                    crate::ast::module_export_name(&s.imported).into_owned(),
                     s.local.name.as_str().to_string(),
                     "static",
                 ),

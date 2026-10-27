@@ -159,9 +159,8 @@ fn exported_member_options<T>(
             let Statement::ExportAllDeclaration(export) = statement else {
                 continue;
             };
-            if export.export_kind.is_type()
-                || export.exported.as_ref().map(|n| n.name()) != Some(exported.into())
-            {
+            let exported_name = export.exported.as_ref().map(crate::ast::module_export_name);
+            if export.export_kind.is_type() || exported_name.as_deref() != Some(exported) {
                 continue;
             }
             let binding = ImportBinding {

@@ -14,12 +14,14 @@ pub(in crate::integration_tests::test_config) fn sourced_reexport(
             continue;
         }
         for specifier in &export.specifiers {
-            if specifier.export_kind.is_type() || specifier.exported.name() != exported {
+            if specifier.export_kind.is_type()
+                || crate::ast::module_export_name(&specifier.exported) != exported
+            {
                 continue;
             }
             return Some(ImportBinding {
                 source: crate::ast::js_literal(&export.source).into_owned(),
-                imported: specifier.local.name().to_string(),
+                imported: crate::ast::module_export_name(&specifier.local).into_owned(),
             });
         }
     }
@@ -53,10 +55,14 @@ pub(in crate::integration_tests::test_config) fn imported_reexport(
             continue;
         }
         for specifier in &export.specifiers {
-            if specifier.export_kind.is_type() || specifier.exported.name() != exported {
+            if specifier.export_kind.is_type()
+                || crate::ast::module_export_name(&specifier.exported) != exported
+            {
                 continue;
             }
-            if let Some(import) = imports.get(specifier.local.name().as_str()) {
+            if let Some(import) =
+                imports.get(crate::ast::module_export_name(&specifier.local).as_ref())
+            {
                 return Some(import.clone());
             }
         }
@@ -97,12 +103,14 @@ pub(in crate::integration_tests::test_config) fn named_export_object<'a>(
             continue;
         };
         for specifier in &export.specifiers {
-            if specifier.export_kind.is_type() || specifier.exported.name() != exported {
+            if specifier.export_kind.is_type()
+                || crate::ast::module_export_name(&specifier.exported) != exported
+            {
                 continue;
             }
-            let local = specifier.local.name();
+            let local = crate::ast::module_export_name(&specifier.local);
             if let Some(object) = bindings
-                .get(local.as_str())
+                .get(local.as_ref())
                 .and_then(|expression| expression_object(expression, bindings))
             {
                 return Some(object);

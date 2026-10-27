@@ -25,10 +25,12 @@ pub(in crate::integration_tests::test_config) fn named_export_options<T>(
     ops: &DeclarationOps<T>,
 ) -> Option<Result<Vec<T>>> {
     for specifier in &export.specifiers {
-        if specifier.export_kind.is_type() || specifier.exported.name() != exported {
+        if specifier.export_kind.is_type()
+            || crate::ast::module_export_name(&specifier.exported) != exported
+        {
             continue;
         }
-        let local = specifier.local.name().to_string();
+        let local = crate::ast::module_export_name(&specifier.local).into_owned();
         if let Some(expression) = ctx.bindings.get(&local).copied() {
             return Some((ops.expression_options)(expression, ctx));
         }
@@ -78,15 +80,17 @@ pub(in crate::integration_tests::test_config) fn export_from_options<T>(
         return None;
     }
     export.specifiers.iter().find_map(|specifier| {
-        (!specifier.export_kind.is_type() && specifier.exported.name() == exported).then(|| {
-            (ops.imported_options)(
-                &ImportBinding {
-                    source: crate::ast::js_literal(&export.source).into_owned(),
-                    imported: specifier.local.name().to_string(),
-                },
-                ctx,
-            )
-        })
+        (!specifier.export_kind.is_type()
+            && crate::ast::module_export_name(&specifier.exported) == exported)
+            .then(|| {
+                (ops.imported_options)(
+                    &ImportBinding {
+                        source: crate::ast::js_literal(&export.source).into_owned(),
+                        imported: crate::ast::module_export_name(&specifier.local).into_owned(),
+                    },
+                    ctx,
+                )
+            })
     })
 }
 

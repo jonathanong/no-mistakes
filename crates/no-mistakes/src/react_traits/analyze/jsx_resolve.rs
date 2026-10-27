@@ -110,8 +110,8 @@ pub(crate) fn collect_local_components(program: &Program<'_>) -> HashMap<String,
             Statement::ExportNamedDeclaration(e) => {
                 // `export { Foo, Bar as Baz }` — local symbol -> exported name
                 for spec in &e.specifiers {
-                    let local = spec.local.name().as_ref().to_string();
-                    let exported = spec.exported.name().as_ref().to_string();
+                    let local = crate::ast::module_export_name(&spec.local).into_owned();
+                    let exported = crate::ast::module_export_name(&spec.exported).into_owned();
                     if is_component_name(&local) {
                         map.insert(local, exported);
                     }

@@ -74,7 +74,8 @@ fn public_workspace_call(callee: &Expression<'_>, program: &Program<'_>) -> bool
                     ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
                         !namespace
                             && !specifier.import_kind.is_type()
-                            && specifier.imported.name() == "defineWorkspace"
+                            && crate::ast::module_export_name(&specifier.imported)
+                                == "defineWorkspace"
                             && specifier.local.name == name
                     }
                     ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {

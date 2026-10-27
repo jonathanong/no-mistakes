@@ -55,8 +55,9 @@ that string contains a lone surrogate.
 Source spelling is retained for legacy braced and separated surrogate escapes;
 spans continue to point into the original UTF-8 source.
 
-Ordinary UTF-8 values borrow arena storage. Compatibility conversion allocates
-only when the prior string representation requires it. Consumers use the shared
+Ordinary unescaped UTF-8 values borrow arena storage. Unusual escape spellings
+can require a temporary decoding buffer even when the final value still borrows.
+Consumers use the shared
 literal, template, property, and module-name helpers rather than diagnostic
 formatting or dropping values without a UTF-8 view. The parser gateway also keeps
 legacy fatal module-name diagnostics before facts are extracted. These adapters

@@ -1,11 +1,11 @@
 //! Keep Oxc 0.153's fatal rejection of spelling-sensitive surrogate names.
+use super::ParserReturn;
 use oxc_allocator::{Allocator, Dummy, Vec};
 use oxc_ast::ast::{
     Declaration, ImportDeclarationSpecifier, ModuleExportName, Program, Statement,
     TSNamespaceDeclarationBody,
 };
 use oxc_diagnostics::OxcDiagnostic;
-use oxc_parser::ParserReturn;
 use oxc_span::Span;
 
 pub(super) fn enforce<'a>(

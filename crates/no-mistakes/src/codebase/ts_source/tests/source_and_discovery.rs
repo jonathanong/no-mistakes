@@ -89,7 +89,10 @@ fn source_helpers_cover_paths_lines_wrappers_and_property_names() {
         let _ = unwrap_ts_wrappers(&prop.value);
     }
 
-    assert_eq!(names, vec![Some("plain"), Some("quoted"), None]);
+    assert_eq!(
+        names.iter().map(Option::as_deref).collect::<Vec<_>>(),
+        vec![Some("plain"), Some("quoted"), None]
+    );
     assert_eq!(normalize_discovery_path(Path::new("")), Path::new("."));
 }
 

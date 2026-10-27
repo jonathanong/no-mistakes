@@ -49,8 +49,12 @@ pub(super) fn default_expression<'a>(
             }
             Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => {
                 for specifier in &export.specifiers {
-                    if !specifier.export_kind.is_type() && specifier.exported.name() == "default" {
-                        return bindings.get(specifier.local.name().as_str()).copied();
+                    if !specifier.export_kind.is_type()
+                        && crate::ast::module_export_name(&specifier.exported) == "default"
+                    {
+                        return bindings
+                            .get(crate::ast::module_export_name(&specifier.local).as_ref())
+                            .copied();
                     }
                 }
             }

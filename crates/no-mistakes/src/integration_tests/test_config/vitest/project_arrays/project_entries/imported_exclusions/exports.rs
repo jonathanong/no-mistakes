@@ -59,8 +59,13 @@ pub(super) fn exported_expression<'a>(
             }
             Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => {
                 export.specifiers.iter().find_map(|specifier| {
-                    (!specifier.export_kind.is_type() && specifier.exported.name() == exported)
-                        .then(|| bindings.get(specifier.local.name().as_str()).copied())
+                    (!specifier.export_kind.is_type()
+                        && crate::ast::module_export_name(&specifier.exported) == exported)
+                        .then(|| {
+                            bindings
+                                .get(crate::ast::module_export_name(&specifier.local).as_ref())
+                                .copied()
+                        })
                         .flatten()
                 })
             }
@@ -107,8 +112,12 @@ pub(super) fn exported_function_body<'a>(
             }
             Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => {
                 for specifier in &export.specifiers {
-                    if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
-                        return functions.get(specifier.local.name().as_str()).copied();
+                    if !specifier.export_kind.is_type()
+                        && crate::ast::module_export_name(&specifier.exported) == exported
+                    {
+                        return functions
+                            .get(crate::ast::module_export_name(&specifier.local).as_ref())
+                            .copied();
                     }
                 }
             }

@@ -79,7 +79,7 @@ fn build_import_table_inner(
                         s.local.name.to_string(),
                         ImportEntry {
                             resolved_path: resolved.clone(),
-                            exported_name: s.imported.name().to_string(),
+                            exported_name: crate::ast::module_export_name(&s.imported).into_owned(),
                         },
                     );
                 }
