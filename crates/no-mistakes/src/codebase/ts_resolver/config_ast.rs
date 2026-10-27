@@ -41,7 +41,8 @@ fn collect_path_mappings(
                     .filter_map(|value| {
                         value
                             .as_string_lit()
-                            .map(|literal| literal.value.to_string())
+                            // JSONC stores decoded UTF-8 in Cow<str>, not OXC JSStr.
+                            .map(|literal| literal.value.clone().into_owned())
                     })
                     .collect()
             })

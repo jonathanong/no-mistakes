@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@replacement/*": ["./\uFFFD/*"],
+      "@marker/*": ["./\uFFFDd800/*"],
+      "@escaped/*": ["./\\uD800/*"],
+      "@paired/*": ["./\uD800\uDC00/*"],
+      "@plain/*": ["./normal/*"]
+    }
+  }
+}
