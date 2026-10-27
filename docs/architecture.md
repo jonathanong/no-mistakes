@@ -57,8 +57,8 @@ spans continue to point into the original UTF-8 source.
 
 Ordinary unescaped UTF-8 values borrow arena storage. Unusual escape spellings
 can require a temporary decoding buffer even when the final value still borrows.
-Consumers use the shared
-literal, template, property, and module-name helpers rather than diagnostic
+Consumers use the shared literal, template, property, and module-name helpers
+rather than diagnostic
 formatting or dropping values without a UTF-8 view. The parser gateway also keeps
 legacy fatal module-name diagnostics before facts are extracted. These adapters
 reuse the parsed source and AST without another parse or persistent state.
