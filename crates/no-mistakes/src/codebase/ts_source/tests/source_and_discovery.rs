@@ -64,6 +64,19 @@ fn source_helpers_cover_paths_lines_wrappers_and_property_names() {
         relative_slash_path(Path::new("/repo"), Path::new("/repo/src\\file.ts")),
         "src/file.ts"
     );
+    // canonicalize() on Windows stores the root as \\?\D:\... while the config
+    // path stays D:\.... The finding file must still be relative.
+    assert_eq!(
+        relative_slash_path(
+            Path::new(r"\\?\D:\repo\fixture"),
+            Path::new(r"D:\repo\fixture\stale.yml")
+        ),
+        "stale.yml"
+    );
+    assert_eq!(
+        relative_slash_path(Path::new(r"\\?\D:\repo"), Path::new(r"D:\other\file.yml")),
+        "D:/other/file.yml"
+    );
     assert_eq!(line_number("a\nb\nc", 2), 2);
 
     let allocator = Allocator::default();

@@ -47,10 +47,34 @@ pub fn discover_with_basenames(
 }
 
 pub fn relative_slash_path(root: &Path, path: &Path) -> String {
-    path.strip_prefix(root)
-        .unwrap_or(path)
-        .to_string_lossy()
-        .replace('\\', "/")
+    if let Ok(relative) = path.strip_prefix(root) {
+        return relative.to_string_lossy().replace('\\', "/");
+    }
+    // `Path::canonicalize` on Windows prefixes `\\?\`, so the check root and a
+    // config path can name the same file and still fail `strip_prefix`.
+    let root = without_verbatim_prefix(&root.to_string_lossy().replace('\\', "/"));
+    let path = without_verbatim_prefix(&path.to_string_lossy().replace('\\', "/"));
+    if root.is_empty() {
+        return path;
+    }
+    if path == root {
+        return String::new();
+    }
+    let prefix = format!("{root}/");
+    path.strip_prefix(&prefix)
+        .unwrap_or(&path)
+        .to_string()
+}
+
+fn without_verbatim_prefix(path: &str) -> String {
+    let Some(rest) = path.strip_prefix("//?/") else {
+        return path.to_string();
+    };
+    if let Some(unc) = rest.strip_prefix("UNC/") {
+        format!("//{unc}")
+    } else {
+        rest.to_string()
+    }
 }
 
 /// Detect absolute paths from either native or Windows syntax. Finding paths
