@@ -35,6 +35,16 @@ fn json_configs_report_the_unknown_key() {
 }
 
 #[test]
+fn merge_keys_get_a_hint_to_write_the_keys_out() {
+    let error = check("merge-key.yml").unwrap_err().to_string();
+    assert!(error.contains("unknown key `<<`"), "{error}");
+    assert!(error.contains("merge keys"), "{error}");
+    assert!(error.contains("on each entry"), "{error}");
+    let plain = check("unknown.json").unwrap_err().to_string();
+    assert!(!plain.contains("merge keys"), "{plain}");
+}
+
+#[test]
 fn non_string_keys_are_rejected_with_a_debug_name() {
     let error = check("numeric-key.yml").unwrap_err().to_string();
     assert!(error.contains("unknown key `Number(1)`"), "{error}");

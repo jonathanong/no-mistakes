@@ -25,6 +25,10 @@ Supported keys: name, rule, message, enabled, projects, tests, scope, include,
 exclude, options, severity. ...
 ```
 
+YAML merge keys (`<<: *base`) are not supported on rule entries: `<<` is
+rejected as an unknown key, and the error adds a hint to write the shared keys
+out on each entry instead.
+
 ### Severity
 
 `severity: error | advisory` defaults to `error`, which fails `check` when the
@@ -42,12 +46,18 @@ rules:
     severity: advisory
 ```
 
-Severity is applied after suppression directives, to the findings the rule
-puts in the `rules` and `codebase` sections of the check report. When a rule
+Severity applies to the findings the rule puts in the `rules` and `codebase`
+sections of the check report. Disable directives suppress an advisory rule's
+findings exactly as they do an `error` rule's, so a suppressed finding appears
+only in `suppressed`. When a rule
 has several enabled applications, its findings are advisory only if every
 application is `advisory`; one `error` application keeps the rule failing.
-Findings of the `react`, `queues` and `integration` sections, warnings, and
-`reportUnusedDisableDirectives` diagnostics keep their own failure policies.
+A demoted `unique-exports` finding is converted to a rule finding, so it loses
+its `exportName` and `exportKind` fields. Findings of the `react`, `queues`
+and `integration` sections are not demoted because those sections are enabled by
+project config, not by `rules:` entries, so there is no rule entry to carry a
+`severity`. Warnings and `reportUnusedDisableDirectives` diagnostics also keep
+their own failure policies.
 
 The repository setting `reportUnusedDisableDirectives: advise | report | ignore`
 audits disable comments independently of rule applications. Its default is

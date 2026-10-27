@@ -30,10 +30,16 @@ pub(super) fn validate(source: &str, path: &Path) -> Result<()> {
                     locations.line(&ConfigPath::default().key("rules").index(index).key(&name))
                 })
                 .unwrap_or(1);
+            let hint = if name == "<<" {
+                " YAML merge keys (`<<`) are not supported on rule entries; \
+                 write the shared keys out on each entry instead."
+            } else {
+                ""
+            };
             anyhow::bail!(
                 "{}:{location}: rules[{index}] (rule `{id}`) has unknown key `{name}`. \
                  Supported keys: {}. An unknown key would be silently ignored, \
-                 so fix the spelling or remove it.",
+                 so fix the spelling or remove it.{hint}",
                 path.display(),
                 RuleDef::SUPPORTED_KEYS.join(", ")
             );

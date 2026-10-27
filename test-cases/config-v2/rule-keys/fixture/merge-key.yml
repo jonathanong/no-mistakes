@@ -1,0 +1,5 @@
+base: &base
+  scope: repository
+rules:
+  - rule: unique-exports
+    <<: *base
