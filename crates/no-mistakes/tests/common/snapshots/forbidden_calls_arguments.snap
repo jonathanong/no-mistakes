@@ -17,6 +17,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "forbidden call (no-live-analyzer-from-tests, application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "processes.execFile(process.execPath, [cli, 'check'], { cwd: repository }, () => {})",
           "target": "module export `node:child_process#execFile`"
         },
         {
@@ -25,6 +26,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "forbidden call (no-live-analyzer-from-tests, application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "run(process.execPath, liveArgs, liveOptions, () => {})",
           "target": "module export `node:child_process#execFile`"
         }
       ],
@@ -46,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "forbidden call (destructuring-policy, application #1): unknown arguments for exact `execute`",
           "rule": "forbidden-calls",
+          "sourceLine": "execute(argv, cwd);",
           "target": "unknown arguments for exact `execute`"
         }
       ],
@@ -79,6 +82,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "forbidden call (documented-argument-policy, application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "processes.execFile(process.execPath, [cli, 'check'], { cwd: repository }, () => {})",
           "target": "module export `node:child_process#execFile`"
         },
         {
@@ -87,6 +91,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "forbidden call (documented-argument-policy, application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "run(process.execPath, liveArgs, liveOptions, () => {})",
           "target": "module export `node:child_process#execFile`"
         }
       ],
@@ -108,6 +113,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "forbidden call (escape-policy, application #1): unknown arguments for exact `execute`",
           "rule": "forbidden-calls",
+          "sourceLine": "export function invoke() { execute(command, argv, options); }",
           "target": "unknown arguments for exact `execute`"
         }
       ],
@@ -141,6 +147,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "forbidden call (application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "processes.execFile(process.execPath, [cli, 'check'], { cwd: repository }, () => {})",
           "target": "module export `node:child_process#execFile`"
         },
         {
@@ -149,6 +156,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "forbidden call (application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "run(process.execPath, fixtureArgs, { cwd: fixtureRoot }, () => {})",
           "target": "module export `node:child_process#execFile`"
         },
         {
@@ -157,6 +165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "forbidden call (application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "run(process.execPath, liveArgs, liveOptions, () => {})",
           "target": "module export `node:child_process#execFile`"
         },
         {
@@ -165,6 +174,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "forbidden call (application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "run(process.execPath, [cli, 'check', '--root', fixtureRoot], { cwd: repository }, () => {})",
           "target": "module export `node:child_process#execFile`"
         }
       ],
@@ -186,6 +196,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "forbidden call (repeated-policy, application #1): unknown arguments for exact `execute`",
           "rule": "forbidden-calls",
+          "sourceLine": "export function repeat() { execute(captured); }",
           "target": "unknown arguments for exact `execute`"
         },
         {
@@ -194,6 +205,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "forbidden call (repeated-policy, application #1): unknown arguments for exact `execute`",
           "rule": "forbidden-calls",
+          "sourceLine": "for (let i = 0; i < 2; i++) { execute(looped); }",
           "target": "unknown arguments for exact `execute`"
         },
         {
@@ -202,6 +214,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "forbidden call (repeated-policy, application #1): exact `execute`",
           "rule": "forbidden-calls",
+          "sourceLine": "export function fresh() { const local = ['--root']; execute(local); }",
           "target": "exact `execute`"
         },
         {
@@ -210,6 +223,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "forbidden call (repeated-policy, application #1): unknown arguments for exact `execute`",
           "rule": "forbidden-calls",
+          "sourceLine": "class RepeatedInstance { value = execute(captured); }",
           "target": "unknown arguments for exact `execute`"
         }
       ],
@@ -231,6 +245,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "forbidden call (repeated-policy, application #1): exact `execute`",
           "rule": "forbidden-calls",
+          "sourceLine": "export function fresh() { const local = ['--root']; execute(local); }",
           "target": "exact `execute`"
         }
       ],
@@ -252,6 +267,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "forbidden call (application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "processes.execFile(process.execPath, [cli, 'check'], { cwd: repository }, () => {})",
           "target": "module export `node:child_process#execFile`"
         },
         {
@@ -260,6 +276,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "forbidden call (application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "run(process.execPath, fixtureArgs, { cwd: fixtureRoot }, () => {})",
           "target": "module export `node:child_process#execFile`"
         },
         {
@@ -268,6 +285,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "forbidden call (application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "run(process.execPath, liveArgs, liveOptions, () => {})",
           "target": "module export `node:child_process#execFile`"
         },
         {
@@ -276,6 +294,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "forbidden call (application #1): module export `node:child_process#execFile`",
           "rule": "forbidden-calls",
+          "sourceLine": "run(process.execPath, [cli, 'check', '--root', fixtureRoot], { cwd: repository }, () => {})",
           "target": "module export `node:child_process#execFile`"
         }
       ],

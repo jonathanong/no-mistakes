@@ -28,6 +28,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": ".github/workflows/ci.yml:12: job `build` step 1 downloads `https://example.invalid/bare.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL ${BASE_URL}/bare.tgz",
           "target": "build"
         },
         {
@@ -35,6 +36,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": ".github/workflows/ci.yml:16: job `build` step 2 downloads `https://example.invalid/commented.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL \"$BASE_URL/commented.tgz\"",
           "target": "build"
         },
         {
@@ -42,6 +44,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": ".github/workflows/ci.yml:19: job `build` step 3 downloads `https://example.invalid/empty-assign.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/empty-assign.tgz",
           "target": "build"
         },
         {
@@ -49,6 +52,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": ".github/workflows/ci.yml:23: job `build` step 4 downloads `https://example.invalid/spaced-assign.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/spaced-assign.tgz",
           "target": "build"
         },
         {
@@ -56,6 +60,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 27,
           "message": ".github/workflows/ci.yml:27: job `build` step 5 downloads `https://example.invalid/trailing-junk.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/trailing-junk.tgz",
           "target": "build"
         },
         {
@@ -63,6 +68,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 30,
           "message": ".github/workflows/ci.yml:30: job `build` step 6 downloads `https://example.invalid/unclosed.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/unclosed.tgz",
           "target": "build"
         },
         {
@@ -70,6 +76,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": ".github/workflows/ci.yml:34: job `build` step 7 downloads `https://example.invalid/continued.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "https://example.invalid/continued.tgz -o continued.tgz",
           "target": "build"
         },
         {
@@ -77,6 +84,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 37,
           "message": ".github/workflows/ci.yml:37: job `build` step 8 downloads `https://example.invalid/quoted-nl.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "file\" https://example.invalid/quoted-nl.tgz",
           "target": "build"
         },
         {
@@ -84,6 +92,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 39,
           "message": ".github/workflows/ci.yml:39: job `build` step 9 downloads `https://example.invalid/dynamic.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/dynamic.tgz",
           "target": "build"
         },
         {
@@ -91,6 +100,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 45,
           "message": ".github/workflows/ci.yml:45: job `build` step 12 downloads `https://example.invalid/inline.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl --output=out.tgz --url=https://example.invalid/inline.tgz",
           "target": "build"
         },
         {
@@ -98,6 +108,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 46,
           "message": ".github/workflows/ci.yml:46: job `build` step 13 downloads `https://example.invalid/dashed.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL -- https://example.invalid/dashed.tgz",
           "target": "build"
         },
         {
@@ -105,6 +116,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 48,
           "message": ".github/workflows/ci.yml:48: job `build` step 15 downloads `https://[::1]:9/v6.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: 'curl -fsSL https://[::1]:9/v6.tgz'",
           "target": "build"
         },
         {
@@ -112,6 +124,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 49,
           "message": ".github/workflows/ci.yml:49: job `build` step 16 downloads `https://[::1]` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: 'curl -fsSL https://[::1]'",
           "target": "build"
         },
         {
@@ -119,6 +132,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 53,
           "message": ".github/workflows/ci.yml:53: job `build` step 20 downloads `https://example.invalid/file{1}.sha256` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: 'curl -fsSL https://example.invalid/file{1}.sha256'",
           "target": "build"
         },
         {
@@ -126,6 +140,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 54,
           "message": ".github/workflows/ci.yml:54: job `build` step 21 downloads `https://user:pw@example.invalid/auth.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: 'curl -fsSL https://user:pw@example.invalid/auth.tgz'",
           "target": "build"
         },
         {
@@ -133,6 +148,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 57,
           "message": ".github/workflows/ci.yml:57: job `build` step 22 downloads `https://example.invalid/bad-marker.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/bad-marker.tgz",
           "target": "build"
         },
         {
@@ -140,6 +156,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 60,
           "message": ".github/workflows/ci.yml:60: job `build` step 23 downloads `https://example.invalid/stuck-skip.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/stuck-skip.tgz",
           "target": "build"
         },
         {
@@ -147,6 +164,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 63,
           "message": ".github/workflows/ci.yml:63: job `build` step 24 downloads `https://example.invalid/no-reason.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/no-reason.tgz",
           "target": "build"
         },
         {
@@ -154,6 +172,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 70,
           "message": ".github/workflows/ci.yml:70: job `build` step 28 downloads `https://example.invalid/kept-after.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/kept-after.tgz -o kept-after.tgz",
           "target": "build"
         },
         {
@@ -161,6 +180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/complex.yml:1: job `job` step 1 downloads `https://example.invalid/complex.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "# A sequence key is not a string, number, or bool job id.",
           "target": "job"
         },
         {
@@ -168,6 +188,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/flow.yml:1: job `flow` step 1 downloads `https://example.invalid/flow.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "# Flow-style steps are not located, so the finding stays on line 1.",
           "target": "flow"
         },
         {
@@ -175,6 +196,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": ".github/workflows/jobs.yml:13: job `7` step 5 downloads `https://example.invalid/num.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/num.tgz -o num.tgz",
           "target": "7"
         },
         {
@@ -182,6 +204,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": ".github/workflows/jobs.yml:17: job `true` step 1 downloads `https://example.invalid/bool.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/bool.tgz -o bool.tgz",
           "target": "true"
         }
       ],
@@ -202,6 +225,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml:7: job `build` step 1 downloads `https://api.github.com/repos/example/tool` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl https://api.github.com/repos/example/tool",
           "target": "build"
         },
         {
@@ -209,6 +233,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml:8: job `build` step 2 downloads `http://127.0.0.1:9/health` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl http://127.0.0.1:9/health",
           "target": "build"
         }
       ],
@@ -229,6 +254,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/actions/fetch/action.yml:6: job `composite` step 1 downloads `https://example.invalid/tool.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/tool.tgz -o tool.tgz",
           "target": "composite"
         },
         {
@@ -236,6 +262,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": ".github/workflows/ci.yml:11: job `build` step 3 downloads `https://example.invalid/b.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL \"$BASE_URL/b.tgz\" -o b.tgz",
           "target": "build"
         },
         {
@@ -243,6 +270,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": ".github/workflows/ci.yml:12: job `build` step 4 downloads `https://example.invalid/c.tgz` with `wget` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: wget -O c.tgz https://example.invalid/c.tgz",
           "target": "build"
         },
         {
@@ -250,6 +278,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": ".github/workflows/ci.yml:14: job `build` step 6 downloads `https://example.invalid/tool-$VERSION.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL \"https://example.invalid/tool-$VERSION.tgz\" -o t.tgz",
           "target": "build"
         },
         {
@@ -257,6 +286,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": ".github/workflows/ci.yml:15: job `build` step 7 downloads `https://example.invalid/tool-${VERSION}/t.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL \"https://example.invalid/tool-${VERSION}/t.tgz\" -o t.tgz",
           "target": "build"
         },
         {
@@ -264,6 +294,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": ".github/workflows/ci.yml:16: job `build` step 8 downloads `https://example.invalid/${{ inputs.version }}/t.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/${{ inputs.version }}/t.tgz -o t.tgz",
           "target": "build"
         },
         {
@@ -271,6 +302,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": ".github/workflows/ci.yml:17: job `build` step 9 downloads `https://example.invalid/tool-$(uname -m).tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/tool-$(uname -m).tgz -o t.tgz",
           "target": "build"
         },
         {
@@ -278,6 +310,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": ".github/workflows/ci.yml:18: job `build` step 10 downloads `https://example.invalid/sudo.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: sudo curl -fsSL https://example.invalid/sudo.tgz -o t.tgz",
           "target": "build"
         },
         {
@@ -285,6 +318,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": ".github/workflows/ci.yml:19: job `build` step 11 downloads `https://example.invalid/envcmd.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: env FOO=1 curl -fsSL https://example.invalid/envcmd.tgz -o t.tgz",
           "target": "build"
         },
         {
@@ -292,6 +326,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": ".github/workflows/ci.yml:20: job `build` step 12 downloads `https://example.invalid/then.sh` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: if true; then curl -fsSL https://example.invalid/then.sh | sh; fi",
           "target": "build"
         },
         {
@@ -299,6 +334,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": ".github/workflows/ci.yml:21: job `build` step 13 downloads `https://example.invalid/subshell.sh` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: (curl -fsSL https://example.invalid/subshell.sh | sh)",
           "target": "build"
         },
         {
@@ -306,6 +342,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": ".github/workflows/ci.yml:22: job `build` step 14 downloads `https://example.invalid/brace.sh` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: \"{ curl -fsSL https://example.invalid/brace.sh; } | sh\"",
           "target": "build"
         },
         {
@@ -313,6 +350,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": ".github/workflows/ci.yml:23: job `build` step 15 downloads `https://example.invalid/bang.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: \"! curl -fsSL https://example.invalid/bang.tgz -o t.tgz\"",
           "target": "build"
         },
         {
@@ -320,6 +358,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 28,
           "message": ".github/workflows/ci.yml:28: job `build` step 16 downloads `https://example.invalid/after-heredoc.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/after-heredoc.tgz -o x.tgz",
           "target": "build"
         },
         {
@@ -327,6 +366,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 31,
           "message": ".github/workflows/ci.yml:31: job `build` step 17 downloads `https://example.invalid/herestring.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/herestring.tgz -o x.tgz",
           "target": "build"
         },
         {
@@ -334,6 +374,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": ".github/workflows/ci.yml:34: job `build` step 18 downloads `https://example.invalid/shift.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/shift.tgz -o x.tgz",
           "target": "build"
         },
         {
@@ -341,6 +382,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 37,
           "message": ".github/workflows/ci.yml:37: job `build` step 19 downloads `https://example.invalid/comment-apostrophe.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/comment-apostrophe.tgz -o t.tgz",
           "target": "build"
         },
         {
@@ -348,6 +390,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 39,
           "message": ".github/workflows/ci.yml:39: job `build` step 19 downloads `https://example.invalid/after-quote.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/after-quote.tgz -o t.tgz",
           "target": "build"
         },
         {
@@ -355,6 +398,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 41,
           "message": ".github/workflows/ci.yml:41: job `build` step 20 downloads `https://example.invalid/trailing-comment.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/trailing-comment.tgz -o t.tgz # it's pinned",
           "target": "build"
         },
         {
@@ -362,6 +406,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 42,
           "message": ".github/workflows/ci.yml:42: job `build` step 20 downloads `https://example.invalid/after-trailing.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/after-trailing.tgz -o t.tgz",
           "target": "build"
         },
         {
@@ -369,6 +414,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 45,
           "message": ".github/workflows/ci.yml:45: job `build` step 21 downloads `https://example.invalid/comment-shift.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/comment-shift.tgz -o t.tgz",
           "target": "build"
         },
         {
@@ -376,6 +422,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 48,
           "message": ".github/workflows/ci.yml:48: job `build` step 22 downloads `https://example.invalid/after-arith.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "curl -fsSL https://example.invalid/after-arith.tgz -o t.tgz",
           "target": "build"
         },
         {
@@ -383,6 +430,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml:7: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/a.tgz -o a.tgz",
           "target": "build"
         },
         {
@@ -390,6 +438,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/compact.yml:7: job `a` step 1 downloads `https://example.invalid/compact.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/compact.tgz -o compact.tgz",
           "target": "a"
         }
       ],
@@ -410,6 +459,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml:7: job `build` step 1 downloads `https://example.invalid/tool.tgz` with `ci_download_to` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: ci_download_to dest https://example.invalid/tool.tgz",
           "target": "build"
         }
       ],
@@ -442,6 +492,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml:8: job `build` step 2 downloads `https://api.github.com/repos/example/tool` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://api.github.com/repos/example/tool",
           "target": "build"
         }
       ],

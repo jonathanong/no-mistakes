@@ -11,6 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/allow.sql:1: key \"accountId\" written into invoice_revisions.changes has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO invoice_revisions (changes) VALUES ('{\"accountId\": \"a1\"}'::jsonb);",
           "target": "column:invoice_revisions.changes"
         },
         {
@@ -18,6 +19,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/allow.sql:2: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES ('{\"accountId\": \"a1\"}'::jsonb);",
           "target": "column:orders.details"
         },
         {
@@ -25,6 +27,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/allow.sql:3: key \"accountId\" written into orders.extra has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (extra) VALUES ('{\"accountId\": \"a1\"}'::jsonb);",
           "target": "column:orders.extra"
         }
       ],
@@ -45,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/allow.sql:1: key \"accountId\" written into invoice_revisions.changes has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO invoice_revisions (changes) VALUES ('{\"accountId\": \"a1\"}'::jsonb);",
           "target": "column:invoice_revisions.changes"
         },
         {
@@ -52,6 +56,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/allow.sql:3: key \"accountId\" written into orders.extra has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (extra) VALUES ('{\"accountId\": \"a1\"}'::jsonb);",
           "target": "column:orders.extra"
         }
       ],
@@ -72,6 +77,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/allow.sql:2: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES ('{\"accountId\": \"a1\"}'::jsonb);",
           "target": "column:orders.details"
         },
         {
@@ -79,6 +85,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/allow.sql:3: key \"accountId\" written into orders.extra has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (extra) VALUES ('{\"accountId\": \"a1\"}'::jsonb);",
           "target": "column:orders.extra"
         }
       ],
@@ -99,6 +106,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -106,6 +114,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const statement = `INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1))`; // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -113,6 +122,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -120,6 +130,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -127,6 +138,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1)); -- no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -134,6 +146,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -141,6 +154,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -148,6 +162,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -155,6 +170,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         }
       ],
@@ -175,6 +191,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/recall-conflict-fail.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "ON CONFLICT (id) DO UPDATE SET details = jsonb_build_object('accountId', $3);",
           "target": "column:orders.details"
         }
       ],
@@ -207,6 +224,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/recall-constructor-text.sql:2: key \"accountId\" written into orders.note has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (note) VALUES (jsonb_build_object('accountId', $1));",
           "target": "column:orders.note"
         }
       ],
@@ -227,6 +245,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/fail.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "VALUES ($1, jsonb_build_object('accountId', $2::text, 'total', 10));",
           "target": "column:orders.details"
         },
         {
@@ -234,6 +253,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/fail.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "UPDATE orders SET details = '{\"accountId\": \"a1\"}'::jsonb WHERE id = $1;",
           "target": "column:orders.details"
         }
       ],
@@ -254,6 +274,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "db/edges.sql:10: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "(jsonb_build_object('accountId', $2));",
           "target": "column:orders.details"
         },
         {
@@ -261,6 +282,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/edges.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO public.orders (details) VALUES (jsonb_build_object('accountId', $1)) RETURNING id",
           "target": "column:orders.details"
         },
         {
@@ -268,6 +290,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "db/edges.sql:6: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "UPDATE public.orders SET details = '{\"accountId\": \"a1\"}'::jsonb RETURNING id",
           "target": "column:orders.details"
         },
         {
@@ -275,6 +298,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "db/edges.sql:9: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "('{\"accountId\": \"a1\"}'::jsonb),",
           "target": "column:orders.details"
         }
       ],
@@ -307,6 +331,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -314,6 +339,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const statement = `INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1))`; // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -321,6 +347,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -328,6 +355,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -335,6 +363,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1)); -- no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -342,6 +371,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -349,6 +379,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -356,6 +387,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -363,6 +395,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         }
       ],
@@ -383,6 +416,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "schema-expression-index.json:8: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_lower_hash_key; confirm a relational key exists, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "\"document_sha256\": { \"dataType\": \"text\" },",
           "target": "column:invoices.document_sha256"
         }
       ],
@@ -403,6 +437,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/fail.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "VALUES ($1, jsonb_build_object('accountId', $2::text, 'total', 10));",
           "target": "column:orders.details"
         },
         {
@@ -410,6 +445,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/fail.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "UPDATE orders SET details = '{\"accountId\": \"a1\"}'::jsonb WHERE id = $1;",
           "target": "column:orders.details"
         }
       ],
@@ -430,6 +466,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 85,
           "message": "schema.json:85: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_document_key; confirm a relational key exists, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "\"document_sha256\": {",
           "target": "column:invoices.document_sha256"
         }
       ],
@@ -462,6 +499,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 79,
           "message": "schema.json:79: column invoices.number matches fingerprintNamePattern and is part of UNIQUE key invoices_account_number_key; confirm a relational key exists, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "\"number\": {",
           "target": "column:invoices.number"
         },
         {
@@ -469,6 +507,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 82,
           "message": "schema.json:82: column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_account_fingerprint_key; confirm a relational key exists, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "\"fingerprint_sha256\": {",
           "target": "column:invoices.fingerprint_sha256"
         },
         {
@@ -476,6 +515,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 82,
           "message": "schema.json:82: column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_fingerprint_key; confirm a relational key exists, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "\"fingerprint_sha256\": {",
           "target": "column:invoices.fingerprint_sha256"
         },
         {
@@ -483,6 +523,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 85,
           "message": "schema.json:85: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_document_key; confirm a relational key exists, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "\"document_sha256\": {",
           "target": "column:invoices.document_sha256"
         }
       ],
@@ -503,6 +544,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 82,
           "message": "schema.json:82: column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_account_fingerprint_key; confirm a relational key exists, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "\"fingerprint_sha256\": {",
           "target": "column:invoices.fingerprint_sha256"
         },
         {
@@ -510,6 +552,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 82,
           "message": "schema.json:82: column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_fingerprint_key; confirm a relational key exists, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "\"fingerprint_sha256\": {",
           "target": "column:invoices.fingerprint_sha256"
         },
         {
@@ -517,6 +560,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 85,
           "message": "schema.json:85: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_document_key; confirm a relational key exists, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "\"document_sha256\": {",
           "target": "column:invoices.document_sha256"
         }
       ],
@@ -561,6 +605,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -568,6 +613,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const statement = `INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1))`; // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -575,6 +621,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -582,6 +629,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -589,6 +637,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1)); -- no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -596,6 +645,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -603,6 +653,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -610,6 +661,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -617,6 +669,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         }
       ],
@@ -637,6 +690,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/literal-key-forms.sql:2: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object(E'accountId', $1));",
           "target": "column:orders.details"
         },
         {
@@ -644,6 +698,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/literal-key-forms.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object(U&'accountId', $1));",
           "target": "column:orders.details"
         },
         {
@@ -651,6 +706,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/literal-key-forms.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES (CAST(jsonb_build_object('accountId', $1) AS jsonb));",
           "target": "column:orders.details"
         }
       ],
@@ -671,6 +727,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -678,6 +735,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const statement = `INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1))`; // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -685,6 +743,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -692,6 +751,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -699,6 +759,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1)); -- no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -706,6 +767,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -713,6 +775,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -720,6 +783,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -727,6 +791,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         }
       ],
@@ -759,6 +824,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/positional-missing-ordinals.sql:2: key \"accountId\" written into positional column 1 of orders has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders VALUES (jsonb_build_object('accountId', $1));",
           "target": "table:orders"
         }
       ],
@@ -779,6 +845,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -786,6 +853,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const statement = `INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1))`; // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -793,6 +861,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -800,6 +869,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -807,6 +877,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1)); -- no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -814,6 +885,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -821,6 +893,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -828,6 +901,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -835,6 +909,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         }
       ],
@@ -867,6 +942,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -874,6 +950,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const statement = `INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1))`; // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -881,6 +958,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -888,6 +966,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -895,6 +974,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1)); -- no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -902,6 +982,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -909,6 +990,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -916,6 +998,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -923,6 +1006,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         }
       ],
@@ -943,6 +1027,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/positional.sql:2: key \"accountId\" written into positional column 1 of events has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO events VALUES (jsonb_build_object('accountId', $1));",
           "target": "table:events"
         }
       ],
@@ -963,6 +1048,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -970,6 +1056,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const statement = `INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1))`; // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -977,6 +1064,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -984,6 +1072,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -991,6 +1080,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1)); -- no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -998,6 +1088,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -1005,6 +1096,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -1012,6 +1104,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export const run = () => query(`INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1));`); // no-mistakes-disable-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         },
         {
@@ -1019,6 +1112,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-json-relation-ids",
           "target": "postgres-json-relation-ids"
         }
       ],
@@ -1039,6 +1133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/syntax-fail.sql:1: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "UPDATE orders SET (details, alternate_id) = (jsonb_build_object('accountId', $1), $1);",
           "target": "column:orders.details"
         },
         {
@@ -1046,6 +1141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/syntax-fail.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "SELECT jsonb_build_object('accountId', $1)",
           "target": "column:orders.details"
         },
         {
@@ -1053,6 +1149,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/syntax-fail.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "UNION ALL SELECT '{\"accountId\":\"a2\"}'::jsonb;",
           "target": "column:orders.details"
         },
         {
@@ -1060,6 +1157,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "db/syntax-fail.sql:5: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES (JSONB '{\"accountId\":\"a1\"}');",
           "target": "column:orders.details"
         },
         {
@@ -1067,6 +1165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "db/syntax-fail.sql:6: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES ($doc${\"accountId\":\"a1\"}$doc$::jsonb);",
           "target": "column:orders.details"
         },
         {
@@ -1074,6 +1173,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "db/syntax-fail.sql:7: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "UPDATE orders SET details = '{\"accountId\":\"a1\"}'::jsonb || jsonb_build_object('orderId', $1);",
           "target": "column:orders.details"
         },
         {
@@ -1081,6 +1181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "db/syntax-fail.sql:7: key \"orderId\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "UPDATE orders SET details = '{\"accountId\":\"a1\"}'::jsonb || jsonb_build_object('orderId', $1);",
           "target": "column:orders.details"
         },
         {
@@ -1088,6 +1189,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "db/syntax-fail.sql:8: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES (jsonb_build_object(CAST('accountId' AS text), $1));",
           "target": "column:orders.details"
         },
         {
@@ -1095,6 +1197,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "db/syntax-fail.sql:9: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES (pg_catalog.jsonb_build_object('accountId', $1));",
           "target": "column:orders.details"
         }
       ],
@@ -1127,6 +1230,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/unmapped.sql:1: key \"id\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES ('{\"orderId\": \"o1\", \"id\": \"event1\", \"parent_id\": \"p1\"}'::jsonb);",
           "target": "column:orders.details"
         },
         {
@@ -1134,6 +1238,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/unmapped.sql:1: key \"orderId\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES ('{\"orderId\": \"o1\", \"id\": \"event1\", \"parent_id\": \"p1\"}'::jsonb);",
           "target": "column:orders.details"
         },
         {
@@ -1141,6 +1246,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/unmapped.sql:1: key \"parent_id\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES ('{\"orderId\": \"o1\", \"id\": \"event1\", \"parent_id\": \"p1\"}'::jsonb);",
           "target": "column:orders.details"
         }
       ],
@@ -1161,6 +1267,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/recall-wildcards.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "SELECT jsonb_build_object('accountId', $1), source.* FROM (SELECT $2 AS id) source;",
           "target": "column:orders.details"
         },
         {
@@ -1168,6 +1275,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "db/recall-wildcards.sql:5: key \"accountId\" written into an unresolved column of orders has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "SELECT source.*, jsonb_build_object('accountId', $1) FROM (SELECT $2 AS id) source;",
           "target": "table:orders"
         },
         {
@@ -1175,6 +1283,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "db/recall-wildcards.sql:8: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "SELECT * FROM (SELECT jsonb_build_object('accountId', $1) AS details) source;",
           "target": "column:orders.details"
         }
       ],
@@ -1195,6 +1304,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/recall-wrappers-fail.sql:2: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "UPDATE orders SET details = CASE WHEN $1 THEN jsonb_build_object('accountId', $2) ELSE '{}'::jsonb END;",
           "target": "column:orders.details"
         },
         {
@@ -1202,6 +1312,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/recall-wrappers-fail.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (details) VALUES (COALESCE(NULL, jsonb_build_object('accountId', $1)));",
           "target": "column:orders.details"
         }
       ],
@@ -1234,6 +1345,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/wrong-fk.sql:2: key \"accountId\" written into loose_orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO loose_orders (account_id, details) VALUES ($1, jsonb_build_object('accountId', $1));",
           "target": "column:loose_orders.details"
         },
         {
@@ -1241,6 +1353,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/wrong-fk.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "INSERT INTO orders (alternate_id, details) VALUES ($1, '{\"accountId\": \"a1\"}'::jsonb);",
           "target": "column:orders.details"
         },
         {
@@ -1248,6 +1361,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/wrong-fk.sql:4: key \"accountId\" written into loose_orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
           "rule": "postgres-json-relation-ids",
+          "sourceLine": "UPDATE loose_orders SET account_id = $1, details = jsonb_build_object('accountId', $1);",
           "target": "column:loose_orders.details"
         }
       ],

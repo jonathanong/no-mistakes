@@ -51,7 +51,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "block_comment.rs",
           "line": 1,
           "message": "1 code lines (max 0) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "/* start"
         }
       ],
       "warnings": []
@@ -70,7 +71,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "byte_raw_string_comment_markers.rs",
           "line": 1,
           "message": "2 code lines (max 1) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "let s = br#\"/* not a comment */\"#;"
         }
       ],
       "warnings": []
@@ -89,7 +91,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "char_slash.rs",
           "line": 1,
           "message": "1 code lines (max 0) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "let c = '/';"
         }
       ],
       "warnings": []
@@ -108,7 +111,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "doc_comment.rs",
           "line": 1,
           "message": "1 code lines (max 0) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "/// doc comment"
         }
       ],
       "warnings": []
@@ -139,7 +143,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "escaped_char.rs",
           "line": 1,
           "message": "1 code lines (max 0) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "let c = '\\n';"
         }
       ],
       "warnings": []
@@ -158,7 +163,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "escaped_quote.rs",
           "line": 1,
           "message": "2 code lines (max 1) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "let s = \"\\\"/*\\\"\";"
         }
       ],
       "warnings": []
@@ -177,7 +183,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "inline_block.rs",
           "line": 1,
           "message": "1 code lines (max 0) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "let x = /* comment */ 1;"
         }
       ],
       "warnings": []
@@ -196,7 +203,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "multiline_raw_string_comment_markers.rs",
           "line": 1,
           "message": "5 code lines (max 4) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "let s = r###\""
         }
       ],
       "warnings": []
@@ -215,7 +223,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "nested_block.rs",
           "line": 1,
           "message": "1 code lines (max 0) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "/* outer /* inner */ still outer */"
         }
       ],
       "warnings": []
@@ -234,7 +243,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "raw_string_comment_markers.rs",
           "line": 1,
           "message": "2 code lines (max 1) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "let s = r#\"/* not a comment */\"#;"
         }
       ],
       "warnings": []
@@ -253,7 +263,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "simple.rs",
           "line": 1,
           "message": "3 code lines (max 2) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn foo() {"
         }
       ],
       "warnings": []
@@ -272,7 +283,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "string_block.rs",
           "line": 1,
           "message": "2 code lines (max 1) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "let s = \"/*\";"
         }
       ],
       "warnings": []
@@ -291,7 +303,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "string_line.rs",
           "line": 1,
           "message": "1 code lines (max 0) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "let s = \"//\";"
         }
       ],
       "warnings": []
@@ -310,7 +323,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "big.rs",
           "line": 1,
           "message": "10 code lines (max 3) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn f0() {}"
         }
       ],
       "warnings": []
@@ -329,7 +343,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "worker/lib.rs",
           "line": 1,
           "message": "3 code lines (max 1) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn worker_a() {}"
         }
       ],
       "warnings": []
@@ -360,7 +375,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "physical_vs_code.rs",
           "line": 1,
           "message": "3 code lines (max 2) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "// Keep comments and blank lines: this fixture distinguishes physical and code lines."
         }
       ],
       "warnings": []
@@ -379,7 +395,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "sub/big.rs",
           "line": 1,
           "message": "10 code lines (max 3) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn f0() {}"
         }
       ],
       "warnings": []
@@ -398,13 +415,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "a.rs",
           "line": 1,
           "message": "2 code lines (max 1) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn a() {}"
         },
         {
           "file": "b.rs",
           "line": 1,
           "message": "2 code lines (max 1) - split into smaller modules",
-          "rule": "rust-max-lines-per-file"
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn a() {}"
         }
       ],
       "warnings": []

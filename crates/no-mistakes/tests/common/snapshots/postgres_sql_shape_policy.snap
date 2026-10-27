@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/001.sql:5: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE deleted_at = false AND id > $1 ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/001.sql:6: LIMIT 7 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 7 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 7;",
           "target": "literal-limit"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/001.sql:6: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 7;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -50,6 +53,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE $1::boolean IS NOT NULL AND id > $2 ORDER BY id LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -57,6 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE ($1::guard_options).enabled IS TRUE AND id > $2 ORDER BY id LIMIT $3; -- The dotted field name is a label; this is a bind-only guard.",
           "target": "keyset-only-sweep"
         }
       ],
@@ -101,6 +106,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "src/fragments.mts:13: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT '🚀' AS label, sql_placeholder_1 FROM orders WHERE id > ${after} ORDER BY id LIMIT 10",
           "target": "keyset-only-sweep"
         },
         {
@@ -108,6 +114,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/fragments.mts:4: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return sql`SELECT sql_placeholder_1 FROM orders WHERE id > ${after} ORDER BY id LIMIT 10`",
           "target": "keyset-only-sweep"
         }
       ],
@@ -128,6 +135,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "sql/pages.sql:15: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > ($1::numeric)::int OR (a = ($1::numeric)::int AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -135,6 +143,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "sql/pages.sql:19: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > ($1, $2) OR (a = ($1, $2) AND b > $3) ORDER BY a, b LIMIT $4;",
           "target": "keyset-only-sweep"
         },
         {
@@ -142,6 +151,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1::int OR (a = $1 AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -149,6 +159,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "sql/pages.sql:21: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "PREPARE integer_cursor(integer, integer, integer) AS SELECT * FROM accounts WHERE a > $1::int OR (a = $1 AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -156,6 +167,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": "sql/pages.sql:23: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "PREPARE numeric_cast_cursor(numeric, numeric, integer) AS SELECT * FROM accounts WHERE a > $1::int OR (a = $1::int AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -163,6 +175,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "sql/pages.sql:8: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1::cursor_id OR (a = $1::cursor_id AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -170,6 +183,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "sql/pages.sql:9: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1::smallint OR (a = $1::smallint AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -190,6 +204,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE $1 < a OR ($1 = a AND $2 < b) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -197,6 +212,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE ($1, $2) < (a, b) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -217,6 +233,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE EXISTS (",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -261,6 +278,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: LIMIT 1000 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1000 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders ORDER BY id LIMIT 1_000;",
           "target": "literal-limit"
         },
         {
@@ -268,6 +286,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: LIMIT 100 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 100 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders ORDER BY id LIMIT 1_0_0;",
           "target": "literal-limit"
         },
         {
@@ -275,6 +294,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: LIMIT 50 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 50 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders ORDER BY id FETCH FIRST 5_0 ROWS ONLY;",
           "target": "literal-limit"
         }
       ],
@@ -307,6 +327,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: executed SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return query(`SELECT 1 FROM ${table}`);",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -339,6 +360,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "src/builders.ts:15: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query.append(sql`AND EXISTS (",
           "target": "correlated-exists-set-operation"
         },
         {
@@ -346,6 +368,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "src/builders.ts:26: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return sql`EXISTS (",
           "target": "correlated-exists-set-operation"
         },
         {
@@ -353,6 +376,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/builders.ts:5: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return sql`EXISTS (SELECT 1 FROM `",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -373,6 +397,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id = $1 LIMIT 1;",
           "target": "literal-limit"
         },
         {
@@ -380,6 +405,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: LIMIT 20 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 20 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE account_id = $1 ORDER BY id LIMIT 20;",
           "target": "literal-limit"
         },
         {
@@ -387,6 +413,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: walks every row of currencies in code order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"currencies\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT code FROM currencies ORDER BY code LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -394,6 +421,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: walks every row of public.currencies in code order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"public\".\"currencies\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT code FROM public.currencies WHERE code > $1 ORDER BY code LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -401,6 +429,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/001.sql:6: LIMIT 7 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 7 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 7;",
           "target": "literal-limit"
         },
         {
@@ -408,6 +437,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/001.sql:6: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 7;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -428,6 +458,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/builders.ts:5: SQL could not be analyzed for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return sql`EXISTS (",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -448,6 +479,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/jobs.ts:5: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "`SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 500`,",
           "target": "literal-limit"
         },
         {
@@ -455,6 +487,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/jobs.ts:5: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "`SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 500`,",
           "target": "keyset-only-sweep"
         }
       ],
@@ -475,6 +508,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "sql/pages.sql:10: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a < $1 OR (a = $1 AND b < $2) ORDER BY a DESC, b DESC LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -482,6 +516,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1 OR (a = $1 AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -489,6 +524,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a < $1 OR (a = $1 AND b < $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -509,6 +545,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/builders.ts:5: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return query.append(sql`EXISTS (",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -529,6 +566,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: walks every row of work.items in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"work.items\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM \"work.items\" ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -536,6 +574,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "(SELECT id FROM orders ORDER BY id) LIMIT $1;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -556,6 +595,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: walks every row of Orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"Orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM \"Orders\" ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -563,6 +603,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/001.sql:5: walks every row of work.Orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"work.Orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM \"work.Orders\" ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -570,6 +611,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/001.sql:6: walks every row of  orders  in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\" orders \"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM \" orders \" ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -590,6 +632,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM Orders ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -597,6 +640,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -604,6 +648,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/001.sql:6: walks every row of  orders  in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\" orders \"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM \" orders \" ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -624,6 +669,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/002.sql:3: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY;",
           "target": "literal-limit"
         }
       ],
@@ -644,6 +690,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/builders.ts:4: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query.append(sql`AND EXISTS (",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -664,6 +711,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 500;",
           "target": "keyset-only-sweep"
         },
         {
@@ -671,6 +719,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: walks every row of invoices in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"invoices\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH c AS (SELECT id FROM invoices ORDER BY id LIMIT 1000 FOR UPDATE SKIP LOCKED) DELETE FROM invoices USING c WHERE invoices.id = c.id;",
           "target": "keyset-only-sweep"
         },
         {
@@ -678,6 +727,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: walks every row of events in created_at, id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"events\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM events WHERE (created_at, id) > ($1, $2) ORDER BY created_at, id FETCH FIRST 50 ROWS ONLY;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -698,6 +748,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 500;",
           "target": "literal-limit"
         },
         {
@@ -705,6 +756,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: LIMIT 1000 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1000 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH c AS (SELECT id FROM invoices ORDER BY id LIMIT 1000 FOR UPDATE SKIP LOCKED) DELETE FROM invoices USING c WHERE invoices.id = c.id;",
           "target": "literal-limit"
         },
         {
@@ -712,6 +764,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: LIMIT 50 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 50 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM events WHERE (created_at, id) > ($1, $2) ORDER BY created_at, id FETCH FIRST 50 ROWS ONLY;",
           "target": "literal-limit"
         }
       ],
@@ -732,6 +785,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 500;",
           "target": "literal-limit"
         },
         {
@@ -739,6 +793,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 500;",
           "target": "keyset-only-sweep"
         },
         {
@@ -746,6 +801,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: LIMIT 1000 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1000 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH c AS (SELECT id FROM invoices ORDER BY id LIMIT 1000 FOR UPDATE SKIP LOCKED) DELETE FROM invoices USING c WHERE invoices.id = c.id;",
           "target": "literal-limit"
         },
         {
@@ -753,6 +809,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: walks every row of invoices in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"invoices\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH c AS (SELECT id FROM invoices ORDER BY id LIMIT 1000 FOR UPDATE SKIP LOCKED) DELETE FROM invoices USING c WHERE invoices.id = c.id;",
           "target": "keyset-only-sweep"
         },
         {
@@ -760,6 +817,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: LIMIT 50 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 50 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM events WHERE (created_at, id) > ($1, $2) ORDER BY created_at, id FETCH FIRST 50 ROWS ONLY;",
           "target": "literal-limit"
         },
         {
@@ -767,6 +825,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: walks every row of events in created_at, id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"events\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM events WHERE (created_at, id) > ($1, $2) ORDER BY created_at, id FETCH FIRST 50 ROWS ONLY;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -787,6 +846,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/builders.ts:5: builder SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return query",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -831,6 +891,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 500;",
           "target": "literal-limit"
         },
         {
@@ -838,6 +899,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE id > $1 ORDER BY id LIMIT 500;",
           "target": "keyset-only-sweep"
         },
         {
@@ -845,6 +907,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE ($1::uuid IS NULL OR id > $1) AND deleted_at IS NULL ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -852,6 +915,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: LIMIT 1000 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1000 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH c AS (SELECT id FROM invoices ORDER BY id LIMIT 1000 FOR UPDATE SKIP LOCKED) DELETE FROM invoices USING c WHERE invoices.id = c.id;",
           "target": "literal-limit"
         },
         {
@@ -859,6 +923,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: walks every row of invoices in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"invoices\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH c AS (SELECT id FROM invoices ORDER BY id LIMIT 1000 FOR UPDATE SKIP LOCKED) DELETE FROM invoices USING c WHERE invoices.id = c.id;",
           "target": "keyset-only-sweep"
         },
         {
@@ -866,6 +931,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: LIMIT 50 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 50 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM events WHERE (created_at, id) > ($1, $2) ORDER BY created_at, id FETCH FIRST 50 ROWS ONLY;",
           "target": "literal-limit"
         },
         {
@@ -873,6 +939,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: walks every row of events in created_at, id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"events\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM events WHERE (created_at, id) > ($1, $2) ORDER BY created_at, id FETCH FIRST 50 ROWS ONLY;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -893,6 +960,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/pages.sql:1: LIMIT 255 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 255 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 'λ' AS note LIMIT 0xF_F;",
           "target": "literal-limit"
         },
         {
@@ -900,6 +968,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/pages.sql:6: LIMIT 0 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 0 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 LIMIT 0x0;",
           "target": "literal-limit"
         }
       ],
@@ -920,6 +989,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/builders.ts:6: builder SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "sql`AND true`.append(...runtimeFragments)",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -964,6 +1034,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE EXISTS (",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -984,6 +1055,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: walks every row of jobs in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"jobs\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM jobs WHERE STATUS = 'idle' AND id > $1 ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -1016,6 +1088,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: walks every row of work.items in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"work\".\"items\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM work.items ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1023,6 +1096,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: walks every row of work.items in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"work.items\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM \"work.items\" ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1030,6 +1104,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "(SELECT id FROM orders ORDER BY id) LIMIT $1;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -1050,6 +1125,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/pages.sql:1: LIMIT 1005 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1005 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 LIMIT 0o_1_755;",
           "target": "literal-limit"
         },
         {
@@ -1057,6 +1133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/pages.sql:2: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 LIMIT 0b_1_0;",
           "target": "literal-limit"
         },
         {
@@ -1064,6 +1141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/pages.sql:3: LIMIT 56 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 56 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 LIMIT 0o_7_0;",
           "target": "literal-limit"
         }
       ],
@@ -1096,6 +1174,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE (a = $1 AND b > $2) OR a > $1 ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1103,6 +1182,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1 OR (a = $1 AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -1123,6 +1203,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/restricted-correlated.sql:2: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE EXISTS (",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -1155,6 +1236,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": "src/operators.ts:17: builder SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'FOR UPDATE'",
           "target": "correlated-exists-set-operation"
         },
         {
@@ -1162,6 +1244,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "src/operators.ts:21: builder SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'REPEATABLE READ'",
           "target": "correlated-exists-set-operation"
         },
         {
@@ -1169,6 +1252,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/operators.ts:9: builder SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return '='",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -1189,6 +1273,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/003.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE TRUE AND id > $1 ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1196,6 +1281,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/003.sql:2: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE 1 = 1 ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1203,6 +1289,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/003.sql:4: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE ($1::uuid IS NULL OR id >= $1) AND ($2::uuid IS NULL OR id < $2) ORDER BY id LIMIT $3;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -1223,6 +1310,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/builders.ts:4: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return sql`SELECT 1 FROM posts WHERE EXISTS (",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -1243,6 +1331,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/builders.ts:5: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query.append(sql`AND EXISTS (",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -1263,6 +1352,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/templates.mts:5: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return query(sql`SELECT id FROM orders WHERE id > ${after} ORDER BY id LIMIT ${size}`)",
           "target": "keyset-only-sweep"
         }
       ],
@@ -1307,6 +1397,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/builders.ts:4: builder SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return sql`EXISTS (`",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -1339,6 +1430,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/unparseable.sql:1: SQL could not be analyzed for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT EXISTS (SELECT 1 UNION SELECT 2",
           "target": "correlated-exists-set-operation"
         }
       ],

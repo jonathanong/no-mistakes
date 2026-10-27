@@ -15,13 +15,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "package.json",
           "line": 1,
           "message": "package.json: \"pnpm.overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "{\"overrides\":{\"hono\":\"1.0.0\"},\"pnpm\":{\"overrides\":{\"fast-uri\":\"1.0.0\"}}}"
         },
         {
           "file": "package.json",
           "line": 1,
           "message": "package.json: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "{\"overrides\":{\"hono\":\"1.0.0\"},\"pnpm\":{\"overrides\":{\"fast-uri\":\"1.0.0\"}}}"
         }
       ],
       "warnings": []
@@ -40,19 +42,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm-workspace.yaml",
           "line": 1,
           "message": "pnpm-workspace.yaml: setting \"overrides\" is claimed by more than one pnpm source",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "overrides:"
         },
         {
           "file": "pnpm-workspace.yaml",
           "line": 1,
           "message": "pnpm-workspace.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "overrides:"
         },
         {
           "file": "pnpm/security.yaml",
           "line": 1,
           "message": "pnpm/security.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "overrides:"
         }
       ],
       "warnings": []
@@ -83,7 +88,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm/security.yaml",
           "line": 1,
           "message": "pnpm/security.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "overrides:"
         }
       ],
       "warnings": []
@@ -102,7 +108,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm/security.yaml",
           "line": 1,
           "message": "pnpm/security.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "overrides:"
         }
       ],
       "warnings": []
@@ -121,7 +128,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "packages/app/package.json",
           "line": 4,
           "message": "packages/app/package.json: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "\"overrides\": {"
         }
       ],
       "warnings": []
@@ -140,7 +148,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "packages/web/package.json",
           "line": 5,
           "message": "packages/web/package.json: \"pnpm.overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "\"overrides\": {"
         }
       ],
       "warnings": []
@@ -159,7 +168,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm-workspace.yaml",
           "line": 1,
           "message": "pnpm-workspace.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
-          "rule": "pnpm-overrides-ban"
+          "rule": "pnpm-overrides-ban",
+          "sourceLine": "overrides:"
         }
       ],
       "warnings": []
@@ -179,6 +189,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: cannot verify dependency policy because this manifest could not be read or parsed: failed to parse YAML: did not find expected node content at line 4 column 1, while parsing a flow node. Repair the manifest or restore read access.",
           "rule": "pnpm-overrides-ban",
+          "sourceLine": "packages:",
           "target": "unanalyzable"
         }
       ],

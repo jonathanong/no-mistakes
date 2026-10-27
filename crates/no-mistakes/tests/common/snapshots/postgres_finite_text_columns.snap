@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-finite-text-columns allow entry: column:payments.missing",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "{",
           "target": "column:payments.missing"
         }
       ],
@@ -36,6 +37,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": "schema.json: column:accounts.plan_type: text column name matches (^|_)(status|state|kind|type|source|category|mode|channel)$, which marks a fixed set of values; use an enum type or a foreign key to a lookup table, or add an allow entry with a reason",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"plan_type\": {",
           "target": "column:accounts.plan_type"
         },
         {
@@ -43,6 +45,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "schema.json: column:order_links.link_kind: text column holds a fixed set of values ('order') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"link_kind\": {",
           "target": "column:order_links.link_kind"
         }
       ],
@@ -63,6 +66,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "schema.json: column:accounts.generated_status: replace this with a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"generated_status\": {",
           "target": "column:accounts.generated_status"
         },
         {
@@ -70,6 +74,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "schema.json: column:accounts.bounded_state: replace this with a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"bounded_state\": {",
           "target": "column:accounts.bounded_state"
         },
         {
@@ -77,6 +82,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": "schema.json: column:accounts.quoted_kind: replace this with a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"quoted_kind\": {",
           "target": "column:accounts.quoted_kind"
         },
         {
@@ -84,6 +90,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:accounts.status: replace this with a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:accounts.status"
         },
         {
@@ -91,6 +98,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "schema.json: column:accounts.peer_status: replace this with a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"peer_status\": {",
           "target": "column:accounts.peer_status"
         }
       ],
@@ -135,6 +143,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:entities.status: text column holds a fixed set of values ('on') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:entities.status"
         }
       ],
@@ -179,6 +188,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:jobs.scope: text column holds a fixed set of values ('global', 'tenant') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"scope\": {",
           "target": "column:jobs.scope"
         }
       ],
@@ -199,6 +209,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:labels.Kind: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"Kind\": {",
           "target": "column:labels.Kind"
         }
       ],
@@ -219,6 +230,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:labels.kind: character varying column holds a fixed set of values ('open') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"kind\": {",
           "target": "column:labels.kind"
         }
       ],
@@ -239,6 +251,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "schema.json: column:invoices.state: text column holds a fixed set of values ('paid') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"state\": { \"dataType\": \"text\" }",
           "target": "column:invoices.state"
         }
       ],
@@ -259,6 +272,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "schema.json: column:t1.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t2.status, t3.status, t4.status, t5.status and 1 more have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:t1.status"
         },
         {
@@ -266,6 +280,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 30,
           "message": "schema.json: column:t2.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t3.status, t4.status, t5.status and 1 more have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:t2.status"
         },
         {
@@ -273,6 +288,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 42,
           "message": "schema.json: column:t3.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t2.status, t4.status, t5.status and 1 more have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:t3.status"
         },
         {
@@ -280,6 +296,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 54,
           "message": "schema.json: column:t4.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t2.status, t3.status, t5.status and 1 more have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:t4.status"
         },
         {
@@ -287,6 +304,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:t0.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t1.status, t2.status, t3.status, t4.status, t5.status and 1 more have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:t0.status"
         },
         {
@@ -294,6 +312,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 66,
           "message": "schema.json: column:t5.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t2.status, t3.status, t4.status and 1 more have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:t5.status"
         },
         {
@@ -301,6 +320,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 78,
           "message": "schema.json: column:t6.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t2.status, t3.status, t4.status and 1 more have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:t6.status"
         }
       ],
@@ -321,6 +341,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:invoices.status: text column holds a fixed set of values ('v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', … (2 more)) enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:invoices.status"
         }
       ],
@@ -341,6 +362,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "schema.json: column:invoices.state: text column holds a fixed set of values ('paid') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"state\": { \"dataType\": \"text\" }",
           "target": "column:invoices.state"
         }
       ],
@@ -373,6 +395,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:accounts.kind: text column name matches (^|_)(status|state|kind|type|source|category|mode|channel)$, which marks a fixed set of values; use an enum type or a foreign key to a lookup table, or add an allow entry with a reason",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"kind\": {",
           "target": "column:accounts.kind"
         }
       ],
@@ -393,6 +416,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:orders.kind: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"kind\": {",
           "target": "column:orders.kind"
         }
       ],
@@ -413,6 +437,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "schema.json: column:parts.status: TEXT column holds a fixed set of values ('open') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:parts.status"
         }
       ],
@@ -433,6 +458,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:payments.currency: text column holds a fixed set of values ('USD') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"currency\": {",
           "target": "column:payments.currency"
         }
       ],
@@ -453,6 +479,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "schema.json: column:b.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; a.status, c.status and d.status have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:b.status"
         },
         {
@@ -460,6 +487,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 30,
           "message": "schema.json: column:c.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; a.status, b.status and d.status have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:c.status"
         },
         {
@@ -467,6 +495,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 42,
           "message": "schema.json: column:d.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; a.status, b.status and c.status have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:d.status"
         },
         {
@@ -474,6 +503,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:a.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; b.status, c.status and d.status have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:a.status"
         }
       ],
@@ -494,6 +524,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "schema.json: column:invoices.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; bills.status has the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:invoices.status"
         },
         {
@@ -501,6 +532,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:bills.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; invoices.status has the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:bills.status"
         }
       ],
@@ -521,6 +553,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:accounts.status: text column holds a fixed set of values ('draft') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:accounts.status"
         }
       ],
@@ -553,6 +586,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "schema.json: column:accounts.bounded_state: varchar(12) column holds a fixed set of values ('open', 'closed') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"bounded_state\": {",
           "target": "column:accounts.bounded_state"
         },
         {
@@ -560,6 +594,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": "schema.json: column:accounts.quoted_kind: text column holds a fixed set of values ('O''Reilly') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"quoted_kind\": {",
           "target": "column:accounts.quoted_kind"
         },
         {
@@ -567,6 +602,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:accounts.status: text column holds a fixed set of values ('sent') enforced by CHECK; use an enum type or a foreign key to a lookup table; accounts.peer_status has the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:accounts.status"
         },
         {
@@ -574,6 +610,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "schema.json: column:accounts.peer_status: text column holds a fixed set of values ('sent') enforced by CHECK; use an enum type or a foreign key to a lookup table; accounts.status has the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"peer_status\": {",
           "target": "column:accounts.peer_status"
         }
       ],
@@ -594,6 +631,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "schema.json: column:bills.state: text column holds a fixed set of values ('paid', 'draft', 'sent') enforced by CHECK; use an enum type or a foreign key to a lookup table; invoices.status and quotes.status have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"state\": {",
           "target": "column:bills.state"
         },
         {
@@ -601,6 +639,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 30,
           "message": "schema.json: column:quotes.status: text column holds a fixed set of values ('sent', 'paid', 'draft') enforced by CHECK; use an enum type or a foreign key to a lookup table; bills.state and invoices.status have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:quotes.status"
         },
         {
@@ -608,6 +647,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:invoices.status: text column holds a fixed set of values ('draft', 'sent', 'paid') enforced by CHECK; use an enum type or a foreign key to a lookup table; bills.state and quotes.status have the same values and can share the type",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:invoices.status"
         }
       ],
@@ -628,6 +668,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:shipments.state: text column holds a fixed set of values ('new', 'sent', 'lost') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"state\": {",
           "target": "column:shipments.state"
         }
       ],
@@ -660,6 +701,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-finite-text-columns allow entry: column:payments.missing",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "{",
           "target": "column:payments.missing"
         },
         {
@@ -667,6 +709,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "schema.json: column:payments.status: use a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": { \"dataType\": \"text\" }",
           "target": "column:payments.status"
         }
       ],
@@ -687,6 +730,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:invoices.status: text column holds a fixed set of values ('sent', 'paid') enforced by CHECK; use an enum type or a foreign key to a lookup table",
           "rule": "postgres-finite-text-columns",
+          "sourceLine": "\"status\": {",
           "target": "column:invoices.status"
         }
       ],

@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "mocked": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "integration-tests/web-api/mocked.test.mts",
+          "import": "msw",
+          "line": 1,
+          "message": "integration-tests/web-api/mocked.test.mts: integration tests must not use mocking libraries (`msw`); use real dependencies and test helpers instead",
+          "rule": "integration-test-no-mocks",
+          "sourceLine": "const server = await import('msw/node')"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

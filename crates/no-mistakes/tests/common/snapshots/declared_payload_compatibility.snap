@@ -1,0 +1,38 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schemas.json",
+          "line": 1,
+          "message": "contract `queue user-notifications`: incompatible with schemas.json/worker: $[\"userId\"]: consumer requires a property the producer does not guarantee",
+          "rule": "declared-payload-compatibility",
+          "sourceLine": "{",
+          "target": "queue user-notifications"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

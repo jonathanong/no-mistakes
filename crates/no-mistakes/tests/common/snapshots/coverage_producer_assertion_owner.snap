@@ -1,0 +1,1059 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 18,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#dynamic",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }",
+          "target": "dynamic"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ambiguous_callback": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producers.mts",
+          "line": 77,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#ambiguousCallbackA",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function ambiguousCallbackA() { ambiguousOwner(assertResult); }",
+          "target": "ambiguousCallbackA"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 78,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#ambiguousCallbackB",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function ambiguousCallbackB() { ambiguousOwner(localAssertionOwner); }",
+          "target": "ambiguousCallbackB"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "applications": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producers.mts",
+          "line": 19,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#crossProcess",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function crossProcess() { spawn('worker'); }",
+          "target": "crossProcess"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producers.mts",
+          "line": 21,
+          "message": "Assert the worker result: src/producers.mts#unrelatedDispatch",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unrelatedDispatch() { execute(); }",
+          "target": "unrelatedDispatch"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producers.mts",
+          "line": 10,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#productionOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function productionOnly() { execute(); }",
+          "target": "productionOnly"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 11,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#unreachable",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unreachable() {",
+          "target": "unreachable"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 18,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#dynamic",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamic(dispatch: () => void) { dispatch(); }",
+          "target": "dynamic"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 20,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#unmodeledProcess",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unmodeledProcess() { spawn('worker'); }",
+          "target": "unmodeledProcess"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 25,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#emptyContract",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptyContract() { spawn('worker'); }",
+          "target": "emptyContract"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 26,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#deadBranch",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function deadBranch() { if (false) { assertResult(); } }",
+          "target": "deadBranch"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 27,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#afterReturn",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function afterReturn() { return 1; assertResult(); }",
+          "target": "afterReturn"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 39,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#deadWhile",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function deadWhile() { while (false) { assertResult(); } }",
+          "target": "deadWhile"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 40,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#deadFor",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function deadFor() { for (; false; assertResult()) { assertResult(); } }",
+          "target": "deadFor"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 41,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#deadConditional",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function deadConditional() { false ? assertResult() : 0; }",
+          "target": "deadConditional"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 42,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#deadAnd",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function deadAnd() { false && assertResult(); }",
+          "target": "deadAnd"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 43,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#deadOr",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function deadOr() { true || assertResult(); }",
+          "target": "deadOr"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 44,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#deadNullish",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function deadNullish() { 1 ?? assertResult(); }",
+          "target": "deadNullish"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 45,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#lexicalSibling",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function lexicalSibling() {",
+          "target": "lexicalSibling"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 49,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#deadProcess",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function deadProcess() { if (false) { spawn('worker'); } }",
+          "target": "deadProcess"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 61,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#empty",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function empty() {}",
+          "target": "empty"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 62,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#cycle",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function cycle() { cycleHelper(); }",
+          "target": "cycle"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 64,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#afterBreak",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function afterBreak() { while (true) { break; assertResult(); } }",
+          "target": "afterBreak"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 65,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#afterContinue",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function afterContinue(condition: boolean) { while (condition) { continue; assertResult(); } }",
+          "target": "afterContinue"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 71,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#registeredCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function registeredCallback() { register(localAssertionOwner); }",
+          "target": "registeredCallback"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 72,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#memberOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function memberOnly() { class Unused { method() { strictEqual(1, 1); } } }",
+          "target": "memberOnly"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 73,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#constructOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function constructOnly() { new Date(); }",
+          "target": "constructOnly"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 79,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#nestedDeadRanges",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function nestedDeadRanges() {",
+          "target": "nestedDeadRanges"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 86,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/producers.mts#unusedConstructorMethod",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unusedConstructorMethod() { new UnusedMethod(); }",
+          "target": "unusedConstructorMethod"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 88,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#unconsumedGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unconsumedGenerator() { execute(); generatorRoot(); }",
+          "target": "unconsumedGenerator"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 89,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#consumedGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function consumedGenerator() { generatorRoot().next(); }",
+          "target": "consumedGenerator"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 91,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#asyncGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function asyncGenerator() { asyncOwner(); }",
+          "target": "asyncGenerator"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "depth": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producers.mts",
+          "line": 9,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#callback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callback() { callbackOwner(assertResult); }",
+          "target": "callback"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "filtered": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "generators": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producers.mts",
+          "line": 87,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#generatorRoot",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function* generatorRoot() { strictEqual(1, 1); }",
+          "target": "generatorRoot"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 88,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#unconsumedGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unconsumedGenerator() { execute(); generatorRoot(); }",
+          "target": "unconsumedGenerator"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 89,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#consumedGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function consumedGenerator() { generatorRoot().next(); }",
+          "target": "consumedGenerator"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 91,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#asyncGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function asyncGenerator() { asyncOwner(); }",
+          "target": "asyncGenerator"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 92,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#selectedGenerator",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function selectedGenerator() { aliasedGenerator(); }",
+          "target": "selectedGenerator"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 93,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#generatorContract",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function generatorContract() { generatorAssertion(); }",
+          "target": "generatorContract"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 94,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#generatorContractOwner",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function generatorContractOwner() { spawn('worker'); }",
+          "target": "generatorContractOwner"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "import_forms": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/import-forms.mts",
+          "line": 11,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#externalAndAssertion",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function externalAndAssertion() { existsSync('.'); equal(1, 1); }",
+          "target": "externalAndAssertion"
+        },
+        {
+          "file": "src/import-forms.mts",
+          "line": 9,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#defaultMemberAssertion",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function defaultMemberAssertion() { assert.strictEqual(1, 1); }",
+          "target": "defaultMemberAssertion"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "warning: rules check skipped: coverage-producer-assertion-owner: function `src/missing.mts#absent` must select exactly one prepared callable"
+      ]
+    }
+  },
+  "mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producers.mts",
+          "line": 28,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#mixed",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function mixed(dispatch: () => void) { assertResult(); dispatch(); }",
+          "target": "mixed"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 35,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#mixedTarget",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function mixedTarget(dispatch: typeof strictEqual | undefined) {",
+          "target": "mixedTarget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nodes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/producers.mts",
+          "line": 9,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#callback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callback() { callbackOwner(assertResult); }",
+          "target": "callback"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parse_error": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/broken.mts",
+          "line": 1,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/broken.mts#broken",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "// A configured producer with invalid syntax must abstain, never prove an owner.",
+          "target": "broken"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "switches": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/switches.mts",
+          "line": 11,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#typedCaseMismatch",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function typedCaseMismatch() { switch (1) { case '1': strictEqual(1, 1); } }",
+          "target": "typedCaseMismatch"
+        },
+        {
+          "file": "src/switches.mts",
+          "line": 12,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#returnedCase",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function returnedCase() { switch (1) { case 1: return; case 2: strictEqual(1, 1); } }",
+          "target": "returnedCase"
+        },
+        {
+          "file": "src/switches.mts",
+          "line": 13,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#thrownCase",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function thrownCase() { switch (1) { case 1: throw 1; case 2: strictEqual(1, 1); } }",
+          "target": "thrownCase"
+        },
+        {
+          "file": "src/switches.mts",
+          "line": 18,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#emptySwitch",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function emptySwitch() { switch (1) {} }",
+          "target": "emptySwitch"
+        },
+        {
+          "file": "src/switches.mts",
+          "line": 22,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#loneSurrogateWrongCase",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function loneSurrogateWrongCase() { switch ('\\ud800') { case '\\uFFFDd800': strictEqual(1, 1); } }",
+          "target": "loneSurrogateWrongCase"
+        },
+        {
+          "file": "src/switches.mts",
+          "line": 24,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#blockBreak",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function blockBreak() { switch (1) { case 1: { break; } case 2: strictEqual(1, 1); } }",
+          "target": "blockBreak"
+        },
+        {
+          "file": "src/switches.mts",
+          "line": 25,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#blockReturn",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function blockReturn() { switch (1) { case 1: { { return; } strictEqual(1, 1); } case 2: strictEqual(1, 1); } }",
+          "target": "blockReturn"
+        },
+        {
+          "file": "src/switches.mts",
+          "line": 4,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#impossibleCase",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function impossibleCase() { switch (1) { case 2: strictEqual(1, 1); break; } }",
+          "target": "impossibleCase"
+        },
+        {
+          "file": "src/switches.mts",
+          "line": 8,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#stoppedFallthrough",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function stoppedFallthrough() { switch (null) { case null: break; default: strictEqual(1, 1); } }",
+          "target": "stoppedFallthrough"
+        },
+        {
+          "file": "src/switches.mts",
+          "line": 9,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/switches.mts#defaultBeforeMatch",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function defaultBeforeMatch() { switch (1) { default: strictEqual(1, 1); break; case 1: break; } }",
+          "target": "defaultBeforeMatch"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "typo": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.mts",
+          "line": 1,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line coverage-producer-assertion-owner -- deliberate coverage-only fixture",
+          "target": "coverage-producer-assertion-owner"
+        },
+        {
+          "file": "src/suppressed.mts",
+          "line": 4,
+          "message": "directive for `coverage-producer-assertion-owner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "export function lineInlineSuppressed() { execute(); } // no-mistakes-disable-line coverage-producer-assertion-owner",
+          "target": "coverage-producer-assertion-owner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "warning: rules check skipped: invalid options for rule `coverage-producer-assertion-owner` at options.typo: unknown field `typo`, expected one of `producers`, `assertions`, `ownership`, `maxDepth`, `maxNodes`"
+      ]
+    }
+  }
+}

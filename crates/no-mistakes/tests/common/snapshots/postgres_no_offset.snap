@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "src/append-positions.ts:18: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 1\\n; SELECT id FROM orders OFFSET 0`;",
           "target": "offset#5"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "src/append-positions.ts:18: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 1\\n; SELECT id FROM orders OFFSET 0`;",
           "target": "offset#4"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "src/append-positions.ts:21: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "const same = sql`SELECT id FROM orders`; same.append(sql` OFFSET 0`); query(same);",
           "target": "offset#6"
         },
         {
@@ -37,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/append-positions.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "statement.append(sql` OFFSET 1`);",
           "target": "offset"
         },
         {
@@ -44,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/append-positions.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "const suffix = sql`OFFSET 1`;",
           "target": "offset#2"
         }
       ],
@@ -64,6 +69,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "db/copy.sql:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 2;",
           "target": "offset"
         }
       ],
@@ -84,6 +90,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "db/copy-edge.sql:10: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT (SELECT 1 OFFSET 0) OFFSET 2;",
           "target": "offset#2"
         },
         {
@@ -91,6 +98,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "db/copy-edge.sql:10: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT (SELECT 1 OFFSET 0) OFFSET 2;",
           "target": "offset#3"
         },
         {
@@ -98,6 +106,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/copy-edge.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "COPY (SELECT id FROM stdin OFFSET 1) TO STDOUT;",
           "target": "offset"
         }
       ],
@@ -125,6 +134,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-no-offset: fixture exemption",
           "target": "postgres-no-offset"
         },
         {
@@ -132,6 +142,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-offset: executor directive owns constant findings",
           "target": "postgres-no-offset"
         }
       ],
@@ -145,6 +156,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/crlf.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 2`);",
           "target": "offset"
         },
         {
@@ -152,6 +164,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/crlf.ts:8: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 0`;",
           "target": "offset#2"
         }
       ],
@@ -167,6 +180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-no-offset: fixture exemption",
           "target": "postgres-no-offset"
         },
         {
@@ -174,6 +188,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-offset: executor directive owns constant findings",
           "target": "postgres-no-offset"
         }
       ],
@@ -187,6 +202,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/crlf.ts:10: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
           "rule": "postgres-no-offset",
+          "sourceLine": "query(`SELECT 1",
           "target": "unanalyzable"
         },
         {
@@ -194,6 +210,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/crlf.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 2`);",
           "target": "offset"
         },
         {
@@ -201,6 +218,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/crlf.ts:8: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 0`;",
           "target": "offset#2"
         }
       ],
@@ -216,6 +234,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-no-offset: fixture exemption",
           "target": "postgres-no-offset"
         },
         {
@@ -223,6 +242,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-offset: executor directive owns constant findings",
           "target": "postgres-no-offset"
         }
       ],
@@ -236,6 +256,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "src/crlf.ts:11: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET \\u0033`);",
           "target": "offset#3"
         },
         {
@@ -243,6 +264,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/crlf.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 2`);",
           "target": "offset"
         },
         {
@@ -250,6 +272,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/crlf.ts:8: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 0`;",
           "target": "offset#2"
         }
       ],
@@ -270,6 +293,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/custom-executors.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "first(`SELECT id FROM orders OFFSET 1`);",
           "target": "offset"
         },
         {
@@ -277,6 +301,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/custom-executors.ts:3: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "last(`SELECT id FROM orders OFFSET 0`);",
           "target": "offset#2"
         }
       ],
@@ -321,6 +346,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/containers.sql:1: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT CASE WHEN EXISTS (SELECT 1 OFFSET 0) THEN (SELECT 1 OFFSET 1) ELSE 0 END;",
           "target": "offset"
         },
         {
@@ -328,6 +354,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/containers.sql:1: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT CASE WHEN EXISTS (SELECT 1 OFFSET 0) THEN (SELECT 1 OFFSET 1) ELSE 0 END;",
           "target": "offset#2"
         },
         {
@@ -335,6 +362,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/containers.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT ARRAY[(SELECT 1 OFFSET 2)], COALESCE((SELECT 1 OFFSET 3), 0), 1 BETWEEN (SELECT 1 OFFSET 4) AND 5;",
           "target": "offset#3"
         },
         {
@@ -342,6 +370,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/containers.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT ARRAY[(SELECT 1 OFFSET 2)], COALESCE((SELECT 1 OFFSET 3), 0), 1 BETWEEN (SELECT 1 OFFSET 4) AND 5;",
           "target": "offset#4"
         },
         {
@@ -349,6 +378,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/containers.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT ARRAY[(SELECT 1 OFFSET 2)], COALESCE((SELECT 1 OFFSET 3), 0), 1 BETWEEN (SELECT 1 OFFSET 4) AND 5;",
           "target": "offset#5"
         },
         {
@@ -356,6 +386,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/containers.sql:3: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "INSERT INTO t VALUES (1) ON CONFLICT (id) DO UPDATE SET id = (SELECT 1 OFFSET 0) RETURNING (SELECT 1 OFFSET 1);",
           "target": "offset#6"
         },
         {
@@ -363,6 +394,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/containers.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "INSERT INTO t VALUES (1) ON CONFLICT (id) DO UPDATE SET id = (SELECT 1 OFFSET 0) RETURNING (SELECT 1 OFFSET 1);",
           "target": "offset#7"
         },
         {
@@ -370,6 +402,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/containers.sql:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "WITH q AS (SELECT 1 OFFSET 0) SELECT (SELECT 1 OFFSET 1) FROM q OFFSET 2;",
           "target": "offset#8"
         },
         {
@@ -377,6 +410,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/containers.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "WITH q AS (SELECT 1 OFFSET 0) SELECT (SELECT 1 OFFSET 1) FROM q OFFSET 2;",
           "target": "offset#10"
         },
         {
@@ -384,6 +418,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/containers.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "WITH q AS (SELECT 1 OFFSET 0) SELECT (SELECT 1 OFFSET 1) FROM q OFFSET 2;",
           "target": "offset#9"
         },
         {
@@ -391,6 +426,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "db/containers.sql:5: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT (SELECT 1 OFFSET 0), (SELECT 1 OFFSET 0);",
           "target": "offset#11"
         },
         {
@@ -398,6 +434,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "db/containers.sql:5: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT (SELECT 1 OFFSET 0), (SELECT 1 OFFSET 0);",
           "target": "offset#12"
         },
         {
@@ -405,6 +442,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "db/containers.sql:6: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT (SELECT 1 OFFSET 3), (SELECT 1 OFFSET 4);",
           "target": "offset#13"
         },
         {
@@ -412,6 +450,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "db/containers.sql:6: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT (SELECT 1 OFFSET 3), (SELECT 1 OFFSET 4);",
           "target": "offset#14"
         },
         {
@@ -419,6 +458,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/dml.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 1;",
           "target": "offset"
         },
         {
@@ -426,6 +466,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/dml.sql:3: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "UPDATE t SET id = (SELECT id FROM u OFFSET 0) WHERE id IN (SELECT id FROM u OFFSET 2);",
           "target": "offset#2"
         },
         {
@@ -433,6 +474,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/dml.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "UPDATE t SET id = (SELECT id FROM u OFFSET 0) WHERE id IN (SELECT id FROM u OFFSET 2);",
           "target": "offset#3"
         },
         {
@@ -440,6 +482,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/dml.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "DELETE FROM t USING (SELECT id FROM u OFFSET 3) u WHERE t.id = u.id;",
           "target": "offset#4"
         },
         {
@@ -447,6 +490,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "db/dml.sql:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "COPY (SELECT id FROM u OFFSET 4) TO STDOUT;",
           "target": "offset#5"
         },
         {
@@ -454,6 +498,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "db/dml.sql:6: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "CREATE TABLE page AS SELECT id FROM u OFFSET 5;",
           "target": "offset#6"
         },
         {
@@ -461,6 +506,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "db/dml.sql:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "CREATE VIEW page_view AS SELECT id FROM u OFFSET 6;",
           "target": "offset#7"
         }
       ],
@@ -481,6 +527,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/query.ts:10: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY ${column}`);",
           "target": "unanalyzable"
         },
         {
@@ -488,6 +535,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/query.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY id OFFSET ${offset}`);",
           "target": "offset"
         },
         {
@@ -495,6 +543,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": "src/query.ts:35: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`INSERT INTO archive SELECT * FROM live ORDER BY id ${tail}`);",
           "target": "unanalyzable"
         },
         {
@@ -502,6 +551,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 38,
           "message": "src/query.ts:38: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`UPDATE live SET id = (SELECT id FROM archive ${tail})`);",
           "target": "unanalyzable"
         },
         {
@@ -509,6 +559,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(sql);",
           "target": "unanalyzable"
         }
       ],
@@ -529,6 +580,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/query.ts:10: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY ${column}`);",
           "target": "unanalyzable"
         },
         {
@@ -536,6 +588,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/query.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY id OFFSET ${offset}`);",
           "target": "offset"
         },
         {
@@ -543,6 +596,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": "src/query.ts:35: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`INSERT INTO archive SELECT * FROM live ORDER BY id ${tail}`);",
           "target": "unanalyzable"
         },
         {
@@ -550,6 +604,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 38,
           "message": "src/query.ts:38: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`UPDATE live SET id = (SELECT id FROM archive ${tail})`);",
           "target": "unanalyzable"
         },
         {
@@ -557,6 +612,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(sql);",
           "target": "unanalyzable"
         }
       ],
@@ -577,6 +633,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/query.ts:10: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY ${column}`);",
           "target": "unanalyzable"
         },
         {
@@ -584,6 +641,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/query.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY id OFFSET ${offset}`);",
           "target": "offset"
         },
         {
@@ -591,6 +649,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": "src/query.ts:35: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`INSERT INTO archive SELECT * FROM live ORDER BY id ${tail}`);",
           "target": "unanalyzable"
         },
         {
@@ -598,6 +657,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 38,
           "message": "src/query.ts:38: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`UPDATE live SET id = (SELECT id FROM archive ${tail})`);",
           "target": "unanalyzable"
         },
         {
@@ -605,6 +665,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(sql);",
           "target": "unanalyzable"
         }
       ],
@@ -620,6 +681,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 30,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-offset",
           "target": "postgres-no-offset"
         }
       ],
@@ -633,6 +695,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/query.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY id OFFSET ${offset}`);",
           "target": "offset"
         }
       ],
@@ -653,6 +716,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/edges.sql:1: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT id FROM orders OFFSET 0 ROWS;",
           "target": "offset"
         },
         {
@@ -660,6 +724,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/edges.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT id FROM orders OFFSET $1;",
           "target": "offset#2"
         },
         {
@@ -667,6 +732,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/edges.sql:3: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT * FROM (SELECT id FROM orders OFFSET 0) o OFFSET 40;",
           "target": "offset#3"
         },
         {
@@ -674,6 +740,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/edges.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT * FROM (SELECT id FROM orders OFFSET 0) o OFFSET 40;",
           "target": "offset#4"
         }
       ],
@@ -694,6 +761,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 10;",
           "target": "offset"
         },
         {
@@ -701,6 +769,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "src/query.ts:11: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "query(`SELECT 1 ${tail}`);",
           "target": "unanalyzable"
         },
         {
@@ -708,6 +777,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "src/query.ts:12: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1\\nOFFSET 9');",
           "target": "offset#6"
         },
         {
@@ -715,6 +785,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1 OFFSET 2');",
           "target": "offset"
         },
         {
@@ -722,6 +793,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 0`);",
           "target": "offset#2"
         },
         {
@@ -729,6 +801,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "const saved = `SELECT 1 OFFSET 4`;",
           "target": "offset#3"
         },
         {
@@ -736,6 +809,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "const saved = `SELECT 1 OFFSET 4`;",
           "target": "offset#4"
         },
         {
@@ -743,6 +817,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/query.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "function build() { return 'SELECT 1 OFFSET 8'; }",
           "target": "offset#5"
         }
       ],
@@ -763,6 +838,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 10;",
           "target": "offset"
         },
         {
@@ -770,6 +846,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "src/query.ts:11: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
           "rule": "postgres-no-offset",
+          "sourceLine": "query(`SELECT 1 ${tail}`);",
           "target": "unanalyzable"
         },
         {
@@ -777,6 +854,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "src/query.ts:12: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1\\nOFFSET 9');",
           "target": "unanalyzable"
         },
         {
@@ -784,6 +862,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1 OFFSET 2');",
           "target": "offset"
         },
         {
@@ -791,6 +870,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 0`);",
           "target": "offset#2"
         },
         {
@@ -798,6 +878,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "const saved = `SELECT 1 OFFSET 4`;",
           "target": "offset#3"
         },
         {
@@ -805,6 +886,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "const saved = `SELECT 1 OFFSET 4`;",
           "target": "offset#4"
         },
         {
@@ -812,6 +894,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/query.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "function build() { return 'SELECT 1 OFFSET 8'; }",
           "target": "offset#5"
         }
       ],
@@ -832,6 +915,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 10;",
           "target": "offset"
         },
         {
@@ -839,6 +923,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1 OFFSET 2');",
           "target": "offset"
         },
         {
@@ -846,6 +931,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 0`);",
           "target": "offset#2"
         },
         {
@@ -853,6 +939,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "const saved = `SELECT 1 OFFSET 4`;",
           "target": "offset#3"
         },
         {
@@ -860,6 +947,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "const saved = `SELECT 1 OFFSET 4`;",
           "target": "offset#4"
         },
         {
@@ -867,6 +955,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/query.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "function build() { return 'SELECT 1 OFFSET 8'; }",
           "target": "offset#5"
         }
       ],
@@ -887,6 +976,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 10;",
           "target": "offset"
         },
         {
@@ -894,6 +984,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "src/query.ts:11: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "query(`SELECT 1 ${tail}`);",
           "target": "unanalyzable"
         },
         {
@@ -901,6 +992,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "src/query.ts:12: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1\\nOFFSET 9');",
           "target": "offset#6"
         },
         {
@@ -908,6 +1000,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1 OFFSET 2');",
           "target": "offset"
         },
         {
@@ -915,6 +1008,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 0`);",
           "target": "offset#2"
         },
         {
@@ -922,6 +1016,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "const saved = `SELECT 1 OFFSET 4`;",
           "target": "offset#3"
         },
         {
@@ -929,6 +1024,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "const saved = `SELECT 1 OFFSET 4`;",
           "target": "offset#4"
         },
         {
@@ -936,6 +1032,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/query.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "function build() { return 'SELECT 1 OFFSET 8'; }",
           "target": "offset#5"
         }
       ],
@@ -956,6 +1053,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/zero.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 0`);",
           "target": "offset"
         }
       ],
@@ -988,6 +1086,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/client.mts:6: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "connection.query(sql)",
           "target": "unanalyzable"
         },
         {
@@ -995,6 +1094,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/client.mts:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "connection.query('SELECT id FROM users OFFSET 1')",
           "target": "offset"
         }
       ],
@@ -1010,6 +1110,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-offset",
           "target": "postgres-no-offset"
         }
       ],
@@ -1023,6 +1124,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/client.mts:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "connection.query('SELECT id FROM users OFFSET 1')",
           "target": "offset"
         }
       ],
@@ -1043,6 +1145,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/explain.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "EXPLAIN ANALYZE SELECT id FROM orders OFFSET 1;",
           "target": "offset"
         },
         {
@@ -1050,6 +1153,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/explain.sql:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "EXPLAIN (ANALYZE TRUE) SELECT id FROM orders OFFSET 0;",
           "target": "offset#2"
         },
         {
@@ -1057,6 +1161,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "db/explain.sql:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "EXPLAIN (ANALYZE) SELECT id FROM orders OFFSET 1;",
           "target": "offset#3"
         },
         {
@@ -1064,6 +1169,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "db/explain.sql:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "EXPLAIN (ANALYZE 'on') SELECT id FROM orders OFFSET 1;",
           "target": "offset#4"
         }
       ],
@@ -1084,6 +1190,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY id DESC OFFSET 10`);",
           "target": "offset"
         }
       ],
@@ -1104,6 +1211,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "composed-helper-alias.ts:14: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "alias.append(sql` OFFSET 10`)",
           "target": "offset#2"
         },
         {
@@ -1111,6 +1219,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": "composed-helper-alias.ts:22: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "second.append(sql` OFFSET 11`)",
           "target": "offset#3"
         },
         {
@@ -1118,6 +1227,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 36,
           "message": "composed-helper-alias.ts:36: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "if (unknown) query.append(sql` OFFSET 13`)",
           "target": "offset#4"
         },
         {
@@ -1125,6 +1235,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 51,
           "message": "composed-helper-alias.ts:51: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "await read(reassigned())",
           "target": "unanalyzable"
         },
         {
@@ -1132,6 +1243,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 53,
           "message": "composed-helper-alias.ts:53: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "await read(escaped(() => {}))",
           "target": "unanalyzable"
         },
         {
@@ -1139,6 +1251,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "composed-helper-alias.ts:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "query.append(sql` OFFSET 9`)",
           "target": "offset"
         }
       ],
@@ -1172,6 +1285,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY id DESC OFFSET 10`);",
           "target": "offset"
         }
       ],
@@ -1192,6 +1306,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "return query(`SELECT id FROM posts ORDER BY id DESC OFFSET ${offset}`);",
           "target": "offset"
         }
       ],
@@ -1207,6 +1322,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file postgres-no-offset: fixture exemption",
           "target": "postgres-no-offset"
         },
         {
@@ -1214,6 +1330,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/invalid.ts:2: postgres-no-offset application #0 has unresolved SQL for offset: invalid-sql",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1 OFFSET 1; SELECT ???');",
           "target": "offset"
         },
         {
@@ -1221,6 +1338,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/invalid.ts:3: postgres-no-offset application #0 has unresolved SQL for offset: invalid-sql",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT ???');",
           "target": "offset"
         },
         {
@@ -1228,6 +1346,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-offset: executor directive owns constant findings",
           "target": "postgres-no-offset"
         }
       ],
@@ -1241,6 +1360,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 10;",
           "target": "offset"
         }
       ],
@@ -1261,6 +1381,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "db/locations.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET",
           "target": "offset"
         },
         {
@@ -1268,6 +1389,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "db/locations.sql:9: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 0;",
           "target": "offset#2"
         }
       ],
@@ -1288,6 +1410,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/lenient.sql:2: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT (SELECT 1 OFFSET 0)",
           "target": "offset"
         },
         {
@@ -1295,6 +1418,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/lenient.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 10;",
           "target": "offset#2"
         }
       ],
@@ -1327,6 +1451,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/loose.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1 OFFSET 1');",
           "target": "offset"
         }
       ],
@@ -1347,6 +1472,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/loose.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "query('SELECT 1 OFFSET 1');",
           "target": "offset"
         }
       ],
@@ -1452,6 +1578,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/shared.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 3`;",
           "target": "offset"
         },
         {
@@ -1459,6 +1586,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/shared.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 3`;",
           "target": "offset#2"
         }
       ],
@@ -1491,6 +1619,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "src/source-map.ts:11: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 1`);",
           "target": "offset#4"
         },
         {
@@ -1498,6 +1627,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "src/source-map.ts:13: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 1`);",
           "target": "offset#5"
         },
         {
@@ -1505,6 +1635,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "src/source-map.ts:16: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "OFFSET 1`;",
           "target": "offset#6"
         },
         {
@@ -1512,6 +1643,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/source-map.ts:2: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "const shared = \"SELECT id FROM orders\\nOFFSET 0\";",
           "target": "offset"
         },
         {
@@ -1519,6 +1651,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/source-map.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "} OFFSET 1`);",
           "target": "offset#2"
         },
         {
@@ -1526,6 +1659,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/source-map.ts:9: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "export const cooked = () => query(`SELECT id FROM orders\\nOFFSET 1`);",
           "target": "offset#3"
         }
       ],
@@ -1570,6 +1704,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/views.sql:2: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT * FROM (SELECT id, account_id FROM orders WHERE id > '0190' OFFSET 0) o JOIN accounts a ON a.id = o.account_id;",
           "target": "offset"
         },
         {
@@ -1577,6 +1712,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "db/views.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT id FROM orders ORDER BY id LIMIT 20 OFFSET 40;",
           "target": "offset#2"
         }
       ],
@@ -1597,6 +1733,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "TABLE posts OFFSET 10;",
           "target": "offset"
         }
       ],
@@ -1617,6 +1754,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "db/stdin-string.sql:1: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
           "rule": "postgres-no-offset",
+          "sourceLine": "SELECT 'STDIN' FROM posts OFFSET 1;",
           "target": "offset"
         }
       ],
@@ -1637,6 +1775,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/invalid.ts:2: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-offset",
+          "sourceLine": "export function read(text: string) { return query(text); }",
           "target": "unanalyzable"
         }
       ],

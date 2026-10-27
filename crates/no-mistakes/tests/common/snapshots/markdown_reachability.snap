@@ -27,7 +27,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "deep.md",
           "line": 1,
           "message": "stale baseline entry: references a deleted or excluded Markdown file",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "ok"
         }
       ],
       "warnings": []
@@ -46,7 +47,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "deep.md",
           "line": 1,
           "message": "stale baseline entry: baseline does not match current depth",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "ok"
         }
       ],
       "warnings": []
@@ -65,7 +67,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "CLAUDE.md",
           "line": 1,
           "message": "stale baseline entry: references a deleted or excluded Markdown file",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "ok"
         }
       ],
       "warnings": []
@@ -84,13 +87,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "arbitrary.md",
           "line": 1,
           "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "ok"
         },
         {
           "file": "lost.md",
           "line": 1,
           "message": "not reachable from a configured root Markdown file within 2 hops",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "ok"
         }
       ],
       "warnings": []
@@ -109,7 +114,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "indexed.md",
           "line": 1,
           "message": "reachable only at depth 2; maximum is 1",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "ok"
         }
       ],
       "warnings": []
@@ -171,7 +177,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "detail.md",
           "line": 1,
           "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Detail"
         }
       ],
       "warnings": []
@@ -214,7 +221,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "docs/lost.md",
           "line": 1,
           "message": "not reachable from a configured root Markdown file within 2 hops",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Nested document"
         }
       ],
       "warnings": []
@@ -233,13 +241,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "docs/blocked.md",
           "line": 1,
           "message": "not reachable from a configured root Markdown file within 2 hops",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "ok"
         },
         {
           "file": "docs/unlinked.md",
           "line": 1,
           "message": "not reachable from a configured root Markdown file within 2 hops",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "ok"
         }
       ],
       "warnings": []
@@ -258,7 +268,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "outer.md",
           "line": 1,
           "message": "not reachable from a configured root Markdown file within 2 hops",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Outer document"
         }
       ],
       "warnings": []
@@ -289,13 +300,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "docs/nested.md",
           "line": 1,
           "message": "not reachable from a configured root Markdown file within 2 hops",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Nested unlinked"
         },
         {
           "file": "outer.md",
           "line": 1,
           "message": "not reachable from a configured root Markdown file within 2 hops",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Outer unlinked"
         }
       ],
       "warnings": []
@@ -326,7 +339,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "second.md",
           "line": 1,
           "message": "reachable at depth 3, but an intermediary must be a configured index Markdown file",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Invalid second intermediary"
         }
       ],
       "warnings": []
@@ -345,7 +359,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "domain/guide.md",
           "line": 1,
           "message": "stale baseline entry: is reachable; remove its baseline entry",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Guide"
         }
       ],
       "warnings": []
@@ -364,19 +379,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "domain/deeper/deep.md",
           "line": 1,
           "message": "reachable only at depth 4; maximum is 3",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Too deep"
         },
         {
           "file": "first.md",
           "line": 1,
           "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Invalid first intermediary"
         },
         {
           "file": "second.md",
           "line": 1,
           "message": "reachable at depth 3, but an intermediary must be a configured index Markdown file",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Invalid second intermediary"
         }
       ],
       "warnings": []
@@ -395,7 +413,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "domain/guide.md",
           "line": 1,
           "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Guide"
         }
       ],
       "warnings": []
@@ -414,7 +433,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "domain/guide.md",
           "line": 1,
           "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
-          "rule": "markdown-reachability"
+          "rule": "markdown-reachability",
+          "sourceLine": "# Guide"
         }
       ],
       "warnings": []

@@ -76,6 +76,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
           "rule": "postgres-fk-index",
+          "sourceLine": "post_id uuid REFERENCES posts -- fk-index-allow: legacy dual-write",
           "target": "comments.post_id"
         }
       ],
@@ -96,6 +97,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
           "rule": "postgres-fk-index",
+          "sourceLine": "post_id uuid REFERENCES posts --",
           "target": "comments.post_id"
         }
       ],
@@ -116,6 +118,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
           "rule": "postgres-fk-index",
+          "sourceLine": "post_id uuid REFERENCES posts",
           "target": "comments.post_id"
         }
       ],
@@ -148,6 +151,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
           "rule": "postgres-fk-index",
+          "sourceLine": "post_id uuid REFERENCES posts,",
           "target": "comments.post_id"
         }
       ],
@@ -168,6 +172,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
           "rule": "postgres-fk-index",
+          "sourceLine": "post_id uuid REFERENCES posts",
           "target": "comments.post_id"
         }
       ],
@@ -200,6 +205,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
           "rule": "postgres-fk-index",
+          "sourceLine": "post_id uuid REFERENCES posts,",
           "target": "comments.post_id"
         }
       ],
@@ -220,6 +226,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "first_comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
           "rule": "postgres-fk-index",
+          "sourceLine": "REFERENCES posts(id)",
           "target": "first_comments.post_id"
         }
       ],

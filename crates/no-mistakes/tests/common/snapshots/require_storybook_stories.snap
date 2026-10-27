@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Card() {",
           "target": "components/Card.tsx#Card"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "React component `Other` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Other() {",
           "target": "other/Other.tsx#Other"
         }
       ],
@@ -50,6 +52,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook component opt-out `components/Missing.tsx#Missing` must include a reason.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Missing() {",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -76,6 +79,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `NestedOnly` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function NestedOnly() {",
           "target": "components/NestedOnly.tsx#NestedOnly"
         },
         {
@@ -83,6 +87,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `SpecOnly` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function SpecOnly() {",
           "target": "components/SpecOnly.tsx#SpecOnly"
         }
       ],
@@ -103,6 +108,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `MockTs` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function MockTs() {",
           "target": "components/MockTs.tsx#MockTs"
         },
         {
@@ -110,6 +116,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `MockTsx` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function MockTsx() {",
           "target": "components/MockTsx.tsx#MockTsx"
         },
         {
@@ -117,6 +124,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `NestedOnly` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function NestedOnly() {",
           "target": "components/NestedOnly.tsx#NestedOnly"
         },
         {
@@ -124,6 +132,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `PlainTs` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function PlainTs() {",
           "target": "components/PlainTs.tsx#PlainTs"
         },
         {
@@ -131,6 +140,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `PlainTsx` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function PlainTsx() {",
           "target": "components/PlainTsx.tsx#PlainTsx"
         },
         {
@@ -138,6 +148,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `SpecOnly` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function SpecOnly() {",
           "target": "components/SpecOnly.tsx#SpecOnly"
         }
       ],
@@ -254,6 +265,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function LiteralMissing() { return <div />; }",
           "target": "LiteralMissing.tsx#LiteralMissing"
         },
         {
@@ -261,6 +273,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `First` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function First() { return <div />; }",
           "target": "First.tsx#First"
         },
         {
@@ -268,6 +281,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Second` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Second() { return <div />; }",
           "target": "Second.tsx#Second"
         }
       ],
@@ -288,6 +302,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function LiteralMissing() { return <div />; }",
           "target": "LiteralMissing.tsx#LiteralMissing"
         },
         {
@@ -295,6 +310,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `First` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function First() { return <div />; }",
           "target": "unanalyzable"
         },
         {
@@ -302,6 +318,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Second` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Second() { return <div />; }",
           "target": "unanalyzable"
         }
       ],
@@ -317,6 +334,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `First` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function First() { return <div />; }",
           "target": "unanalyzable"
         },
         {
@@ -324,6 +342,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Second` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Second() { return <div />; }",
           "target": "unanalyzable"
         }
       ],
@@ -337,6 +356,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function LiteralMissing() { return <div />; }",
           "target": "LiteralMissing.tsx#LiteralMissing"
         }
       ],
@@ -352,6 +372,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate visual harness",
           "target": "require-storybook-stories"
         },
         {
@@ -359,6 +380,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: separate visual harness",
           "target": "require-storybook-stories"
         }
       ],
@@ -372,6 +394,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function LiteralMissing() { return <div />; }",
           "target": "LiteralMissing.tsx#LiteralMissing"
         }
       ],
@@ -392,6 +415,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function LiteralMissing() { return <div />; }",
           "target": "LiteralMissing.tsx#LiteralMissing"
         },
         {
@@ -399,6 +423,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `First` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function First() { return <div />; }",
           "target": "First.tsx#First"
         },
         {
@@ -406,6 +431,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Second` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Second() { return <div />; }",
           "target": "Second.tsx#Second"
         }
       ],
@@ -421,6 +447,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Child` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Child() { return <div />; }",
           "target": "unanalyzable"
         },
         {
@@ -428,6 +455,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate visual harness",
           "target": "require-storybook-stories"
         },
         {
@@ -435,6 +463,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: separate visual harness",
           "target": "require-storybook-stories"
         }
       ],
@@ -455,6 +484,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate visual harness",
           "target": "require-storybook-stories"
         },
         {
@@ -462,6 +492,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: separate visual harness",
           "target": "require-storybook-stories"
         }
       ],
@@ -482,6 +513,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate visual harness",
           "target": "require-storybook-stories"
         },
         {
@@ -489,6 +521,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: separate visual harness",
           "target": "require-storybook-stories"
         }
       ],
@@ -538,6 +571,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Card() {",
           "target": "components/Card.tsx#Card"
         }
       ],
@@ -558,6 +592,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Hidden` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Hidden() {",
           "target": "components/Hidden.tsx#Hidden"
         }
       ],
@@ -604,6 +639,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Missing() {",
           "target": "components/Missing.tsx#Missing"
         }
       ],
@@ -636,6 +672,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Card() {",
           "target": "components/Card.tsx#Card"
         }
       ],
@@ -656,6 +693,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Card() {",
           "target": "components/Card.tsx#Card"
         },
         {
@@ -663,6 +701,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Card() {",
           "target": "components/Card.tsx#Card"
         }
       ],
@@ -702,6 +741,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `LiteralMissing` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function LiteralMissing() { return <div />; }",
           "target": "unanalyzable"
         }
       ],
@@ -787,6 +827,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "React component `Sibling` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Sibling() {",
           "target": "components/Card.tsx#Sibling"
         }
       ],
@@ -802,6 +843,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
         },
         {
@@ -809,6 +851,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -829,6 +872,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -849,6 +893,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -862,6 +907,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
         }
       ],
@@ -877,6 +923,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -884,6 +931,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -891,6 +939,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -904,6 +953,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected React source could not be analyzed (parsing components/Broken.jsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Intentionally malformed JSX is also an explicitly selectable input.",
           "target": "unanalyzable"
         }
       ],
@@ -919,6 +969,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -926,6 +977,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -933,6 +985,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -953,6 +1006,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -960,6 +1014,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -967,6 +1022,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -987,6 +1043,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -994,6 +1051,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -1001,6 +1059,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1021,6 +1080,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
         },
         {
@@ -1028,6 +1088,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1041,6 +1102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Valid` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Valid() { return <button />; }",
           "target": "outside/Valid.tsx#Valid"
         }
       ],
@@ -1056,6 +1118,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -1063,6 +1126,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -1070,6 +1134,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1083,6 +1148,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Valid` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Valid() { return <button />; }",
           "target": "outside/Valid.tsx#Valid"
         }
       ],
@@ -1098,6 +1164,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -1105,6 +1172,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -1112,6 +1180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1125,6 +1194,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected React source could not be analyzed (parsing outside/NextLine.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 118, end: 119 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "unanalyzable"
         }
       ],
@@ -1140,6 +1210,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1153,6 +1224,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
         }
       ],
@@ -1168,6 +1240,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -1175,6 +1248,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "export function Broken( { // no-mistakes-disable-line require-storybook-stories: independent coverage",
           "target": "require-storybook-stories"
         },
         {
@@ -1182,6 +1256,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1202,6 +1277,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1222,6 +1298,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1235,6 +1312,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Intentionally malformed: explicit selection must not silently pass.",
           "target": "unanalyzable"
         }
       ],
@@ -1250,6 +1328,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1270,6 +1349,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line require-storybook-stories: only suppresses line two",
           "target": "require-storybook-stories"
         }
       ],
@@ -1314,6 +1394,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
         }
       ],
@@ -1327,6 +1408,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         }
       ],
@@ -1347,6 +1429,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1361,6 +1444,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
         }
       ],
@@ -1381,6 +1465,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1388,6 +1473,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1408,6 +1494,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1415,6 +1502,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1435,6 +1523,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1442,6 +1531,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
         }
       ],
@@ -1462,6 +1552,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1469,6 +1560,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1484,6 +1576,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate harness",
           "target": "require-storybook-stories"
         },
         {
@@ -1491,6 +1584,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-line require-storybook-stories: separate harness",
           "target": "require-storybook-stories"
         }
       ],
@@ -1504,6 +1598,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         }
       ],
@@ -1524,6 +1619,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1531,6 +1627,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Unknown` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "components/Unknown.tsx#Unknown"
         },
         {
@@ -1538,6 +1635,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
         }
       ],
@@ -1553,6 +1651,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
         }
       ],
@@ -1566,6 +1665,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         }
       ],
@@ -1581,6 +1681,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "// Keep this malformed: its hidden imports make this application incomplete.",
           "target": "unanalyzable"
         }
       ],
@@ -1594,6 +1695,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         }
       ],
@@ -1609,6 +1711,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate harness",
           "target": "require-storybook-stories"
         },
         {
@@ -1616,6 +1719,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-line require-storybook-stories: separate harness",
           "target": "require-storybook-stories"
         }
       ],
@@ -1629,6 +1733,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         }
       ],
@@ -1644,6 +1749,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file require-storybook-stories: separate harness",
           "target": "require-storybook-stories"
         },
         {
@@ -1651,6 +1757,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-line require-storybook-stories: separate harness",
           "target": "require-storybook-stories"
         }
       ],
@@ -1664,6 +1771,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         }
       ],
@@ -1684,6 +1792,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1691,6 +1800,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1711,6 +1821,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1718,6 +1829,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1738,6 +1850,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1745,6 +1858,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1765,6 +1879,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1772,6 +1887,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1792,6 +1908,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1799,6 +1916,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1819,6 +1937,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1826,6 +1945,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1846,6 +1966,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Missing = () => <div />;",
           "target": "components/Missing.tsx#Missing"
         },
         {
@@ -1853,6 +1974,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export const Unknown = () => <div />;",
           "target": "unanalyzable"
         }
       ],
@@ -1885,6 +2007,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
           "rule": "require-storybook-stories",
+          "sourceLine": "export function Card() {",
           "target": "components/Card.tsx#Card"
         }
       ],

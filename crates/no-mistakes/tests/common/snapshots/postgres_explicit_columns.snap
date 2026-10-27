@@ -28,6 +28,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/ctes.sql:2: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "WITH \"Orders\" AS (SELECT 1) SELECT * FROM orders;",
           "target": "orders"
         }
       ],
@@ -60,6 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/dml-ctes.sql:1: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "WITH changed AS (UPDATE orders SET status = 'x' RETURNING *) SELECT id FROM changed;",
           "target": "orders"
         },
         {
@@ -67,6 +69,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/dml-ctes.sql:2: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "WITH changed AS (DELETE FROM orders RETURNING *) SELECT id FROM changed;",
           "target": "orders"
         },
         {
@@ -74,6 +77,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/dml-ctes.sql:3: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "WITH changed AS (INSERT INTO orders (id) VALUES (1) RETURNING *) SELECT id FROM changed;",
           "target": "orders"
         },
         {
@@ -81,6 +85,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/dml-ctes.sql:4: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "WITH ids AS (SELECT 1) UPDATE orders SET status = 'x' RETURNING *;",
           "target": "orders"
         },
         {
@@ -88,6 +93,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/dml-ctes.sql:5: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "WITH ids AS (SELECT 1) DELETE FROM orders RETURNING *;",
           "target": "orders"
         }
       ],
@@ -120,6 +126,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "queries.ts:10: executed SQL is not statically recoverable for explicit columns",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(sqlText);",
           "target": "unanalyzable"
         },
         {
@@ -127,6 +134,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "queries.ts:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"SELECT * FROM orders\");",
           "target": "orders"
         },
         {
@@ -134,6 +142,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "queries.ts:5: SQL could not be analyzed for explicit columns",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"THIS IS NOT SQL\");",
           "target": "unanalyzable"
         },
         {
@@ -141,6 +150,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "queries.ts:7: SQL could not be analyzed for explicit columns",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"THIS IS NOT SQL\");",
           "target": "unanalyzable"
         }
       ],
@@ -161,6 +171,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "queries.ts:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"SELECT * FROM orders\");",
           "target": "orders"
         }
       ],
@@ -181,6 +192,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/function-lines.sql:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "o.*",
           "target": "orders"
         }
       ],
@@ -213,6 +225,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "src/composed.mts:16: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts second",
           "target": "accounts"
         },
         {
@@ -220,6 +233,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/composed.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts first",
           "target": "accounts"
         },
         {
@@ -227,6 +241,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "src/helper.mts:12: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts attempt",
           "target": "accounts"
         },
         {
@@ -234,6 +249,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/imported-other.mts:4: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "return sql`SELECT * FROM accounts other_imported`",
           "target": "accounts"
         },
         {
@@ -241,6 +257,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "src/imported-source.mts:11: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts imported_second",
           "target": "accounts"
         },
         {
@@ -248,6 +265,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/imported-source.mts:20: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts imported_direct",
           "target": "accounts"
         },
         {
@@ -255,6 +273,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 32,
           "message": "src/imported-source.mts:32: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "return sql`SELECT * FROM accounts suppressed`",
           "target": "accounts"
         },
         {
@@ -262,6 +281,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/imported-source.mts:6: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts imported_first",
           "target": "accounts"
         },
         {
@@ -269,6 +289,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/single.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts attempt",
           "target": "accounts"
         }
       ],
@@ -289,6 +310,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "src/composed.mts:16: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts second",
           "target": "accounts"
         },
         {
@@ -296,6 +318,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/composed.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts first",
           "target": "accounts"
         },
         {
@@ -303,6 +326,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "src/helper.mts:12: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts attempt",
           "target": "accounts"
         },
         {
@@ -310,6 +334,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/imported-other.mts:4: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "return sql`SELECT * FROM accounts other_imported`",
           "target": "accounts"
         },
         {
@@ -317,6 +342,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "src/imported-source.mts:11: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts imported_second",
           "target": "accounts"
         },
         {
@@ -324,6 +350,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/imported-source.mts:20: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts imported_direct",
           "target": "accounts"
         },
         {
@@ -331,6 +358,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/imported-source.mts:6: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts imported_first",
           "target": "accounts"
         },
         {
@@ -338,6 +366,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/single.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts attempt",
           "target": "accounts"
         }
       ],
@@ -353,6 +382,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 31,
           "message": "directive for `postgres-explicit-columns` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-explicit-columns",
           "target": "postgres-explicit-columns"
         }
       ],
@@ -366,6 +396,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "src/composed.mts:16: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts second",
           "target": "accounts"
         },
         {
@@ -373,6 +404,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/composed.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts first",
           "target": "accounts"
         },
         {
@@ -380,6 +412,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "src/helper.mts:12: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts attempt",
           "target": "accounts"
         },
         {
@@ -387,6 +420,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/single.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts attempt",
           "target": "accounts"
         }
       ],
@@ -407,6 +441,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/insert-alias.sql:1: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO orders AS o (id) VALUES (1) RETURNING o.*;",
           "target": "orders"
         },
         {
@@ -414,6 +449,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/insert-alias.sql:2: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO orders DEFAULT VALUES RETURNING *;",
           "target": "orders"
         },
         {
@@ -421,6 +457,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/insert-alias.sql:3: SELECT * reads all 40 columns of public.orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT public.orders.* FROM public.orders;",
           "target": "public.orders"
         }
       ],
@@ -441,6 +478,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/invalid.sql:1: SQL could not be analyzed for explicit columns",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "THIS IS NOT SQL;",
           "target": "unanalyzable"
         }
       ],
@@ -473,6 +511,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/join-wide.sql:1: SELECT * reads all 20 columns of shipments (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM orders JOIN shipments ON true;",
           "target": "shipments"
         },
         {
@@ -480,6 +519,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/join-wide.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM orders JOIN shipments ON true;",
           "target": "orders"
         },
         {
@@ -487,6 +527,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/qualified.sql:1: SELECT * reads all 40 columns of public.orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM public.orders WHERE id = $1;",
           "target": "public.orders"
         }
       ],
@@ -507,6 +548,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/view.sql:1: SELECT * reads all columns of view_public_tags, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM view_public_tags;",
           "target": "view_public_tags"
         }
       ],
@@ -539,6 +581,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/lenient-lines.sql:4: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM orders;",
           "target": "orders"
         }
       ],
@@ -571,6 +614,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "sql/lenient-returning.sql:13: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "*;",
           "target": "orders"
         },
         {
@@ -578,6 +622,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/lenient-returning.sql:5: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "*;",
           "target": "orders"
         },
         {
@@ -585,6 +630,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "sql/lenient-returning.sql:9: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "orders.*;",
           "target": "orders"
         }
       ],
@@ -617,6 +663,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/tags.sql:1: SELECT * reads every column of tags, including columns added later; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM tags;",
           "target": "tags"
         }
       ],
@@ -637,6 +684,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/lines.sql:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "*",
           "target": "orders"
         },
         {
@@ -644,6 +692,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/lines.sql:6: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "orders.*",
           "target": "orders"
         }
       ],
@@ -664,6 +713,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/qualified.sql:1: SELECT * reads all columns of public.orders, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM public.orders;",
           "target": "public.orders"
         }
       ],
@@ -684,6 +734,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/qualified.sql:1: SELECT * reads all 40 columns of public.orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM public.orders;",
           "target": "public.orders"
         },
         {
@@ -691,6 +742,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/qualified.sql:2: SELECT * reads all 40 columns of archive.orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT o.* FROM archive.orders o;",
           "target": "archive.orders"
         }
       ],
@@ -711,6 +763,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/accounts.sql:1: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM accounts WHERE id = $1;",
           "target": "accounts"
         },
         {
@@ -718,6 +771,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/cte.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "WITH recent AS (SELECT * FROM orders WHERE id > $1) SELECT id FROM recent;",
           "target": "orders"
         },
         {
@@ -725,6 +779,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/join.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT o.*, a.name FROM orders o JOIN accounts a ON a.id = o.account_id;",
           "target": "orders"
         },
         {
@@ -732,6 +787,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/returning.sql:1: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "UPDATE orders SET status = 'paid' WHERE id = $1 RETURNING *;",
           "target": "orders"
         },
         {
@@ -739,6 +795,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/star.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM orders WHERE id = $1;",
           "target": "orders"
         }
       ],
@@ -771,6 +828,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/peers.sql:1: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "UPDATE tags SET id = 1 FROM orders o RETURNING o.*;",
           "target": "orders"
         },
         {
@@ -778,6 +836,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/peers.sql:2: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "DELETE FROM tags USING orders o RETURNING o.*;",
           "target": "orders"
         },
         {
@@ -785,6 +844,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/peers.sql:4: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "DELETE FROM orders o RETURNING o.*;",
           "target": "orders"
         }
       ],
@@ -805,6 +865,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/suppress.sql:4: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "*",
           "target": "orders"
         },
         {
@@ -812,6 +873,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "sql/suppress.sql:8: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "RETURNING *;",
           "target": "orders"
         }
       ],
@@ -844,6 +906,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "suppressed.ts:4: SQL could not be analyzed for explicit columns",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"THIS IS NOT SQL\");",
           "target": "unanalyzable"
         }
       ],
@@ -876,6 +939,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/standalone-table.sql:2: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "TABLE accounts;",
           "target": "accounts"
         }
       ],
@@ -908,6 +972,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/table-left-arm.sql:1: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "TABLE accounts UNION ALL SELECT id FROM safe;",
           "target": "accounts"
         },
         {
@@ -915,6 +980,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/table-right-arm.sql:1: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT id FROM safe UNION ALL TABLE accounts;",
           "target": "accounts"
         }
       ],
@@ -935,6 +1001,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/file.sql:2: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM orders WHERE id = $1;",
           "target": "orders"
         },
         {
@@ -942,6 +1009,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/line.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM orders WHERE id = $1; -- postgres-explicit-columns",
           "target": "orders"
         },
         {
@@ -949,6 +1017,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/next-line.sql:2: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM orders WHERE id = $1;",
           "target": "orders"
         }
       ],
@@ -981,6 +1050,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/values.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "INSERT INTO logs (payload) VALUES ((SELECT json_agg(r) FROM (SELECT * FROM orders) r));",
           "target": "orders"
         }
       ],
@@ -1001,6 +1071,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/functions.sql:2: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT ARRAY[row_to_json(o.*)] FROM orders o;",
           "target": "orders"
         },
         {
@@ -1008,6 +1079,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/functions.sql:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT array_agg(id ORDER BY row_to_json(o.*)) FROM orders o;",
           "target": "orders"
         }
       ],
@@ -1040,6 +1112,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/json-upper.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT ROW_TO_JSON(o.*) FROM orders o WHERE id = $1;",
           "target": "orders"
         }
       ],

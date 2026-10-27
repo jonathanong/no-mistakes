@@ -15,19 +15,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "package.json",
           "line": 1,
           "message": "package.json: \"a\": \"file:../a\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "{"
         },
         {
           "file": "package.json",
           "line": 1,
           "message": "package.json: \"b\": \"link:../b\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "{"
         },
         {
           "file": "package.json",
           "line": 1,
           "message": "package.json: \"c\": \"git+https://github.com/x/y\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "{"
         }
       ],
       "warnings": []
@@ -99,6 +102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/broken/package.json: cannot verify dependency policy because this manifest could not be read or parsed: EOF while parsing an object at line 2 column 0. Repair the manifest or restore read access.",
           "rule": "package-json-registry-only",
+          "sourceLine": "{",
           "target": "unanalyzable"
         }
       ],
@@ -154,7 +158,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "package.json",
           "line": 1,
           "message": "package.json: \"my-lib\": \"file:../my-lib\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "{\"dependencies\": {\"my-lib\": \"file:../my-lib\", \"other\": \"^1.0.0\"}}"
         }
       ],
       "warnings": []
@@ -173,7 +178,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "package.json",
           "line": 1,
           "message": "package.json: \"my-lib\": \"file:../my-lib\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "{\"dependencies\": {\"my-lib\": \"file:../my-lib\"}}"
         }
       ],
       "warnings": []
@@ -192,7 +198,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm-lock.yaml",
           "line": 1,
           "message": "pnpm-lock.yaml: package \"is-buffer@1.1.6\" has a non-registry resolution (tarball) — only npm registry packages are permitted",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "---"
         }
       ],
       "warnings": []
@@ -212,6 +219,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-lock.yaml: pnpm lockfile could not be parsed: Malformed",
           "rule": "package-json-registry-only",
+          "sourceLine": "{ invalid: yaml: [[[",
           "target": "unanalyzable"
         }
       ],
@@ -232,6 +240,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-lock.yaml: pnpm lockfile has a non-env document before the project lockfile",
           "rule": "package-json-registry-only",
+          "sourceLine": "---",
           "target": "unanalyzable"
         }
       ],
@@ -300,6 +309,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-lock.yaml: pnpm lockfile could not be parsed: Malformed",
           "rule": "package-json-registry-only",
+          "sourceLine": ": invalid: yaml: {{{",
           "target": "unanalyzable"
         }
       ],
@@ -343,7 +353,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm-lock.yaml",
           "line": 1,
           "message": "pnpm-lock.yaml: package \"my-pkg@1.0.0\" has a non-registry resolution (tarball) — only npm registry packages are permitted",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "lockfileVersion: '9.0'"
         }
       ],
       "warnings": []
@@ -394,7 +405,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm-lock.yaml",
           "line": 1,
           "message": "pnpm-lock.yaml: package \"config-plugin@1.0.0\" has a non-registry resolution (tarball) — only npm registry packages are permitted",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "---"
         }
       ],
       "warnings": []
@@ -413,7 +425,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm-lock.yaml",
           "line": 1,
           "message": "pnpm-lock.yaml: package \"config-plugin@1.0.0\" has a non-registry resolution (tarball) — only npm registry packages are permitted",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "---"
         }
       ],
       "warnings": []
@@ -432,7 +445,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm-lock.yaml",
           "line": 1,
           "message": "pnpm-lock.yaml: package \"github.com/org/repo\" has a non-registry resolution (repo) — only npm registry packages are permitted",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "---"
         }
       ],
       "warnings": []
@@ -451,7 +465,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "packages/a/package.json",
           "line": 1,
           "message": "packages/a/package.json: \"bad\": \"file:../bad\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
-          "rule": "package-json-registry-only"
+          "rule": "package-json-registry-only",
+          "sourceLine": "{\"dependencies\": {\"bad\": \"file:../bad\"}}"
         }
       ],
       "warnings": []

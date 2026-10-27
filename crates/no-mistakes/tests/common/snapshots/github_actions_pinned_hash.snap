@@ -15,7 +15,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": ".github/workflows/ci.yml:1: `uses: dtolnay/rust-toolchain@stable` — `stable` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: dtolnay/rust-toolchain@stable"
         }
       ],
       "warnings": []
@@ -70,7 +71,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@v6.0.2` — `v6.0.2` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: \"actions/checkout@v6.0.2\" # v6.0.2"
         }
       ],
       "warnings": []
@@ -101,25 +103,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 11,
           "message": ".github/workflows/ci.yml:11: `uses: actions/setup-node@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/setup-node@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
         },
         {
           "file": ".github/workflows/ci.yml",
           "line": 13,
           "message": ".github/workflows/ci.yml:13: `uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `# main` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # main"
         },
         {
           "file": ".github/workflows/ci.yml",
           "line": 7,
           "message": ".github/workflows/ci.yml:7: `uses: actions/checkout@v6.0.2` — `v6.0.2` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@v6.0.2"
         },
         {
           "file": ".github/workflows/ci.yml",
           "line": 9,
           "message": ".github/workflows/ci.yml:9: `uses: dtolnay/rust-toolchain@stable` — `stable` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: dtolnay/rust-toolchain@stable"
         }
       ],
       "warnings": []
@@ -222,7 +228,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": ".github/workflows/ci.yml:1: `uses: my-org/my-repo/.github/workflows/build.yml@main` — `main` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: my-org/my-repo/.github/workflows/build.yml@main"
         }
       ],
       "warnings": []
@@ -241,7 +248,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `# main` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # main"
         }
       ],
       "warnings": []
@@ -260,7 +268,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
         }
       ],
       "warnings": []
@@ -279,7 +288,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/alias-fail.yml",
           "line": 3,
           "message": ".github/workflows/alias-fail.yml:3: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: *checkout"
         }
       ],
       "warnings": []
@@ -298,7 +308,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/aliased-steps-fail.yml",
           "line": 10,
           "message": ".github/workflows/aliased-steps-fail.yml:10: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -317,7 +328,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/anchor-flow-fail.yml",
           "line": 1,
           "message": ".github/workflows/anchor-flow-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: &checkout actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -336,7 +348,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/anchor-key-same-line-fail.yml",
           "line": 6,
           "message": ".github/workflows/anchor-key-same-line-fail.yml:6: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: actions/checkout@v4"
         }
       ],
       "warnings": []
@@ -355,13 +368,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/anchor-step-fail.yml",
           "line": 6,
           "message": ".github/workflows/anchor-step-fail.yml:6: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: actions/checkout@v4"
         },
         {
           "file": ".github/workflows/anchor-step-fail.yml",
           "line": 7,
           "message": ".github/workflows/anchor-step-fail.yml:7: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- &same { uses: actions/setup-node@v4 }"
         }
       ],
       "warnings": []
@@ -392,7 +407,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/anchored-flow-steps-fail.yml",
           "line": 10,
           "message": ".github/workflows/anchored-flow-steps-fail.yml:10: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -411,13 +427,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/bare-dash-step-fail.yml",
           "line": 6,
           "message": ".github/workflows/bare-dash-step-fail.yml:6: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: actions/checkout@v4"
         },
         {
           "file": ".github/workflows/bare-dash-step-fail.yml",
           "line": 8,
           "message": ".github/workflows/bare-dash-step-fail.yml:8: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: actions/setup-node@v4"
         }
       ],
       "warnings": []
@@ -436,13 +454,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/block-chomp-comment-fail.yml",
           "line": 6,
           "message": ".github/workflows/block-chomp-comment-fail.yml:6: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
         },
         {
           "file": ".github/workflows/block-chomp-comment-fail.yml",
           "line": 9,
           "message": ".github/workflows/block-chomp-comment-fail.yml:9: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "actions/checkout@v4"
         }
       ],
       "warnings": []
@@ -461,13 +481,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/block-header-comment-fail.yml",
           "line": 4,
           "message": ".github/workflows/block-header-comment-fail.yml:4: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@v4"
         },
         {
           "file": ".github/workflows/block-header-comment-fail.yml",
           "line": 7,
           "message": ".github/workflows/block-header-comment-fail.yml:7: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "actions/checkout@v4"
         }
       ],
       "warnings": []
@@ -486,13 +508,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/block-script-fail.yml",
           "line": 11,
           "message": ".github/workflows/block-script-fail.yml:11: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "actions/checkout@v4"
         },
         {
           "file": ".github/workflows/block-script-fail.yml",
           "line": 8,
           "message": ".github/workflows/block-script-fail.yml:8: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@v4"
         }
       ],
       "warnings": []
@@ -511,7 +535,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/comment-before-value-fail.yml",
           "line": 10,
           "message": ".github/workflows/comment-before-value-fail.yml:10: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -530,13 +555,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/dedup-fail.yml",
           "line": 1,
           "message": ".github/workflows/dedup-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@v4"
         },
         {
           "file": ".github/workflows/dedup-fail.yml",
           "line": 2,
           "message": ".github/workflows/dedup-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -555,7 +582,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/echo-ref-fail.yml",
           "line": 5,
           "message": ".github/workflows/echo-ref-fail.yml:5: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -574,7 +602,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/escaped-comment-fail.yml",
           "line": 3,
           "message": ".github/workflows/escaped-comment-fail.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { name: \"foo\\\"# text\", uses: actions/checkout@v4 } # v6.0.2"
         }
       ],
       "warnings": []
@@ -593,7 +622,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/flow-break-fail.yml",
           "line": 3,
           "message": ".github/workflows/flow-break-fail.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -612,7 +642,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/flow-fail.yml",
           "line": 1,
           "message": ".github/workflows/flow-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -631,7 +662,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/flow-hash-comment-fail.yml",
           "line": 3,
           "message": ".github/workflows/flow-hash-comment-fail.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { name: foo#bar, uses: actions/checkout@v4 } # v6.0.2"
         }
       ],
       "warnings": []
@@ -650,7 +682,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/flow-pass.yml",
           "line": 8,
           "message": ".github/workflows/flow-pass.yml:8: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -669,7 +702,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/flow-with-break-fail.yml",
           "line": 11,
           "message": ".github/workflows/flow-with-break-fail.yml:11: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "actions/checkout@v4"
         }
       ],
       "warnings": []
@@ -688,7 +722,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/folded-flow-fail.yml",
           "line": 1,
           "message": ".github/workflows/folded-flow-fail.yml:1: `uses: actions/checkout@v4 continued` — `v4 continued` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: \"actions/checkout@v4"
         }
       ],
       "warnings": []
@@ -719,13 +754,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/job-named-env-fail.yml",
           "line": 5,
           "message": ".github/workflows/job-named-env-fail.yml:5: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         },
         {
           "file": ".github/workflows/job-named-env-fail.yml",
           "line": 8,
           "message": ".github/workflows/job-named-env-fail.yml:8: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/setup-node@v4 }"
         }
       ],
       "warnings": []
@@ -744,13 +781,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/job-named-env-workflow-fail.yml",
           "line": 5,
           "message": ".github/workflows/job-named-env-workflow-fail.yml:5: `uses: owner/repo/.github/workflows/reuse.yml@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: owner/repo/.github/workflows/reuse.yml@v4"
         },
         {
           "file": ".github/workflows/job-named-env-workflow-fail.yml",
           "line": 7,
           "message": ".github/workflows/job-named-env-workflow-fail.yml:7: `uses: owner/repo/.github/workflows/other.yml@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: owner/repo/.github/workflows/other.yml@v4"
         }
       ],
       "warnings": []
@@ -769,13 +808,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/job-named-steps-fail.yml",
           "line": 4,
           "message": ".github/workflows/job-named-steps-fail.yml:4: `uses: owner/repo/.github/workflows/reuse.yml@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: owner/repo/.github/workflows/reuse.yml@v4"
         },
         {
           "file": ".github/workflows/job-named-steps-fail.yml",
           "line": 6,
           "message": ".github/workflows/job-named-steps-fail.yml:6: `uses: owner/repo/.github/workflows/reuse.yml@v3` — `v3` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "uses: owner/repo/.github/workflows/reuse.yml@v3"
         }
       ],
       "warnings": []
@@ -794,13 +835,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/mapping-alias-fail.yml",
           "line": 16,
           "message": ".github/workflows/mapping-alias-fail.yml:16: `uses: actions/checkout@v3` — `v3` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- *plain"
         },
         {
           "file": ".github/workflows/mapping-alias-fail.yml",
           "line": 8,
           "message": ".github/workflows/mapping-alias-fail.yml:8: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "steps: [*shared]"
         }
       ],
       "warnings": []
@@ -819,7 +862,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/matrix-next-line-fail.yml",
           "line": 12,
           "message": ".github/workflows/matrix-next-line-fail.yml:12: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -838,13 +882,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/matrix-uses-fail.yml",
           "line": 17,
           "message": ".github/workflows/matrix-uses-fail.yml:17: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@v4"
         },
         {
           "file": ".github/workflows/matrix-uses-fail.yml",
           "line": 9,
           "message": ".github/workflows/matrix-uses-fail.yml:9: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd }"
         }
       ],
       "warnings": []
@@ -863,13 +909,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/multi-doc-fail.yml",
           "line": 1,
           "message": ".github/workflows/multi-doc-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@v4"
         },
         {
           "file": ".github/workflows/multi-doc-fail.yml",
           "line": 3,
           "message": ".github/workflows/multi-doc-fail.yml:3: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/setup-node@v4"
         }
       ],
       "warnings": []
@@ -888,7 +936,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/multi-doc-flow-fail.yml",
           "line": 1,
           "message": ".github/workflows/multi-doc-flow-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -919,7 +968,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/next-line-fail.yml",
           "line": 2,
           "message": ".github/workflows/next-line-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "actions/checkout@v4"
         }
       ],
       "warnings": []
@@ -938,7 +988,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/next-line-pass.yml",
           "line": 3,
           "message": ".github/workflows/next-line-pass.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -957,7 +1008,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/numeric-job-fail.yml",
           "line": 5,
           "message": ".github/workflows/numeric-job-fail.yml:5: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@v4"
         }
       ],
       "warnings": []
@@ -976,7 +1028,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/plain-apostrophe-comment-fail.yml",
           "line": 4,
           "message": ".github/workflows/plain-apostrophe-comment-fail.yml:4: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { name: Don't fail, uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd }"
         }
       ],
       "warnings": []
@@ -995,7 +1048,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/plain-apostrophe-fail.yml",
           "line": 3,
           "message": ".github/workflows/plain-apostrophe-fail.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -1014,7 +1068,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/plain-hash-fail.yml",
           "line": 2,
           "message": ".github/workflows/plain-hash-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { name: foo#bar, uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -1033,7 +1088,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/quote-escape-fail.yml",
           "line": 2,
           "message": ".github/workflows/quote-escape-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { name: \"foo\\\"bar\", uses: actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -1052,7 +1108,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/quoted-escape-key-fail.yml",
           "line": 2,
           "message": ".github/workflows/quoted-escape-key-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { \"us\\u0065s\": actions/checkout@v4 }"
         }
       ],
       "warnings": []
@@ -1071,7 +1128,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/quoted-key-fail.yml",
           "line": 1,
           "message": ".github/workflows/quoted-key-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- \"uses\": actions/checkout@v4"
         }
       ],
       "warnings": []
@@ -1090,13 +1148,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/same-indent-steps-fail.yml",
           "line": 10,
           "message": ".github/workflows/same-indent-steps-fail.yml:10: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@v4"
         },
         {
           "file": ".github/workflows/same-indent-steps-fail.yml",
           "line": 11,
           "message": ".github/workflows/same-indent-steps-fail.yml:11: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/setup-node@v4"
         }
       ],
       "warnings": []
@@ -1115,7 +1175,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/same-line-uses-fail.yml",
           "line": 2,
           "message": ".github/workflows/same-line-uses-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "steps: [{ uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd }, { uses: actions/checkout@v4 }] # v6.0.2"
         }
       ],
       "warnings": []
@@ -1134,13 +1195,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/space-before-colon-fail.yml",
           "line": 2,
           "message": ".github/workflows/space-before-colon-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses : actions/checkout@v4"
         },
         {
           "file": ".github/workflows/space-before-colon-fail.yml",
           "line": 3,
           "message": ".github/workflows/space-before-colon-fail.yml:3: `uses: actions/checkout@v3` — `v3` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses : actions/checkout@v3 }"
         }
       ],
       "warnings": []
@@ -1171,7 +1234,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/with-comment-fail.yml",
           "line": 5,
           "message": ".github/workflows/with-comment-fail.yml:5: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- { uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd }"
         }
       ],
       "warnings": []
@@ -1202,7 +1266,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83d` — `de0fac2e4500dabe0009e67214ff5f5447ce83d` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83d"
         }
       ],
       "warnings": []
@@ -1233,7 +1298,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 1,
           "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@v6.0.2` — `v6.0.2` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
-          "rule": "github-actions-pinned-hash"
+          "rule": "github-actions-pinned-hash",
+          "sourceLine": "- uses: actions/checkout@v6.0.2"
         }
       ],
       "warnings": []

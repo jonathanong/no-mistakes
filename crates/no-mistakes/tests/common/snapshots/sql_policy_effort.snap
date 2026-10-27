@@ -11,6 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "src/queries.ts:25: postgres-explicit-columns application #0 has unresolved SQL for returning-star, select-star: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(opaqueSql());",
           "target": "returning-star, select-star"
         },
         {
@@ -18,6 +19,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "src/queries.ts:25: postgres-required-predicates application #0 has unresolved SQL for relation:accounts:predicate:deleted_at IS NULL: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(opaqueSql());",
           "target": "relation:accounts:predicate:deleted_at IS NULL"
         },
         {
@@ -25,6 +27,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "src/queries.ts:26: postgres-explicit-columns application #0 has unresolved SQL for returning-star, select-star: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, invalid-sql",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"SELECT FROM\");",
           "target": "returning-star, select-star"
         },
         {
@@ -32,6 +35,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "src/queries.ts:26: postgres-required-predicates application #0 has unresolved SQL for relation:accounts:predicate:deleted_at IS NULL: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, invalid-sql",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"SELECT FROM\");",
           "target": "relation:accounts:predicate:deleted_at IS NULL"
         }
       ],
@@ -45,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/queries.ts:10: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "const oneBadLocal = \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -52,6 +57,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/queries.ts:10: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "const oneBadLocal = \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -59,6 +65,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "src/queries.ts:19: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "return \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -66,6 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "src/queries.ts:19: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -73,6 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/queries.ts:9: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"SELECT * FROM accounts\");",
           "target": "accounts"
         },
         {
@@ -80,6 +89,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/queries.ts:9: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"SELECT * FROM accounts\");",
           "target": "accounts"
         }
       ],
@@ -100,6 +110,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/queries.ts:10: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "const oneBadLocal = \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -107,6 +118,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/queries.ts:10: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "const oneBadLocal = \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -114,6 +126,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "src/queries.ts:19: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "return \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -121,6 +134,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "src/queries.ts:19: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -128,6 +142,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/queries.ts:9: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"SELECT * FROM accounts\");",
           "target": "accounts"
         },
         {
@@ -135,6 +150,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/queries.ts:9: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"SELECT * FROM accounts\");",
           "target": "accounts"
         }
       ],
@@ -155,6 +171,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/queries.ts:10: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "const oneBadLocal = \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -162,6 +179,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/queries.ts:10: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "const oneBadLocal = \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -169,6 +187,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "src/queries.ts:19: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "return \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -176,6 +195,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "src/queries.ts:19: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -183,6 +203,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "src/queries.ts:25: executed SQL is not statically recoverable for explicit columns; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(opaqueSql());",
           "target": "unanalyzable"
         },
         {
@@ -190,6 +211,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "src/queries.ts:25: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(opaqueSql());",
           "target": "unanalyzable"
         },
         {
@@ -197,6 +219,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "src/queries.ts:26: SQL could not be analyzed for explicit columns",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"SELECT FROM\");",
           "target": "unanalyzable"
         },
         {
@@ -204,6 +227,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "src/queries.ts:26: SQL could not be analyzed for required predicates",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"SELECT FROM\");",
           "target": "unanalyzable"
         },
         {
@@ -211,6 +235,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/queries.ts:9: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"SELECT * FROM accounts\");",
           "target": "accounts"
         },
         {
@@ -218,6 +243,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/queries.ts:9: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"SELECT * FROM accounts\");",
           "target": "accounts"
         }
       ],
@@ -233,6 +259,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "src/queries.ts:25: postgres-explicit-columns application #0 has unresolved SQL for returning-star, select-star: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(opaqueSql());",
           "target": "returning-star, select-star"
         },
         {
@@ -240,6 +267,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "src/queries.ts:25: postgres-required-predicates application #0 has unresolved SQL for relation:accounts:predicate:deleted_at IS NULL: opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(opaqueSql());",
           "target": "relation:accounts:predicate:deleted_at IS NULL"
         },
         {
@@ -247,6 +275,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "src/queries.ts:26: postgres-explicit-columns application #0 has unresolved SQL for returning-star, select-star: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, invalid-sql",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"SELECT FROM\");",
           "target": "returning-star, select-star"
         },
         {
@@ -254,6 +283,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "src/queries.ts:26: postgres-required-predicates application #0 has unresolved SQL for relation:accounts:predicate:deleted_at IS NULL: invalid-sql",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"SELECT FROM\");",
           "target": "relation:accounts:predicate:deleted_at IS NULL"
         }
       ],
@@ -267,6 +297,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/queries.ts:10: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "const oneBadLocal = \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -274,6 +305,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/queries.ts:10: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "const oneBadLocal = \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -281,6 +313,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "src/queries.ts:19: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "return \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -288,6 +321,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "src/queries.ts:19: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return \"SELECT * FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -295,6 +329,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/queries.ts:9: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
           "rule": "postgres-explicit-columns",
+          "sourceLine": "query(\"SELECT * FROM accounts\");",
           "target": "accounts"
         },
         {
@@ -302,6 +337,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/queries.ts:9: queries against accounts must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"SELECT * FROM accounts\");",
           "target": "accounts"
         }
       ],

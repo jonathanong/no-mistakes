@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/alias.sql:3: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "ORDER BY ts;",
           "target": "created_at"
         }
       ],
@@ -36,6 +37,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/alter.sql:1: WHERE filters orders.alt_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE alt_at > $1;",
           "target": "alt_at"
         }
       ],
@@ -56,6 +58,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/custom-query.sql:1: ORDER BY custom_events.derived sorts by a column generated from slug, which is generated from other_fn(slug); consider using slug directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT slug FROM custom_events WHERE derived > $1 ORDER BY derived;",
           "target": "derived"
         },
         {
@@ -63,6 +66,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/custom-query.sql:1: WHERE filters custom_events.derived, which is generated from other_fn(slug); consider using slug directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT slug FROM custom_events WHERE derived > $1 ORDER BY derived;",
           "target": "derived"
         }
       ],
@@ -83,6 +87,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/lines.sql:3: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "WHERE created_at <> $1",
           "target": "created_at"
         },
         {
@@ -90,6 +95,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/lines.sql:4: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "ORDER BY created_at;",
           "target": "created_at"
         }
       ],
@@ -110,6 +116,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/dynamic.ts:2: executed SQL is not statically recoverable for generated column predicates",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "export function read(text: string) { return query(text); }",
           "target": "unanalyzable"
         }
       ],
@@ -130,6 +137,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.cjs:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -150,6 +158,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.cjs:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -170,6 +179,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.cts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -190,6 +200,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.cts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -210,6 +221,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.jsx:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -230,6 +242,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.jsx:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -250,6 +263,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.mjs:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -270,6 +284,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.mjs:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -290,6 +305,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -310,6 +326,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -330,6 +347,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/invoices.sql:1: ORDER BY invoices.created_at sorts by a column generated from id, which is generated from a configured expression using id; consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM invoices ORDER BY created_at;",
           "target": "created_at"
         }
       ],
@@ -350,6 +368,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/extra.sql:1: WHERE filters events.created_at, which is generated from a configured expression using id; consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM events WHERE created_at > $1;",
           "target": "created_at"
         }
       ],
@@ -370,6 +389,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/query.sql:1: WHERE filters orders.alt_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at > $1 OR alt_at > $2;",
           "target": "alt_at"
         },
         {
@@ -377,6 +397,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/query.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at > $1 OR alt_at > $2;",
           "target": "created_at"
         }
       ],
@@ -433,6 +454,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/where.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at > $1;",
           "target": "created_at"
         }
       ],
@@ -453,6 +475,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/inequality.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at != $1;",
           "target": "created_at"
         }
       ],
@@ -473,6 +496,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/between.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT o.id FROM orders o WHERE o.created_at BETWEEN $1 AND $2;",
           "target": "created_at"
         },
         {
@@ -480,6 +504,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/order.sql:1: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders ORDER BY created_at DESC LIMIT 20;",
           "target": "created_at"
         },
         {
@@ -487,6 +512,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/where.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at > $1;",
           "target": "created_at"
         }
       ],
@@ -507,6 +533,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/join.sql:1: JOIN ON compares orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN tags t ON o.created_at = t.id;",
           "target": "created_at"
         },
         {
@@ -514,6 +541,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/schema.sql:1: SQL could not be analyzed for generated column predicates",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "CREATE TABLE orders (",
           "target": "unanalyzable"
         }
       ],
@@ -534,6 +562,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/join-scope.sql:2: JOIN ON compares orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "JOIN tags ON created_at > $1",
           "target": "created_at"
         }
       ],
@@ -554,6 +583,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/lines.sql:3: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "WHERE created_at <> $1",
           "target": "created_at"
         },
         {
@@ -561,6 +591,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/lines.sql:4: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "ORDER BY created_at;",
           "target": "created_at"
         }
       ],
@@ -581,6 +612,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/mutations.sql:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "WHERE created_at > $2;",
           "target": "created_at"
         },
         {
@@ -588,6 +620,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/mutations.sql:4: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "WHERE created_at > $1;",
           "target": "created_at"
         },
         {
@@ -595,6 +628,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/mutations.sql:5: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "WITH changed AS (DELETE FROM orders WHERE created_at > $1 RETURNING id) SELECT * FROM changed;",
           "target": "created_at"
         }
       ],
@@ -627,6 +661,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/join.sql:1: JOIN ON compares orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN tags t ON o.created_at = t.id;",
           "target": "created_at"
         },
         {
@@ -634,6 +669,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/note.sql:1: WHERE filters orders.note_at, which is generated from uuid_extract_timestamp(note_id); consider using note_id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE note_at > $1;",
           "target": "note_at"
         },
         {
@@ -641,6 +677,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/schema.sql:1: SQL could not be analyzed for generated column predicates",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "CREATE TABLE orders (",
           "target": "unanalyzable"
         },
         {
@@ -648,6 +685,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/stored.sql:1: WHERE filters orders.stored_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE stored_at > $1;",
           "target": "stored_at"
         },
         {
@@ -655,6 +693,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/unique.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders JOIN tags ON orders.id = tags.id WHERE created_at > $1;",
           "target": "created_at"
         },
         {
@@ -662,6 +701,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/virtual.sql:1: WHERE filters orders.virtual_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE virtual_at > $1;",
           "target": "virtual_at"
         }
       ],
@@ -682,6 +722,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/order.sql:1: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders ORDER BY created_at DESC LIMIT 20;",
           "target": "created_at"
         }
       ],
@@ -702,6 +743,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/parse.ts:4: SQL could not be analyzed for generated column predicates",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(\"SELECT FROM\");",
           "target": "unanalyzable"
         }
       ],
@@ -722,6 +764,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(`SELECT id FROM orders WHERE created_at > $1`);",
           "target": "created_at"
         }
       ],
@@ -742,6 +785,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/qualified.sql:1: WHERE filters public.history.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM public.history WHERE created_at > $1;",
           "target": "created_at"
         }
       ],
@@ -762,6 +806,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/quoted.sql:1: WHERE filters Orders.CreatedAt, which is generated from uuid_extract_timestamp(ID); consider using ID directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT \"ID\" FROM \"Orders\" WHERE \"CreatedAt\" > $1;",
           "target": "CreatedAt"
         },
         {
@@ -769,6 +814,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/quoted.sql:2: JOIN ON compares Orders.CreatedAt, which is generated from uuid_extract_timestamp(ID); consider using ID directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT \"ID\" FROM \"Orders\" o JOIN tags t ON \"CreatedAt\" > $1;",
           "target": "CreatedAt"
         }
       ],
@@ -789,6 +835,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/suppress.sql:3: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "WHERE created_at <> $1;",
           "target": "created_at"
         },
         {
@@ -796,6 +843,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/suppress.sql:5: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "ORDER BY created_at; -- postgres-generated-column-predicates",
           "target": "created_at"
         }
       ],
@@ -828,6 +876,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/suppress.ts:4: SQL could not be analyzed for generated column predicates",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "query(\"SELECT FROM\");",
           "target": "unanalyzable"
         }
       ],
@@ -860,6 +909,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/between.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT o.id FROM orders o WHERE o.created_at BETWEEN $1 AND $2;",
           "target": "created_at"
         },
         {
@@ -867,6 +917,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/order.sql:1: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders ORDER BY created_at DESC LIMIT 20;",
           "target": "created_at"
         },
         {
@@ -874,6 +925,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/where.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at > $1;",
           "target": "created_at"
         },
         {
@@ -882,6 +934,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "stale postgres-generated-column-predicates extraGeneratedColumns entry: orders.created_at",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "- {table: orders, column: created_at, sourceColumn: id}",
           "target": "created_at"
         }
       ],
@@ -902,6 +955,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/standalone-table.sql:2: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "TABLE orders ORDER BY created_at;",
           "target": "created_at"
         }
       ],
@@ -922,6 +976,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/join.sql:1: JOIN ON compares orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN tags t ON o.created_at = t.id;",
           "target": "created_at"
         },
         {
@@ -929,6 +984,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/schema.sql:1: SQL could not be analyzed for generated column predicates",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "CREATE TABLE orders (",
           "target": "unanalyzable"
         },
         {
@@ -936,6 +992,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/stored.sql:1: WHERE filters orders.stored_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE stored_at > $1;",
           "target": "stored_at"
         },
         {
@@ -943,6 +1000,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/unique.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders JOIN tags ON orders.id = tags.id WHERE created_at > $1;",
           "target": "created_at"
         },
         {
@@ -950,6 +1008,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/virtual.sql:1: WHERE filters orders.virtual_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE virtual_at > $1;",
           "target": "virtual_at"
         }
       ],
@@ -994,6 +1053,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/file.sql:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at > $1;",
           "target": "created_at"
         },
         {
@@ -1001,6 +1061,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/line.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at > $1; -- postgres-generated-column-predicates",
           "target": "created_at"
         },
         {
@@ -1008,6 +1069,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/next-line.sql:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at > $1;",
           "target": "created_at"
         }
       ],
@@ -1040,6 +1102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/between.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT o.id FROM orders o WHERE o.created_at BETWEEN $1 AND $2;",
           "target": "created_at"
         },
         {
@@ -1047,6 +1110,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/where.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
           "rule": "postgres-generated-column-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE created_at > $1;",
           "target": "created_at"
         }
       ],

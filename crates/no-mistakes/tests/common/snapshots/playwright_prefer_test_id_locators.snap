@@ -1,0 +1,58 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/e2e/app.spec.ts",
+          "line": 10,
+          "message": "Prefer getByTestId('search-input') over copy-coupled placeholder locator getByPlaceholder(Search); matched app element exposes data-pw=\"search-input\"",
+          "rule": "playwright-prefer-test-id-locators",
+          "sourceLine": "await page.getByPlaceholder(\"Search\").fill(\"topic\");",
+          "target": "data-pw=search-input"
+        },
+        {
+          "file": "tests/e2e/app.spec.ts",
+          "line": 11,
+          "message": "Prefer getByTestId('logo-image') over copy-coupled alt locator getByAltText(Company logo); matched app element exposes data-pw=\"logo-image\"",
+          "rule": "playwright-prefer-test-id-locators",
+          "sourceLine": "await page.getByAltText(\"Company logo\").click();",
+          "target": "data-pw=logo-image"
+        },
+        {
+          "file": "tests/e2e/app.spec.ts",
+          "line": 12,
+          "message": "Prefer getByTestId('help-button') over copy-coupled title locator getByTitle(Help); matched app element exposes data-pw=\"help-button\"",
+          "rule": "playwright-prefer-test-id-locators",
+          "sourceLine": "await page.getByTitle(\"Help\").click();",
+          "target": "data-pw=help-button"
+        },
+        {
+          "file": "tests/e2e/app.spec.ts",
+          "line": 8,
+          "message": "Prefer getByTestId('save-button') over copy-coupled role locator getByRole(button, name: Save); matched app element exposes data-pw=\"save-button\"",
+          "rule": "playwright-prefer-test-id-locators",
+          "sourceLine": "await page.getByRole(\"button\", { name: \"Save\" }).click();",
+          "target": "data-pw=save-button"
+        },
+        {
+          "file": "tests/e2e/app.spec.ts",
+          "line": 9,
+          "message": "Prefer getByTestId('email-input') over copy-coupled label locator getByLabel(Email); matched app element exposes data-pw=\"email-input\"",
+          "rule": "playwright-prefer-test-id-locators",
+          "sourceLine": "await page.getByLabel(\"Email\").fill(\"reader@example.com\");",
+          "target": "data-pw=email-input"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

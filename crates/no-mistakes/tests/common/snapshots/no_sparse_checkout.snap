@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/actions/check/action.yaml:6: composite action passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
           "rule": "no-sparse-checkout",
+          "sourceLine": "sparse-checkout: scripts",
           "target": "sparse-checkout"
         }
       ],
@@ -36,6 +37,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "ci/no-mistakes-workflows/check.yml:6: job \"build\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
           "rule": "no-sparse-checkout",
+          "sourceLine": "sparse-checkout: rules",
           "target": "sparse-checkout"
         }
       ],
@@ -68,6 +70,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": ".github/workflows/comment-and-script.yml:22: job \"build\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
           "rule": "no-sparse-checkout",
+          "sourceLine": "sparse-checkout: docs",
           "target": "sparse-checkout"
         }
       ],
@@ -87,13 +90,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/bad.yml",
           "line": 2,
           "message": ".github/workflows/bad.yml: invalid YAML (did not find expected ',' or '}' at line 2 column 1, while parsing a flow mapping at line 1 column 15)",
-          "rule": "no-sparse-checkout"
+          "rule": "no-sparse-checkout",
+          "sourceLine": ""
         },
         {
           "file": ".github/workflows/both.yml",
           "line": 6,
           "message": ".github/workflows/both.yml:6: job \"cleanup\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
           "rule": "no-sparse-checkout",
+          "sourceLine": "\"sparse-checkout\": |-",
           "target": "sparse-checkout"
         },
         {
@@ -101,6 +106,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/both.yml:8: job \"cleanup\" passes `sparse-checkout-cone-mode` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
           "rule": "no-sparse-checkout",
+          "sourceLine": "'sparse-checkout-cone-mode': false",
           "target": "sparse-checkout-cone-mode"
         },
         {
@@ -108,6 +114,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml:7: job \"build\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
           "rule": "no-sparse-checkout",
+          "sourceLine": "sparse-checkout: src",
           "target": "sparse-checkout"
         },
         {
@@ -115,6 +122,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/two-checkouts.yml:6: job \"build\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
           "rule": "no-sparse-checkout",
+          "sourceLine": "sparse-checkout: first",
           "target": "sparse-checkout"
         },
         {
@@ -122,6 +130,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/two-checkouts.yml:7: job \"build\" passes `sparse-checkout-cone-mode` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
           "rule": "no-sparse-checkout",
+          "sourceLine": "sparse-checkout-cone-mode: false",
           "target": "sparse-checkout-cone-mode"
         }
       ],

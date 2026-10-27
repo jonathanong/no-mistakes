@@ -76,6 +76,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
           "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(job?.['timeout-minutes']).toContain(\"&& '45'\")",
           "target": "expect(job?.['timeout-minutes']).toContain(\"&& '45'\")"
         },
         {
@@ -83,6 +84,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
           "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(job.timeoutMinutes).toEqual(8)",
           "target": "expect(job.timeoutMinutes).toEqual(8)"
         },
         {
@@ -90,6 +92,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
           "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(workflowSource).toContain('timeout-minutes: 15')",
           "target": "expect(workflowSource).toContain('timeout-minutes: 15')"
         },
         {
@@ -97,6 +100,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
           "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "expect(step?.['timeout-minutes']).toBe(10)",
           "target": "expect(step?.['timeout-minutes']).toBe(10)"
         }
       ],
@@ -117,6 +121,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "stale github-actions-test-timeout-literals allow entry `.github/workflows/ci.test.mts#timeout-minutes: 99`",
           "rule": "github-actions-test-timeout-literals",
+          "sourceLine": "it('keeps the step under the job budget', () => {",
           "target": ".github/workflows/ci.test.mts#timeout-minutes: 99"
         }
       ],

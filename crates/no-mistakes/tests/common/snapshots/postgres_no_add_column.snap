@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "migrations/001.sql:2: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
           "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE posts ADD COLUMN status text;",
           "target": "posts.status"
         }
       ],
@@ -55,6 +56,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-no-add-column` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-no-add-column: deployed schema exception",
           "target": "postgres-no-add-column"
         }
       ],
@@ -68,6 +70,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "migrations/001.sql:1: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
           "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE posts ADD COLUMN status text;",
           "target": "posts.status"
         }
       ],
@@ -112,6 +115,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "duplicate postgres-no-add-column allowedMigrations entry: migrations/001.sql:posts:status:TEXT:false:'draft'",
           "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE posts ADD COLUMN status text NOT NULL DEFAULT 'draft';",
           "target": "migrations/001.sql:posts:status:TEXT:false:'draft'"
         }
       ],
@@ -132,6 +136,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "migrations/001.sql:3: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
           "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE posts ADD COLUMN status text;",
           "target": "posts.status"
         }
       ],
@@ -147,6 +152,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "migrations/001.sql:6: SQL statement `ALTER GROUP regress_priv_group2 ADD USER regress_priv_user2` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER GROUP regress_priv_group2 ADD USER regress_priv_user2;",
           "target": "ALTER GROUP regress_priv_group2 ADD USER regress_priv_user2"
         }
       ],
@@ -160,6 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "migrations/001.sql:4: SQL statement `ALTER DOMAIN dcomptype ADD CONSTRAINT c1 CHECK (` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER DOMAIN dcomptype ADD CONSTRAINT c1 CHECK ((value).r <= (value).i);",
           "target": "ALTER DOMAIN dcomptype ADD CONSTRAINT c1 CHECK ("
         }
       ],
@@ -180,6 +187,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "stale postgres-no-add-column allowedMigrations entry: migrations/001.sql:posts:status:TEXT:false:'draft'",
           "rule": "postgres-no-add-column",
+          "sourceLine": "DO $$ BEGIN",
           "target": "migrations/001.sql:posts:status:TEXT:false:'draft'"
         },
         {
@@ -187,6 +195,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "migrations/001.sql:2: ALTER TABLE ADD COLUMN does not match an allowedMigrations entry; update the exact path, table, column, type, nullable, and default fields or fold the column into the original CREATE TABLE definition",
           "rule": "postgres-no-add-column",
+          "sourceLine": "EXECUTE format('ALTER TABLE %I ADD COLUMN %I text NOT NULL DEFAULT %L', 'posts', 'status', 'draft');",
           "target": "dynamic_identifier.dynamic_identifier"
         }
       ],
@@ -207,6 +216,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "migrations/001.sql:1: ALTER TABLE ADD COLUMN does not match an allowedMigrations entry; update the exact path, table, column, type, nullable, and default fields or fold the column into the original CREATE TABLE definition",
           "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE posts ADD COLUMN status text NOT NULL DEFAULT 'draft';",
           "target": "posts.status"
         },
         {
@@ -214,6 +224,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "stale postgres-no-add-column allowedMigrations entry: migrations/001.sql:posts:status:TEXT:false:'published'",
           "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE posts ADD COLUMN status text NOT NULL DEFAULT 'draft';",
           "target": "migrations/001.sql:posts:status:TEXT:false:'published'"
         }
       ],

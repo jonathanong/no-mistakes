@@ -1,0 +1,71 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "cli_config": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "FeedView.swift",
+          "line": 2,
+          "message": "use a logger instead of raw print()",
+          "rule": "swift-no-raw-print",
+          "sourceLine": "print(\"[DEBUG]\", message())"
+        },
+        {
+          "file": "Qualified.swift",
+          "line": 2,
+          "message": "use a logger instead of raw print()",
+          "rule": "swift-no-raw-print",
+          "sourceLine": "Swift.print(\"[DEBUG]\", \"loaded\")"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "FeedView.swift",
+          "line": 2,
+          "message": "use a logger instead of raw print()",
+          "rule": "swift-no-raw-print",
+          "sourceLine": "print(\"[DEBUG]\", message())"
+        },
+        {
+          "file": "Qualified.swift",
+          "line": 2,
+          "message": "use a logger instead of raw print()",
+          "rule": "swift-no-raw-print",
+          "sourceLine": "Swift.print(\"[DEBUG]\", \"loaded\")"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,306 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 21,
+          "message": "selector [data-testid=\"{identifierId}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={identifierId}>From const</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={identifierId}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 22,
+          "message": "selector [data-testid=\"{flag ? 'ternary-on' : 'ternary-off'}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={flag ? 'ternary-on' : 'ternary-off'}>Ternary</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={flag ? 'ternary-on' : 'ternary-off'}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 23,
+          "message": "selector [data-testid=\"user-${templateId}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={`user-${templateId}`}>Template</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid=user-${templateId}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 24,
+          "message": "selector [data-testid=\"{IMPORTED_ID}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={IMPORTED_ID}>Imported</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={IMPORTED_ID}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 25,
+          "message": "selector [data-testid=\"{makeId()}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={makeId()}>Helper</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={makeId()}"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"default-button\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=default-button"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"missing\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=missing"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"publish\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=publish"
+        },
+        {
+          "file": "web/app/settings/page.tsx",
+          "line": 1,
+          "message": "Next.js route `/settings` is not covered by a Playwright navigation assertion",
+          "rule": "playwright-coverage",
+          "sourceLine": "export default function Settings() {",
+          "target": "/settings"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"default-button\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=default-button"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"from-const\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=from-const"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"imported-id\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=imported-id"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"missing\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=missing"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"publish\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=publish"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"ternary-off\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=ternary-off"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"ternary-on\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=ternary-on"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"user-${templateId}\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=user-${templateId}"
+        },
+        {
+          "file": "web/app/settings/page.tsx",
+          "line": 1,
+          "message": "Next.js route `/settings` is not covered by a Playwright navigation assertion",
+          "rule": "playwright-coverage",
+          "sourceLine": "export default function Settings() {",
+          "target": "/settings"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"default-button\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=default-button"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"missing\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=missing"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"publish\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=publish"
+        },
+        {
+          "file": "web/app/settings/page.tsx",
+          "line": 1,
+          "message": "Next.js route `/settings` is not covered by a Playwright navigation assertion",
+          "rule": "playwright-coverage",
+          "sourceLine": "export default function Settings() {",
+          "target": "/settings"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"default-button\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=default-button"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"missing\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=missing"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"publish\"] is not covered by a Playwright locator",
+          "rule": "playwright-coverage",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=publish"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 21,
+          "message": "selector [data-testid=\"{identifierId}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={identifierId}>From const</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={identifierId}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 22,
+          "message": "selector [data-testid=\"{flag ? 'ternary-on' : 'ternary-off'}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={flag ? 'ternary-on' : 'ternary-off'}>Ternary</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={flag ? 'ternary-on' : 'ternary-off'}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 23,
+          "message": "selector [data-testid=\"user-${templateId}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={`user-${templateId}`}>Template</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid=user-${templateId}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 24,
+          "message": "selector [data-testid=\"{IMPORTED_ID}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={IMPORTED_ID}>Imported</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={IMPORTED_ID}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 25,
+          "message": "selector [data-testid=\"{makeId()}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-coverage",
+          "sourceLine": "<button data-testid={makeId()}>Helper</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={makeId()}"
+        },
+        {
+          "file": "web/app/settings/page.tsx",
+          "line": 1,
+          "message": "Next.js route `/settings` is not covered by a Playwright navigation assertion",
+          "rule": "playwright-coverage",
+          "sourceLine": "export default function Settings() {",
+          "target": "/settings"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

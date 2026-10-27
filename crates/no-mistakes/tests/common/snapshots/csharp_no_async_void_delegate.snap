@@ -1,0 +1,99 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "cli_config": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Pages/LoadablePageBinding.cs",
+          "line": 10,
+          "message": "do not pass an async lambda to a void Action API; wrap as () => _ = FooAsync()",
+          "rule": "csharp-no-async-void-delegate",
+          "sourceLine": "RefreshCommand = new Command(async () => await RefreshAsync());"
+        },
+        {
+          "file": "Pages/MauiCommandHost.cs",
+          "line": 10,
+          "message": "do not pass an async lambda to a void Action API; wrap as () => _ = FooAsync()",
+          "rule": "csharp-no-async-void-delegate",
+          "sourceLine": "Command = new Microsoft.Maui.Controls.Command(async () => await Task.CompletedTask);"
+        },
+        {
+          "file": "Pages/SessionBinding.cs",
+          "line": 10,
+          "message": "do not pass an async lambda to a void Action API; wrap as () => _ = FooAsync()",
+          "rule": "csharp-no-async-void-delegate",
+          "sourceLine": "MainThread.BeginInvokeOnMainThread(async () => await RefreshAsync());"
+        },
+        {
+          "file": "Pages/TypedCommandHost.cs",
+          "line": 10,
+          "message": "do not pass an async lambda to a void Action API; wrap as () => _ = FooAsync()",
+          "rule": "csharp-no-async-void-delegate",
+          "sourceLine": "Command = new Command<string>(async value => await UseAsync(value));"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Pages/LoadablePageBinding.cs",
+          "line": 10,
+          "message": "do not pass an async lambda to a void Action API; wrap as () => _ = FooAsync()",
+          "rule": "csharp-no-async-void-delegate",
+          "sourceLine": "RefreshCommand = new Command(async () => await RefreshAsync());"
+        },
+        {
+          "file": "Pages/MauiCommandHost.cs",
+          "line": 10,
+          "message": "do not pass an async lambda to a void Action API; wrap as () => _ = FooAsync()",
+          "rule": "csharp-no-async-void-delegate",
+          "sourceLine": "Command = new Microsoft.Maui.Controls.Command(async () => await Task.CompletedTask);"
+        },
+        {
+          "file": "Pages/SessionBinding.cs",
+          "line": 10,
+          "message": "do not pass an async lambda to a void Action API; wrap as () => _ = FooAsync()",
+          "rule": "csharp-no-async-void-delegate",
+          "sourceLine": "MainThread.BeginInvokeOnMainThread(async () => await RefreshAsync());"
+        },
+        {
+          "file": "Pages/TypedCommandHost.cs",
+          "line": 10,
+          "message": "do not pass an async lambda to a void Action API; wrap as () => _ = FooAsync()",
+          "rule": "csharp-no-async-void-delegate",
+          "sourceLine": "Command = new Command<string>(async value => await UseAsync(value));"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

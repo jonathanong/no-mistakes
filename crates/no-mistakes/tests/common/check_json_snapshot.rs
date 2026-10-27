@@ -5,9 +5,14 @@
 //! CLI already made relative stays relative; an absolute path under the same
 //! root loses its `<root>/` prefix so Windows matches that form. Paths outside
 //! the fixture root and inside the checkout become `<repo>`. Arrays are sorted
-//! so `--jobs` cannot change the committed file. The redaction tokens are part
+//! so `--jobs` cannot change the committed file. Each finding with a file and
+//! line also gets `sourceLine`, the trimmed text of that fixture line, so a
+//! finding on the wrong line shows up in a snapshot diff. The redaction tokens are part
 //! of the contract: dropping them would make Linux, macOS, and Windows
 //! snapshots diverge.
+
+#[path = "check_json_source_lines.rs"]
+mod source_lines;
 
 use serde_json::Value;
 use std::path::{Path, PathBuf};
@@ -15,10 +20,20 @@ use std::process::Command;
 use std::sync::OnceLock;
 
 pub fn assert_saved_fixture(name: &str, cases: &[(&str, PathBuf, PathBuf)]) {
+    assert_saved_fixture_with_env(name, cases, &[]);
+}
+
+/// Like `assert_saved_fixture`, with extra environment for the child only
+/// (for example an empty `PATH` so an external tool is deterministically absent).
+pub fn assert_saved_fixture_with_env(
+    name: &str,
+    cases: &[(&str, PathBuf, PathBuf)],
+    envs: &[(&str, &str)],
+) {
     let mut document = serde_json::Map::new();
     for (label, root, config) in cases {
-        let jobs_one = run_normalized(root, config, 1);
-        let jobs_two = run_normalized(root, config, 2);
+        let jobs_one = run_normalized(root, config, 1, envs);
+        let jobs_two = run_normalized(root, config, 2, envs);
         assert_eq!(
             jobs_one, jobs_two,
             "{label} changed between --jobs 1 and --jobs 2"
@@ -37,11 +52,12 @@ pub fn assert_saved_fixture(name: &str, cases: &[(&str, PathBuf, PathBuf)]) {
     });
 }
 
-fn run_normalized(root: &Path, config: &Path, jobs: usize) -> Value {
+fn run_normalized(root: &Path, config: &Path, jobs: usize, envs: &[(&str, &str)]) -> Value {
     let jobs_arg = jobs.to_string();
     let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .current_dir(root)
         .env_remove("RAYON_NUM_THREADS")
+        .envs(envs.iter().copied())
         .args(["--jobs", &jobs_arg, "check", "--root"])
         .arg(root)
         .arg("--config")
@@ -62,6 +78,9 @@ fn run_normalized(root: &Path, config: &Path, jobs: usize) -> Value {
         "report": report,
     });
     normalize_value(&mut value, &root_variants(root));
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let repo = manifest.ancestors().nth(2).unwrap_or(manifest);
+    source_lines::add_source_lines(&mut value, root, repo);
     sort_value(&mut value);
     value
 }

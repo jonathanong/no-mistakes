@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "declaration-locations.sql:10: identifier \"temporary_table\" is 15 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TEMP TABLE temporary_table (id int);",
           "target": "temporary_table"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "declaration-locations.sql:11: identifier \"unlogged_table\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE UNLOGGED TABLE unlogged_table (id int);",
           "target": "unlogged_table"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "declaration-locations.sql:12: SQL statement `CREATE TABLE invalid_table AS SELECT FROM` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE invalid_table AS SELECT FROM;",
           "target": "CREATE TABLE invalid_table AS SELECT FROM"
         },
         {
@@ -37,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "declaration-locations.sql:13: identifier \"after_invalid\" is 13 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE after_invalid (id int);",
           "target": "after_invalid"
         },
         {
@@ -44,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "declaration-locations.sql:14: identifier \"explicit_column\" is 15 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE OR REPLACE VIEW replaced_view (explicit_column) AS SELECT 1;",
           "target": "explicit_column"
         },
         {
@@ -51,6 +56,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "declaration-locations.sql:14: identifier \"replaced_view\" is 13 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE OR REPLACE VIEW replaced_view (explicit_column) AS SELECT 1;",
           "target": "replaced_view"
         },
         {
@@ -58,6 +64,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "declaration-locations.sql:15: identifier \"temporary_view\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TEMP VIEW temporary_view AS SELECT 1;",
           "target": "temporary_view"
         },
         {
@@ -65,6 +72,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "declaration-locations.sql:16: identifier \"replaced_trigger\" is 16 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE OR REPLACE TRIGGER replaced_trigger BEFORE INSERT ON repeated_table",
           "target": "replaced_trigger"
         },
         {
@@ -72,6 +80,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "declaration-locations.sql:18: identifier \"constraint_trigger\" is 18 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE CONSTRAINT TRIGGER constraint_trigger AFTER INSERT ON repeated_table",
           "target": "constraint_trigger"
         },
         {
@@ -79,6 +88,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "declaration-locations.sql:4: identifier \"repeated_table\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE repeated_table (id int);",
           "target": "repeated_table"
         },
         {
@@ -86,6 +96,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "declaration-locations.sql:7: identifier \"repeated_table\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE repeated_table (id int);",
           "target": "repeated_table"
         }
       ],
@@ -106,6 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "migrations/long.sql:10: identifier \"table_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"table_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE table_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (",
           "target": "table_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -113,6 +125,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "migrations/long.sql:15: identifier \"idx_invoice_line_items_account_id_created_at_status_currency_code\" is 65 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"idx_invoice_line_items_account_id_created_at_status_currency_co\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE INDEX idx_invoice_line_items_account_id_created_at_status_currency_code ON accounts (id);",
           "target": "idx_invoice_line_items_account_id_created_at_status_currency_code"
         },
         {
@@ -120,6 +133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "migrations/long.sql:16: identifier \"unique_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"unique_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE UNIQUE INDEX unique_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);",
           "target": "unique_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -127,6 +141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "migrations/long.sql:18: identifier \"trigger_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"trigger_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TRIGGER trigger_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
           "target": "trigger_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -134,6 +149,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": "migrations/long.sql:22: identifier \"function_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"function_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE FUNCTION function_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx() RETURNS void LANGUAGE plpgsql AS $function$",
           "target": "function_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -141,6 +157,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 28,
           "message": "migrations/long.sql:28: identifier \"replaced_functionxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"replaced_functionxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE OR REPLACE FUNCTION replaced_functionxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx() RETURNS void LANGUAGE plpgsql AS $function$",
           "target": "replaced_functionxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -148,6 +165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "migrations/long.sql:3: identifier \"column_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"column_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE accounts (",
           "target": "column_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -155,6 +173,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "migrations/long.sql:3: identifier \"inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE accounts (",
           "target": "inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -162,6 +181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "migrations/long.sql:3: identifier \"table_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"table_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE accounts (",
           "target": "table_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -169,6 +189,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": "migrations/long.sql:34: identifier \"procedure_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"procedure_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE PROCEDURE procedure_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx() LANGUAGE plpgsql AS $procedure$",
           "target": "procedure_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -176,6 +197,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 40,
           "message": "migrations/long.sql:40: identifier \"replaced_procedurexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"replaced_procedurexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE OR REPLACE PROCEDURE replaced_procedurexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx() LANGUAGE plpgsql AS $procedure$",
           "target": "replaced_procedurexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -183,6 +205,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 46,
           "message": "migrations/long.sql:46: identifier \"view_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"view_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE VIEW view_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx AS SELECT id FROM accounts;",
           "target": "view_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -190,6 +213,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 47,
           "message": "migrations/long.sql:47: identifier \"matview_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"matview_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE MATERIALIZED VIEW matview_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx AS SELECT id FROM accounts;",
           "target": "matview_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -197,6 +221,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 48,
           "message": "migrations/long.sql:48: identifier \"enum_typexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"enum_typexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TYPE enum_typexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx AS ENUM ('ready');",
           "target": "enum_typexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -204,6 +229,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 50,
           "message": "migrations/long.sql:50: identifier \"added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "ALTER TABLE accounts ADD CONSTRAINT added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx CHECK (id IS NOT NULL);",
           "target": "added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -211,6 +237,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 51,
           "message": "migrations/long.sql:51: identifier \"added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "ALTER TABLE accounts ADD COLUMN added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx text CONSTRAINT added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx CHECK (id IS NOT NULL);",
           "target": "added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -218,6 +245,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 51,
           "message": "migrations/long.sql:51: identifier \"added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "ALTER TABLE accounts ADD COLUMN added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx text CONSTRAINT added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx CHECK (id IS NOT NULL);",
           "target": "added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -225,6 +253,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 52,
           "message": "migrations/long.sql:52: identifier \"renamed_tablexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"renamed_tablexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "ALTER TABLE accounts RENAME TO renamed_tablexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;",
           "target": "renamed_tablexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -232,6 +261,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 53,
           "message": "migrations/long.sql:53: identifier \"renamed_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"renamed_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "ALTER TABLE accounts RENAME COLUMN id TO renamed_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;",
           "target": "renamed_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -239,6 +269,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 54,
           "message": "migrations/long.sql:54: identifier \"renamed_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"renamed_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "ALTER TABLE accounts RENAME CONSTRAINT added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx TO renamed_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;",
           "target": "renamed_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -246,6 +277,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 56,
           "message": "migrations/long.sql:56: identifier \"renamed_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"renamed_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "ALTER INDEX short_idx RENAME TO renamed_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;",
           "target": "renamed_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -253,6 +285,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 61,
           "message": "migrations/long.sql:61: identifier \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE INDEX do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);",
           "target": "do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         }
       ],
@@ -273,6 +306,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "do-block.sql:4: identifier \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE INDEX do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);",
           "target": "do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         }
       ],
@@ -293,6 +327,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "duplicate.sql:1: identifier \"duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE INDEX duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);",
           "target": "duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         {
@@ -300,6 +335,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "duplicate.sql:2: identifier \"duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE INDEX duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);",
           "target": "duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         }
       ],
@@ -320,6 +356,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "function-body.sql:3: identifier \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE INDEX do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);",
           "target": "do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         }
       ],
@@ -340,6 +377,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "max-bytes.sql:1: identifier \"abcdefghijk\" is 11 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE INDEX abcdefghijk ON accounts (id);",
           "target": "abcdefghijk"
         }
       ],
@@ -372,6 +410,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "multibyte.sql:1: identifier \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa€\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa€ (id int);",
           "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa€"
         },
         {
@@ -379,6 +418,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "multibyte.sql:2: identifier \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbé\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbé (id int);",
           "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbé"
         }
       ],
@@ -411,6 +451,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "procedure-tokens.sql:2: identifier \"commented_procedure\" is 19 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE /* declaration */ PROCEDURE /* name */ commented_procedure() LANGUAGE plpgsql AS $$BEGIN NULL; END$$;",
           "target": "commented_procedure"
         },
         {
@@ -418,6 +459,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "procedure-tokens.sql:3: SQL statement `CREATE PROCEDURE app.U&\"escaped_/0070rocedure\"(` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE PROCEDURE app.U&\"escaped_\\0070rocedure\"() LANGUAGE plpgsql AS $$BEGIN NULL; END$$;",
           "target": "CREATE PROCEDURE app.U&\"escaped_/0070rocedure\"("
         },
         {
@@ -425,6 +467,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "procedure-tokens.sql:3: identifier \"escaped_procedure\" is 17 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE PROCEDURE app.U&\"escaped_\\0070rocedure\"() LANGUAGE plpgsql AS $$BEGIN NULL; END$$;",
           "target": "escaped_procedure"
         },
         {
@@ -432,6 +475,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "procedure-tokens.sql:4: SQL statement `CREATE PROCEDURE U&\"custom_!0070rocedure\" UESCAPE '!'(` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE PROCEDURE U&\"custom_!0070rocedure\" UESCAPE '!'() LANGUAGE plpgsql AS $$BEGIN NULL; END$$;",
           "target": "CREATE PROCEDURE U&\"custom_!0070rocedure\" UESCAPE '!'("
         },
         {
@@ -439,6 +483,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "procedure-tokens.sql:4: identifier \"custom_procedure\" is 16 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE PROCEDURE U&\"custom_!0070rocedure\" UESCAPE '!'() LANGUAGE plpgsql AS $$BEGIN NULL; END$$;",
           "target": "custom_procedure"
         },
         {
@@ -446,6 +491,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "procedure-tokens.sql:7: identifier \"dynamic_procedure\" is 17 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
+          "sourceLine": "EXECUTE 'CREATE PROCEDURE dynamic_procedure() LANGUAGE plpgsql AS $body$BEGIN NULL; END$body$';",
           "target": "dynamic_procedure"
         }
       ],
@@ -466,6 +512,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "quotes.sql:1: identifier \"order\"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"order\"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE INDEX \"order\"\"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\" ON accounts (id);",
           "target": "order\"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
         }
       ],
@@ -486,6 +533,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "reference.sql:3: SQL statement `ALTER PROCEDURE referenced_onlyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx() OWNER TO app` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
+          "sourceLine": "ALTER PROCEDURE referenced_onlyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx() OWNER TO app;",
           "target": "ALTER PROCEDURE referenced_onlyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx() OWNER TO app"
         }
       ],
@@ -506,6 +554,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema-qualified.sql:1: identifier \"qualified_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"qualified_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
           "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE INDEX app.qualified_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);",
           "target": "qualified_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         }
       ],

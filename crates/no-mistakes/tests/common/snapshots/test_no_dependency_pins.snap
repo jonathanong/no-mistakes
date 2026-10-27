@@ -1,0 +1,1605 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/__tests__/nested.ts",
+          "import": "actions/cache@v4",
+          "line": 1,
+          "message": "src/__tests__/nested.ts:1: tests must not pin exact dependency versions (exact action ref): `actions/cache@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "export const pinned = 'actions/cache@v4'",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "Homebrew/actions/setup-homebrew@4",
+          "line": 11,
+          "message": "src/action-ref.test.mts:11: tests must not pin exact dependency versions (exact action ref): `Homebrew/actions/setup-homebrew@4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('{ name: \"}\", uses: Homebrew/actions/setup-homebrew@4 }')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "Homebrew/actions/setup-homebrew@4",
+          "line": 5,
+          "message": "src/action-ref.test.mts:5: tests must not pin exact dependency versions (exact action ref): `Homebrew/actions/setup-homebrew@4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: Homebrew/actions/setup-homebrew@4')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "Homebrew/actions/setup-homebrew@4",
+          "line": 7,
+          "message": "src/action-ref.test.mts:7: tests must not pin exact dependency versions (exact action ref): `Homebrew/actions/setup-homebrew@4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('\"uses\": \"Homebrew/actions/setup-homebrew@4\"')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "Homebrew/actions/setup-homebrew@4",
+          "line": 9,
+          "message": "src/action-ref.test.mts:9: tests must not pin exact dependency versions (exact action ref): `Homebrew/actions/setup-homebrew@4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('{ env: { HOMEBREW: yes }, uses: Homebrew/actions/setup-homebrew@4 }')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "Homebrew/brew@4.1",
+          "line": 6,
+          "message": "src/action-ref.test.mts:6: tests must not pin exact dependency versions (exact action ref): `Homebrew/brew@4.1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: Homebrew/brew@4.1')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "[2001:db8::1]:443/actions/checkout@v4",
+          "line": 24,
+          "message": "src/action-ref.test.mts:24: tests must not pin exact dependency versions (exact action ref): `[2001:db8::1]:443/actions/checkout@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(url).toContain('https://[2001:db8::1]:443/actions/checkout@v4')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "[fe80::1%25eth0]:443/actions/checkout@v4",
+          "line": 25,
+          "message": "src/action-ref.test.mts:25: tests must not pin exact dependency versions (exact action ref): `[fe80::1%25eth0]:443/actions/checkout@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(url).toContain('https://[fe80::1%25eth0]:443/actions/checkout@v4')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "actions/checkout@v6.0.2",
+          "line": 1,
+          "message": "src/action-ref.test.mts:1: tests must not pin exact dependency versions (exact action ref): `actions/checkout@v6.0.2`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: actions/checkout@v6.0.2')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "actions/setup-node@de0fac2e4500dabe0009e67214ff5f5447ce83dd",
+          "line": 2,
+          "message": "src/action-ref.test.mts:2: tests must not pin exact dependency versions (exact action ref): `actions/setup-node@de0fac2e4500dabe0009e67214ff5f5447ce83dd`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(sha).toContain('actions/setup-node@de0fac2e4500dabe0009e67214ff5f5447ce83dd')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "github/codeql-action/init@v3",
+          "line": 13,
+          "message": "src/action-ref.test.mts:13: tests must not pin exact dependency versions (exact action ref): `github/codeql-action/init@v3`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: github/codeql-action/init@v3')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "github/codeql-action/upload-sarif@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v3.25.0",
+          "line": 15,
+          "message": "src/action-ref.test.mts:15: tests must not pin exact dependency versions (exact action ref): `github/codeql-action/upload-sarif@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v3.25.0`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: github/codeql-action/upload-sarif@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v3.25.0')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "octo-org/example-repo/.github/workflows/reusable.yml@v1",
+          "line": 14,
+          "message": "src/action-ref.test.mts:14: tests must not pin exact dependency versions (exact action ref): `octo-org/example-repo/.github/workflows/reusable.yml@v1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: octo-org/example-repo/.github/workflows/reusable.yml@v1')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "owner/repo/v0.0.0/path/action@v1",
+          "line": 18,
+          "message": "src/action-ref.test.mts:18: tests must not pin exact dependency versions (exact action ref): `owner/repo/v0.0.0/path/action@v1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: owner/repo/v0.0.0/path/action@v1')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "owner/repo/v1.0.0/x/y@v1",
+          "line": 19,
+          "message": "src/action-ref.test.mts:19: tests must not pin exact dependency versions (exact action ref): `owner/repo/v1.0.0/x/y@v1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: owner/repo/v1.0.0/x/y@v1')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "path/action@v1",
+          "line": 22,
+          "message": "src/action-ref.test.mts:22: tests must not pin exact dependency versions (exact action ref): `path/action@v1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: owner/repo/../path/action@v1')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/action-ref.test.mts",
+          "import": "registry.npmjs.org:443/o/r@v1",
+          "line": 21,
+          "message": "src/action-ref.test.mts:21: tests must not pin exact dependency versions (exact action ref): `registry.npmjs.org:443/o/r@v1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(url).toContain('https://registry.npmjs.org:443/o/r@v1')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "10.0.0.5:5000/acme/api:2",
+          "line": 29,
+          "message": "src/container-image.test.mts:29: tests must not pin exact dependency versions (container image tag): `10.0.0.5:5000/acme/api:2`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('10.0.0.5:5000/acme/api:2')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "docker.io/library/redis@sha256:06ada57c26aa5cf429e9f2c0a99e3e4a42daecd45fc4c955d7c1399ab4227ae8",
+          "line": 12,
+          "message": "src/container-image.test.mts:12: tests must not pin exact dependency versions (container image digest): `docker.io/library/redis@sha256:06ada57c26aa5cf429e9f2c0a99e3e4a42daecd45fc4c955d7c1399ab4227ae8`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('docker.io/library/redis@sha256:06ada57c26aa5cf429e9f2c0a99e3e4a42daecd45fc4c955d7c1399ab4227ae8')",
+          "target": "container image digest"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "ghcr.io/acme/api:5000",
+          "line": 9,
+          "message": "src/container-image.test.mts:9: tests must not pin exact dependency versions (container image tag): `ghcr.io/acme/api:5000`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('ghcr.io/acme/api:5000')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "ghcr.io/acme/api:7",
+          "line": 32,
+          "message": "src/container-image.test.mts:32: tests must not pin exact dependency versions (container image tag): `ghcr.io/acme/api:7`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('βghcr.io/acme/api:7')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "ghcr.io/acme/api:v2",
+          "line": 22,
+          "message": "src/container-image.test.mts:22: tests must not pin exact dependency versions (container image tag): `ghcr.io/acme/api:v2`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('ghcr.io/acme/api:v2')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "ghcr.io/acme/api:v2.4.1",
+          "line": 6,
+          "message": "src/container-image.test.mts:6: tests must not pin exact dependency versions (container image tag): `ghcr.io/acme/api:v2.4.1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('ghcr.io/acme/api:v2.4.1')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "ghcr.io/acme/api:v4",
+          "line": 24,
+          "message": "src/container-image.test.mts:24: tests must not pin exact dependency versions (container image tag): `ghcr.io/acme/api:v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(images).toEqual(['owner/repo:v2', 'ghcr.io/acme/api:v4'])",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "ghcr.io/acme/api:v5",
+          "line": 26,
+          "message": "src/container-image.test.mts:26: tests must not pin exact dependency versions (container image tag): `ghcr.io/acme/api:v5`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(compose).toContain('image:ghcr.io/acme/api:v5')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "ghcr.io/acme/api:v6",
+          "line": 31,
+          "message": "src/container-image.test.mts:31: tests must not pin exact dependency versions (container image tag): `ghcr.io/acme/api:v6`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('ghcr.io/acme/api:v6β')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "mirror.gcr.io/library/node:26-trixie-slim",
+          "line": 11,
+          "message": "src/container-image.test.mts:11: tests must not pin exact dependency versions (container image tag): `mirror.gcr.io/library/node:26-trixie-slim`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(log).toContain('mirror.gcr.io/library/node:26-trixie-slim@sha256:${imageDigest}')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "node:24.11.1-bookworm-slim",
+          "line": 5,
+          "message": "src/container-image.test.mts:5: tests must not pin exact dependency versions (container image tag): `node:24.11.1-bookworm-slim`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(dockerfile).toContain('FROM --platform=linux/amd64 node:24.11.1-bookworm-slim AS build')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "otel/collector:0.153.0",
+          "line": 14,
+          "message": "src/container-image.test.mts:14: tests must not pin exact dependency versions (container image tag): `otel/collector:0.153.0`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(images).toEqual(['valkey/valkey-bundle:9.1.0', 'otel/collector:0.153.0'])",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "otel/opentelemetry-collector-contrib:0.153.0",
+          "line": 2,
+          "message": "src/container-image.test.mts:2: tests must not pin exact dependency versions (container image tag): `otel/opentelemetry-collector-contrib:0.153.0`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(compose).toContain(\"image: 'otel/opentelemetry-collector-contrib:0.153.0'\")",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "owner/my.image:1.2.3",
+          "line": 16,
+          "message": "src/container-image.test.mts:16: tests must not pin exact dependency versions (container image tag): `owner/my.image:1.2.3`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(compose).toContain('image: owner/my.image:1.2.3')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "owner/repo:v2",
+          "line": 19,
+          "message": "src/container-image.test.mts:19: tests must not pin exact dependency versions (container image tag): `owner/repo:v2`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(compose).toContain('image: owner/repo:v2')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "pgvector/pgvector:pg18",
+          "line": 8,
+          "message": "src/container-image.test.mts:8: tests must not pin exact dependency versions (container image tag): `pgvector/pgvector:pg18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('pgvector/pgvector:pg18')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "postgres:18-alpine",
+          "line": 4,
+          "message": "src/container-image.test.mts:4: tests must not pin exact dependency versions (container image tag): `postgres:18-alpine`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(dockerfile).toContain('FROM postgres:18-alpine')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "redis@sha256:e0ef56d6eb603d9ffe87e74c28b8210b0ea93839e2ea4fb64f1fc2c66e95e391",
+          "line": 13,
+          "message": "src/container-image.test.mts:13: tests must not pin exact dependency versions (container image digest): `redis@sha256:e0ef56d6eb603d9ffe87e74c28b8210b0ea93839e2ea4fb64f1fc2c66e95e391`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('redis@sha256:e0ef56d6eb603d9ffe87e74c28b8210b0ea93839e2ea4fb64f1fc2c66e95e391')",
+          "target": "container image digest"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "registry-eu.acme.io/acme/api:2.4.1",
+          "line": 28,
+          "message": "src/container-image.test.mts:28: tests must not pin exact dependency versions (container image tag): `registry-eu.acme.io/acme/api:2.4.1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('registry-eu.acme.io/acme/api:2.4.1')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "registry.internal:5000/acme/api:2.4.1",
+          "line": 7,
+          "message": "src/container-image.test.mts:7: tests must not pin exact dependency versions (container image tag): `registry.internal:5000/acme/api:2.4.1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('registry.internal:5000/acme/api:2.4.1')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "registry.internal:5000/acme/api:v3",
+          "line": 23,
+          "message": "src/container-image.test.mts:23: tests must not pin exact dependency versions (container image tag): `registry.internal:5000/acme/api:v3`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(image).toBe('registry.internal:5000/acme/api:v3')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "repo:v2",
+          "line": 18,
+          "message": "src/container-image.test.mts:18: tests must not pin exact dependency versions (container image tag): `repo:v2`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(compose).toContain('image: repo:v2')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "valkey/valkey-bundle:9",
+          "line": 3,
+          "message": "src/container-image.test.mts:3: tests must not pin exact dependency versions (container image tag): `valkey/valkey-bundle:9`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(compose).toContain('image: valkey/valkey-bundle:9')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "valkey/valkey-bundle:9.1.0",
+          "line": 1,
+          "message": "src/container-image.test.mts:1: tests must not pin exact dependency versions (container image tag): `valkey/valkey-bundle:9.1.0`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(compose).toContain('image: valkey/valkey-bundle:9.1.0')",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/container-image.test.mts",
+          "import": "valkey/valkey-bundle:9.1.0",
+          "line": 14,
+          "message": "src/container-image.test.mts:14: tests must not pin exact dependency versions (container image tag): `valkey/valkey-bundle:9.1.0`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(images).toEqual(['valkey/valkey-bundle:9.1.0', 'otel/collector:0.153.0'])",
+          "target": "container image tag"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "'1.2.3'). /* current pin */ toBe(packageJson.dependencies.foo)",
+          "line": 31,
+          "message": "src/dependency-manifest.test.mts:31: tests must not pin exact dependency versions (parsed dependency version assertion): `'1.2.3'). /* current pin */ toBe(packageJson.dependencies.foo)`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect('1.2.3'). /* current pin */ toBe(packageJson.dependencies.foo)",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "'1.2.3').toBe /* current pin */ (packageJson.dependencies.foo)",
+          "line": 30,
+          "message": "src/dependency-manifest.test.mts:30: tests must not pin exact dependency versions (parsed dependency version assertion): `'1.2.3').toBe /* current pin */ (packageJson.dependencies.foo)`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect('1.2.3').toBe /* current pin */ (packageJson.dependencies.foo)",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "'1.2.3').toBe((packageJson?.dependencies.foo))",
+          "line": 32,
+          "message": "src/dependency-manifest.test.mts:32: tests must not pin exact dependency versions (parsed dependency version assertion): `'1.2.3').toBe((packageJson?.dependencies.foo))`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect('1.2.3').toBe((packageJson?.dependencies.foo))",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "'1.2.3').toBe(packageJson!.dependencies.foo)",
+          "line": 28,
+          "message": "src/dependency-manifest.test.mts:28: tests must not pin exact dependency versions (parsed dependency version assertion): `'1.2.3').toBe(packageJson!.dependencies.foo)`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect('1.2.3').toBe(packageJson!.dependencies.foo)",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "'1.2.3').toBe(packageJson.dependencies.foo)",
+          "line": 27,
+          "message": "src/dependency-manifest.test.mts:27: tests must not pin exact dependency versions (parsed dependency version assertion): `'1.2.3').toBe(packageJson.dependencies.foo)`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect('1.2.3').toBe(packageJson.dependencies.foo)",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "'10.9.0').toEqual((packageJson as PackageJson).devDependencies.eslint)",
+          "line": 33,
+          "message": "src/dependency-manifest.test.mts:33: tests must not pin exact dependency versions (parsed dependency version assertion): `'10.9.0').toEqual((packageJson as PackageJson).devDependencies.eslint)`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect('10.9.0').toEqual((packageJson as PackageJson).devDependencies.eslint)",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "'10.9.0').toEqual(packageJson.devDependencies['eslint'])",
+          "line": 29,
+          "message": "src/dependency-manifest.test.mts:29: tests must not pin exact dependency versions (parsed dependency version assertion): `'10.9.0').toEqual(packageJson.devDependencies['eslint'])`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect('10.9.0').toEqual(packageJson.devDependencies['eslint'])",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "( packageJson.dependencies.foo, /* current dependency */ ).toBe('1.2.3')",
+          "line": 64,
+          "message": "src/dependency-manifest.test.mts:64: tests must not pin exact dependency versions (parsed dependency version assertion): `( packageJson.dependencies.foo, /* current dependency */ ).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "( packageJson.dependencies.foo, // current dependency ).toBe('1.2.3')",
+          "line": 61,
+          "message": "src/dependency-manifest.test.mts:61: tests must not pin exact dependency versions (parsed dependency version assertion): `( packageJson.dependencies.foo, // current dependency ).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "( packageJson.devDependencies?.['@typescript-eslint/parser'], ).toEqual( '8.42.0', )",
+          "line": 98,
+          "message": "src/dependency-manifest.test.mts:98: tests must not pin exact dependency versions (parsed dependency version assertion): `( packageJson.devDependencies?.['@typescript-eslint/parser'], ).toEqual( '8.42.0', )`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(((packageJson.dependencies.foo as unknown as string))).toStrictEqual('1.2.3')",
+          "line": 78,
+          "message": "src/dependency-manifest.test.mts:78: tests must not pin exact dependency versions (parsed dependency version assertion): `(((packageJson.dependencies.foo as unknown as string))).toStrictEqual('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(((packageJson.dependencies.foo as unknown as string))).toStrictEqual('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "((packageJson.dependencies.foo)).toEqual('1.2.3')",
+          "line": 77,
+          "message": "src/dependency-manifest.test.mts:77: tests must not pin exact dependency versions (parsed dependency version assertion): `((packageJson.dependencies.foo)).toEqual('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect((packageJson.dependencies.foo)).toEqual('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "((packageJson.devDependencies as DependencyMap)).toHaveProperty('eslint', '10.9.0')",
+          "line": 81,
+          "message": "src/dependency-manifest.test.mts:81: tests must not pin exact dependency versions (parsed dependency version assertion): `((packageJson.devDependencies as DependencyMap)).toHaveProperty('eslint', '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect((packageJson.devDependencies as DependencyMap)).toHaveProperty('eslint', '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(browserCrawlPackage.dependencies?.playwright).toBe('1.61.1')",
+          "line": 13,
+          "message": "src/dependency-manifest.test.mts:13: tests must not pin exact dependency versions (parsed dependency version assertion): `(browserCrawlPackage.dependencies?.playwright).toBe('1.61.1')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(browserCrawlPackage.dependencies?.playwright).toBe('1.61.1')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson!.dependencies.foo).toBe('1.2.3')",
+          "line": 22,
+          "message": "src/dependency-manifest.test.mts:22: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson!.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson!.dependencies.foo).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson!.devDependencies).toHaveProperty('eslint', '10.9.0')",
+          "line": 80,
+          "message": "src/dependency-manifest.test.mts:80: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson!.devDependencies).toHaveProperty('eslint', '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson!.devDependencies).toHaveProperty('eslint', '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson).toHaveProperty('devDependencies.eslint', '10.9.0')",
+          "line": 92,
+          "message": "src/dependency-manifest.test.mts:92: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson).toHaveProperty('devDependencies.eslint', '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson).toHaveProperty('devDependencies.eslint', '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.dépendance).toBe('1.2.3')",
+          "line": 24,
+          "message": "src/dependency-manifest.test.mts:24: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.dépendance).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.dépendance).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo as string).toBe('1.2.3')",
+          "line": 76,
+          "message": "src/dependency-manifest.test.mts:76: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo as string).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.foo as string).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo) /* dependency check */ .toBe('1.2.3')",
+          "line": 35,
+          "message": "src/dependency-manifest.test.mts:35: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo) /* dependency check */ .toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.foo) /* dependency check */ .toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo)).resolves.toBe('1.2.3')",
+          "line": 72,
+          "message": "src/dependency-manifest.test.mts:72: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo)).resolves.toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "await expect(Promise.resolve(packageJson.dependencies.foo)).resolves.toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo). /* current pin */ toBe('1.2.3')",
+          "line": 39,
+          "message": "src/dependency-manifest.test.mts:39: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo). /* current pin */ toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.foo). /* current pin */ toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo).toBe /* current pin */ ('1.2.3')",
+          "line": 38,
+          "message": "src/dependency-manifest.test.mts:38: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe /* current pin */ ('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.foo).toBe /* current pin */ ('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo).toBe('1.2.3' /* use \"latest instead */)",
+          "line": 40,
+          "message": "src/dependency-manifest.test.mts:40: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe('1.2.3' /* use \"latest instead */)`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.foo).toBe('1.2.3' /* use \"latest instead */)",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo).toBe('1.2.3')",
+          "line": 26,
+          "message": "src/dependency-manifest.test.mts:26: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect!(packageJson.dependencies.foo).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo).toBe('1.2.3')",
+          "line": 60,
+          "message": "src/dependency-manifest.test.mts:60: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect<string>(packageJson.dependencies.foo).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo).toBe('1.2.3')",
+          "line": 93,
+          "message": "src/dependency-manifest.test.mts:93: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect /* dependency check */ (packageJson.dependencies.foo).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo).toBe('1.2.3')",
+          "line": 94,
+          "message": "src/dependency-manifest.test.mts:94: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "`${expect(packageJson.dependencies.foo).toBe('1.2.3')}`",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo).toBe('1.2.3')",
+          "line": 95,
+          "message": "src/dependency-manifest.test.mts:95: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "`${{ value: `${expect(packageJson.dependencies.foo).toBe('1.2.3')}` }.value}`",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.foo).toBe('1.2.3')",
+          "line": 96,
+          "message": "src/dependency-manifest.test.mts:96: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "dedent`${expect(packageJson.dependencies.foo).toBe('1.2.3')}`",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.localPackage).toBe('workspace:1.0.0')",
+          "line": 51,
+          "message": "src/dependency-manifest.test.mts:51: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.localPackage).toBe('workspace:1.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.localPackage).toBe('workspace:1.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.localPackage).toBe('workspace:>=1.0.0 <2.0.0')",
+          "line": 52,
+          "message": "src/dependency-manifest.test.mts:52: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.localPackage).toBe('workspace:>=1.0.0 <2.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.localPackage).toBe('workspace:>=1.0.0 <2.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.react).toBe('npm:preact@10.27.1')",
+          "line": 17,
+          "message": "src/dependency-manifest.test.mts:17: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.react).toBe('npm:preact@10.27.1')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.react).toBe('npm:preact@10.27.1')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies.react).toBe('npm:preact@^10.0.0 || ^11.0.0')",
+          "line": 53,
+          "message": "src/dependency-manifest.test.mts:53: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.react).toBe('npm:preact@^10.0.0 || ^11.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies.react).toBe('npm:preact@^10.0.0 || ^11.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.dependencies?.[dependency.name]).toBe('1.2.3')",
+          "line": 75,
+          "message": "src/dependency-manifest.test.mts:75: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies?.[dependency.name]).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.dependencies?.[dependency.name]).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies!['eslint']).toBe('10.9.0')",
+          "line": 21,
+          "message": "src/dependency-manifest.test.mts:21: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies!['eslint']).toBe('10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies!['eslint']).toBe('10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies)).resolves.toHaveProperty('eslint', '10.9.0')",
+          "line": 87,
+          "message": "src/dependency-manifest.test.mts:87: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies)).resolves.toHaveProperty('eslint', '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "await expect(Promise.resolve(packageJson.devDependencies)).resolves.toHaveProperty('eslint', '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies). /* current pin */ toHaveProperty('eslint', '10.9.0')",
+          "line": 84,
+          "message": "src/dependency-manifest.test.mts:84: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies). /* current pin */ toHaveProperty('eslint', '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies). /* current pin */ toHaveProperty('eslint', '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies).toHaveProperty /* current pin */ ('eslint', '10.9.0')",
+          "line": 83,
+          "message": "src/dependency-manifest.test.mts:83: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies).toHaveProperty /* current pin */ ('eslint', '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies).toHaveProperty /* current pin */ ('eslint', '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0' /* use \"latest instead */)",
+          "line": 85,
+          "message": "src/dependency-manifest.test.mts:85: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0' /* use \"latest instead */)`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0' /* use \"latest instead */)",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0')",
+          "line": 79,
+          "message": "src/dependency-manifest.test.mts:79: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies).toHaveProperty('eslint', '>= 10.9.0')",
+          "line": 89,
+          "message": "src/dependency-manifest.test.mts:89: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies).toHaveProperty('eslint', '>= 10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies).toHaveProperty('eslint', '>= 10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies).toHaveProperty('eslint', /* current pin */ '10.9.0')",
+          "line": 86,
+          "message": "src/dependency-manifest.test.mts:86: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies).toHaveProperty('eslint', /* current pin */ '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies).toHaveProperty('eslint', /* current pin */ '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies).toHaveProperty('eslint', \"10.9.0\")",
+          "line": 82,
+          "message": "src/dependency-manifest.test.mts:82: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies).toHaveProperty('eslint', \"10.9.0\")`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies).toHaveProperty('eslint', \"10.9.0\")",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies, 'dependency check').toHaveProperty('eslint', '10.9.0')",
+          "line": 90,
+          "message": "src/dependency-manifest.test.mts:90: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies, 'dependency check').toHaveProperty('eslint', '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies, 'dependency check').toHaveProperty('eslint', '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies.eslint!).toBe('10.9.0')",
+          "line": 25,
+          "message": "src/dependency-manifest.test.mts:25: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies.eslint!).toBe('10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies.eslint!).toBe('10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies.eslint) // dependency check .toEqual('10.9.0')",
+          "line": 36,
+          "message": "src/dependency-manifest.test.mts:36: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies.eslint) // dependency check .toEqual('10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies.eslint) // dependency check",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies.eslint).toBe('10.9.0-beta.1+build.5')",
+          "line": 55,
+          "message": "src/dependency-manifest.test.mts:55: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies.eslint).toBe('10.9.0-beta.1+build.5')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies.eslint).toBe('10.9.0-beta.1+build.5')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies.eslint).toEqual // current pin ('10.9.0')",
+          "line": 41,
+          "message": "src/dependency-manifest.test.mts:41: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies.eslint).toEqual // current pin ('10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies.eslint).toEqual // current pin",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies.eslint).toStrictEqual('10.9.0')",
+          "line": 54,
+          "message": "src/dependency-manifest.test.mts:54: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies.eslint).toStrictEqual('10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies.eslint).toStrictEqual('10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies.eslint, 'eslint must stay pinned').toBe('10.9.0')",
+          "line": 97,
+          "message": "src/dependency-manifest.test.mts:97: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies.eslint, 'eslint must stay pinned').toBe('10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies.eslint, 'eslint must stay pinned').toBe('10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.devDependencies[dependencyName]).toBe('10.9.0')",
+          "line": 74,
+          "message": "src/dependency-manifest.test.mts:74: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies[dependencyName]).toBe('10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.devDependencies[dependencyName]).toBe('10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.optionalDependencies).toHaveProperty(dependency.name, '2.3.3')",
+          "line": 91,
+          "message": "src/dependency-manifest.test.mts:91: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.optionalDependencies).toHaveProperty(dependency.name, '2.3.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.optionalDependencies).toHaveProperty(dependency.name, '2.3.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.optionalDependencies?.['fsevents']).toEqual('2.3.3')",
+          "line": 14,
+          "message": "src/dependency-manifest.test.mts:14: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.optionalDependencies?.['fsevents']).toEqual('2.3.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.optionalDependencies?.['fsevents']).toEqual('2.3.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.eslint).toBe('>=9 <10')",
+          "line": 59,
+          "message": "src/dependency-manifest.test.mts:59: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.eslint).toBe('>=9 <10')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.eslint).toBe('>=9 <10')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.eslint).toBe('>=9')",
+          "line": 57,
+          "message": "src/dependency-manifest.test.mts:57: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.eslint).toBe('>=9')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.eslint).toBe('>=9')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.eslint).toBe('^9.1')",
+          "line": 58,
+          "message": "src/dependency-manifest.test.mts:58: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.eslint).toBe('^9.1')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.eslint).toBe('^9.1')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toBe('18.0.0 - 19.2.0')",
+          "line": 50,
+          "message": "src/dependency-manifest.test.mts:50: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toBe('18.0.0 - 19.2.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toBe('18.0.0 - 19.2.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toBe('=18.0.0')",
+          "line": 46,
+          "message": "src/dependency-manifest.test.mts:46: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toBe('=18.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toBe('=18.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toBe('>= 18.0.0 < 20.0.0')",
+          "line": 45,
+          "message": "src/dependency-manifest.test.mts:45: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toBe('>= 18.0.0 < 20.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toBe('>= 18.0.0 < 20.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toBe('>= 18.0.0')",
+          "line": 44,
+          "message": "src/dependency-manifest.test.mts:44: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toBe('>= 18.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toBe('>= 18.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0')",
+          "line": 48,
+          "message": "src/dependency-manifest.test.mts:48: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0-rc.1+build.5')",
+          "line": 56,
+          "message": "src/dependency-manifest.test.mts:56: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0-rc.1+build.5')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0-rc.1+build.5')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toBe('>=18.0.0 =19.0.0')",
+          "line": 47,
+          "message": "src/dependency-manifest.test.mts:47: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toBe('>=18.0.0 =19.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toBe('>=18.0.0 =19.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toBe('>=18.0.0')",
+          "line": 43,
+          "message": "src/dependency-manifest.test.mts:43: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toBe('>=18.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toBe('>=18.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toBe('^18.0.0 || ^19.0.0')",
+          "line": 49,
+          "message": "src/dependency-manifest.test.mts:49: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toBe('^18.0.0 || ^19.0.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toBe('^18.0.0 || ^19.0.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson.peerDependencies.react).toEqual('19.1.0')",
+          "line": 15,
+          "message": "src/dependency-manifest.test.mts:15: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.peerDependencies.react).toEqual('19.1.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson.peerDependencies.react).toEqual('19.1.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(packageJson[`dependencies`][`foo`]).toBe('1.2.3')",
+          "line": 34,
+          "message": "src/dependency-manifest.test.mts:34: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson[`dependencies`][`foo`]).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(packageJson[`dependencies`][`foo`]).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(paqueté.dependencies.foo).toBe('1.2.3')",
+          "line": 23,
+          "message": "src/dependency-manifest.test.mts:23: tests must not pin exact dependency versions (parsed dependency version assertion): `(paqueté.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(paqueté.dependencies.foo).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(rootPackage.devDependencies?.['@playwright/test']).toBe('1.61.1')",
+          "line": 12,
+          "message": "src/dependency-manifest.test.mts:12: tests must not pin exact dependency versions (parsed dependency version assertion): `(rootPackage.devDependencies?.['@playwright/test']).toBe('1.61.1')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(rootPackage.devDependencies?.['@playwright/test']).toBe('1.61.1')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "(rootPackage['devDependencies']['eslint']).toBe('10.9.0')",
+          "line": 16,
+          "message": "src/dependency-manifest.test.mts:16: tests must not pin exact dependency versions (parsed dependency version assertion): `(rootPackage['devDependencies']['eslint']).toBe('10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(rootPackage['devDependencies']['eslint']).toBe('10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "/\"eslint/\": /\"~10.9.0/\"",
+          "line": 2,
+          "message": "src/dependency-manifest.test.mts:2: tests must not pin exact dependency versions (package.json dependency assertion): `/\"eslint/\": /\"~10.9.0/\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toContain(\"\\\"eslint\\\": \\\"~10.9.0\\\"\")",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"eslint\": \"10.9.0\"",
+          "line": 5,
+          "message": "src/dependency-manifest.test.mts:5: tests must not pin exact dependency versions (package.json dependency assertion): `\"eslint\": \"10.9.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readFileSync('package.json', 'utf8')).toEqual('\"eslint\": \"10.9.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"eslint\": \"9.0.0\"",
+          "line": 10,
+          "message": "src/dependency-manifest.test.mts:10: tests must not pin exact dependency versions (package.json dependency assertion): `\"eslint\": \"9.0.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')). /* current pin */ toContain('\"eslint\": \"9.0.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"eslint\": \"9.0.0\"",
+          "line": 11,
+          "message": "src/dependency-manifest.test.mts:11: tests must not pin exact dependency versions (package.json dependency assertion): `\"eslint\": \"9.0.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toContain(/* current pin */ '\"eslint\": \"9.0.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"eslint\": \"9.0.0\"",
+          "line": 6,
+          "message": "src/dependency-manifest.test.mts:6: tests must not pin exact dependency versions (package.json dependency assertion): `\"eslint\": \"9.0.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toContain('\"version\": \"1.0.0\", \"eslint\": \"9.0.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"eslint\": \"9.0.0\"",
+          "line": 7,
+          "message": "src/dependency-manifest.test.mts:7: tests must not pin exact dependency versions (package.json dependency assertion): `\"eslint\": \"9.0.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toContain('\"eslint\": \"9.0.0\", \"version\": \"1.0.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"eslint\": \"9.0.0\"",
+          "line": 9,
+          "message": "src/dependency-manifest.test.mts:9: tests must not pin exact dependency versions (package.json dependency assertion): `\"eslint\": \"9.0.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toContain /* current pin */ ('\"eslint\": \"9.0.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"eslint\": \"^10.9.0\"",
+          "line": 18,
+          "message": "src/dependency-manifest.test.mts:18: tests must not pin exact dependency versions (package.json dependency assertion): `\"eslint\": \"^10.9.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readFileSync('package.json').toString().trim()).toContain('\"eslint\": \"^10.9.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"eslint\": \"^9\"",
+          "line": 20,
+          "message": "src/dependency-manifest.test.mts:20: tests must not pin exact dependency versions (package.json dependency assertion): `\"eslint\": \"^9\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toContain('\"eslint\": \"^9\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"no-mistakes\": \"^0.53.2\"",
+          "line": 1,
+          "message": "src/dependency-manifest.test.mts:1: tests must not pin exact dependency versions (package.json dependency assertion): `\"no-mistakes\": \"^0.53.2\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readFileSync('package.json', 'utf8')).toContain('\"no-mistakes\": \"^0.53.2\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"typescript\": \"5.9.0\"",
+          "line": 3,
+          "message": "src/dependency-manifest.test.mts:3: tests must not pin exact dependency versions (package.json dependency assertion): `\"typescript\": \"5.9.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toContain('\"typescript\": \"5.9.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"typescript\": \"^5.9.0\"",
+          "line": 19,
+          "message": "src/dependency-manifest.test.mts:19: tests must not pin exact dependency versions (package.json dependency assertion): `\"typescript\": \"^5.9.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toContain('\"typescript\": \"^5.9.0\"') // current manifest pin",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"vitest\": \"4.0.0\"",
+          "line": 4,
+          "message": "src/dependency-manifest.test.mts:4: tests must not pin exact dependency versions (package.json dependency assertion): `\"vitest\": \"4.0.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toBe('\"vitest\": \"4.0.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "\"vitest\": \"^4.0.0\"",
+          "line": 8,
+          "message": "src/dependency-manifest.test.mts:8: tests must not pin exact dependency versions (package.json dependency assertion): `\"vitest\": \"^4.0.0\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(readRepoFile('package.json')).toStrictEqual('\"vitest\": \"^4.0.0\"')",
+          "target": "package.json dependency assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "expect.poll(() => { return packageJson.dependencies.foo; }, { timeout: 1 }).toBe('1.2.3')",
+          "line": 73,
+          "message": "src/dependency-manifest.test.mts:73: tests must not pin exact dependency versions (parsed dependency version assertion): `expect.poll(() => { return packageJson.dependencies.foo; }, { timeout: 1 }).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect.poll(() => { return packageJson.dependencies.foo; }, { timeout: 1 }).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "expect.poll(() => { return packageJson.devDependencies; }, { timeout: 1 }).toHaveProperty('eslint', '10.9.0')",
+          "line": 88,
+          "message": "src/dependency-manifest.test.mts:88: tests must not pin exact dependency versions (parsed dependency version assertion): `expect.poll(() => { return packageJson.devDependencies; }, { timeout: 1 }).toHaveProperty('eslint', '10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect.poll(() => { return packageJson.devDependencies; }, { timeout: 1 }).toHaveProperty('eslint', '10.9.0')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "packageJson.dependencies.foo).toBe('1.2.3')",
+          "line": 71,
+          "message": "src/dependency-manifest.test.mts:71: tests must not pin exact dependency versions (parsed dependency version assertion): `packageJson.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect.poll(async () => packageJson.dependencies.foo).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/dependency-manifest.test.mts",
+          "import": "packageJson.dependencies.foo, { timeout: 25_000 }, ).toBe('1.2.3')",
+          "line": 67,
+          "message": "src/dependency-manifest.test.mts:67: tests must not pin exact dependency versions (parsed dependency version assertion): `packageJson.dependencies.foo, { timeout: 25_000 }, ).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect.poll(",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/helper.mock.test.js",
+          "import": "RUN v0.1.0",
+          "line": 1,
+          "message": "src/helper.mock.test.js:1: tests must not pin exact dependency versions (versioned tool log): `RUN v0.1.0`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(log).toMatch('RUN v0.1.0')",
+          "target": "versioned tool log"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "libc++@18",
+          "line": 19,
+          "message": "src/homebrew-formula.test.mts:19: tests must not pin exact dependency versions (versioned Homebrew formula): `libc++@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('uses: Homebrew/core/libc++@18')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "libpq@17",
+          "line": 2,
+          "message": "src/homebrew-formula.test.mts:2: tests must not pin exact dependency versions (versioned Homebrew formula): `libpq@17`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('brew link --force libpq@17 openssl@3.5')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "openssl@3.5",
+          "line": 2,
+          "message": "src/homebrew-formula.test.mts:2: tests must not pin exact dependency versions (versioned Homebrew formula): `openssl@3.5`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('brew link --force libpq@17 openssl@3.5')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "postgresql@18",
+          "line": 1,
+          "message": "src/homebrew-formula.test.mts:1: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('brew install postgresql@18')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "postgresql@18",
+          "line": 11,
+          "message": "src/homebrew-formula.test.mts:11: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('brew package.uses: homebrew/core/postgresql@18')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "postgresql@18",
+          "line": 13,
+          "message": "src/homebrew-formula.test.mts:13: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('brew $uses: homebrew/core/postgresql@18')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "postgresql@18",
+          "line": 15,
+          "message": "src/homebrew-formula.test.mts:15: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(output).toContain('Homebrew uses: homebrew/core/postgresql@18')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "postgresql@18",
+          "line": 17,
+          "message": "src/homebrew-formula.test.mts:17: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(output).toContain('Homebrew, uses: homebrew/core/postgresql@18')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "postgresql@18",
+          "line": 4,
+          "message": "src/homebrew-formula.test.mts:4: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('brew services start postgresql@18')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "postgresql@18",
+          "line": 5,
+          "message": "src/homebrew-formula.test.mts:5: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('HOMEBREW_PREFIX=$(brew --prefix postgresql@18)')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "postgresql@18",
+          "line": 7,
+          "message": "src/homebrew-formula.test.mts:7: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('brew install homebrew/core/postgresql@18')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "postgresql@18",
+          "line": 9,
+          "message": "src/homebrew-formula.test.mts:9: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(output).toContain('Homebrew uses: postgresql@18')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/homebrew-formula.test.mts",
+          "import": "temurin@21",
+          "line": 3,
+          "message": "src/homebrew-formula.test.mts:3: tests must not pin exact dependency versions (versioned Homebrew formula): `temurin@21`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('brew install --cask temurin@21')",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/jsx.test.tsx",
+          "import": "(packageJson.dependencies.foo).toBe('1.2.3')",
+          "line": 13,
+          "message": "src/jsx.test.tsx:13: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "const unmatchedJsxQuote = <div>\"quoted text</div>; expect(packageJson.dependencies.foo).toBe('1.2.3')",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/jsx.test.tsx",
+          "import": "(packageJson.dependencies.foo).toBe('1.2.3')",
+          "line": 4,
+          "message": "src/jsx.test.tsx:4: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.dependencies.foo).toBe('1.2.3')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "{expect(packageJson.dependencies.foo).toBe('1.2.3')}",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/jsx.test.tsx",
+          "import": "(packageJson.devDependencies.eslint).toBe('10.9.0')",
+          "line": 10,
+          "message": "src/jsx.test.tsx:10: tests must not pin exact dependency versions (parsed dependency version assertion): `(packageJson.devDependencies.eslint).toBe('10.9.0')`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "<pre>{expect(packageJson.devDependencies.eslint).toBe('10.9.0')}</pre>",
+          "target": "parsed dependency version assertion"
+        },
+        {
+          "file": "src/jsx.test.tsx",
+          "import": "actions/checkout@v6.0.2",
+          "line": 9,
+          "message": "src/jsx.test.tsx:9: tests must not pin exact dependency versions (exact action ref): `actions/checkout@v6.0.2`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "actions/checkout@v6.0.2",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/release-asset.test.mts",
+          "import": "no-mistakes-v0.44.0-x86_64-apple-darwin.tar.gz",
+          "line": 1,
+          "message": "src/release-asset.test.mts:1: tests must not pin exact dependency versions (versioned release asset): `no-mistakes-v0.44.0-x86_64-apple-darwin.tar.gz`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(name).toBe('no-mistakes-v0.44.0-x86_64-apple-darwin.tar.gz')",
+          "target": "versioned release asset"
+        },
+        {
+          "file": "src/release-url.test.mts",
+          "import": "releases/download/v1.2.3",
+          "line": 1,
+          "message": "src/release-url.test.mts:1: tests must not pin exact dependency versions (versioned release URL): `releases/download/v1.2.3`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(script).toContain('https://github.com/org/repo/releases/download/v1.2.3/asset.tar.gz')",
+          "target": "versioned release URL"
+        },
+        {
+          "file": "src/runner-label.test.mts",
+          "import": "macos-14",
+          "line": 7,
+          "message": "src/runner-label.test.mts:7: tests must not pin exact dependency versions (versioned runner label): `macos-14`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(matrix).toEqual(['ubuntu-24.04', 'macos-14', 'windows-2022'])",
+          "target": "versioned runner label"
+        },
+        {
+          "file": "src/runner-label.test.mts",
+          "import": "macos-15",
+          "line": 3,
+          "message": "src/runner-label.test.mts:3: tests must not pin exact dependency versions (versioned runner label): `macos-15`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('runs-on: macos-15')",
+          "target": "versioned runner label"
+        },
+        {
+          "file": "src/runner-label.test.mts",
+          "import": "macos-15-intel",
+          "line": 4,
+          "message": "src/runner-label.test.mts:4: tests must not pin exact dependency versions (versioned runner label): `macos-15-intel`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('runs-on: macos-15-intel')",
+          "target": "versioned runner label"
+        },
+        {
+          "file": "src/runner-label.test.mts",
+          "import": "ubuntu-22.04",
+          "line": 2,
+          "message": "src/runner-label.test.mts:2: tests must not pin exact dependency versions (versioned runner label): `ubuntu-22.04`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('runs-on: ubuntu-22.04')",
+          "target": "versioned runner label"
+        },
+        {
+          "file": "src/runner-label.test.mts",
+          "import": "ubuntu-24.04",
+          "line": 7,
+          "message": "src/runner-label.test.mts:7: tests must not pin exact dependency versions (versioned runner label): `ubuntu-24.04`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(matrix).toEqual(['ubuntu-24.04', 'macos-14', 'windows-2022'])",
+          "target": "versioned runner label"
+        },
+        {
+          "file": "src/runner-label.test.mts",
+          "import": "ubuntu-24.04-arm",
+          "line": 1,
+          "message": "src/runner-label.test.mts:1: tests must not pin exact dependency versions (versioned runner label): `ubuntu-24.04-arm`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('runs-on: ubuntu-24.04-arm')",
+          "target": "versioned runner label"
+        },
+        {
+          "file": "src/runner-label.test.mts",
+          "import": "windows-11-arm",
+          "line": 6,
+          "message": "src/runner-label.test.mts:6: tests must not pin exact dependency versions (versioned runner label): `windows-11-arm`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('runs-on: windows-11-arm')",
+          "target": "versioned runner label"
+        },
+        {
+          "file": "src/runner-label.test.mts",
+          "import": "windows-2022",
+          "line": 7,
+          "message": "src/runner-label.test.mts:7: tests must not pin exact dependency versions (versioned runner label): `windows-2022`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(matrix).toEqual(['ubuntu-24.04', 'macos-14', 'windows-2022'])",
+          "target": "versioned runner label"
+        },
+        {
+          "file": "src/runner-label.test.mts",
+          "import": "windows-2025",
+          "line": 5,
+          "message": "src/runner-label.test.mts:5: tests must not pin exact dependency versions (versioned runner label): `windows-2025`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('runs-on: windows-2025')",
+          "target": "versioned runner label"
+        },
+        {
+          "file": "src/setup-version.test.mts",
+          "import": "go-version: \"1.26\"",
+          "line": 3,
+          "message": "src/setup-version.test.mts:3: tests must not pin exact dependency versions (setup action version): `go-version: \"1.26\"`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('go-version: \"1.26\"')",
+          "target": "setup action version"
+        },
+        {
+          "file": "src/setup-version.test.mts",
+          "import": "java-version: 21",
+          "line": 6,
+          "message": "src/setup-version.test.mts:6: tests must not pin exact dependency versions (setup action version): `java-version: 21`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(inline).toContain('with: { java-version: 21 }')",
+          "target": "setup action version"
+        },
+        {
+          "file": "src/setup-version.test.mts",
+          "import": "node-version: '26'",
+          "line": 1,
+          "message": "src/setup-version.test.mts:1: tests must not pin exact dependency versions (setup action version): `node-version: '26'`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain(\"node-version: '26'\")",
+          "target": "setup action version"
+        },
+        {
+          "file": "src/setup-version.test.mts",
+          "import": "node-version: 24.11.1",
+          "line": 4,
+          "message": "src/setup-version.test.mts:4: tests must not pin exact dependency versions (setup action version): `node-version: 24.11.1`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('  node-version: 24.11.1\\n')",
+          "target": "setup action version"
+        },
+        {
+          "file": "src/setup-version.test.mts",
+          "import": "node-version: 26",
+          "line": 5,
+          "message": "src/setup-version.test.mts:5: tests must not pin exact dependency versions (setup action version): `node-version: 26`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(yaml).toBe(\"      - uses: actions/setup-node\\n        with:\\n          node-version: 26\\n\")",
+          "target": "setup action version"
+        },
+        {
+          "file": "src/setup-version.test.mts",
+          "import": "python-version: 3.13",
+          "line": 2,
+          "message": "src/setup-version.test.mts:2: tests must not pin exact dependency versions (setup action version): `python-version: 3.13`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('python-version: 3.13')",
+          "target": "setup action version"
+        },
+        {
+          "file": "src/tool-log.test.mts",
+          "import": "RUN v1.2.3",
+          "line": 1,
+          "message": "src/tool-log.test.mts:1: tests must not pin exact dependency versions (versioned tool log): `RUN v1.2.3`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(output).toContain('RUN v1.2.3')",
+          "target": "versioned tool log"
+        },
+        {
+          "file": "src/tool-version.test.mts",
+          "import": "NODE_VERSION: '20.11.0",
+          "line": 1,
+          "message": "src/tool-version.test.mts:1: tests must not pin exact dependency versions (exact tool version): `NODE_VERSION: '20.11.0`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(env).toContain(\"NODE_VERSION: '20.11.0'\")",
+          "target": "exact tool version"
+        },
+        {
+          "file": "src/uses-key.test.mts",
+          "import": "Homebrew/actions/setup-homebrew@4",
+          "line": 10,
+          "message": "src/uses-key.test.mts:10: tests must not pin exact dependency versions (exact action ref): `Homebrew/actions/setup-homebrew@4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('{ name: \\'a\\\\\\', run: \\']\\', uses: Homebrew/actions/setup-homebrew@4 }')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/uses-key.test.mts",
+          "import": "Homebrew/actions/setup-homebrew@4",
+          "line": 3,
+          "message": "src/uses-key.test.mts:3: tests must not pin exact dependency versions (exact action ref): `Homebrew/actions/setup-homebrew@4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain(\"{ name: \\\"a\\\\\\\"}x\\\", uses: Homebrew/actions/setup-homebrew@4 }\")",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/uses-key.test.mts",
+          "import": "Homebrew/actions/setup-homebrew@4",
+          "line": 4,
+          "message": "src/uses-key.test.mts:4: tests must not pin exact dependency versions (exact action ref): `Homebrew/actions/setup-homebrew@4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain(\"{ name: \\\"a\\\\\\\"]x\\\", uses: Homebrew/actions/setup-homebrew@4 }\")",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/uses-key.test.mts",
+          "import": "Homebrew/actions/setup-homebrew@4",
+          "line": 6,
+          "message": "src/uses-key.test.mts:6: tests must not pin exact dependency versions (exact action ref): `Homebrew/actions/setup-homebrew@4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain(\"{ name: \\\\\\\"}\\\\\\\", uses: Homebrew/actions/setup-homebrew@4 }\")",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/uses-key.test.mts",
+          "import": "Homebrew/actions/setup-homebrew@4",
+          "line": 9,
+          "message": "src/uses-key.test.mts:9: tests must not pin exact dependency versions (exact action ref): `Homebrew/actions/setup-homebrew@4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(workflow).toContain('{ name: \\'a\\\\\\', env: \\'}\\', uses: Homebrew/actions/setup-homebrew@4 }')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "src/uses-key.test.mts",
+          "import": "postgresql@18",
+          "line": 12,
+          "message": "src/uses-key.test.mts:12: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(output).toContain(\"brew { a: \\\"x\\\\\\\"{\\\" }, uses: homebrew/core/postgresql@18\")",
+          "target": "versioned Homebrew formula"
+        },
+        {
+          "file": "src/uses-key.test.mts",
+          "import": "postgresql@18",
+          "line": 14,
+          "message": "src/uses-key.test.mts:14: tests must not pin exact dependency versions (versioned Homebrew formula): `postgresql@18`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(output).toContain('{ a: \\'x\\\\\\' }, note: \\'y\\', uses: homebrew/core/postgresql@18')",
+          "target": "versioned Homebrew formula"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

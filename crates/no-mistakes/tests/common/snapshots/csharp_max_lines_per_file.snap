@@ -1,0 +1,149 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "Suppressed.cs",
+          "line": 1,
+          "message": "directive names disabled or out-of-scope rule `csharp-max-lines-per-file`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file csharp-max-lines-per-file",
+          "target": "csharp-max-lines-per-file"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "CommentsOnly.cs",
+          "line": 1,
+          "message": "10 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "// 1"
+        },
+        {
+          "file": "TooLong.cs",
+          "line": 1,
+          "message": "10 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "namespace App;"
+        },
+        {
+          "file": "sub/TooLong.cs",
+          "line": 1,
+          "message": "10 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "namespace App.Sub;"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "over_limit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "CommentsOnly.cs",
+          "line": 1,
+          "message": "10 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "// 1"
+        },
+        {
+          "file": "TooLong.cs",
+          "line": 1,
+          "message": "10 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "namespace App;"
+        },
+        {
+          "file": "sub/TooLong.cs",
+          "line": 1,
+          "message": "10 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "namespace App.Sub;"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "test_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "CommentsOnly.cs",
+          "line": 1,
+          "message": "10 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "// 1"
+        },
+        {
+          "file": "TooLong.cs",
+          "line": 1,
+          "message": "10 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "namespace App;"
+        },
+        {
+          "file": "sub/TooLong.cs",
+          "line": 1,
+          "message": "10 physical lines (max 3) - split into smaller types or files",
+          "rule": "csharp-max-lines-per-file",
+          "sourceLine": "namespace App.Sub;"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "under_limit": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "Suppressed.cs",
+          "line": 1,
+          "message": "directive for `csharp-max-lines-per-file` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file csharp-max-lines-per-file",
+          "target": "csharp-max-lines-per-file"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

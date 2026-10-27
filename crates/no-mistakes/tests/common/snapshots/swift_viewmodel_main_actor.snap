@@ -1,0 +1,155 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "cli_config": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "BareViewModel.swift",
+          "line": 1,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class BareViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 10,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class EmptyParenViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 15,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class AttrArgsViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 20,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class NestedArgsViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 25,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class CallArgsViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 29,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "{ class BraceViewModel"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 5,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": ") class UnmatchedParenViewModel {"
+        },
+        {
+          "file": "BrokenViewModel.swift",
+          "line": 2,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "final class BrokenViewModel {"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "BareViewModel.swift",
+          "line": 1,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class BareViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 10,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class EmptyParenViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 15,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class AttrArgsViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 20,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class NestedArgsViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 25,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "class CallArgsViewModel {"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 29,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "{ class BraceViewModel"
+        },
+        {
+          "file": "BareViewModel.swift",
+          "line": 5,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": ") class UnmatchedParenViewModel {"
+        },
+        {
+          "file": "BrokenViewModel.swift",
+          "line": 2,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor",
+          "sourceLine": "final class BrokenViewModel {"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

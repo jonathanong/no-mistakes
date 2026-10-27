@@ -1,0 +1,66 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "dynamic_config": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unmapped": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/custom.spec.ts",
+          "line": 1,
+          "message": "src/custom.spec.ts: Vitest test file does not map to any Vitest project",
+          "rule": "vitest-project-mapping",
+          "sourceLine": "test(\"custom\", () => {});"
+        },
+        {
+          "file": "src/shared.test.ts",
+          "line": 1,
+          "message": "src/shared.test.ts: Vitest test file maps to multiple Vitest projects: unit-a, unit-b",
+          "rule": "vitest-project-mapping",
+          "sourceLine": "import { test } from \"vitest\";",
+          "target": "unit-a,unit-b"
+        },
+        {
+          "file": "src/unmapped.spec.ts",
+          "line": 1,
+          "message": "src/unmapped.spec.ts: Vitest test file does not map to any Vitest project",
+          "rule": "vitest-project-mapping",
+          "sourceLine": "test(\"unmapped\", () => {});"
+        },
+        {
+          "file": "src/unmapped.test.js",
+          "line": 1,
+          "message": "src/unmapped.test.js: Vitest test file does not map to any Vitest project",
+          "rule": "vitest-project-mapping",
+          "sourceLine": "import { test } from \"vitest\";"
+        },
+        {
+          "file": "src/unmapped.test.ts",
+          "line": 1,
+          "message": "src/unmapped.test.ts: Vitest test file does not map to any Vitest project",
+          "rule": "vitest-project-mapping",
+          "sourceLine": "import { test } from \"vitest\";"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_reject_invoices_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_orders_update, fn_reject_refunds_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_reject_invoices_update"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_reject_refunds_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_invoices_update, fn_reject_orders_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_reject_refunds_update"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-duplicate-function-body allow entry: function:fn_orders_audit",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_orders_audit"
         }
       ],
@@ -50,6 +53,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_int: function body duplicates 1 other function(s) after normalizing names and literals: fn_int_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_int"
         },
         {
@@ -57,6 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_int_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_int. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_int_copy"
         }
       ],
@@ -77,6 +82,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_if: function body duplicates 1 other function(s) after normalizing names and literals: fn_if_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_if"
         },
         {
@@ -84,6 +90,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_if_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_if. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_if_copy"
         }
       ],
@@ -104,6 +111,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_atomic_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_atomic_a"
         },
         {
@@ -111,6 +119,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_atomic_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_atomic_b"
         }
       ],
@@ -131,6 +140,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_atomic(): function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_atomic()"
         },
         {
@@ -138,6 +148,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_atomic_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_atomic_copy()"
         },
         {
@@ -145,6 +156,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_send(): function body duplicates 1 other function(s) after normalizing names and literals: fn_send_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_send()"
         },
         {
@@ -152,6 +164,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_send_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_send(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_send_copy()"
         },
         {
@@ -159,6 +172,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_set(): function body duplicates 1 other function(s) after normalizing names and literals: fn_set_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_set()"
         },
         {
@@ -166,6 +180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_set_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_set(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_set_copy()"
         },
         {
@@ -173,6 +188,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_text(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_text_copy(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_text(integer)"
         },
         {
@@ -180,6 +196,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_text_copy(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_text(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_text_copy(integer)"
         },
         {
@@ -187,6 +204,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_u(): function body duplicates 1 other function(s) after normalizing names and literals: fn_u_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_u()"
         },
         {
@@ -194,6 +212,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_u_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_u(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_u_copy()"
         }
       ],
@@ -214,6 +233,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_01: function body duplicates 6 other function(s) after normalizing names and literals: fn_02, fn_03, fn_04, fn_05, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_01"
         },
         {
@@ -221,6 +241,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_02: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_03, fn_04, fn_05, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_02"
         },
         {
@@ -228,6 +249,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_03: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_04, fn_05, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_03"
         },
         {
@@ -235,6 +257,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_04: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_03, fn_05, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_04"
         },
         {
@@ -242,6 +265,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_05: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_03, fn_04, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_05"
         },
         {
@@ -249,6 +273,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_06: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_03, fn_04, fn_05 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_06"
         },
         {
@@ -256,6 +281,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_07: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_03, fn_04, fn_05 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_07"
         }
       ],
@@ -288,6 +314,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_atomic_gap(): function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_gap_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_atomic_gap()"
         },
         {
@@ -295,6 +322,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_atomic_gap_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_gap(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_atomic_gap_copy()"
         },
         {
@@ -302,6 +330,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_cost_low(): function body duplicates 1 other function(s) after normalizing names and literals: fn_cost_low_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_cost_low()"
         },
         {
@@ -309,6 +338,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_cost_low_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_cost_low(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_cost_low_copy()"
         },
         {
@@ -316,6 +346,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_eend(): function body duplicates 1 other function(s) after normalizing names and literals: fn_eend_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_eend()"
         },
         {
@@ -323,6 +354,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_eend_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_eend(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_eend_copy()"
         },
         {
@@ -330,6 +362,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_lang_sql(): function body duplicates 1 other function(s) after normalizing names and literals: fn_lang_sql_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_lang_sql()"
         },
         {
@@ -337,6 +370,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_lang_sql_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_lang_sql(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_lang_sql_copy()"
         },
         {
@@ -344,6 +378,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_outer(): function body duplicates 1 other function(s) after normalizing names and literals: fn_outer_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_outer()"
         },
         {
@@ -351,6 +386,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_outer_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_outer(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_outer_copy()"
         },
         {
@@ -358,6 +394,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_path_stable(): function body duplicates 1 other function(s) after normalizing names and literals: fn_path_stable_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_path_stable()"
         },
         {
@@ -365,6 +402,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_path_stable_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_path_stable(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_path_stable_copy()"
         },
         {
@@ -372,6 +410,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_type_stable(): function body duplicates 1 other function(s) after normalizing names and literals: fn_type_stable_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_type_stable()"
         },
         {
@@ -379,6 +418,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_type_stable_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_type_stable(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_type_stable_copy()"
         }
       ],
@@ -411,6 +451,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_reject_invoices_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_orders_update, fn_reject_refunds_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_reject_invoices_update"
         },
         {
@@ -418,6 +459,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_reject_orders_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_invoices_update, fn_reject_refunds_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_reject_orders_update"
         },
         {
@@ -425,6 +467,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_reject_refunds_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_invoices_update, fn_reject_orders_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_reject_refunds_update"
         }
       ],
@@ -445,6 +488,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_01: merge the copies",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_01"
         },
         {
@@ -452,6 +496,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_02: merge the copies",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_02"
         },
         {
@@ -459,6 +504,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_03: merge the copies",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_03"
         },
         {
@@ -466,6 +512,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_04: merge the copies",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_04"
         },
         {
@@ -473,6 +520,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_05: merge the copies",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_05"
         },
         {
@@ -480,6 +528,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_06: merge the copies",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_06"
         },
         {
@@ -487,6 +536,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_07: merge the copies",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_07"
         }
       ],
@@ -531,6 +581,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_escape_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_escape_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_escape_a"
         },
         {
@@ -538,6 +589,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_escape_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_escape_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_escape_b"
         }
       ],
@@ -606,6 +658,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_not: function body duplicates 1 other function(s) after normalizing names and literals: fn_plain. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_not"
         },
         {
@@ -613,6 +666,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_plain: function body duplicates 1 other function(s) after normalizing names and literals: fn_not. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_plain"
         }
       ],
@@ -645,6 +699,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_left: function body duplicates 1 other function(s) after normalizing names and literals: fn_left_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_left"
         },
         {
@@ -652,6 +707,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_left_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_left. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_left_copy"
         }
       ],
@@ -672,6 +728,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_tenant_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_tenant_a_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_tenant_a"
         },
         {
@@ -679,6 +736,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_tenant_a_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_tenant_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_tenant_a_copy"
         }
       ],
@@ -699,6 +757,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_audit(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_audit(text). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_audit(integer)"
         },
         {
@@ -706,6 +765,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_audit(text): function body duplicates 1 other function(s) after normalizing names and literals: fn_audit(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_audit(text)"
         },
         {
@@ -713,6 +773,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_dollar_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_dollar_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_dollar_a"
         },
         {
@@ -720,6 +781,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_dollar_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_dollar_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_dollar_b"
         },
         {
@@ -727,6 +789,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_nolang_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_nolang_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_nolang_a"
         },
         {
@@ -734,6 +797,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_nolang_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_nolang_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_nolang_b"
         },
         {
@@ -741,6 +805,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_semi_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_semi_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_semi_a"
         },
         {
@@ -748,6 +813,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_semi_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_semi_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_semi_b"
         }
       ],
@@ -792,6 +858,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_safe: function body duplicates 1 other function(s) after normalizing names and literals: fn_safe_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_safe"
         },
         {
@@ -799,6 +866,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_safe_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_safe. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_safe_copy"
         }
       ],
@@ -819,6 +887,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_param(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_param_copy(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_param(integer)"
         },
         {
@@ -826,6 +895,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_param_copy(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_param(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_param_copy(integer)"
         }
       ],
@@ -846,6 +916,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_bang(): function body duplicates 1 other function(s) after normalizing names and literals: fn_bang_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_bang()"
         },
         {
@@ -853,6 +924,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_bang_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_bang(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_bang_copy()"
         },
         {
@@ -860,6 +932,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_op_a(): function body duplicates 1 other function(s) after normalizing names and literals: fn_op_a_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_op_a()"
         },
         {
@@ -867,6 +940,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_op_a_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_op_a(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_op_a_copy()"
         },
         {
@@ -874,6 +948,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_rows_one(): function body duplicates 1 other function(s) after normalizing names and literals: fn_rows_one_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_rows_one()"
         },
         {
@@ -881,6 +956,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_rows_one_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_rows_one(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_rows_one_copy()"
         },
         {
@@ -888,6 +964,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_support_one(): function body duplicates 1 other function(s) after normalizing names and literals: fn_support_one_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_support_one()"
         },
         {
@@ -895,6 +972,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_support_one_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_support_one(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_support_one_copy()"
         },
         {
@@ -902,6 +980,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_table_int(): function body duplicates 1 other function(s) after normalizing names and literals: fn_table_int_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_table_int()"
         },
         {
@@ -909,6 +988,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_table_int_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_table_int(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_table_int_copy()"
         }
       ],
@@ -929,6 +1009,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_quote_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_quote_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_quote_a"
         },
         {
@@ -936,6 +1017,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_quote_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_quote_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_quote_b"
         }
       ],
@@ -968,6 +1050,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_quoted_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_quoted_a_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_quoted_a"
         },
         {
@@ -975,6 +1058,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_quoted_a_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_quoted_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_quoted_a_copy"
         }
       ],
@@ -995,6 +1079,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_int: function body duplicates 1 other function(s) after normalizing names and literals: fn_int_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_int"
         },
         {
@@ -1002,6 +1087,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_int_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_int. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_int_copy"
         }
       ],
@@ -1022,6 +1108,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_ret_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_ret_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_ret_a"
         },
         {
@@ -1029,6 +1116,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_ret_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_ret_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_ret_b"
         }
       ],
@@ -1049,6 +1137,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_tenant_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_tenant_a_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_tenant_a"
         },
         {
@@ -1056,6 +1145,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_tenant_a_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_tenant_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_tenant_a_copy"
         }
       ],
@@ -1076,6 +1166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_definer_sql: function body duplicates 1 other function(s) after normalizing names and literals: fn_definer_sql_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_definer_sql"
         },
         {
@@ -1083,6 +1174,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_definer_sql_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_definer_sql. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_definer_sql_copy"
         }
       ],
@@ -1103,6 +1195,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_definer: function body duplicates 1 other function(s) after normalizing names and literals: fn_definer_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_definer"
         },
         {
@@ -1110,6 +1203,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_definer_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_definer. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_definer_copy"
         }
       ],
@@ -1130,6 +1224,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_path: function body duplicates 1 other function(s) after normalizing names and literals: fn_path_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_path"
         },
         {
@@ -1137,6 +1232,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_path_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_path. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_path_copy"
         }
       ],
@@ -1157,6 +1253,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_called: function body duplicates 1 other function(s) after normalizing names and literals: fn_default_word. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_called"
         },
         {
@@ -1164,6 +1261,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_default_word: function body duplicates 1 other function(s) after normalizing names and literals: fn_called. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_default_word"
         },
         {
@@ -1171,6 +1269,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_strict: function body duplicates 1 other function(s) after normalizing names and literals: fn_strict_long. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_strict"
         },
         {
@@ -1178,6 +1277,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_strict_long: function body duplicates 1 other function(s) after normalizing names and literals: fn_strict. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_strict_long"
         }
       ],
@@ -1198,6 +1298,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_event_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_event_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one event trigger function; event triggers cannot take arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_event_a"
         },
         {
@@ -1205,6 +1306,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_event_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_event_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one event trigger function; event triggers cannot take arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_event_b"
         }
       ],
@@ -1225,6 +1327,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_alpha(): function body duplicates 1 other function(s) after normalizing names and literals: fn_alpha_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_alpha()"
         },
         {
@@ -1232,6 +1335,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_alpha_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_alpha(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_alpha_copy()"
         },
         {
@@ -1239,6 +1343,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_cafe(): function body duplicates 1 other function(s) after normalizing names and literals: fn_cafe_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_cafe()"
         },
         {
@@ -1246,6 +1351,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_cafe_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_cafe(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_cafe_copy()"
         }
       ],
@@ -1266,6 +1372,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_audit(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_audit(text). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_audit(integer)"
         },
         {
@@ -1273,6 +1380,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_audit(text): function body duplicates 1 other function(s) after normalizing names and literals: fn_audit(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_audit(text)"
         },
         {
@@ -1280,6 +1388,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_body: function body duplicates 1 other function(s) after normalizing names and literals: fn_title. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_body"
         },
         {
@@ -1287,6 +1396,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_dollar_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_dollar_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_dollar_a"
         },
         {
@@ -1294,6 +1404,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_dollar_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_dollar_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_dollar_b"
         },
         {
@@ -1301,6 +1412,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_nolang_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_nolang_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_nolang_a"
         },
         {
@@ -1308,6 +1420,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_nolang_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_nolang_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_nolang_b"
         },
         {
@@ -1315,6 +1428,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_semi_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_semi_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_semi_a"
         },
         {
@@ -1322,6 +1436,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_semi_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_semi_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_semi_b"
         },
         {
@@ -1329,6 +1444,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_title: function body duplicates 1 other function(s) after normalizing names and literals: fn_body. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_title"
         }
       ],
@@ -1349,6 +1465,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_immutable: function body duplicates 1 other function(s) after normalizing names and literals: fn_immutable_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_immutable"
         },
         {
@@ -1356,6 +1473,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: function:fn_immutable_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_immutable. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
           "rule": "postgres-duplicate-function-body",
+          "sourceLine": "{",
           "target": "function:fn_immutable_copy"
         }
       ],

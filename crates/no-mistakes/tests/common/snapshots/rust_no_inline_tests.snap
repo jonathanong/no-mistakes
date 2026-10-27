@@ -15,7 +15,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "cfg_fn.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -34,19 +35,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "lib.rs",
           "line": 14,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         },
         {
           "file": "lib.rs",
           "line": 4,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         },
         {
           "file": "lib.rs",
           "line": 9,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -65,7 +69,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "cfg_use.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -97,6 +102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "cannot verify rust-no-inline-tests: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]",
           "target": "unanalyzable"
         }
       ],
@@ -116,7 +122,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "mymod.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -159,7 +166,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "extra_attrs.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -190,7 +198,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "one_line.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)] mod tests { fn it_works() {} }"
         }
       ],
       "warnings": []
@@ -233,7 +242,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pub_mod.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -252,7 +262,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "sub/b.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -271,7 +282,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "simple_inline.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -290,19 +302,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "a.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         },
         {
           "file": "a.rs",
           "line": 3,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         },
         {
           "file": "b.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -321,7 +336,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "whitespace_cfg.rs",
           "line": 1,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "# [ cfg ( test ) ]"
         }
       ],
       "warnings": []

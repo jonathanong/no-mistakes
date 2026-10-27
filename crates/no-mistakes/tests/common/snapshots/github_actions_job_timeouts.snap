@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": ".github/workflows/ci.yml: job \"visible\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "*visible-id :",
           "target": "visible"
         }
       ],
@@ -36,6 +37,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": ".github/workflows/ci.yml: job \"visible\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "*visible-id :",
           "target": "visible"
         }
       ],
@@ -56,6 +58,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"coverage\" timeout-minutes is 20, exceeding its allowlisted max of 15",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "coverage:",
           "target": "coverage"
         }
       ],
@@ -88,6 +91,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"above\" timeout-minutes is 11, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "above:",
           "target": "above"
         },
         {
@@ -95,6 +99,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 113,
           "message": ".github/workflows/ci.yml: job \"parallel-without-caller-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "parallel-without-caller-timeout:",
           "target": "parallel-without-caller-timeout"
         },
         {
@@ -102,6 +107,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": ".github/workflows/ci.yml: job \"conditional-matrix-composite\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "conditional-matrix-composite:",
           "target": "conditional-matrix-composite"
         },
         {
@@ -109,6 +115,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"equal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "equal:",
           "target": "equal"
         },
         {
@@ -116,6 +123,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 37,
           "message": ".github/workflows/ci.yml: job \"overflow\" timeout-minutes is 18446744073709551615, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "overflow:",
           "target": "overflow"
         },
         {
@@ -123,6 +131,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 45,
           "message": ".github/workflows/ci.yml: job \"no-steps\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "no-steps:",
           "target": "no-steps"
         },
         {
@@ -130,6 +139,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 47,
           "message": ".github/workflows/ci.yml: job \"empty-steps\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "empty-steps:",
           "target": "empty-steps"
         },
         {
@@ -137,6 +147,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 50,
           "message": ".github/workflows/ci.yml: job \"single-step\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "single-step:",
           "target": "single-step"
         },
         {
@@ -144,6 +155,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 55,
           "message": ".github/workflows/ci.yml: job \"malformed-steps\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "malformed-steps:",
           "target": "malformed-steps"
         },
         {
@@ -151,6 +163,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 58,
           "message": ".github/workflows/ci.yml: job \"malformed-step\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "malformed-step:",
           "target": "malformed-step"
         },
         {
@@ -158,6 +171,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 64,
           "message": ".github/workflows/ci.yml: job \"missing-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "missing-step-timeout:",
           "target": "missing-step-timeout"
         },
         {
@@ -165,6 +179,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 70,
           "message": ".github/workflows/ci.yml: job \"expression-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "expression-step-timeout:",
           "target": "expression-step-timeout"
         },
         {
@@ -172,6 +187,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 77,
           "message": ".github/workflows/ci.yml: job \"string-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "string-step-timeout:",
           "target": "string-step-timeout"
         },
         {
@@ -179,6 +195,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 84,
           "message": ".github/workflows/ci.yml: job \"boolean-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "boolean-step-timeout:",
           "target": "boolean-step-timeout"
         },
         {
@@ -186,6 +203,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 91,
           "message": ".github/workflows/ci.yml: job \"negative-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "negative-step-timeout:",
           "target": "negative-step-timeout"
         },
         {
@@ -193,6 +211,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 98,
           "message": ".github/workflows/ci.yml: job \"float-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "float-step-timeout:",
           "target": "float-step-timeout"
         }
       ],
@@ -213,6 +232,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"above\" timeout-minutes is 11, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "above:",
           "target": "above"
         },
         {
@@ -220,6 +240,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 113,
           "message": ".github/workflows/ci.yml: job \"parallel-without-caller-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "parallel-without-caller-timeout:",
           "target": "parallel-without-caller-timeout"
         },
         {
@@ -227,6 +248,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": ".github/workflows/ci.yml: job \"conditional-matrix-composite\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "conditional-matrix-composite:",
           "target": "conditional-matrix-composite"
         },
         {
@@ -234,6 +256,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"equal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "equal:",
           "target": "equal"
         },
         {
@@ -241,6 +264,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 37,
           "message": ".github/workflows/ci.yml: job \"overflow\" timeout-minutes is 18446744073709551615, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "overflow:",
           "target": "overflow"
         },
         {
@@ -248,6 +272,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 45,
           "message": ".github/workflows/ci.yml: job \"no-steps\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "no-steps:",
           "target": "no-steps"
         },
         {
@@ -255,6 +280,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 47,
           "message": ".github/workflows/ci.yml: job \"empty-steps\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "empty-steps:",
           "target": "empty-steps"
         },
         {
@@ -262,6 +288,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 50,
           "message": ".github/workflows/ci.yml: job \"single-step\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "single-step:",
           "target": "single-step"
         },
         {
@@ -269,6 +296,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 55,
           "message": ".github/workflows/ci.yml: job \"malformed-steps\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "malformed-steps:",
           "target": "malformed-steps"
         },
         {
@@ -276,6 +304,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 58,
           "message": ".github/workflows/ci.yml: job \"malformed-step\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "malformed-step:",
           "target": "malformed-step"
         },
         {
@@ -283,6 +312,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 64,
           "message": ".github/workflows/ci.yml: job \"missing-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "missing-step-timeout:",
           "target": "missing-step-timeout"
         },
         {
@@ -290,6 +320,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 70,
           "message": ".github/workflows/ci.yml: job \"expression-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "expression-step-timeout:",
           "target": "expression-step-timeout"
         },
         {
@@ -297,6 +328,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 77,
           "message": ".github/workflows/ci.yml: job \"string-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "string-step-timeout:",
           "target": "string-step-timeout"
         },
         {
@@ -304,6 +336,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 84,
           "message": ".github/workflows/ci.yml: job \"boolean-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "boolean-step-timeout:",
           "target": "boolean-step-timeout"
         },
         {
@@ -311,6 +344,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 91,
           "message": ".github/workflows/ci.yml: job \"negative-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "negative-step-timeout:",
           "target": "negative-step-timeout"
         },
         {
@@ -318,6 +352,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 98,
           "message": ".github/workflows/ci.yml: job \"float-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "float-step-timeout:",
           "target": "float-step-timeout"
         }
       ],
@@ -362,6 +397,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"test\" step \"slow\" timeout-minutes is 20, exceeding its job timeout of 10",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "timeout-minutes: 10",
           "target": "test"
         }
       ],
@@ -382,6 +418,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 38,
           "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "? \"visible#colon:job\"",
           "target": "visible#colon:job"
         },
         {
@@ -389,6 +426,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 46,
           "message": ".github/workflows/ci.yml: job \"normal\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "normal: &defaults",
           "target": "normal"
         },
         {
@@ -396,6 +434,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 57,
           "message": ".github/workflows/ci.yml: job \"following\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "following:",
           "target": "following"
         }
       ],
@@ -416,6 +455,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 38,
           "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "? \"visible#colon:job\"",
           "target": "visible#colon:job"
         },
         {
@@ -423,6 +463,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 46,
           "message": ".github/workflows/ci.yml: job \"normal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "normal: &defaults",
           "target": "normal"
         },
         {
@@ -430,6 +471,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 57,
           "message": ".github/workflows/ci.yml: job \"following\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "following:",
           "target": "following"
         }
       ],
@@ -450,6 +492,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": ".github/workflows/ci.yml: job \"real#job\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "\"real#job\":",
           "target": "real#job"
         }
       ],
@@ -518,6 +561,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 53,
           "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "\"visible#colon:job\":",
           "target": "visible#colon:job"
         },
         {
@@ -525,6 +569,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 60,
           "message": ".github/workflows/ci.yml: job \"anchored\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "anchored: &defaults",
           "target": "anchored"
         }
       ],
@@ -545,6 +590,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"inline\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "jobs: {inline: {timeout-minutes: 10, steps: [{run: echo, timeout-minutes: 4}, {run: echo, timeout-minutes: 6}]}}",
           "target": "inline"
         }
       ],
@@ -564,7 +610,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 2,
           "message": ".github/workflows/ci.yml: invalid YAML (did not find expected node content at line 2 column 1, while parsing a flow node)",
-          "rule": "github-actions-job-timeouts"
+          "rule": "github-actions-job-timeouts",
+          "sourceLine": ""
         }
       ],
       "warnings": []
@@ -584,6 +631,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": ".github/workflows/ci.yml: job \"mapped\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "mapped:",
           "target": "mapped"
         }
       ],
@@ -604,6 +652,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": ".github/workflows/ci.yml: job \"mapped\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "mapped:",
           "target": "mapped"
         }
       ],
@@ -624,6 +673,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"test\" has no timeout-minutes (defaults to GitHub's 6-hour ceiling); add a literal number",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "test:",
           "target": "test"
         }
       ],
@@ -644,6 +694,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": ".github/workflows/ci.yml: job \"multi line\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "? \"multi",
           "target": "multi line"
         }
       ],
@@ -664,6 +715,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": ".github/workflows/ci.yml: job \"multi line\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "? \"multi",
           "target": "multi line"
         }
       ],
@@ -696,6 +748,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"test\" timeout-minutes is 30, over the 10-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "test:",
           "target": "test"
         }
       ],
@@ -716,6 +769,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 51,
           "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "\"visible#colon:job\":",
           "target": "visible#colon:job"
         },
         {
@@ -723,6 +777,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 58,
           "message": ".github/workflows/ci.yml: job \"anchored\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "anchored: &defaults",
           "target": "anchored"
         }
       ],
@@ -743,6 +798,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 51,
           "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "\"visible#colon:job\":",
           "target": "visible#colon:job"
         },
         {
@@ -750,6 +806,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 58,
           "message": ".github/workflows/ci.yml: job \"anchored\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "anchored: &defaults",
           "target": "anchored"
         }
       ],
@@ -782,6 +839,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"root-alias\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "root-alias:",
           "target": "root-alias"
         }
       ],
@@ -802,6 +860,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"root-alias\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "root-alias:",
           "target": "root-alias"
         }
       ],
@@ -822,6 +881,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "stale github-actions-job-timeouts allow entry `.github/workflows/ci.yml#missing`",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "name: ci",
           "target": ".github/workflows/ci.yml#missing"
         }
       ],
@@ -842,6 +902,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"test\" step \"slow\" timeout-minutes is 20, exceeding its job timeout of 10",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "timeout-minutes: 10",
           "target": "test"
         }
       ],
@@ -862,6 +923,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"above\" timeout-minutes is 11, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "above:",
           "target": "above"
         },
         {
@@ -869,6 +931,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": ".github/workflows/ci.yml: job \"conditional-matrix-composite\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "conditional-matrix-composite:",
           "target": "conditional-matrix-composite"
         },
         {
@@ -876,6 +939,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"equal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "equal:",
           "target": "equal"
         }
       ],
@@ -896,6 +960,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"above\" timeout-minutes is 11, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "above:",
           "target": "above"
         },
         {
@@ -903,6 +968,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": ".github/workflows/ci.yml: job \"conditional-matrix-composite\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "conditional-matrix-composite:",
           "target": "conditional-matrix-composite"
         },
         {
@@ -910,6 +976,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"equal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "equal:",
           "target": "equal"
         },
         {
@@ -917,6 +984,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"boolean-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "timeout-minutes: 10",
           "target": "boolean-step-timeout"
         },
         {
@@ -924,6 +992,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"expression-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "timeout-minutes: 10",
           "target": "expression-step-timeout"
         },
         {
@@ -931,6 +1000,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"float-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "timeout-minutes: 10",
           "target": "float-step-timeout"
         },
         {
@@ -938,6 +1008,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"negative-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "timeout-minutes: 10",
           "target": "negative-step-timeout"
         },
         {
@@ -945,6 +1016,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"string-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "timeout-minutes: 10",
           "target": "string-step-timeout"
         }
       ],
@@ -1013,6 +1085,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": ".github/workflows/ci.yml: job \"custom\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!custom custom:",
           "target": "custom"
         },
         {
@@ -1020,6 +1093,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": ".github/workflows/ci.yml: job \"1\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!!str 1:",
           "target": "1"
         },
         {
@@ -1027,6 +1101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 52,
           "message": ".github/workflows/ci.yml: job \"3\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!custom \"3\":",
           "target": "3"
         },
         {
@@ -1034,6 +1109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 59,
           "message": ".github/workflows/ci.yml: job \"4\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!<tag:example.com,2026:job> 4:",
           "target": "4"
         },
         {
@@ -1041,6 +1117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 66,
           "message": ".github/workflows/ci.yml: job \"map\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!!map map:",
           "target": "map"
         },
         {
@@ -1048,6 +1125,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 73,
           "message": ".github/workflows/ci.yml: job \"seq\" timeout-minutes is 10, over the 9-minute cap",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!!seq seq:",
           "target": "seq"
         }
       ],
@@ -1068,6 +1146,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": ".github/workflows/ci.yml: job \"custom\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!custom custom:",
           "target": "custom"
         },
         {
@@ -1075,6 +1154,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": ".github/workflows/ci.yml: job \"1\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!!str 1:",
           "target": "1"
         },
         {
@@ -1082,6 +1162,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 52,
           "message": ".github/workflows/ci.yml: job \"3\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!custom \"3\":",
           "target": "3"
         },
         {
@@ -1089,6 +1170,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 59,
           "message": ".github/workflows/ci.yml: job \"4\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!<tag:example.com,2026:job> 4:",
           "target": "4"
         },
         {
@@ -1096,6 +1178,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 66,
           "message": ".github/workflows/ci.yml: job \"map\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!!map map:",
           "target": "map"
         },
         {
@@ -1103,6 +1186,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 73,
           "message": ".github/workflows/ci.yml: job \"seq\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
           "rule": "github-actions-job-timeouts",
+          "sourceLine": "!!seq seq:",
           "target": "seq"
         }
       ],

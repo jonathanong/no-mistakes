@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "glob_coverage": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": "registry contains `@acme/docs` but no glob in dependabotGlobs covers it",
+          "rule": "finite-set-consistency",
+          "sourceLine": "version: 2",
+          "target": "@acme/docs"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

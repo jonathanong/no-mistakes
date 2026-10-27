@@ -27,7 +27,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "sgconfig.yml",
           "line": 1,
           "message": "sgconfig.yml: failed to parse YAML (did not find expected key, while parsing a block mapping)",
-          "rule": "config-path-references"
+          "rule": "config-path-references",
+          "sourceLine": ":"
         }
       ],
       "warnings": []
@@ -46,7 +47,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "config/invalid.yml",
           "line": 1,
           "message": "config/invalid.yml: failed to parse YAML (did not find expected node content at line 3 column 1, while parsing a flow node)",
-          "rule": "config-path-references"
+          "rule": "config-path-references",
+          "sourceLine": "paths:"
         }
       ],
       "warnings": []
@@ -66,6 +68,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "config/app.yml: config path `missing.json` from `paths.required` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "paths:",
           "target": "missing.json"
         }
       ],
@@ -85,7 +88,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 1,
           "message": ".github/workflows/check.yml: failed to parse YAML (did not find expected key, while parsing a block mapping)",
-          "rule": "config-path-references"
+          "rule": "config-path-references",
+          "sourceLine": ":"
         }
       ],
       "warnings": []
@@ -105,6 +109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".coverage-rules.yml: config path `missing/**/*.rs` from `rules[0].paths` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "rules:",
           "target": "missing/**/*.rs"
         },
         {
@@ -112,6 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/dependabot.yml: config path `missing-app` from `updates[0].directory` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "version: 2",
           "target": "missing-app"
         },
         {
@@ -119,6 +125,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/pnpm-filters.yml: config path `./missing-app` from `pnpm filter 0` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "name: pnpm filters",
           "target": "./missing-app"
         },
         {
@@ -126,6 +133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".no-mistakes.yml: config path `missing-playwright.config.ts` from `tests.playwright.configs[0]` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "projects:",
           "target": "missing-playwright.config.ts"
         },
         {
@@ -133,6 +141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".no-mistakes.yml: config path `missing-project/src/missing.ts` from `testPlan.vitest.fullSuiteTriggers.projects.app[0]` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "projects:",
           "target": "missing-project/src/missing.ts"
         },
         {
@@ -140,6 +149,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".no-mistakes.yml: config path `missing-project` from `projects.app.root` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "projects:",
           "target": "missing-project"
         },
         {
@@ -147,6 +157,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".no-mistakes.yml: config path `missing-trigger.ts` from `testPlan.vitest.fullSuiteTriggers.triggers[0].paths[0]` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "projects:",
           "target": "missing-trigger.ts"
         },
         {
@@ -154,6 +165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".oxlintrc.json: config path `./plugins/missing.js` from `jsPlugins[0].specifier` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "{",
           "target": "./plugins/missing.js"
         },
         {
@@ -161,6 +173,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".oxlintrc.json: config path `src/missing-baseline.ts` from `rules.custom/rule.baseline[0][0]` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "{",
           "target": "src/missing-baseline.ts"
         },
         {
@@ -168,6 +181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".oxlintrc.json: config path `src/missing.ts` from `overrides[0].files[0]` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "{",
           "target": "src/missing.ts"
         },
         {
@@ -175,6 +189,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".syncpackrc.json: config path `missing/*/package.json` from `source[0]` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "{",
           "target": "missing/*/package.json"
         },
         {
@@ -182,6 +197,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "knip.jsonc: config path `packages/app/src/missing.ts` from `workspaces.packages/app.entry[0]` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "{",
           "target": "packages/app/src/missing.ts"
         },
         {
@@ -189,6 +205,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "knip.jsonc: config path `src/root-missing.ts` from `workspaces...entry[0]` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "{",
           "target": "src/root-missing.ts"
         },
         {
@@ -196,6 +213,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/app/.oxlintrc.json: config path `./plugins/nested-missing.js` from `jsPlugins[0].specifier` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "{",
           "target": "./plugins/nested-missing.js"
         },
         {
@@ -203,6 +221,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sgconfig.yml: config path `missing-rules` from `ruleDirs[0]` does not exist",
           "rule": "config-path-references",
+          "sourceLine": "ruleDirs:",
           "target": "missing-rules"
         }
       ],

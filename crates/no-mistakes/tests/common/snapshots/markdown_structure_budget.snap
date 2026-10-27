@@ -15,7 +15,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "doc.md",
           "line": 1,
           "message": "stale baseline entry: visual counts no longer match the baseline",
-          "rule": "markdown-structure-budget"
+          "rule": "markdown-structure-budget",
+          "sourceLine": "| a |"
         }
       ],
       "warnings": []
@@ -46,7 +47,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "doc.md",
           "line": 1,
           "message": "stale baseline entry: references a deleted or excluded Markdown file",
-          "rule": "markdown-structure-budget"
+          "rule": "markdown-structure-budget",
+          "sourceLine": "| a |"
         }
       ],
       "warnings": []
@@ -65,7 +67,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "doc.md",
           "line": 1,
           "message": "stale baseline entry: is no longer a structure-budget violation",
-          "rule": "markdown-structure-budget"
+          "rule": "markdown-structure-budget",
+          "sourceLine": "short"
         }
       ],
       "warnings": []
@@ -84,7 +87,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "exact-cr.md",
           "line": 1,
           "message": "oversized Markdown has 1 tables (max 0) and 0 Mermaid blocks (max 1)",
-          "rule": "markdown-structure-budget"
+          "rule": "markdown-structure-budget",
+          "sourceLine": "| a |"
         }
       ],
       "warnings": []
@@ -122,7 +126,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "over-budget.md",
           "line": 1,
           "message": "oversized Markdown has 2 tables (max 1) and 2 Mermaid blocks (max 1)",
-          "rule": "markdown-structure-budget"
+          "rule": "markdown-structure-budget",
+          "sourceLine": "| a |"
         }
       ],
       "warnings": []
@@ -141,7 +146,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "over-budget.md",
           "line": 1,
           "message": "oversized Markdown has 2 tables (max 1) and 2 Mermaid blocks (max 1)",
-          "rule": "markdown-structure-budget"
+          "rule": "markdown-structure-budget",
+          "sourceLine": "| a |"
         }
       ],
       "warnings": []
@@ -160,7 +166,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "unicode.md",
           "line": 1,
           "message": "oversized Markdown has 2 tables (max 1) and 0 Mermaid blocks (max 1)",
-          "rule": "markdown-structure-budget"
+          "rule": "markdown-structure-budget",
+          "sourceLine": "éé"
         }
       ],
       "warnings": []

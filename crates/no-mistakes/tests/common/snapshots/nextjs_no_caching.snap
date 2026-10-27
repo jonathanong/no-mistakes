@@ -1,0 +1,165 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/bad.ts",
+          "line": 1,
+          "message": "next/cache `revalidatePath` is disabled; avoid Next.js cache APIs",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "import { unstable_cache, revalidatePath } from 'next/cache'"
+        },
+        {
+          "file": "web/app/bad.ts",
+          "line": 1,
+          "message": "next/cache `unstable_cache` is disabled; avoid Next.js cache APIs",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "import { unstable_cache, revalidatePath } from 'next/cache'"
+        },
+        {
+          "file": "web/app/bad.ts",
+          "line": 6,
+          "message": "Next.js unstable_cache is disabled; compute this value per request",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "export const cachedUser = unstable_cache(async () => {"
+        },
+        {
+          "file": "web/app/directive.ts",
+          "line": 2,
+          "message": "Next.js cache directives are disabled; remove this directive",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "'use cache'"
+        },
+        {
+          "file": "web/app/fetch-options.ts",
+          "line": 2,
+          "message": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/a', { cache: 'force-cache' })"
+        },
+        {
+          "file": "web/app/fetch-options.ts",
+          "line": 3,
+          "message": "fetch next.revalidate caching is disabled; use revalidate: 0 or no-store",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/b', { next: { revalidate: false } })"
+        },
+        {
+          "file": "web/app/fetch-options.ts",
+          "line": 4,
+          "message": "fetch next.revalidate caching is disabled; use revalidate: 0 or no-store",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/c', { next: { revalidate: 60 } })"
+        },
+        {
+          "file": "web/app/fetch-options.ts",
+          "line": 5,
+          "message": "fetch next.tags caching is disabled; remove cache tags",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/d', { next: { tags: ['user'] } })"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 10,
+          "message": "Next.js `fetchCache` cache segment config is disabled; remove static caching",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "export const fetchCache = fetchMode"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 13,
+          "message": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "const loadLater = () => fetch('/api/later', { cache: laterMode })"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 17,
+          "message": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/template', { cache: `force-cache` })"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 18,
+          "message": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/key', { [`cache`]: alias })"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 19,
+          "message": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/local', { cache: localMode })"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 20,
+          "message": "fetch next.revalidate caching is disabled; use revalidate: 0 or no-store",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/seconds', { next: { revalidate: seconds } })"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 21,
+          "message": "fetch next.revalidate caching is disabled; use revalidate: 0 or no-store",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/off', { next: { revalidate: off } })"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 24,
+          "message": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "await fetch('/api/blocked', { cache: blocked })"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 8,
+          "message": "Next.js `revalidate` cache segment config is disabled; remove static caching",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "export const revalidate = seconds"
+        },
+        {
+          "file": "web/app/static-keys/page.tsx",
+          "line": 9,
+          "message": "Next.js `dynamic` cache segment config is disabled; remove static caching",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "export const dynamic = policy"
+        },
+        {
+          "file": "web/next.config.ts",
+          "line": 4,
+          "message": "Next.js cacheComponents config is disabled; remove static caching",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "[`cacheComponents`]: enabled,"
+        },
+        {
+          "file": "web/next.config.ts",
+          "line": 5,
+          "message": "Next.js `cacheLife` config is disabled; remove static caching",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "cacheLife: {"
+        },
+        {
+          "file": "web/next.config.ts",
+          "line": 8,
+          "message": "Next.js `cacheHandlers` config is disabled; remove static caching",
+          "rule": "nextjs-no-caching",
+          "sourceLine": "cacheHandlers: {"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

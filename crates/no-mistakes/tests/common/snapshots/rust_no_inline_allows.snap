@@ -28,6 +28,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-allows",
+          "sourceLine": "#[cfg(test)]",
           "target": "unanalyzable"
         }
       ],
@@ -71,7 +72,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "indented_allow.rs",
           "line": 1,
           "message": "inline #[allow(unused_imports)] attribute - fix the warning or move test-only code to a sibling test module",
-          "rule": "rust-no-inline-allows"
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(unused_imports)]"
         }
       ],
       "warnings": []
@@ -90,7 +92,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "inline_allow.rs",
           "line": 1,
           "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
-          "rule": "rust-no-inline-allows"
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]"
         }
       ],
       "warnings": []
@@ -110,6 +113,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]",
           "target": "unanalyzable"
         }
       ],
@@ -129,7 +133,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "namespaced_allow.rs",
           "line": 1,
           "message": "inline #[allow(clippy::all,unused_imports)] attribute - fix the warning or move test-only code to a sibling test module",
-          "rule": "rust-no-inline-allows"
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(clippy::all, unused_imports)]"
         }
       ],
       "warnings": []
@@ -148,7 +153,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "path_allow.rs",
           "line": 1,
           "message": "inline #[allow()] attribute - fix the warning or move test-only code to a sibling test module",
-          "rule": "rust-no-inline-allows"
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow]"
         }
       ],
       "warnings": []
@@ -167,7 +173,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "sub/b.rs",
           "line": 1,
           "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
-          "rule": "rust-no-inline-allows"
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]"
         }
       ],
       "warnings": []
@@ -186,13 +193,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "a.rs",
           "line": 1,
           "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
-          "rule": "rust-no-inline-allows"
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]"
         },
         {
           "file": "sub/b.rs",
           "line": 1,
           "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
-          "rule": "rust-no-inline-allows"
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]"
         }
       ],
       "warnings": []

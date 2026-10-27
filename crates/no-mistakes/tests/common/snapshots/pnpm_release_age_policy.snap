@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: setting \"minimumReleaseAgeExclude\" is claimed by more than one pnpm source",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "include:",
           "target": "minimumReleaseAgeExclude"
         }
       ],
@@ -36,6 +37,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"@acme/core\" is not in a release-age exemption registry",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "@acme/core"
         },
         {
@@ -43,6 +45,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"acme-lib\" is not in a release-age exemption registry",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "acme-lib"
         },
         {
@@ -50,6 +53,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"demo-temporary-package@9.9.9\" duplicates another temporary selector",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "demo-temporary-package@9.9.9"
         }
       ],
@@ -82,6 +86,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/dependabot.yml: \"@acme/core\" is not covered by npm cooldown.exclude",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "updates:",
           "target": "@acme/core"
         }
       ],
@@ -102,6 +107,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"@acme/core\" is missing from minimumReleaseAgeExclude",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "@acme/core"
         },
         {
@@ -109,6 +115,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"demo-temporary-package@9.9.9\" is missing from minimumReleaseAgeExclude",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "demo-temporary-package@9.9.9"
         },
         {
@@ -116,6 +123,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"unknown-package\" is not in a release-age exemption registry",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "unknown-package"
         }
       ],
@@ -136,6 +144,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-lock.yaml: \"@acme/new-tool\" is an active first-party package missing from permanentPackages",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "lockfileVersion: '9.0'",
           "target": "@acme/new-tool"
         }
       ],
@@ -156,6 +165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-lock.yaml: \"demo-temporary-package@9.9.9\" is absent from lockfile packages",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "lockfileVersion: '9.0'",
           "target": "demo-temporary-package@9.9.9"
         }
       ],
@@ -200,6 +210,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"@acme/core\" is not in a release-age exemption registry",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "@acme/core"
         },
         {
@@ -207,6 +218,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"acme-lib\" is not in a release-age exemption registry",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "acme-lib"
         },
         {
@@ -214,6 +226,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"demo-temporary-package@9.9.9\" duplicates another temporary selector",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "demo-temporary-package@9.9.9"
         },
         {
@@ -221,6 +234,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"demo-temporary-package@^9.9.9\" must be an exact package@version selector",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "demo-temporary-package@^9.9.9"
         },
         {
@@ -228,6 +242,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"temporaryGroups\" eligibleForRemovalAt must be canonical YYYY-MM-DDTHH:mm:ssZ",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "temporaryGroups"
         },
         {
@@ -235,6 +250,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"temporaryGroups\" reason must be non-empty",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "temporaryGroups"
         },
         {
@@ -242,6 +258,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"temporaryGroups\" selectors must contain at least one exact package@version selector",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude:",
           "target": "temporaryGroups"
         }
       ],
@@ -262,6 +279,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: cannot verify dependency policy because this manifest could not be read or parsed: failed to parse YAML: did not find expected key at line 2 column 1, while parsing a block mapping. Repair the manifest or restore read access.",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude: [ok, {nested: 1}]",
           "target": "unanalyzable"
         }
       ],
@@ -282,6 +300,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: pnpm lockfile could not be parsed: Malformed. Repair the manifest or restore read access.",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "{ invalid: yaml: [[[",
           "target": "unanalyzable"
         }
       ],
@@ -322,6 +341,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: pnpm lockfile has a non-env document before the project lockfile. Repair the manifest or restore read access.",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "---",
           "target": "unanalyzable"
         }
       ],
@@ -366,6 +386,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: cannot verify dependency policy because this manifest could not be read or parsed: failed to parse YAML: deserializing from YAML containing more than one document is not supported. Repair the manifest or restore read access.",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "{ invalid yaml: }}}",
           "target": "unanalyzable"
         }
       ],
@@ -441,6 +462,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-lock.yaml: \"demo-temporary-package@9.9.9\" is absent from lockfile packages",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "---",
           "target": "demo-temporary-package@9.9.9"
         }
       ],
@@ -501,6 +523,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"@acme/core\" is missing from minimumReleaseAgeExclude",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "include:",
           "target": "@acme/core"
         },
         {
@@ -508,6 +531,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"acme-lib\" is missing from minimumReleaseAgeExclude",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "include:",
           "target": "acme-lib"
         },
         {
@@ -515,6 +539,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: \"demo-temporary-package@9.9.9\" is missing from minimumReleaseAgeExclude",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "include:",
           "target": "demo-temporary-package@9.9.9"
         },
         {
@@ -522,6 +547,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "pnpm-workspace.yaml: included file \"./pnpm/missing.yaml\" could not be read",
           "rule": "pnpm-release-age-policy",
+          "sourceLine": "include:",
           "target": "unanalyzable"
         }
       ],

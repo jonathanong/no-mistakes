@@ -1,0 +1,45 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/services/emails/send.test.mts",
+          "import": "person%40example%2Ecom",
+          "line": 5,
+          "message": "backend/services/emails/send.test.mts: test email fixtures must not use `example.com`; use `tests+<hash>@example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "'person%40example%2Ecom',",
+          "target": "example.com"
+        },
+        {
+          "file": "backend/services/emails/send.test.mts",
+          "import": "person@example.com",
+          "line": 4,
+          "message": "backend/services/emails/send.test.mts: test email fixtures must not use `example.com`; use `tests+<hash>@example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "'person@example.com',",
+          "target": "example.com"
+        },
+        {
+          "file": "email-templates/__snapshots__/login.txt",
+          "import": "person%40tag%40example.com%26otp",
+          "line": 1,
+          "message": "email-templates/__snapshots__/login.txt: test email fixtures must not use `example.com`; use `tests+<hash>@example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "Login link for person%40tag%40example.com%26otp",
+          "target": "example.com"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -40,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "query(sql);",
           "target": "unanalyzable-sql"
         }
       ],
@@ -72,6 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "query(`INSERT INTO items (id) SELECT id FROM input ${conflictClause}`);",
           "target": "unanalyzable-sql"
         }
       ],
@@ -164,6 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter input.user_id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "noncanonical-order"
         }
       ],
@@ -184,6 +187,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.user_id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "missing-canonical-order"
         }
       ],
@@ -216,6 +220,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "ON CONFLICT infers multiple catalog arbiters with incompatible key orders; use ON CONSTRAINT or remove the incompatible index",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(`",
           "target": "ambiguous-arbiter"
         }
       ],
@@ -236,6 +241,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "ON CONFLICT (id) DO NOTHING",
           "target": "missing-canonical-order"
         }
       ],
@@ -256,6 +262,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(statement, [ids]);",
           "target": "unanalyzable-sql"
         },
         {
@@ -263,6 +270,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "unanalyzable-sql"
         }
       ],
@@ -283,6 +291,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter ids.order_id ASC NULLS LAST, nums.line_no ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "noncanonical-order"
         },
         {
@@ -290,6 +299,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 36,
           "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter input.order_id ASC NULLS LAST, input.line_no ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "noncanonical-order"
         },
         {
@@ -297,6 +307,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter ids.order_id ASC NULLS LAST, nums.line_no ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "noncanonical-order"
         }
       ],
@@ -317,6 +328,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "multi-row INSERT source must be a direct SELECT with explicit target columns so arbiter expressions can be mapped to ORDER BY",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "unresolved-source-order"
         },
         {
@@ -324,6 +336,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.scope_id ASC NULLS LAST, input.user_key ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "missing-canonical-order"
         }
       ],
@@ -344,6 +357,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(buildInsert(ids), [ids]);",
           "target": "missing-canonical-order"
         }
       ],
@@ -364,6 +378,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "await write(query);",
           "target": "unanalyzable-sql"
         }
       ],
@@ -384,6 +399,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(`",
           "target": "missing-canonical-order"
         }
       ],
@@ -404,6 +420,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter tenant_id ASC NULLS LAST, id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(`",
           "target": "noncanonical-order"
         }
       ],
@@ -424,6 +441,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "query(assembleWriter());",
           "target": "unanalyzable-sql"
         },
         {
@@ -431,6 +449,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "read(assembleWriter());",
           "target": "unanalyzable-sql"
         },
         {
@@ -438,6 +457,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "write(assembleWriter());",
           "target": "unanalyzable-sql"
         }
       ],
@@ -458,6 +478,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "client.query(assembleWriter());",
           "target": "unanalyzable-sql"
         }
       ],
@@ -478,6 +499,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "ON CONFLICT target does not resolve to one valid, ready btree unique index in schemaCatalogPath",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(`",
           "target": "unresolved-arbiter"
         }
       ],
@@ -498,6 +520,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "ON CONFLICT target keys must use the resolved catalog index order",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(`",
           "target": "noncanonical-target"
         }
       ],
@@ -518,6 +541,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(`",
           "target": "targetless-arbiter"
         }
       ],
@@ -538,6 +562,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter sql_placeholder_1 ASC NULLS LAST, input.product_id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "missing-canonical-order"
         },
         {
@@ -545,6 +570,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 31,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter sql_placeholder_1 ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(sql`/* userSpelledMarkerBesideReal */",
           "target": "missing-canonical-order"
         },
         {
@@ -552,6 +578,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.product_id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(sql`/* controlUnordered */",
           "target": "missing-canonical-order"
         }
       ],
@@ -572,6 +599,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "multi-row INSERT source must be a direct SELECT with explicit target columns so arbiter expressions can be mapped to ORDER BY",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(`",
           "target": "unresolved-source-order"
         }
       ],
@@ -604,6 +632,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(`INSERT INTO items (id) VALUES ( ON CONFLICT (id) DO NOTHING`);",
           "target": "unanalyzable-sql"
         }
       ],
@@ -648,6 +677,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "? \"INSERT INTO items (id) SELECT input.id FROM unnest($1::uuid[]) AS input(id) ON CONFLICT (id) DO NOTHING\"",
           "target": "missing-canonical-order"
         }
       ],
@@ -788,6 +818,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter o.id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(",
           "target": "missing-canonical-order"
         }
       ],
@@ -832,6 +863,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter id ASC NULLS LAST",
           "rule": "postgres-conflict-ordering",
+          "sourceLine": "INSERT INTO items (id) SELECT id FROM pending ON CONFLICT (id) DO NOTHING;",
           "target": "missing-canonical-order"
         }
       ],

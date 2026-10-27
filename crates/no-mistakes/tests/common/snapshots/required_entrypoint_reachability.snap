@@ -1,0 +1,67 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "filesystem_skip": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sources/unreachable.ts",
+          "line": 1,
+          "message": "sources/unreachable.ts is not runtime-reachable from configured entrypoints: entrypoints/runtime.ts",
+          "rule": "required-entrypoint-reachability",
+          "sourceLine": "export const unreachable = true;",
+          "target": "entrypoints/runtime.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sources": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sources/type-only.ts",
+          "line": 1,
+          "message": "sources/type-only.ts is not runtime-reachable from configured entrypoints: entrypoints/api.ts",
+          "rule": "required-entrypoint-reachability",
+          "sourceLine": "export interface OnlyType {",
+          "target": "entrypoints/api.ts"
+        },
+        {
+          "file": "sources/unreachable.ts",
+          "line": 1,
+          "message": "sources/unreachable.ts is not runtime-reachable from configured entrypoints: entrypoints/api.ts",
+          "rule": "required-entrypoint-reachability",
+          "sourceLine": "export const unreachable = true;",
+          "target": "entrypoints/api.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

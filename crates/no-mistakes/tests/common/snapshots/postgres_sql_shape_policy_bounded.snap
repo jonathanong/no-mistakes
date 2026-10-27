@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "PREPARE mixed_cursor(integer, text, integer) AS SELECT * FROM accounts WHERE a > $1::int OR (a = $1 AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "PREPARE reordered_cursor(text, integer, integer) AS SELECT * FROM accounts WHERE a > $2::int OR (a = $2 AND b > $1) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/pages.sql:4: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "PREPARE qualified_cursor(pg_catalog.int4, text, integer) AS SELECT * FROM accounts WHERE a > $1::int OR (a = $1 AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -37,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/pages.sql:5: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1::pg_catalog.int4 OR (a = $1 AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -44,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/pages.sql:6: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1::\"pg_catalog\".\"int4\" OR (a = $1 AND b > $2) ORDER BY a, b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -51,6 +56,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "sql/pages.sql:7: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > ($1::int, $2) OR (a = ($1, $2) AND b > $3) ORDER BY a, b LIMIT $4;",
           "target": "keyset-only-sweep"
         },
         {
@@ -58,6 +64,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "sql/pages.sql:8: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "PREPARE tuple_cursor(integer, text, integer, integer) AS SELECT * FROM accounts WHERE a > ($1::int, $2) OR (a = ($1, $2) AND b > $3) ORDER BY a, b LIMIT $4;",
           "target": "keyset-only-sweep"
         },
         {
@@ -65,6 +72,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "sql/pages.sql:9: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "PREPARE nested_tuple_cursor(integer, integer, text, integer, integer) AS SELECT * FROM accounts WHERE a > ($1, ($2::int, $3)) OR (a = ($1, ($2, $3)) AND b > $4) ORDER BY a, b LIMIT $5;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -85,6 +93,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/conflict-assignment.sql:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SET blocked = excluded.id NOT IN (SELECT id FROM bans),",
           "target": "not-in-subquery"
         },
         {
@@ -92,6 +101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/conflict-assignment.sql:4: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "quiet = (SELECT COUNT(*) FROM orders) = 0;",
           "target": "count-for-existence"
         }
       ],
@@ -112,6 +122,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/on-conflict-where.sql:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE id NOT IN (",
           "target": "not-in-subquery"
         },
         {
@@ -119,6 +130,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/on-conflict-where.sql:5: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE (SELECT COUNT(*) FROM archived) > 0",
           "target": "count-for-existence"
         }
       ],
@@ -139,6 +151,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/count.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM accounts a WHERE (SELECT COUNT(*) FROM orders o WHERE o.account_id = a.id) > 0;",
           "target": "count-for-existence"
         }
       ],
@@ -183,6 +196,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "sql/pages.sql:10: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE $1 < a OR ($1 = a AND $2 >= b) ORDER BY a ASC,b DESC LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -190,6 +204,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "sql/pages.sql:11: walks every row of accounts in a order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1 ORDER BY a DESC LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -197,6 +212,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1 OR (a = $1 AND b >= $2) ORDER BY a,b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -204,6 +220,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a < $1 OR (a = $1 AND b <= $2) ORDER BY a,b LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -211,6 +228,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/pages.sql:4: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1 OR (a = $1 AND b < $2) ORDER BY a ASC,b DESC LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -218,6 +236,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/pages.sql:5: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a < $1 OR (a = $1 AND b > $2) ORDER BY a ASC,b DESC LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -225,6 +244,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/pages.sql:6: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a < $1 OR (a = $1 AND b >= $2) ORDER BY a DESC,b ASC LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -232,6 +252,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "sql/pages.sql:7: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1 OR (a = $1 AND b <= $2) ORDER BY a DESC,b ASC LIMIT $3;",
           "target": "keyset-only-sweep"
         },
         {
@@ -239,6 +260,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "sql/pages.sql:8: walks every row of accounts in a, b, c order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE a > $1 OR (a = $1 AND b < $2) OR (a = $1 AND b = $2 AND c >= $3) ORDER BY a ASC,b DESC,c ASC LIMIT $4;",
           "target": "keyset-only-sweep"
         },
         {
@@ -246,6 +268,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "sql/pages.sql:9: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE (a = $1 AND b <= $2) OR a > $1 ORDER BY a ASC,b DESC LIMIT $3;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -266,6 +289,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/distinct-grouping.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders GROUP BY DISTINCT ROLLUP (())) > 0;",
           "target": "count-for-existence"
         },
         {
@@ -273,6 +297,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/distinct-grouping.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders GROUP BY DISTINCT CUBE (())) > 0;",
           "target": "count-for-existence"
         },
         {
@@ -280,6 +305,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/distinct-grouping.sql:3: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders GROUP BY DISTINCT",
           "target": "count-for-existence"
         },
         {
@@ -287,6 +313,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/distinct-grouping.sql:5: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders GROUP BY DISTINCT\tCUBE (())) > 0;",
           "target": "count-for-existence"
         }
       ],
@@ -307,6 +334,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE id NOT IN (SELECT account_id FROM bans)",
           "target": "not-in-subquery"
         },
         {
@@ -314,6 +342,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/query.ts:6: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "AND (SELECT COUNT(*) FROM orders) = 0`;",
           "target": "count-for-existence"
         }
       ],
@@ -334,6 +363,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "sql/empty-grouping.sql:10: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders GROUP BY DISTINCT GROUPING SETS ((), ())) > 0;",
           "target": "count-for-existence"
         },
         {
@@ -341,6 +371,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/empty-grouping.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 FROM orders GROUP BY () HAVING COUNT(*) > 0;",
           "target": "count-for-existence"
         },
         {
@@ -348,6 +379,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/empty-grouping.sql:3: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 FROM orders GROUP BY GROUPING SETS (()) HAVING COUNT(*) > 0;",
           "target": "count-for-existence"
         },
         {
@@ -355,6 +387,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/empty-grouping.sql:6: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders GROUP BY ()) > 0;",
           "target": "count-for-existence"
         }
       ],
@@ -375,6 +408,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/exists-continuation.ts:4: do not wrap a set operation in a correlated EXISTS",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "EXISTS (",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -407,6 +441,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/same-line.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM accounts WHERE id NOT IN (SELECT 1) AND id NOT IN (SELECT 2);",
           "target": "not-in-subquery"
         }
       ],
@@ -439,6 +474,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/lenient-locations.sql:4: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT COUNT(*) > 0 FROM orders;",
           "target": "count-for-existence"
         }
       ],
@@ -459,6 +495,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "sql/merge-action.sql:10: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "VALUES (source.id, (SELECT COUNT(*) FROM orders) = 0)",
           "target": "count-for-existence"
         },
         {
@@ -466,6 +503,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/merge-action.sql:5: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "UPDATE SET blocked = source.id NOT IN (SELECT id FROM bans)",
           "target": "not-in-subquery"
         }
       ],
@@ -486,6 +524,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/merge.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "USING (SELECT id FROM seed WHERE id NOT IN (SELECT id FROM bans)) AS source",
           "target": "not-in-subquery"
         },
         {
@@ -493,6 +532,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/merge.sql:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "ON target.id NOT IN (SELECT id FROM bans)",
           "target": "not-in-subquery"
         },
         {
@@ -500,6 +540,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/merge.sql:4: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHEN MATCHED AND (SELECT COUNT(*) FROM checks) > 0 THEN",
           "target": "count-for-existence"
         },
         {
@@ -507,6 +548,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/merge.sql:5: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "UPDATE SET value = (SELECT value FROM updates WHERE id NOT IN (SELECT id FROM bans))",
           "target": "not-in-subquery"
         },
         {
@@ -514,6 +556,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/merge.sql:6: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHEN MATCHED AND target.id NOT IN (SELECT id FROM bans) THEN DELETE",
           "target": "not-in-subquery"
         },
         {
@@ -521,6 +564,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "sql/merge.sql:8: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "VALUES (source.id, (SELECT value FROM updates WHERE id NOT IN (SELECT id FROM bans)))",
           "target": "not-in-subquery"
         }
       ],
@@ -541,6 +585,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/merge-table-function.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "USING unnest(ARRAY[(SELECT COUNT(*) FROM orders) > 0]) AS source(flag)",
           "target": "count-for-existence"
         },
         {
@@ -548,6 +593,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "sql/merge-table-function.sql:7: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "USING generate_series((SELECT COUNT(*) FROM orders) = 0, 1) AS source(n)",
           "target": "count-for-existence"
         }
       ],
@@ -568,6 +614,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/merge-with.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH source AS (SELECT id FROM seed WHERE id NOT IN (SELECT id FROM bans))",
           "target": "not-in-subquery"
         },
         {
@@ -575,6 +622,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/merge-with.sql:4: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHEN MATCHED AND target.id NOT IN (SELECT id FROM bans) THEN DELETE;",
           "target": "not-in-subquery"
         }
       ],
@@ -595,6 +643,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/negated-count.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT NOT ((SELECT COUNT(*) FROM orders) = 0);",
           "target": "count-for-existence"
         },
         {
@@ -602,6 +651,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/negated-count.sql:2: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT NOT (COUNT(*) > 0) FROM orders;",
           "target": "count-for-existence"
         },
         {
@@ -609,6 +659,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/negated-count.sql:3: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT NOT NOT ((SELECT COUNT(*) FROM orders) = 0);",
           "target": "count-for-existence"
         },
         {
@@ -616,6 +667,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/negated-count.sql:5: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 FROM orders HAVING COUNT(*) > 0;",
           "target": "count-for-existence"
         }
       ],
@@ -636,6 +688,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/pages.sql:2: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE NOT (id <= $1) ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -643,6 +696,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/pages.sql:3: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE NOT (id >= $1) ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -650,6 +704,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/pages.sql:4: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE NOT NOT (id > $1) ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -657,6 +712,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/pages.sql:5: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE NOT ($1 >= id) ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -664,6 +720,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/pages.sql:6: walks every row of accounts in id, created_at order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE NOT ((id, created_at) <= ($1, $2)) ORDER BY id, created_at LIMIT $3;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -684,6 +741,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/parity.sql:2: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE NOT NOT ($1 IS NULL OR id > $1) ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -691,6 +749,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/parity.sql:3: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE NOT (NOT (NOT (NOT ($1 IS NULL OR id > $1)))) ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -698,6 +757,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/parity.sql:5: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE NOT NOT (id > $1) ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -705,6 +765,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/parity.sql:6: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE NOT NOT NOT (id > $1) ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -725,6 +786,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/not-in.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM accounts WHERE id NOT IN (SELECT account_id FROM bans);",
           "target": "not-in-subquery"
         }
       ],
@@ -757,6 +819,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "sql/offset-fetch.sql:15: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY;",
           "target": "literal-limit"
         },
         {
@@ -764,6 +827,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "sql/offset-fetch.sql:20: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY",
           "target": "literal-limit"
         },
         {
@@ -771,6 +835,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 28,
           "message": "sql/offset-fetch.sql:28: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY",
           "target": "literal-limit"
         },
         {
@@ -778,6 +843,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 30,
           "message": "sql/offset-fetch.sql:30: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY;",
           "target": "literal-limit"
         },
         {
@@ -785,6 +851,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": "sql/offset-fetch.sql:34: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY",
           "target": "literal-limit"
         },
         {
@@ -792,6 +859,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/offset-fetch.sql:5: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY",
           "target": "literal-limit"
         },
         {
@@ -799,6 +867,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "sql/offset-fetch.sql:7: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY;",
           "target": "literal-limit"
         }
       ],
@@ -879,6 +948,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "sql/001.sql:11: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE id > $1 AND status = E'a\\' or x = \\'b' ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -886,6 +956,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE id > $1 AND status = 'a'' or x = ''b' ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -893,6 +964,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/001.sql:5: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE id > $1 AND \"a\"\" or x = \"\"b\" ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -900,6 +972,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "sql/001.sql:8: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE id > $1 AND status = 'a  b' ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -920,6 +993,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "sql/002.sql:10: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE id > $1 AND flags = X'dead' ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -927,6 +1001,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/002.sql:2: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE id > $1 AND status = E'a\\' or x = \\'b' ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -934,6 +1009,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/002.sql:4: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE id > $1 AND status = U&'a\\0027 or x = \\0027b' ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -941,6 +1017,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/002.sql:6: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE id > $1 AND score = 1E3 ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -948,6 +1025,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "sql/002.sql:8: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts WHERE id > $1 AND status = $TAG$idle$TAG$ ORDER BY id LIMIT $2;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -968,6 +1046,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/quoted-count.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT \"count\"(*) > 0 FROM orders;",
           "target": "count-for-existence"
         },
         {
@@ -975,6 +1054,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/quoted-count.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.\"count\"(*) > 0 FROM orders;",
           "target": "count-for-existence"
         },
         {
@@ -982,6 +1062,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/quoted-count.sql:3: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT \"pg_catalog\".\"count\"(*) > 0 FROM orders;",
           "target": "count-for-existence"
         }
       ],
@@ -1002,6 +1083,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/casts.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT COUNT(*)::integer > 0 FROM orders;",
           "target": "count-for-existence"
         },
         {
@@ -1009,6 +1091,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/casts.sql:2: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*)::integer FROM orders)::bigint = 0;",
           "target": "count-for-existence"
         }
       ],
@@ -1029,6 +1112,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/comments.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE id NOT /* audited */ IN (SELECT account_id FROM bans);",
           "target": "not-in-subquery"
         }
       ],
@@ -1049,6 +1133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/count-edges.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) AS n FROM orders) > 0;",
           "target": "count-for-existence"
         },
         {
@@ -1056,6 +1141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/count-edges.sql:3: SQL could not be analyzed for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT COUNT(SELECT id FROM orders) > 0;",
           "target": "correlated-exists-set-operation"
         }
       ],
@@ -1076,6 +1162,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/cte.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH a AS (SELECT id FROM accounts WHERE id NOT IN (SELECT account_id FROM bans)),",
           "target": "not-in-subquery"
         },
         {
@@ -1083,6 +1170,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/cte.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "b AS (SELECT id FROM accounts WHERE id NOT IN (SELECT account_id FROM bans))",
           "target": "not-in-subquery"
         }
       ],
@@ -1103,6 +1191,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/filter.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE account_id NOT IN (SELECT account_id FROM bans)) FROM orders;",
           "target": "not-in-subquery"
         }
       ],
@@ -1123,6 +1212,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/having.sql:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "HAVING account_id NOT IN (SELECT account_id FROM bans)",
           "target": "not-in-subquery"
         },
         {
@@ -1130,6 +1220,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/having.sql:4: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "AND (SELECT COUNT(*) FROM bans) = 0;",
           "target": "count-for-existence"
         }
       ],
@@ -1150,6 +1241,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/mutations.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE id NOT IN (SELECT account_id FROM bans);",
           "target": "not-in-subquery"
         },
         {
@@ -1157,6 +1249,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/mutations.sql:4: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE (SELECT COUNT(*) FROM orders) = 0;",
           "target": "count-for-existence"
         }
       ],
@@ -1189,6 +1282,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/operators.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE (SELECT COUNT(*) FROM orders) != 0;",
           "target": "count-for-existence"
         },
         {
@@ -1196,6 +1290,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/operators.sql:4: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE (SELECT COUNT(*) FROM orders) <> 0;",
           "target": "count-for-existence"
         }
       ],
@@ -1216,6 +1311,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/polarity.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders) > 0;",
           "target": "count-for-existence"
         },
         {
@@ -1223,6 +1319,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/polarity.sql:2: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders) = 0;",
           "target": "count-for-existence"
         },
         {
@@ -1230,6 +1327,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/polarity.sql:3: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders) < 1;",
           "target": "count-for-existence"
         },
         {
@@ -1237,6 +1335,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/polarity.sql:4: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT COUNT(*) FROM orders) <= 0;",
           "target": "count-for-existence"
         },
         {
@@ -1244,6 +1343,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/polarity.sql:5: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 0 >= (SELECT COUNT(*) FROM orders);",
           "target": "count-for-existence"
         },
         {
@@ -1251,6 +1351,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/polarity.sql:6: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.count(*) > 0 FROM orders;",
           "target": "count-for-existence"
         }
       ],
@@ -1271,6 +1372,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/repeated.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE id NOT IN (SELECT account_id FROM bans);",
           "target": "not-in-subquery"
         },
         {
@@ -1278,6 +1380,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/repeated.sql:4: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE id NOT IN (SELECT account_id FROM bans);",
           "target": "not-in-subquery"
         }
       ],
@@ -1310,6 +1413,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/unicode.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE (ñ NOT IN (SELECT a FROM bans))",
           "target": "not-in-subquery"
         },
         {
@@ -1317,6 +1421,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/unicode.sql:3: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "AND (SELECT COUNT(*) FROM orders) != 0;",
           "target": "count-for-existence"
         }
       ],
@@ -1337,6 +1442,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/pages.sql:2: walks every row of orders in account_id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT ALL account_id FROM orders WHERE account_id > $1 ORDER BY account_id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1344,6 +1450,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/pages.sql:3: walks every row of orders in account_id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT account_id FROM orders WHERE account_id > $1 ORDER BY account_id LIMIT $2;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1351,6 +1458,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/pages.sql:6: walks every row of orders in account_id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT ALL account_id FROM orders ORDER BY account_id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1358,6 +1466,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "sql/pages.sql:7: walks every row of orders in account_id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT ALL account_id AS id FROM orders ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         }
       ],
@@ -1378,6 +1487,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": "sql/pages.sql:23: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts ORDER BY id LIMIT 1::bigint;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1385,6 +1495,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": "sql/pages.sql:24: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts ORDER BY id LIMIT +1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1392,6 +1503,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "sql/pages.sql:25: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts ORDER BY id LIMIT 0::public.custom_count;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1399,6 +1511,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "sql/pages.sql:26: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1406,6 +1519,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 29,
           "message": "sql/pages.sql:29: LIMIT 0 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 0 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts ORDER BY id LIMIT 0;",
           "target": "literal-limit"
         },
         {
@@ -1413,6 +1527,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 31,
           "message": "sql/pages.sql:31: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts ORDER BY id LIMIT 1e-1000;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1420,6 +1535,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/pages.sql:6: LIMIT 0 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 0 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM accounts ORDER BY id FETCH FIRST 0 ROWS ONLY;",
           "target": "literal-limit"
         }
       ],
@@ -1440,6 +1556,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/source-map.ts:10: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE id NOT IN (SELECT id FROM bans)`);",
           "target": "not-in-subquery"
         },
         {
@@ -1447,6 +1564,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/source-map.ts:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "const shared = \"SELECT id FROM orders\\nWHERE id NOT IN (SELECT id FROM bans)\";",
           "target": "not-in-subquery"
         },
         {
@@ -1454,6 +1572,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/source-map.ts:6: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WHERE (SELECT COUNT(*) FROM events) > 0`;",
           "target": "count-for-existence"
         },
         {
@@ -1461,6 +1580,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/source-map.ts:8: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(\"SELECT id FROM orders\\nWHERE (SELECT COUNT(*) FROM events) = 0\");",
           "target": "count-for-existence"
         }
       ],
@@ -1529,6 +1649,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: executed SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return query(`SELECT 1 FROM ${table}`);",
           "target": "count-for-existence"
         }
       ],
@@ -1549,6 +1670,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: executed SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return query(`SELECT 1 FROM ${table}`);",
           "target": "not-in-subquery"
         }
       ],

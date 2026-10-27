@@ -28,6 +28,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/actions/db/action.yml:7: composite step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "run: docker run -p 5432:5432 postgres",
           "target": "composite"
         },
         {
@@ -35,6 +36,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 102,
           "message": ".github/workflows/ci.yml:102: job `cap-add-after` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432 --cap-add SYS_ADMIN postgres",
           "target": "cap-add-after"
         },
         {
@@ -42,6 +44,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 106,
           "message": ".github/workflows/ci.yml:106: job `cap-add-before` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run --cap-add SYS_ADMIN -p 5432:5432 postgres",
           "target": "cap-add-before"
         },
         {
@@ -49,6 +52,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": ".github/workflows/ci.yml:11: job `ip` step 1 pins host port `5432` in `127.0.0.1:5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 127.0.0.1:5432:5432 postgres",
           "target": "ip"
         },
         {
@@ -56,6 +60,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 110,
           "message": ".github/workflows/ci.yml:110: job `reservation` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run --memory-reservation 1g -p 5432:5432 postgres",
           "target": "reservation"
         },
         {
@@ -63,6 +68,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 118,
           "message": ".github/workflows/ci.yml:118: job `after-heredoc` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "docker run -p 5432:5432 postgres",
           "target": "after-heredoc"
         },
         {
@@ -70,6 +76,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 126,
           "message": ".github/workflows/ci.yml:126: job `hd-space-after` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "docker run -p 5432:5432 postgres",
           "target": "hd-space-after"
         },
         {
@@ -77,6 +84,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 134,
           "message": ".github/workflows/ci.yml:134: job `hd-space-quoted` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "docker run -p 5432:5432 postgres",
           "target": "hd-space-quoted"
         },
         {
@@ -84,6 +92,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 139,
           "message": ".github/workflows/ci.yml:139: job `hd-pipe` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "cat <<EOF | docker run -i -p 5432:5432 pg",
           "target": "hd-pipe"
         },
         {
@@ -91,6 +100,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 146,
           "message": ".github/workflows/ci.yml:146: job `hd-and` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "cat <<EOF && docker run -p 5432:5432 postgres",
           "target": "hd-and"
         },
         {
@@ -98,6 +108,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": ".github/workflows/ci.yml:15: job `long` step 1 pins host port `8080` in `8080:80`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run --publish 8080:80 nginx",
           "target": "long"
         },
         {
@@ -105,6 +116,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 152,
           "message": ".github/workflows/ci.yml:152: job `container-run` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker container run -p 5432:5432 postgres",
           "target": "container-run"
         },
         {
@@ -112,6 +124,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 156,
           "message": ".github/workflows/ci.yml:156: job `sudo` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: sudo docker run -p 5432:5432 postgres",
           "target": "sudo"
         },
         {
@@ -119,6 +132,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 160,
           "message": ".github/workflows/ci.yml:160: job `if-guard` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: if docker run -p 5432:5432 postgres; then echo ok; fi",
           "target": "if-guard"
         },
         {
@@ -126,6 +140,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 164,
           "message": ".github/workflows/ci.yml:164: job `subshell` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: (docker run -p 5432:5432 postgres)",
           "target": "subshell"
         },
         {
@@ -133,6 +148,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 168,
           "message": ".github/workflows/ci.yml:168: job `env-wrapper` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: env FOO=1 docker run -p 5432:5432 postgres",
           "target": "env-wrapper"
         },
         {
@@ -140,6 +156,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 172,
           "message": ".github/workflows/ci.yml:172: job `timeout-wrapper` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: timeout 60 docker run -p 5432:5432 postgres",
           "target": "timeout-wrapper"
         },
         {
@@ -147,6 +164,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 176,
           "message": ".github/workflows/ci.yml:176: job `sudo-preserve` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: sudo --preserve-env docker run -p 5432:5432 postgres",
           "target": "sudo-preserve"
         },
         {
@@ -154,6 +172,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 180,
           "message": ".github/workflows/ci.yml:180: job `xargs-wrapper` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: echo pg | xargs docker run -p 5432:5432",
           "target": "xargs-wrapper"
         },
         {
@@ -161,6 +180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 185,
           "message": ".github/workflows/ci.yml:185: job `xargs-equals` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: echo pg | xargs --max-args=1 docker run -p 5432:5432 postgres",
           "target": "xargs-equals"
         },
         {
@@ -168,6 +188,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 189,
           "message": ".github/workflows/ci.yml:189: job `quiet-short` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -q -p 5432:5432 pg",
           "target": "quiet-short"
         },
         {
@@ -175,6 +196,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": ".github/workflows/ci.yml:19: job `equals` step 1 pins host port `8080` in `8080:80`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run --publish=8080:80 nginx",
           "target": "equals"
         },
         {
@@ -182,6 +204,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 193,
           "message": ".github/workflows/ci.yml:193: job `docker-create` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker create -p 5432:5432 postgres",
           "target": "docker-create"
         },
         {
@@ -189,6 +212,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 197,
           "message": ".github/workflows/ci.yml:197: job `docker-context` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker --context ci run -p 5432:5432 postgres",
           "target": "docker-context"
         },
         {
@@ -196,6 +220,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 203,
           "message": ".github/workflows/ci.yml:203: job `let-shift` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "docker run -p 5432:5432 postgres",
           "target": "let-shift"
         },
         {
@@ -203,6 +228,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 211,
           "message": ".github/workflows/ci.yml:211: job `quoted-arith` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "docker run -p 5432:5432 postgres",
           "target": "quoted-arith"
         },
         {
@@ -210,6 +236,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 218,
           "message": ".github/workflows/ci.yml:218: job `service-ports` service `pg` pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- 5432:5432",
           "target": "service-ports"
         },
         {
@@ -217,6 +244,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 222,
           "message": ".github/workflows/ci.yml:222: job `service-ports` service `scalar` pins host port `9` in `9:9`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "ports: \"9:9\"",
           "target": "service-ports"
         },
         {
@@ -224,6 +252,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": ".github/workflows/ci.yml:23: job `attached` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p5432:5432 postgres",
           "target": "attached"
         },
         {
@@ -231,6 +260,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 231,
           "message": ".github/workflows/ci.yml:231: job `service-ports` service `bare` pins host port `6` in `6:6`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- 6:6",
           "target": "service-ports"
         },
         {
@@ -238,6 +268,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 235,
           "message": ".github/workflows/ci.yml:235: job `service-ports` container pins host port `8080` in `8080:80`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- 8080:80",
           "target": "service-ports"
         },
         {
@@ -245,6 +276,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 244,
           "message": ".github/workflows/ci.yml:244: job `same-indent-ports` service `pg` pins host port `6001` in `6001:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- 6001:5432",
           "target": "same-indent-ports"
         },
         {
@@ -252,6 +284,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 249,
           "message": ".github/workflows/ci.yml:249: job `flow-services` service `pg` pins host port `6002` in `6002:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "services: { pg: { image: postgres, ports: [\"6002:5432\"] } }",
           "target": "flow-services"
         },
         {
@@ -259,6 +292,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 255,
           "message": ".github/workflows/ci.yml:255: job `flow-nested` service `pg` pins host port `6003` in `6003:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "pg: { image: postgres, ports: [\"6003:5432\"] }",
           "target": "flow-nested"
         },
         {
@@ -266,6 +300,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 260,
           "message": ".github/workflows/ci.yml:260: job `flow-container` container pins host port `6007` in `6007:80`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "container: { image: ubuntu, ports: [\"6007:80\"] }",
           "target": "flow-container"
         },
         {
@@ -273,6 +308,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 268,
           "message": ".github/workflows/ci.yml:268: job `service-options` service `pg` pins host port `6010` in `6010:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "options: --publish 6010:5432",
           "target": "service-options"
         },
         {
@@ -280,6 +316,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 27,
           "message": ".github/workflows/ci.yml:27: job `clustered` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -dp 5432:5432 postgres",
           "target": "clustered"
         },
         {
@@ -287,6 +324,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 274,
           "message": ".github/workflows/ci.yml:274: job `bash-c` step 1 pins host port `5434` in `5434:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: bash -c \"docker run -p 5434:5432 pg\"",
           "target": "bash-c"
         },
         {
@@ -294,6 +332,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 278,
           "message": ".github/workflows/ci.yml:278: job `sh-c` step 1 pins host port `5435` in `5435:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: sh -c 'docker run -p 5435:5432 pg'",
           "target": "sh-c"
         },
         {
@@ -301,6 +340,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 282,
           "message": ".github/workflows/ci.yml:282: job `bash-lc` step 1 pins host port `5436` in `5436:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: bash -lc \"sudo docker run -p 5436:5432 pg\"",
           "target": "bash-lc"
         },
         {
@@ -308,6 +348,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 286,
           "message": ".github/workflows/ci.yml:286: job `sudo-sh-c` step 1 pins host port `5469` in `5469:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: sudo sh -c \"docker run -p 5469:5432 pg\"",
           "target": "sudo-sh-c"
         },
         {
@@ -315,6 +356,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 290,
           "message": ".github/workflows/ci.yml:290: job `eval-wrapper` step 1 pins host port `5449` in `5449:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: eval \"docker run -p 5449:5432 pg\"",
           "target": "eval-wrapper"
         },
         {
@@ -322,6 +364,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 294,
           "message": ".github/workflows/ci.yml:294: job `sudo-end` step 1 pins host port `5440` in `5440:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: sudo -- docker run -p 5440:5432 pg",
           "target": "sudo-end"
         },
         {
@@ -329,6 +372,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 298,
           "message": ".github/workflows/ci.yml:298: job `sudo-user` step 1 pins host port `5474` in `5474:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: sudo --user=root docker run -p 5474:5432 pg",
           "target": "sudo-user"
         },
         {
@@ -336,6 +380,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 302,
           "message": ".github/workflows/ci.yml:302: job `env-path` step 1 pins host port `5473` in `5473:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: /usr/bin/env docker run -p 5473:5432 pg",
           "target": "env-path"
         },
         {
@@ -343,6 +388,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 306,
           "message": ".github/workflows/ci.yml:306: job `env-chdir` step 1 pins host port `5445` in `5445:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: env -C /tmp docker run -p 5445:5432 pg",
           "target": "env-chdir"
         },
         {
@@ -350,6 +396,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 31,
           "message": ".github/workflows/ci.yml:31: job `range` step 1 pins host port `8000-8002` in `8000-8002:8000-8002`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 8000-8002:8000-8002 app",
           "target": "range"
         },
         {
@@ -357,6 +404,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 310,
           "message": ".github/workflows/ci.yml:310: job `env-split` step 1 pins host port `5444` in `5444:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: env -S \"A=1\" docker run -p 5444:5432 pg",
           "target": "env-split"
         },
         {
@@ -364,6 +412,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 314,
           "message": ".github/workflows/ci.yml:314: job `timeout-signal` step 1 pins host port `5446` in `5446:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: timeout -s KILL 60 docker run -p 5446:5432 pg",
           "target": "timeout-signal"
         },
         {
@@ -371,6 +420,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 318,
           "message": ".github/workflows/ci.yml:318: job `docker-tls` step 1 pins host port `5441` in `5441:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker --tls run -p 5441:5432 pg",
           "target": "docker-tls"
         },
         {
@@ -378,6 +428,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 322,
           "message": ".github/workflows/ci.yml:322: job `docker-tlsverify` step 1 pins host port `5443` in `5443:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker --tlsverify run -p 5443:5432 pg",
           "target": "docker-tlsverify"
         },
         {
@@ -385,6 +436,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 326,
           "message": ".github/workflows/ci.yml:326: job `docker-short-context` step 1 pins host port `5442` in `5442:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker -c ctx run -p 5442:5432 pg",
           "target": "docker-short-context"
         },
         {
@@ -392,6 +444,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 330,
           "message": ".github/workflows/ci.yml:330: job `podman` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: podman run -p 5432:5432 postgres",
           "target": "podman"
         },
         {
@@ -399,6 +452,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 334,
           "message": ".github/workflows/ci.yml:334: job `nerdctl` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: nerdctl run -p 5432:5432 postgres",
           "target": "nerdctl"
         },
         {
@@ -406,6 +460,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 338,
           "message": ".github/workflows/ci.yml:338: job `podman-sudo-create` step 1 pins host port `5433` in `5433:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: sudo --preserve-env podman create -p 5433:5432 pg",
           "target": "podman-sudo-create"
         },
         {
@@ -413,6 +468,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 342,
           "message": ".github/workflows/ci.yml:342: job `nerdctl-container` step 1 pins host port `5434` in `5434:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: nerdctl container run -p 5434:5432 pg",
           "target": "nerdctl-container"
         },
         {
@@ -420,6 +476,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 348,
           "message": ".github/workflows/ci.yml:348: job `arith-shift` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "docker run -p 5432:5432 postgres",
           "target": "arith-shift"
         },
         {
@@ -427,6 +484,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": ".github/workflows/ci.yml:35: job `quoted` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p \"5432:5432\" postgres",
           "target": "quoted"
         },
         {
@@ -434,6 +492,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 352,
           "message": ".github/workflows/ci.yml:352: job `dyn-after-publish` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432 $(echo postgres)",
           "target": "dyn-after-publish"
         },
         {
@@ -441,6 +500,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 39,
           "message": ".github/workflows/ci.yml:39: job `udp` step 1 pins host port `5432` in `5432:5432/udp`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432/udp postgres",
           "target": "udp"
         },
         {
@@ -448,6 +508,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 43,
           "message": ".github/workflows/ci.yml:43: job `chain` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: echo starting && docker run --rm -e POSTGRES_PASSWORD=x -p 5432:5432 postgres",
           "target": "chain"
         },
         {
@@ -455,6 +516,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 49,
           "message": ".github/workflows/ci.yml:49: job `block` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "docker run -p 5432:5432 postgres",
           "target": "block"
         },
         {
@@ -462,6 +524,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 53,
           "message": ".github/workflows/ci.yml:53: job `ipv6` step 1 pins host port `5432` in `[::1]:5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p \"[::1]:5432:5432\" postgres",
           "target": "ipv6"
         },
         {
@@ -469,6 +532,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 57,
           "message": ".github/workflows/ci.yml:57: job `path` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: /usr/bin/docker run -p 5432:5432 postgres",
           "target": "path"
         },
         {
@@ -476,6 +540,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 61,
           "message": ".github/workflows/ci.yml:61: job `two` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432 -p 6379:6379 postgres",
           "target": "two"
         },
         {
@@ -483,6 +548,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 61,
           "message": ".github/workflows/ci.yml:61: job `two` step 1 pins host port `6379` in `6379:6379`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432 -p 6379:6379 postgres",
           "target": "two"
         },
         {
@@ -490,6 +556,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 66,
           "message": ".github/workflows/ci.yml:66: job `second-step` step 2 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432 postgres",
           "target": "second-step"
         },
         {
@@ -497,6 +564,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml:7: job `literal` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432 postgres",
           "target": "literal"
         },
         {
@@ -504,6 +572,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 70,
           "message": ".github/workflows/ci.yml:70: job `env-prefix` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: DEBUG=1 docker run -p 5432:5432 postgres",
           "target": "env-prefix"
         },
         {
@@ -511,6 +580,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 74,
           "message": ".github/workflows/ci.yml:74: job `container-var` step 1 pins host port `5432` in `5432:$PORT`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:$PORT postgres",
           "target": "container-var"
         },
         {
@@ -518,6 +588,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 79,
           "message": ".github/workflows/ci.yml:79: job `known-flags` step 1 pins host port `5432` in `127.0.0.1:5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run --rm -d --name db --network=host -p 127.0.0.1:5432:5432 postgres",
           "target": "known-flags"
         },
         {
@@ -525,6 +596,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 85,
           "message": ".github/workflows/ci.yml:85: job `continued` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "5432:5432 \\",
           "target": "continued"
         },
         {
@@ -532,6 +604,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 90,
           "message": ".github/workflows/ci.yml:90: job `captured` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: CID=$(docker run -d -p 5432:5432 postgres)",
           "target": "captured"
         },
         {
@@ -539,6 +612,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 94,
           "message": ".github/workflows/ci.yml:94: job `subst-value` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432 -e PW=$(cat pw) postgres",
           "target": "subst-value"
         },
         {
@@ -546,6 +620,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 98,
           "message": ".github/workflows/ci.yml:98: job `subst` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432 $(date) postgres",
           "target": "subst"
         },
         {
@@ -553,6 +628,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": ".github/workflows/compact.yml:13: job `b` step 2 pins host port `5432` in `127.0.0.1:5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run --publish 127.0.0.1:5432:5432 postgres",
           "target": "b"
         },
         {
@@ -560,6 +636,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/compact.yml:8: job `a` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run -p 5432:5432 postgres",
           "target": "a"
         }
       ],
@@ -580,6 +657,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml:1: job `build` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
           "rule": "github-actions-docker-host-ports",
+          "sourceLine": "name: ci",
           "target": "build"
         }
       ],

@@ -11,6 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/dynamic.test.ts:4: postgres-no-test-state-mutation application \"test-database\" (#0) has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(statement);",
           "target": "test-state-mutation"
         },
         {
@@ -18,6 +19,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "tests/malformed.test.ts:3: postgres-no-test-state-mutation application \"test-database\" (#0) has unresolved SQL for test-state-mutation: invalid-sql",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('SELECT FROM');",
           "target": "test-state-mutation"
         }
       ],
@@ -31,6 +33,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/variants.test.ts:4: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(condition ? 'CREATE TABLE variant_test (id integer)' : 'SELECT 1');",
           "target": "CREATE TABLE"
         }
       ],
@@ -51,6 +54,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/dynamic.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(statement);",
           "target": "unanalyzable-sql"
         },
         {
@@ -58,6 +62,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "tests/malformed.test.ts:3: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('SELECT FROM');",
           "target": "unanalyzable-sql"
         },
         {
@@ -65,6 +70,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/variants.test.ts:4: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(condition ? 'CREATE TABLE variant_test (id integer)' : 'SELECT 1');",
           "target": "CREATE TABLE"
         }
       ],
@@ -85,6 +91,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/variants.test.ts:4: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(condition ? 'CREATE TABLE variant_test (id integer)' : 'SELECT 1');",
           "target": "CREATE TABLE"
         }
       ],
@@ -105,6 +112,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/variants.test.ts:4: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(condition ? 'CREATE TABLE variant_test (id integer)' : 'SELECT 1');",
           "target": "CREATE TABLE"
         }
       ],
@@ -125,6 +133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "helpers/reset.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query('DROP TABLE helper_test');",
           "target": "DROP TABLE"
         },
         {
@@ -132,6 +141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "helpers/schema-sql.ts:3: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return 'CREATE TABLE helper_test (id integer)';",
           "target": "CREATE TABLE"
         },
         {
@@ -139,6 +149,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "tests/mutations.test.ts:10: executed test SQL uses session_replication_role; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('SET LOCAL session_replication_role = replica');",
           "target": "session_replication_role"
         },
         {
@@ -146,6 +157,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "tests/mutations.test.ts:11: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('SELECT pg_sleep(1)');",
           "target": "pg_sleep"
         },
         {
@@ -153,6 +165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "tests/mutations.test.ts:12: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('SELECT PG_SLEEP(1)');",
           "target": "pg_sleep"
         },
         {
@@ -160,6 +173,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "tests/mutations.test.ts:15: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('TRUNCATE direct_test');",
           "target": "TRUNCATE"
         },
         {
@@ -167,6 +181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/mutations.test.ts:4: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE TABLE direct_test (id integer)');",
           "target": "CREATE TABLE"
         },
         {
@@ -174,6 +189,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "tests/mutations.test.ts:5: executed test SQL uses ALTER TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await write(`ALTER TABLE direct_test ADD CONSTRAINT valid_id CHECK (false)`);",
           "target": "ALTER TABLE"
         },
         {
@@ -181,6 +197,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "tests/mutations.test.ts:6: executed test SQL uses CREATE VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE VIEW direct_view AS SELECT id FROM direct_test');",
           "target": "CREATE VIEW"
         },
         {
@@ -188,6 +205,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "tests/mutations.test.ts:7: executed test SQL uses DROP VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP VIEW direct_view');",
           "target": "DROP VIEW"
         },
         {
@@ -195,6 +213,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "tests/mutations.test.ts:8: executed test SQL uses CREATE VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE MATERIALIZED VIEW snapshot AS SELECT id FROM direct_test');",
           "target": "CREATE VIEW"
         },
         {
@@ -202,6 +221,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "tests/mutations.test.ts:9: executed test SQL uses ALTER SYSTEM; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER SYSTEM SET statement_timeout = 100');",
           "target": "ALTER SYSTEM"
         }
       ],
@@ -222,6 +242,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "tests/explain.test.ts:10: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('EXPLAIN (ANALYZE on) SELECT pg_sleep(1)');",
           "target": "pg_sleep"
         },
         {
@@ -229,6 +250,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "tests/explain.test.ts:8: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('EXPLAIN ANALYZE SELECT pg_sleep(1)');",
           "target": "pg_sleep"
         },
         {
@@ -236,6 +258,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "tests/explain.test.ts:9: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('EXPLAIN (ANALYZE true) SELECT pg_sleep(1)');",
           "target": "pg_sleep"
         }
       ],
@@ -256,6 +279,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "helpers/schema-sql.ts:3: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return 'CREATE TABLE helper_test (id integer)';",
           "target": "CREATE TABLE"
         },
         {
@@ -263,6 +287,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "tests/mutations.test.ts:10: executed test SQL uses session_replication_role; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('SET LOCAL session_replication_role = replica');",
           "target": "session_replication_role"
         },
         {
@@ -270,6 +295,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "tests/mutations.test.ts:11: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('SELECT pg_sleep(1)');",
           "target": "pg_sleep"
         },
         {
@@ -277,6 +303,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "tests/mutations.test.ts:12: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('SELECT PG_SLEEP(1)');",
           "target": "pg_sleep"
         },
         {
@@ -284,6 +311,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "tests/mutations.test.ts:15: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('TRUNCATE direct_test');",
           "target": "TRUNCATE"
         },
         {
@@ -291,6 +319,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/mutations.test.ts:4: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE TABLE direct_test (id integer)');",
           "target": "CREATE TABLE"
         },
         {
@@ -298,6 +327,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "tests/mutations.test.ts:5: executed test SQL uses ALTER TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await write(`ALTER TABLE direct_test ADD CONSTRAINT valid_id CHECK (false)`);",
           "target": "ALTER TABLE"
         },
         {
@@ -305,6 +335,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "tests/mutations.test.ts:6: executed test SQL uses CREATE VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE VIEW direct_view AS SELECT id FROM direct_test');",
           "target": "CREATE VIEW"
         },
         {
@@ -312,6 +343,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "tests/mutations.test.ts:7: executed test SQL uses DROP VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP VIEW direct_view');",
           "target": "DROP VIEW"
         },
         {
@@ -319,6 +351,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "tests/mutations.test.ts:8: executed test SQL uses CREATE VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE MATERIALIZED VIEW snapshot AS SELECT id FROM direct_test');",
           "target": "CREATE VIEW"
         },
         {
@@ -326,6 +359,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "tests/mutations.test.ts:9: executed test SQL uses ALTER SYSTEM; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER SYSTEM SET statement_timeout = 100');",
           "target": "ALTER SYSTEM"
         }
       ],
@@ -353,6 +387,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "tests/prefix-policy.test.ts:11: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT 1; sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SELECT 1; ${opaque}`);",
           "target": "test-state-mutation"
         },
         {
@@ -360,6 +395,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "tests/prefix-policy.test.ts:6: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"CREATE TABLE prefix_table (id integer); sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`CREATE TABLE prefix_table (id integer); ${opaque}`);",
           "target": "test-state-mutation"
         },
         {
@@ -367,6 +403,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "tests/prefix-policy.test.ts:7: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"SET session_replication_role = replica; sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SET session_replication_role = replica; ${opaque}`);",
           "target": "test-state-mutation"
         },
         {
@@ -374,6 +411,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "tests/prefix-policy.test.ts:8: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT pg_sleep(1); sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SELECT pg_sleep(1); ${opaque}`);",
           "target": "test-state-mutation"
         }
       ],
@@ -387,6 +425,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "tests/prefix-policy.test.ts:6: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`CREATE TABLE prefix_table (id integer); ${opaque}`);",
           "target": "CREATE TABLE"
         },
         {
@@ -394,6 +433,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "tests/prefix-policy.test.ts:7: executed test SQL uses session_replication_role; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SET session_replication_role = replica; ${opaque}`);",
           "target": "session_replication_role"
         },
         {
@@ -401,6 +441,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "tests/prefix-policy.test.ts:8: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SELECT pg_sleep(1); ${opaque}`);",
           "target": "pg_sleep"
         }
       ],
@@ -421,6 +462,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "tests/prefix-policy.test.ts:11: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SELECT 1; ${opaque}`);",
           "target": "unanalyzable-sql"
         },
         {
@@ -428,6 +470,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "tests/prefix-policy.test.ts:6: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`CREATE TABLE prefix_table (id integer); ${opaque}`);",
           "target": "CREATE TABLE"
         },
         {
@@ -435,6 +478,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "tests/prefix-policy.test.ts:7: executed test SQL uses session_replication_role; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SET session_replication_role = replica; ${opaque}`);",
           "target": "session_replication_role"
         },
         {
@@ -442,6 +486,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "tests/prefix-policy.test.ts:8: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SELECT pg_sleep(1); ${opaque}`);",
           "target": "pg_sleep"
         }
       ],
@@ -462,6 +507,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "tests/prefix-policy.test.ts:6: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`CREATE TABLE prefix_table (id integer); ${opaque}`);",
           "target": "CREATE TABLE"
         },
         {
@@ -469,6 +515,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "tests/prefix-policy.test.ts:7: executed test SQL uses session_replication_role; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SET session_replication_role = replica; ${opaque}`);",
           "target": "session_replication_role"
         },
         {
@@ -476,6 +523,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "tests/prefix-policy.test.ts:8: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SELECT pg_sleep(1); ${opaque}`);",
           "target": "pg_sleep"
         }
       ],
@@ -496,6 +544,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "tests/operations.test.ts:10: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE TEMPORARY TABLE temporary_t (id integer)');",
           "target": "CREATE TABLE"
         },
         {
@@ -503,6 +552,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "tests/operations.test.ts:11: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE UNLOGGED TABLE unlogged_t (id integer)');",
           "target": "CREATE TABLE"
         },
         {
@@ -510,6 +560,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "tests/operations.test.ts:12: executed test SQL uses ALTER TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER TABLE t ADD COLUMN label text');",
           "target": "ALTER TABLE"
         },
         {
@@ -517,6 +568,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "tests/operations.test.ts:13: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE t');",
           "target": "DROP TABLE"
         },
         {
@@ -524,6 +576,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "tests/operations.test.ts:14: executed test SQL uses CREATE VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE OR REPLACE VIEW v AS SELECT 1 AS id');",
           "target": "CREATE VIEW"
         },
         {
@@ -531,6 +584,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "tests/operations.test.ts:15: executed test SQL uses ALTER VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER MATERIALIZED VIEW mv RENAME TO renamed_mv');",
           "target": "ALTER VIEW"
         },
         {
@@ -538,6 +592,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "tests/operations.test.ts:16: executed test SQL uses DROP VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP MATERIALIZED VIEW mv');",
           "target": "DROP VIEW"
         },
         {
@@ -545,6 +600,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": "tests/operations.test.ts:17: executed test SQL uses CREATE TRIGGER; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE TRIGGER tr BEFORE INSERT ON t FOR EACH ROW EXECUTE FUNCTION trigger_fn()');",
           "target": "CREATE TRIGGER"
         },
         {
@@ -552,6 +608,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "tests/operations.test.ts:18: executed test SQL uses ALTER TRIGGER; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER TRIGGER tr ON t RENAME TO renamed_tr');",
           "target": "ALTER TRIGGER"
         },
         {
@@ -559,6 +616,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "tests/operations.test.ts:19: executed test SQL uses DROP TRIGGER; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TRIGGER tr ON t');",
           "target": "DROP TRIGGER"
         },
         {
@@ -566,6 +624,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "tests/operations.test.ts:20: executed test SQL uses CREATE FUNCTION; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE OR REPLACE FUNCTION fn() RETURNS integer LANGUAGE SQL AS $$ SELECT 1 $$');",
           "target": "CREATE FUNCTION"
         },
         {
@@ -573,6 +632,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "tests/operations.test.ts:21: executed test SQL uses ALTER FUNCTION; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER FUNCTION fn() SUPPORT support_fn');",
           "target": "ALTER FUNCTION"
         },
         {
@@ -580,6 +640,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": "tests/operations.test.ts:22: executed test SQL uses DROP FUNCTION; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP FUNCTION fn()');",
           "target": "DROP FUNCTION"
         },
         {
@@ -587,6 +648,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": "tests/operations.test.ts:23: executed test SQL uses CREATE PROCEDURE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE OR REPLACE PROCEDURE pr() LANGUAGE SQL AS $$ SELECT 1 $$');",
           "target": "CREATE PROCEDURE"
         },
         {
@@ -594,6 +656,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": "tests/operations.test.ts:24: executed test SQL uses ALTER PROCEDURE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER PROCEDURE pr() OWNER TO owner_role');",
           "target": "ALTER PROCEDURE"
         },
         {
@@ -601,6 +664,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "tests/operations.test.ts:25: executed test SQL uses DROP PROCEDURE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP PROCEDURE pr()');",
           "target": "DROP PROCEDURE"
         },
         {
@@ -608,6 +672,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "tests/operations.test.ts:26: executed test SQL uses CREATE INDEX; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE UNIQUE INDEX ix ON t (id)');",
           "target": "CREATE INDEX"
         },
         {
@@ -615,6 +680,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 27,
           "message": "tests/operations.test.ts:27: executed test SQL uses ALTER INDEX; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER INDEX ix RENAME TO renamed_ix');",
           "target": "ALTER INDEX"
         },
         {
@@ -622,6 +688,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 28,
           "message": "tests/operations.test.ts:28: executed test SQL uses DROP INDEX; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP INDEX ix');",
           "target": "DROP INDEX"
         },
         {
@@ -629,6 +696,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 29,
           "message": "tests/operations.test.ts:29: executed test SQL uses CREATE TYPE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE TYPE status AS ENUM (\\'open\\', \\'closed\\')');",
           "target": "CREATE TYPE"
         },
         {
@@ -636,6 +704,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "tests/operations.test.ts:3: executed test SQL uses CREATE DATABASE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE DATABASE scratch');",
           "target": "CREATE DATABASE"
         },
         {
@@ -643,6 +712,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 30,
           "message": "tests/operations.test.ts:30: executed test SQL uses ALTER TYPE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER TYPE status ADD VALUE \\'archived\\'');",
           "target": "ALTER TYPE"
         },
         {
@@ -650,6 +720,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 31,
           "message": "tests/operations.test.ts:31: executed test SQL uses DROP TYPE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TYPE status');",
           "target": "DROP TYPE"
         },
         {
@@ -657,6 +728,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 32,
           "message": "tests/operations.test.ts:32: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('SELECT * FROM (SELECT pg_catalog.pg_sleep(1)) nested');",
           "target": "pg_sleep"
         },
         {
@@ -664,6 +736,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/operations.test.ts:4: executed test SQL uses ALTER DATABASE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER DATABASE scratch SET statement_timeout = 100');",
           "target": "ALTER DATABASE"
         },
         {
@@ -671,6 +744,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "tests/operations.test.ts:5: executed test SQL uses DROP DATABASE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP DATABASE scratch');",
           "target": "DROP DATABASE"
         },
         {
@@ -678,6 +752,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "tests/operations.test.ts:6: executed test SQL uses CREATE SCHEMA; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE SCHEMA scratch');",
           "target": "CREATE SCHEMA"
         },
         {
@@ -685,6 +760,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "tests/operations.test.ts:7: executed test SQL uses ALTER SCHEMA; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ALTER SCHEMA scratch RENAME TO renamed');",
           "target": "ALTER SCHEMA"
         },
         {
@@ -692,6 +768,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "tests/operations.test.ts:8: executed test SQL uses DROP SCHEMA; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP SCHEMA scratch');",
           "target": "DROP SCHEMA"
         },
         {
@@ -699,6 +776,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "tests/operations.test.ts:9: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('CREATE TEMP TABLE temp_t (id integer)');",
           "target": "CREATE TABLE"
         }
       ],
@@ -719,6 +797,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "tests/dynamic.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(statement);",
           "target": "unanalyzable-sql"
         }
       ],

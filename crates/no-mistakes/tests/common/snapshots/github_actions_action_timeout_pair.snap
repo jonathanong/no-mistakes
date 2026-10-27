@@ -40,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"deploy\" step \"Configure credentials\" uses a configured action and must set timeout-minutes: 2; got null",
           "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: ./.github/actions/setup-aws",
           "target": "deploy"
         }
       ],
@@ -60,6 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/actions/other-composite/action.yml: composite step \"Set up credentials\" nests a configured action, where no caller-side timeout-minutes is expressible; call it from the workflow instead",
           "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "uses: ./.github/actions/setup-aws",
           "target": "Set up credentials"
         }
       ],
@@ -92,6 +94,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": ".github/workflows/ci.yml: job \"deploy\" step \"Direct third-party\" calls a third-party action directly and must pass action-timeout-s: 90 (a bare number, not a quoted string) in its with: block; got \"90\"",
           "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "action-timeout-s: \"90\"",
           "target": "deploy"
         }
       ],
@@ -112,6 +115,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "packages/app/.github/actions/setup-aws/action.yml: job \"(composite)\" step \"aws-actions/configure-aws-credentials@v4\" calls a third-party action directly and must pass action-timeout-s: 90 (a bare number, not a quoted string) in its with: block; got null",
           "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "- uses: aws-actions/configure-aws-credentials@v4",
           "target": "(composite)"
         }
       ],

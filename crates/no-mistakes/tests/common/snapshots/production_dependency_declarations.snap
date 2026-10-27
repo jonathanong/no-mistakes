@@ -1,0 +1,141 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "computed_import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dev_dependency": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/lib/index.mts",
+          "import": "chalk",
+          "line": 1,
+          "message": "packages/lib/index.mts: imports 'chalk', which @acme/lib declares only under a non-production dependency field (e.g. devDependencies); the production deploy prunes that field, so move it to dependencies (or optionalDependencies/peerDependencies)",
+          "rule": "production-dependency-declarations",
+          "sourceLine": "import chalk from \"chalk\";",
+          "target": "chalk"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dev_only_workspace": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/lib/index.mts",
+          "import": "@acme/tool",
+          "line": 1,
+          "message": "packages/lib/index.mts: imports '@acme/tool', which @acme/lib declares only under a non-production dependency field (e.g. devDependencies); the production deploy prunes that field, so move it to dependencies (or optionalDependencies/peerDependencies)",
+          "rule": "production-dependency-declarations",
+          "sourceLine": "import { doThing } from \"@acme/tool\";",
+          "target": "@acme/tool"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "relative_closure": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/lib/helper.mts",
+          "import": "@acme/tool",
+          "line": 1,
+          "message": "packages/lib/helper.mts: imports '@acme/tool', which @acme/lib declares only under a non-production dependency field (e.g. devDependencies); the production deploy prunes that field, so move it to dependencies (or optionalDependencies/peerDependencies)",
+          "rule": "production-dependency-declarations",
+          "sourceLine": "import { doThing } from \"@acme/tool\";",
+          "target": "@acme/tool"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "test_only_importer": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "type_import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "undeclared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/lib/index.mts",
+          "import": "left-pad",
+          "line": 1,
+          "message": "packages/lib/index.mts: imports 'left-pad', which @acme/lib does not declare as a dependency; add it to dependencies (or optionalDependencies/peerDependencies)",
+          "rule": "production-dependency-declarations",
+          "sourceLine": "import leftPad from \"left-pad\";",
+          "target": "left-pad"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

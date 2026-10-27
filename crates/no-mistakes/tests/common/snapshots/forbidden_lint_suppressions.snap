@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/directives.tsx:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable react/purity, allowed/rule -- temporary */",
           "target": "react/purity"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/directives.tsx:2: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-line react/purity",
           "target": "react/purity"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/directives.tsx:20: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "const jsx = <div>eslint-disable react/purity{/* oxlint-disable react-hooks-js/refs */}</div>;",
           "target": "react-hooks-js/refs"
         },
         {
@@ -37,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-next-line react-hooks-js/refs, react/purity, react/purity",
           "target": "react-hooks-js/refs"
         },
         {
@@ -44,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-next-line react-hooks-js/refs, react/purity, react/purity",
           "target": "react/purity"
         },
         {
@@ -51,6 +56,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/directives.tsx:4: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable react/purity */",
           "target": "react/purity"
         },
         {
@@ -58,6 +64,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/directives.tsx:5: `oxlint-disable-line` disables forbidden rule `react-hooks-js/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable-line react-hooks-js/purity",
           "target": "react-hooks-js/purity"
         },
         {
@@ -65,6 +72,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/directives.tsx:6: `oxlint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable-next-line react/purity",
           "target": "react/purity"
         },
         {
@@ -72,6 +80,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/directives.tsx:7: `eslint-disable` disables forbidden rule `*`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable */",
           "target": "*"
         },
         {
@@ -79,6 +88,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/directives.tsx:8: `oxlint-disable-next-line` disables forbidden rule `*`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable-next-line -- blanket reason",
           "target": "*"
         },
         {
@@ -86,6 +96,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/line-endings.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -93,6 +104,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/line-endings.ts:3: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -100,6 +112,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/line-endings.ts:5: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-line react/purity",
           "target": "react/purity"
         },
         {
@@ -107,6 +120,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "eslint-disable react/purity,",
           "target": "react-hooks-js/refs"
         },
         {
@@ -114,6 +128,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "eslint-disable react/purity,",
           "target": "react/purity"
         },
         {
@@ -121,6 +136,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -128,6 +144,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react/purity"
         },
         {
@@ -135,6 +152,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -142,6 +160,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react/purity"
         },
         {
@@ -149,6 +168,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -156,6 +176,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable-line react/purity */",
           "target": "react/purity"
         },
         {
@@ -163,6 +184,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/recovered.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         }
       ],
@@ -183,6 +205,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/directives.tsx:1: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable react/purity, allowed/rule -- temporary */",
           "target": "react/purity"
         },
         {
@@ -190,6 +213,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/directives.tsx:2: `eslint-disable-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-line react/purity",
           "target": "react/purity"
         },
         {
@@ -197,6 +221,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/directives.tsx:20: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "const jsx = <div>eslint-disable react/purity{/* oxlint-disable react-hooks-js/refs */}</div>;",
           "target": "react-hooks-js/refs"
         },
         {
@@ -204,6 +229,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-next-line react-hooks-js/refs, react/purity, react/purity",
           "target": "react-hooks-js/refs"
         },
         {
@@ -211,6 +237,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-next-line react-hooks-js/refs, react/purity, react/purity",
           "target": "react/purity"
         },
         {
@@ -218,6 +245,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/directives.tsx:4: `oxlint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable react/purity */",
           "target": "react/purity"
         },
         {
@@ -225,6 +253,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/directives.tsx:5: `oxlint-disable-line` disables forbidden rule `react-hooks-js/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable-line react-hooks-js/purity",
           "target": "react-hooks-js/purity"
         },
         {
@@ -232,6 +261,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/directives.tsx:6: `oxlint-disable-next-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable-next-line react/purity",
           "target": "react/purity"
         },
         {
@@ -239,6 +269,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/line-endings.ts:1: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -246,6 +277,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/line-endings.ts:3: `oxlint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -253,6 +285,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/line-endings.ts:5: `eslint-disable-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-line react/purity",
           "target": "react/purity"
         },
         {
@@ -260,6 +293,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "eslint-disable react/purity,",
           "target": "react-hooks-js/refs"
         },
         {
@@ -267,6 +301,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "eslint-disable react/purity,",
           "target": "react/purity"
         },
         {
@@ -274,6 +309,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -281,6 +317,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react/purity"
         },
         {
@@ -288,6 +325,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -295,6 +333,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react/purity"
         },
         {
@@ -302,6 +341,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -309,6 +349,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable-line react/purity */",
           "target": "react/purity"
         },
         {
@@ -316,6 +357,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/recovered.ts:1: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         }
       ],
@@ -336,6 +378,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/directives.tsx:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable react/purity, allowed/rule -- temporary */",
           "target": "react/purity"
         },
         {
@@ -343,6 +386,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/directives.tsx:2: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-line react/purity",
           "target": "react/purity"
         },
         {
@@ -350,6 +394,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/directives.tsx:20: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "const jsx = <div>eslint-disable react/purity{/* oxlint-disable react-hooks-js/refs */}</div>;",
           "target": "react-hooks-js/refs"
         },
         {
@@ -357,6 +402,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-next-line react-hooks-js/refs, react/purity, react/purity",
           "target": "react-hooks-js/refs"
         },
         {
@@ -364,6 +410,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-next-line react-hooks-js/refs, react/purity, react/purity",
           "target": "react/purity"
         },
         {
@@ -371,6 +418,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/directives.tsx:4: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable react/purity */",
           "target": "react/purity"
         },
         {
@@ -378,6 +426,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/directives.tsx:5: `oxlint-disable-line` disables forbidden rule `react-hooks-js/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable-line react-hooks-js/purity",
           "target": "react-hooks-js/purity"
         },
         {
@@ -385,6 +434,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/directives.tsx:6: `oxlint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable-next-line react/purity",
           "target": "react/purity"
         },
         {
@@ -392,6 +442,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/line-endings.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -399,6 +450,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/line-endings.ts:3: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -406,6 +458,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/line-endings.ts:5: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-line react/purity",
           "target": "react/purity"
         },
         {
@@ -413,6 +466,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "eslint-disable react/purity,",
           "target": "react-hooks-js/refs"
         },
         {
@@ -420,6 +474,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "eslint-disable react/purity,",
           "target": "react/purity"
         },
         {
@@ -427,6 +482,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -434,6 +490,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react/purity"
         },
         {
@@ -441,6 +498,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -448,6 +506,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react/purity"
         },
         {
@@ -455,6 +514,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -462,6 +522,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable-line react/purity */",
           "target": "react/purity"
         },
         {
@@ -469,6 +530,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/recovered.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         }
       ],
@@ -501,6 +563,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/directives.tsx:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable react/purity, allowed/rule -- temporary */",
           "target": "react/purity"
         },
         {
@@ -508,6 +571,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/directives.tsx:2: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-line react/purity",
           "target": "react/purity"
         },
         {
@@ -515,6 +579,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "src/directives.tsx:20: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "const jsx = <div>eslint-disable react/purity{/* oxlint-disable react-hooks-js/refs */}</div>;",
           "target": "react-hooks-js/refs"
         },
         {
@@ -522,6 +587,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-next-line react-hooks-js/refs, react/purity, react/purity",
           "target": "react-hooks-js/refs"
         },
         {
@@ -529,6 +595,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-next-line react-hooks-js/refs, react/purity, react/purity",
           "target": "react/purity"
         },
         {
@@ -536,6 +603,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/directives.tsx:4: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable react/purity */",
           "target": "react/purity"
         },
         {
@@ -543,6 +611,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/directives.tsx:5: `oxlint-disable-line` disables forbidden rule `react-hooks-js/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable-line react-hooks-js/purity",
           "target": "react-hooks-js/purity"
         },
         {
@@ -550,6 +619,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/directives.tsx:6: `oxlint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable-next-line react/purity",
           "target": "react/purity"
         },
         {
@@ -557,6 +627,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/line-endings.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -564,6 +635,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/line-endings.ts:3: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// oxlint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -571,6 +643,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/line-endings.ts:5: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable-line react/purity",
           "target": "react/purity"
         },
         {
@@ -578,6 +651,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "eslint-disable react/purity,",
           "target": "react-hooks-js/refs"
         },
         {
@@ -585,6 +659,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "eslint-disable react/purity,",
           "target": "react/purity"
         },
         {
@@ -592,6 +667,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -599,6 +675,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react/purity"
         },
         {
@@ -606,6 +683,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -613,6 +691,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react/purity"
         },
         {
@@ -620,6 +699,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -627,6 +707,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable-line react/purity */",
           "target": "react/purity"
         },
         {
@@ -634,6 +715,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/recovered.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         }
       ],
@@ -649,6 +731,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -656,6 +739,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line forbidden-lint-suppressions: intentional test fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -663,6 +747,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "/* oxlint-disable react/purity */ // no-mistakes-disable-line forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         }
       ],
@@ -676,6 +761,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/html.cjs:1: `eslint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "<!-- eslint-disable-next-line react/purity",
           "target": "react/purity"
         },
         {
@@ -683,6 +769,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/html.cjs:3: `oxlint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "--> oxlint-disable-next-line react/purity",
           "target": "react/purity"
         }
       ],
@@ -698,6 +785,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -705,6 +793,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line forbidden-lint-suppressions: intentional test fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -712,6 +801,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "/* oxlint-disable react/purity */ // no-mistakes-disable-line forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         }
       ],
@@ -732,6 +822,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -739,6 +830,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line forbidden-lint-suppressions: intentional test fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -746,6 +838,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "/* oxlint-disable react/purity */ // no-mistakes-disable-line forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         }
       ],
@@ -766,6 +859,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -773,6 +867,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line forbidden-lint-suppressions: intentional test fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -780,6 +875,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "/* oxlint-disable react/purity */ // no-mistakes-disable-line forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         }
       ],
@@ -793,6 +889,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -800,6 +897,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable \"react/purity\", 'react-hooks-js/refs' -- reason */",
           "target": "react/purity"
         },
         {
@@ -807,6 +905,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react-hooks-js/refs"
         },
         {
@@ -814,6 +913,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* oxlint-disable \"react/purity\", 'react-hooks-js/refs' --- reason */",
           "target": "react/purity"
         },
         {
@@ -821,6 +921,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/quoted.ts:4: `eslint-disable` disables forbidden rule `custom/no--bad`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable custom/no--bad -- reason */",
           "target": "custom/no--bad"
         },
         {
@@ -828,6 +929,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// eslint-disable react/purity",
           "target": "react/purity"
         },
         {
@@ -835,6 +937,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* eslint-disable-line react/purity */",
           "target": "react/purity"
         }
       ],
@@ -850,6 +953,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -857,6 +961,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line forbidden-lint-suppressions: intentional test fixture",
           "target": "forbidden-lint-suppressions"
         },
         {
@@ -864,6 +969,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "/* oxlint-disable react/purity */ // no-mistakes-disable-line forbidden-lint-suppressions: intentional fixture",
           "target": "forbidden-lint-suppressions"
         }
       ],
@@ -877,6 +983,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "src/directives.tsx:11: `@ts-expect-error` disables forbidden rule `@ts-expect-error`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/* @ts-expect-error explanation */",
           "target": "@ts-expect-error"
         },
         {
@@ -884,6 +991,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/directives.tsx:9: `@ts-ignore` disables forbidden rule `@ts-ignore`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// @ts-ignore: intentional unsafe conversion",
           "target": "@ts-ignore"
         },
         {
@@ -891,6 +999,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/ts-blocks.ts:1: `@ts-ignore` disables forbidden rule `@ts-ignore`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/** @ts-ignore */",
           "target": "@ts-ignore"
         },
         {
@@ -898,6 +1007,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "src/ts-blocks.ts:13: `@ts-expect-error` disables forbidden rule `@ts-expect-error`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "/// @ts-expect-error: compatibility",
           "target": "@ts-expect-error"
         },
         {
@@ -905,6 +1015,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/ts-blocks.ts:4: `@ts-ignore` disables forbidden rule `@ts-ignore`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "* @ts-ignore */",
           "target": "@ts-ignore"
         },
         {
@@ -912,6 +1023,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/ts-blocks.ts:7: `@ts-expect-error` disables forbidden rule `@ts-expect-error`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "* @ts-expect-error */",
           "target": "@ts-expect-error"
         },
         {
@@ -919,6 +1031,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/ts-prefix.ts:1: `@ts-ignore` disables forbidden rule `@ts-ignore`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
           "rule": "forbidden-lint-suppressions",
+          "sourceLine": "// @ts-ignore(legacy)",
           "target": "@ts-ignore"
         }
       ],

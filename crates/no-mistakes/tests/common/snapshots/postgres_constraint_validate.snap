@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "ALTER TABLE ADD CONSTRAINT comments_body_check NOT VALID must have a matching VALIDATE CONSTRAINT",
           "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE comments ADD CONSTRAINT comments_body_check CHECK (body <> '') NOT VALID;",
           "target": "comments.comments_body_check"
         }
       ],
@@ -36,6 +37,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "ALTER TABLE ADD CONSTRAINT nv_child_2011_d_check NOT VALID must have a matching VALIDATE CONSTRAINT",
           "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE nv_child_2011 ADD CHECK (d > DATE '2011-01-01') NOT VALID;",
           "target": "nv_child_2011.nv_child_2011_d_check"
         }
       ],
@@ -56,6 +58,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "ALTER TABLE ADD CONSTRAINT comments_body_check NOT VALID must have a matching VALIDATE CONSTRAINT",
           "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE comments ADD CONSTRAINT comments_body_check CHECK (body <> '') NOT VALID;",
           "target": "comments.comments_body_check"
         }
       ],
@@ -148,6 +151,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "ALTER TABLE ADD CONSTRAINT child_topic_result_fk NOT VALID must have a matching VALIDATE CONSTRAINT",
           "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE child",
           "target": "child.child_topic_result_fk"
         },
         {
@@ -155,6 +159,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "VALIDATE CONSTRAINT child_other_fk has no matching named NOT VALID add",
           "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE child",
           "target": "child.child_other_fk"
         }
       ],
@@ -175,6 +180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "VALIDATE CONSTRAINT comments_body_check has no matching named NOT VALID add",
           "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE comments VALIDATE CONSTRAINT comments_body_check;",
           "target": "comments.comments_body_check"
         }
       ],

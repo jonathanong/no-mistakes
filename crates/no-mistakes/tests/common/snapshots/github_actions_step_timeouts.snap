@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -48,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"alt-test\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "alt-test: *base_job",
           "target": ".github/workflows/ci.yml#alt-test#1"
         }
       ],
@@ -80,6 +82,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- *group",
           "target": ".github/workflows/ci.yml#build#2/1"
         }
       ],
@@ -112,6 +115,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#bool`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "name: CI",
           "target": ".github/workflows/ci.yml#build#bool"
         },
         {
@@ -119,6 +123,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#quoted`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "name: CI",
           "target": ".github/workflows/ci.yml#build#quoted"
         },
         {
@@ -126,6 +131,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#zero`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "name: CI",
           "target": ".github/workflows/ci.yml#build#zero"
         },
         {
@@ -133,6 +139,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"build\" step \"bool\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: bool",
           "target": ".github/workflows/ci.yml#build#bool"
         },
         {
@@ -140,6 +147,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": ".github/workflows/ci.yml: job \"build\" step \"dynamic\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: dynamic",
           "target": ".github/workflows/ci.yml#build#dynamic"
         },
         {
@@ -147,6 +155,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": ".github/workflows/ci.yml: job \"build\" step \"quoted\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: quoted",
           "target": ".github/workflows/ci.yml#build#quoted"
         },
         {
@@ -154,6 +163,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": ".github/workflows/ci.yml: job \"build\" step \"huge\" timeout-minutes is 400, over the 360-minute cap",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: huge",
           "target": ".github/workflows/ci.yml#build#huge"
         },
         {
@@ -161,6 +171,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"zero\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: zero",
           "target": ".github/workflows/ci.yml#build#zero"
         }
       ],
@@ -181,6 +192,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "steps: &shared [{ run: echo missing }]",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -213,6 +225,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -245,6 +258,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -277,6 +291,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -308,7 +323,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 4,
           "message": ".github/workflows/ci.yml: invalid YAML (did not find expected node content at line 4 column 1, while parsing a flow node)",
-          "rule": "github-actions-step-timeouts"
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": ""
         }
       ],
       "warnings": []
@@ -328,13 +344,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#checkout`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "name: CI",
           "target": ".github/workflows/ci.yml#build#checkout"
         },
         {
           "file": ".github/workflows/ci.yml",
           "line": 4,
           "message": ".github/workflows/ci.yml: invalid YAML (did not find expected node content at line 4 column 1, while parsing a flow node)",
-          "rule": "github-actions-step-timeouts"
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": ""
         }
       ],
       "warnings": []
@@ -354,6 +372,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#absent`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "name: CI",
           "target": ".github/workflows/ci.yml#build#absent"
         },
         {
@@ -361,6 +380,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: allow entry `.github/workflows/ci.yml#build#dynamic` needs a reason",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: dynamic",
           "target": ".github/workflows/ci.yml#build#dynamic"
         }
       ],
@@ -381,6 +401,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -413,6 +434,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -445,6 +467,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -477,6 +500,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -509,6 +533,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": ".github/workflows/ci.yml: job \"alt\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "\"steps\": *shared_steps",
           "target": ".github/workflows/ci.yml#alt#1/1"
         }
       ],
@@ -592,6 +617,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -624,6 +650,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -656,6 +683,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#dynamic`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "name: CI",
           "target": ".github/workflows/ci.yml#build#dynamic"
         }
       ],
@@ -696,6 +724,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": ": [{run: echo missing}]",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -728,6 +757,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -760,6 +790,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1/2"
         }
       ],
@@ -792,6 +823,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -824,6 +856,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "\"jobs\": {build: {runs-on: ubuntu-latest, steps: [{name: group, parallel: [{run: echo missing}]}]}}",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -856,6 +889,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "jobs: {build: {runs-on: ubuntu-latest, steps: [{run: echo missing}]}}",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -888,6 +922,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- parallel: [{ run: echo missing }]",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -908,6 +943,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1/1"
         },
         {
@@ -915,6 +951,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- {name: alias, parallel: *tasks}",
           "target": ".github/workflows/ci.yml#build#2/1"
         }
       ],
@@ -935,6 +972,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -967,6 +1005,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- {name: group, parallel: [{run: echo missing}]}",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -999,6 +1038,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "steps: [{ run: echo missing }]",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -1031,6 +1071,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"build\" step \"bool\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: bool",
           "target": ".github/workflows/ci.yml#build#bool"
         },
         {
@@ -1038,6 +1079,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": ".github/workflows/ci.yml: job \"build\" step \"dynamic\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: dynamic",
           "target": ".github/workflows/ci.yml#build#dynamic"
         },
         {
@@ -1045,6 +1087,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": ".github/workflows/ci.yml: job \"build\" step \"quoted\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: quoted",
           "target": ".github/workflows/ci.yml#build#quoted"
         },
         {
@@ -1052,6 +1095,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": ".github/workflows/ci.yml: job \"build\" step \"huge\" timeout-minutes is 400, over the 360-minute cap",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: huge",
           "target": ".github/workflows/ci.yml#build#huge"
         },
         {
@@ -1059,6 +1103,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"zero\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: zero",
           "target": ".github/workflows/ci.yml#build#zero"
         }
       ],
@@ -1123,6 +1168,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -1155,6 +1201,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -1187,6 +1234,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"slow\" timeout-minutes is 20, over the 10-minute cap",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: slow",
           "target": ".github/workflows/ci.yml#build#slow"
         }
       ],
@@ -1207,6 +1255,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -1239,6 +1288,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"checkout\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: checkout",
           "target": ".github/workflows/ci.yml#build#checkout"
         },
         {
@@ -1246,6 +1296,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo build",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -1266,6 +1317,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -1286,6 +1338,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"beta\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo beta",
           "target": ".github/workflows/ci.yml#beta#1"
         },
         {
@@ -1293,6 +1346,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": ".github/workflows/ci.yml: job \"gamma\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo gamma",
           "target": ".github/workflows/ci.yml#gamma#1"
         },
         {
@@ -1300,6 +1354,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"alpha\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo alpha",
           "target": ".github/workflows/ci.yml#alpha#1"
         }
       ],
@@ -1320,6 +1375,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#dynamic`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "jobs:",
           "target": ".github/workflows/ci.yml#build#dynamic"
         }
       ],
@@ -1340,6 +1396,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -1372,6 +1429,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing},",
           "target": ".github/workflows/ci.yml#build#1/2"
         }
       ],
@@ -1404,6 +1462,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing, env: {TEXT: \"escaped \\\" quote },[,]\"}},",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -1419,6 +1478,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "directive for `github-actions-step-timeouts` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-step-timeouts",
           "target": "github-actions-step-timeouts"
         }
       ],
@@ -1432,6 +1492,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing},",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -1464,6 +1525,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -1496,6 +1558,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -1528,6 +1591,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -1560,6 +1624,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "parallel: [{run: echo missing}]",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -1592,6 +1657,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -1612,6 +1678,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#1/2"
         }
       ],
@@ -1644,6 +1711,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#1/2"
         }
       ],
@@ -1688,6 +1756,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"alt\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "steps:",
           "target": ".github/workflows/ci.yml#alt#1"
         }
       ],
@@ -1720,6 +1789,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "steps:",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -1752,6 +1822,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "jobs:",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -1784,6 +1855,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- parallel:",
           "target": ".github/workflows/ci.yml#build#1/1"
         }
       ],
@@ -1816,6 +1888,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "steps:",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -1848,6 +1921,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- run: echo missing",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -1892,6 +1966,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/ci.yml#removed#checkout`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "name: CI",
           "target": ".github/workflows/ci.yml#removed#checkout"
         },
         {
@@ -1899,6 +1974,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#removed#checkout`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "name: CI",
           "target": ".github/workflows/ci.yml#removed#checkout"
         }
       ],
@@ -1919,6 +1995,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"build\" step \"bool\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: bool",
           "target": ".github/workflows/ci.yml#build#bool"
         },
         {
@@ -1926,6 +2003,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": ".github/workflows/ci.yml: job \"build\" step \"dynamic\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: dynamic",
           "target": ".github/workflows/ci.yml#build#dynamic"
         },
         {
@@ -1933,6 +2011,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": ".github/workflows/ci.yml: job \"build\" step \"quoted\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: quoted",
           "target": ".github/workflows/ci.yml#build#quoted"
         },
         {
@@ -1940,6 +2019,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": ".github/workflows/ci.yml: job \"build\" step \"huge\" timeout-minutes is 400, over the 10-minute cap",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: huge",
           "target": ".github/workflows/ci.yml#build#huge"
         },
         {
@@ -1947,6 +2027,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"zero\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: zero",
           "target": ".github/workflows/ci.yml#build#zero"
         }
       ],
@@ -1967,6 +2048,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml: job \"build\" step \"frontend\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: frontend",
           "target": ".github/workflows/ci.yml#build#1/frontend"
         }
       ],
@@ -2023,6 +2105,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -2043,6 +2126,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "build: *base_job,",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -2075,6 +2159,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "jobs: *job_list}",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -2107,6 +2192,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "build:",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -2139,6 +2225,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "jobs:",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -2171,6 +2258,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -2203,6 +2291,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "build: {runs-on: ubuntu-latest, steps: *shared}",
           "target": ".github/workflows/ci.yml#build#1"
         }
       ],
@@ -2247,6 +2336,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -2279,6 +2369,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -2311,6 +2402,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#1/2"
         }
       ],
@@ -2343,6 +2435,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#checkout`",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "name: CI",
           "target": ".github/workflows/ci.yml#build#checkout"
         }
       ],
@@ -2363,6 +2456,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],
@@ -2395,6 +2489,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- wait: background",
           "target": ".github/workflows/ci.yml#build#2"
         },
         {
@@ -2402,6 +2497,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #3\" timeout-minutes is 361, over the 360-minute cap",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- wait-all:",
           "target": ".github/workflows/ci.yml#build#3"
         }
       ],
@@ -2422,6 +2518,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- wait: background",
           "target": ".github/workflows/ci.yml#build#2"
         },
         {
@@ -2429,6 +2526,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #3\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "- wait-all:",
           "target": ".github/workflows/ci.yml#build#3"
         }
       ],
@@ -2473,6 +2571,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
           "rule": "github-actions-step-timeouts",
+          "sourceLine": "{run: echo missing}",
           "target": ".github/workflows/ci.yml#build#2"
         }
       ],

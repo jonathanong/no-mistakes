@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "all-contexts.sql:10: SQL files matching this rule must not use CREATE TRIGGER",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TRIGGER reject_rows BEFORE INSERT ON orders FOR EACH ROW EXECUTE FUNCTION reject_write();",
           "target": "CREATE TRIGGER"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "all-contexts.sql:11: SQL files matching this rule must not use DROP TRIGGER",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TRIGGER reject_rows ON orders;",
           "target": "DROP TRIGGER"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "all-contexts.sql:12: SQL files matching this rule must not use CREATE FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE FUNCTION empty_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';",
           "target": "CREATE FUNCTION"
         },
         {
@@ -37,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "all-contexts.sql:13: SQL files matching this rule must not use CREATE PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE plpgsql AS 'BEGIN NULL; END';",
           "target": "CREATE PROCEDURE"
         },
         {
@@ -44,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "all-contexts.sql:13: SQL statement `CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE plpgsql AS 'BEGIN NULL; END';",
           "target": "CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE"
         },
         {
@@ -51,6 +56,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "all-contexts.sql:14: SQL files matching this rule must not use DROP FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP FUNCTION empty_fn();",
           "target": "DROP FUNCTION"
         },
         {
@@ -58,6 +64,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "all-contexts.sql:15: SQL files matching this rule must not use DROP PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP PROCEDURE empty_proc();",
           "target": "DROP PROCEDURE"
         },
         {
@@ -65,6 +72,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "all-contexts.sql:16: SQL files matching this rule must not use DROP TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TABLE orders;",
           "target": "DROP TABLE"
         },
         {
@@ -72,6 +80,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": "all-contexts.sql:17: SQL files matching this rule must not use CREATE TYPE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TYPE phase AS ENUM ('new', 'done');",
           "target": "CREATE TYPE"
         },
         {
@@ -79,6 +88,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "all-contexts.sql:18: SQL files matching this rule must not use DROP TYPE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TYPE phase;",
           "target": "DROP TYPE"
         },
         {
@@ -86,6 +96,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "all-contexts.sql:20: SQL files matching this rule must not use CREATE FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE FUNCTION enclosing() RETURNS void LANGUAGE plpgsql AS $outer$ BEGIN",
           "target": "CREATE FUNCTION"
         },
         {
@@ -93,6 +104,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "all-contexts.sql:21: SQL files matching this rule must not use CREATE DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE DATABASE scratch TEMPLATE template0;",
           "target": "CREATE DATABASE"
         },
         {
@@ -100,6 +112,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "all-contexts.sql:21: SQL statement `CREATE DATABASE scratch TEMPLATE template0` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE DATABASE scratch TEMPLATE template0;",
           "target": "CREATE DATABASE scratch TEMPLATE template0"
         },
         {
@@ -107,6 +120,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": "all-contexts.sql:22: SQL files matching this rule must not use DROP DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP DATABASE scratch;",
           "target": "DROP DATABASE"
         },
         {
@@ -114,6 +128,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": "all-contexts.sql:23: SQL files matching this rule must not use ALTER DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET statement_timeout = '1s';",
           "target": "ALTER DATABASE"
         },
         {
@@ -121,6 +136,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": "all-contexts.sql:23: SQL statement `ALTER DATABASE app SET statement_timeout = '1s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET statement_timeout = '1s';",
           "target": "ALTER DATABASE app SET statement_timeout = '1s'"
         },
         {
@@ -128,6 +144,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": "all-contexts.sql:24: SQL files matching this rule must not use ALTER SYSTEM",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SYSTEM SET statement_timeout = '2s';",
           "target": "ALTER SYSTEM"
         },
         {
@@ -135,6 +152,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": "all-contexts.sql:24: SQL statement `ALTER SYSTEM SET statement_timeout = '2s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SYSTEM SET statement_timeout = '2s';",
           "target": "ALTER SYSTEM SET statement_timeout = '2s'"
         },
         {
@@ -142,6 +160,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "all-contexts.sql:25: SQL files matching this rule must not use CREATE SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE SCHEMA scratch_schema;",
           "target": "CREATE SCHEMA"
         },
         {
@@ -149,6 +168,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "all-contexts.sql:26: SQL files matching this rule must not use ALTER SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SCHEMA scratch_schema OWNER TO postgres;",
           "target": "ALTER SCHEMA"
         },
         {
@@ -156,6 +176,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 27,
           "message": "all-contexts.sql:27: SQL files matching this rule must not use DROP SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP SCHEMA scratch_schema;",
           "target": "DROP SCHEMA"
         },
         {
@@ -163,6 +184,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 28,
           "message": "all-contexts.sql:28: SQL files matching this rule must not use CREATE TRIGGER",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TRIGGER reject_rows BEFORE INSERT ON orders FOR EACH ROW EXECUTE FUNCTION reject_write();",
           "target": "CREATE TRIGGER"
         },
         {
@@ -170,6 +192,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 29,
           "message": "all-contexts.sql:29: SQL files matching this rule must not use DROP TRIGGER",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TRIGGER reject_rows ON orders;",
           "target": "DROP TRIGGER"
         },
         {
@@ -177,6 +200,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "all-contexts.sql:3: SQL files matching this rule must not use CREATE DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE DATABASE scratch TEMPLATE template0;",
           "target": "CREATE DATABASE"
         },
         {
@@ -184,6 +208,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "all-contexts.sql:3: SQL statement `CREATE DATABASE scratch TEMPLATE template0` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE DATABASE scratch TEMPLATE template0;",
           "target": "CREATE DATABASE scratch TEMPLATE template0"
         },
         {
@@ -191,6 +216,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 30,
           "message": "all-contexts.sql:30: SQL files matching this rule must not use CREATE FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE FUNCTION empty_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';",
           "target": "CREATE FUNCTION"
         },
         {
@@ -198,6 +224,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 31,
           "message": "all-contexts.sql:31: SQL files matching this rule must not use CREATE PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE plpgsql AS 'BEGIN NULL; END';",
           "target": "CREATE PROCEDURE"
         },
         {
@@ -205,6 +232,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 32,
           "message": "all-contexts.sql:32: SQL files matching this rule must not use DROP FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP FUNCTION empty_fn();",
           "target": "DROP FUNCTION"
         },
         {
@@ -212,6 +240,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 33,
           "message": "all-contexts.sql:33: SQL files matching this rule must not use DROP PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP PROCEDURE empty_proc();",
           "target": "DROP PROCEDURE"
         },
         {
@@ -219,6 +248,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": "all-contexts.sql:34: SQL files matching this rule must not use DROP TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TABLE orders;",
           "target": "DROP TABLE"
         },
         {
@@ -226,6 +256,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": "all-contexts.sql:35: SQL files matching this rule must not use CREATE TYPE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TYPE phase AS ENUM ('new', 'done');",
           "target": "CREATE TYPE"
         },
         {
@@ -233,6 +264,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 36,
           "message": "all-contexts.sql:36: SQL files matching this rule must not use DROP TYPE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TYPE phase;",
           "target": "DROP TYPE"
         },
         {
@@ -240,6 +272,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 39,
           "message": "all-contexts.sql:39: SQL files matching this rule must not use CREATE DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'CREATE DATABASE scratch TEMPLATE template0';",
           "target": "CREATE DATABASE"
         },
         {
@@ -247,6 +280,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 39,
           "message": "all-contexts.sql:39: SQL statement `CREATE DATABASE scratch TEMPLATE template0` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'CREATE DATABASE scratch TEMPLATE template0';",
           "target": "CREATE DATABASE scratch TEMPLATE template0"
         },
         {
@@ -254,6 +288,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "all-contexts.sql:4: SQL files matching this rule must not use DROP DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP DATABASE scratch;",
           "target": "DROP DATABASE"
         },
         {
@@ -261,6 +296,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 40,
           "message": "all-contexts.sql:40: SQL files matching this rule must not use DROP DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'DROP DATABASE scratch';",
           "target": "DROP DATABASE"
         },
         {
@@ -268,6 +304,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 41,
           "message": "all-contexts.sql:41: SQL files matching this rule must not use ALTER DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'ALTER DATABASE app SET statement_timeout = ''1s''';",
           "target": "ALTER DATABASE"
         },
         {
@@ -275,6 +312,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 41,
           "message": "all-contexts.sql:41: SQL statement `ALTER DATABASE app SET statement_timeout = '1s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'ALTER DATABASE app SET statement_timeout = ''1s''';",
           "target": "ALTER DATABASE app SET statement_timeout = '1s'"
         },
         {
@@ -282,6 +320,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 42,
           "message": "all-contexts.sql:42: SQL files matching this rule must not use ALTER SYSTEM",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'ALTER SYSTEM SET statement_timeout = ''2s''';",
           "target": "ALTER SYSTEM"
         },
         {
@@ -289,6 +328,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 42,
           "message": "all-contexts.sql:42: SQL statement `ALTER SYSTEM SET statement_timeout = '2s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'ALTER SYSTEM SET statement_timeout = ''2s''';",
           "target": "ALTER SYSTEM SET statement_timeout = '2s'"
         },
         {
@@ -296,6 +336,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 43,
           "message": "all-contexts.sql:43: SQL files matching this rule must not use CREATE SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'CREATE SCHEMA scratch_schema';",
           "target": "CREATE SCHEMA"
         },
         {
@@ -303,6 +344,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 44,
           "message": "all-contexts.sql:44: SQL files matching this rule must not use ALTER SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'ALTER SCHEMA scratch_schema OWNER TO postgres';",
           "target": "ALTER SCHEMA"
         },
         {
@@ -310,6 +352,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 45,
           "message": "all-contexts.sql:45: SQL files matching this rule must not use DROP SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'DROP SCHEMA scratch_schema';",
           "target": "DROP SCHEMA"
         },
         {
@@ -317,6 +360,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 46,
           "message": "all-contexts.sql:46: SQL files matching this rule must not use CREATE TRIGGER",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'CREATE TRIGGER reject_rows BEFORE INSERT ON orders FOR EACH ROW EXECUTE FUNCTION reject_write()';",
           "target": "CREATE TRIGGER"
         },
         {
@@ -324,6 +368,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 47,
           "message": "all-contexts.sql:47: SQL files matching this rule must not use DROP TRIGGER",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'DROP TRIGGER reject_rows ON orders';",
           "target": "DROP TRIGGER"
         },
         {
@@ -331,6 +376,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 48,
           "message": "all-contexts.sql:48: SQL files matching this rule must not use CREATE FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'CREATE FUNCTION empty_fn() RETURNS int LANGUAGE sql AS ''SELECT 1''';",
           "target": "CREATE FUNCTION"
         },
         {
@@ -338,6 +384,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 49,
           "message": "all-contexts.sql:49: SQL files matching this rule must not use CREATE PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE plpgsql AS ''BEGIN NULL; END''';",
           "target": "CREATE PROCEDURE"
         },
         {
@@ -345,6 +392,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "all-contexts.sql:5: SQL files matching this rule must not use ALTER DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET statement_timeout = '1s';",
           "target": "ALTER DATABASE"
         },
         {
@@ -352,6 +400,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "all-contexts.sql:5: SQL statement `ALTER DATABASE app SET statement_timeout = '1s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET statement_timeout = '1s';",
           "target": "ALTER DATABASE app SET statement_timeout = '1s'"
         },
         {
@@ -359,6 +408,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 50,
           "message": "all-contexts.sql:50: SQL files matching this rule must not use DROP FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'DROP FUNCTION empty_fn()';",
           "target": "DROP FUNCTION"
         },
         {
@@ -366,6 +416,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 51,
           "message": "all-contexts.sql:51: SQL files matching this rule must not use DROP PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'DROP PROCEDURE empty_proc()';",
           "target": "DROP PROCEDURE"
         },
         {
@@ -373,6 +424,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 52,
           "message": "all-contexts.sql:52: SQL files matching this rule must not use DROP TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'DROP TABLE orders';",
           "target": "DROP TABLE"
         },
         {
@@ -380,6 +432,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 53,
           "message": "all-contexts.sql:53: SQL files matching this rule must not use CREATE TYPE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'CREATE TYPE phase AS ENUM (''new'', ''done'')';",
           "target": "CREATE TYPE"
         },
         {
@@ -387,6 +440,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 54,
           "message": "all-contexts.sql:54: SQL files matching this rule must not use DROP TYPE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'DROP TYPE phase';",
           "target": "DROP TYPE"
         },
         {
@@ -394,6 +448,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "all-contexts.sql:6: SQL files matching this rule must not use ALTER SYSTEM",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SYSTEM SET statement_timeout = '2s';",
           "target": "ALTER SYSTEM"
         },
         {
@@ -401,6 +456,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "all-contexts.sql:6: SQL statement `ALTER SYSTEM SET statement_timeout = '2s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SYSTEM SET statement_timeout = '2s';",
           "target": "ALTER SYSTEM SET statement_timeout = '2s'"
         },
         {
@@ -408,6 +464,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "all-contexts.sql:7: SQL files matching this rule must not use CREATE SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE SCHEMA scratch_schema;",
           "target": "CREATE SCHEMA"
         },
         {
@@ -415,6 +472,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "all-contexts.sql:8: SQL files matching this rule must not use ALTER SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SCHEMA scratch_schema OWNER TO postgres;",
           "target": "ALTER SCHEMA"
         },
         {
@@ -422,6 +480,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "all-contexts.sql:9: SQL files matching this rule must not use DROP SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP SCHEMA scratch_schema;",
           "target": "DROP SCHEMA"
         }
       ],
@@ -437,6 +496,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: SQL statement `CREATE ACCESS METHOD bogus TYPE INDEX HANDLER heap_tableam_handler` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE ACCESS METHOD bogus TYPE INDEX HANDLER heap_tableam_handler;",
           "target": "CREATE ACCESS METHOD bogus TYPE INDEX HANDLER heap_tableam_handler"
         }
       ],
@@ -450,6 +510,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/001.sql:5: SQL files matching this rule must not use CREATE TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TABLE real_table (id int);",
           "target": "CREATE TABLE"
         }
       ],
@@ -470,6 +531,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: SQL files matching this rule must not use CREATE TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TABLE foo (id uuid PRIMARY KEY);",
           "target": "CREATE TABLE"
         }
       ],
@@ -490,6 +552,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: SQL files matching this rule must not use CREATE TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TABLE foo (id uuid PRIMARY KEY);",
           "target": "CREATE TABLE"
         }
       ],
@@ -510,6 +573,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/001.sql:5: SQL files matching this rule must not use TRUNCATE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE foo;",
           "target": "TRUNCATE"
         }
       ],
@@ -530,6 +594,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: SQL files matching this rule must not use CREATE TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TABLE foo (id uuid);",
           "target": "CREATE TABLE"
         },
         {
@@ -537,6 +602,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: SQL files matching this rule must not use ALTER TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER TABLE foo ADD COLUMN x text;",
           "target": "ALTER TABLE"
         },
         {
@@ -544,6 +610,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: SQL files matching this rule must not use CREATE INDEX",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE UNIQUE INDEX idx ON foo (id);",
           "target": "CREATE INDEX"
         },
         {
@@ -551,6 +618,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/001.sql:4: SQL files matching this rule must not use CREATE VIEW",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE MATERIALIZED VIEW bar AS SELECT 1;",
           "target": "CREATE VIEW"
         },
         {
@@ -558,6 +626,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/001.sql:5: SQL files matching this rule must not use TRUNCATE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE foo;",
           "target": "TRUNCATE"
         },
         {
@@ -565,6 +634,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/001.sql:6: SQL files matching this rule must not use DROP INDEX",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP INDEX idx;",
           "target": "DROP INDEX"
         },
         {
@@ -572,6 +642,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "sql/001.sql:7: SQL files matching this rule must not use DROP VIEW",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP MATERIALIZED VIEW bar;",
           "target": "DROP VIEW"
         }
       ],
@@ -592,6 +663,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "disable-trigger.sql:1: SQL files matching this rule must not use ALTER TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER TABLE orders DISABLE TRIGGER ALL;",
           "target": "ALTER TABLE"
         }
       ],
@@ -636,6 +708,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "dynamic.test.ts:2: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(runtimeSql);",
           "target": "unanalyzable-sql"
         },
         {
@@ -643,6 +716,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "dynamic.test.ts:3: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('this is invalid SQL');",
           "target": "unanalyzable-sql"
         }
       ],
@@ -675,6 +749,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "policy.test.ts:6: executed SQL must not use TRUNCATE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "execute(sql`TRUNCATE orders`);",
           "target": "TRUNCATE"
         }
       ],
@@ -695,6 +770,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "policy.test.ts:2: executed SQL must not use ALTER TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "execute(sql`ALTER TABLE orders ADD CONSTRAINT reject_writes CHECK (false)`);",
           "target": "ALTER TABLE"
         },
         {
@@ -702,6 +778,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "policy.test.ts:4: executed SQL must not use CREATE VIEW",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "transaction(sql`CREATE VIEW orders_view AS SELECT * FROM orders`);",
           "target": "CREATE VIEW"
         },
         {
@@ -709,6 +786,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "policy.test.ts:6: executed SQL must not use TRUNCATE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "execute(sql`TRUNCATE orders`);",
           "target": "TRUNCATE"
         }
       ],
@@ -729,6 +807,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "failures.test.ts:4: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $1;",
           "target": "unanalyzable-sql"
         },
         {
@@ -736,6 +815,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "failures.test.ts:7: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $2;",
           "target": "unanalyzable-sql"
         },
         {
@@ -743,6 +823,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "one-suppressed.test.ts:7: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $2;",
           "target": "unanalyzable-sql"
         },
         {
@@ -750,6 +831,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "second-suppressed.test.ts:4: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $1;",
           "target": "unanalyzable-sql"
         }
       ],
@@ -770,6 +852,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "routines.test.ts:4: executed SQL must not use CREATE TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TABLE direct_table (id int);",
           "target": "CREATE TABLE"
         },
         {
@@ -777,6 +860,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "routines.test.ts:5: executed SQL must not use ALTER TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'ALTER TABLE orders ADD COLUMN routine_column text';",
           "target": "ALTER TABLE"
         }
       ],
@@ -809,6 +893,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "embedded.test.ts:2: executed SQL must not use CREATE DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('CREATE DATABASE scratch TEMPLATE template0');",
           "target": "CREATE DATABASE"
         },
         {
@@ -816,6 +901,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "embedded.test.ts:3: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('SET LOCAL session_replication_role = replica');",
           "target": "setting:session_replication_role"
         },
         {
@@ -823,6 +909,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "embedded.test.ts:4: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SELECT set_config('session_replication_role', 'replica', true)\");",
           "target": "setting:session_replication_role"
         },
         {
@@ -830,6 +917,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "embedded.test.ts:5: executed SQL must not use ALTER SYSTEM",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('ALTER SYSTEM SET statement_timeout = 100');",
           "target": "ALTER SYSTEM"
         },
         {
@@ -837,6 +925,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "embedded.test.ts:6: executed SQL must not use CREATE PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('CREATE OR REPLACE PROCEDURE reset_orders() LANGUAGE plpgsql AS $$ BEGIN NULL; END $$');",
           "target": "CREATE PROCEDURE"
         }
       ],
@@ -852,6 +941,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "kinds.sql:1: SQL statement `CREATE DATABASE scratch OWNER postgres TEMPLATE template0 ENCODING` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE DATABASE scratch OWNER postgres TEMPLATE template0 ENCODING 'UTF8' CONNECTION LIMIT 2;",
           "target": "CREATE DATABASE scratch OWNER postgres TEMPLATE template0 ENCODING"
         },
         {
@@ -859,6 +949,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "kinds.sql:3: SQL statement `ALTER DATABASE app SET statement_timeout = '1s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET statement_timeout = '1s';",
           "target": "ALTER DATABASE app SET statement_timeout = '1s'"
         },
         {
@@ -866,6 +957,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "kinds.sql:4: SQL statement `ALTER SYSTEM SET statement_timeout = '2s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SYSTEM SET statement_timeout = '2s';",
           "target": "ALTER SYSTEM SET statement_timeout = '2s'"
         }
       ],
@@ -879,6 +971,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "kinds.sql:1: SQL files matching this rule must not use CREATE DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE DATABASE scratch OWNER postgres TEMPLATE template0 ENCODING 'UTF8' CONNECTION LIMIT 2;",
           "target": "CREATE DATABASE"
         },
         {
@@ -886,6 +979,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "kinds.sql:10: SQL files matching this rule must not use CREATE FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE OR REPLACE FUNCTION reject_write() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$;",
           "target": "CREATE FUNCTION"
         },
         {
@@ -893,6 +987,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "kinds.sql:11: SQL files matching this rule must not use CREATE PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE OR REPLACE PROCEDURE reset_orders() LANGUAGE plpgsql AS $$ BEGIN NULL; END $$;",
           "target": "CREATE PROCEDURE"
         },
         {
@@ -900,6 +995,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "kinds.sql:12: SQL files matching this rule must not use DROP FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP FUNCTION reject_write();",
           "target": "DROP FUNCTION"
         },
         {
@@ -907,6 +1003,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "kinds.sql:13: SQL files matching this rule must not use DROP PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP PROCEDURE reset_orders();",
           "target": "DROP PROCEDURE"
         },
         {
@@ -914,6 +1011,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "kinds.sql:14: SQL files matching this rule must not use DROP TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TABLE orders;",
           "target": "DROP TABLE"
         },
         {
@@ -921,6 +1019,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "kinds.sql:15: SQL files matching this rule must not use CREATE TYPE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TYPE state AS ENUM ('new', 'done');",
           "target": "CREATE TYPE"
         },
         {
@@ -928,6 +1027,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "kinds.sql:16: SQL files matching this rule must not use DROP TYPE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TYPE state;",
           "target": "DROP TYPE"
         },
         {
@@ -935,6 +1035,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": "kinds.sql:17: SQL files matching this rule must not use CREATE TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TEMP TABLE scratch_rows (id int);",
           "target": "CREATE TABLE"
         },
         {
@@ -942,6 +1043,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "kinds.sql:18: SQL files matching this rule must not use ALTER TABLE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER TABLE orders ENABLE TRIGGER ALL;",
           "target": "ALTER TABLE"
         },
         {
@@ -949,6 +1051,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 19,
           "message": "kinds.sql:19: SQL files matching this rule must not use CREATE TRIGGER",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE CONSTRAINT TRIGGER guard_orders AFTER INSERT ON orders DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION guard_write();",
           "target": "CREATE TRIGGER"
         },
         {
@@ -956,6 +1059,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "kinds.sql:2: SQL files matching this rule must not use DROP DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP DATABASE scratch;",
           "target": "DROP DATABASE"
         },
         {
@@ -963,6 +1067,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "kinds.sql:3: SQL files matching this rule must not use ALTER DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET statement_timeout = '1s';",
           "target": "ALTER DATABASE"
         },
         {
@@ -970,6 +1075,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "kinds.sql:4: SQL files matching this rule must not use ALTER SYSTEM",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SYSTEM SET statement_timeout = '2s';",
           "target": "ALTER SYSTEM"
         },
         {
@@ -977,6 +1083,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "kinds.sql:5: SQL files matching this rule must not use CREATE SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE SCHEMA test_schema;",
           "target": "CREATE SCHEMA"
         },
         {
@@ -984,6 +1091,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "kinds.sql:6: SQL files matching this rule must not use ALTER SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SCHEMA test_schema OWNER TO postgres;",
           "target": "ALTER SCHEMA"
         },
         {
@@ -991,6 +1099,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "kinds.sql:7: SQL files matching this rule must not use DROP SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP SCHEMA test_schema;",
           "target": "DROP SCHEMA"
         },
         {
@@ -998,6 +1107,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "kinds.sql:8: SQL files matching this rule must not use CREATE TRIGGER",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TRIGGER reject_orders BEFORE INSERT ON orders FOR EACH ROW EXECUTE FUNCTION reject_write();",
           "target": "CREATE TRIGGER"
         },
         {
@@ -1005,6 +1115,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "kinds.sql:9: SQL files matching this rule must not use DROP TRIGGER",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP TRIGGER reject_orders ON orders;",
           "target": "DROP TRIGGER"
         }
       ],
@@ -1049,6 +1160,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "prefixed.sql:1: SQL files matching this rule must not use CREATE FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE FUNCTION first_cluster_change() RETURNS void LANGUAGE plpgsql AS $$ BEGIN",
           "target": "CREATE FUNCTION"
         },
         {
@@ -1056,6 +1168,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "prefixed.sql:12: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "IF pg_catalog.set_config('session_replication_role', 'replica', true) = 'replica' THEN NULL; END IF;",
           "target": "setting:session_replication_role"
         },
         {
@@ -1063,6 +1176,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "prefixed.sql:2: SQL files matching this rule must not use ALTER DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET statement_timeout = '1s';",
           "target": "ALTER DATABASE"
         },
         {
@@ -1070,6 +1184,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "prefixed.sql:3: SQL files matching this rule must not use ALTER SYSTEM",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "IF true THEN ALTER SYSTEM SET statement_timeout = '2s'; END IF;",
           "target": "ALTER SYSTEM"
         },
         {
@@ -1077,6 +1192,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "prefixed.sql:5: SQL files matching this rule must not use CREATE PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE PROCEDURE first_setting_change() LANGUAGE plpgsql AS $$ BEGIN",
           "target": "CREATE PROCEDURE"
         },
         {
@@ -1084,6 +1200,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "prefixed.sql:6: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT CASE WHEN true THEN pg_catalog.set_config('session_replication_role', 'replica', true) ELSE 'origin' END;",
           "target": "setting:session_replication_role"
         },
         {
@@ -1091,6 +1208,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "prefixed.sql:9: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "PERFORM CASE WHEN true THEN set_config('session_replication_role', 'origin', true) ELSE 'replica' END;",
           "target": "setting:session_replication_role"
         }
       ],
@@ -1111,6 +1229,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "failures.sql:3: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $1;",
           "target": "SELECT 1 FROM orders WHERE id::text"
         },
         {
@@ -1118,6 +1237,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "failures.sql:6: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $2;",
           "target": "SELECT 1 FROM orders WHERE id::text"
         },
         {
@@ -1125,6 +1245,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "one-suppressed.sql:6: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $2;",
           "target": "SELECT 1 FROM orders WHERE id::text"
         },
         {
@@ -1132,6 +1253,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "second-suppressed.sql:3: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $1;",
           "target": "SELECT 1 FROM orders WHERE id::text"
         }
       ],
@@ -1152,6 +1274,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "routines.sql:10: SQL files matching this rule must not use DROP SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'DROP SCHEMA inner_schema';",
           "target": "DROP SCHEMA"
         },
         {
@@ -1159,6 +1282,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "routines.sql:12: SQL files matching this rule must not use CREATE PROCEDURE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE OR REPLACE PROCEDURE change_cluster() LANGUAGE plpgsql AS $$ BEGIN",
           "target": "CREATE PROCEDURE"
         },
         {
@@ -1166,6 +1290,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "routines.sql:13: SQL files matching this rule must not use ALTER SYSTEM",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SYSTEM SET statement_timeout = '2s';",
           "target": "ALTER SYSTEM"
         },
         {
@@ -1173,6 +1298,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "routines.sql:14: SQL files matching this rule must not use DROP DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'DROP DATABASE scratch';",
           "target": "DROP DATABASE"
         },
         {
@@ -1180,6 +1306,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "routines.sql:2: SQL files matching this rule must not use ALTER DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET statement_timeout = '1s';",
           "target": "ALTER DATABASE"
         },
         {
@@ -1187,6 +1314,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "routines.sql:3: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET LOCAL session_replication_role = replica;",
           "target": "setting:session_replication_role"
         },
         {
@@ -1194,6 +1322,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "routines.sql:4: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "PERFORM set_config('session_replication_role', 'origin', true);",
           "target": "setting:session_replication_role"
         },
         {
@@ -1201,6 +1330,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "routines.sql:5: SQL files matching this rule must not use CREATE DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'CREATE DATABASE scratch TEMPLATE template0';",
           "target": "CREATE DATABASE"
         },
         {
@@ -1208,6 +1338,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "routines.sql:7: SQL files matching this rule must not use CREATE FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE OR REPLACE FUNCTION change_schema() RETURNS void LANGUAGE plpgsql AS $$ BEGIN",
           "target": "CREATE FUNCTION"
         },
         {
@@ -1215,6 +1346,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "routines.sql:8: SQL files matching this rule must not use CREATE SCHEMA",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE SCHEMA inner_schema;",
           "target": "CREATE SCHEMA"
         },
         {
@@ -1222,6 +1354,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "routines.sql:9: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET session_replication_role = replica;",
           "target": "setting:session_replication_role"
         }
       ],
@@ -1242,6 +1375,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "settings.sql:1: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET session_replication_role = replica;",
           "target": "setting:session_replication_role"
         },
         {
@@ -1249,6 +1383,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "settings.sql:2: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET LOCAL SESSION_REPLICATION_ROLE TO replica;",
           "target": "setting:session_replication_role"
         },
         {
@@ -1256,6 +1391,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "settings.sql:3: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET SESSION session_replication_role = origin;",
           "target": "setting:session_replication_role"
         },
         {
@@ -1263,6 +1399,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "settings.sql:4: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT set_config('session_replication_role', 'replica', true);",
           "target": "setting:session_replication_role"
         },
         {
@@ -1270,6 +1407,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "settings.sql:5: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT pg_catalog.set_config('SESSION_REPLICATION_ROLE', 'origin', false);",
           "target": "setting:session_replication_role"
         },
         {
@@ -1277,6 +1415,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "settings.sql:6: SQL files matching this rule must not use ALTER DATABASE",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET session_replication_role = replica;",
           "target": "ALTER DATABASE"
         },
         {
@@ -1284,6 +1423,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "settings.sql:6: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER DATABASE app SET session_replication_role = replica;",
           "target": "setting:session_replication_role"
         },
         {
@@ -1291,6 +1431,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "settings.sql:7: SQL files matching this rule must not use ALTER SYSTEM",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SYSTEM SET session_replication_role = origin;",
           "target": "ALTER SYSTEM"
         },
         {
@@ -1298,6 +1439,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "settings.sql:7: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER SYSTEM SET session_replication_role = origin;",
           "target": "setting:session_replication_role"
         },
         {
@@ -1305,6 +1447,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "settings.sql:8: SQL matching this rule must not change PostgreSQL setting `app.guard`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET app.guard = 'disabled';",
           "target": "setting:app.guard"
         },
         {
@@ -1312,6 +1455,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "settings.sql:9: SQL matching this rule must not change PostgreSQL setting `app.guard`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT set_config('app.guard', 'enabled', false);",
           "target": "setting:app.guard"
         }
       ],
@@ -1332,6 +1476,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "setting-contexts.sql:2: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'SET LOCAL session_replication_role = replica';",
           "target": "setting:session_replication_role"
         },
         {
@@ -1339,6 +1484,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "setting-contexts.sql:3: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "EXECUTE 'SELECT set_config(''session_replication_role'', ''origin'', true)';",
           "target": "setting:session_replication_role"
         },
         {
@@ -1346,6 +1492,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "setting-contexts.sql:5: SQL files matching this rule must not use CREATE FUNCTION",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE FUNCTION change_setting() RETURNS void LANGUAGE plpgsql AS $$ BEGIN",
           "target": "CREATE FUNCTION"
         },
         {
@@ -1353,6 +1500,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "setting-contexts.sql:6: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "IF true THEN SET LOCAL session_replication_role = replica; END IF;",
           "target": "setting:session_replication_role"
         }
       ],
@@ -1373,6 +1521,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "setting-literals.sql:1: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT set_config(E'session_replication_role', 'replica', true);",
           "target": "setting:session_replication_role"
         },
         {
@@ -1380,6 +1529,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "setting-literals.sql:2: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT \"pg_catalog\".\"set_config\"($name$session_replication_role$name$, 'replica', true);",
           "target": "setting:session_replication_role"
         }
       ],
@@ -1400,6 +1550,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "timezone.sql:1: SQL matching this rule must not change PostgreSQL setting `timezone`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET TIME ZONE 'UTC';",
           "target": "setting:timezone"
         },
         {
@@ -1407,6 +1558,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "timezone.sql:2: SQL matching this rule must not change PostgreSQL setting `timezone`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET LOCAL TIME ZONE 'Europe/Paris';",
           "target": "setting:timezone"
         },
         {
@@ -1414,6 +1566,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "timezone.sql:3: SQL matching this rule must not change PostgreSQL setting `timezone`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET SESSION TIME ZONE DEFAULT;",
           "target": "setting:timezone"
         },
         {
@@ -1421,6 +1574,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "timezone.sql:4: SQL matching this rule must not change PostgreSQL setting `timezone`",
           "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET timezone = 'UTC';",
           "target": "setting:timezone"
         }
       ],

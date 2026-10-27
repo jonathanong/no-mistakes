@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/disabled.sql:2: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id) VALUES (1);",
           "target": "insert"
         }
       ],
@@ -84,6 +85,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: executed INSERT SQL is not statically recoverable",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "return query(`INSERT INTO ${table} (id) VALUES (1)`);",
           "target": "insert"
         }
       ],
@@ -116,6 +118,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "return query(`INSERT INTO items (id) VALUES (1)`);",
           "target": "insert"
         }
       ],
@@ -172,6 +175,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "app/q.ts:3: BEFORE INSERT trigger audit fires before conflict checks",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "export const insertItem = () => query(`INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);",
           "target": "insert"
         },
         {
@@ -179,6 +183,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "lib/q.ts:3: BEFORE INSERT trigger audit fires before conflict checks",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "export const insertItem = () => query(`INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);",
           "target": "insert"
         }
       ],
@@ -223,6 +228,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id) VALUES (1);",
           "target": "insert"
         }
       ],
@@ -255,6 +261,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id) VALUES (1);",
           "target": "insert"
         }
       ],
@@ -287,6 +294,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/002-insert.sql:1: BEFORE INSERT trigger audit fires before conflict checks",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;",
           "target": "insert"
         }
       ],
@@ -326,6 +334,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-idempotent-insert` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-idempotent-insert: one-off seed",
           "target": "postgres-idempotent-insert"
         }
       ],
@@ -339,6 +348,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.psql:1: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id) VALUES (1);",
           "target": "insert"
         }
       ],
@@ -359,6 +369,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: BEFORE INSERT trigger audit fires before conflict checks",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "CREATE TRIGGER t BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION audit(); INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING; DROP TRIGGER t ON items;",
           "target": "insert"
         }
       ],
@@ -391,6 +402,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "sql/001.sql:6: BEFORE INSERT trigger audit fires before conflict checks",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;",
           "target": "insert"
         }
       ],
@@ -423,6 +435,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/001.sql:2: BEFORE INSERT trigger audit fires before conflict checks",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;",
           "target": "insert"
         }
       ],
@@ -455,6 +468,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/unparseable.sql:1: INSERT could not be proven replay-safe",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "not a valid INSERT INTO statement",
           "target": "insert"
         },
         {
@@ -462,6 +476,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/unparseable.sql:1: SQL statement `not a valid INSERT INTO statement` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "not a valid INSERT INTO statement",
           "target": "not a valid INSERT INTO statement"
         }
       ],
@@ -494,6 +509,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: seen = a volatile value (now) re-applies on every replay",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id, seen) VALUES (1, now())",
           "target": "insert"
         }
       ],
@@ -514,6 +530,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/001.sql:3: ON CONFLICT DO UPDATE can re-fire trigger audit",
           "rule": "postgres-idempotent-insert",
+          "sourceLine": "INSERT INTO items (id, a, b) VALUES (1, 'x', now())",
           "target": "insert"
         }
       ],

@@ -1,0 +1,189 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "basic": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [
+        {
+          "exportKind": "type",
+          "exportName": "SharedType",
+          "file": "src/b.ts",
+          "line": 5,
+          "message": "type export `SharedType` is already exported from src/a.ts:2; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export interface SharedType {"
+        },
+        {
+          "exportKind": "value",
+          "exportName": "shared",
+          "file": "src/b.ts",
+          "line": 1,
+          "message": "value export `shared` is already exported from src/a.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export function shared() {"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "config_disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "edge_cases": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/disabled-invalid.ts",
+          "line": 1,
+          "message": "directive for `unique-exports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file unique-exports",
+          "target": "unique-exports"
+        },
+        {
+          "file": "src/invalid.ts",
+          "line": 1,
+          "message": "directive for `unique-exports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file unique-exports",
+          "target": "unique-exports"
+        }
+      ],
+      "codebase": [
+        {
+          "exportKind": "type",
+          "exportName": "DefaultShapeAlias",
+          "file": "src/default-type-b.ts",
+          "line": 1,
+          "message": "type export `DefaultShapeAlias` is already exported from src/default-type-a.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export type DefaultShapeAlias = {};"
+        },
+        {
+          "exportKind": "value",
+          "exportName": "CycleName",
+          "file": "src/cycle-explicit-b.ts",
+          "line": 1,
+          "message": "value export `CycleName` is already exported from src/cycle-explicit-a.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export { CycleName } from \"./cycle-explicit-a\";"
+        },
+        {
+          "exportKind": "value",
+          "exportName": "Hidden",
+          "file": "src/disabled-reexport.ts",
+          "line": 1,
+          "message": "value export `Hidden` is already exported from src/disabled-local.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export { Hidden } from \"./disabled-target\";"
+        },
+        {
+          "exportKind": "value",
+          "exportName": "Namespace",
+          "file": "src/namespace-b.ts",
+          "line": 1,
+          "message": "value export `Namespace` is already exported from src/namespace-a.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export const Namespace = {};"
+        },
+        {
+          "exportKind": "value",
+          "exportName": "SameLine",
+          "file": "src/same-line-b.ts",
+          "line": 1,
+          "message": "value export `SameLine` is already exported from src/same-line-a.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export const SameLine = 2;"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "path_filters": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [
+        {
+          "exportKind": "value",
+          "exportName": "shared",
+          "file": "src/b.ts",
+          "line": 1,
+          "message": "value export `shared` is already exported from src/a.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export const shared = \"b\";"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "strict": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [
+        {
+          "exportKind": "export",
+          "exportName": "Shared",
+          "file": "src/value.ts",
+          "line": 1,
+          "message": "export `Shared` is already exported from src/type.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export const Shared = 1;"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "type_value_strict": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [
+        {
+          "exportKind": "export",
+          "exportName": "Shared",
+          "file": "src/b.ts",
+          "line": 1,
+          "message": "export `Shared` is already exported from src/a.ts:1; rename or consolidate this exported API",
+          "rule": "unique-exports",
+          "sourceLine": "export type Shared = { id: string };"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

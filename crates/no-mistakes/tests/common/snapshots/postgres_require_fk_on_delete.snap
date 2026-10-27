@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "migrations/001.sql:1: foreign keys must declare an explicit ON DELETE action",
           "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "ALTER TABLE children ADD CONSTRAINT fk_children_parent FOREIGN KEY (parent_id) REFERENCES parents(id);",
           "target": "children.parent_id"
         }
       ],
@@ -48,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "migrations/001.sql:3: foreign keys must declare an explicit ON DELETE action",
           "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "parent_id uuid REFERENCES parents(id)",
           "target": "children.parent_id"
         }
       ],
@@ -80,6 +82,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "migrations/001.sql:2: foreign keys must declare an explicit ON DELETE action",
           "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "parent_id uuid REFERENCES parents(id) ON DELETE NO ACTION",
           "target": "children.parent_id"
         }
       ],
@@ -100,6 +103,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "migrations/001.sql:2: foreign keys must declare an explicit ON DELETE action",
           "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "parent_id uuid REFERENCES parents(id)",
           "target": "children.parent_id"
         }
       ],
@@ -120,6 +124,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "migrations/001.sql:3: foreign keys must declare an explicit ON DELETE action",
           "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "CREATE TABLE FKTABLE_FAIL1 (ftest1 int REFERENCES PKTABLE);",
           "target": "FKTABLE_FAIL1.ftest1"
         }
       ],

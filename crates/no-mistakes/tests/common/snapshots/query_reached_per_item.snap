@@ -1,0 +1,991 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/entry.mts",
+          "line": 41,
+          "message": "directive for `query-reached-per-item` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line query-reached-per-item -- cursor pages depend on previous page",
+          "target": "query-reached-per-item"
+        },
+        {
+          "file": "src/entry.mts",
+          "line": 44,
+          "message": "directive for `query-reached-per-item` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "read(item); // no-mistakes-disable-line query-reached-per-item -- ordered writes",
+          "target": "query-reached-per-item"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "batchAndRead",
+          "line": 54,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `batchAndRead` reaches `postgres` via transactionAndBatchCases → batchAndRead → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) batchAndRead([item]);",
+          "target": "postgres: transactionAndBatchCases → batchAndRead → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "client.read",
+          "line": 72,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `client.read` reaches `postgres` via configuredNamedMemberCallback → client.read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function configuredNamedMemberCallback(client: {read: Function}) { items.map(client.read); }",
+          "target": "postgres: configuredNamedMemberCallback → client.read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "cycle",
+          "line": 22,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `cycle` reaches `postgres` via handler → cycle → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) cycle(item);",
+          "target": "postgres: handler → cycle → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "db.read",
+          "line": 59,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `db.read` reaches `postgres` via db.read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) db.read(item);",
+          "target": "postgres: db.read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "localLookup",
+          "line": 33,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `localLookup` reaches `postgres` via callbackShapes/<anonymous:9> → localLookup → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.map(function (item) { return localLookup(item); });",
+          "target": "postgres: callbackShapes/<anonymous:9> → localLookup → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "localLookup",
+          "line": 34,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: forEach callback `localLookup` reaches `postgres` via callbackShapes → localLookup → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.forEach(localLookup);",
+          "target": "postgres: callbackShapes → localLookup → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 10,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via handler/<anonymous:1> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(items.map(item => lookup(item)));",
+          "target": "postgres: handler/<anonymous:1> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 11,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: forEach callback `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.forEach(lookup);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 12,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: flatMap callback `lookup` reaches `postgres` via handler/<anonymous:2> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.flatMap(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:2> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 13,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: filter callback `lookup` reaches `postgres` via handler/<anonymous:3> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.filter(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:3> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 14,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: some callback `lookup` reaches `postgres` via handler/<anonymous:4> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.some(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:4> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 15,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: every callback `lookup` reaches `postgres` via handler/<anonymous:5> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.every(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:5> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: reduce callback `lookup` reaches `postgres` via handler/<anonymous:6> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.reduce((value, item) => lookup(item), null);",
+          "target": "postgres: handler/<anonymous:6> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 17,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: find callback `lookup` reaches `postgres` via handler/<anonymous:7> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.find(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:7> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 19,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) promises.push(lookup(item));",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 24,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via handler/<anonymous:8> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "batch(items.map(item => lookup(item)));",
+          "target": "postgres: handler/<anonymous:8> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 39,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via callbackShapes/<anonymous:10> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "factory().map(item => lookup(item));",
+          "target": "postgres: callbackShapes/<anonymous:10> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 60,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via aliasedBatchWrapper/<anonymous:12> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function aliasedBatchWrapper() { batchAlias(items.map(item => lookup(item))); }",
+          "target": "postgres: aliasedBatchWrapper/<anonymous:12> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 63,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via shadowedBatchAlias/<anonymous:13> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "batchAlias(items.map(item => lookup(item)));",
+          "target": "postgres: shadowedBatchAlias/<anonymous:13> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 68,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `lookup` reaches `postgres` via unsupportedCallbacksAndLoopHeaders → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = read(0); i < 2; i++) lookup(i);",
+          "target": "postgres: unsupportedCallbacksAndLoopHeaders → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-in `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const key in items) lookup(key);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 70,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via repeatedCalls → lookup → inner → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCalls() { for (const item of items) { lookup(item); lookup(item); } }",
+          "target": "postgres: repeatedCalls → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 70,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via repeatedCalls → lookup → inner → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCalls() { for (const item of items) { lookup(item); lookup(item); } }",
+          "target": "postgres: repeatedCalls → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 71,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via repeatedCallbacks → lookup → inner → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCallbacks() { items.map(lookup); items.map(lookup); }",
+          "target": "postgres: repeatedCallbacks → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 71,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via repeatedCallbacks → lookup → inner → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCallbacks() { items.map(lookup); items.map(lookup); }",
+          "target": "postgres: repeatedCallbacks → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "while (items.length) { lookup(items.pop()); }",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 9,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: do `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "do { lookup(items.pop()); } while (items.length);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookupAlias",
+          "line": 74,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookupAlias` reaches `postgres` via lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.map(lookupAlias);",
+          "target": "postgres: lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookupAlias",
+          "line": 75,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: forEach callback `lookupAlias` reaches `postgres` via namedAliasCallbacks → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function namedAliasCallbacks() { items.forEach(lookupAlias); }",
+          "target": "postgres: namedAliasCallbacks → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "mixed",
+          "line": 51,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `mixed` reaches `postgres` via transactionAndBatchCases → mixed → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) mixed(tx);",
+          "target": "postgres: transactionAndBatchCases → mixed → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "transactional",
+          "line": 50,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `transactional` reaches `postgres` via transactionAndBatchCases → transactional → tx.query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) transactional(tx);",
+          "target": "postgres: transactionAndBatchCases → transactional → tx.query"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "tx.query",
+          "line": 21,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `tx.query` reaches `postgres` via handler → tx.query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) tx.query(item);",
+          "target": "postgres: handler → tx.query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "category": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "batchAndRead",
+          "line": 54,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `batchAndRead` reaches `postgres` via transactionAndBatchCases → batchAndRead → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) batchAndRead([item]);",
+          "target": "postgres: transactionAndBatchCases → batchAndRead → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "client.read",
+          "line": 72,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `client.read` reaches `postgres` via configuredNamedMemberCallback → client.read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function configuredNamedMemberCallback(client: {read: Function}) { items.map(client.read); }",
+          "target": "postgres: configuredNamedMemberCallback → client.read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "cycle",
+          "line": 22,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `cycle` reaches `postgres` via handler → cycle → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) cycle(item);",
+          "target": "postgres: handler → cycle → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "db.read",
+          "line": 59,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `db.read` reaches `postgres` via db.read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) db.read(item);",
+          "target": "postgres: db.read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "localLookup",
+          "line": 33,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `localLookup` reaches `postgres` via callbackShapes/<anonymous:9> → localLookup → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.map(function (item) { return localLookup(item); });",
+          "target": "postgres: callbackShapes/<anonymous:9> → localLookup → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "localLookup",
+          "line": 34,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: forEach callback `localLookup` reaches `postgres` via callbackShapes → localLookup → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.forEach(localLookup);",
+          "target": "postgres: callbackShapes → localLookup → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 10,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via handler/<anonymous:1> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(items.map(item => lookup(item)));",
+          "target": "postgres: handler/<anonymous:1> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 11,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: forEach callback `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.forEach(lookup);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 12,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: flatMap callback `lookup` reaches `postgres` via handler/<anonymous:2> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.flatMap(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:2> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 13,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: filter callback `lookup` reaches `postgres` via handler/<anonymous:3> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.filter(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:3> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 14,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: some callback `lookup` reaches `postgres` via handler/<anonymous:4> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.some(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:4> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 15,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: every callback `lookup` reaches `postgres` via handler/<anonymous:5> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.every(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:5> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: reduce callback `lookup` reaches `postgres` via handler/<anonymous:6> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.reduce((value, item) => lookup(item), null);",
+          "target": "postgres: handler/<anonymous:6> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 17,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: find callback `lookup` reaches `postgres` via handler/<anonymous:7> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.find(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:7> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 19,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) promises.push(lookup(item));",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 24,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via handler/<anonymous:8> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "batch(items.map(item => lookup(item)));",
+          "target": "postgres: handler/<anonymous:8> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 39,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via callbackShapes/<anonymous:10> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "factory().map(item => lookup(item));",
+          "target": "postgres: callbackShapes/<anonymous:10> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) lookup(item);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 60,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via aliasedBatchWrapper/<anonymous:12> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function aliasedBatchWrapper() { batchAlias(items.map(item => lookup(item))); }",
+          "target": "postgres: aliasedBatchWrapper/<anonymous:12> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 63,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via shadowedBatchAlias/<anonymous:13> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "batchAlias(items.map(item => lookup(item)));",
+          "target": "postgres: shadowedBatchAlias/<anonymous:13> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 68,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `lookup` reaches `postgres` via unsupportedCallbacksAndLoopHeaders → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = read(0); i < 2; i++) lookup(i);",
+          "target": "postgres: unsupportedCallbacksAndLoopHeaders → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-in `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const key in items) lookup(key);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 70,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via repeatedCalls → lookup → inner → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCalls() { for (const item of items) { lookup(item); lookup(item); } }",
+          "target": "postgres: repeatedCalls → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 70,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via repeatedCalls → lookup → inner → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCalls() { for (const item of items) { lookup(item); lookup(item); } }",
+          "target": "postgres: repeatedCalls → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 71,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via repeatedCallbacks → lookup → inner → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCallbacks() { items.map(lookup); items.map(lookup); }",
+          "target": "postgres: repeatedCallbacks → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 71,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via repeatedCallbacks → lookup → inner → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCallbacks() { items.map(lookup); items.map(lookup); }",
+          "target": "postgres: repeatedCallbacks → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "while (items.length) { lookup(items.pop()); }",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 9,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: do `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "do { lookup(items.pop()); } while (items.length);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookupAlias",
+          "line": 74,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookupAlias` reaches `postgres` via lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.map(lookupAlias);",
+          "target": "postgres: lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookupAlias",
+          "line": 75,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: forEach callback `lookupAlias` reaches `postgres` via namedAliasCallbacks → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function namedAliasCallbacks() { items.forEach(lookupAlias); }",
+          "target": "postgres: namedAliasCallbacks → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "mixed",
+          "line": 51,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `mixed` reaches `postgres` via transactionAndBatchCases → mixed → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) mixed(tx);",
+          "target": "postgres: transactionAndBatchCases → mixed → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "read",
+          "line": 57,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) read(item);",
+          "target": "postgres: read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via handler → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < items.length; i++) read(items[i]);",
+          "target": "postgres: handler → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "transactional",
+          "line": 50,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `transactional` reaches `postgres` via transactionAndBatchCases → transactional → tx.query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) transactional(tx);",
+          "target": "postgres: transactionAndBatchCases → transactional → tx.query"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "tx.query",
+          "line": 21,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `tx.query` reaches `postgres` via handler → tx.query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) tx.query(item);",
+          "target": "postgres: handler → tx.query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "batchAndRead",
+          "line": 54,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `batchAndRead` reaches `postgres` via transactionAndBatchCases → batchAndRead → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) batchAndRead([item]);",
+          "target": "postgres: transactionAndBatchCases → batchAndRead → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "client.read",
+          "line": 72,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `client.read` reaches `postgres` via configuredNamedMemberCallback → client.read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function configuredNamedMemberCallback(client: {read: Function}) { items.map(client.read); }",
+          "target": "postgres: configuredNamedMemberCallback → client.read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "cycle",
+          "line": 22,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `cycle` reaches `postgres` via handler → cycle → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) cycle(item);",
+          "target": "postgres: handler → cycle → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "db.read",
+          "line": 59,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `db.read` reaches `postgres` via db.read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) db.read(item);",
+          "target": "postgres: db.read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "localLookup",
+          "line": 33,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `localLookup` reaches `postgres` via callbackShapes/<anonymous:9> → localLookup → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.map(function (item) { return localLookup(item); });",
+          "target": "postgres: callbackShapes/<anonymous:9> → localLookup → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "localLookup",
+          "line": 34,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: forEach callback `localLookup` reaches `postgres` via callbackShapes → localLookup → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.forEach(localLookup);",
+          "target": "postgres: callbackShapes → localLookup → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 10,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via handler/<anonymous:1> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(items.map(item => lookup(item)));",
+          "target": "postgres: handler/<anonymous:1> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 11,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: forEach callback `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.forEach(lookup);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 12,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: flatMap callback `lookup` reaches `postgres` via handler/<anonymous:2> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.flatMap(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:2> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 13,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: filter callback `lookup` reaches `postgres` via handler/<anonymous:3> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.filter(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:3> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 14,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: some callback `lookup` reaches `postgres` via handler/<anonymous:4> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.some(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:4> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 15,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: every callback `lookup` reaches `postgres` via handler/<anonymous:5> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.every(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:5> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 16,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: reduce callback `lookup` reaches `postgres` via handler/<anonymous:6> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.reduce((value, item) => lookup(item), null);",
+          "target": "postgres: handler/<anonymous:6> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 17,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: find callback `lookup` reaches `postgres` via handler/<anonymous:7> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.find(item => lookup(item));",
+          "target": "postgres: handler/<anonymous:7> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 19,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) promises.push(lookup(item));",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 24,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via handler/<anonymous:8> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "batch(items.map(item => lookup(item)));",
+          "target": "postgres: handler/<anonymous:8> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 39,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via callbackShapes/<anonymous:10> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "factory().map(item => lookup(item));",
+          "target": "postgres: callbackShapes/<anonymous:10> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) lookup(item);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 60,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via aliasedBatchWrapper/<anonymous:12> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function aliasedBatchWrapper() { batchAlias(items.map(item => lookup(item))); }",
+          "target": "postgres: aliasedBatchWrapper/<anonymous:12> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 63,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via shadowedBatchAlias/<anonymous:13> → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "batchAlias(items.map(item => lookup(item)));",
+          "target": "postgres: shadowedBatchAlias/<anonymous:13> → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 68,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `lookup` reaches `postgres` via unsupportedCallbacksAndLoopHeaders → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = read(0); i < 2; i++) lookup(i);",
+          "target": "postgres: unsupportedCallbacksAndLoopHeaders → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-in `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const key in items) lookup(key);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 70,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via repeatedCalls → lookup → inner → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCalls() { for (const item of items) { lookup(item); lookup(item); } }",
+          "target": "postgres: repeatedCalls → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 70,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `lookup` reaches `postgres` via repeatedCalls → lookup → inner → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCalls() { for (const item of items) { lookup(item); lookup(item); } }",
+          "target": "postgres: repeatedCalls → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 71,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via repeatedCallbacks → lookup → inner → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCallbacks() { items.map(lookup); items.map(lookup); }",
+          "target": "postgres: repeatedCallbacks → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 71,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookup` reaches `postgres` via repeatedCallbacks → lookup → inner → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function repeatedCallbacks() { items.map(lookup); items.map(lookup); }",
+          "target": "postgres: repeatedCallbacks → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "while (items.length) { lookup(items.pop()); }",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookup",
+          "line": 9,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: do `lookup` reaches `postgres` via handler → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "do { lookup(items.pop()); } while (items.length);",
+          "target": "postgres: handler → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookupAlias",
+          "line": 74,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `lookupAlias` reaches `postgres` via lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "items.map(lookupAlias);",
+          "target": "postgres: lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "lookupAlias",
+          "line": 75,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: forEach callback `lookupAlias` reaches `postgres` via namedAliasCallbacks → lookup → inner → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "export function namedAliasCallbacks() { items.forEach(lookupAlias); }",
+          "target": "postgres: namedAliasCallbacks → lookup → inner → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "mixed",
+          "line": 51,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `mixed` reaches `postgres` via transactionAndBatchCases → mixed → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) mixed(tx);",
+          "target": "postgres: transactionAndBatchCases → mixed → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "read",
+          "line": 57,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) read(item);",
+          "target": "postgres: read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via handler → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let i = 0; i < items.length; i++) read(items[i]);",
+          "target": "postgres: handler → read"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "transactional",
+          "line": 50,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `transactional` reaches `postgres` via transactionAndBatchCases → transactional → tx.query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) transactional(tx);",
+          "target": "postgres: transactionAndBatchCases → transactional → tx.query"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "tx.query",
+          "line": 21,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `tx.query` reaches `postgres` via handler → tx.query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) tx.query(item);",
+          "target": "postgres: handler → tx.query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

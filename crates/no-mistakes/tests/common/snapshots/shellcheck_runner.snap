@@ -1,0 +1,224 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scripts/check.sh",
+          "line": 1,
+          "message": "scripts/check.sh: shellcheck analysis is incomplete: ShellCheck executable was not found; install shellcheck and make it available on PATH. This check requires ShellCheck to validate selected shell scripts.",
+          "rule": "shellcheck-runner",
+          "sourceLine": "#!/bin/sh",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scripts/next-disabled.sh",
+          "line": 1,
+          "message": "directive for `shellcheck-runner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line shellcheck-runner -- line 2 is not the file diagnostic",
+          "target": "shellcheck-runner"
+        },
+        {
+          "file": "scripts/next-disabled.sh",
+          "line": 1,
+          "message": "scripts/next-disabled.sh: shellcheck analysis is incomplete: ShellCheck executable was not found; install shellcheck and make it available on PATH. This check requires ShellCheck to validate selected shell scripts.",
+          "rule": "shellcheck-runner",
+          "sourceLine": "# no-mistakes-disable-next-line shellcheck-runner -- line 2 is not the file diagnostic",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scripts/check.sh",
+          "line": 1,
+          "message": "Install the project ShellCheck dependency.",
+          "rule": "shellcheck-runner",
+          "sourceLine": "#!/bin/sh",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scripts/next-disabled.sh",
+          "line": 1,
+          "message": "Install the project ShellCheck dependency.",
+          "rule": "shellcheck-runner",
+          "sourceLine": "# no-mistakes-disable-next-line shellcheck-runner -- line 2 is not the file diagnostic",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scripts/next-disabled.sh",
+          "line": 1,
+          "message": "directive for `shellcheck-runner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line shellcheck-runner -- line 2 is not the file diagnostic",
+          "target": "shellcheck-runner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scripts/file-disabled.sh",
+          "line": 1,
+          "message": "directive for `shellcheck-runner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file shellcheck-runner -- intentional suppression control",
+          "target": "shellcheck-runner"
+        },
+        {
+          "file": "scripts/line-disabled.sh",
+          "line": 1,
+          "message": "directive for `shellcheck-runner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-line shellcheck-runner -- diagnostic is anchored at line 1",
+          "target": "shellcheck-runner"
+        },
+        {
+          "file": "scripts/next-disabled.sh",
+          "line": 1,
+          "message": "directive for `shellcheck-runner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line shellcheck-runner -- line 2 is not the file diagnostic",
+          "target": "shellcheck-runner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_selected": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "scripts/next-disabled.sh",
+          "line": 1,
+          "message": "directive for `shellcheck-runner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line shellcheck-runner -- line 2 is not the file diagnostic",
+          "target": "shellcheck-runner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scripts/check.sh",
+          "line": 1,
+          "message": "scripts/check.sh: shellcheck analysis is incomplete: ShellCheck executable was not found; install shellcheck and make it available on PATH. This check requires ShellCheck to validate selected shell scripts.",
+          "rule": "shellcheck-runner",
+          "sourceLine": "#!/bin/sh",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scripts/next-disabled.sh",
+          "line": 1,
+          "message": "scripts/next-disabled.sh: shellcheck analysis is incomplete: ShellCheck executable was not found; install shellcheck and make it available on PATH. This check requires ShellCheck to validate selected shell scripts.",
+          "rule": "shellcheck-runner",
+          "sourceLine": "# no-mistakes-disable-next-line shellcheck-runner -- line 2 is not the file diagnostic",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "rule_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "scripts/file-disabled.sh",
+          "line": 1,
+          "message": "directive for `shellcheck-runner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file shellcheck-runner -- intentional suppression control",
+          "target": "shellcheck-runner"
+        },
+        {
+          "file": "scripts/line-disabled.sh",
+          "line": 1,
+          "message": "directive for `shellcheck-runner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-line shellcheck-runner -- diagnostic is anchored at line 1",
+          "target": "shellcheck-runner"
+        },
+        {
+          "file": "scripts/next-disabled.sh",
+          "line": 1,
+          "message": "directive for `shellcheck-runner` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line shellcheck-runner -- line 2 is not the file diagnostic",
+          "target": "shellcheck-runner"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "scoped": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scripts/check.sh",
+          "line": 1,
+          "message": "scripts/check.sh: shellcheck analysis is incomplete: ShellCheck executable was not found; install shellcheck and make it available on PATH. This check requires ShellCheck to validate selected shell scripts.",
+          "rule": "shellcheck-runner",
+          "sourceLine": "#!/bin/sh",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
