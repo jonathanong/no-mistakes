@@ -40,12 +40,10 @@ no-mistakes check --format json
 ```
 
 `no-mistakes check --include-sql-verdicts --format json` adds the opt-in SQL verdict ledger and does not change findings.
-`no-mistakes check --effort low --format json` selects low effort only for
-rules that implement it (`postgres-require-query-annotation`,
-`nextjs-redirect-destinations`, `test-no-unmocked-dynamic-imports`,
-`playwright-unique-test-ids`, `playwright-unique-html-ids`, `playwright-coverage`, `nextjs-no-caching`,
-`require-storybook-stories`, and `postgres-no-offset`);
-`max` is the default and preserves current analysis.
+`no-mistakes check --effort low --format json` requests low effort for rules
+that implement it; adoption is rule-specific and documented in each rule's
+Effort section. Examples include PostgreSQL SQL checks, Next.js checks, and
+Playwright checks. `max` is the default and preserves current analysis.
 `test-no-unmocked-dynamic-imports` at `low` accepts only a top-level static
 import, a `vi.mock` or `jest.mock` call, or a literal `require()` in setup
 files; other setup-reachability shapes follow `unanalyzable`.
@@ -60,9 +58,18 @@ and direct configuration objects; indirect settings follow `unanalyzable`.
 `require-storybook-stories` at `low` keeps direct story and configured colocated
 test coverage; coverage requiring render-chain or dynamic/mock boundary analysis
 follows `unanalyzable`.
-`postgres-no-offset` at `low` checks unescaped literal SQL directly or through
-one local const. Helpers, builders, interpolation, and unsupported executor
-forms follow `unanalyzable`; selected `.sql` files retain their existing checks.
+`postgres-no-offset` at `low` supports literal SQL and bounded helper/builder
+recovery; SQL-template interpolations in configured bind templates are values,
+not SQL text. Unsupported shapes follow `unanalyzable`, and selected `.sql`
+files retain their existing checks. See the
+[bounded helper contract](../../docs/postgres-facts/low-helper-recovery.md).
+`postgres-explicit-columns` and `postgres-required-predicates` also support
+`low` for literal SQL and the bounded helper subset; unsupported or residual
+inputs follow `unanalyzable`. See the
+[explicit-columns](../../docs/rules/postgres-explicit-columns.md#effort) and
+[required-predicates](../../docs/rules/postgres-required-predicates.md#effort)
+Effort sections and the
+[bounded helper contract](../../docs/postgres-facts/low-helper-recovery.md).
 If a low-effort rule's required partner check is missing or outside its
 configured scope, the check warns and falls back to `max` for that rule.
 JSON reports include `analysisFallbacks` for these partner fallbacks and omit
