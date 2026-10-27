@@ -44,3 +44,5 @@ import { value as shapeControl4 } from "../src/spread.mjs";
 void shapeControl4;
 import { value as shapeControl5 } from "../src/captured-property.mjs";
 void shapeControl5;
+import { value as noFactoryValue } from "../src/no-factory.mjs";
+void noFactoryValue;

@@ -162,6 +162,7 @@ fn mock_controls_check_json_snapshot() {
         ("other/local-binding.mts", "../src/local-binding.mjs"),
         ("other/optional.mts", "../src/optional.mjs"),
         ("other/reference.mts", "../src/reference.mjs"),
+        ("other/no-factory.mts", "../src/no-factory.mjs"),
         ("other/opaque-member.mts", "../src/opaque-member.mjs"),
         ("other/opaque-reference.mts", "../src/opaque-reference.mjs"),
         ("other/generator.mts", "../src/generator.mjs"),
