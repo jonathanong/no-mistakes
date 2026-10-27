@@ -100,57 +100,46 @@ fn fail_fixture_reports_issues_or_missing_shellcheck() {
 
 #[test]
 fn no_shell_files_returns_empty() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::write(root.join("readme.md"), "# Hello\n").unwrap();
+    let root = fixture_root("no-shell-files");
     let config = config_with_rule("{shellcheck: {severity: warning}}");
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty());
 }
 
 #[test]
 fn collect_shell_files_finds_sh_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture_root("collect-sh");
     let sh = root.join("setup.sh");
-    std::fs::write(&sh, "#!/bin/bash\necho hi\n").unwrap();
     let md = root.join("readme.md");
-    std::fs::write(&md, "# Title\n").unwrap();
     let opts = Options::default();
     let files = vec![sh.clone(), md];
-    let candidates = collect_shell_files(root, &opts, &files, &[]);
+    let candidates = collect_shell_files(&root, &opts, &files, &[]);
     assert_eq!(candidates, vec![sh]);
 }
 
 #[test]
 fn collect_shell_files_includes_explicit_shell_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture_root("explicit-deploy");
     let script = root.join("deploy");
-    std::fs::write(&script, "#!/bin/bash\necho deploy\n").unwrap();
     let opts = Options {
         shell_files: vec!["deploy".to_string()],
         ..Default::default()
     };
     let files = vec![];
-    let candidates = collect_shell_files(root, &opts, &files, &[]);
+    let candidates = collect_shell_files(&root, &opts, &files, &[]);
     assert_eq!(candidates, vec![script]);
 }
 
 #[test]
 fn collect_shell_files_detects_shebang_in_dir() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let scripts_dir = root.join("scripts");
-    std::fs::create_dir_all(&scripts_dir).unwrap();
-    let script = scripts_dir.join("deploy");
-    std::fs::write(&script, "#!/bin/bash\necho deploy\n").unwrap();
+    let root = fixture_root("shebang-scripts");
+    let script = root.join("scripts/deploy");
     let opts = Options {
         shebang_dirs: vec!["scripts".to_string()],
         ..Default::default()
     };
     let files = vec![script.clone()];
-    let candidates = collect_shell_files(root, &opts, &files, &[]);
+    let candidates = collect_shell_files(&root, &opts, &files, &[]);
     assert_eq!(candidates, vec![script]);
 }
 
@@ -210,45 +199,37 @@ fn collect_shell_files_with_sources_handles_root_and_target_scope() {
 
 #[test]
 fn has_bash_shebang_detects_bash() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("deploy");
-    std::fs::write(&path, "#!/bin/bash\necho hi\n").unwrap();
+    let path = fixture_root("bash-shebang").join("deploy");
     assert!(has_bash_shebang(&path));
 }
 
 #[test]
 fn has_bash_shebang_false_for_non_shell() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("script.py");
-    std::fs::write(&path, "#!/usr/bin/env python3\nprint('hi')\n").unwrap();
+    let path = fixture_root("python-shebang").join("script.py");
     assert!(!has_bash_shebang(&path));
 }
 
 #[test]
 fn check_with_files_works() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture_root("check-with-files");
     let sh = root.join("script.sh");
-    std::fs::write(&sh, "#!/bin/bash\nset -euo pipefail\necho hi\n").unwrap();
     let config = config_with_rule("{shellcheck: {severity: warning}}");
     // Should not error — may or may not have findings depending on shellcheck
-    let result = check_with_files(root, &config, &[sh]);
+    let result = check_with_files(&root, &config, &[sh]);
     assert!(result.is_ok());
 }
 
 #[test]
 fn shebang_dir_empty_string_uses_root() {
     // Exercises line 90: empty dir_rel → root.to_path_buf().
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture_root("shebang-root");
     let script = root.join("deploy");
-    std::fs::write(&script, "#!/bin/bash\necho deploy\n").unwrap();
     let opts = Options {
         shebang_dirs: vec![String::new()], // empty string → root itself
         ..Default::default()
     };
     let files = vec![script.clone()];
-    let candidates = collect_shell_files(root, &opts, &files, &[]);
+    let candidates = collect_shell_files(&root, &opts, &files, &[]);
     assert!(
         candidates.contains(&script),
         "root shebang script should be included"
@@ -258,20 +239,14 @@ fn shebang_dir_empty_string_uses_root() {
 #[test]
 fn shebang_dir_skips_file_in_wrong_parent() {
     // File not under the shebang_dir → starts_with fails → skip.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let scripts_dir = root.join("scripts");
-    let other_dir = root.join("other");
-    std::fs::create_dir_all(&scripts_dir).unwrap();
-    std::fs::create_dir_all(&other_dir).unwrap();
-    let wrong_script = other_dir.join("deploy");
-    std::fs::write(&wrong_script, "#!/bin/bash\necho deploy\n").unwrap();
+    let root = fixture_root("shebang-wrong-parent");
+    let wrong_script = root.join("other/deploy");
     let opts = Options {
         shebang_dirs: vec!["scripts".to_string()],
         ..Default::default()
     };
     let files = vec![wrong_script];
-    let candidates = collect_shell_files(root, &opts, &files, &[]);
+    let candidates = collect_shell_files(&root, &opts, &files, &[]);
     assert!(
         candidates.is_empty(),
         "file in wrong parent should be skipped"
@@ -281,18 +256,14 @@ fn shebang_dir_skips_file_in_wrong_parent() {
 #[test]
 fn shebang_dir_skips_sh_files_already_collected() {
     // Exercises line 103: .sh extension → skip in shebang_dirs loop.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let scripts_dir = root.join("scripts");
-    std::fs::create_dir_all(&scripts_dir).unwrap();
-    let sh_file = scripts_dir.join("setup.sh");
-    std::fs::write(&sh_file, "#!/bin/bash\necho hi\n").unwrap();
+    let root = fixture_root("shebang-sh-dedup");
+    let sh_file = root.join("scripts/setup.sh");
     let opts = Options {
         shebang_dirs: vec!["scripts".to_string()],
         ..Default::default()
     };
     let files = vec![sh_file.clone()];
-    let candidates = collect_shell_files(root, &opts, &files, &[]);
+    let candidates = collect_shell_files(&root, &opts, &files, &[]);
     // setup.sh was already added via the .sh extension pass; it should appear
     // exactly once (dedup ensures no duplicate).
     assert_eq!(candidates.len(), 1);
@@ -310,9 +281,8 @@ fn has_bash_shebang_returns_false_for_nonexistent_file() {
 #[test]
 fn run_shellcheck_uses_default_severity_when_empty() {
     // Exercises line 145: opts.shellcheck.severity.is_empty() → DEFAULT_SEVERITY.
-    let tmp = tempfile::tempdir().unwrap();
-    let sh = tmp.path().join("test.sh");
-    std::fs::write(&sh, "#!/bin/bash\necho hi\n").unwrap();
+    let root = fixture_root("echo-hi");
+    let sh = root.join("test.sh");
     let opts = Options {
         shellcheck: ShellcheckOptions {
             severity: String::new(), // empty → DEFAULT_SEVERITY
@@ -320,7 +290,7 @@ fn run_shellcheck_uses_default_severity_when_empty() {
         ..Default::default()
     };
     // Missing ShellCheck is a structured incomplete result, not an invocation error.
-    let result = run_shellcheck(tmp.path(), &opts, &[sh]);
+    let result = run_shellcheck(&root, &opts, &[sh]);
     assert!(result.is_ok());
 }
 
@@ -344,18 +314,14 @@ fn shebang_dir_file_with_no_parent_is_skipped() {
 #[test]
 fn shebang_dir_includes_nested_script() {
     // Exercises recursive shebang dir scanning: files in subdirs should be included.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let tools_dir = root.join("scripts/tools");
-    std::fs::create_dir_all(&tools_dir).unwrap();
-    let nested = tools_dir.join("deploy");
-    std::fs::write(&nested, "#!/bin/bash\necho deploy\n").unwrap();
+    let root = fixture_root("nested-shebang");
+    let nested = root.join("scripts/tools/deploy");
     let opts = Options {
         shebang_dirs: vec!["scripts".to_string()],
         ..Default::default()
     };
     let files = vec![nested.clone()];
-    let candidates = collect_shell_files(root, &opts, &files, &[]);
+    let candidates = collect_shell_files(&root, &opts, &files, &[]);
     assert_eq!(
         candidates,
         vec![nested],
@@ -366,22 +332,15 @@ fn shebang_dir_includes_nested_script() {
 #[test]
 fn collect_shell_files_respects_target_roots() {
     // Exercises EW60V: explicit shell_files outside target_roots should be skipped.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture_root("target-roots");
     let proj_dir = root.join("proj");
-    let other_dir = root.join("other");
-    std::fs::create_dir_all(&proj_dir).unwrap();
-    std::fs::create_dir_all(&other_dir).unwrap();
     let inside = proj_dir.join("run.sh");
-    let outside = other_dir.join("deploy");
-    std::fs::write(&inside, "#!/bin/bash\necho hi\n").unwrap();
-    std::fs::write(&outside, "#!/bin/bash\necho deploy\n").unwrap();
     let opts = Options {
         shell_files: vec!["proj/run.sh".to_string(), "other/deploy".to_string()],
         ..Default::default()
     };
     let target_roots = vec![proj_dir.clone()];
-    let candidates = collect_shell_files(root, &opts, &[], &target_roots);
+    let candidates = collect_shell_files(&root, &opts, &[], &target_roots);
     assert_eq!(
         candidates,
         vec![inside],
@@ -391,13 +350,8 @@ fn collect_shell_files_respects_target_roots() {
 
 #[test]
 fn explicit_shell_files_respect_rule_path_filters() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture_root("path-filters");
     let included = root.join("scripts/run.sh");
-    let excluded = root.join("scripts/generated.sh");
-    std::fs::create_dir_all(root.join("scripts")).unwrap();
-    std::fs::write(&included, "#!/bin/bash\necho hi\n").unwrap();
-    std::fs::write(&excluded, "#!/bin/bash\necho generated\n").unwrap();
     let opts = Options {
         shell_files: vec![
             "scripts/run.sh".to_string(),
@@ -408,9 +362,9 @@ fn explicit_shell_files_respect_rule_path_filters() {
     let mut config = config_with_rule("{shellcheck: {severity: warning}}");
     config.rules[0].exclude = vec!["scripts/generated.sh".to_string()];
     let rule_filter =
-        super::super::path_filter::RulePathFilter::new(root, &config, &config.rules[0]).unwrap();
+        super::super::path_filter::RulePathFilter::new(&root, &config, &config.rules[0]).unwrap();
 
-    let candidates = filtered_shell_files(root, &opts, &[], &[], &rule_filter);
+    let candidates = filtered_shell_files(&root, &opts, &[], &[], &rule_filter);
 
     assert_eq!(candidates, vec![included]);
 }
@@ -423,9 +377,7 @@ fn parse_affected_files_empty_stdout_returns_empty() {
 
 #[test]
 fn parse_affected_files_line_without_colon_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let sh = tmp.path().join("a.sh");
-    std::fs::write(&sh, "#!/bin/bash\n").unwrap();
+    let sh = fixture_root("parse-affected").join("a.sh");
     let stdout = "no colon here\n";
     let result = parse_affected_files(stdout, std::slice::from_ref(&sh));
     assert!(result.is_empty());
@@ -433,9 +385,7 @@ fn parse_affected_files_line_without_colon_skipped() {
 
 #[test]
 fn parse_affected_files_unknown_file_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let sh = tmp.path().join("known.sh");
-    std::fs::write(&sh, "#!/bin/bash\n").unwrap();
+    let sh = fixture_root("parse-affected").join("a.sh");
     let stdout = format!(
         "{}:1:1: warning: blah [SC2086]\n/tmp/unknown.sh:1:1: warning: blah [SC2086]\n",
         sh.display()
@@ -446,9 +396,7 @@ fn parse_affected_files_unknown_file_skipped() {
 
 #[test]
 fn parse_affected_files_deduplicates() {
-    let tmp = tempfile::tempdir().unwrap();
-    let sh = tmp.path().join("a.sh");
-    std::fs::write(&sh, "#!/bin/bash\n").unwrap();
+    let sh = fixture_root("parse-affected").join("a.sh");
     let stdout = format!(
         "{}:1:1: warning: blah [SC2086]\n{}:2:1: warning: blah2 [SC2087]\n",
         sh.display(),
@@ -461,16 +409,15 @@ fn parse_affected_files_deduplicates() {
 
 #[test]
 fn run_shellcheck_rejects_invalid_severity() {
-    let tmp = tempfile::tempdir().unwrap();
-    let sh = tmp.path().join("test.sh");
-    std::fs::write(&sh, "#!/bin/bash\necho hi\n").unwrap();
+    let root = fixture_root("echo-hi");
+    let sh = root.join("test.sh");
     let opts = Options {
         shellcheck: ShellcheckOptions {
             severity: "invalid_value".to_string(),
         },
         ..Default::default()
     };
-    let result = run_shellcheck(tmp.path(), &opts, &[sh]);
+    let result = run_shellcheck(&root, &opts, &[sh]);
     assert!(result.is_err());
     let error = result.unwrap_err().to_string();
     assert!(error.contains("invalid shellcheck severity"));

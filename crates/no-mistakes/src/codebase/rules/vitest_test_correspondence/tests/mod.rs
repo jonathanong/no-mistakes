@@ -116,24 +116,11 @@ fn source_to_test_direction_fixture_reports_untested_sources() {
 
 #[test]
 fn test_to_source_direction_ignores_duplicate_test_stems() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
-    std::fs::write(root.join("backend/mod/index.ts"), "export {};\n").unwrap();
-    std::fs::write(
-        root.join("backend/mod/index.test.ts"),
-        "test('a', () => {});\n",
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("backend/mod/index.test.tsx"),
-        "test('b', () => {});\n",
-    )
-    .unwrap();
+    let root = fixture_root("duplicate-stem");
     let config = config_with_rule(
         "{scopes: [backend], testExtensions: [\".test.ts\", \".test.tsx\"], testsDir: __tests__, direction: test-to-source}",
     );
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(
         findings.is_empty(),
         "test-to-source mode reports orphan tests only: {findings:?}"
@@ -168,85 +155,53 @@ fn declaration_files_fixture_has_no_findings() {
 
 #[test]
 fn test_file_with_corresponding_source_passes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
-    std::fs::write(root.join("backend/mod/index.mts"), "export {};\n").unwrap();
-    std::fs::write(
-        root.join("backend/mod/index.test.mts"),
-        "test('x', () => {});\n",
-    )
-    .unwrap();
+    let root = fixture_root("corresponding-mts");
     let config = config_with_rule(
         "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__}",
     );
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty());
 }
 
 #[test]
 fn test_file_without_source_fails() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
-    std::fs::write(
-        root.join("backend/mod/index.test.mts"),
-        "test('x', () => {});\n",
-    )
-    .unwrap();
+    let root = fixture_root("orphan-test-mts");
     let config = config_with_rule(
         "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__}",
     );
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("no corresponding source file"));
 }
 
 #[test]
 fn test_file_in_tests_dir_is_exempt() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend/__tests__")).unwrap();
-    std::fs::write(
-        root.join("backend/__tests__/index.test.mts"),
-        "test('x', () => {});\n",
-    )
-    .unwrap();
+    let root = fixture_root("tests-dir-exempt");
     let config = config_with_rule(
         "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__}",
     );
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty(), "tests dir files should be exempt");
 }
 
 #[test]
 fn out_of_scope_test_file_is_ignored() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("frontend/mod")).unwrap();
-    std::fs::write(
-        root.join("frontend/mod/index.test.mts"),
-        "test('x', () => {});\n",
-    )
-    .unwrap();
+    let root = fixture_root("out-of-scope");
     let config = config_with_rule(
         "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__}",
     );
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty(), "out-of-scope files should be ignored");
 }
 
 #[test]
 fn check_with_files_works() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    let root = fixture_root("orphan-test-mts");
     let test_file = root.join("backend/mod/index.test.mts");
-    std::fs::write(&test_file, "test('x', () => {});\n").unwrap();
     let config = config_with_rule(
         "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__}",
     );
-    let findings = check_with_files(root, &config, &[test_file]).unwrap();
+    let findings = check_with_files(&root, &config, &[test_file]).unwrap();
     assert_eq!(findings.len(), 1);
 }
 
@@ -306,18 +261,10 @@ fn stem_and_dir_no_slash_returns_empty_dir() {
 #[test]
 fn default_test_extensions_and_tests_dir_used_when_empty() {
     // Exercises lines 60 and 68: empty testExtensions / testsDir → defaults.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
-    std::fs::write(root.join("backend/mod/index.ts"), "export {};\n").unwrap();
-    std::fs::write(
-        root.join("backend/mod/index.test.ts"),
-        "test('x', () => {});\n",
-    )
-    .unwrap();
+    let root = fixture_root("default-extensions");
     // Empty testExtensions and testsDir → use defaults
     let config = config_with_rule("{scopes: [backend]}");
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(
         findings.is_empty(),
         "test with matching source should pass with default extensions"
@@ -329,26 +276,11 @@ fn duplicate_stem_test_files_are_flagged() {
     // Exercises lines 151-168: duplicate stem detection.
     // Two test files with the same stem in the same dir (not in __tests__)
     // should both be flagged.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
-    // Source file
-    std::fs::write(root.join("backend/mod/index.ts"), "export {};\n").unwrap();
-    // Two test files with stem "index" in the same directory
-    std::fs::write(
-        root.join("backend/mod/index.test.ts"),
-        "test('a', () => {});\n",
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("backend/mod/index.test.tsx"),
-        "test('b', () => {});\n",
-    )
-    .unwrap();
+    let root = fixture_root("duplicate-stem");
     let config = config_with_rule(
         "{scopes: [backend], testExtensions: [\".test.ts\", \".test.tsx\"], testsDir: __tests__}",
     );
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     // Both test files should be flagged for duplicate stems
     let dup_findings: Vec<_> = findings
         .iter()
@@ -398,14 +330,11 @@ fn source_candidates_cjs_extension() {
 
 #[test]
 fn source_file_without_test_fails() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
-    std::fs::write(root.join("backend/mod/index.mts"), "export {};\n").unwrap();
+    let root = fixture_root("source-without-test");
     let config = config_with_rule(
         "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__}",
     );
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("no corresponding test file"));
 }
@@ -414,18 +343,7 @@ fn source_file_without_test_fails() {
 fn non_source_extension_file_ignored_in_inverse_check() {
     // Exercises helpers.rs line 78: `return None` when file extension is not in
     // src_exts derived from test extensions.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
-    // .json file — not a source extension for .test.mts tests (src_ext = "mts")
-    std::fs::write(root.join("backend/mod/config.json"), "{}").unwrap();
-    // valid .mts source with its test
-    std::fs::write(root.join("backend/mod/index.mts"), "export {};\n").unwrap();
-    std::fs::write(
-        root.join("backend/mod/index.test.mts"),
-        "test('x', () => {});\n",
-    )
-    .unwrap();
+    let root = fixture_root("ignore-json");
     let config = config_with_rule(
         "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__}",
     );
@@ -434,7 +352,7 @@ fn non_source_extension_file_ignored_in_inverse_check() {
         root.join("backend/mod/index.mts"),
         root.join("backend/mod/index.test.mts"),
     ];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "json file should be ignored in inverse check; everything else passes"
@@ -445,13 +363,11 @@ fn non_source_extension_file_ignored_in_inverse_check() {
 fn root_level_source_file_without_test_fails() {
     // Exercises helpers.rs lines 84 and 89: dir.is_empty() branches in
     // check_source_to_test when a source file is at the root level (no sub-directory).
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture_root("root-level-source");
     // Root-level source file — relative path has no '/', so dir="" in stem_and_dir.
-    std::fs::write(root.join("root-module.ts"), "export {};\n").unwrap();
     let config = config_with_rule("{testExtensions: [\".test.ts\"], testsDir: __tests__}");
     let files = vec![root.join("root-module.ts")];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 1);
     assert!(
         findings[0].message.contains("no corresponding test file"),

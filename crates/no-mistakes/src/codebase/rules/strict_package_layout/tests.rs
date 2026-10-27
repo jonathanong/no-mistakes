@@ -271,10 +271,8 @@ fn scan_returns_empty_for_no_packages() {
 
 #[test]
 fn scan_uses_default_test_patterns_when_empty() {
-    let tmp = tempfile::tempdir().unwrap();
-    let file = tmp.path().join("pkg/index.test.ts");
-    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
-    std::fs::write(&file, "").unwrap();
+    let root = fixture("rules/strict-package-layout/default-test-pattern");
+    let file = root.join("pkg/index.test.ts");
     let opts = Options {
         test_file_patterns: vec![],
         test_dir_name: String::new(),
@@ -285,7 +283,7 @@ fn scan_uses_default_test_patterns_when_empty() {
             allowed_subdirs: vec![],
         }],
     };
-    let findings = scan(tmp.path(), &opts, &[file]);
+    let findings = scan(&root, &opts, &[file]);
     assert!(
         findings.is_empty(),
         "*.test.ts should match default pattern *.test.*"
@@ -328,12 +326,8 @@ packages:
 #[test]
 fn scan_with_absolute_package_root() {
     // Exercises spec.root.is_absolute() branch (line 85).
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let pkg = root.join("queues/email");
-    std::fs::create_dir_all(&pkg).unwrap();
-    let file = pkg.join("package.json");
-    std::fs::write(&file, "{}").unwrap();
+    let root = fixture("rules/strict-package-layout/absolute-package-root");
+    let file = root.join("queues/email/package.json");
     // Use absolute path for spec root
     let abs_queues = root.join("queues");
     let opts = Options {
@@ -345,7 +339,7 @@ fn scan_with_absolute_package_root() {
         }],
         ..Options::default()
     };
-    let findings = scan(root, &opts, &[file]);
+    let findings = scan(&root, &opts, &[file]);
     // package.json is allowed at root level — no finding
     assert!(
         findings.is_empty(),

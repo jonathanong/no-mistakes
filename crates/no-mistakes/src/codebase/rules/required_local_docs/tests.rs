@@ -141,44 +141,32 @@ fn scan_empty_roots_returns_empty() {
 
 #[test]
 fn scan_subdir_with_code_and_readme_passes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("rules/required-local-docs/scan-with-readme");
     let dir = root.join("agents/email");
-    std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join("index.mts"), "").unwrap();
-    std::fs::write(dir.join("README.md"), "# hi").unwrap();
     let files: Vec<PathBuf> = vec![dir.join("index.mts"), dir.join("README.md")];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
+    let findings = scan_with_config(&root, &NoMistakesConfig::default(), &opts, &files);
     assert!(findings.is_empty(), "unexpected findings: {findings:#?}");
 }
 
 #[test]
 fn scan_subdir_without_readme_fails() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let dir = root.join("agents/email");
-    std::fs::create_dir_all(&dir).unwrap();
-    let code_file = dir.join("index.mts");
-    std::fs::write(&code_file, "").unwrap();
+    let root = fixture("rules/required-local-docs/scan-without-readme");
+    let code_file = root.join("agents/email/index.mts");
     let files = vec![code_file];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
+    let findings = scan_with_config(&root, &NoMistakesConfig::default(), &opts, &files);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("missing README.md"));
 }
 
 #[test]
 fn scan_skips_files_directly_under_root() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let dir = root.join("agents");
-    std::fs::create_dir_all(&dir).unwrap();
-    let code_file = dir.join("top.mts");
-    std::fs::write(&code_file, "").unwrap();
+    let root = fixture("rules/required-local-docs/scan-root-file");
+    let code_file = root.join("agents/top.mts");
     let files = vec![code_file];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
+    let findings = scan_with_config(&root, &NoMistakesConfig::default(), &opts, &files);
     assert!(
         findings.is_empty(),
         "direct root children should not require docs"
@@ -187,15 +175,11 @@ fn scan_skips_files_directly_under_root() {
 
 #[test]
 fn scan_skips_test_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let dir = root.join("agents/email/__tests__");
-    std::fs::create_dir_all(&dir).unwrap();
-    let test_file = dir.join("index.test.mts");
-    std::fs::write(&test_file, "").unwrap();
+    let root = fixture("rules/required-local-docs/scan-test-file");
+    let test_file = root.join("agents/email/__tests__/index.test.mts");
     let files = vec![test_file];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
+    let findings = scan_with_config(&root, &NoMistakesConfig::default(), &opts, &files);
     assert!(
         findings.is_empty(),
         "test files should not trigger missing docs"
@@ -206,16 +190,13 @@ fn scan_skips_test_files() {
 
 #[test]
 fn doc_section_passes_when_heading_present() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("rules/required-local-docs/doc-heading-present");
     let readme = root.join("agents/email/README.md");
-    std::fs::create_dir_all(readme.parent().unwrap()).unwrap();
-    std::fs::write(&readme, "# Email\n\n## Performance\n\nFast.\n").unwrap();
     let opts = DocSectionOptions {
         glob: "agents/*/README.md".to_string(),
         required_heading: "## Performance".to_string(),
     };
-    let findings = scan_doc_section(root, &opts, &[readme]).unwrap();
+    let findings = scan_doc_section(&root, &opts, &[readme]).unwrap();
     assert!(findings.is_empty());
 }
 
@@ -284,16 +265,13 @@ fn doc_section_fails_when_heading_is_only_in_a_code_block() {
 
 #[test]
 fn doc_section_fails_when_heading_missing() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("rules/required-local-docs/doc-heading-missing");
     let readme = root.join("agents/email/README.md");
-    std::fs::create_dir_all(readme.parent().unwrap()).unwrap();
-    std::fs::write(&readme, "# Email\n\nNo perf section.\n").unwrap();
     let opts = DocSectionOptions {
         glob: "agents/*/README.md".to_string(),
         required_heading: "## Performance".to_string(),
     };
-    let findings = scan_doc_section(root, &opts, &[readme]).unwrap();
+    let findings = scan_doc_section(&root, &opts, &[readme]).unwrap();
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("missing required heading"));
 }
@@ -306,15 +284,13 @@ fn doc_section_empty_opts_returns_empty() {
 
 #[test]
 fn doc_section_skips_non_matching_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("rules/required-local-docs/doc-non-matching");
     let other = root.join("other.md");
-    std::fs::write(&other, "nothing here").unwrap();
     let opts = DocSectionOptions {
         glob: "agents/*/README.md".to_string(),
         required_heading: "## Performance".to_string(),
     };
-    let findings = scan_doc_section(root, &opts, &[other]).unwrap();
+    let findings = scan_doc_section(&root, &opts, &[other]).unwrap();
     assert!(findings.is_empty());
 }
 
@@ -407,17 +383,14 @@ fn check_required_doc_section_standalone_discovers_files() {
 fn doc_section_unreadable_file_is_skipped() {
     // Exercises Err(_) => continue (line 64): a file that matches the glob but
     // cannot be read should be silently skipped.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    // ghost.md does NOT exist on disk, so read_to_string will fail
+    let root = fixture("rules/required-local-docs/doc-unreadable");
+    // README.md does NOT exist on disk, so read_to_string will fail.
     let ghost = root.join("agents/email/README.md");
-    std::fs::create_dir_all(ghost.parent().unwrap()).unwrap();
-    // Don't write the file — it will fail to read
     let opts = DocSectionOptions {
         glob: "agents/*/README.md".to_string(),
         required_heading: "## Perf".to_string(),
     };
-    let findings = scan_doc_section(root, &opts, &[ghost]).unwrap();
+    let findings = scan_doc_section(&root, &opts, &[ghost]).unwrap();
     // The file matches the glob but reading fails → no finding emitted
     assert!(
         findings.is_empty(),
@@ -431,12 +404,8 @@ fn scan_config_uses_defaults_when_fields_empty() {
     // required_file empty → DEFAULT_REQUIRED_FILE
     // code_extensions empty → DEFAULT_CODE_EXTENSIONS
     // test_exclude_patterns empty → DEFAULT_TEST_EXCLUDE
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let dir = root.join("agents/email");
-    std::fs::create_dir_all(&dir).unwrap();
-    let code_file = dir.join("index.ts"); // .ts is in DEFAULT_CODE_EXTENSIONS
-    std::fs::write(&code_file, "").unwrap();
+    let root = fixture("rules/required-local-docs/missing-readme-ts");
+    let code_file = root.join("agents/email/index.ts"); // .ts is in DEFAULT_CODE_EXTENSIONS
     let files = vec![code_file];
     // Options with empty required_file, code_extensions, test_exclude_patterns
     let opts = Options {
@@ -445,7 +414,7 @@ fn scan_config_uses_defaults_when_fields_empty() {
         code_extensions: Vec::new(),  // → DEFAULT_CODE_EXTENSIONS
         test_exclude_patterns: Vec::new(), // → DEFAULT_TEST_EXCLUDE
     };
-    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
+    let findings = scan_with_config(&root, &NoMistakesConfig::default(), &opts, &files);
     // Should flag because README.md is missing
     assert_eq!(findings.len(), 1, "missing README.md should be flagged");
     assert!(findings[0].message.contains("README.md"));
@@ -454,11 +423,8 @@ fn scan_config_uses_defaults_when_fields_empty() {
 #[test]
 fn scan_with_absolute_root_path() {
     // Exercises root_rel.is_absolute() branch (line 138).
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("rules/required-local-docs/missing-readme-ts");
     let dir = root.join("agents/email");
-    std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join("index.ts"), "").unwrap();
     let files = vec![dir.join("index.ts")];
     // Use absolute path for root
     let abs_agents = root.join("agents");
@@ -468,7 +434,7 @@ fn scan_with_absolute_root_path() {
         code_extensions: vec!["ts".to_string()],
         test_exclude_patterns: vec!["*.test.*".to_string()],
     };
-    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
+    let findings = scan_with_config(&root, &NoMistakesConfig::default(), &opts, &files);
     assert_eq!(
         findings.len(),
         1,
@@ -478,13 +444,7 @@ fn scan_with_absolute_root_path() {
 
 #[test]
 fn doc_section_findings_sorted() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    for name in &["alpha", "beta", "gamma"] {
-        let dir = root.join(format!("agents/{name}"));
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("README.md"), "no heading").unwrap();
-    }
+    let root = fixture("rules/required-local-docs/doc-section-sorted");
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
         rule: REQUIRED_DOC_SECTION_RULE_ID.to_string(),
@@ -493,8 +453,9 @@ fn doc_section_findings_sorted() {
             .unwrap(),
         ..Default::default()
     });
-    let files = crate::codebase::ts_source::discover_files(root, &[]);
-    let findings = check_required_doc_section_with_files(root, &config, &files).unwrap();
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let findings = check_required_doc_section_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 3);
     for i in 1..findings.len() {
         assert!(findings[i - 1] <= findings[i]);
     }

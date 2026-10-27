@@ -1,0 +1,5 @@
+# node is documented here
+package:
+  engines:
+    # no-mistakes-disable-next-line version-pin-consistency
+    node: 20

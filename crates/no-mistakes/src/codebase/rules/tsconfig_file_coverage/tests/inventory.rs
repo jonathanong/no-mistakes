@@ -1,33 +1,15 @@
-fn temp_root() -> (tempfile::TempDir, PathBuf) {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(&dir.path().canonicalize().unwrap());
-    (dir, root)
-}
-
-fn write(root: &Path, rel: &str, contents: &str) -> PathBuf {
-    let path = root.join(rel);
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).unwrap();
-    }
-    std::fs::write(&path, contents).unwrap();
-    path
-}
-
 #[test]
 fn missing_tsconfig_is_silent() {
-    let (_dir, root) = temp_root();
-    let ts = write(&root, "index.ts", "export {}\n");
+    let root = fixture("missing-tsconfig");
+    let ts = root.join("index.ts");
     let findings = check_with_files(&root, &config("{}"), &[ts]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn missing_tsconfig_still_rejects_malformed_options() {
-    let (_dir, root) = temp_root();
-    let files = vec![
-        write(&root, "index.ts", "export {}\n"),
-        write(&root, "helper.json", "{}\n"),
-    ];
+    let root = fixture("malformed-options");
+    let files = vec![root.join("index.ts"), root.join("helper.json")];
     let findings = check_with_files(
         &root,
         &config(
@@ -73,12 +55,12 @@ auxiliaryConfigs:
 
 #[test]
 fn source_include_keeps_root_tsconfig_membership() {
-    let (_dir, root) = temp_root();
+    let root = fixture("source-include");
     let files = vec![
-        write(&root, "tsconfig.json", "{ \"files\": [\"src/index.ts\"] }\n"),
-        write(&root, "src/index.ts", "export {}\n"),
-        write(&root, "src/extra.ts", "export {}\n"),
-        write(&root, "scripts/scratch.ts", "export {}\n"),
+        root.join("tsconfig.json"),
+        root.join("src/index.ts"),
+        root.join("src/extra.ts"),
+        root.join("scripts/scratch.ts"),
     ];
     let mut cfg = config("{}");
     cfg.rules[0].include = vec!["src/**/*.ts".into()];
@@ -100,16 +82,12 @@ fn source_include_keeps_root_tsconfig_membership() {
 
 #[test]
 fn files_and_include_union_covers_both_sets() {
-    let (_dir, root) = temp_root();
+    let root = fixture("files-and-include");
     let files = vec![
-        write(
-            &root,
-            "tsconfig.json",
-            "{ \"files\": [\"scripts/generate.ts\"], \"include\": [\"src\"] }\n",
-        ),
-        write(&root, "src/index.ts", "export {}\n"),
-        write(&root, "scripts/generate.ts", "export {}\n"),
-        write(&root, "orphan.ts", "export {}\n"),
+        root.join("tsconfig.json"),
+        root.join("src/index.ts"),
+        root.join("scripts/generate.ts"),
+        root.join("orphan.ts"),
     ];
     let findings = check_with_files(&root, &config("{}"), &files).unwrap();
     assert!(
@@ -128,10 +106,10 @@ fn files_and_include_union_covers_both_sets() {
 
 #[test]
 fn auxiliary_only_inventory_leaves_sources_uncovered() {
-    let (_dir, root) = temp_root();
+    let root = fixture("auxiliary-only");
     let files = vec![
-        write(&root, "index.ts", "export {}\n"),
-        write(&root, "tsconfig.dependency-cruiser.json", "{}\n"),
+        root.join("index.ts"),
+        root.join("tsconfig.dependency-cruiser.json"),
     ];
     let findings = check_with_files(
         &root,
@@ -156,10 +134,10 @@ auxiliaryConfigs:
 
 #[test]
 fn missing_auxiliary_source_is_not_a_json_object() {
-    let (_dir, root) = temp_root();
+    let root = fixture("missing-auxiliary");
     let files = vec![
-        write(&root, "tsconfig.json", "{ \"include\": [\"index.ts\"] }\n"),
-        write(&root, "index.ts", "export {}\n"),
+        root.join("tsconfig.json"),
+        root.join("index.ts"),
         root.join("tsconfig.dependency-cruiser.json"),
     ];
     let findings = check_with_files(
@@ -184,11 +162,11 @@ auxiliaryConfigs:
 
 #[test]
 fn auxiliary_array_json_is_not_an_object() {
-    let (_dir, root) = temp_root();
+    let root = fixture("auxiliary-array");
     let files = vec![
-        write(&root, "tsconfig.json", "{ \"include\": [\"index.ts\"] }\n"),
-        write(&root, "index.ts", "export {}\n"),
-        write(&root, "tsconfig.dependency-cruiser.json", "[]\n"),
+        root.join("tsconfig.json"),
+        root.join("index.ts"),
+        root.join("tsconfig.dependency-cruiser.json"),
     ];
     let findings = check_with_files(
         &root,
@@ -212,11 +190,11 @@ auxiliaryConfigs:
 
 #[test]
 fn tracked_non_tsconfig_auxiliary_is_still_read() {
-    let (_dir, root) = temp_root();
+    let root = fixture("tracked-auxiliary");
     let files = vec![
-        write(&root, "tsconfig.json", "{ \"include\": [\"index.ts\"] }\n"),
-        write(&root, "index.ts", "export {}\n"),
-        write(&root, "foo.json", "{ \"include\": [\"index.ts\"] }\n"),
+        root.join("tsconfig.json"),
+        root.join("index.ts"),
+        root.join("foo.json"),
     ];
     let findings = check_with_files(
         &root,

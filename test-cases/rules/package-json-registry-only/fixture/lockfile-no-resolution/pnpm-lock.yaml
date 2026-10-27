@@ -1,0 +1,5 @@
+lockfileVersion: '9.0'
+packages:
+  my-pkg@1.0.0:
+    engines:
+      node: '>=18'
