@@ -8,5 +8,6 @@
   "array": 101,
   "deleted": 8,
   "sparse": 9,
-  "replacement": 11
+  "replacement": 11,
+  "scopeNameCount": 5000
 }

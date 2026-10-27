@@ -61,6 +61,14 @@ impl Scope {
             .map(|name| (name, &self.0.values[name]))
     }
 
+    /// Borrow an existing ordered selection without scanning or cloning names.
+    pub(super) fn cached_reference_bindings(&self) -> Option<impl Iterator<Item = &Value>> {
+        self.0
+            .reference_binding_names
+            .get()
+            .map(|names| names.iter().map(move |name| &self.0.values[name]))
+    }
+
     /// Argument/array identities remain references even when their current arena is empty.
     pub(super) fn contains_reference(&self) -> bool {
         *self

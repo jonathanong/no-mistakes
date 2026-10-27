@@ -14,8 +14,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 // No mutable recursion occurs in this scope, so prefix-only
                 // inserts commute while the order between scopes stays intact.
                 ids.extend(edges.identities.iter().copied());
+            } else if let Some(values) = scope.cached_reference_bindings() {
+                for value in values {
+                    super::hooks::record_live_binding!();
+                    self.collect_builder_value(value, &mut ids, &mut visited, &mut visit);
+                }
             } else {
                 for value in scope.values() {
+                    super::hooks::record_live_binding!();
                     self.collect_builder_value(value, &mut ids, &mut visited, &mut visit);
                 }
             }
