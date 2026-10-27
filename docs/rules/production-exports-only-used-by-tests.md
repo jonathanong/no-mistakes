@@ -73,7 +73,7 @@ consumer of the exports it provably reads. These forms are recognized:
 | --- | --- |
 | `import("./x").then((m) => m.Name)` (also a `function` callback with a sole `return m.Name`) | `Name` |
 | `import("./x").then(({ Name, Other: o }) => ...)` | `Name`, `Other` |
-| `const X = dynamic(() => import("./x"))`, `export default lazy(() => import("./x"))`, a wrapper call in JSX or as a bare statement (an expression-bodied arrow passed directly as a call argument, where the wrapper call's own result is not a member object, `await` operand, or another call's argument) | `default` |
+| `const X = dynamic(() => import("./x"))`, `export default lazy(() => import("./x"))`, a wrapper call in JSX or as a bare statement (an expression-bodied arrow passed directly as a call argument, where the wrapper call's own result, looking through parentheses, `as`, `satisfies`, `!` and type assertions, is not a member object, `await` operand, call or `new` argument, returned, or stored in a binding with such a use) | `default` |
 | `const m = await import("./x")` where every use of `m` is `m.Name` | `Name` |
 | `const { Name } = await import("./x")` | `Name` |
 
@@ -83,7 +83,12 @@ destructuring pattern, a namespace that escapes (passed to a call, exported, or
 reassigned), a callback passed by reference, a stored loader
 (`const load = () => import("./x")`), a loader whose wrapper result is chained or
 consumed (`retry(() => import("./x")).then((m) => m.X)`,
-`await wrap(() => import("./x"))`, `outer(wrap(() => import("./x")))`), a block-bodied arrow, and a dynamic import
+`(retry(() => import("./x")) as Promise<M>).then(...)`,
+`await wrap(() => import("./x"))`, `outer(wrap(() => import("./x")))`), a wrapper
+result returned (`return wrap(...)`, `() => wrap(...)`) or stored in a
+destructuring pattern or a binding that is later chained, awaited or passed
+(`const r = retry(() => import("./x")); r.then(...)`; a binding used only in JSX
+or exported keeps `default` proven), a block-bodied arrow, and a dynamic import
 sharing a line and specifier with an unproven one. A proven name the target does
 not export, or a specifier that does not resolve, is also still reported.
 Rewrite the import into one of the forms above, or use a static import.

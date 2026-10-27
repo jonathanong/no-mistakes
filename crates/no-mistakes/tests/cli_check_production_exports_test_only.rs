@@ -316,8 +316,9 @@ fn dynamic_imports_check_json_snapshot() {
     // Proven dynamic selectors (`.then` member and destructure, a loader
     // returning the import, awaited member and destructure) are production use.
     assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
-    // A computed member read, an unresolved module, a missing member and an
-    // unproven import sharing a proven import's line keep their advisories.
+    // A computed member read, an unresolved module, a missing member, an unproven
+    // import sharing a proven import's line, and a wrapper result that is
+    // parenthesized, cast or stored before being chained keep their advisories.
     let advisories = report["advisories"].as_array().unwrap();
     let mut files: Vec<_> = advisories
         .iter()
@@ -327,7 +328,9 @@ fn dynamic_imports_check_json_snapshot() {
     assert_eq!(
         files,
         [
+            "src/assigned-consumer.mts",
             "src/mixed-line.mts",
+            "src/paren-consumer.mts",
             "src/unknown-consumer.mts",
             "src/unresolved-consumer.mts",
             "src/unresolved-consumer.mts",
