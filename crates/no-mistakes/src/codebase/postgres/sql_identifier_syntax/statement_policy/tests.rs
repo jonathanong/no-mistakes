@@ -423,3 +423,5 @@ fn opaque_helper_and_unknown_carrier_keep_residual_uncertainty() {
             .any(|row| row.span == span && row.status == SqlVerdictStatus::Abstain));
     }
 }
+
+mod shared_direct;
