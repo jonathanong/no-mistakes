@@ -1,24 +1,3 @@
 # Existing inline fixture writes. This list can only shrink.
 # Remove a path in the same change that removes the last banned call from that file.
 # Adding a path fails once this file is on the base revision.
-crates/no-mistakes/src/check_discovery/preserved_roots/tests.rs
-crates/no-mistakes/src/check_discovery/tests.rs
-crates/no-mistakes/src/codebase/symbols/tests_pipeline_errors.rs
-crates/no-mistakes/src/codebase/ts_process_spawn/tests.rs
-crates/no-mistakes/src/codebase/ts_resolver/tests.rs
-crates/no-mistakes/src/codebase/ts_source/file_inventory/tests.rs
-crates/no-mistakes/src/codebase/ts_source/source_store/tests.rs
-crates/no-mistakes/src/codebase/ts_source/tests.rs
-crates/no-mistakes/src/codebase/workspaces/tests.rs
-crates/no-mistakes/src/config/tests.rs
-crates/no-mistakes/src/data_pw_query/tests.rs
-crates/no-mistakes/src/fetch/imports/tests.rs
-crates/no-mistakes/src/integration_tests/runner_config/cache/source/tests.rs
-crates/no-mistakes/src/napi_api/lockfile_diff/tests.rs
-crates/no-mistakes/src/napi_api/lockfile_diff/tests2.rs
-crates/no-mistakes/src/napi_api/tests_planning/changed_files.rs
-crates/no-mistakes/src/playwright/rules/tests.rs
-crates/no-mistakes/src/playwright/selectors/extract_app/discovery/tests.rs
-crates/no-mistakes/src/postgres_catalog/tests.rs
-crates/no-mistakes/src/react_traits/pipeline/glob/tests.rs
-crates/no-mistakes/src/routes/tests.rs

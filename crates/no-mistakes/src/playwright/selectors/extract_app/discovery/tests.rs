@@ -35,10 +35,20 @@ fn git_add_all(dir: &Path) {
     );
 }
 
-fn write(dir: &Path, path: &str, content: &str) {
-    let full = dir.join(path);
-    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
-    std::fs::write(full, content).unwrap();
+fn candidate_source(name: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/playwright/source-file-candidates")
+        .join(name)
+}
+
+fn materialized_candidates(name: &str) -> TempDir {
+    let dir = crate::test_support::materialize_saved_fixture(&candidate_source(name));
+    let gitignore = dir.path().join(".gitignore.fixture");
+    if gitignore.is_file() {
+        // `.gitignore.fixture` keeps ignored fixture files committable here.
+        std::fs::rename(gitignore, dir.path().join(".gitignore")).unwrap();
+    }
+    dir
 }
 
 /// Regression test for `source_file_candidates` walking large gitignored
@@ -51,11 +61,8 @@ fn write(dir: &Path, path: &str, content: &str) {
 /// would still be visited and returned as a candidate.
 #[test]
 fn source_file_candidates_does_not_walk_gitignored_directory() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_candidates("gitignored-directory");
     git_init(dir.path());
-    write(dir.path(), ".gitignore", "dependency-store/\n");
-    write(dir.path(), "app/page.tsx", "<div />");
-    write(dir.path(), "dependency-store/nested/trap.tsx", "<div />");
     git_add_all(dir.path());
 
     let candidates = source_file_candidates(dir.path());
@@ -72,10 +79,8 @@ fn source_file_candidates_does_not_walk_gitignored_directory() {
 /// only during a live filesystem walk.
 #[test]
 fn source_file_candidates_excludes_git_tracked_skip_dir() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_candidates("tracked-skip-dir");
     git_init(dir.path());
-    write(dir.path(), "app/page.tsx", "<div />");
-    write(dir.path(), "node_modules/pkg/page.tsx", "<div />");
     git_add_all(dir.path());
 
     let candidates = source_file_candidates(dir.path());
@@ -91,9 +96,8 @@ fn source_file_candidates_excludes_git_tracked_skip_dir() {
 /// path that cannot actually be read.
 #[test]
 fn source_file_candidates_skips_missing_git_tracked_file() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_candidates("missing-tracked");
     git_init(dir.path());
-    write(dir.path(), "app/page.tsx", "<div />");
     git_add_all(dir.path());
     std::fs::remove_file(dir.path().join("app/page.tsx")).unwrap();
 
@@ -108,9 +112,9 @@ fn source_file_candidates_skips_missing_git_tracked_file() {
 #[test]
 #[cfg(unix)]
 fn source_file_candidates_includes_git_tracked_symlink_to_file() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_candidates("symlink-target");
     git_init(dir.path());
-    write(dir.path(), "app/target.tsx", "<div />");
+    // Absolute link target is the temp copy, so the symlink is created here.
     std::os::unix::fs::symlink(
         dir.path().join("app/target.tsx"),
         dir.path().join("app/linked.tsx"),
@@ -127,9 +131,7 @@ fn source_file_candidates_includes_git_tracked_symlink_to_file() {
 /// still apply to the shared ignore-aware candidate list.
 #[test]
 fn source_file_candidates_apply_skip_dirs_outside_git_repositories() {
-    let dir = TempDir::new().unwrap();
-    write(dir.path(), "app/page.tsx", "<div />");
-    write(dir.path(), "dist/ignored.tsx", "<div />");
+    let dir = materialized_candidates("outside-git-skip-dirs");
 
     let candidates = source_file_candidates(dir.path());
 

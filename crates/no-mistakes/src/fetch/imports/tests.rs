@@ -3,6 +3,14 @@ use crate::ast;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
+fn fetch_fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/fetch")
+        .join(name)
+        .canonicalize()
+        .unwrap()
+}
+
 #[test]
 fn test_collect_runtime_imports_from_program() {
     let source = r#"
@@ -13,13 +21,8 @@ fn test_collect_runtime_imports_from_program() {
         console.log(A, B);
     "#;
 
-    let temp_dir = tempfile::tempdir().unwrap();
-    let pwd = temp_dir.path();
-    let path = pwd.join("dummy.ts");
-
-    // Create dummy files so resolve_import returns Some
-    std::fs::write(pwd.join("file_to_import.ts"), "").unwrap();
-    std::fs::write(pwd.join("unused_import.ts"), "").unwrap();
+    // Sibling files exist so resolve_import returns Some.
+    let path = fetch_fixture("runtime-import-resolution").join("dummy.ts");
 
     ast::with_program(&path, source, |program, _| {
         let mut referenced_identifiers = HashSet::new();
@@ -47,17 +50,8 @@ fn test_collect_imports_from_program() {
         export type * from './type_export_all';
     "#;
 
-    let temp_dir = tempfile::tempdir().unwrap();
-    let pwd = temp_dir.path();
-    let path = pwd.join("dummy.ts");
-
-    // Create dummy files so resolve_import returns Some
-    std::fs::write(pwd.join("runtime_import.ts"), "").unwrap();
-    std::fs::write(pwd.join("type_import.ts"), "").unwrap();
-    std::fs::write(pwd.join("runtime_export.ts"), "").unwrap();
-    std::fs::write(pwd.join("type_export.ts"), "").unwrap();
-    std::fs::write(pwd.join("runtime_export_all.ts"), "").unwrap();
-    std::fs::write(pwd.join("type_export_all.ts"), "").unwrap();
+    // Sibling files exist so resolve_import returns Some.
+    let path = fetch_fixture("import-program-resolution").join("dummy.ts");
 
     let mut import_cache = HashMap::new();
 
@@ -253,15 +247,7 @@ fn collect_imports_with_sources_reuses_the_prepared_store() {
     use crate::codebase::ts_source::{FileInventory, SourceStore};
     use std::sync::Arc;
 
-    let temp_dir = tempfile::tempdir().unwrap();
-    let pwd = temp_dir.path();
-    let path = pwd.join("dummy.ts");
-    std::fs::write(
-        &path,
-        "import { A } from './runtime_import';\nconsole.log(A);\n",
-    )
-    .unwrap();
-    std::fs::write(pwd.join("runtime_import.ts"), "").unwrap();
+    let path = fetch_fixture("prepared-import-store").join("dummy.ts");
     let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
     let store = SourceStore::new(inventory);
     let mut cache = HashMap::new();

@@ -150,11 +150,40 @@ fn local_arc_resolve_keys_match_interned_keys_by_path_bytes() {
     assert!(cache.raw_entries.get(&local).is_some());
 }
 
+// Child modules still call write(); copy saved bytes instead of creating them inline.
 fn write(path: &Path, content: &str) {
-    if let Some(p) = path.parent() {
-        std::fs::create_dir_all(p).unwrap();
+    ensure_parent(path);
+    std::fs::copy(byte_blob(content), path).unwrap();
+}
+
+fn ensure_parent(path: &Path) {
+    let Some(parent) = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+    else {
+        return;
+    };
+    if parent.exists() {
+        return;
     }
-    std::fs::write(path, content).unwrap();
+    ensure_parent(parent);
+    std::fs::create_dir(parent).unwrap();
+}
+
+fn byte_blob(content: &str) -> PathBuf {
+    let mut hash = 0xcbf29ce484222325u64;
+    for byte in content.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase/ts-resolver-byte-blobs")
+        .join(format!("{hash:016x}"));
+    assert!(
+        saved.is_file(),
+        "missing resolver byte blob for {content:?}"
+    );
+    saved
 }
 
 fn make_tsconfig(dir: &Path, paths_json: &str) -> TsConfig {

@@ -1,5 +1,4 @@
 use super::*;
-use std::fs;
 use std::process::Command;
 
 fn git_init(dir: &Path) {
@@ -34,10 +33,21 @@ fn git_add_all(dir: &Path) {
     );
 }
 
-fn write(dir: &Path, path: &str, content: &str) {
-    let full = dir.join(path);
-    fs::create_dir_all(full.parent().unwrap()).unwrap();
-    fs::write(full, content).unwrap();
+fn route_source(name: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-routes")
+        .join(name)
+        .join("fixture")
+}
+
+fn materialized_routes(name: &str) -> tempfile::TempDir {
+    let dir = crate::test_support::materialize_saved_fixture(&route_source(name));
+    let gitignore = dir.path().join(".gitignore.fixture");
+    if gitignore.is_file() {
+        // `.gitignore.fixture` keeps ignored fixture files committable here.
+        std::fs::rename(gitignore, dir.path().join(".gitignore")).unwrap();
+    }
+    dir
 }
 
 #[test]
@@ -85,13 +95,7 @@ fn test_path_to_route_pattern() {
 
 #[test]
 fn test_collect_routes() {
-    let dir = tempfile::tempdir().unwrap();
-    let app = dir.path().join("app");
-    fs::create_dir(&app).unwrap();
-    fs::write(app.join("page.tsx"), "").unwrap();
-    fs::create_dir(app.join("users")).unwrap();
-    fs::write(app.join("users/page.tsx"), "").unwrap();
-    fs::write(app.join("not-a-page.ts"), "").unwrap();
+    let app = route_source("collect-basic");
 
     let routes = collect_routes(&app, &["page"]);
     assert_eq!(routes.len(), 2);
@@ -99,7 +103,6 @@ fn test_collect_routes() {
     assert_eq!(routes[1].pattern, "/users");
 
     // Test sorting tiebreaker
-    fs::write(app.join("users/layout.tsx"), "").unwrap();
     let routes = collect_routes(&app, &["page", "layout"]);
     assert_eq!(routes.len(), 3);
 }
@@ -112,8 +115,9 @@ fn test_collect_routes_missing_root() {
 
 #[test]
 fn test_collect_routes_empty() {
-    let dir = tempfile::tempdir().unwrap();
-    let routes = collect_routes(dir.path(), &["page"]);
+    // `.gitkeep` holds this directory; git cannot store an empty one.
+    let dir = route_source("collect-empty");
+    let routes = collect_routes(&dir, &["page"]);
     assert!(routes.is_empty());
 }
 
@@ -145,11 +149,8 @@ fn dot_directories_are_excluded_from_route_scanning() {
 /// a real frontend build.
 #[test]
 fn collect_routes_does_not_walk_gitignored_directory() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialized_routes("gitignored-dependency-store");
     git_init(dir.path());
-    write(dir.path(), ".gitignore", "dependency-store/\n");
-    write(dir.path(), "app/page.tsx", "");
-    write(dir.path(), "dependency-store/nested/app/trap/page.tsx", "");
     git_add_all(dir.path());
 
     let routes = collect_routes(dir.path(), &["page"]);
@@ -168,10 +169,8 @@ fn collect_routes_does_not_walk_gitignored_directory() {
 /// it finds actually exists.
 #[test]
 fn collect_routes_excludes_git_tracked_file_missing_on_disk() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialized_routes("missing-tracked-page");
     git_init(dir.path());
-    write(dir.path(), "app/page.tsx", "");
-    write(dir.path(), "app/deleted/page.tsx", "");
     git_add_all(dir.path());
     std::fs::remove_file(dir.path().join("app/deleted/page.tsx")).unwrap();
 
@@ -195,10 +194,8 @@ fn collect_routes_excludes_git_tracked_file_missing_on_disk() {
 /// should do.
 #[test]
 fn collect_routes_excludes_dot_directories_from_git_visible_files() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialized_routes("git-tracked-dot-next");
     git_init(dir.path());
-    write(dir.path(), "app/page.tsx", "");
-    write(dir.path(), ".next/server/app/page.tsx", "");
     git_add_all(dir.path());
 
     let routes = collect_routes(dir.path(), &["page"]);
@@ -211,12 +208,10 @@ fn collect_routes_excludes_dot_directories_from_git_visible_files() {
 /// applies to the shared ignore-aware candidate list.
 #[test]
 fn collect_routes_applies_dot_dir_filter_outside_git() {
-    let dir = tempfile::tempdir().unwrap();
-    let frontend_root = dir.path().join("app");
-    write(&frontend_root, "page.tsx", "");
-    write(&frontend_root, ".hidden/page.tsx", "");
+    let dir = materialized_routes("outside-git-dot-dir");
+    let frontend_root = dir.path();
 
-    let routes = collect_routes(&frontend_root, &["page"]);
+    let routes = collect_routes(frontend_root, &["page"]);
 
     assert_eq!(routes.len(), 1);
     assert_eq!(routes[0].file, frontend_root.join("page.tsx"));

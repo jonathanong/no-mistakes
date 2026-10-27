@@ -305,10 +305,12 @@ fn git_tracked_regular_files_skip_inventory_metadata_stats() {
         inventory.len() >= 3,
         "git-index-classify fixture must contribute tracked files"
     );
-    assert!(inventory.paths().iter().all(|path| inventory
-        .classification_for_path(path)
-        .unwrap()
-        .is_lexical_file()));
+    assert!(inventory.paths().iter().all(|path| {
+        inventory
+            .classification_for_path(path)
+            .unwrap()
+            .is_lexical_file()
+    }));
     assert_eq!(
         inventory.metadata_stat_count(),
         0,
@@ -379,7 +381,9 @@ fn git_tracked_symlink_replaced_by_regular_file_uses_worktree_type() {
     std::os::unix::fs::symlink("regular.mts", &link).unwrap();
     crate::test_support::git_add_all(dir.path());
     std::fs::remove_file(&link).unwrap();
-    std::fs::write(&link, "export {}\n").unwrap();
+    // Copy a tracked regular file over the symlink. The replacement has to
+    // happen after git add, and the assertions only observe the worktree type.
+    std::fs::copy(dir.path().join("regular.mts"), &link).unwrap();
 
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
     let sources = snapshot.source_store_for(dir.path());
@@ -396,7 +400,12 @@ fn git_untracked_files_still_stat() {
     let dir = saved_ts_source("git-index-classify");
     crate::test_support::git_init(dir.path());
     crate::test_support::git_add_all(dir.path());
-    std::fs::write(dir.path().join("untracked.mts"), "export {}\n").unwrap();
+    // Created after git add so the path stays untracked. Content is not observed.
+    std::fs::copy(
+        dir.path().join("regular.mts"),
+        dir.path().join("untracked.mts"),
+    )
+    .unwrap();
 
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
     let sources = snapshot.source_store_for(dir.path());
@@ -456,8 +465,10 @@ fn git_untracked_stage_shaped_names_keep_the_literal_path() {
     let dir = saved_ts_source("git-index-classify");
     crate::test_support::git_init(dir.path());
     crate::test_support::git_add_all(dir.path());
+    // The tab in the name is the behavior under test. Copy after git add so
+    // the path stays untracked; a saved filename would be staged by git_add_all.
     let spoofed = dir.path().join("100644 abcdef 0\tactual.mts");
-    std::fs::write(&spoofed, "export {}\n").unwrap();
+    std::fs::copy(dir.path().join("regular.mts"), &spoofed).unwrap();
 
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
     let sources = snapshot.source_store_for(dir.path());

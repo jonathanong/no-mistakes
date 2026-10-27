@@ -18,6 +18,12 @@ fn setup_git_repo(root: &std::path::Path) {
         .unwrap();
 }
 
+fn saved(name: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/lockfile/napi-lockfile-diff")
+        .join(name)
+}
+
 #[test]
 fn lockfile_diff_json_impl_binary_lockfile_explicit_returns_err() {
     // Covers lines 62-65: when the explicit lockfile path is a binary format
@@ -64,15 +70,14 @@ fn lockfile_diff_json_impl_newly_added_no_head_reports_all_added() {
     // base → old_content treated as empty → all packages reported as added.
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
-    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
     setup_git_repo(root);
     std::process::Command::new("git")
         .args(["commit", "--allow-empty", "-m", "empty"])
         .current_dir(root)
         .output()
         .unwrap();
-    // Write lockfile to disk but do NOT commit it — so HEAD doesn't have it
-    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
+    // Copy the lockfile onto disk but do NOT commit it — so HEAD doesn't have it.
+    std::fs::copy(saved("lodash-4.17.21-x.yaml"), root.join("pnpm-lock.yaml")).unwrap();
     let options = format!(
         r#"{{"root": "{}", "base": "HEAD"}}"#,
         root.to_str().unwrap().replace('\\', "/")
@@ -144,11 +149,10 @@ fn git_ref_exists_is_false_for_missing_refs() {
 
 #[test]
 fn detect_lockfiles_from_head_uses_subdirectory_paths() {
-    let dir = tempfile::tempdir().unwrap();
+    // `app/` already exists in the saved tree, so the test does not create it.
+    let dir = crate::test_support::materialize_saved_fixture(&saved("app-lock"));
     let root = dir.path();
     setup_git_repo(root);
-    std::fs::create_dir_all(root.join("app")).unwrap();
-    std::fs::write(root.join("app/pnpm-lock.yaml"), "lockfileVersion: '9.0'\n").unwrap();
     std::process::Command::new("git")
         .args(["add", "app/pnpm-lock.yaml"])
         .current_dir(root)

@@ -1,9 +1,65 @@
 use super::*;
 use crate::codebase::lockfile::PackageManager;
+use crate::test_support::{git_commit_all, git_init};
+use std::path::{Path, PathBuf};
 
-// ---------------------------------------------------------------------------
-// manager_name
-// ---------------------------------------------------------------------------
+fn saved(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/lockfile/napi-lockfile-diff")
+        .join(name)
+}
+
+fn copy_lock(dir: &Path, name: &str) {
+    std::fs::copy(saved(name), dir.join("pnpm-lock.yaml")).unwrap();
+}
+
+fn materialize(name: &str) -> tempfile::TempDir {
+    crate::test_support::materialize_saved_fixture(&saved(name))
+}
+
+fn committed_lock(name: &str, message: &str) -> tempfile::TempDir {
+    let dir = tempfile::tempdir().unwrap();
+    copy_lock(dir.path(), name);
+    git_init(dir.path());
+    git_commit_all(dir.path(), message);
+    dir
+}
+
+fn invoke(root: &Path, body: &str) -> napi::Result<String> {
+    let root = root.to_str().unwrap().replace('\\', "/");
+    let json = if body.is_empty() {
+        format!(r#"{{"root": "{root}"}}"#)
+    } else {
+        format!(r#"{{"root": "{root}", {body}}}"#)
+    };
+    lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(json))
+}
+
+fn empty_commit(root: &Path) {
+    let output = std::process::Command::new("git")
+        .args([
+            "-c",
+            "user.name=no-mistakes tests",
+            "-c",
+            "user.email=no-mistakes-tests@example.invalid",
+            "commit",
+            "--allow-empty",
+            "-m",
+            "empty",
+        ])
+        .current_dir(root)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_COMMON_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
 
 #[test]
 fn manager_name_npm() {
@@ -25,30 +81,13 @@ fn manager_name_bun() {
     assert_eq!(manager_name(PackageManager::Bun), "bun");
 }
 
-// ---------------------------------------------------------------------------
-// git_show_file
-// ---------------------------------------------------------------------------
-
 #[test]
 fn git_show_file_invalid_ref_returns_none() {
     let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-
-    // Initialise a bare git repo so git commands work
-    std::process::Command::new("git")
-        .args(["init", "-b", "main"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    // Non-existent ref → None
-    let result = git_show_file(root, "nonexistent-ref-xyz", "any-file.yaml").unwrap();
+    git_init(dir.path());
+    let result = git_show_file(dir.path(), "nonexistent-ref-xyz", "any-file.yaml").unwrap();
     assert!(result.is_none());
 }
-
-// ---------------------------------------------------------------------------
-// lockfile_diff_json_impl — error paths
-// ---------------------------------------------------------------------------
 
 #[test]
 fn lockfile_diff_json_impl_invalid_json_returns_err() {
@@ -61,70 +100,16 @@ fn lockfile_diff_json_impl_invalid_json_returns_err() {
 #[test]
 fn lockfile_diff_json_impl_root_with_no_lockfiles_returns_empty_array() {
     let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-
-    // Provide a valid root that has no lockfiles at all
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD"}}"#,
-        root.to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let result = invoke(dir.path(), r#""base": "HEAD""#).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
     assert_eq!(parsed.as_array().unwrap().len(), 0);
 }
 
-// ---------------------------------------------------------------------------
-// lockfile_diff_json_impl — happy path with a real git repo
-// ---------------------------------------------------------------------------
-
-fn setup_git_repo(root: &std::path::Path) {
-    std::process::Command::new("git")
-        .args(["init", "-b", "main"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["config", "user.email", "test@test.com"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["config", "user.name", "Test"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-}
-
 #[test]
 fn lockfile_diff_json_impl_pnpm_changed_package() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-
-    let old_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    let new_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-
-    std::fs::write(root.join("pnpm-lock.yaml"), old_lock).unwrap();
-
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    // Update lockfile on disk (new content)
-    std::fs::write(root.join("pnpm-lock.yaml"), new_lock).unwrap();
-
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD"}}"#,
-        root.to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let dir = committed_lock("lodash-4.17.20-old.yaml", "initial");
+    copy_lock(dir.path(), "lodash-4.17.21-new.yaml");
+    let result = invoke(dir.path(), r#""base": "HEAD""#).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0]["manager"], "pnpm");
@@ -137,77 +122,18 @@ fn lockfile_diff_json_impl_pnpm_changed_package() {
 
 #[test]
 fn lockfile_diff_json_impl_invalid_base_returns_err() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-
-    std::fs::write(
-        root.join("pnpm-lock.yaml"),
-        "lockfileVersion: '9.0'\n\npackages:\n",
-    )
-    .unwrap();
-
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    let options = format!(
-        r#"{{"root": "{}", "base": "nonexistent-ref-xyz"}}"#,
-        root.to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
-    // git_show_file returns None → should return Err
-    assert!(result.is_err());
+    let dir = committed_lock("packages-empty.yaml", "initial");
+    // git_show_file returns None for the missing ref.
+    assert!(invoke(dir.path(), r#""base": "nonexistent-ref-xyz""#).is_err());
 }
 
 #[test]
 fn lockfile_diff_json_impl_head_option_reads_from_git() {
-    // When `head` is specified, new_content comes from git_show_file(head) instead of disk.
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-
-    let v1_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-v1}\n";
-    let v2_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-v2}\n";
-
-    std::fs::write(root.join("pnpm-lock.yaml"), v1_lock).unwrap();
-
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "v1"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    std::fs::write(root.join("pnpm-lock.yaml"), v2_lock).unwrap();
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "v2"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    // base = HEAD~1 (v1), head = HEAD (v2)
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD~1", "head": "HEAD"}}"#,
-        root.to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    // `head` reads new content from git instead of the worktree.
+    let dir = committed_lock("lodash-4.17.20-v1.yaml", "v1");
+    copy_lock(dir.path(), "lodash-4.17.21-v2.yaml");
+    git_commit_all(dir.path(), "v2");
+    let result = invoke(dir.path(), r#""base": "HEAD~1", "head": "HEAD""#).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(entries.len(), 1);
     let changed = entries[0]["changed"].as_array().unwrap();
@@ -219,31 +145,14 @@ fn lockfile_diff_json_impl_head_option_reads_from_git() {
 
 #[test]
 fn lockfile_diff_json_impl_subdirectory_root_uses_git_relative_path() {
-    // When root is a subdirectory of the git repo, git show must use a repo-relative path.
-    let dir = tempfile::tempdir().unwrap();
+    // Root is a git subdirectory, so git show must use a repo-relative path.
+    let dir = materialize("subdirectory-root");
     let root = dir.path();
-    let sub = root.join("packages").join("api");
-    std::fs::create_dir_all(&sub).unwrap();
-    let old_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    let new_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-    std::fs::write(sub.join("pnpm-lock.yaml"), old_lock).unwrap();
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::fs::write(sub.join("pnpm-lock.yaml"), new_lock).unwrap();
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD"}}"#,
-        sub.to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let sub = root.join("packages/api");
+    git_init(root);
+    git_commit_all(root, "initial");
+    copy_lock(&sub, "lodash-4.17.21-new.yaml");
+    let result = invoke(&sub, r#""base": "HEAD""#).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(
         entries.len(),
@@ -260,11 +169,7 @@ fn lockfile_diff_json_impl_subdirectory_root_uses_git_relative_path() {
 #[test]
 fn lockfile_diff_json_impl_missing_base_returns_err() {
     let dir = tempfile::tempdir().unwrap();
-    let options = format!(
-        r#"{{"root": "{}"}}"#,
-        dir.path().to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
+    let result = invoke(dir.path(), "");
     assert!(result.is_err(), "missing base should be an error");
     let err = result.unwrap_err();
     assert!(
@@ -277,40 +182,20 @@ fn lockfile_diff_json_impl_missing_base_returns_err() {
 #[test]
 fn lockfile_diff_json_impl_empty_base_returns_err() {
     let dir = tempfile::tempdir().unwrap();
-    let options = format!(
-        r#"{{"root": "{}", "base": ""}}"#,
-        dir.path().to_str().unwrap().replace('\\', "/")
+    assert!(
+        invoke(dir.path(), "\"base\": \"\"").is_err(),
+        "empty base should be an error"
     );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
-    assert!(result.is_err(), "empty base should be an error");
 }
 
 #[test]
 fn lockfile_diff_json_impl_invalid_head_returns_err() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-
-    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    // When --lockfile is explicit and head is invalid, git_show_file fails → error.
-    // Without --lockfile, detect_lockfiles_from_head silently returns empty (matches CLI behavior).
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz", "lockfile": "pnpm-lock.yaml"}}"#,
-        root.to_str().unwrap().replace('\\', "/")
+    let dir = committed_lock("lodash-4.17.20-old.yaml", "initial");
+    // Explicit lockfile plus an invalid head fails in git_show_file.
+    let result = invoke(
+        dir.path(),
+        r#""base": "HEAD", "head": "nonexistent-ref-xyz", "lockfile": "pnpm-lock.yaml""#,
     );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(
         result.is_err(),
         "invalid head ref should be an error when lockfile is explicit"
@@ -319,46 +204,16 @@ fn lockfile_diff_json_impl_invalid_head_returns_err() {
 
 #[test]
 fn lockfile_diff_json_impl_head_autodetect_new_lockfile() {
-    // When head adds a new lockfile not present on disk, detect_lockfiles_from_head finds it
-    // and base is treated as empty → all packages reported as added.
+    // Head introduces a lockfile absent at base, so every package is added.
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
-    let lock_v1 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    let lock_v2 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["commit", "--allow-empty", "-m", "empty"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::fs::write(root.join("pnpm-lock.yaml"), lock_v1).unwrap();
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "add lockfile"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::fs::write(root.join("pnpm-lock.yaml"), lock_v2).unwrap();
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "v2"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    // base = HEAD~2 (no lockfile), head = HEAD (v2) → lodash should appear as added
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD~2", "head": "HEAD"}}"#,
-        root.to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    git_init(root);
+    empty_commit(root);
+    copy_lock(root, "lodash-4.17.20-old.yaml");
+    git_commit_all(root, "add lockfile");
+    copy_lock(root, "lodash-4.17.21-new.yaml");
+    git_commit_all(root, "v2");
+    let result = invoke(root, r#""base": "HEAD~2", "head": "HEAD""#).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(
         entries.len(),
@@ -374,28 +229,11 @@ fn lockfile_diff_json_impl_head_autodetect_new_lockfile() {
 
 #[test]
 fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_err() {
-    // Without explicit lockfile, an invalid head ref is rejected before autodetection
-    // rather than silently returning an empty result.
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz"}}"#,
-        root.to_str().unwrap().replace('\\', "/")
+    let dir = committed_lock("lodash-4.17.20-old.yaml", "initial");
+    let result = invoke(
+        dir.path(),
+        r#""base": "HEAD", "head": "nonexistent-ref-xyz""#,
     );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(result.is_err(), "invalid head ref should return an error");
     assert!(
         result.unwrap_err().reason.contains("does not exist"),
@@ -405,28 +243,11 @@ fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_err() {
 
 #[test]
 fn lockfile_diff_json_impl_invalid_base_with_head_returns_err() {
-    // When head is valid but base ref is invalid, git_show_file fails for old_content.
-    // git_ref_exists returns false for the invalid base → error is returned.
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    let options = format!(
-        r#"{{"root": "{}", "base": "nonexistent-base-xyz", "head": "HEAD", "lockfile": "pnpm-lock.yaml"}}"#,
-        root.to_str().unwrap().replace('\\', "/")
+    let dir = committed_lock("lodash-4.17.20-old.yaml", "initial");
+    let result = invoke(
+        dir.path(),
+        r#""base": "nonexistent-base-xyz", "head": "HEAD", "lockfile": "pnpm-lock.yaml""#,
     );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(
         result.is_err(),
         "invalid base with head should return an error"
@@ -435,14 +256,12 @@ fn lockfile_diff_json_impl_invalid_base_with_head_returns_err() {
 
 #[test]
 fn lockfile_diff_json_impl_unknown_lockfile_name_skipped() {
-    // When an explicit lockfile path has a name not recognized by detect_manager,
-    // the entry is skipped → empty result (no error).
     let dir = tempfile::tempdir().unwrap();
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD", "lockfile": "custom-lock.txt"}}"#,
-        dir.path().to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let result = invoke(
+        dir.path(),
+        r#""base": "HEAD", "lockfile": "custom-lock.txt""#,
+    )
+    .unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert!(
         entries.is_empty(),
@@ -452,42 +271,15 @@ fn lockfile_diff_json_impl_unknown_lockfile_name_skipped() {
 
 #[test]
 fn lockfile_diff_json_impl_head_with_subdirectory_root() {
-    // When root is a git subdirectory and head is set, detect_lockfiles_from_head
-    // builds a repo-relative path (e.g. packages/api/pnpm-lock.yaml) for git show.
-    let dir = tempfile::tempdir().unwrap();
+    // Head plus a git subdirectory builds a repo-relative git show path.
+    let dir = materialize("subdirectory-root");
     let root = dir.path();
-    let sub = root.join("packages").join("api");
-    std::fs::create_dir_all(&sub).unwrap();
-    let v1 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    let v2 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-    std::fs::write(sub.join("pnpm-lock.yaml"), v1).unwrap();
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "v1"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::fs::write(sub.join("pnpm-lock.yaml"), v2).unwrap();
-    std::process::Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "v2"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD~1", "head": "HEAD"}}"#,
-        sub.to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let sub = root.join("packages/api");
+    git_init(root);
+    git_commit_all(root, "v1");
+    copy_lock(&sub, "lodash-4.17.21-new.yaml");
+    git_commit_all(root, "v2");
+    let result = invoke(&sub, r#""base": "HEAD~1", "head": "HEAD""#).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(
         entries.len(),
@@ -503,38 +295,14 @@ fn lockfile_diff_json_impl_head_with_subdirectory_root() {
 
 #[test]
 fn lockfile_diff_json_impl_deleted_lockfile_at_head_reports_removed() {
-    // When head is valid but the lockfile was deleted, new content is empty
-    // and all previously locked packages should be reported as removed.
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
-    setup_git_repo(root);
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["rm", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "delete-lock"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD~1", "head": "HEAD", "lockfile": "pnpm-lock.yaml"}}"#,
-        root.to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let dir = committed_lock("lodash-4.17.20-old.yaml", "initial");
+    std::fs::remove_file(dir.path().join("pnpm-lock.yaml")).unwrap();
+    git_commit_all(dir.path(), "delete-lock");
+    let result = invoke(
+        dir.path(),
+        r#""base": "HEAD~1", "head": "HEAD", "lockfile": "pnpm-lock.yaml""#,
+    )
+    .unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(
         entries.len(),

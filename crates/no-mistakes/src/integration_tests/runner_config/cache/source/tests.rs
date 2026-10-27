@@ -16,19 +16,24 @@ fn with_cached_sources<T>(
     result
 }
 
+fn cache_source_fixture(name: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/integration-tests")
+        .join(name)
+        .join("fixture")
+}
+
 #[test]
 fn read_request_source_without_cache_reads_and_errors() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("cfg.ts");
-    std::fs::write(&path, "export {}").unwrap();
+    let dir = cache_source_fixture("read-request-source-without-cache");
+    let path = dir.join("cfg.ts");
     assert!(read_request_source(&path).unwrap().contains("export"));
-    assert!(read_request_source(&dir.path().join("missing.ts")).is_err());
+    assert!(read_request_source(&dir.join("missing.ts")).is_err());
 }
 
 #[test]
 fn read_request_source_with_session_surfaces_read_failures() {
-    let dir = tempfile::tempdir().unwrap();
-    let missing = dir.path().join("missing.ts");
+    let missing = cache_source_fixture("read-request-source-without-cache").join("missing.ts");
     let session = crate::codebase::analysis_session::AnalysisSession::new(None);
     let error = read_request_source_with_session(&session, &missing).unwrap_err();
     assert!(error.to_string().contains("reading"));
@@ -36,9 +41,7 @@ fn read_request_source_with_session_surfaces_read_failures() {
 
 #[test]
 fn read_request_source_uses_the_cached_source_store() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("cfg.ts");
-    std::fs::write(&path, "export const ready = 1").unwrap();
+    let path = cache_source_fixture("read-request-source-cached-store").join("cfg.ts");
     let inventory =
         crate::codebase::ts_source::FileInventory::from_paths(std::slice::from_ref(&path));
     let sources = std::sync::Arc::new(crate::codebase::ts_source::SourceStore::new(

@@ -7,33 +7,30 @@ struct TestConfig {
     name: String,
 }
 
+fn config_fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/config")
+        .join(name)
+}
+
 #[test]
 fn test_load_config_yaml() {
-    let dir = tempdir().unwrap();
-    let config_path = dir.path().join("test.yaml");
-    fs::write(&config_path, "name: hello\n").unwrap();
-
-    let config: TestConfig = load_config(dir.path(), None, &["test"]).unwrap();
+    let dir = config_fixture("load-config-yaml");
+    let config: TestConfig = load_config(&dir, None, &["test"]).unwrap();
     assert_eq!(config.name, "hello");
 }
 
 #[test]
 fn test_load_config_json() {
-    let dir = tempdir().unwrap();
-    let config_path = dir.path().join("test.json");
-    fs::write(&config_path, "{\"name\": \"world\"}").unwrap();
-
-    let config: TestConfig = load_config(dir.path(), None, &["test"]).unwrap();
+    let dir = config_fixture("load-config-json");
+    let config: TestConfig = load_config(&dir, None, &["test"]).unwrap();
     assert_eq!(config.name, "world");
 }
 
 #[test]
 fn test_load_config_priority() {
-    let dir = tempdir().unwrap();
-    fs::write(dir.path().join("first.yaml"), "name: first\n").unwrap();
-    fs::write(dir.path().join("second.yaml"), "name: second\n").unwrap();
-
-    let config: TestConfig = load_config(dir.path(), None, &["first", "second"]).unwrap();
+    let dir = config_fixture("load-config-priority");
+    let config: TestConfig = load_config(&dir, None, &["first", "second"]).unwrap();
     assert_eq!(config.name, "first");
 }
 
@@ -46,12 +43,8 @@ fn test_load_config_missing_returns_default() {
 
 #[test]
 fn test_load_config_explicit() {
-    let dir = tempdir().unwrap();
-    let config_path = dir.path().join("custom.yaml");
-    fs::write(&config_path, "name: custom\n").unwrap();
-
-    let config: TestConfig =
-        load_config(dir.path(), Some(Path::new("custom.yaml")), &["test"]).unwrap();
+    let dir = config_fixture("load-config-explicit");
+    let config: TestConfig = load_config(&dir, Some(Path::new("custom.yaml")), &["test"]).unwrap();
     assert_eq!(config.name, "custom");
 }
 
@@ -83,11 +76,8 @@ fn pass5a_legacy_visible_loader_matches_discovery_and_honors_explicit_ignored_co
 
 #[test]
 fn test_load_config_multiple_error() {
-    let dir = tempdir().unwrap();
-    fs::write(dir.path().join("test.yaml"), "name: a\n").unwrap();
-    fs::write(dir.path().join("test.json"), "{\"name\": \"b\"}").unwrap();
-
-    let err = load_config::<TestConfig>(dir.path(), None, &["test"])
+    let dir = config_fixture("load-config-multiple-error");
+    let err = load_config::<TestConfig>(&dir, None, &["test"])
         .err()
         .unwrap();
     assert!(err.to_string().contains("multiple config files found"));
@@ -95,11 +85,8 @@ fn test_load_config_multiple_error() {
 
 #[test]
 fn test_parse_config_jsonc() {
-    let dir = tempdir().unwrap();
-    let config_path = dir.path().join("test.jsonc");
-    fs::write(&config_path, "{\n  // comment\n  \"name\": \"jsonc\"\n}").unwrap();
-
-    let config: TestConfig = load_config(dir.path(), None, &["test"]).unwrap();
+    let dir = config_fixture("load-config-jsonc");
+    let config: TestConfig = load_config(&dir, None, &["test"]).unwrap();
     assert_eq!(config.name, "jsonc");
 }
 
@@ -121,13 +108,11 @@ fn test_load_config_explicit_missing() {
 
 #[test]
 fn test_load_config_read_error() {
-    let dir = tempdir().unwrap();
-    let path = dir.path().join("test.yaml");
-    fs::create_dir(&path).unwrap(); // Dir instead of file will cause read error
-
+    // `test.yaml` is a directory, so the explicit path fails as a read.
     // Automatic discovery only considers visible files. Use an explicit path
     // to retain coverage for propagating a read error from a directory.
-    let err = load_config::<TestConfig>(dir.path(), Some(Path::new("test.yaml")), &["test"])
+    let dir = config_fixture("load-config-read-error");
+    let err = load_config::<TestConfig>(&dir, Some(Path::new("test.yaml")), &["test"])
         .err()
         .unwrap();
     assert!(err.to_string().contains("directory") || err.to_string().contains("failed"));
