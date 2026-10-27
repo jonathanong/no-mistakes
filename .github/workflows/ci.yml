@@ -549,6 +549,10 @@ jobs:
           cargo test --locked -p no-mistakes --test suite_cli_postgres cli_postgres_snapshot_
           cargo test --locked -p no-mistakes --test suite_cli_postgres cli_mrf_snapshot_
           cargo test --locked -p no-mistakes --test suite_cli_package_config cli_pkgcfg_snapshot_
+          # Small rule subset (incl. shellcheck empty-PATH) checks sourceLine
+          # determinism natively; it is linked into suite_cli_package_config
+          # so suite_cli_rules is still not compiled here.
+          cargo test --locked -p no-mistakes --test suite_cli_package_config cli_rrb_snapshot_
 
       - name: Run native CLI smoke test
         timeout-minutes: 2

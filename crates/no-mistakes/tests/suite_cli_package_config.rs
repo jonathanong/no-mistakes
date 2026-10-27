@@ -2,6 +2,10 @@
 
 #[path = "common/check_json_snapshot.rs"]
 mod check_json_snapshot;
+// Cross-OS subset of the rule snapshots: the native Windows and macOS jobs run
+// `cli_rrb_snapshot_` here without compiling `suite_cli_rules`.
+#[path = "common/check_json_case.rs"]
+mod check_json_case;
 
 #[path = "cli_pkgcfg_snapshot_config_path_references.rs"]
 mod cli_pkgcfg_snapshot_config_path_references;
@@ -35,3 +39,13 @@ mod cli_pkgcfg_snapshot_tsconfig_gate_coverage;
 mod cli_pkgcfg_snapshot_version_pin_consistency;
 #[path = "cli_pkgcfg_snapshot_workspace_package_cycles.rs"]
 mod cli_pkgcfg_snapshot_workspace_package_cycles;
+#[path = "cli_rrb_snapshot_lexical.rs"]
+mod cli_rrb_snapshot_lexical;
+#[path = "cli_rrb_snapshot_playwright.rs"]
+mod cli_rrb_snapshot_playwright;
+#[path = "cli_rrb_snapshot_shellcheck.rs"]
+mod cli_rrb_snapshot_shellcheck;
+
+// Unit tests for the shared `sourceLine` helper run in this suite only.
+#[path = "common/check_json_source_lines_tests.rs"]
+mod check_json_source_lines_tests;

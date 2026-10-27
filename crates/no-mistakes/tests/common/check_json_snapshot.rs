@@ -12,7 +12,7 @@
 //! snapshots diverge.
 
 #[path = "check_json_source_lines.rs"]
-mod source_lines;
+pub mod source_lines;
 
 use serde_json::Value;
 use std::path::{Path, PathBuf};
