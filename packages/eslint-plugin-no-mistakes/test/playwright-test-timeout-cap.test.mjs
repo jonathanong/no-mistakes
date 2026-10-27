@@ -214,6 +214,61 @@ describe(rule, () => {
       ],
     );
   });
+  it("does not crash on a computed call keyed by a null initializer", () => {
+    const code = fixture(`${rule}/null-computed-key.ts`);
+    const reported = (option) =>
+      lint(
+        code,
+        { [`no-mistakes/${rule}`]: option ? ["error", option] : "error" },
+        "null-computed-key.ts",
+      )
+        .map(({ line, messageId }) => [line, messageId])
+        .sort((a, b) => a[0] - b[0] || a[1].localeCompare(b[1]));
+    const timeouts = [
+      [25, "timeout"],
+      [26, "timeout"],
+      [27, "timeout"],
+    ];
+    assert.deepEqual(reported(), timeouts);
+    assert.deepEqual(reported({ unknownValues: "finding" }), [...timeouts, [30, "unknown"]]);
+    const root = resolve(__dirname, `../../../test-cases/eslint-snippets/fixture/${rule}`);
+    for (let run = 0; run < 2; run += 1) {
+      const oxlint = spawnSync(
+        process.execPath,
+        [
+          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+          "--config",
+          resolve(root, ".oxlintrc.json"),
+          "--format",
+          "json",
+          resolve(root, "null-computed-key.ts"),
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(oxlint.status, 1, oxlint.stderr);
+      assert.equal(oxlint.stdout.includes("Error running JS plugin"), false);
+      const runtime =
+        "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.";
+      assert.deepEqual(
+        JSON.parse(oxlint.stdout)
+          .diagnostics.filter((item) => item.code?.includes(rule))
+          .map((item) => [item.labels[0].span.line, item.message])
+          .sort((a, b) => a[0] - b[0]),
+        [
+          [25, runtime],
+          [26, runtime],
+          [
+            27,
+            "Playwright project timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          ],
+          [
+            30,
+            "Playwright dynamic framework API cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          ],
+        ],
+      );
+    }
+  });
   it("retains exact locations through Oxlint", () => {
     const root = resolve(__dirname, `../../../test-cases/eslint-snippets/fixture/${rule}`);
     const run = spawnSync(
