@@ -20,10 +20,10 @@ pub(crate) fn audit_directives_for_path(
         return ordinary(disable_directives(&markdown_comments(source), false));
     }
     if extension.eq_ignore_ascii_case("rs") {
-        let comments = rust_comments(source);
+        let (comments, blocks) = rust_comments(source);
         let mut found = ordinary(disable_directives(&comments, false));
         found.extend(
-            rust_docs::directives(&comments)
+            rust_docs::directives(&comments, source, &blocks)
                 .into_iter()
                 .map(|item| (item, true)),
         );
@@ -75,7 +75,8 @@ fn markdown_comments(source: &str) -> String {
     String::from_utf8(output).expect("mask preserves UTF-8")
 }
 
-fn rust_comments(source: &str) -> String {
+fn rust_comments(source: &str) -> (String, Vec<std::ops::Range<usize>>) {
+    let mut docs = Vec::new();
     let bytes = source.as_bytes();
     let mut output = bytes.to_vec();
     mask(&mut output);
@@ -95,6 +96,11 @@ fn rust_comments(source: &str) -> String {
                 .unwrap_or(bytes.len() - index);
             output[start..index].copy_from_slice(&bytes[start..index]);
         } else if bytes[index..].starts_with(b"/*") {
+            let start = index;
+            let doc = bytes[index..].starts_with(b"/*!")
+                || (bytes[index..].starts_with(b"/**")
+                    && !bytes[index..].starts_with(b"/***")
+                    && !bytes[index..].starts_with(b"/**/"));
             // Keep the outer framing so a license header is still a comment
             // before a file directive; nested framing stays masked.
             output[index..index + 2].copy_from_slice(b"/*");
@@ -114,13 +120,19 @@ fn rust_comments(source: &str) -> String {
                     index += 1;
                 }
             }
+            if doc {
+                docs.push(start..index);
+            }
         } else if let Some(end) = rust_literal_end(bytes, index) {
             index = end;
         } else {
             index += 1;
         }
     }
-    String::from_utf8(output).expect("mask preserves UTF-8")
+    (
+        String::from_utf8(output).expect("mask preserves UTF-8"),
+        docs,
+    )
 }
 
 fn rust_literal_end(bytes: &[u8], start: usize) -> Option<usize> {
