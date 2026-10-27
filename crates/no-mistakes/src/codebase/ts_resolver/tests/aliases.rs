@@ -103,20 +103,18 @@ fn queue_compatibility_keeps_declaration_order_fallthrough() {
 
 #[test]
 fn resolves_alias_exact() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("resolves-alias-exact");
     let target = dir.path().join("lib").join("core.mts");
-    write(&target, "");
-    let tc = make_tsconfig(dir.path(), r#"{"@core": ["./lib/core"]}"#);
+    let tc = load_tsconfig(&dir.path().join("tsconfig.json")).unwrap();
     let importer = dir.path().join("main.mts");
     assert_eq!(resolve_import("@core", &importer, &tc), Some(target));
 }
 
 #[test]
 fn resolves_alias_wildcard() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("resolves-alias-wildcard");
     let target = dir.path().join("utils").join("helpers.mts");
-    write(&target, "");
-    let tc = make_tsconfig(dir.path(), r#"{"@utils/*": ["./utils/*"]}"#);
+    let tc = load_tsconfig(&dir.path().join("tsconfig.json")).unwrap();
     let importer = dir.path().join("main.mts");
     assert_eq!(
         resolve_import("@utils/helpers", &importer, &tc),
@@ -126,10 +124,9 @@ fn resolves_alias_wildcard() {
 
 #[test]
 fn alias_wildcard_with_subpath() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("alias-wildcard-with-subpath");
     let target = dir.path().join("systems").join("emails").join("queues.mts");
-    write(&target, "");
-    let tc = make_tsconfig(dir.path(), r#"{"@systems/*": ["./systems/*"]}"#);
+    let tc = load_tsconfig(&dir.path().join("tsconfig.json")).unwrap();
     let importer = dir.path().join("main.mts");
     assert_eq!(
         resolve_import("@systems/emails/queues", &importer, &tc),
@@ -139,15 +136,15 @@ fn alias_wildcard_with_subpath() {
 
 #[test]
 fn alias_nonexistent_returns_none() {
-    let dir = TempDir::new().unwrap();
-    let tc = make_tsconfig(dir.path(), r#"{"@utils/*": ["./utils/*"]}"#);
+    let dir = saved_resolver_fixture("alias-nonexistent-returns-none");
+    let tc = load_tsconfig(&dir.path().join("tsconfig.json")).unwrap();
     let importer = dir.path().join("main.mts");
     assert!(resolve_import("@utils/ghost", &importer, &tc).is_none());
 }
 
 #[test]
 fn bare_npm_returns_none() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("bare-npm-returns-none");
     let tc = TsConfig {
         dir: dir.path().to_path_buf(),
         paths: vec![],
@@ -161,8 +158,8 @@ fn bare_npm_returns_none() {
 
 #[test]
 fn catch_all_nonexistent_returns_none() {
-    let dir = TempDir::new().unwrap();
-    let tc = make_tsconfig(dir.path(), r#"{"*": ["./*"]}"#);
+    let dir = saved_resolver_fixture("catch-all-nonexistent-returns-none");
+    let tc = load_tsconfig(&dir.path().join("tsconfig.json")).unwrap();
     let importer = dir.path().join("main.mts");
     assert!(resolve_import("some-npm-pkg", &importer, &tc).is_none());
 }

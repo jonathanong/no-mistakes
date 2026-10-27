@@ -8,6 +8,10 @@ This repository is a huge token sink. Thus, contributions are welcomed.
    - A suite whose loader reads `fixtures/<category>/<name>/` (benchmarks, N-API, test-plan, and
      some per-rule cases) keeps its cases there. Both trees hold some `rules/`, `lockfile/`, and
      `check-runner/` cases, so find the suite's loader with `rg` and add to the tree it reads.
+   - Crate-local resolver, source-discovery, and workspace cases live in readable,
+     named directories under `crates/no-mistakes/fixtures/`. Load them with
+     `crate::test_support::fixture_root`; use `materialize_saved_fixture` for an
+     isolated copy before mutating files or initializing Git.
 2. Rule output tests commit file snapshots. Review `.snap` and Vitest file-snapshot
    diffs like code. Rust `check --format json` snapshots use
    `crates/no-mistakes/tests/common/check_json_snapshot.rs`, which compares `--jobs 1`

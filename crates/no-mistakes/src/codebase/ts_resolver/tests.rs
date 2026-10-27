@@ -150,18 +150,9 @@ fn local_arc_resolve_keys_match_interned_keys_by_path_bytes() {
     assert!(cache.raw_entries.get(&local).is_some());
 }
 
-fn write(path: &Path, content: &str) {
-    if let Some(p) = path.parent() {
-        std::fs::create_dir_all(p).unwrap();
-    }
-    std::fs::write(path, content).unwrap();
-}
-
-fn make_tsconfig(dir: &Path, paths_json: &str) -> TsConfig {
-    let content = format!(r#"{{"compilerOptions": {{"paths": {}}}}}"#, paths_json);
-    let p = dir.join("tsconfig.json");
-    write(&p, &content);
-    load_tsconfig(&p).unwrap()
+fn saved_resolver_fixture(name: &str) -> TempDir {
+    let source = crate::test_support::fixture_root("ts-resolver").join(name);
+    crate::test_support::materialize_saved_fixture(&source)
 }
 
 fn fixture(name: &str) -> PathBuf {

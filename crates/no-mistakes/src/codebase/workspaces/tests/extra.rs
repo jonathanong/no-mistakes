@@ -1,6 +1,5 @@
 use super::super::*;
 use super::resolve_entry;
-use tempfile::TempDir;
 
 fn pkg(content: &str) -> PackageJson {
     serde_json::from_str(content).unwrap()
@@ -8,8 +7,7 @@ fn pkg(content: &str) -> PackageJson {
 
 #[test]
 fn workspace_globs_and_expansion_cover_empty_and_outside_paths() {
-    let dir = TempDir::new().unwrap();
-    super::write(&dir.path().join("package.json"), r#"{"name":"root"}"#);
+    let dir = super::materialize_workspace_fixture("workspace-globs-empty");
     assert!(load_workspace_globs(dir.path()).unwrap().is_empty());
     assert!(expand_workspace_globs_from_files(dir.path(), &["[".to_string()], &[]).is_empty());
 
@@ -49,31 +47,43 @@ fn workspace_globs_and_expansion_cover_empty_and_outside_paths() {
 
 #[test]
 fn resolve_entry_covers_module_main_types_and_fallbacks() {
-    let dir = TempDir::new().unwrap();
+    let dir = super::materialize_workspace_fixture("entry-resolution-module");
 
     let module_file = dir.path().join("dist/module.mjs");
-    super::write(&module_file, "");
     assert_eq!(
         resolve_entry(dir.path(), &pkg(r#"{"module":"dist/module.mjs"}"#)),
         Some(module_file)
     );
 
+    // Add each saved candidate only after the preceding entry resolution, as originally tested.
     let main_file = dir.path().join("dist/main.js");
-    super::write(&main_file, "");
+    std::fs::copy(
+        super::saved_workspace_fixture("entry-resolution-staged").join("dist/main.js"),
+        &main_file,
+    )
+    .unwrap();
     assert_eq!(
         resolve_entry(dir.path(), &pkg(r#"{"main":"dist/main.js"}"#)),
         Some(main_file)
     );
 
     let types_file = dir.path().join("dist/types.d.ts");
-    super::write(&types_file, "");
+    std::fs::copy(
+        super::saved_workspace_fixture("entry-resolution-staged").join("dist/types.d.ts"),
+        &types_file,
+    )
+    .unwrap();
     assert_eq!(
         resolve_entry(dir.path(), &pkg(r#"{"types":"dist/types.d.ts"}"#)),
         Some(types_file)
     );
 
     let fallback = dir.path().join("src/index.ts");
-    super::write(&fallback, "");
+    std::fs::copy(
+        super::saved_workspace_fixture("entry-resolution-staged").join("src/index.ts"),
+        &fallback,
+    )
+    .unwrap();
     assert_eq!(resolve_entry(dir.path(), &pkg(r#"{}"#)), Some(fallback));
 }
 
@@ -97,9 +107,8 @@ fn export_and_specifier_helpers_cover_unmatched_shapes() {
 
 #[test]
 fn try_resolve_appends_supported_extension() {
-    let dir = TempDir::new().unwrap();
+    let dir = super::materialize_workspace_fixture("try-resolve-extension");
     let file = dir.path().join("entry.ts");
-    super::write(&file, "");
     assert_eq!(try_resolve(&dir.path().join("entry")), Some(file));
 }
 
@@ -231,21 +240,8 @@ fn git_add_all(dir: &Path) {
 /// tree even though none of its contents are ever git-visible.
 #[test]
 fn load_does_not_walk_gitignored_directory() {
-    let dir = TempDir::new().unwrap();
+    let dir = super::materialize_workspace_fixture("gitignored-workspaces");
     git_init(dir.path());
-    super::write(&dir.path().join(".gitignore"), "packages/ignored/\n");
-    super::write(
-        &dir.path().join("package.json"),
-        r#"{"name":"root","workspaces":["packages/*"]}"#,
-    );
-    super::write(
-        &dir.path().join("packages/app/package.json"),
-        r#"{"name":"@fixtures/app"}"#,
-    );
-    super::write(
-        &dir.path().join("packages/ignored/package.json"),
-        r#"{"name":"@fixtures/trap"}"#,
-    );
     git_add_all(dir.path());
 
     let map = load(dir.path()).unwrap();
@@ -258,15 +254,7 @@ fn load_does_not_walk_gitignored_directory() {
 /// candidate list.
 #[test]
 fn load_discovers_workspaces_outside_git_repositories() {
-    let dir = TempDir::new().unwrap();
-    super::write(
-        &dir.path().join("package.json"),
-        r#"{"name":"root","workspaces":["packages/*"]}"#,
-    );
-    super::write(
-        &dir.path().join("packages/app/package.json"),
-        r#"{"name":"@fixtures/app"}"#,
-    );
+    let dir = super::materialize_workspace_fixture("outside-git-workspaces");
 
     let map = load(dir.path()).unwrap();
 

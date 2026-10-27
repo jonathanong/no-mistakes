@@ -30,8 +30,8 @@ time, rather than as a new native Rust-source `no-mistakes` rule.
   `ast-grep test --skip-snapshot-tests` (no `fix:` is used by either rule, so
   there is nothing to snapshot).
 - `.ast-grep/inline-fixture-write-allowlist.txt` — justified runtime exceptions.
-- `.ast-grep/inline-fixture-write-baseline.txt` — existing violations. The list
-  can only shrink.
+- `.ast-grep/inline-fixture-write-baseline.txt` — the completed migration's empty
+  baseline. Keep the file empty; it cannot grow again.
 - `.ast-grep/check-inline-fixture-writes.py` — gates the fixture-write ban.
 
 Run locally:
@@ -47,7 +47,8 @@ any finding. Pre-push and CI turn the two inline fixture-write rules off in
 that scan. The checker above is what fails a new violation. Pass the pull
 request's base commit, or `FETCH_HEAD` after the pre-push fetch of `main`. The
 first revision that adds the baseline skips the shrink check because the file
-is absent at that base.
+is absent at that base. An empty file is an existing baseline, not an absent
+one: after completion, any new baseline path fails the gate.
 
 ## Rules
 
@@ -249,10 +250,9 @@ files at runtime. Each line is `path`, `copy` or `runtime`, and a one-line
 justification. A `copy` entry may only call `create_dir_all` while copying a
 saved tree. A `runtime` entry covers permissions, locks, symlinks, concurrent
 writes, or bytes that cannot be committed. Do not add fixture content writes
-to an allowlisted file. Every other current violation is listed in
-`.ast-grep/inline-fixture-write-baseline.txt`. Delete a path only in the change
-that removes the last banned call from that file. Adding a path fails once the
-baseline exists on the base revision.
+to an allowlisted file. The completed migration leaves
+`.ast-grep/inline-fixture-write-baseline.txt` empty. Every non-allowlisted write
+now fails, and paths cannot be added back to that baseline.
 
 ## Adding more rules of this shape
 

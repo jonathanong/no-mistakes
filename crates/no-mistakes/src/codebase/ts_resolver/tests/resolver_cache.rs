@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn import_resolver_uses_visible_file_set() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("import-resolver-uses-visible-file-set");
     let target = dir.path().join("src").join("utils.mts");
     let importer = dir.path().join("src").join("main.mts");
     let tc = TsConfig {
@@ -24,7 +24,7 @@ fn import_resolver_uses_visible_file_set() {
 /// prove memoization happened. This asserts the cache is actually populated.
 #[test]
 fn import_resolver_with_visible_keeps_cache_enabled() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("import-resolver-with-visible-keeps-cache-enabled");
     let target = dir.path().join("src").join("utils.mts");
     let importer = dir.path().join("src").join("main.mts");
     let tc = TsConfig {
@@ -49,10 +49,9 @@ fn import_resolver_with_visible_keeps_cache_enabled() {
 /// `cache` would otherwise carry answers computed under different visibility.
 #[test]
 fn import_resolver_with_visible_clears_stale_cache_entries() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("import-resolver-with-visible-clears-stale-cache-entries");
     let target = normalize_path(&dir.path().join("src").join("utils.mts"));
     let importer = dir.path().join("src").join("main.mts");
-    write(&target, "");
     let tc = TsConfig {
         dir: dir.path().to_path_buf(),
         paths: vec![],
@@ -70,7 +69,7 @@ fn import_resolver_with_visible_clears_stale_cache_entries() {
 
 #[test]
 fn import_resolver_cache_reuses_present_result() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("import-resolver-cache-reuses-present-result");
     let target = normalize_path(&dir.path().join("src").join("utils.mts"));
     let importer = dir.path().join("src").join("main.mts");
     let tc = TsConfig {
@@ -90,9 +89,8 @@ fn import_resolver_cache_reuses_present_result() {
 
 #[test]
 fn import_resolver_cache_preserves_missing_result() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("import-resolver-cache-preserves-missing-result");
     let importer = dir.path().join("src").join("main.mts");
-    let target = dir.path().join("src").join("utils.mts");
     let tc = TsConfig {
         dir: dir.path().to_path_buf(),
         paths: vec![],
@@ -102,7 +100,12 @@ fn import_resolver_cache_preserves_missing_result() {
     let resolver = ImportResolver::new(&tc);
 
     assert!(resolver.resolve("./utils", &importer).is_none());
-    write(&target, "");
+    // Move saved bytes into place only after the missing result has been cached.
+    std::fs::rename(
+        dir.path().join("utils.mts"),
+        dir.path().join("src/utils.mts"),
+    )
+    .unwrap();
     assert!(resolver.resolve("./utils", &importer).is_none());
 }
 

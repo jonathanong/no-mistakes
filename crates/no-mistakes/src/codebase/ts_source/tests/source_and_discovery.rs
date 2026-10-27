@@ -100,13 +100,10 @@ fn source_helpers_cover_paths_lines_wrappers_and_property_names() {
 
 #[test]
 fn git_visible_files_include_tracked_and_untracked_non_ignored_files() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_discovery_fixture("tracked-and-untracked");
     git_init(dir.path());
-    write(dir.path(), ".gitignore", "dist/\n");
-    write(dir.path(), "src/tracked.mts", "");
-    write(dir.path(), "dist/ignored.mts", "");
-    git_add_all(dir.path());
-    write(dir.path(), "src/untracked.mts", "");
+    // Stage only the originally tracked sources; the saved untracked file stays untracked.
+    crate::test_support::git_add_force(dir.path(), &[".gitignore", "src/tracked.mts"]);
 
     let files = git_visible_files(dir.path()).unwrap();
 
@@ -331,8 +328,7 @@ fn staged_git_paths_cover_malformed_stage_payloads_and_dedup() {
 
 #[test]
 fn discover_files_falls_back_outside_git_repositories() {
-    let dir = TempDir::new().unwrap();
-    write(dir.path(), "src/main.mts", "");
+    let dir = saved_discovery_fixture("main-source");
 
     let files = discover_files(dir.path(), &[]);
 
@@ -402,9 +398,8 @@ fn discover_source_files_filters_non_ts_js_extensions() {
 
 #[test]
 fn discover_files_normalizes_dot_components() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_discovery_fixture("main-source");
     git_init(dir.path());
-    write(dir.path(), "src/main.mts", "");
     git_add_all(dir.path());
 
     let files = discover_files(&dir.path().join("."), &[]);
@@ -414,11 +409,8 @@ fn discover_files_normalizes_dot_components() {
 
 #[test]
 fn discover_files_prunes_git_visible_skip_dirs() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_discovery_fixture("git-visible-skipped-directories");
     git_init(dir.path());
-    write(dir.path(), "src/main.mts", "");
-    write(dir.path(), "node_modules/pkg/index.mts", "");
-    write(dir.path(), "dist/bundle.mts", "");
     git_add_all(dir.path());
 
     let files = discover_files(dir.path(), &[]);

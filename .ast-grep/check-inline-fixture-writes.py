@@ -12,6 +12,7 @@ baseline does not fail the raw scan. This script is the gate:
 - `copy` allowlist entries may only match `create_dir_all`
 - remaining finding paths must equal the baseline exactly
 - once the baseline exists at --base, the current path set must be a subset
+- an empty baseline at --base is final: no paths may be added again
 """
 
 from __future__ import annotations
@@ -364,6 +365,8 @@ def parse_allowlist(text: str) -> dict[str, tuple[str, str]]:
 def shrink_errors(current: set[str], previous: set[str] | None, base: str) -> list[str]:
     if previous is None:
         return []
+    if not previous:
+        return [f"baseline migration is complete at {base}; must remain empty: {path}" for path in sorted(current)]
     return [f"baseline grew relative to {base}: {path}" for path in sorted(current - previous)]
 
 
@@ -462,6 +465,11 @@ def self_test() -> None:
     assert not is_glob_test("crates/no-mistakes/src/foo/tests_planning/changed_files.rs")
     assert not is_glob_test("fixtures/demo/tests/app.rs")
     assert shrink_errors({"a.rs"}, None, "base") == []
+    assert shrink_errors(set(), {"a.rs"}, "base") == []
+    assert shrink_errors(set(), set(), "base") == []
+    assert shrink_errors({"a.rs"}, set(), "base") == [
+        "baseline migration is complete at base; must remain empty: a.rs"
+    ]
     assert shrink_errors({"a.rs"}, {"a.rs", "b.rs"}, "base") == []
     assert shrink_errors({"b.rs"}, {"a.rs"}, "base") == [
         "baseline grew relative to base: b.rs"
@@ -469,6 +477,7 @@ def self_test() -> None:
     assert call_class("std::fs::create_dir_all(&target)") == "dir"
     assert call_class("std::fs::write(path, data)") == "write"
     assert parse_list("# header\n\na.rs\nb.rs\n") == ["a.rs", "b.rs"]
+    assert parse_list("") == []
     allow = parse_allowlist("a.rs\tcopy\tCopies a saved fixture.\n")
     assert allow["a.rs"][0] == "copy"
 

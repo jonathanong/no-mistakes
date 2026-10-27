@@ -1,6 +1,5 @@
 use super::*;
 use tempfile::TempDir;
-
 impl WorkspaceMap {
     pub(crate) fn resolve_specifier_from_visible(
         &self,
@@ -62,11 +61,12 @@ fn workspace_case(name: &str) -> PathBuf {
         .join("fixture")
 }
 
-fn write(path: &Path, content: &str) {
-    if let Some(p) = path.parent() {
-        std::fs::create_dir_all(p).unwrap();
-    }
-    std::fs::write(path, content).unwrap();
+fn saved_workspace_fixture(name: &str) -> PathBuf {
+    crate::test_support::fixture_root("workspaces").join(name)
+}
+
+fn materialize_workspace_fixture(name: &str) -> TempDir {
+    crate::test_support::materialize_saved_fixture(&saved_workspace_fixture(name))
 }
 
 fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
@@ -77,7 +77,7 @@ fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
 
 #[test]
 fn no_package_json_returns_empty() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialize_workspace_fixture("no-package-json");
     let map = load(dir.path()).unwrap();
     assert!(map.packages.is_empty());
 }
@@ -273,7 +273,7 @@ fn resolve_specifier_rejects_relative_and_missing_packages() {
 
 #[test]
 fn resolve_specifier_rejects_unprefixed_subpath_without_exports() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialize_workspace_fixture("package-without-exports");
     let map = WorkspaceMap::from_packages(vec![WorkspacePackage {
         name: "@x/api".to_string(),
         dir: dir.path().to_path_buf(),

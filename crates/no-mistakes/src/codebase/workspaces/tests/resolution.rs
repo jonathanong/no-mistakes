@@ -2,9 +2,7 @@ use super::*;
 
 #[test]
 fn prefers_module_over_main() {
-    let dir = TempDir::new().unwrap();
-    write(&dir.path().join("esm.mts"), "");
-    write(&dir.path().join("cjs.js"), "");
+    let dir = super::materialize_workspace_fixture("prefers-module-over-main");
     let pkg = PackageJson {
         name: Some("pkg".to_string()),
         module: Some("esm.mts".to_string()),
@@ -17,9 +15,7 @@ fn prefers_module_over_main() {
 
 #[test]
 fn prefers_exports_over_other_entry_fields() {
-    let dir = TempDir::new().unwrap();
-    write(&dir.path().join("dist/index.js"), "");
-    write(&dir.path().join("esm.mts"), "");
+    let dir = super::materialize_workspace_fixture("prefers-exports-over-other-entry-fields");
     let pkg = PackageJson {
         exports: Some(serde_json::json!("./dist/index.js")),
         imports: None,
@@ -35,8 +31,7 @@ fn prefers_exports_over_other_entry_fields() {
 
 #[test]
 fn resolves_directory_entry_to_index_file() {
-    let dir = TempDir::new().unwrap();
-    write(&dir.path().join("dist/index.js"), "");
+    let dir = super::materialize_workspace_fixture("resolves-directory-entry-to-index-file");
     let pkg = PackageJson {
         main: Some("dist".to_string()),
         ..Default::default()
@@ -50,8 +45,7 @@ fn resolves_directory_entry_to_index_file() {
 
 #[test]
 fn falls_back_to_main_then_types() {
-    let main_dir = TempDir::new().unwrap();
-    write(&main_dir.path().join("cjs.js"), "");
+    let main_dir = super::materialize_workspace_fixture("falls-back-to-main");
     let main_pkg = PackageJson {
         main: Some("cjs.js".to_string()),
         types: Some("index.d.ts".to_string()),
@@ -61,8 +55,7 @@ fn falls_back_to_main_then_types() {
         .unwrap()
         .ends_with("cjs.js"));
 
-    let types_dir = TempDir::new().unwrap();
-    write(&types_dir.path().join("index.d.ts"), "");
+    let types_dir = super::materialize_workspace_fixture("falls-back-to-types");
     let types_pkg = PackageJson {
         types: Some("index.d.ts".to_string()),
         ..Default::default()
@@ -74,8 +67,7 @@ fn falls_back_to_main_then_types() {
 
 #[test]
 fn falls_back_to_src_index_mts() {
-    let dir = TempDir::new().unwrap();
-    write(&dir.path().join("src/index.mts"), "");
+    let dir = super::materialize_workspace_fixture("falls-back-to-src-index-mts");
     let pkg = PackageJson::default();
     let entry = resolve_entry(dir.path(), &pkg);
     assert!(entry.is_some());
@@ -84,7 +76,7 @@ fn falls_back_to_src_index_mts() {
 
 #[test]
 fn resolve_entry_returns_none_when_no_candidates_exist() {
-    let dir = TempDir::new().unwrap();
+    let dir = super::materialize_workspace_fixture("resolution-empty");
     let pkg = PackageJson {
         exports: Some(serde_json::json!("./missing.mts")),
         imports: None,
@@ -99,8 +91,9 @@ fn resolve_entry_returns_none_when_no_candidates_exist() {
 
 #[test]
 fn resolve_entry_continues_when_exports_have_no_entry_path() {
-    let dir = TempDir::new().unwrap();
-    write(&dir.path().join("main.mts"), "");
+    let dir = super::materialize_workspace_fixture(
+        "resolve-entry-continues-when-exports-have-no-entry-path",
+    );
     let pkg = PackageJson {
         exports: Some(serde_json::json!({"browser": false})),
         imports: None,
@@ -115,12 +108,10 @@ fn resolve_entry_continues_when_exports_have_no_entry_path() {
 
 #[test]
 fn load_package_ignores_invalid_json_and_missing_name() {
-    let invalid = TempDir::new().unwrap();
-    write(&invalid.path().join("package.json"), "{ invalid");
+    let invalid = super::materialize_workspace_fixture("invalid-package-json");
     assert!(load_package(invalid.path(), None).unwrap().is_none());
 
-    let unnamed = TempDir::new().unwrap();
-    write(&unnamed.path().join("package.json"), r#"{"name": ""}"#);
+    let unnamed = super::materialize_workspace_fixture("unnamed-package-json");
     assert!(load_package(unnamed.path(), None).unwrap().is_none());
 }
 
@@ -150,23 +141,8 @@ fn malformed_workspace_manifest_does_not_hide_valid_sibling_package() {
 
 #[test]
 fn loads_multiple_packages() {
-    let dir = TempDir::new().unwrap();
+    let dir = super::materialize_workspace_fixture("multiple-packages");
     let root = dir.path();
-
-    write(
-        &root.join("package.json"),
-        r#"{"workspaces": ["packages/*"]}"#,
-    );
-    for name in &["api", "web", "shared"] {
-        write(
-            &root.join(format!("packages/{name}/package.json")),
-            &format!(r#"{{"name": "@x/{name}", "main": "src/index.mts"}}"#),
-        );
-        write(
-            &root.join(format!("packages/{name}/src/index.mts")),
-            "export {};",
-        );
-    }
 
     let map = load(root).unwrap();
     assert_eq!(map.packages.len(), 3);
@@ -238,9 +214,10 @@ fn export_pattern_sort_uses_pattern_name_as_tiebreaker() {
 
 #[test]
 fn resolve_specifier_falls_back_to_subpath_without_exports() {
-    let dir = TempDir::new().unwrap();
+    let dir = super::materialize_workspace_fixture(
+        "resolve-specifier-falls-back-to-subpath-without-exports",
+    );
     let target = dir.path().join("src/public.mts");
-    write(&target, "");
     let map = WorkspaceMap::from_packages(vec![WorkspacePackage {
         name: "@x/api".to_string(),
         dir: dir.path().to_path_buf(),
@@ -254,9 +231,9 @@ fn resolve_specifier_falls_back_to_subpath_without_exports() {
 
 #[test]
 fn resolve_specifier_supports_exact_subpath_export() {
-    let dir = TempDir::new().unwrap();
+    let dir =
+        super::materialize_workspace_fixture("resolve-specifier-supports-exact-subpath-export");
     let entry = dir.path().join("src/public.mts");
-    write(&entry, "");
     let map = WorkspaceMap::from_packages(vec![WorkspacePackage {
         name: "@x/api".to_string(),
         dir: dir.path().to_path_buf(),
@@ -269,9 +246,10 @@ fn resolve_specifier_supports_exact_subpath_export() {
 
 #[test]
 fn resolve_specifier_supports_single_star_subpath_export() {
-    let dir = TempDir::new().unwrap();
+    let dir = super::materialize_workspace_fixture(
+        "resolve-specifier-supports-single-star-subpath-export",
+    );
     let target = dir.path().join("enqueues.mts");
-    write(&target, "");
     let map = WorkspaceMap::from_packages(vec![WorkspacePackage {
         name: "@systems/foo".to_string(),
         dir: dir.path().to_path_buf(),
@@ -284,8 +262,9 @@ fn resolve_specifier_supports_single_star_subpath_export() {
 
 #[test]
 fn resolve_specifier_does_not_fallback_when_exports_are_defined() {
-    let dir = TempDir::new().unwrap();
-    write(&dir.path().join("internal.mts"), "");
+    let dir = super::materialize_workspace_fixture(
+        "resolve-specifier-does-not-fallback-when-exports-are-defined",
+    );
     let map = WorkspaceMap::from_packages(vec![WorkspacePackage {
         name: "@x/api".to_string(),
         dir: dir.path().to_path_buf(),
@@ -298,9 +277,10 @@ fn resolve_specifier_does_not_fallback_when_exports_are_defined() {
 
 #[test]
 fn resolve_specifier_continues_after_unsupported_matching_pattern() {
-    let dir = TempDir::new().unwrap();
+    let dir = super::materialize_workspace_fixture(
+        "resolve-specifier-continues-after-unsupported-matching-pattern",
+    );
     let target = dir.path().join("src/foo/value.mts");
-    write(&target, "");
     let map = WorkspaceMap::from_packages(vec![WorkspacePackage {
         name: "@x/api".to_string(),
         dir: dir.path().to_path_buf(),
@@ -316,11 +296,9 @@ fn resolve_specifier_continues_after_unsupported_matching_pattern() {
 
 #[test]
 fn resolve_specifier_prefers_more_specific_star_export() {
-    let dir = TempDir::new().unwrap();
+    let dir =
+        super::materialize_workspace_fixture("resolve-specifier-prefers-more-specific-star-export");
     let specific = dir.path().join("specific/value.mts");
-    let broad = dir.path().join("broad/foo/bar/value.mts");
-    write(&specific, "");
-    write(&broad, "");
     let map = WorkspaceMap::from_packages(vec![WorkspacePackage {
         name: "@x/api".to_string(),
         dir: dir.path().to_path_buf(),
