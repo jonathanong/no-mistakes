@@ -261,3 +261,26 @@ fn host_inventory_preserves_bom_headers_and_skips_plain_sources() {
     let plain = include_str!("../../../../../../fixtures/rules/disable-directive-audit/plain.rs");
     assert!(disable_directives_for_path(plain, Path::new("plain.rs")).is_empty());
 }
+
+#[test]
+fn rust_inventory_preserves_nested_license_header_before_file_directive() {
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/nested-license.rs");
+    let directives = disable_directives_for_path(source, Path::new("nested-license.rs"));
+    assert_eq!(directives.len(), 1);
+    assert_eq!(directives[0].rule, "rust-max-lines-per-file");
+    assert_eq!(directives[0].directive, DisableDirective::File { line: 7 });
+}
+
+#[test]
+fn rust_inventory_preserves_script_preamble_but_not_inner_attributes() {
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/bom-shebang.rs");
+    let directives = disable_directives_for_path(source, Path::new("script.rs"));
+    assert_eq!(directives.len(), 1);
+    assert_eq!(directives[0].rule, "rust-max-lines-per-file");
+    assert_eq!(directives[0].directive, DisableDirective::File { line: 2 });
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/inner-attribute.rs");
+    assert!(disable_directives_for_path(source, Path::new("attribute.rs")).is_empty());
+}

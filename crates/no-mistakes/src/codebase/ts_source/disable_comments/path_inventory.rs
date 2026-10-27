@@ -63,6 +63,12 @@ fn rust_comments(source: &str) -> String {
     let mut output = bytes.to_vec();
     mask(&mut output);
     let mut index = 0;
+    let preamble = source.trim_start_matches('\u{FEFF}');
+    if preamble.starts_with("#!") && !preamble.starts_with("#![") {
+        let start = source.len() - preamble.len();
+        output[start..start + 2].copy_from_slice(b"#!");
+        index = start + preamble.find('\n').unwrap_or(preamble.len());
+    }
     while index < bytes.len() {
         if bytes[index..].starts_with(b"//") {
             let start = index;
@@ -72,6 +78,9 @@ fn rust_comments(source: &str) -> String {
                 .unwrap_or(bytes.len() - index);
             output[start..index].copy_from_slice(&bytes[start..index]);
         } else if bytes[index..].starts_with(b"/*") {
+            // Keep the outer framing so a license header is still a comment
+            // before a file directive; nested framing stays masked.
+            output[index..index + 2].copy_from_slice(b"/*");
             index += 2;
             let mut depth = 1;
             while index < bytes.len() && depth > 0 {
@@ -80,6 +89,9 @@ fn rust_comments(source: &str) -> String {
                     index += 2;
                 } else if bytes[index..].starts_with(b"*/") {
                     depth -= 1;
+                    if depth == 0 {
+                        output[index..index + 2].copy_from_slice(b"*/");
+                    }
                     index += 2;
                 } else {
                     index += 1;
