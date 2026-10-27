@@ -9,6 +9,48 @@ fn load_tsconfig_parses_paths() {
 }
 
 #[test]
+fn load_tsconfig_preserves_decoded_utf8_string_identity() {
+    let fixture =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/string-identity");
+    let root = crate::test_support::materialize_saved_fixture(&fixture);
+    let path = root.path().join("valid.json");
+    let config = load_tsconfig(&path).unwrap();
+    // JSONC values are decoded UTF-8; marker-like and literal escape text
+    // must remain distinct without OXC's lone-surrogate compatibility encoding.
+    assert_eq!(
+        config.paths,
+        vec![
+            ("@replacement/*".into(), vec!["./\u{fffd}/*".into()]),
+            ("@marker/*".into(), vec!["./\u{fffd}d800/*".into()]),
+            ("@escaped/*".into(), vec![r"./\uD800/*".into()]),
+            ("@paired/*".into(), vec!["./\u{10000}/*".into()]),
+            ("@plain/*".into(), vec!["./normal/*".into()]),
+        ]
+    );
+    let (located, locations) = load_tsconfig_with_path_locations(&path).unwrap();
+    assert_eq!(located, config);
+    assert_eq!(locations.unwrap().lines["@replacement/*"], 4);
+}
+
+#[test]
+fn load_tsconfig_rejects_lone_surrogates_before_collecting_paths() {
+    let fixture =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/string-identity");
+    let root = crate::test_support::materialize_saved_fixture(&fixture);
+    for (name, reason) in [
+        ("lone-high.json", "unpaired high surrogate"),
+        ("lone-low.json", "unpaired low surrogate"),
+    ] {
+        let error = load_tsconfig(&root.path().join(name))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains(name), "{error}");
+        assert!(error.contains("parsing"), "{error}");
+        assert!(error.contains(reason), "{error}");
+    }
+}
+
+#[test]
 fn load_tsconfig_empty_returns_defaults() {
     let dir = TempDir::new().unwrap();
     let p = dir.path().join("tsconfig.json");

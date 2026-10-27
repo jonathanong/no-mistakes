@@ -53,6 +53,8 @@ pub(crate) fn template_quasi_text<'a>(quasi: &TemplateElement<'a>) -> Cow<'a, st
         Some(cooked) => {
             let text = js_string(cooked);
             let raw = quasi.value.raw.as_str();
+            // Pointer/length identity proves cooked text reuses the raw slice.
+            // A miss, including equal bytes stored elsewhere, takes the raw scan.
             if cooked
                 .as_str()
                 .is_some_and(|value| value.as_ptr() == raw.as_ptr() && value.len() == raw.len())
@@ -83,8 +85,9 @@ pub(crate) fn js_literal<'a>(literal: &StringLiteral<'a>) -> Cow<'a, str> {
 pub(super) fn js_raw_literal<'a>(value: JSStr<'a>, raw: Option<&str>) -> Cow<'a, str> {
     let text = js_string(value);
     if let Some(raw) = raw {
-        // Unescaped literals borrow the source between their quotes. Avoid
-        // scanning those overwhelmingly common strings for unusual escapes.
+        // Unescaped literals can borrow the source between their quotes.
+        // Pointer/length identity proves reuse and avoids scanning that slice.
+        // A miss, including equal bytes stored elsewhere, takes the raw scan.
         if value.as_str().is_some_and(|value| {
             value.as_ptr() == raw.as_ptr().wrapping_add(1) && value.len() + 2 == raw.len()
         }) {
