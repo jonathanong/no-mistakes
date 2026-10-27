@@ -1,7 +1,7 @@
 use super::nextjs::project_roots;
 use super::tests::fixture;
 use crate::codebase::rules::run_check;
-use crate::codebase::unique_exports::is_framework_entrypoint_file;
+use crate::codebase::unique_exports::{framework_consumed_export, is_framework_entrypoint_file};
 use crate::config::v2::schema::{NoMistakesConfig, Project, ProjectType};
 use std::path::{Path, PathBuf};
 
@@ -153,6 +153,17 @@ fn entrypoint_files_follow_the_shared_inventory_and_project_type() {
     assert!(!is_framework_entrypoint_file(
         &root.join("other/app/page.tsx"),
         &roots[0],
+    ));
+    // Outside the project root, and a non-code file under it, consume nothing.
+    assert!(!framework_consumed_export(
+        &root.join("other/app/page.tsx"),
+        &roots[0],
+        "default",
+    ));
+    assert!(!framework_consumed_export(
+        &roots[0].join("app/page.png"),
+        &roots[0],
+        "default",
     ));
     assert!(!super::nextjs::consumed_export(
         &root.join("apps/web/app/page.tsx"),

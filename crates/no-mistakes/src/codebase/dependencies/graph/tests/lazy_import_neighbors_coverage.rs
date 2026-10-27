@@ -341,4 +341,8 @@ fn import_neighbors_from_facts_cover_preferred_workspace_and_unresolved_shapes()
             .any(|(node, kind)| node.as_file().is_none() && *kind == EdgeKind::Import),
         "unresolved lodash should become a module node: {neighbors:#?}"
     );
+    // This resolver does not read tsconfig paths, so it owns no alias.
+    assert!(!crate::codebase::ts_resolver::ImportResolution::matches_paths_alias(
+        &resolver, "@runtime/value", &a,
+    ));
 }

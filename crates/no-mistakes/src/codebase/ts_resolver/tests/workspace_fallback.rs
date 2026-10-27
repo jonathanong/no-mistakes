@@ -58,6 +58,12 @@ fn workspace_specifiers_resolve_last_and_the_rest_is_delegated() {
         &resolver, "./local", &importer, &workspace, &visible,
     );
     assert_eq!(classified.resolver_path(), Some(sibling.as_path()));
+    // Empty paths: the wrapper asks the inner resolver, which owns no alias.
+    assert!(!ImportResolverFacade::matches_paths_alias(
+        &resolver,
+        "@fixture/core",
+        &importer,
+    ));
 }
 
 #[test]

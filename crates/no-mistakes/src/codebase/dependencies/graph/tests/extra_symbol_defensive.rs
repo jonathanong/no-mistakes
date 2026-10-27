@@ -174,6 +174,93 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         Some((NodeId::symbol(source.clone(), "alpha"), EdgeKind::Import,))
     );
 
+    // `export * as api` is one value. A sibling named re-export is not a star.
+    facts.insert(
+        source.clone(),
+        TsFileFacts {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
+                exports: vec![Export {
+                    name: "wanted".to_string(),
+                    local: None,
+                    kind: ExportKind::Function,
+                    line: 1,
+                    is_type_only: false,
+                }],
+                imports: vec![],
+            })),
+            ..TsFileFacts::default()
+        },
+    );
+    let mixed = p("/repo/src/mixed.mts");
+    facts.insert(
+        mixed.clone(),
+        TsFileFacts {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
+                exports: vec![
+                    Export {
+                        name: "other".to_string(),
+                        local: None,
+                        kind: ExportKind::ReExport {
+                            source: "./source.mts".to_string(),
+                            imported: "wanted".to_string(),
+                        },
+                        line: 1,
+                        is_type_only: false,
+                    },
+                    Export {
+                        name: "*".to_string(),
+                        local: None,
+                        kind: ExportKind::ReExport {
+                            source: "./source.mts".to_string(),
+                            imported: "*".to_string(),
+                        },
+                        line: 2,
+                        is_type_only: false,
+                    },
+                ],
+                imports: vec![],
+            })),
+            ..TsFileFacts::default()
+        },
+    );
+    let origin_inputs = ExportEdgeInputs {
+        path: &mixed,
+        symbols: facts
+            .get_ts_facts(&mixed)
+            .unwrap()
+            .symbols
+            .as_ref()
+            .unwrap(),
+        facts: &facts,
+        resolver: &resolver,
+        workspace: &workspace,
+        visible_files: &visible,
+        graph_files: &graph_files,
+        interner: &crate::codebase::analysis_session::PathInterner::new(),
+    };
+    let mut seen = HashSet::new();
+    assert_eq!(
+        star_export_origin(
+            &origin_inputs,
+            &mid,
+            "api",
+            &StarExportNamespace::Value,
+            &mut seen,
+        ),
+        Some((mid.clone(), "api".to_string()))
+    );
+    seen.clear();
+    assert_eq!(
+        star_export_origin(
+            &origin_inputs,
+            &mixed,
+            "wanted",
+            &StarExportNamespace::Value,
+            &mut seen,
+        ),
+        Some((source.clone(), "wanted".to_string()))
+    );
+
     let cycle = p("/repo/src/cycle.mts");
     visible.insert(cycle.clone());
     let cycle_graph_files = GraphFiles::from_files(visible.iter().cloned().collect());

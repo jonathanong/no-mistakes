@@ -146,29 +146,32 @@ fn module_gap_message(ts: &TsFileFacts, module: &str) -> (usize, String) {
 }
 
 fn import_site(ts: &TsFileFacts, key: &str, symbol: bool) -> Option<(String, usize)> {
-    if let Some(symbols) = ts.symbols.as_ref() {
-        if let Some(import) = symbols.imports.iter().find(|import| {
-            if symbol {
-                import.imported == key
-            } else {
-                import.source == key
-            }
-        }) {
-            return Some((import.source.clone(), import.line.max(1) as usize));
+    // Callers skip files with no symbol table before asking for a selector site.
+    let symbols = ts
+        .symbols
+        .as_ref()
+        .expect("selector gaps run after symbols are present");
+    if let Some(import) = symbols.imports.iter().find(|import| {
+        if symbol {
+            import.imported == key
+        } else {
+            import.source == key
         }
-        if let Some((source, line)) = symbols.exports.iter().find_map(|export| {
-            let ExportKind::ReExport { source, imported } = &export.kind else {
-                return None;
-            };
-            let matched = if symbol {
-                imported == key
-            } else {
-                source == key
-            };
-            matched.then(|| (source.clone(), export.line.max(1) as usize))
-        }) {
-            return Some((source, line));
-        }
+    }) {
+        return Some((import.source.clone(), import.line.max(1) as usize));
+    }
+    if let Some((source, line)) = symbols.exports.iter().find_map(|export| {
+        let ExportKind::ReExport { source, imported } = &export.kind else {
+            return None;
+        };
+        let matched = if symbol {
+            imported == key
+        } else {
+            source == key
+        };
+        matched.then(|| (source.clone(), export.line.max(1) as usize))
+    }) {
+        return Some((source, line));
     }
     if symbol {
         return None;
