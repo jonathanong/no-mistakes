@@ -174,9 +174,15 @@ to each arm walk. These work ledgers are created only by the request observer.
 
 `postgres.annotation.readonly_alternatives` counts joins whose arms are proven
 local reads, literals, or synthetic empty skipped arms from logical expressions.
-Local member and index reads retain existing identities without snapshotting
-evaluator state or walking the inherited heap. Calls, imports, mutations, and
-other unproven expressions keep the full branch path.
+Record and object values also qualify when their operands have no modeled
+effects. These joins retain existing identities without snapshotting evaluator
+state or walking the inherited heap. Calls, imports, mutations, and other
+unproven expressions keep the full branch path.
+
+`postgres.annotation.depth_limited_alternatives` counts joins whose arms cannot
+execute because the expression-depth budget is exhausted. They return the same
+depth-limit failures without taking state snapshots. The depth budget and
+failure values are unchanged.
 
 File-scoped forbidden call checks report `forbidden_calls.path_filter_checks`
 once per selected file instead of once per call occurrence.
