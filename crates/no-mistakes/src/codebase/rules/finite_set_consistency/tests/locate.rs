@@ -112,3 +112,64 @@ fn yaml_sequence_items_stay_inside_their_own_item() {
     assert_eq!(yaml("u.1.j", source), 6);
     assert_eq!(yaml("u.1.n", source), 5);
 }
+
+// `- - k` puts two markers on one line; each inner item needs its own line.
+const NESTED_SEQUENCES: &str = "m:\n  - - k: 1\n      v: a\n    - k: 2\n      v: b\n  - - k: 3\n";
+
+#[test]
+fn yaml_nested_sequence_items_resolve_to_their_own_line() {
+    assert_eq!(yaml("m.0.0", NESTED_SEQUENCES), 2);
+    assert_eq!(yaml("m.0.1", NESTED_SEQUENCES), 4);
+    assert_eq!(yaml("m.0.1.v", NESTED_SEQUENCES), 5);
+    assert_eq!(yaml("m.0.0.v", NESTED_SEQUENCES), 3);
+    assert_eq!(yaml("m.1.0.k", NESTED_SEQUENCES), 6);
+    // A key cannot be read through an unopened inner sequence.
+    assert_eq!(yaml("m.0.k", NESTED_SEQUENCES), 2);
+    assert_eq!(yaml("m.0.2", NESTED_SEQUENCES), 2);
+}
+
+// Pretty-printed and compact arrays must both resolve by index.
+const JSON_ARRAYS: &str = "{\n  \"a\": [\n    {\n      \"k\": 1\n    },\n    {\n      \"k\": 2\n    }\n  ],\n  \"b\": [{\"k\": 1}, {\"k\": 2}]\n}\n";
+const JSON_TOP_ARRAY: &str = "[\n  {\n    \"k\": 1\n  },\n  {\n    \"k\": 2\n  }\n]\n";
+
+#[test]
+fn json_numeric_segments_resolve_array_elements() {
+    assert_eq!(yaml("a.1.k", JSON_ARRAYS), 7);
+    assert_eq!(yaml("a.0.k", JSON_ARRAYS), 4);
+    assert_eq!(yaml("a.1", JSON_ARRAYS), 6);
+    assert_eq!(yaml("b.1.k", JSON_ARRAYS), 10);
+    // Out-of-range and non-numeric segments fall back to the ancestor.
+    assert_eq!(yaml("a.2.k", JSON_ARRAYS), 2);
+    assert_eq!(yaml("a.x", JSON_ARRAYS), 2);
+    assert_eq!(yaml("0.k", JSON_TOP_ARRAY), 3);
+    assert_eq!(yaml("1.k", JSON_TOP_ARRAY), 6);
+}
+
+#[test]
+fn json_keys_match_without_space_after_colon() {
+    let source = "{\n\"a\":[1],\n\"b\":{\"c\":[2]}}\n";
+    assert_eq!(yaml("a", source), 2);
+    assert_eq!(yaml("b.c", source), 3);
+    // Truncated JSON keeps what resolved; unquoted keys use the line scan.
+    assert_eq!(yaml("a", "{\n  \"a\": [1,\n"), 2);
+    assert_eq!(yaml("a", "{\n  a: [1]\n}\n"), 2);
+}
+
+#[test]
+fn yaml_block_scalar_header_may_carry_a_comment() {
+    let source = "run: | # note\n  a: not a key\nb: >- # c\n  c: nope\na:\n  - 1\n";
+    assert_eq!(yaml("a", source), 5);
+    assert_eq!(yaml("c", source), 1);
+}
+
+#[test]
+fn declaration_line_ignores_string_contents() {
+    let ts = |source| set_line(&spec("ts-string-union", "", "K"), source);
+    let quoted = "const n = 'type K = 1';\nconst t = `\n  type K\n`;\nconst u = \"type K\";\ntype K = 'a';\n";
+    assert_eq!(ts(quoted), 6);
+    // An unterminated quote ends at the newline and cannot hide the real one.
+    assert_eq!(ts("const s = \"don't;\nexport type K = 'a';\n"), 2);
+    assert_eq!(ts("const s = 'it\\'s type K';\ntype K = 'a';\n"), 2);
+    // Backslash-newline continues a quoted string onto the next line.
+    assert_eq!(ts("const s = 'a \\\n type K';\ntype K = 'a';\n"), 3);
+}
