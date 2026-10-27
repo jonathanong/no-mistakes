@@ -3,6 +3,8 @@ mod borrowed_tests;
 #[cfg(test)]
 mod builder_free_tests;
 mod builder_ids;
+#[cfg(test)]
+mod direct_write_tests;
 #[cfg(not(test))]
 mod hooks;
 #[cfg(test)]
@@ -19,10 +21,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn invalidate_live_builders(&mut self) {
         // Opaque hooks may patch intrinsics even without live builders.
         self.untrusted_array_intrinsics = true;
-        let ids = self.collect_builder_ids_from(
-            self.scopes.iter().flat_map(|scope| scope.values()),
-            std::mem::drop,
-        );
+        let ids = self.collect_live_builder_ids(std::mem::drop);
         self.invalidate_builder_ids(ids);
     }
 
@@ -54,6 +53,15 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
         self.invalidated_builders.extend(ids.iter().copied());
         for scope in &mut self.scopes {
             if !scope.contains_builders(&ids) {
+                continue;
+            }
+            // Nested builders participate in the coarse index, but this loop
+            // only rewrites direct bindings. A no-op write would detach the
+            // scope and discard its immutable indexes on every opaque call.
+            if !scope
+                .values()
+                .any(|value| matches!(value, Value::Prefix(_, _, Some(id)) if ids.contains(id)))
+            {
                 continue;
             }
             for value in scope.values_mut() {
