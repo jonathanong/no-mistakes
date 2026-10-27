@@ -8,11 +8,13 @@ It complements the ARM CodSpeed benchmarks; it does not replace them.
 
 ## Source selection and builds
 
-Each invocation resolves the candidate from current `main` HEAD and the baseline
-from GitHub's latest stable release tag. Both commits and trees are resolved once
-and carried through the artifacts. A dispatch selects the workflow harness, not
-an alternative candidate or baseline. A pinned analyzer ref or another build of
-`main` is not a release baseline. The release tag may legitimately point to the
+Nightly invocations resolve the candidate from current `main` HEAD. A manual
+dispatch can optionally set `candidate_sha` to an exact 40-character lowercase
+commit SHA to measure that immutable candidate; leaving it empty resolves current
+`main` as usual. The baseline always comes from GitHub's latest stable release
+tag. Both commits and trees are resolved once and carried through the artifacts.
+A dispatch selects the workflow harness. A pinned analyzer ref or another build
+of `main` is not a release baseline. The release tag may legitimately point to the
 same commit as `main`; provenance must still identify the actual release tag.
 The summary warns when those commits match: that run measures variance and
 absolute budgets, not a version change. GitHub's
@@ -182,6 +184,16 @@ or report a speedup from censored observations.
 ```sh
 gh workflow run hosted-check.yml --ref main
 ```
+
+To prove a specific candidate commit manually, pass its full SHA:
+
+```sh
+gh workflow run hosted-check.yml --ref main -f candidate_sha=<40-character-commit-sha>
+```
+
+The resolver verifies that GitHub returns that exact commit before building it;
+provenance labels the candidate as `commit`. Empty input preserves nightly's
+current-main selection.
 
 Each run emits calibration proposals for review. It does not commit budgets,
 learn tolerances from the candidate, or forgive failed measurements.

@@ -141,6 +141,53 @@ test("allows latest stable release and main to legitimately share an immutable s
   assert.match(sourceSummary(result), /Warning.*same commit.*Absolute budgets still apply/);
 });
 
+test("resolves an explicitly requested candidate commit and rejects invalid or mismatched SHAs", () => {
+  const sha = "a".repeat(40);
+  const calls = [];
+  const result = resolveRefs(
+    (endpoint) => {
+      calls.push(endpoint);
+      if (endpoint.endsWith(`/commits/${sha}`))
+        return { ...responses[Object.keys(responses)[0]], sha };
+      return responses[endpoint];
+    },
+    compiler,
+    repository,
+    harness,
+    sha,
+  );
+  assert.deepEqual(calls, [
+    `repos/${repository}/commits/${sha}`,
+    `repos/${repository}/releases/latest`,
+    `repos/${repository}/commits/v0.94.0`,
+  ]);
+  assert.deepEqual(result.candidate, {
+    kind: "commit",
+    ref: sha,
+    commit: sha,
+    tree: responses[Object.keys(responses)[0]].commit.tree.sha,
+  });
+  assert.ok(sourceSummary(result).includes(`Candidate: commit \`${sha}\`.`));
+  assert.throws(
+    () => resolveRefs(() => {}, compiler, repository, harness, "main"),
+    /exact 40-character/,
+  );
+  assert.throws(
+    () =>
+      resolveRefs(
+        (endpoint) =>
+          endpoint.endsWith(`/commits/${sha}`)
+            ? { ...responses[Object.keys(responses)[0]], sha: "f".repeat(40) }
+            : responses[endpoint],
+        compiler,
+        repository,
+        harness,
+        sha,
+      ),
+    /does not match the requested SHA/,
+  );
+});
+
 test("rejects prereleases, drafts, malformed tags, non-GitHub releases, mutable identities and compiler aliases", () => {
   for (const patch of [
     { prerelease: true },
@@ -345,6 +392,8 @@ test("nightly and demand runs always source-build latest release against resolve
   );
   assert.match(workflow, /cron: "23 8 \* \* \*"/);
   assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /candidate_sha:[\s\S]*?required: false[\s\S]*?default: ""/);
+  assert.match(workflow, /HOSTED_CANDIDATE_SHA: \$\{\{ inputs\.candidate_sha \}\}/);
   assert.doesNotMatch(workflow, /pull_request|candidateRef|baselineSourceCommit|0\.86\.2/);
   assert.match(workflow, /cancel-in-progress: false/);
   const jobs = [

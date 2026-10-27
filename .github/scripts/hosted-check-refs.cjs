@@ -16,13 +16,29 @@ function commitIdentity(response) {
   return { commit: response.sha, tree: response.commit.tree.sha };
 }
 
-function resolveRefs(api, compiler, repository, harnessCommit, now = new Date()) {
+function resolveRefs(
+  api,
+  compiler,
+  repository,
+  harnessCommit,
+  candidateSha = "",
+  now = new Date(),
+) {
   validateCompiler(compiler);
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository) || !SHA.test(harnessCommit)) {
     throw new Error("Invalid repository or measurement harness commit");
   }
   const endpoint = `repos/${repository}/releases/latest`;
-  const main = api(`repos/${repository}/commits/main`);
+  if (candidateSha && !SHA.test(candidateSha)) {
+    throw new Error("Candidate SHA must be an exact 40-character lowercase commit SHA");
+  }
+  const candidateEndpoint = candidateSha
+    ? `repos/${repository}/commits/${candidateSha}`
+    : `repos/${repository}/commits/main`;
+  const candidateIdentity = commitIdentity(api(candidateEndpoint));
+  if (candidateSha && candidateIdentity.commit !== candidateSha) {
+    throw new Error("GitHub candidate commit does not match the requested SHA");
+  }
   const release = api(endpoint);
   if (
     release.draft !== false ||
@@ -41,7 +57,9 @@ function resolveRefs(api, compiler, repository, harnessCommit, now = new Date())
     harnessCommit,
     compiler,
     resolvedAt: now.toISOString(),
-    candidate: { kind: "main", ref: "refs/heads/main", ...commitIdentity(main) },
+    candidate: candidateSha
+      ? { kind: "commit", ref: candidateSha, ...candidateIdentity }
+      : { kind: "main", ref: "refs/heads/main", ...candidateIdentity },
     baseline: {
       kind: "release",
       ref: `refs/tags/${release.tag_name}`,
@@ -63,7 +81,7 @@ function githubApi(endpoint) {
 
 function sourceSummary(refs) {
   return [
-    `Candidate: main \`${refs.candidate.commit}\`.`,
+    `Candidate: ${refs.candidate.kind === "main" ? "main" : "commit"} \`${refs.candidate.commit}\`.`,
     `Baseline: release [${refs.baseline.release.tag}](${refs.baseline.release.url}) \`${refs.baseline.commit}\`.`,
     ...(refs.baseline.commit === refs.candidate.commit
       ? [
@@ -81,6 +99,7 @@ if (require.main === module) {
     compiler,
     process.env.GITHUB_REPOSITORY,
     process.env.HOSTED_HARNESS_COMMIT,
+    process.env.HOSTED_CANDIDATE_SHA || "",
   );
   writeFileSync(output, `${JSON.stringify(refs, null, 2)}\n`);
   for (const key of ["candidate", "baseline"]) {

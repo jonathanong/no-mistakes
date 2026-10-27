@@ -12,13 +12,18 @@ function validateBuildPair(builds) {
   if (!isDeepStrictEqual(baseline.refs, candidate.refs))
     throw new Error("Variant source selections differ");
   const refs = baseline.refs;
+  const candidateSelectionRef = refs?.candidate;
+  const candidateSelection =
+    (candidateSelectionRef?.kind === "main" && candidateSelectionRef.ref === "refs/heads/main") ||
+    (candidateSelectionRef?.kind === "commit" &&
+      REVISION.test(candidateSelectionRef.ref) &&
+      candidateSelectionRef.ref === candidateSelectionRef.commit);
   if (
     refs?.schemaVersion !== 1 ||
     refs.repository !== "jonathanong/no-mistakes" ||
-    refs.candidate?.kind !== "main" ||
-    refs.candidate.ref !== "refs/heads/main"
+    !candidateSelection
   )
-    throw new Error("Candidate source must be selected from main");
+    throw new Error("Candidate source must be selected from main or an exact immutable commit");
   const release = refs.baseline?.release;
   if (
     refs.baseline?.kind !== "release" ||
