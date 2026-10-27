@@ -1,0 +1,184 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "do_block_without_validate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 6,
+          "message": "ALTER TABLE ADD CONSTRAINT comments_body_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "target": "comments.comments_body_check"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "implicit_check_name": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 2,
+          "message": "ALTER TABLE ADD CONSTRAINT nv_child_2011_d_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "target": "nv_child_2011.nv_child_2011_d_check"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "not_valid_without_validate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "ALTER TABLE ADD CONSTRAINT comments_body_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "target": "comments.comments_body_check"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "paired": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "paired_column_specific_set_null": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "paired_do_block": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "paired_do_block_ignore_recovery": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "paired_set_null": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres_regression_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unmatched_column_specific_set_null": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 3,
+          "message": "ALTER TABLE ADD CONSTRAINT child_topic_result_fk NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "target": "child.child_topic_result_fk"
+        },
+        {
+          "file": "migrations/001.sql",
+          "line": 9,
+          "message": "VALIDATE CONSTRAINT child_other_fk has no matching named NOT VALID add",
+          "rule": "postgres-constraint-validate",
+          "target": "child.child_other_fk"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "validate_without_not_valid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "VALIDATE CONSTRAINT comments_body_check has no matching named NOT VALID add",
+          "rule": "postgres-constraint-validate",
+          "target": "comments.comments_body_check"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

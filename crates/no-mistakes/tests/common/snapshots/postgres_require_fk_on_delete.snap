@@ -1,0 +1,137 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "alter_table": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "migrations/001.sql:1: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "target": "children.parent_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled_next_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "do_block": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 3,
+          "message": "migrations/001.sql:3: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "target": "children.parent_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_actions_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_action": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 2,
+          "message": "migrations/001.sql:2: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "target": "children.parent_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "omitted_on_delete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-require-fk-on-delete` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-require-fk-on-delete"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 2,
+          "message": "migrations/001.sql:2: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "target": "children.parent_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_regression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 3,
+          "message": "migrations/001.sql:3: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "target": "FKTABLE_FAIL1.ftest1"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
