@@ -8,6 +8,10 @@ struct UnreadableExtendsResolver {
 }
 
 impl ImportResolution for UnreadableExtendsResolver {
+    fn matches_paths_alias(&self, _: &str, _: &Path) -> bool {
+        false
+    }
+
     fn resolve(&self, specifier: &str, _: &Path) -> Option<PathBuf> {
         (specifier == "./unreadable.js").then(|| self.path.clone())
     }

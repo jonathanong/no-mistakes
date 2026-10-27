@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: banned-renamed-files
+    scope: repository
+    options:
+      bannedBasenames:
+        - name: jest.config
+          message: "remove jest.config.* — tests run under vitest"
+          pattern: "^jest\\.config\\..+"
+      extensions: [".ts"]

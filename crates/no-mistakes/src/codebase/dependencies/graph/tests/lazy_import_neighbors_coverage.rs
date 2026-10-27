@@ -161,6 +161,10 @@ struct ScriptedImportResolver {
 }
 
 impl crate::codebase::ts_resolver::ImportResolution for ScriptedImportResolver {
+    fn matches_paths_alias(&self, _: &str, _: &Path) -> bool {
+        false
+    }
+
     fn resolve(
         &self,
         specifier: &str,
