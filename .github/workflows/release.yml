@@ -398,6 +398,16 @@ jobs:
         timeout-minutes: 2
         run: tar -xzf prepared-release/release-source.tgz
 
+      - name: Restore a source repository for archive-based tests
+        timeout-minutes: 2
+        # The prepared source is a `git archive` with no .git. The async
+        # source-proof benchmark test archives HEAD, so commit the extracted
+        # tree before dependencies are installed.
+        run: |
+          git init -q
+          git add -A -- . ":!prepared-release"
+          git -c user.name=release -c user.email=release@localhost commit -q -m "release source"
+
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
