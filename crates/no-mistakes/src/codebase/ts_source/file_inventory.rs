@@ -154,5 +154,3 @@ impl FileInventory {
 
 #[cfg(test)]
 mod tests;
-#[cfg(test)]
-mod tests_git_index;

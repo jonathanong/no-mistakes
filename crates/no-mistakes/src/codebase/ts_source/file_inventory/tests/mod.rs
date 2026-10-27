@@ -2,7 +2,9 @@ use super::{ClassifiedPath, FileClassification, FileId, FileInventory};
 use std::path::PathBuf;
 use std::time::Instant;
 
-pub(super) fn fixture(path: &str) -> PathBuf {
+mod git_index;
+
+fn fixture(path: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/analysis-dataset/source-store")

@@ -1,9 +1,10 @@
-//! Git-index classification tests, split from `tests.rs` to stay under the 500-line cap.
-use super::FileInventory;
+//! Git-index classification tests. This file lives under `tests/` so
+//! `rust-max-lines-per-file` applies the test-file cap.
+use super::super::FileInventory;
 use std::path::PathBuf;
 
 fn fixture(path: &str) -> PathBuf {
-    super::tests::fixture(path)
+    super::fixture(path)
 }
 
 fn saved_ts_source(name: &str) -> tempfile::TempDir {
@@ -202,14 +203,14 @@ fn git_untracked_stage_shaped_names_keep_the_literal_path() {
 #[test]
 fn git_classify_drops_missing_relative_paths() {
     let root = fixture("alpha.ts").parent().unwrap().to_path_buf();
-    let (classified, stats) = super::classify_git_listed_paths(
+    let (classified, stats) = super::super::classify_git_listed_paths(
         &root,
         vec![
             (PathBuf::from("alpha.ts"), None),
             (PathBuf::from("missing.ts"), None),
             (
                 PathBuf::from("missing-link.ts"),
-                Some(super::GitIndexKind::Symlink),
+                Some(super::super::GitIndexKind::Symlink),
             ),
         ],
     );
@@ -221,11 +222,11 @@ fn git_classify_drops_missing_relative_paths() {
 #[test]
 fn git_classify_tracked_regular_missing_paths_skip_metadata() {
     let root = fixture("alpha.ts").parent().unwrap().to_path_buf();
-    let (classified, stats) = super::classify_git_listed_paths(
+    let (classified, stats) = super::super::classify_git_listed_paths(
         &root,
         vec![(
             PathBuf::from("missing-regular.ts"),
-            Some(super::GitIndexKind::RegularFile),
+            Some(super::super::GitIndexKind::RegularFile),
         )],
     );
     assert_eq!(classified.len(), 1);
