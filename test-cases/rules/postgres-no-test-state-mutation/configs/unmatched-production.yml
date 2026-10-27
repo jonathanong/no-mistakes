@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - tests/dynamic.test.ts
+      - src/transaction.ts
+    options:
+      testGlobs: ["tests/**"]
+      helperRoots: ["helpers/**"]
+      importSpecifier: "@example/db"
+      executorFactoryNames: [openTransaction]
+      reportUnmatchedExecutorNames: true

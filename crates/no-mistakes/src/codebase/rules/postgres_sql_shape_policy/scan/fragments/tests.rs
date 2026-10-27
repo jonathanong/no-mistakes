@@ -2,6 +2,8 @@ use crate::codebase::rules::postgres_sql_shape_policy::{check_with_files, RULE_I
 use crate::config::v2::load_v2_config;
 use std::path::PathBuf;
 
+// Output cases moved to cli_postgres_snapshot_sql_shape_policy.
+
 fn variant(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-sql-shape-policy/variants")
@@ -49,25 +51,5 @@ fn host_suppressed_finite_fragments_still_scan_the_disabled_host() {
         findings.iter().any(|finding| finding.line == 4
             && finding.target.as_deref() == Some("banned-function-call")),
         "{findings:?}"
-    );
-}
-
-#[test]
-fn unexecuted_finite_fragments_keep_their_origin_lines() {
-    let findings = findings("finite-fragments-unexecuted");
-    assert_eq!(findings.len(), 2, "{findings:?}");
-    assert_eq!(findings[0].line, 2);
-    assert!(
-        findings[0].message.starts_with("src/query.ts:2:"),
-        "{}",
-        findings[0].message
-    );
-    assert_eq!(findings[1].line, 10);
-    assert!(
-        findings[1]
-            .message
-            .starts_with("src/query.ts:10: builder SQL"),
-        "{}",
-        findings[1].message
     );
 }

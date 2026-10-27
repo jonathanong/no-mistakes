@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: ""
+      executorNames: [write, query]
+      include: ["src/query.mts"]
+      trustedSqlTags:
+        - module: "@custom/sql"
+          name: fragment

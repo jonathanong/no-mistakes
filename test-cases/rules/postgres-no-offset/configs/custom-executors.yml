@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    include:
+      - src/custom-executors.ts
+    options:
+      importSpecifier: "@custom/database"
+      executorNames: [last, first, last]

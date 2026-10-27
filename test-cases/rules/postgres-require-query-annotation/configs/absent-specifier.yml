@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [undeclared-executor-types.ts]
+    options:
+      executorNames: [query, execute]
+      executorTypeNames: [Executor]
+      unanalyzableSql: report

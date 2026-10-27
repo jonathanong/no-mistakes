@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [sql/001.sql]
+    options:
+      sqlInclude: [sql/001.sql]
+      importSpecifier: "@example/db"
+      bannedShapes: [keyset-only-sweep]

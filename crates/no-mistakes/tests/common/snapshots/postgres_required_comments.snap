@@ -1,0 +1,392 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_objects": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.code: column comment is shorter than 10 characters. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.code"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.secret: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.secret"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.title: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.title"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:schema_migrations.version: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:schema_migrations.version"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:paid_orders: materialized view has no COMMENT ON MATERIALIZED VIEW. Add COMMENT ON MATERIALIZED VIEW with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "materialized-view:paid_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:blank_rows: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:blank_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:schema_migrations: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:schema_migrations"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:short_rows: table comment is shorter than 10 characters. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:short_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: view:blank_view: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "view:blank_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: view:open_orders: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "view:open_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: view:tiny_view: view comment is shorter than 10 characters. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "view:tiny_view"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.code: column comment is shorter than 10 characters. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.code"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.title: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.title"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:schema_migrations.version: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:schema_migrations.version"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-required-comments allow entry: table:not_real",
+          "rule": "postgres-required-comments",
+          "target": "table:not_real"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:blank_rows: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:blank_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:short_rows: table comment is shorter than 10 characters. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:short_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: view:blank_view: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "view:blank_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: view:tiny_view: view comment is shorter than 10 characters. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "view:tiny_view"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "column_name_patterns": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.code: column comment is shorter than 10 characters. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.code"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.secret: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.secret"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.title: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.title"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_tables": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:blank_rows: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:blank_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:schema_migrations: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:schema_migrations"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_column_patterns": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.secret: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.secret"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.title: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:orders.title"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:schema_migrations.version: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "column:schema_migrations.version"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_misses_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "materialized_views": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: materialized-view:paid_orders: materialized view has no COMMENT ON MATERIALIZED VIEW. Add COMMENT ON MATERIALIZED VIEW with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "materialized-view:paid_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "min_length_10": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:blank_rows: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:blank_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:schema_migrations: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:schema_migrations"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:short_rows: table comment is shorter than 10 characters. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "table:short_rows"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "payload_columns": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "views": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: view:blank_view: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "view:blank_view"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: view:open_orders: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "target": "view:open_orders"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

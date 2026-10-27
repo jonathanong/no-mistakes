@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [src/from-less-builders.ts]
+    options:
+      bannedShapes: [literal-limit]
+      importSpecifier: "@example/db"

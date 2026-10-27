@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    include: [all-contexts.sql]
+    options:
+      bannedStatements: [ddl]
+      sqlInclude: [all-contexts.sql]
+      unanalyzable: report

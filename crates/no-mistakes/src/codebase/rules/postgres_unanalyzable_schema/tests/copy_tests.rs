@@ -10,7 +10,7 @@ fn copy_data_and_terminators_do_not_report_but_following_sql_does() {
     assert!(direct[0].head.starts_with("FROBULATE accounts"));
     assert_eq!(direct[0].source_order, [2]);
 
-    let (config, files, facts) = prepared(&root, "report.yml");
+    let (_config, files, facts) = prepared(&root, "report.yml");
     assert_eq!(
         &facts
             .postgres_schema_file(&files[0])
@@ -18,11 +18,6 @@ fn copy_data_and_terminators_do_not_report_but_following_sql_does() {
             .unanalyzable_statements,
         &direct
     );
-    let findings = diagnostics_for_rule(&root, &config, &files, &facts, "postgres-fk-index")
-        .unwrap()
-        .findings;
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].line, 8);
 }
 
 #[test]

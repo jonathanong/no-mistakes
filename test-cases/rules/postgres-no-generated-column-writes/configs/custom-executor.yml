@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - schema.sql
+      - write.ts
+    options:
+      importSpecifier: "@app/db"
+      executorNames: [run]
+      sqlInclude: ["**/schema.sql"]

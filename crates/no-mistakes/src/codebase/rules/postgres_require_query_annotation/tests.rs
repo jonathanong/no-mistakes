@@ -1,3 +1,4 @@
+// Output cases moved to cli_postgres_snapshot_require_query_annotation.
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -33,97 +34,11 @@ pub(super) fn ts_file(root: &Path) -> PathBuf {
     root.join("src/query.ts")
 }
 
-fn findings_for(scenario: &str) -> Vec<RuleFinding> {
-    let root = fixture(scenario);
-    let file = ts_file(&root);
-    check_with_files(&root, &default_config(), &[file]).unwrap()
-}
-
-#[test]
-fn fail_fixture_reports_missing_annotation() {
-    let findings = findings_for("fail");
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].rule, RULE_ID);
-    assert_eq!(findings[0].file, "src/query.ts");
-    assert!(findings[0].line > 0);
-    assert_eq!(findings[0].target.as_deref(), Some("annotation"));
-    assert!(findings[0].message.contains("/* name */"), "{findings:#?}");
-}
-
-#[test]
-fn annotated_query_is_clean() {
-    assert!(findings_for("pass-annotated").is_empty());
-}
-
-#[test]
-fn chained_executor_returns_preserve_the_exact_executed_query() {
-    let root = fixture("chained-executor-return");
-    let file = root.join("src/query.mts");
-    let source = std::fs::read_to_string(&file).unwrap();
-    let findings = check_with_files(
-        &root,
-        &config_with_options("importSpecifier: '@example/db'\nexecutorNames: [write]"),
-        &[file],
-    )
-    .unwrap();
-    let expected = source
-        .lines()
-        .enumerate()
-        .filter_map(|(index, line)| line.contains("// finding:").then_some(index + 1))
-        .collect::<Vec<_>>();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.line)
-            .collect::<Vec<_>>(),
-        expected,
-        "{findings:#?}"
-    );
-    let actual = findings
-        .iter()
-        .map(|finding| finding.message.as_str())
-        .collect::<Vec<_>>();
-    for (finding, line) in findings.iter().zip(expected) {
-        let marker = source.lines().nth(line - 1).unwrap();
-        assert!(
-            finding
-                .message
-                .contains(if marker.contains("finding: missing") {
-                    "query execution must start"
-                } else {
-                    "leading SQL is unanalyzable"
-                }),
-            "{actual:#?}"
-        );
-    }
-}
-
 #[test]
 fn var_sql_retains_function_scope_and_lexical_bindings_stay_local() {
     let root = fixture("var-scopes");
     let file = ts_file(&root);
     let source = std::fs::read_to_string(&file).unwrap();
-    let findings = check_with_files(
-        &root,
-        // This fixture separately pins legacy SQL recovery, including opaque
-        // bindings; default unknown reporting is covered by helper-tracing.
-        &config_with_options("importSpecifier: '@example/db'\nunanalyzableSql: ignore"),
-        std::slice::from_ref(&file),
-    )
-    .unwrap();
-    let expected = source
-        .lines()
-        .enumerate()
-        .filter_map(|(index, line)| line.contains("// finding:").then_some(index + 1))
-        .collect::<Vec<_>>();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.line)
-            .collect::<Vec<_>>(),
-        expected
-    );
-
     let facts = crate::codebase::postgres::extract_embedded_sql_from_source(
         &file,
         &source,
@@ -150,16 +65,6 @@ fn var_sql_retains_function_scope_and_lexical_bindings_stay_local() {
 }
 
 #[test]
-fn transaction_commands_are_clean() {
-    assert!(findings_for("pass-transaction").is_empty());
-}
-
-#[test]
-fn line_comment_is_not_an_annotation() {
-    assert_eq!(findings_for("fail-line-comment").len(), 1);
-}
-
-#[test]
 fn honors_disable_comments() {
     let root = fixture("fail");
     let file = root.join("src/disabled.ts");
@@ -172,6 +77,4 @@ fn honors_disable_comments() {
 }
 
 mod config;
-mod helper_contexts;
 mod helper_tracing;
-mod helper_value;

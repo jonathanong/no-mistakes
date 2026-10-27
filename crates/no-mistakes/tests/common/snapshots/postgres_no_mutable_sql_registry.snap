@@ -1,0 +1,450 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "registry",
+          "line": 5,
+          "message": "Cross-file write to exported registry `registry` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_array": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 5,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_computed_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 5,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_define_property": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 5,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_delete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 5,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_dynamic_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 3,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_export_star": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 5,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_literal_computed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 3,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_many_const_requires": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 3,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_member_write": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 5,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_namespace": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "t",
+          "line": 5,
+          "message": "Cross-file write to exported registry `t` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_namespace_named_reexport": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "ns",
+          "line": 3,
+          "message": "Cross-file write to exported registry `ns` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_namespace_reexport": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "ns",
+          "line": 3,
+          "message": "Cross-file write to exported registry `ns` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_reexport_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "registry",
+          "line": 5,
+          "message": "Cross-file write to exported registry `registry` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_require_namespace": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "registry",
+          "line": 3,
+          "message": "Cross-file write to exported registry `registry` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_static_require": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "tables",
+          "line": 3,
+          "message": "Cross-file write to exported registry `tables` in src/tables.ts (src/mutate.ts) reaches SQL identifier interpolation in this executor call. Member assignment after export is not a declared literal map. Consolidate the literal registry in src/tables.ts and import it; const does not freeze members.",
+          "rule": "postgres-no-mutable-sql-registry",
+          "target": "src/tables.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass_bind_value": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_dynamic_require": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_dynamic_unrelated": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_env_identifier": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_http_query": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  },
+  "pass_literal_registry": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_same_file_write": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_unrelated_state": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

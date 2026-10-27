@@ -10,23 +10,9 @@ fn rule_lines(items: &[RuleFinding], rule: &str) -> Vec<usize> {
 
 #[test]
 fn default_body_uncertainty_advises_without_downgrading_top_level_errors() {
+    // Finding and advisory lines moved to cli_postgres_snapshot_unanalyzable_schema.
     let root = fixture().join("body-policy");
-    let (config, files, facts) = prepared(&root, "default.yml");
-    let output = diagnostics(&root, &config, &files, &facts).unwrap();
-    for rule in RULE_IDS {
-        assert_eq!(
-            rule_lines(&output.findings, rule),
-            [2, 33, 35],
-            "{rule}: {:?}",
-            output.findings
-        );
-        assert_eq!(
-            rule_lines(&output.advisories, rule),
-            [5, 6, 8, 13, 18, 21, 24, 28],
-            "{rule}: {:?}",
-            output.advisories
-        );
-    }
+    let (_config, files, facts) = prepared(&root, "default.yml");
     let direct = extract_migration_facts(&std::fs::read_to_string(&files[0]).unwrap());
     let prepared = facts.postgres_schema_file(&files[0]).unwrap();
     assert_eq!(
@@ -51,35 +37,6 @@ fn default_body_uncertainty_advises_without_downgrading_top_level_errors() {
 }
 
 #[test]
-fn explicit_body_policies_keep_rule_and_repository_precedence() {
-    let root = fixture().join("body-policy");
-    for (name, findings, advisories) in [
-        ("report.yml", 11, 0),
-        ("advise.yml", 0, 11),
-        ("ignore.yml", 0, 0),
-        ("override.yml", 11, 0),
-        ("global-alias-report.yml", 11, 0),
-        ("rule-advise.yml", 0, 11),
-        ("rule-ignore.yml", 0, 0),
-    ] {
-        let (config, files, facts) = prepared(&root, name);
-        let output = diagnostics(&root, &config, &files, &facts).unwrap();
-        for rule in RULE_IDS {
-            assert_eq!(
-                rule_lines(&output.findings, rule).len(),
-                findings,
-                "{name}: {rule}"
-            );
-            assert_eq!(
-                rule_lines(&output.advisories, rule).len(),
-                advisories,
-                "{name}: {rule}"
-            );
-        }
-    }
-}
-
-#[test]
 fn default_body_advisories_keep_line_and_file_suppressions() {
     let root = fixture().join("body-suppress");
     let (config, mut files, _) = prepared(&root, "default.yml");
@@ -98,24 +55,4 @@ fn default_body_advisories_keep_line_and_file_suppressions() {
     assert_eq!(output.advisories.len(), 4);
     suppress_rule_findings_with_sources(&root, &mut output.advisories, &sources);
     assert_eq!(rule_lines(&output.advisories, "postgres-fk-index"), [6]);
-}
-
-#[test]
-fn malformed_wrapper_keeps_its_classification_separate_from_an_opaque_child() {
-    let root = fixture().join("body-wrapper");
-    let config = load_v2_config(&root, Some(&root.join("default.yml"))).unwrap();
-    let files = vec![root.join("migrations/001.sql")];
-    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
-        &root,
-        &files,
-        source_store_for_files(&files),
-        &config,
-        RULE_IDS,
-    )
-    .unwrap();
-    let output = diagnostics(&root, &config, &files, &facts).unwrap();
-    for rule in RULE_IDS {
-        assert_eq!(rule_lines(&output.findings, rule), [2, 7], "{rule}");
-        assert_eq!(rule_lines(&output.advisories, rule), [4], "{rule}");
-    }
 }

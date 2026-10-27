@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-object-naming
+    scope: repository
+    message: use the shared names
+    options:
+      schemaCatalogPath: schema.json
+      patterns:
+        table: "^widgets$"

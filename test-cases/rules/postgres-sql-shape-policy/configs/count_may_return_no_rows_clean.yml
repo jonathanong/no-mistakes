@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [sql/count-may-return-no-rows.sql]
+    options:
+      sqlInclude: [sql/count-may-return-no-rows.sql]
+      bannedShapes: [correlated-exists-set-operation, not-in-subquery, count-for-existence]
+      importSpecifier: "@example/db"

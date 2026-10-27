@@ -1,5 +1,7 @@
 use super::super::*;
 
+// Output cases moved to cli_postgres_snapshot_required_predicates.
+// The CLI case is the post-suppression report. This test keeps the count of 5.
 #[test]
 fn merged_variant_requirements_keep_helper_attribution_and_caller_suppression_separate() {
     let root = super::fixture("variant-merged-suppression");

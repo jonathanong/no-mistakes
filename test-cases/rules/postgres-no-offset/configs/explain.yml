@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    include:
+      - db/explain.sql
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["*.sql"]

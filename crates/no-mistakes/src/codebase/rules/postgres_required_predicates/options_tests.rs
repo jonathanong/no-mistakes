@@ -1,3 +1,4 @@
+// Output cases moved to cli_postgres_snapshot_required_predicates.
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -29,28 +30,6 @@ fn config_yaml(yaml: &str) -> NoMistakesConfig {
 fn include_exclude_and_option_overrides() {
     let root = fixture("fail");
     let sql = root.join("sql/001.sql");
-    let relations = "\nrelations:\n  - table: topics\n    require: [\"parent_id IS NOT NULL\"]";
-    assert!(check_with_files(
-        &root,
-        &config_yaml(&format!(
-            "sqlInclude: [\"sql/**/*.sql\"]\nexclude: ['sql/001.sql']{relations}"
-        )),
-        std::slice::from_ref(&sql),
-    )
-    .unwrap()
-    .is_empty());
-    assert_eq!(
-        check_with_files(
-            &root,
-            &config_yaml(&format!(
-                "sqlInclude: [\"sql/**/*.sql\"]\ninclude: ['sql/001.sql']{relations}"
-            )),
-            std::slice::from_ref(&sql),
-        )
-        .unwrap()
-        .len(),
-        1
-    );
     let error = check_with_files(&root, &config_yaml("exclude: ['[']"), &[sql]).expect_err("glob");
     assert!(error.to_string().contains("invalid glob"), "{error}");
     let compiled = compile_options(&Options {
@@ -83,37 +62,7 @@ fn include_exclude_and_option_overrides() {
 
 #[test]
 fn dynamic_unparseable_and_unrelated_tables() {
-    let dynamic = fixture("fail-dynamic");
-    let ts = dynamic.join("src/query.ts");
     let relations = "sqlInclude: [\"sql/**/*.sql\"]\nrelations:\n  - table: topics\n    require: [\"parent_id IS NOT NULL\"]";
-    let flagged =
-        check_with_files(&dynamic, &config_yaml(relations), std::slice::from_ref(&ts)).unwrap();
-    assert!(
-        flagged
-            .iter()
-            .any(|finding| finding.message.contains("not statically recoverable")),
-        "{flagged:?}"
-    );
-    let ignored = check_with_files(
-        &dynamic,
-        &config_yaml(&format!("unanalyzableSql: ignore\n{relations}")),
-        &[ts],
-    )
-    .unwrap();
-    assert!(ignored.is_empty(), "{ignored:?}");
-    let root = fixture("fail");
-    let unparseable = check_with_files(
-        &root,
-        &config_yaml(relations),
-        &[root.join("sql/unparseable.sql")],
-    )
-    .unwrap();
-    assert!(
-        unparseable
-            .iter()
-            .any(|finding| finding.message.contains("could not be analyzed")),
-        "{unparseable:?}"
-    );
     let unrelated = compile_options(&Options {
         relations: vec![RelationOption {
             table: "accounts".into(),
@@ -123,6 +72,7 @@ fn dynamic_unparseable_and_unrelated_tables() {
         ..Default::default()
     })
     .unwrap();
+    let root = fixture("fail");
     let sql = root.join("sql/001.sql");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&sql));
     let facts = crate::codebase::postgres::prepare_rule_sql_facts(

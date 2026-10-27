@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [sql/repeated.sql]
+    options:
+      sqlInclude: [sql/repeated.sql]
+      bannedShapes: [correlated-exists-set-operation, not-in-subquery, count-for-existence]
+      importSpecifier: "@example/db"

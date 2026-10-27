@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: postgres-redundant-index
+    scope: repository
+    options:
+      sqlInclude: [migrations/0001.sql, migrations/0002.sql]

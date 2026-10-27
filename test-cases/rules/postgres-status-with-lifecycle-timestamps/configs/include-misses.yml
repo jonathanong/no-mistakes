@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-status-with-lifecycle-timestamps
+    scope: repository
+    message: use one source of truth
+    include: [missing.json]
+    options:
+      schemaCatalogPath: schema.json
+      statusColumns: [state]
+      lifecycleVerbs: [sent, failed]

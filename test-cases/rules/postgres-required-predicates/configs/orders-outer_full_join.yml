@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      include: ["sql/outer-full.sql"]
+      sqlInclude: ["sql/outer-full.sql"]
+      relations:
+        - table: orders
+          requireColumns: [account_id]

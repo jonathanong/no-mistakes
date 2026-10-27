@@ -1,0 +1,531 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "absent_import_specifier": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 11,
+          "message": "undeclared-executor-types.ts:11: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 13,
+          "message": "undeclared-executor-types.ts:13: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 14,
+          "message": "undeclared-executor-types.ts:14: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 15,
+          "message": "undeclared-executor-types.ts:15: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 18,
+          "message": "undeclared-executor-types.ts:18: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 20,
+          "message": "undeclared-executor-types.ts:20: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 21,
+          "message": "undeclared-executor-types.ts:21: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 23,
+          "message": "undeclared-executor-types.ts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 24,
+          "message": "undeclared-executor-types.ts:24: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 25,
+          "message": "undeclared-executor-types.ts:25: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 34,
+          "message": "undeclared-executor-types.ts:34: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 36,
+          "message": "undeclared-executor-types.ts:36: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 40,
+          "message": "undeclared-executor-types.ts:40: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 43,
+          "message": "undeclared-executor-types.ts:43: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 45,
+          "message": "undeclared-executor-types.ts:45: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 48,
+          "message": "undeclared-executor-types.ts:48: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 6,
+          "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 7,
+          "message": "undeclared-executor-types.ts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 8,
+          "message": "undeclared-executor-types.ts:8: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared_imported_types": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "undeclared-constructor-alias.ts",
+          "import": "@example/db",
+          "line": 4,
+          "message": "undeclared-constructor-alias.ts:4: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        }
+      ],
+      "unprovenMemberQuerySql": 148,
+      "warnings": []
+    }
+  },
+  "empty_import_specifier": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 11,
+          "message": "undeclared-executor-types.ts:11: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 13,
+          "message": "undeclared-executor-types.ts:13: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 14,
+          "message": "undeclared-executor-types.ts:14: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 15,
+          "message": "undeclared-executor-types.ts:15: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 18,
+          "message": "undeclared-executor-types.ts:18: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 20,
+          "message": "undeclared-executor-types.ts:20: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 21,
+          "message": "undeclared-executor-types.ts:21: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 23,
+          "message": "undeclared-executor-types.ts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 24,
+          "message": "undeclared-executor-types.ts:24: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 25,
+          "message": "undeclared-executor-types.ts:25: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 34,
+          "message": "undeclared-executor-types.ts:34: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 36,
+          "message": "undeclared-executor-types.ts:36: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 40,
+          "message": "undeclared-executor-types.ts:40: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 43,
+          "message": "undeclared-executor-types.ts:43: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 45,
+          "message": "undeclared-executor-types.ts:45: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 48,
+          "message": "undeclared-executor-types.ts:48: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 6,
+          "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 7,
+          "message": "undeclared-executor-types.ts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 8,
+          "message": "undeclared-executor-types.ts:8: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "excluded_calls": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "unprovenMemberQuerySql": 17,
+      "warnings": []
+    }
+  },
+  "missing_types_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 15,
+          "message": "undeclared-executor-types.ts:15: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 18,
+          "message": "undeclared-executor-types.ts:18: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db/client`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 20,
+          "message": "undeclared-executor-types.ts:20: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 21,
+          "message": "undeclared-executor-types.ts:21: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 36,
+          "message": "undeclared-executor-types.ts:36: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db/client`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 48,
+          "message": "undeclared-executor-types.ts:48: postgres-require-query-annotation application #0 has unresolved SQL for unresolved-configured-executor-receiver: configured executor receiver of type `Executor` from `@example/db` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 7,
+          "message": "undeclared-executor-types.ts:7: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 8,
+          "message": "undeclared-executor-types.ts:8: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 9,
+          "message": "undeclared-executor-types.ts:9: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 6,
+          "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        }
+      ],
+      "unprovenMemberQuerySql": 144,
+      "warnings": []
+    }
+  },
+  "missing_types_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 6,
+          "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        }
+      ],
+      "unprovenMemberQuerySql": 144,
+      "warnings": []
+    }
+  },
+  "missing_types_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "undeclared-executor-types.ts",
+          "import": "@example/db",
+          "line": 15,
+          "message": "undeclared-executor-types.ts:15: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "import": "@example/db",
+          "line": 20,
+          "message": "undeclared-executor-types.ts:20: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "import": "@example/db",
+          "line": 21,
+          "message": "undeclared-executor-types.ts:21: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "import": "@example/db",
+          "line": 48,
+          "message": "undeclared-executor-types.ts:48: configured executor receiver of type `Executor` from `@example/db` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "import": "@example/db",
+          "line": 7,
+          "message": "undeclared-executor-types.ts:7: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "import": "@example/db",
+          "line": 8,
+          "message": "undeclared-executor-types.ts:8: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "import": "@example/db",
+          "line": 9,
+          "message": "undeclared-executor-types.ts:9: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "import": "@example/db/client",
+          "line": 18,
+          "message": "undeclared-executor-types.ts:18: undeclared executor type `PoolClient` from `@example/db/client`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "import": "@example/db/client",
+          "line": 36,
+          "message": "undeclared-executor-types.ts:36: undeclared executor type `PoolClient` from `@example/db/client`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-require-query-annotation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "undeclared-executor-types.ts",
+          "line": 6,
+          "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        }
+      ],
+      "unprovenMemberQuerySql": 144,
+      "warnings": []
+    }
+  }
+}

@@ -8,15 +8,11 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 #[cfg(test)]
-mod aggregate_operands_tests;
-#[cfg(test)]
 mod coverage_tests;
 #[cfg(test)]
 mod effort_tests;
 mod evaluate;
 mod low;
-#[cfg(test)]
-mod operand_boundaries_tests;
 #[cfg(test)]
 mod policy_tests;
 mod scan;

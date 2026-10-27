@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      shapes:
+        - name: append-only-events
+          tablePattern: ^domain_events$
+          requiredTriggers:
+            - function: fn_reject_mutation
+              events: [update, delete]
+              forEachRow: false

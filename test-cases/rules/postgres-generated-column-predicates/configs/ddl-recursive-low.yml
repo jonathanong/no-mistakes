@@ -1,0 +1,8 @@
+version: 2
+effort: low
+rules:
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    options:
+      sqlInclude: [migrations/001.sql]
+      executorNames: []

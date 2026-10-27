@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-required-comments
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      minLength: 10
+      objects: [table, view, materialized-view, column]
+      exemptColumnNamePatterns: [^(id|created_at|updated_at)$, ^vendor_]

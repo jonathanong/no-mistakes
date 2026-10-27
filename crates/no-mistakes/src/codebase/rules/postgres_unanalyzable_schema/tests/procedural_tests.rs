@@ -185,17 +185,5 @@ fn procedural_bodies_filter_commands_but_retain_unknown_sql_markers() {
                 .unanalyzable_statements,
             direct
         );
-        let findings = diagnostics_for_rule(&root, &config, &files, &facts, "postgres-fk-index")
-            .unwrap()
-            .findings;
-        assert_eq!(findings.len(), direct.len(), "{name}: {findings:?}");
-        assert_eq!(
-            findings
-                .iter()
-                .map(|finding| finding.line)
-                .collect::<Vec<_>>(),
-            expected.iter().map(|(line, _)| *line).collect::<Vec<_>>(),
-            "{name}"
-        );
     }
 }

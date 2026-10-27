@@ -1,0 +1,7 @@
+version: 2
+unanalyzable: advise
+rules:
+  - rule: postgres-require-named-constraints
+    scope: repository
+    options:
+      sqlInclude: [migrations/001.sql]

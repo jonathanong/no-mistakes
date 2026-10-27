@@ -1,0 +1,19 @@
+version: 2
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      shapes:
+        - name: alpha
+          tablePattern: ^orders$
+          requiredColumns:
+            - name: alpha
+        - name: beta
+          tablePattern: ^orders$
+          requiredColumns:
+            - name: beta
+      bannedTablePatterns:
+        - pattern: ^orders$
+          message: not a domain table

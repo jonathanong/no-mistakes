@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-status-with-lifecycle-timestamps
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      statusColumns: [status, state]
+      minLifecycleColumns: 3
+      lifecycleVerbs: [sent, failed, paid, started, finished, bounced]

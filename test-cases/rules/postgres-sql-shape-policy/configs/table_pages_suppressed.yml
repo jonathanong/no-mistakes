@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [sql/table-pages.sql, src/table-pages.ts]
+    options:
+      sqlInclude: [sql/table-pages.sql]
+      bannedShapes: [keyset-only-sweep]
+      importSpecifier: "@example/db"

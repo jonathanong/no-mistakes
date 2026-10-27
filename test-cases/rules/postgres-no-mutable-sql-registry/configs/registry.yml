@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    options:
+      importSpecifier: "@example/db"

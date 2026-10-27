@@ -3,7 +3,10 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+// Output cases moved to cli_postgres_snapshot_no_offset. Keep invalid options,
+// read errors, compile_options, and the pre-suppression count below.
 
 fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/rules/postgres-no-offset")
@@ -24,120 +27,20 @@ pub(super) fn config_with_options(yaml: &str) -> NoMistakesConfig {
     config
 }
 
-fn default_config() -> NoMistakesConfig {
-    config_with_options("{}")
-}
-
-fn ts_file(root: &Path) -> PathBuf {
-    root.join("src/query.ts")
-}
-
-fn findings_for(scenario: &str) -> Vec<RuleFinding> {
-    let root = fixture(scenario);
-    let file = ts_file(&root);
-    check_with_files(&root, &default_config(), &[file]).unwrap()
-}
-
-#[test]
-fn fail_fixture_reports_offset() {
-    let findings = findings_for("fail");
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].rule, RULE_ID);
-    assert_eq!(findings[0].file, "src/query.ts");
-    assert!(findings[0].line > 0);
-    assert_eq!(findings[0].target.as_deref(), Some("offset"));
-    assert!(
-        findings[0].message.contains("do not use SQL OFFSET"),
-        "{findings:#?}"
-    );
-    assert!(
-        !findings[0].message.contains("optimizer fence"),
-        "{findings:#?}"
-    );
-}
-
-#[test]
-fn standalone_table_offset_is_reported() {
-    let root = fixture("standalone-table");
-    let findings = check_with_files(
-        &root,
-        &config_with_options("sqlInclude: ['db/**/*.sql']"),
-        &[root.join("db/query.sql")],
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].line, 2);
-    assert_eq!(findings[0].target.as_deref(), Some("offset"));
-}
-
-#[test]
-fn interpolated_offset_is_reported() {
-    let findings = findings_for("fail-placeholder");
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-}
-
-#[test]
-fn limit_without_offset_is_clean() {
-    assert!(findings_for("pass-limit").is_empty());
-}
-
-#[test]
-fn offset_in_string_literal_is_clean() {
-    assert!(findings_for("pass-prose").is_empty());
-}
-
 #[test]
 fn honors_disable_comments() {
     let root = fixture("fail");
     let file = root.join("src/disabled.ts");
-    let mut findings =
-        check_with_files(&root, &default_config(), std::slice::from_ref(&file)).unwrap();
+    let mut findings = check_with_files(
+        &root,
+        &config_with_options("{}"),
+        std::slice::from_ref(&file),
+    )
+    .unwrap();
     assert_eq!(findings.len(), 1, "{findings:#?}");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&file));
     super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
     assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
-fn include_and_exclude_globs_filter_files() {
-    let root = fixture("fail");
-    let files = vec![ts_file(&root)];
-    let excluded = check_with_files(
-        &root,
-        &config_with_options("exclude: ['src/query.ts']"),
-        &files,
-    )
-    .unwrap();
-    assert!(excluded.is_empty(), "{excluded:#?}");
-
-    let included = check_with_files(
-        &root,
-        &config_with_options("include: ['src/query.ts']"),
-        &files,
-    )
-    .unwrap();
-    assert_eq!(included.len(), 1);
-
-    let missed = check_with_files(
-        &root,
-        &config_with_options("include: ['src/missing.ts']"),
-        &files,
-    )
-    .unwrap();
-    assert!(missed.is_empty(), "{missed:#?}");
-}
-
-#[test]
-fn custom_executor_and_specifier_are_required_to_match() {
-    let root = fixture("fail");
-    let files = vec![ts_file(&root)];
-    let other = check_with_files(
-        &root,
-        &config_with_options("importSpecifier: '@other/db'\nexecutorNames: [run]"),
-        &files,
-    )
-    .unwrap();
-    assert!(other.is_empty(), "{other:#?}");
 }
 
 #[test]
@@ -146,7 +49,7 @@ fn invalid_include_glob_errors() {
     let error = check_with_files(
         &root,
         &config_with_options("include: ['[']"),
-        &[ts_file(&root)],
+        &[root.join("src/query.ts")],
     )
     .expect_err("invalid glob");
     assert!(error.to_string().contains("invalid glob"), "{error}");
@@ -158,7 +61,7 @@ fn invalid_exclude_glob_errors() {
     let error = check_with_files(
         &root,
         &config_with_options("exclude: ['[']"),
-        &[ts_file(&root)],
+        &[root.join("src/query.ts")],
     )
     .expect_err("invalid glob");
     assert!(error.to_string().contains("invalid glob"), "{error}");
@@ -168,30 +71,8 @@ fn invalid_exclude_glob_errors() {
 fn missing_source_file_errors() {
     let root = fixture("fail");
     let missing = root.join("src/does-not-exist.ts");
-    let error = check_with_files(&root, &default_config(), &[missing]).expect_err("read");
+    let error = check_with_files(&root, &config_with_options("{}"), &[missing]).expect_err("read");
     assert!(error.to_string().contains("failed to read"), "{error}");
-}
-
-#[test]
-fn dynamic_and_unparseable_embedded_calls_are_ignored() {
-    let root = fixture("review-followups");
-    let files = [root.join("src/invalid.ts")];
-    let findings = check_with_files(
-        &root,
-        &config_with_options("unanalyzableSql: ignore"),
-        &files,
-    )
-    .unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
-    // By default only the opaque `query(text)` call fails closed; unparseable static SQL stays quiet.
-    let findings = check_with_files(&root, &default_config(), &files).unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| (finding.line, finding.target.as_deref()))
-            .collect::<Vec<_>>(),
-        [(2, Some("unanalyzable"))]
-    );
 }
 
 #[test]

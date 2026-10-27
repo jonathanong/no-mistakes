@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    include:
+      - composed-helper-alias.ts
+    options:
+      importSpecifier: "@example/db"

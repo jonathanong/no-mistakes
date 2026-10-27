@@ -99,8 +99,6 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
 }
 
 #[cfg(test)]
-mod nested_fragment_tests;
-#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod verdict_tests;

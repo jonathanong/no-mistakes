@@ -26,8 +26,50 @@ mod cli_mrf_snapshot_rust_no_inline_tests;
 mod cli_postgres_snapshot_constraint_validate;
 #[path = "cli_postgres_snapshot_fk_on_delete.rs"]
 mod cli_postgres_snapshot_fk_on_delete;
+#[path = "cli_postgres_snapshot_generated_column_writes.rs"]
+mod cli_postgres_snapshot_generated_column_writes;
 #[path = "cli_postgres_snapshot_named_constraints.rs"]
 mod cli_postgres_snapshot_named_constraints;
+#[path = "cli_postgres_snapshot_no_add_column.rs"]
+mod cli_postgres_snapshot_no_add_column;
+#[path = "cli_postgres_snapshot_no_mutable_sql_registry.rs"]
+mod cli_postgres_snapshot_no_mutable_sql_registry;
+#[path = "cli_postgres_snapshot_no_offset.rs"]
+mod cli_postgres_snapshot_no_offset;
+#[path = "cli_postgres_snapshot_no_test_state_mutation.rs"]
+mod cli_postgres_snapshot_no_test_state_mutation;
+#[path = "cli_postgres_snapshot_no_unbounded_sql_identifier.rs"]
+mod cli_postgres_snapshot_no_unbounded_sql_identifier;
+#[path = "cli_postgres_snapshot_object_naming.rs"]
+mod cli_postgres_snapshot_object_naming;
+#[path = "cli_postgres_snapshot_redundant_index.rs"]
+mod cli_postgres_snapshot_redundant_index;
+#[path = "cli_postgres_snapshot_require_query_annotation.rs"]
+mod cli_postgres_snapshot_require_query_annotation;
+#[path = "cli_postgres_snapshot_required_comments.rs"]
+mod cli_postgres_snapshot_required_comments;
+#[path = "cli_postgres_snapshot_required_predicates.rs"]
+mod cli_postgres_snapshot_required_predicates;
+#[path = "cli_postgres_snapshot_sql_shape_policy.rs"]
+mod cli_postgres_snapshot_sql_shape_policy;
+#[path = "cli_postgres_snapshot_sql_shape_policy_bounded.rs"]
+mod cli_postgres_snapshot_sql_shape_policy_bounded;
+#[path = "cli_postgres_snapshot_sql_shape_policy_returns.rs"]
+mod cli_postgres_snapshot_sql_shape_policy_returns;
+#[path = "cli_postgres_snapshot_sql_statement_policy.rs"]
+mod cli_postgres_snapshot_sql_statement_policy;
+#[path = "cli_postgres_snapshot_status_lifecycle.rs"]
+mod cli_postgres_snapshot_status_lifecycle;
+#[path = "cli_postgres_snapshot_table_shape.rs"]
+mod cli_postgres_snapshot_table_shape;
+#[path = "cli_postgres_snapshot_transformed_uuid_predicates.rs"]
+mod cli_postgres_snapshot_transformed_uuid_predicates;
+#[path = "cli_postgres_snapshot_unanalyzable_schema.rs"]
+mod cli_postgres_snapshot_unanalyzable_schema;
+#[path = "cli_postgres_snapshot_undeclared_executors.rs"]
+mod cli_postgres_snapshot_undeclared_executors;
+#[path = "cli_postgres_snapshot_unmatched_executors.rs"]
+mod cli_postgres_snapshot_unmatched_executors;
 
 #[path = "cli_check_rules_postgres_json_relation_ids.rs"]
 mod cli_check_rules_postgres_json_relation_ids;

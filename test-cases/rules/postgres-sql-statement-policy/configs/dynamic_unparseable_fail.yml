@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    include: [dynamic.test.ts]
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [TransactionQuery]
+      sqlInclude: ["sql/seeds/*.sql"]
+      unanalyzableSql: fail

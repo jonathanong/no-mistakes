@@ -10,28 +10,10 @@ mod procedural_tests;
 mod recursive_heads;
 mod unsupported_policy;
 
+// Output cases moved to cli_postgres_snapshot_unanalyzable_schema.
+
 fn fixture() -> PathBuf {
     crate::test_support::rule_fixture_root("postgres-ddl-unanalyzable")
-}
-
-#[test]
-fn valid_postgres_parser_gaps_name_suppression_and_policy() {
-    let root = fixture().join("unsupported-valid");
-    let (config, files, facts) = prepared(&root, "report.yml");
-    let output = diagnostics(&root, &config, &files, &facts).unwrap();
-    assert_eq!(output.findings.len(), 3, "{:?}", output.findings);
-    for (index, finding) in output.findings.iter().enumerate() {
-        assert_eq!(finding.line, index + 1);
-        assert!(finding
-            .message
-            .contains("could not be analyzed for postgres-fk-index"));
-        assert!(finding
-            .message
-            .contains("no-mistakes-disable-next-line postgres-fk-index"));
-        assert!(finding.message.contains("options.unanalyzable"));
-        assert!(finding.message.contains("advise or ignore"));
-        assert!(!finding.message.contains("rewrite it as supported static"));
-    }
 }
 
 #[test]
@@ -72,43 +54,6 @@ fn migration_facts_keep_each_failed_chunk_but_not_real_discard() {
 }
 
 #[test]
-fn every_schema_rule_reports_each_failed_statement_at_max_and_low() {
-    let root = fixture();
-    for config_name in ["report.yml", "low.yml"] {
-        let (config, files, facts) = prepared(&root, config_name);
-        let output = diagnostics(&root, &config, &files, &facts).unwrap();
-        assert!(output.advisories.is_empty());
-        for rule_id in RULE_IDS {
-            let found = output
-                .findings
-                .iter()
-                .filter(|finding| finding.rule == *rule_id)
-                .collect::<Vec<_>>();
-            assert_eq!(found.len(), 2, "{config_name} {rule_id}: {found:?}");
-            assert_eq!(
-                found.iter().map(|item| item.line).collect::<Vec<_>>(),
-                [3, 6]
-            );
-            assert!(found.iter().all(|item| item.file == "migrations/001.sql"));
-        }
-    }
-}
-
-#[test]
-fn policy_routes_the_same_markers_to_advisories_or_ignores_them() {
-    let root = fixture();
-    let (config, files, facts) = prepared(&root, "advise.yml");
-    let advised = diagnostics(&root, &config, &files, &facts).unwrap();
-    assert!(advised.findings.is_empty());
-    assert_eq!(advised.advisories.len(), RULE_IDS.len() * 2);
-
-    let (config, files, facts) = prepared(&root, "ignore.yml");
-    let ignored = diagnostics(&root, &config, &files, &facts).unwrap();
-    assert!(ignored.findings.is_empty());
-    assert!(ignored.advisories.is_empty());
-}
-
-#[test]
 fn nested_do_markers_keep_individual_heads_and_lines() {
     let root = fixture().join("nested");
     let sql = std::fs::read_to_string(root.join("migrations/001.sql")).unwrap();
@@ -120,20 +65,6 @@ fn nested_do_markers_keep_individual_heads_and_lines() {
     );
     assert!(markers[0].head.contains("alpha"));
     assert!(markers[1].head.contains("beta"));
-    let (config, files, facts) = prepared(&root, "report.yml");
-    let output = diagnostics(&root, &config, &files, &facts).unwrap();
-    assert!(output.findings.is_empty());
-    assert_eq!(
-        output
-            .advisories
-            .iter()
-            .map(|item| item.line)
-            .collect::<Vec<_>>(),
-        [4, 5]
-    );
-    for (advisory, marker) in output.advisories.iter().zip(&markers) {
-        assert_eq!(advisory.target.as_deref(), Some(marker.head.as_str()));
-    }
 }
 
 #[test]

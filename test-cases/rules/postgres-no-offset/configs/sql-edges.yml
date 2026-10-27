@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    include:
+      - db/edges.sql
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["db/**/*.sql"]

@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    include:
+      - src/namespace.ts
+    options:
+      include: [src/namespace.ts]
+      importSpecifier: "@example/db"
+      executorNames: [read]
+effort: low

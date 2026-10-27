@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      bannedTablePatterns:
+        - pattern: ^order_history$
+          message: banned
+      allow:
+        - object: "table:order_history"
+          reason: kept
+        - object: "table:missing"
+          reason: not a finding

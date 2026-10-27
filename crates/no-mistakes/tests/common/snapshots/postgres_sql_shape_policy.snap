@@ -1,0 +1,1360 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowed_values_and_ignored_tables": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 5,
+          "message": "sql/001.sql:5: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 6,
+          "message": "sql/001.sql:6: LIMIT 7 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 7 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 6,
+          "message": "sql/001.sql:6: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bind_only_guard": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bounded_shapes_off_by_default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "bounded_work_selecting_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "builder_fragment_provenance": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/fragments.mts",
+          "line": 13,
+          "message": "src/fragments.mts:13: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "src/fragments.mts",
+          "line": 4,
+          "message": "src/fragments.mts:4: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "casted_expanded_keysets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 15,
+          "message": "sql/pages.sql:15: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 19,
+          "message": "sql/pages.sql:19: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 2,
+          "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 21,
+          "message": "sql/pages.sql:21: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 23,
+          "message": "sql/pages.sql:23: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 8,
+          "message": "sql/pages.sql:8: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 9,
+          "message": "sql/pages.sql:9: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "commuted_expanded_keysets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 2,
+          "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 3,
+          "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "correlated_exists_union": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "cursor_window_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "derived_union_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "digit_separator_limits": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: LIMIT 1000 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1000 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: LIMIT 100 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 100 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: LIMIT 50 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 50 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled_next_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_sql_fail_closed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: executed SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_sql_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded_builder_correlated_unions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/builders.ts",
+          "line": 15,
+          "message": "src/builders.ts:15: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        },
+        {
+          "file": "src/builders.ts",
+          "line": 26,
+          "message": "src/builders.ts:26: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        },
+        {
+          "file": "src/builders.ts",
+          "line": 5,
+          "message": "src/builders.ts:5: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_allowed_values": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: LIMIT 20 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 20 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: walks every row of currencies in code order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"currencies\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: walks every row of public.currencies in code order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"public\".\"currencies\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 6,
+          "message": "sql/001.sql:6: LIMIT 7 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 7 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 6,
+          "message": "sql/001.sql:6: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "executed_local_builder_once": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/builders.ts",
+          "line": 5,
+          "message": "src/builders.ts:5: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "executor_sql_source_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/jobs.ts",
+          "line": 5,
+          "message": "src/jobs.ts:5: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "src/jobs.ts",
+          "line": 5,
+          "message": "src/jobs.ts:5: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "expanded_keysets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 10,
+          "message": "sql/pages.sql:10: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 2,
+          "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 3,
+          "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fluent_builder_overlap_once": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/builders.ts",
+          "line": 5,
+          "message": "src/builders.ts:5: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore_items_table_not_quoted_dot": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: walks every row of work.items in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"work.items\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore_tables_quoted_case": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: walks every row of Orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"Orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 5,
+          "message": "sql/001.sql:5: walks every row of work.Orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"work.Orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 6,
+          "message": "sql/001.sql:6: walks every row of  orders  in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\" orders \"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore_tables_quoted_identifiers": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 6,
+          "message": "sql/001.sql:6: walks every row of  orders  in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\" orders \"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "implicit_fetch_clause_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/002.sql",
+          "line": 3,
+          "message": "sql/002.sql:3: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported_sql_statement_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/builders.ts",
+          "line": 4,
+          "message": "src/builders.ts:4: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "keyset_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: walks every row of invoices in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"invoices\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: walks every row of events in created_at, id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"events\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_limit_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: LIMIT 1000 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1000 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: LIMIT 50 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 50 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_limits_and_keyset_walks": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: LIMIT 1000 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1000 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: walks every row of invoices in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"invoices\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: LIMIT 50 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 50 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: walks every row of events in created_at, id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"events\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline_builder_overlap_once": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/builders.ts",
+          "line": 5,
+          "message": "src/builders.ts:5: builder SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "non_sql_append_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "non_sql_string_returns_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nonselective_deleted_at_walk": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: LIMIT 1000 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1000 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: walks every row of invoices in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"invoices\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: LIMIT 50 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 50 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: walks every row of events in created_at, id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"events\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "numeric_hex_literal_limits": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 1,
+          "message": "sql/pages.sql:1: LIMIT 255 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 255 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 6,
+          "message": "sql/pages.sql:6: LIMIT 0 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 0 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "opaque_builder_fail_closed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/builders.ts",
+          "line": 6,
+          "message": "src/builders.ts:6: builder SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "opaque_builder_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "option_exclude_drops_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "option_include_keeps_sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "predicate_case_literal": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: walks every row of jobs in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"jobs\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "probe_union_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_dot_walks": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: walks every row of work.items in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"work\".\"items\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: walks every row of work.items in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"work.items\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "radix_prefix_literal_limits": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 1,
+          "message": "sql/pages.sql:1: LIMIT 1005 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1005 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 2,
+          "message": "sql/pages.sql:2: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 3,
+          "message": "sql/pages.sql:3: LIMIT 56 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 56 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reassigned_builder_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reordered_expanded_keysets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 2,
+          "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 3,
+          "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "restricted_correlated_union": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/restricted-correlated.sql",
+          "line": 2,
+          "message": "sql/restricted-correlated.sql:2: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "restricted_union_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "returned_sql_fragment_fail_closed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/operators.ts",
+          "line": 17,
+          "message": "src/operators.ts:17: builder SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        },
+        {
+          "file": "src/operators.ts",
+          "line": 21,
+          "message": "src/operators.ts:21: builder SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        },
+        {
+          "file": "src/operators.ts",
+          "line": 9,
+          "message": "src/operators.ts:9: builder SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "seeded_where_and_sample": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/003.sql",
+          "line": 1,
+          "message": "sql/003.sql:1: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/003.sql",
+          "line": 2,
+          "message": "sql/003.sql:2: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/003.sql",
+          "line": 4,
+          "message": "sql/003.sql:4: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "select_fragment_builder": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/builders.ts",
+          "line": 4,
+          "message": "src/builders.ts:4: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sequential_typed_append": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/builders.ts",
+          "line": 5,
+          "message": "src/builders.ts:5: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "template_marker_keyset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/templates.mts",
+          "line": 5,
+          "message": "src/templates.mts:5: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "uncorrelated_runtime_builder_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "uncorrelated_union_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unparseable_builder_fail_closed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/builders.ts",
+          "line": 4,
+          "message": "src/builders.ts:4: builder SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unparseable_builder_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unparseable_schema_sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/unparseable.sql",
+          "line": 1,
+          "message": "sql/unparseable.sql:1: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unrelated_sql_statement_type_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

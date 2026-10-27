@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include:
+      - values.sql
+      - schema.json
+    options:
+      schemaCatalogPath: schema.json
+      sqlInclude: ["*.sql"]
+      importSpecifier: db
+      executorNames: [query]

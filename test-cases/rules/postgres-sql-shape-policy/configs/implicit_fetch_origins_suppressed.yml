@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [sql/implicit-fetch-origins.sql]
+    options:
+      bannedShapes: [literal-limit]
+      shapeOptions:
+        literalLimit:
+          allowedValues: []
+      sqlInclude: [sql/implicit-fetch-origins.sql]
+      importSpecifier: "@example/db"

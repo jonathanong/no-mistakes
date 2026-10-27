@@ -2,7 +2,6 @@ mod config;
 mod edges;
 mod expand;
 mod findings;
-mod replacement;
 mod support;
 mod valid;
 
@@ -26,6 +25,7 @@ fn proposed_config_compiles_and_stale_allow_is_reported() {
     );
 }
 
+// Output cases moved to cli_postgres_snapshot_object_naming.
 #[test]
 fn check_with_files_reads_a_prepared_catalog() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -44,38 +44,6 @@ fn check_with_files_reads_a_prepared_catalog() {
     assert!(findings.is_empty(), "{findings:#?}");
     let again = super::check_with_files(&root, &config, &[root.join("schema.json")]).unwrap();
     assert_eq!(findings, again);
-}
-
-#[test]
-fn custom_message_and_include_filter_the_catalog() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/postgres/object-naming/pass");
-    let mut config = NoMistakesConfig::default();
-    config.rules.push(RuleDef {
-        rule: super::RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        message: Some("use the shared names".to_string()),
-        options: serde_yaml::from_str(
-            "schemaCatalogPath: schema.json\npatterns:\n  table: '^widgets$'\n",
-        )
-        .unwrap(),
-        ..RuleDef::default()
-    });
-    let messages = super::check_with_files(&root, &config, &[root.join("schema.json")])
-        .unwrap()
-        .into_iter()
-        .map(|finding| finding.message)
-        .collect::<Vec<_>>();
-    assert_eq!(
-        messages,
-        vec!["schema.json: table:order_line_items: use the shared names".to_string()]
-    );
-    config.rules[0].include = vec!["missing.json".to_string()];
-    assert!(
-        super::check_with_files(&root, &config, &[root.join("schema.json")])
-            .unwrap()
-            .is_empty()
-    );
 }
 
 #[test]

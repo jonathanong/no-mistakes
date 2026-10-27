@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - tests/mutations.test.ts
+      - helpers/schema-sql.ts
+      - helpers/reset.ts
+      - src/production.ts
+      - migrations/001.sql
+    options:
+      testGlobs: ["tests/**/*.test.ts"]
+      helperRoots: ["helpers/**"]
+      importSpecifier: "@example/db"

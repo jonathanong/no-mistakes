@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      shapes:
+        - name: ref-pattern
+          tablePattern: ^ref_pattern$
+          requiredColumns:
+            - namePattern: _id$
+              references: [users, accounts]

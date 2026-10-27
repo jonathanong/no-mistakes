@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      shapes:
+        - name: revision-history
+          tablePattern: ^nullable_revisions$
+          requiredColumns:
+            - name: revised_by_id
+              nullable: true

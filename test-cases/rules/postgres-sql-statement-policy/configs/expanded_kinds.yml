@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    include: [kinds.sql]
+    options:
+      bannedStatements: [ddl]
+      sqlInclude: [kinds.sql]

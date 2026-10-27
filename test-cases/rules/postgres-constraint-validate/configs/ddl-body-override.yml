@@ -1,0 +1,8 @@
+version: 2
+unanalyzable: advise
+rules:
+  - rule: postgres-constraint-validate
+    scope: repository
+    options:
+      sqlInclude: [migrations/001.sql]
+      unanalyzable: report

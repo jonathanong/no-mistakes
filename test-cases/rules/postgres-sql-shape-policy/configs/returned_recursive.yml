@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [src/recursive.ts]
+    options:
+      unanalyzableSql: ignore
+      bannedShapes: [literal-limit]
+      importSpecifier: "@example/db"

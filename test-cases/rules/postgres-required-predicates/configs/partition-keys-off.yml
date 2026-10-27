@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["sql/fail-kind.sql"]
+      schemaCatalogPath: schema.json
+      partitionKeys: "off"
+      relations:
+        - table: orders
+          requireColumns: [account_id]

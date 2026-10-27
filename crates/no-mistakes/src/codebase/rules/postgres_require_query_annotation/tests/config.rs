@@ -1,46 +1,5 @@
+// Output cases moved to cli_postgres_snapshot_require_query_annotation.
 use super::*;
-
-#[test]
-fn include_and_exclude_globs_filter_files() {
-    let root = fixture("fail");
-    let files = vec![ts_file(&root)];
-    let excluded = check_with_files(
-        &root,
-        &config_with_options("exclude: ['src/query.ts']"),
-        &files,
-    )
-    .unwrap();
-    assert!(excluded.is_empty(), "{excluded:#?}");
-
-    let included = check_with_files(
-        &root,
-        &config_with_options("include: ['src/query.ts']"),
-        &files,
-    )
-    .unwrap();
-    assert_eq!(included.len(), 1);
-
-    let missed = check_with_files(
-        &root,
-        &config_with_options("include: ['src/missing.ts']"),
-        &files,
-    )
-    .unwrap();
-    assert!(missed.is_empty(), "{missed:#?}");
-}
-
-#[test]
-fn custom_executor_and_specifier_are_required_to_match() {
-    let root = fixture("fail");
-    let files = vec![ts_file(&root)];
-    let other = check_with_files(
-        &root,
-        &config_with_options("importSpecifier: '@other/db'\nexecutorNames: [run]"),
-        &files,
-    )
-    .unwrap();
-    assert!(other.is_empty(), "{other:#?}");
-}
 
 #[test]
 fn invalid_include_glob_errors() {

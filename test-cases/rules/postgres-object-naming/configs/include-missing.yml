@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-object-naming
+    scope: repository
+    message: use the shared names
+    include:
+      - "missing.json"
+    options:
+      schemaCatalogPath: schema.json
+      patterns:
+        table: "^widgets$"

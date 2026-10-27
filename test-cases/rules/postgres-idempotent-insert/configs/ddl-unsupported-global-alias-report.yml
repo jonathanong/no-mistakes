@@ -1,0 +1,8 @@
+version: 2
+unanalyzableSql: report
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      sqlInclude: [migrations/001.sql]
+      executorNames: []

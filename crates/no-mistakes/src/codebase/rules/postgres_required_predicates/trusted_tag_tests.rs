@@ -1,3 +1,4 @@
+// Output cases moved to cli_postgres_snapshot_required_predicates.
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -39,18 +40,6 @@ fn anchors(findings: &[RuleFinding]) -> Vec<(Option<String>, usize)> {
 }
 
 #[test]
-fn configured_named_tag_anchors_at_the_relation_line() {
-    let findings = run("src/imported-tag.ts", TRUSTED, false);
-    assert_eq!(anchors(&findings), vec![(Some("topics".into()), 10)]);
-}
-
-#[test]
-fn same_tag_without_the_option_stays_unanalyzable() {
-    let findings = run("src/imported-tag.ts", BASE, false);
-    assert_eq!(anchors(&findings), vec![(Some("unanalyzable".into()), 8)]);
-}
-
-#[test]
 fn in_sql_directive_suppresses_only_after_the_tag_is_trusted() {
     assert_eq!(
         anchors(&run("src/imported-tag-suppressed.ts", BASE, true)),
@@ -61,22 +50,4 @@ fn in_sql_directive_suppresses_only_after_the_tag_is_trusted() {
         vec![(Some("topics".into()), 10)]
     );
     assert!(run("src/imported-tag-suppressed.ts", TRUSTED, true).is_empty());
-}
-
-#[test]
-fn same_named_tag_from_another_module_stays_untrusted() {
-    let findings = run("src/imported-tag-other-module.ts", TRUSTED, false);
-    assert_eq!(anchors(&findings), vec![(Some("unanalyzable".into()), 7)]);
-}
-
-#[test]
-fn subpath_is_analyzed_and_a_sibling_prefix_is_not() {
-    assert_eq!(
-        anchors(&run("src/imported-tag-subpath.ts", TRUSTED, false)),
-        vec![(Some("topics".into()), 8)]
-    );
-    assert_eq!(
-        anchors(&run("src/imported-tag-sibling.ts", TRUSTED, false)),
-        vec![(Some("unanalyzable".into()), 6)]
-    );
 }

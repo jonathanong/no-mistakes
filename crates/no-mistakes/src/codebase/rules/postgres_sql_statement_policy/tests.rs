@@ -3,7 +3,9 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+// Output cases moved to cli_postgres_snapshot_sql_statement_policy.
 
 pub(super) fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -23,82 +25,6 @@ fn config() -> NoMistakesConfig {
         }],
         ..Default::default()
     }
-}
-
-fn run(root: &Path) -> Vec<RuleFinding> {
-    let files = vec![root.join("sql/001.sql")];
-    check_with_files(root, &config(), &files).unwrap()
-}
-
-#[test]
-fn flags_create_table() {
-    let findings = run(&fixture("fail"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("CREATE TABLE"));
-    assert!(findings[0].message.contains("CREATE TABLE"), "{findings:?}");
-}
-
-#[test]
-fn flags_default_banned_kinds() {
-    let findings = run(&fixture("fail-kinds"));
-    let kinds: Vec<_> = findings
-        .iter()
-        .filter_map(|finding| finding.target.as_deref())
-        .collect();
-    assert_eq!(
-        kinds,
-        [
-            "CREATE TABLE",
-            "ALTER TABLE",
-            "CREATE INDEX",
-            "CREATE VIEW",
-            "TRUNCATE",
-            "DROP INDEX",
-            "DROP VIEW",
-        ],
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn flags_create_table_inside_do_block() {
-    let findings = run(&fixture("fail-do-block"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("CREATE TABLE"));
-}
-
-#[test]
-fn inserts_and_functions_are_clean() {
-    assert!(run(&fixture("pass")).is_empty());
-}
-
-#[test]
-fn comments_and_other_create_kinds_do_not_inherit_table_policy() {
-    let findings = run(&fixture("pass-postgres-regress"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].line, 5);
-    assert_eq!(findings[0].target.as_deref(), Some("CREATE TABLE"));
-}
-
-#[test]
-fn custom_banned_statements_narrow_the_rule() {
-    let root = fixture("fail-kinds");
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(
-                "sqlInclude: [\"sql/**/*.sql\"]\nbannedStatements: [\"TRUNCATE\"]",
-            )
-            .unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    let files = vec![root.join("sql/001.sql")];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("TRUNCATE"));
 }
 
 #[test]
@@ -149,44 +75,10 @@ fn embedded_config(unanalyzable: &str) -> NoMistakesConfig {
 }
 
 #[test]
-fn embedded_executors_honor_application_scope_and_sql_include() {
-    let root = fixture("embedded");
-    let files = [
-        "policy.test.ts",
-        "excluded.test.ts",
-        "runtime.ts",
-        "sql/migration.sql",
-    ]
-    .map(|file| root.join(file));
-    let findings = check_with_files(&root, &embedded_config("ignore"), &files).unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|f| (f.file.as_str(), f.line, f.target.as_deref()))
-            .collect::<Vec<_>>(),
-        vec![
-            ("policy.test.ts", 2, Some("ALTER TABLE")),
-            ("policy.test.ts", 4, Some("CREATE VIEW")),
-            ("policy.test.ts", 6, Some("TRUNCATE"))
-        ]
-    );
-}
-
-#[test]
 fn dynamic_and_unparseable_sql_follow_policy() {
+    // Finding cases moved to cli_postgres_snapshot_sql_statement_policy.
     let root = fixture("embedded");
     let files = [root.join("dynamic.test.ts")];
-    assert!(check_with_files(&root, &embedded_config("ignore"), &files)
-        .unwrap()
-        .is_empty());
-    let findings = check_with_files(&root, &embedded_config("fail"), &files).unwrap();
-    assert_eq!(
-        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
-        vec![2, 3]
-    );
-    assert!(findings
-        .iter()
-        .all(|f| f.target.as_deref() == Some("unanalyzable-sql")));
     assert!(check_with_files(&root, &embedded_config("invalid"), &files)
         .unwrap_err()
         .to_string()
@@ -208,24 +100,6 @@ fn embedded_suppression_uses_ts_source_lines() {
 }
 
 #[test]
-fn embedded_static_routine_ddl_reuses_schema_categories() {
-    let root = fixture("embedded");
-    let findings = check_with_files(
-        &root,
-        &embedded_config("ignore"),
-        &[root.join("routines.test.ts")],
-    )
-    .unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|f| (f.line, f.target.as_deref()))
-            .collect::<Vec<_>>(),
-        vec![(4, Some("CREATE TABLE")), (5, Some("ALTER TABLE"))]
-    );
-}
-
-#[test]
 fn legacy_sql_only_policy_does_not_read_or_parse_ts() {
     let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
     crate::codebase::postgres::configure_prepared_postgres_plan(
@@ -243,21 +117,7 @@ fn legacy_sql_only_policy_does_not_read_or_parse_ts() {
     let root = fixture("embedded");
     let files = [root.join("unparsed.ts")];
     let sources = super::super::source_store_for_files(&files);
-    assert!(
-        check_with_files_and_sources(&root, &config(), &files, &sources)
-            .unwrap()
-            .is_empty()
-    );
+    // Emptiness of the sql-only scan is in the snapshot. This call must not read TS.
+    check_with_files_and_sources(&root, &config(), &files, &sources).unwrap();
     assert_eq!(sources.physical_read_count(), 0);
-}
-
-#[test]
-fn custom_banned_statements_also_narrow_embedded_calls() {
-    let root = fixture("embedded");
-    let mut config = embedded_config("fail");
-    config.rules[0].options["bannedStatements"] = serde_yaml::from_str("[TRUNCATE]").unwrap();
-    let findings = check_with_files(&root, &config, &[root.join("policy.test.ts")]).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].line, 6);
-    assert_eq!(findings[0].target.as_deref(), Some("TRUNCATE"));
 }

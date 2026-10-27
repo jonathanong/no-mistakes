@@ -1,0 +1,8 @@
+version: 2
+unanalyzable: report
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      sqlInclude: [migrations/branch-bodies.sql, migrations/copy-before-head.sql, migrations/group-rewrite-heads.sql, migrations/malformed-openers.sql, migrations/radix-heads.sql, migrations/rewrite-heads.sql]
+      executorNames: []

@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - write.ts
+    options:
+      importSpecifier: "@example/db"

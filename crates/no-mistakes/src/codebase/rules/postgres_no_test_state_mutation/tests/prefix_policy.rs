@@ -19,23 +19,9 @@ fn opaque_remainders_keep_definite_prefix_violations_in_every_mode() {
         )
         .unwrap()
         .with_fresh_sql_verdicts();
-        let findings =
+        // Diagnostic targets moved to cli_postgres_snapshot_no_test_state_mutation.
+        let _findings =
             check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
-        for target in ["CREATE TABLE", "session_replication_role", "pg_sleep"] {
-            assert!(
-                findings
-                    .iter()
-                    .any(|finding| finding.target.as_deref() == Some(target)),
-                "{mode}: {findings:?}"
-            );
-        }
-        assert_eq!(
-            findings
-                .iter()
-                .any(|finding| finding.target.as_deref() == Some("unanalyzable-sql")),
-            mode == "fail",
-            "{mode}: {findings:?}"
-        );
         let verdicts = facts.sql_verdicts();
         assert!(verdicts.iter().any(|verdict| verdict.advisory) == (mode == "advise"));
     }
