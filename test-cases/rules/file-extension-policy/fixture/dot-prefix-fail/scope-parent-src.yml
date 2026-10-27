@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        # `../src` leaves the repository and matches no file under it.
+        - path: "../src"
+          bannedExtensions: [".js"]

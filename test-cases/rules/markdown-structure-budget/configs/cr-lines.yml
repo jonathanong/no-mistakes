@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: markdown-structure-budget
+    scope: repository
+    include:
+      - exact-cr.md
+    options:
+      maxLines: 5
+      maxTables: 0

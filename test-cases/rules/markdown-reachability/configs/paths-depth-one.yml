@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: markdown-reachability
+    scope: repository
+    include:
+      - CLAUDE.md
+      - README.md
+      - indexed.md
+    options:
+      maxDepth: 1

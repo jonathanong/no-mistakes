@@ -1,0 +1,9 @@
+version: 2
+projects:
+  docs:
+    root: docs
+rules:
+  - rule: markdown-reachability
+    projects: [docs]
+    options:
+      baselineFile: baselines/reachability.json

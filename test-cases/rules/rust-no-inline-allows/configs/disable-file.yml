@@ -1,0 +1,5 @@
+version: 2
+rules:
+  - rule: rust-no-inline-allows
+    scope: repository
+    include: ["disable_file.rs"]

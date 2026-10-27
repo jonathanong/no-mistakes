@@ -1,0 +1,69 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "eval_spawn": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "slow.test.mts",
+          "line": 1,
+          "message": "slow.test.mts reads a markdown file and evals a shell block inside a spawned bash/sh/zsh process. Port content assertions to a spawn-free test, or add this exact relative path to options.allow with a rationale.",
+          "rule": "markdown-eval-tests",
+          "target": "slow.test.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exact_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "spawn_free": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "missing.test.mts",
+          "line": 1,
+          "message": "stale markdown-eval-tests allowlist entry `missing.test.mts`: it is not a matching markdown-eval test in this run",
+          "rule": "markdown-eval-tests",
+          "target": "missing.test.mts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

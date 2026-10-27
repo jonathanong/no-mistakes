@@ -1,5 +1,7 @@
 use super::*;
 
+// `matching_files` returns matched paths; that result is not a check report.
+
 #[test]
 fn matching_files_normalizes_relative_globs() {
     let root = Path::new("/repo");

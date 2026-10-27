@@ -1,0 +1,17 @@
+version: 2
+projects:
+  docs:
+    root: docs
+  other:
+    root: other
+rules:
+  - rule: markdown-reachability
+    include:
+      - "**/*.md"
+    projects: [docs]
+  - rule: markdown-reachability
+    include:
+      - "**/*.md"
+    options:
+      rootFilenames: [alias.md]
+    projects: [other]

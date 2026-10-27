@@ -1,3 +1,4 @@
+version: 2
 rules:
   - rule: file-extension-policy
     scope: repository

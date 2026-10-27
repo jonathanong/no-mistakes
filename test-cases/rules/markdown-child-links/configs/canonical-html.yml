@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: markdown-child-links
+    scope: repository
+    options:
+      groups:
+        - parents: ["docs/README.md"]
+          children: ["docs/*.md"]
+          requireWholeFile: true
+          countCanonicalHtmlListItems: true

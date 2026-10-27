@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: markdown-link-display-text
+    scope: repository
+    include:
+      - docs/page.mdx
+    options:
+      extensions: [.mdx]

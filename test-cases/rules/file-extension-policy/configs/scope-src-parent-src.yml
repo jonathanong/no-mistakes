@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        # `src/../src` is the same prefix as `src`. Do not compare the raw string.
+        - path: src/../src
+          bannedExtensions: [".js"]

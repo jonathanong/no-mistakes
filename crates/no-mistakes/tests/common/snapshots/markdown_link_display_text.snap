@@ -1,0 +1,662 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowed_links": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "angle_destination": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD-NAME.md",
+          "line": 1,
+          "message": "docs/index.md: link text \"OLD-NAME.md\" does not match target basename \"new-name.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "new-name.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bare_filename_mismatch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "SOURCE-STORIES.md",
+          "line": 1,
+          "message": "docs/index.md: link text \"SOURCE-STORIES.md\" does not match target basename \"news-story-clusters.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "news-story-clusters.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "code_before_html_mask": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 1,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"new.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "new.md"
+        },
+        {
+          "file": "docs/index.md",
+          "import": "OLD2.md",
+          "line": 3,
+          "message": "docs/index.md: link text \"OLD2.md\" does not match target basename \"new2.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "new2.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "collapsed_reference": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 1,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "news-story-clusters.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_md_extension_skips_mdx": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom_mdx_extension": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/page.mdx",
+          "import": "OLD.mdx",
+          "line": 1,
+          "message": "docs/page.mdx: link text \"OLD.mdx\" does not match target basename \"new.mdx\"",
+          "rule": "markdown-link-display-text",
+          "target": "new.mdx"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate_reference_keeps_first": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "escaped_backtick_in_code": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "REAL.md",
+          "line": 1,
+          "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "actual.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escaped_bracket_link": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "ADR].md",
+          "line": 1,
+          "message": "docs/index.md: link text \"ADR].md\" does not match target basename \"ADR.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "ADR.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escaped_closing_backtick": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "escaped_display_match": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fence_info_backtick": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "REAL.md",
+          "line": 2,
+          "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "actual.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "html_comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "html_comment_inside_code": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 4,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "news-story-clusters.md"
+        },
+        {
+          "file": "docs/index.md",
+          "import": "OLD2.md",
+          "line": 6,
+          "message": "docs/index.md: link text \"OLD2.md\" does not match target basename \"news-story-clusters.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "news-story-clusters.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "indented_code": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "indented_opening_fence": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "REAL.md",
+          "line": 2,
+          "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "actual.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_closing_fence": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "link_after_fence": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "REAL.md",
+          "line": 5,
+          "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "actual.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "links_inside_code": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "long_fence": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "REAL.md",
+          "line": 6,
+          "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "actual.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_brackets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "ADR[1].md",
+          "line": 1,
+          "message": "docs/index.md: link text \"ADR[1].md\" does not match target basename \"ADR[2].md\"",
+          "rule": "markdown-link-display-text",
+          "target": "ADR[2].md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "non_ascii_offset_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 2,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "news-story-clusters.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parenthesized_filename": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "percent_encoded_basename": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "raw_html_multibyte": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 2,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"new.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "new.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "raw_html_pre_script": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "raw_html_tag_blocks": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reference_edge_blank_label": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reference_edge_resolved": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD3.md",
+          "line": 3,
+          "message": "docs/index.md: link text \"OLD3.md\" does not match target basename \"new.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "new.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reference_edge_unclosed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 1,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"new.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "new.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reference_style": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 1,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "news-story-clusters.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shortcut_reference": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 1,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "news-story-clusters.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "skipped_non_local": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "tab_indented_fence": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 2,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "news-story-clusters.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unmatched_inline_code": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/index.md",
+          "import": "OLD.md",
+          "line": 1,
+          "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"new.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "new.md"
+        },
+        {
+          "file": "docs/index.md",
+          "import": "OLD2.md",
+          "line": 2,
+          "message": "docs/index.md: link text \"OLD2.md\" does not match target basename \"new2.md\"",
+          "rule": "markdown-link-display-text",
+          "target": "new2.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unterminated_html_comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

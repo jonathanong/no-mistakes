@@ -7,6 +7,9 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
+// Output cases moved to cli_mrf_snapshot_rust_max_lines. Keep physical line
+// count, unreadable paths, absolute roots, and finding order below.
+
 fn config_with_rule(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
@@ -54,164 +57,14 @@ fn read_fixture(path: &str) -> String {
 }
 
 #[test]
-fn count_code_lines_empty() {
-    assert_eq!(count_code_lines(""), 0);
-}
-
-#[test]
-fn count_code_lines_blank_and_comment_only() {
-    let src = "\n  // comment\n   \n";
-    assert_eq!(count_code_lines(src), 0);
-}
-
-#[test]
-fn count_code_lines_simple() {
-    let src = "fn foo() {\n    let x = 1;\n}\n";
-    assert_eq!(count_code_lines(src), 3);
-}
-
-#[test]
-fn count_code_lines_block_comment_multiline() {
-    let src = "/* start\n middle\n end */\nlet x = 1;\n";
-    assert_eq!(count_code_lines(src), 1);
-}
-
-#[test]
-fn count_code_lines_nested_block_comment() {
-    // Rust supports nested block comments; the entire first line is a comment.
-    let src = "/* outer /* inner */ still outer */\ncode\n";
-    assert_eq!(count_code_lines(src), 1);
-}
-
-#[test]
-fn count_code_lines_inline_block_comment() {
-    let src = "let x = /* comment */ 1;\n";
-    assert_eq!(count_code_lines(src), 1);
-}
-
-#[test]
-fn count_code_lines_doc_comment() {
-    let src = "/// doc comment\nfn foo() {}\n";
-    assert_eq!(count_code_lines(src), 1);
-}
-
-#[test]
-fn count_code_lines_string_with_block_comment_marker() {
-    // "/*" inside a string must not open a block comment
-    let src = "let s = \"/*\";\nfn foo() {}\n";
-    assert_eq!(count_code_lines(src), 2);
-}
-
-#[test]
-fn count_code_lines_string_with_line_comment_marker() {
-    // "//" inside a string must not break the line
-    let src = "let s = \"//\";\n";
-    assert_eq!(count_code_lines(src), 1);
-}
-
-#[test]
-fn count_code_lines_escaped_quote_in_string() {
-    // Escaped quote must not close the string early
-    let src = "let s = \"\\\"/*\\\"\";\nfn foo() {}\n";
-    assert_eq!(count_code_lines(src), 2);
-}
-
-#[test]
-fn count_code_lines_raw_string_with_comment_markers() {
-    // Raw string fixture text must not enter block-comment mode.
-    let src = read_fixture("unit/raw_string_comment_markers.rs");
-    assert_eq!(count_code_lines(&src), 2);
-}
-
-#[test]
-fn count_code_lines_multiline_raw_string_with_comment_markers() {
-    // The raw string spans lines and contains a fake nested block comment.
-    let src = read_fixture("unit/multiline_raw_string_comment_markers.rs");
-    assert_eq!(count_code_lines(&src), 5);
-}
-
-#[test]
-fn count_code_lines_byte_raw_string_with_comment_markers() {
-    let src = read_fixture("unit/byte_raw_string_comment_markers.rs");
-    assert_eq!(count_code_lines(&src), 2);
-}
-
-#[test]
-fn count_code_lines_char_with_slash() {
-    let src = "let c = '/';\n";
-    assert_eq!(count_code_lines(src), 1);
-}
-
-#[test]
-fn count_code_lines_escaped_char_literal() {
-    let src = "let c = '\\n';\n";
-    assert_eq!(count_code_lines(src), 1);
-}
-
-#[test]
-fn is_test_file_tests_dir() {
-    let root = Path::new("/project");
-    let path = Path::new("/project/crates/foo/tests/integration.rs");
-    assert!(is_test_file(root, path));
-}
-
-#[test]
-fn is_test_file_tests_rs_basename() {
-    let root = Path::new("/project");
-    let path = Path::new("/project/crates/foo/src/module/tests.rs");
-    assert!(is_test_file(root, path));
-}
-
-#[test]
-fn is_test_file_src_file() {
-    let root = Path::new("/project");
-    let path = Path::new("/project/crates/foo/src/lib.rs");
-    assert!(!is_test_file(root, path));
-}
-
-#[test]
-fn check_passes_within_src_limit() {
-    let root = fixture("within-src-limit");
-    let config = config_with_rule("{srcMax: 5}");
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty());
-}
-
-#[test]
-fn check_fails_over_src_limit() {
-    let root = fixture("over-src-limit");
-    let config = config_with_rule("{srcMax: 3}");
-    let findings = check(&root, &config).unwrap();
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0].message.contains("code lines"));
-}
-
-#[test]
 fn check_sorts_multiple_findings_by_file() {
     let root = fixture("sort-by-file");
     let config = config_with_rule("{srcMax: 1}");
-
     let findings = check(&root, &config).unwrap();
-
+    // Snapshot normalization sorts arrays, so it does not lock emission order.
     assert_eq!(findings.len(), 2);
     assert_eq!(findings[0].file, "a.rs");
     assert_eq!(findings[1].file, "b.rs");
-}
-
-#[test]
-fn check_uses_test_limit_for_tests_rs() {
-    let root = fixture("test-limit");
-    let config = config_with_rule("{srcMax: 3, testMax: 20}");
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty(), "tests.rs should use testMax");
-}
-
-#[test]
-fn check_respects_excludes() {
-    let root = fixture("respects-excludes");
-    let config = config_with_rule("{srcMax: 3, excludes: [\"generated\"]}");
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty());
 }
 
 #[test]
@@ -241,58 +94,8 @@ fn check_with_files_respects_roots() {
 }
 
 #[test]
-fn check_with_files_normalizes_relative_roots() {
-    let root = fixture("roots");
-    let outside = root.join("big.rs");
-    let inside = root.join("sub/big.rs");
-    let config = config_with_rule("{srcMax: 3, roots: [\"sub\"]}");
-    let all_files = vec![outside, inside];
-    let findings = check_with_files(&root, &config, &all_files).unwrap();
-    assert_eq!(findings.len(), 1, "relative root resolves relative to root");
-    assert!(findings[0].file.contains("sub"));
-}
-
-#[test]
-fn check_with_files_uses_options_per_rule_application() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/multiple-rule-applications/fixture");
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let all_files = vec![root.join("api/lib.rs"), root.join("worker/lib.rs")];
-
-    let findings = check_with_files(&root, &config, &all_files).unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "worker/lib.rs");
-    assert!(findings[0].message.contains("max 1"));
-}
-
-#[test]
-fn check_respects_disable_file_comment() {
-    let root = fixture("disable-file");
-    let config = config_with_rule("{srcMax: 3}");
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty());
-}
-
-#[test]
 fn physical_lines_can_exceed_the_code_line_limit() {
-    let path = fixture("unit/physical_vs_code.rs");
-    let root = path.parent().unwrap();
     let source = read_fixture("unit/physical_vs_code.rs");
-    // Lock the distinction: a physical-line counter would reject this file.
+    // Check JSON has no physical line count. srcMax 2 and 3 snapshots lock code lines.
     assert_eq!(source.lines().count(), 9);
-    let config = config_with_rule("{srcMax: 3}");
-    assert!(check_with_files(root, &config, std::slice::from_ref(&path))
-        .unwrap()
-        .is_empty());
-
-    let config = config_with_rule("{srcMax: 2}");
-    let findings = check_with_files(root, &config, std::slice::from_ref(&path)).unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "physical_vs_code.rs");
-    assert_eq!(findings[0].line, 1);
-    assert_eq!(
-        findings[0].message,
-        "3 code lines (max 2) - split into smaller modules"
-    );
 }

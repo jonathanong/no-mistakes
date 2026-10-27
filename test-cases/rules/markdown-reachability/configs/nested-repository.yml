@@ -1,0 +1,10 @@
+version: 2
+projects:
+  nested-docs:
+    root: docs
+rules:
+  - rule: markdown-reachability
+    scope: repository
+    projects: [nested-docs]
+    include:
+      - "**/*.md"

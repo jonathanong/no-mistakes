@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: markdown-reachability
+    scope: repository
+    include:
+      - guide.md

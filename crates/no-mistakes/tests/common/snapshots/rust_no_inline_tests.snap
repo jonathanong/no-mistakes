@@ -1,0 +1,330 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "cfg_fn": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "cfg_fn.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "cfg_impl_items": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "lib.rs",
+          "line": 14,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        },
+        {
+          "file": "lib.rs",
+          "line": 4,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        },
+        {
+          "file": "lib.rs",
+          "line": 9,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "cfg_use": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "cfg_use.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "combined_invalid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/invalid.rs",
+          "line": 1,
+          "message": "cannot verify rust-no-inline-tests: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "rule": "rust-no-inline-tests",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "correct_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "mymod.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "excludes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "extra_attrs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "extra_attrs.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_rs_files": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "one_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "one_line.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "out_of_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "path_cfg": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pub_mod": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pub_mod.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "relative_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sub/b.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "simple_inline": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "simple_inline.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sort_by_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "a.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        },
+        {
+          "file": "a.rs",
+          "line": 3,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        },
+        {
+          "file": "b.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "whitespace_cfg": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "whitespace_cfg.rs",
+          "line": 1,
+          "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
+          "rule": "rust-no-inline-tests"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

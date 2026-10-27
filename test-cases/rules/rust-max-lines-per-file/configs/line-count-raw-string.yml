@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: rust-max-lines-per-file
+    scope: repository
+    include: ["raw_string_comment_markers.rs"]
+    options:
+      srcMax: 1

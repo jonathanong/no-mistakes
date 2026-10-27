@@ -8,3 +8,4 @@ fixtures/postgres/prepared-projection-low/src/low.ts -text -whitespace
 test-cases/rules/postgres-no-transformed-uuid-predicates/fixture/crlf.ts -text -whitespace
 test-cases/rules/postgres-ddl-unanalyzable/fixture/copy/migrations/crlf.sql -text -whitespace
 fixtures/analysis-dataset/source-store/invalid-utf8.ts -text -whitespace
+test-cases/rules/rust-max-lines-per-file/fixture/line-counts/blank_and_comment.rs -text -whitespace
