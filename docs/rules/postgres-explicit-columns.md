@@ -274,18 +274,44 @@ Successfully parsed sibling statements remain analyzable.
 
 ### Effort
 
-Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.
+`max` is the default and preserves full helper, builder, alias, and finite-alternative
+analysis. `low` checks SQL visible at a configured executor call as a string literal,
+an interpolation-free template literal, a configured SQL bind template, or one
+immutable local `const`. It also uses the bounded typed/local/imported helper
+recovery described in [bounded low-effort SQL helpers](../postgres-facts/low-helper-recovery.md):
+supported helpers may transport SQL and configured executors, compose finite
+alternatives, and use fresh configured builders. Findings retain the physical SQL
+locations. SQL files selected by `sqlInclude` keep their existing behavior at both
+efforts.
+
+For example, low checks each call below, including the known star in the bounded
+helper:
+
+```ts
+import { query } from '@example/db';
+
+const sql = `SELECT * FROM orders`;
+query('SELECT * FROM accounts');
+query(sql);
+
+function load() {
+  return query(`SELECT * FROM tags`);
+}
+```
+
+Use `effort: max` to analyze shapes outside the bounded low subset. The default
+remains `max`.
 
 ### Unanalyzable inputs
 
 Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
 
-- Inputs this rule cannot prove: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (for example `query(buildSql(filters))` with an unrecoverable helper), and SQL, embedded or in a `sqlInclude` file, that fails to parse. They follow `options.unanalyzable`:
+- At either effort, SQL that fails to parse follows `options.unanalyzable`; successfully parsed sibling statements remain checked. At low, executor calls also follow this policy when their SQL is dynamic or outside the supported literal, one-const, configured-template, or bounded helper shapes. This includes unresolved or ambiguous helpers, unsupported mutations or aliases, and exhausted helper/alternative/work/size bounds. Max retains its existing behavior for these inputs, including the 16-alternative cap. Selected `.sql` files retain their existing parse-failure behavior at both efforts. Inputs the rule cannot prove are never treated as clean:
   - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable for explicit columns` or `SQL could not be analyzed for explicit columns`.
   - `advise`: a non-failing advisory with the same reason.
   - `ignore`: omitted.
 
-  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+  Definite violations remain findings under every policy, including `ignore`; a known star found on one helper path is not hidden by an uncertain sibling path. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names. Low may report uncertainty that max resolves, so compare definite findings separately from residual diagnostics.
 
 ## Suppression
 
