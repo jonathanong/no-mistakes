@@ -300,7 +300,24 @@ fn original_heads_and_rejected_branch_locations_survive_cli_preparation() {
         assert_eq!(output.status.code(), Some(1));
         let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
         let warnings = report["warnings"].as_array().unwrap();
-        assert_eq!(warnings.len(), if config == "low.yml" { 11 } else { 0 });
+        let expected_warnings = if config == "low.yml" {
+            configured_rule_ids(&root, config)
+        } else {
+            std::collections::BTreeSet::new()
+        };
+        let actual_warnings = warnings
+            .iter()
+            .map(|warning| {
+                warning
+                    .as_str()
+                    .unwrap()
+                    .split_once(": ")
+                    .unwrap()
+                    .0
+                    .to_owned()
+            })
+            .collect();
+        assert_eq!(actual_warnings, expected_warnings, "{config}: {warnings:?}");
         assert!(warnings.iter().all(|warning| {
             warning.as_str().unwrap().ends_with(
             "requested effort low; effective effort max because this rule has no low implementation"
