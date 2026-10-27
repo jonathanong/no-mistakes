@@ -65,3 +65,26 @@ fn unresolved_specifiers_name_the_specifier_and_import_line() {
     assert_eq!(gone.file, "app/src/unresolved.mts");
     assert_eq!(gone.line, 5, "{gone:?}");
 }
+
+#[test]
+fn paths_alias_blocks_workspace_fallback_and_hash_imports_stay_concrete() {
+    // `paths` names a file that is not in the graph, so `@scope/pkg` stays an
+    // unresolved specifier instead of the workspace export. `#internal` is a
+    // package import the TypeScript resolver does not own.
+    let found = run_check(&super::tests::fixture("selector-projection"), None, None).unwrap();
+    let alias = found
+        .iter()
+        .find(|row| {
+            row.message
+                .contains("unresolved module selector `@scope/pkg`")
+        })
+        .unwrap_or_else(|| panic!("{found:?}"));
+    assert_eq!(alias.file, "app/src/alias.mts");
+    assert_eq!(alias.line, 1, "{alias:?}");
+    assert!(
+        found.iter().all(|row| !row.message.contains("#internal")
+            && row.file != "packages/pkg/src/internal.mts"
+            && row.file != "packages/pkg/src/use-internal.mts"),
+        "{found:?}"
+    );
+}

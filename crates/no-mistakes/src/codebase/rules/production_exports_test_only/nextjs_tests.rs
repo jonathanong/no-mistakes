@@ -114,6 +114,16 @@ fn entrypoint_files_follow_the_shared_inventory_and_project_type() {
     }
     assert!(!is_entrypoint(&root.join("other/app/page.tsx"), &roots));
     assert!(!is_entrypoint(&root.join("apps/web/app/page.tsx"), &[]));
+    // An omitted root that inference cannot see contributes no entrypoints.
+    let mut bare = NoMistakesConfig::default();
+    bare.projects.insert(
+        "web".to_string(),
+        Project {
+            type_: Some(ProjectType::Nextjs),
+            ..Default::default()
+        },
+    );
+    assert!(project_roots(Path::new("/nm-2797-missing-nextjs-root"), &bare).is_empty());
     // A `web/app` tree is not an entrypoint of a project rooted at the repo.
     assert!(!is_framework_entrypoint_file(
         Path::new("/repo/apps/web/app/page.tsx"),

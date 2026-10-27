@@ -1,6 +1,8 @@
 use crate::codebase::rules::{run_check, RuleFinding};
 use std::path::PathBuf;
 
+mod gap;
+
 pub(super) fn fixture(case: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

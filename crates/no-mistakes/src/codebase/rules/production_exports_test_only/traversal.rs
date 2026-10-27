@@ -156,20 +156,18 @@ fn import_site(ts: &TsFileFacts, key: &str, symbol: bool) -> Option<(String, usi
         }) {
             return Some((import.source.clone(), import.line.max(1) as usize));
         }
-        if let Some(export) = symbols.exports.iter().find(|export| match &export.kind {
-            ExportKind::ReExport { source, imported } => {
-                if symbol {
-                    imported == key
-                } else {
-                    source == key
-                }
-            }
-            _ => false,
-        }) {
-            let ExportKind::ReExport { source, .. } = &export.kind else {
+        if let Some((source, line)) = symbols.exports.iter().find_map(|export| {
+            let ExportKind::ReExport { source, imported } = &export.kind else {
                 return None;
             };
-            return Some((source.clone(), export.line.max(1) as usize));
+            let matched = if symbol {
+                imported == key
+            } else {
+                source == key
+            };
+            matched.then(|| (source.clone(), export.line.max(1) as usize))
+        }) {
+            return Some((source, line));
         }
     }
     if symbol {

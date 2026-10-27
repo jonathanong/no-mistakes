@@ -91,10 +91,11 @@ set under `app/` or `src/app/` (`page`, `layout`, `loading`, `error`,
 at the project root. Only code extensions count. The inventory is shared with
 [`unique-exports`](unique-exports.md); this rule does not keep a second filename
 list. A `next` package dependency does not qualify — the project `type` must be
-`nextjs`, and the file must sit under that project's effective root. The same
-filenames outside that project, and non-entrypoint modules inside it, are still
-reported when only tests import them. Entrypoint files are not reclassified as
-tests, so symbols they import remain production consumers.
+`nextjs`, and the file must sit under that project's effective root. A `nextjs`
+project that omits `root`, when no Next.js root can be inferred, contributes no
+entrypoints. The same filenames outside that project, and non-entrypoint modules
+inside it, are still reported when only tests import them. Entrypoint files are
+not reclassified as tests, so symbols they import remain production consumers.
 
 ## Incomplete analysis
 
@@ -106,6 +107,10 @@ uncertainty names the specifier, the symbol, and that import line. Workspace
 package `exports` resolutions use the shared prepared resolver, the same projection
 as resolve-check and ordinary import classification, so a visible source entry
 stays selected when the TypeScript resolver target is not a visible graph file.
+A `paths` alias that owns the specifier and does not resolve stays unresolved;
+a workspace package of the same name is not substituted. Package `imports`
+(`#name`) still select that package's source when the TypeScript resolver has
+no target.
 Fix unresolved imports and replace dynamic module selection with static imports
 so the consumer relationship can be established. Definite violations remain
 findings under every policy.
