@@ -74,6 +74,8 @@ function returned() {
 }
 const arrowBody = () => retry(() => import("./a"));
 const parenArrowBody = () => (retry(() => import("./a")) as any);
+// An arrow that is the callee, not an argument, is no loader.
+(() => import("./a"))();
 const blockLoad = () => { return import("./a"); };
 // Exported, so other modules may read any member even though this one reads A.
 export const escaped = await import("./a");
