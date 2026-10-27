@@ -23,6 +23,7 @@ mod partitions;
 mod pin_query_reads;
 mod prepared;
 mod prepared_inputs;
+mod propagation;
 mod recovered_table;
 mod recursive_forward;
 mod referential;

@@ -90,5 +90,15 @@ fn postgres_generated_column_predicates_check_json_snapshot() {
             rules_path(rule, "configs", config),
         )
     });
+    let mut cases = cases.to_vec();
+    // The stale entry is anchored on the config file. That file has to live
+    // inside the check root so its path normalizes the same way on every OS.
+    let stale_root = rules_path(rule, "fixture", "stale-extra");
+    let stale = cases
+        .iter_mut()
+        .find(|(label, _, _)| *label == "stale_extra_column")
+        .expect("stale extra column case");
+    stale.1 = stale_root.clone();
+    stale.2 = stale_root.join("stale.yml");
     assert_saved_fixture("postgres_generated_column_predicates", &cases);
 }

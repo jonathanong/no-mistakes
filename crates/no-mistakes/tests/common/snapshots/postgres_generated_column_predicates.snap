@@ -856,14 +856,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": "<temp>",
-          "import": "orders.created_at",
-          "line": 9,
-          "message": "stale postgres-generated-column-predicates extraGeneratedColumns entry: orders.created_at",
-          "rule": "postgres-generated-column-predicates",
-          "target": "created_at"
-        },
-        {
           "file": "sql/between.sql",
           "line": 1,
           "message": "sql/between.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
@@ -881,6 +873,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "sql/where.sql",
           "line": 1,
           "message": "sql/where.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "stale.yml",
+          "import": "orders.created_at",
+          "line": 9,
+          "message": "stale postgres-generated-column-predicates extraGeneratedColumns entry: orders.created_at",
           "rule": "postgres-generated-column-predicates",
           "target": "created_at"
         }
