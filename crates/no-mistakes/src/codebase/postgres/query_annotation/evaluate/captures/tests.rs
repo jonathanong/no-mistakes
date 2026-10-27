@@ -110,13 +110,47 @@ fn cached_prefix_guard_rejects_private_and_out_of_range_origins() {
     );
 
     let mut out_of_range: CapturedOrigins = FxHashMap::from_iter([("name".into(), 99)]).into();
+    assert!(
+        out_of_range.0.max_origin.get().is_none(),
+        "construction is cold"
+    );
     assert_eq!(out_of_range.max_origin(), Some(99));
+    assert_eq!(out_of_range.0.max_origin.get(), Some(&Some(99)));
     assert!(!prefix_is_unchanged(
         &FxHashMap::from_iter([(0, out_of_range.clone())]),
         2
     ));
     out_of_range.remap(&FxHashMap::from_iter([(99, 1)]));
     assert_eq!(out_of_range.max_origin(), Some(1));
+    assert_eq!(out_of_range.0.max_origin.get(), Some(&Some(1)));
     bindings.insert(0, out_of_range);
     assert!(prefix_is_unchanged(&bindings, 2));
+
+    let private: CapturedOrigins = FxHashMap::from_iter([("name".into(), 99)]).into();
+    assert!(!prefix_is_unchanged(
+        &FxHashMap::from_iter([(2, private.clone())]),
+        2
+    ));
+    assert!(
+        private.0.max_origin.get().is_none(),
+        "private owner short-circuits"
+    );
+}
+
+#[test]
+fn origin_cache_is_lazy_shared_and_ignored_by_logical_equality() {
+    let cold: CapturedOrigins = FxHashMap::from_iter([("name".into(), 99)]).into();
+    let clone = cold.clone();
+    assert!(Arc::ptr_eq(&cold.0, &clone.0));
+    assert!(cold.0.max_origin.get().is_none());
+
+    assert_eq!(clone.max_origin(), Some(99));
+    assert_eq!(cold.0.max_origin.get(), Some(&Some(99)));
+    let separately_constructed: CapturedOrigins =
+        FxHashMap::from_iter([("name".into(), 99)]).into();
+    assert!(separately_constructed.0.max_origin.get().is_none());
+    assert_eq!(
+        cold, separately_constructed,
+        "cache warmth is not semantic state"
+    );
 }

@@ -1,6 +1,9 @@
 use super::Environment;
 use crate::fx::FxHashMap;
-use std::{ops::Deref, sync::Arc};
+use std::{
+    ops::Deref,
+    sync::{Arc, OnceLock},
+};
 
 pub(in crate::codebase::postgres::query_annotation) type CapturedBindings =
     FxHashMap<Environment, CapturedOrigins>;
@@ -13,12 +16,21 @@ pub(super) fn prefix_is_unchanged(bindings: &CapturedBindings, base: Environment
     })
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default)]
 struct OriginMap {
     bindings: FxHashMap<String, Environment>,
-    // Cached so prefix checks do not walk every captured name on each arm.
-    max_origin: Option<Environment>,
+    // Clones share this cache with the immutable origin map; branch-free runs
+    // pay no scan unless an alternative actually needs the prefix proof.
+    max_origin: OnceLock<Option<Environment>>,
 }
+
+impl PartialEq for OriginMap {
+    fn eq(&self, other: &Self) -> bool {
+        self.bindings == other.bindings
+    }
+}
+
+impl Eq for OriginMap {}
 
 /// Snapshots own separate reader tables but share each immutable origin map.
 /// Only compaction that moves an origin needs to copy its capture names.
@@ -32,19 +44,20 @@ impl CapturedOrigins {
             .any(|origin| indices.get(origin).is_some_and(|new| new != origin))
         {
             let origins = Arc::make_mut(&mut self.0);
-            let mut max_origin = None;
             for origin in origins.bindings.values_mut() {
                 if let Some(index) = indices.get(origin) {
                     *origin = *index;
                 }
-                max_origin = Some(max_origin.map_or(*origin, |max: Environment| max.max(*origin)));
             }
-            origins.max_origin = max_origin;
+            origins.max_origin.take();
         }
     }
 
-    fn max_origin(&self) -> Option<Environment> {
-        self.0.max_origin
+    pub(super) fn max_origin(&self) -> Option<Environment> {
+        *self
+            .0
+            .max_origin
+            .get_or_init(|| self.0.bindings.values().copied().max())
     }
 
     #[cfg(test)]
@@ -63,7 +76,7 @@ impl CapturedOrigins {
     ) {
         let origins = Arc::make_mut(&mut self.0);
         origins.bindings.insert(name, origin);
-        origins.max_origin = origins.bindings.values().copied().max();
+        origins.max_origin.take();
     }
 
     #[cfg(test)]
@@ -77,10 +90,9 @@ impl CapturedOrigins {
 
 impl From<FxHashMap<String, Environment>> for CapturedOrigins {
     fn from(origins: FxHashMap<String, Environment>) -> Self {
-        let max_origin = origins.values().copied().max();
         Self(Arc::new(OriginMap {
             bindings: origins,
-            max_origin,
+            max_origin: OnceLock::new(),
         }))
     }
 }
