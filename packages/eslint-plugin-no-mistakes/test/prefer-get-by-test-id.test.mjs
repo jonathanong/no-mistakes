@@ -30,9 +30,10 @@ const suite = {
     { code: "page.locator(``)" },
   ],
   invalid: [
+    // One prefer finding on getByTestId("target").
+    // Suppressing the source must leave the target selector visible.
     {
       code: fixture("playwright-prefer-get-by-test-id/suppressed-drag.jsx"),
-      // Suppressing the source must leave the target selector visible.
     },
     {
       code: 'locator("[data-pw=\\"direct\\"]")',

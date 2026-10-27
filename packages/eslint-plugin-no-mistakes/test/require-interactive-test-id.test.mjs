@@ -52,7 +52,7 @@ const suite = {
   ],
   invalid: [
     {
-      // Exercise slots through the direct rule entrypoint as well as the plugin loader.
+      // Eight slot findings, one on each missing Button slot.
       code: fixture("playwright-require-interactive-test-id/slots-missing.tsx"),
       options: [{ interactiveComponents: ["Button"] }],
     },
