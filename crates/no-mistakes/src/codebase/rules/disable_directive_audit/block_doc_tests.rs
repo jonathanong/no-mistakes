@@ -79,3 +79,15 @@ fn rust_block_docs_preserve_bom_and_crlf_line_numbers() {
     assert_eq!(docs[1].0.directive, DisableDirective::NextLine { line: 3 });
     assert!(docs.iter().all(|(_, ineffective)| *ineffective));
 }
+
+#[test]
+fn rust_block_doc_fences_span_ordinary_multiline_comment_gaps() {
+    let source = include_str!(
+        "../../../../../../fixtures/rules/disable-directive-audit/rust-block-doc-comment-gap.rs"
+    );
+    let docs = audit_directives_for_path(source, Path::new("example.rs"));
+    assert_eq!(docs.len(), 1);
+    assert_eq!(docs[0].0.rule, "after-ordinary-block-fence");
+    assert_eq!(docs[0].0.directive, DisableDirective::Line { line: 8 });
+    assert!(docs[0].1);
+}

@@ -71,15 +71,18 @@ fn has_code(mut gap: &str) -> bool {
     loop {
         gap = gap.trim_start_matches(['\u{FEFF}', ' ', '\t', '\r', '\n']);
         if let Some(comment) = gap.strip_prefix("/*") {
-            let Some(end) = comment.find("*/") else {
-                return false;
-            };
-            gap = &comment[end + 2..];
+            // A later lexer-proven doc span implies this ordinary comment
+            // closed; an unterminated comment would consume that span.
+            gap = comment
+                .split_once("*/")
+                .expect("complete inter-doc block comment")
+                .1;
         } else if let Some(comment) = gap.strip_prefix("//") {
-            let Some(end) = comment.find('\n') else {
-                return false;
-            };
-            gap = &comment[end..];
+            // A line comment cannot precede another doc span without a newline.
+            gap = comment
+                .split_once('\n')
+                .expect("complete inter-doc line comment")
+                .1;
         } else {
             return !gap.is_empty();
         }
