@@ -187,3 +187,6 @@ mod tests;
 
 #[cfg(test)]
 mod catalog_tests;
+
+#[cfg(test)]
+mod block_doc_tests;
