@@ -19,6 +19,20 @@ fn check_report(root: &std::path::Path, config: &str, effort: &str) -> serde_jso
     )
 }
 
+fn rust_analysis_warnings(root: &std::path::Path, config: &str) -> Vec<String> {
+    let mut config = crate::config::v2::load_v2_config(root, Some(&root.join(config))).unwrap();
+    config.effort_override = Some(crate::config::v2::Effort::Low);
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+        root,
+        &mut config,
+        &[],
+        &sources,
+    )
+    .unwrap();
+    config.analysis_warnings
+}
+
 fn uuid_locations(report: &serde_json::Value, channel: &str) -> Vec<(String, u64)> {
     report[channel]
         .as_array()
@@ -109,8 +123,13 @@ fn parse_failure_locations_public_check_preserves_parse_findings_and_independent
             assert_eq!(report["advisories"], json!([]));
             let warnings = report["warnings"].as_array().unwrap();
             if effort == "low" {
-                // Only UUID predicates implement low; the six other rules keep max analysis.
-                assert_eq!(warnings.len(), 6, "{report}");
+                // Compare the public API with registry-backed Rust policy metadata,
+                // so new low adopters do not require another warning-count edit.
+                assert_eq!(
+                    report["warnings"],
+                    json!(rust_analysis_warnings(&root, config)),
+                    "{report}"
+                );
                 assert!(warnings.iter().all(|warning| {
                     let message = warning.as_str().unwrap();
                     message.contains("requested effort low")
