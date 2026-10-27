@@ -1,0 +1,167 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "declarations_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/modules/format/index.test.mts",
+          "line": 1,
+          "message": "backend/modules/format/index.test.mts: no corresponding source file found",
+          "rule": "vitest-test-correspondence",
+          "sourceLine": "import { expect, test } from 'vitest';"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "source_to_test_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/modules/untested/index.mts",
+          "line": 1,
+          "message": "backend/modules/untested/index.mts: no corresponding test file found",
+          "rule": "vitest-test-correspondence",
+          "sourceLine": "export {};"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "source_to_test_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stem_suffix": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/mod/orphan.test.tsx",
+          "line": 1,
+          "message": "backend/mod/orphan.test.tsx: no corresponding source file found; configured stemSuffixesToStrip: `.mock`, `.generated`",
+          "rule": "vitest-test-correspondence",
+          "sourceLine": "test(\"orphan without source\", () => {});"
+        },
+        {
+          "file": "backend/mod/page.mock.test.tsx",
+          "line": 1,
+          "message": "backend/mod/page.mock.test.tsx: no corresponding source file found; stripped configured stem suffixes: `.mock`",
+          "rule": "vitest-test-correspondence",
+          "sourceLine": "test(\"mock without source\", () => {});"
+        },
+        {
+          "file": "backend/mod/widget.tsx",
+          "line": 1,
+          "message": "backend/mod/widget.tsx: no corresponding test file found; configured stemSuffixesToStrip: `.mock`, `.generated`",
+          "rule": "vitest-test-correspondence",
+          "sourceLine": "export {};"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "test_to_source_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/modules/orphan/index.test.mts",
+          "line": 1,
+          "message": "backend/modules/orphan/index.test.mts: no corresponding source file found",
+          "rule": "vitest-test-correspondence",
+          "sourceLine": "import \"./index.mts\";"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "test_to_source_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "tsx_missing_test": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/components/widget.tsx",
+          "line": 1,
+          "message": "backend/components/widget.tsx: no corresponding test file found",
+          "rule": "vitest-test-correspondence",
+          "sourceLine": "export function Widget() {"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

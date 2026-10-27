@@ -1,0 +1,46 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/api/users/route.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export async function GET(req: Request) {"
+        },
+        {
+          "file": "web/pages/api/legacy.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export default function handler(_req: unknown, res: { json(value: unknown): void }) {"
+        },
+        {
+          "file": "web/src/app/rss/route.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export async function GET() {"
+        },
+        {
+          "file": "web/src/pages/api/status.ts",
+          "line": 1,
+          "message": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+          "rule": "nextjs-no-api-routes",
+          "sourceLine": "export default function handler(_req: unknown, res: { json(value: unknown): void }) {"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

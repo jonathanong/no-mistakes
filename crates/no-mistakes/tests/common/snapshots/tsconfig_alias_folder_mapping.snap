@@ -39,25 +39,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tsconfig.json",
           "line": 10,
           "message": "tsconfig.json: @agents/jobs/* targets backend/agents/jobs/*.ts, which does not exist on disk",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/jobs/*\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 13,
           "message": "tsconfig.json: @agents/file targets backend/agents/file, which does not exist on disk",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/file\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 4,
           "message": "tsconfig.json: @agents/missing targets backend/agents/missing.ts, which does not exist on disk",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/missing\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 7,
           "message": "tsconfig.json: @agents/directory targets backend/agents/directory.ts, which does not exist on disk",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/directory\": ["
         }
       ],
       "warnings": []
@@ -100,7 +104,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tsconfig.json",
           "line": 1,
           "message": "tsconfig.json: @agents/email must target backend/agents/email, not backend/modules/email",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "{\"compilerOptions\": {\"paths\": {\"@agents/email\": [\"backend/modules/email\"]}}}"
         }
       ],
       "warnings": []
@@ -119,19 +124,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "config/policy.base.json",
           "line": 10,
           "message": "config/policy.base.json: @agents/email must target backend/agents/email, not backend/wrong/email",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/email\": [\"backend/wrong/email\"],"
         },
         {
           "file": "config/policy.base.json",
           "line": 11,
           "message": "config/policy.base.json: @agents/sms must target backend/agents/sms, not backend/wrong/sms",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/\\u0073ms\": [\"backend/wrong/sms\"],"
         },
         {
           "file": "config/policy.base.json",
           "line": 12,
           "message": "config/policy.base.json: @wrong/task must use prefix @agents, not target backend/agents/task.ts directly",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@wrong/task\": [\"backend/agents/task.ts\"]"
         }
       ],
       "warnings": []
@@ -162,7 +170,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "child.json",
           "line": 5,
           "message": "child.json: @agents/child must target backend/agents/child, not backend/wrong/child",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/child\": [\"backend/wrong/child\"]"
         }
       ],
       "warnings": []
@@ -217,19 +226,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "config/policy.base.json",
           "line": 10,
           "message": "config/policy.base.json: @agents/email must target backend/agents/email, not backend/wrong/email",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/email\": [\"backend/wrong/email\"],"
         },
         {
           "file": "config/policy.base.json",
           "line": 11,
           "message": "config/policy.base.json: @agents/sms must target backend/agents/sms, not backend/wrong/sms",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/\\u0073ms\": [\"backend/wrong/sms\"],"
         },
         {
           "file": "config/policy.base.json",
           "line": 12,
           "message": "config/policy.base.json: @wrong/task must use prefix @agents, not target backend/agents/task.ts directly",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@wrong/task\": [\"backend/agents/task.ts\"]"
         }
       ],
       "warnings": []
@@ -248,7 +260,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tsconfig.json",
           "line": 4,
           "message": "tsconfig.json: @agents/email must target backend/agents/email, not backend/modules/email",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/email\": ["
         }
       ],
       "warnings": []
@@ -303,7 +316,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tsconfig.json",
           "line": 4,
           "message": "tsconfig.json: @agents/email must target backend/agents/email, not backend/workers/email",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/email\": ["
         }
       ],
       "warnings": []
@@ -346,55 +360,64 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tsconfig.json",
           "line": 10,
           "message": "tsconfig.json: @agents/nested must target backend/agents/nested, not backend/agents/nested/other.ts",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/nested\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 13,
           "message": "tsconfig.json: @agents/empty must target backend/agents/empty, not backend/agents/empty.",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/empty\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 16,
           "message": "tsconfig.json: @agents/jobs/* must target backend/agents/jobs/*, not backend/agents/jobs/*.ts/child",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/jobs/*\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 16,
           "message": "tsconfig.json: @agents/jobs/* must target backend/agents/jobs/*, not backend/agents/jobs/*/index.ts",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/jobs/*\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 16,
           "message": "tsconfig.json: @agents/jobs/* must target backend/agents/jobs/*, not backend/agents/jobs/index.ts",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/jobs/*\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 21,
           "message": "tsconfig.json: @wrong/item must use prefix @agents, not target backend/agents/item.ts directly",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@wrong/item\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 24,
           "message": "tsconfig.json: @agents/slash must target backend/agents/slash, not backend/agents/slash.//ts",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/slash\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 4,
           "message": "tsconfig.json: @agents/email must target backend/agents/email, not backend/modules/email/index.ts",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/email\": ["
         },
         {
           "file": "tsconfig.json",
           "line": 7,
           "message": "tsconfig.json: @agents/sms must target backend/agents/sms, not backend/agents/sms-other.ts",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/sms\": ["
         }
       ],
       "warnings": []
@@ -413,7 +436,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tsconfig.json",
           "line": 4,
           "message": "tsconfig.json: @wrong/email must use prefix @agents, not target backend/agents/email directly",
-          "rule": "tsconfig-alias-folder-mapping"
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@wrong/email\": ["
         }
       ],
       "warnings": []

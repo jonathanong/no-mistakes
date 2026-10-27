@@ -23,6 +23,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `package-json-required-fields` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file package-json-required-fields",
           "target": "package-json-required-fields"
         }
       ],
@@ -48,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/valid/package.json: must declare \"license\": \"UNLICENSED\".",
           "rule": "package-json-required-fields",
+          "sourceLine": "{\"name\":\"foo\"}",
           "target": "license"
         },
         {
@@ -55,6 +57,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/valid/package.json: must declare \"private\": true.",
           "rule": "package-json-required-fields",
+          "sourceLine": "{\"name\":\"foo\"}",
           "target": "private"
         },
         {
@@ -62,6 +65,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/valid/package.json: must declare \"type\": \"module\".",
           "rule": "package-json-required-fields",
+          "sourceLine": "{\"name\":\"foo\"}",
           "target": "type"
         },
         {
@@ -69,6 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/valid/package.json: package name \"foo\" must be scoped (start with @).",
           "rule": "package-json-required-fields",
+          "sourceLine": "{\"name\":\"foo\"}",
           "target": "name"
         }
       ],
@@ -89,6 +94,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/foo/package.json: must declare \"main\": \"index.mts\" because index.mts exists in the package directory.",
           "rule": "package-json-required-fields",
+          "sourceLine": "{",
           "target": "main"
         }
       ],
@@ -109,6 +115,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "package.json: must declare \"main\": \"src/index.js\" because src/index.js exists in the package directory.",
           "rule": "package-json-required-fields",
+          "sourceLine": "{\"name\":\"@scope/foo\"}",
           "target": "main"
         }
       ],
@@ -141,6 +148,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/foo/package.json: must declare \"license\": \"UNLICENSED\".",
           "rule": "package-json-required-fields",
+          "sourceLine": "{",
           "target": "license"
         },
         {
@@ -148,6 +156,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/foo/package.json: must declare \"main\": \"index.mts\" because index.mts exists in the package directory.",
           "rule": "package-json-required-fields",
+          "sourceLine": "{",
           "target": "main"
         },
         {
@@ -155,6 +164,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/foo/package.json: must declare \"private\": true.",
           "rule": "package-json-required-fields",
+          "sourceLine": "{",
           "target": "private"
         },
         {
@@ -162,6 +172,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/foo/package.json: must declare \"type\": \"module\".",
           "rule": "package-json-required-fields",
+          "sourceLine": "{",
           "target": "type"
         },
         {
@@ -169,6 +180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/foo/package.json: package name \"foo\" must be scoped (start with @).",
           "rule": "package-json-required-fields",
+          "sourceLine": "{",
           "target": "name"
         }
       ],

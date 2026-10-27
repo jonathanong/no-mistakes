@@ -1,0 +1,140 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "components": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/components/Card.tsx",
+          "line": 1,
+          "message": "src/components/Card.tsx: companion files do not import @/components/Card",
+          "rule": "required-companion-imports",
+          "sourceLine": "export function Card() {",
+          "target": "@/components/Card"
+        },
+        {
+          "file": "src/components/Commented.tsx",
+          "line": 1,
+          "message": "src/components/Commented.tsx: companion files do not import @/components/Commented",
+          "rule": "required-companion-imports",
+          "sourceLine": "export function Commented() {",
+          "target": "@/components/Commented"
+        },
+        {
+          "file": "src/components/Computed.tsx",
+          "line": 1,
+          "message": "src/components/Computed.tsx: no companion file found importing @/components/Computed",
+          "rule": "required-companion-imports",
+          "sourceLine": "export async function load(moduleName: string) {",
+          "target": "@/components/Computed"
+        },
+        {
+          "file": "src/components/SkipWidget.tsx",
+          "line": 1,
+          "message": "src/components/SkipWidget.tsx: no companion file found importing @/components/SkipWidget",
+          "rule": "required-companion-imports",
+          "sourceLine": "export function SkipWidget() {",
+          "target": "@/components/SkipWidget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "prepared_external": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/A.tsx",
+          "line": 1,
+          "message": "src/A.tsx: no companion file found importing @/A",
+          "rule": "required-companion-imports",
+          "sourceLine": "export const A = 1;",
+          "target": "@/A"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "prepared_scope": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "prepared_shared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/C.tsx",
+          "line": 1,
+          "message": "src/C.tsx: companion files do not import @/C",
+          "rule": "required-companion-imports",
+          "sourceLine": "export const C = 1;",
+          "target": "@/C"
+        },
+        {
+          "file": "src/D.tsx",
+          "line": 1,
+          "message": "src/D.tsx: companion files do not import @/D",
+          "rule": "required-companion-imports",
+          "sourceLine": "export const D = 1;",
+          "target": "@/D"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repository_scope_abort": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/components/ui/Card.tsx",
+          "line": 1,
+          "message": "web/components/ui/Card.tsx: no companion file found importing @/components/ui/Card",
+          "rule": "required-companion-imports",
+          "sourceLine": "export default function Card() { return null; }",
+          "target": "@/components/ui/Card"
+        },
+        {
+          "file": "web/next.config.ts",
+          "line": 3,
+          "message": "web/next.config.ts: redirect destination '/gone' has no matching App Router page (expected web/app/**/page.tsx for route /gone); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "return [{ source: \"/a\", destination: \"/gone\", permanent: true }];"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

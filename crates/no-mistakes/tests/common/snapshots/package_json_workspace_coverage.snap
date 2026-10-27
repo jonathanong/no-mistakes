@@ -40,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/api/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/api"
         },
         {
@@ -47,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "services/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "services"
         }
       ],
@@ -78,13 +80,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "pnpm-workspace.yaml",
           "line": 1,
           "message": "pnpm-workspace.yaml: setting \"packages\" is claimed by more than one pnpm source",
-          "rule": "package-json-workspace-coverage"
+          "rule": "package-json-workspace-coverage",
+          "sourceLine": "packages:"
         },
         {
           "file": "services/package.json",
           "line": 1,
           "message": "services/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "services"
         }
       ],
@@ -105,6 +109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/group/app/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/group/app"
         },
         {
@@ -112,6 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "services/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "services"
         }
       ],
@@ -131,7 +137,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "package.json",
           "line": 1,
           "message": "package.json: workspace pattern \"packages/api\" does not correspond to a package directory",
-          "rule": "package-json-workspace-coverage"
+          "rule": "package-json-workspace-coverage",
+          "sourceLine": "{"
         }
       ],
       "warnings": []
@@ -151,6 +158,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/admin/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/admin"
         },
         {
@@ -158,6 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/web/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/web"
         }
       ],
@@ -178,6 +187,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/group/app/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/group/app"
         }
       ],
@@ -222,6 +232,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/group/app/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/group/app"
         },
         {
@@ -229,6 +240,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/unnamed/package.json: package.json must declare a name",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/unnamed"
         }
       ],
@@ -248,13 +260,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "package.json",
           "line": 1,
           "message": "package.json: workspace pattern \"apps/*\" does not correspond to a package directory",
-          "rule": "package-json-workspace-coverage"
+          "rule": "package-json-workspace-coverage",
+          "sourceLine": "{"
         },
         {
           "file": "packages/hidden/package.json",
           "line": 1,
           "message": "packages/hidden/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/hidden"
         }
       ],
@@ -275,6 +289,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/group/app/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/group/app"
         },
         {
@@ -282,13 +297,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/hidden/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/hidden"
         },
         {
           "file": "pnpm-workspace.yaml",
           "line": 1,
           "message": "pnpm-workspace.yaml: workspace pattern \"apps/*\" does not correspond to a package directory",
-          "rule": "package-json-workspace-coverage"
+          "rule": "package-json-workspace-coverage",
+          "sourceLine": "packages:"
         }
       ],
       "warnings": []
@@ -308,6 +325,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/unnamed/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/unnamed"
         },
         {
@@ -315,6 +333,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/unnamed/package.json: package.json must declare a name",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/unnamed"
         }
       ],
@@ -335,19 +354,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/api/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "packages/api"
         },
         {
           "file": "pnpm-workspace.yaml",
           "line": 1,
           "message": "pnpm-workspace.yaml: included file \"./pnpm/missing.yaml\" could not be read",
-          "rule": "package-json-workspace-coverage"
+          "rule": "package-json-workspace-coverage",
+          "sourceLine": "include:"
         },
         {
           "file": "services/package.json",
           "line": 1,
           "message": "services/package.json: package directory is not covered by the workspace config",
           "rule": "package-json-workspace-coverage",
+          "sourceLine": "{",
           "target": "services"
         }
       ],

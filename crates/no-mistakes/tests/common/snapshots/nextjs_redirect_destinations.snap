@@ -1,0 +1,431 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "alias_low_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "next-shared.ts",
+          "line": 3,
+          "message": "next-shared.ts: nextjs-redirect-destinations extraction is unanalyzable in redirects() at effort low; return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b', permanent: true }]",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "async redirects() {"
+        },
+        {
+          "file": "next-shared.ts",
+          "line": 9,
+          "message": "next-shared.ts: nextjs-redirect-destinations extraction is unanalyzable in rewrites() at effort low; return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b' }]",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "async rewrites() {"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next-shared.ts",
+          "line": 11,
+          "message": "next-shared.ts: rewrite destination '/missing' has no matching App Router page (expected app/**/page.tsx for route /missing); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "{ source: '/rewrite', destination: '/missing' },"
+        },
+        {
+          "file": "next-shared.ts",
+          "line": 5,
+          "message": "next-shared.ts: redirect destination '/gone' has no matching App Router page (expected app/**/page.tsx for route /gone); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "{ source: '/old', destination: '/gone', permanent: true },"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "extractor": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next.config.ts",
+          "line": 1,
+          "message": "next.config.ts: nextjs-redirect-destinations could not locate the redirects() body; the redirect definition is not a method or function/arrow property. Update the Next.js config shape or the extractor so stale redirect destinations cannot slip through.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "const redirects = () => ["
+        },
+        {
+          "file": "next.config.ts",
+          "line": 9,
+          "message": "next.config.ts: nextjs-redirect-destinations could not locate the rewrites() body; the rewrite definition is not a method or function/arrow property. Update the Next.js config shape or the extractor so stale rewrite destinations cannot slip through.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "const rewrites = () => ["
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next.config.ts",
+          "line": 6,
+          "message": "next.config.ts: redirect destination '/gone' has no matching App Router page (expected app/**/page.tsx for route /gone); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: '/gone',"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next.config.ts",
+          "line": 6,
+          "message": "next.config.ts: redirect destination '/gone' has no matching App Router page (expected app/**/page.tsx for route /gone); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: '/gone',"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next.config.ts",
+          "line": 14,
+          "message": "next.config.ts: redirect destination '/missing-tpl' has no matching App Router page (expected app/**/page.tsx for route /missing-tpl); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: `/missing-tpl`,"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 20,
+          "message": "next.config.ts: redirect destination '/x/dyn' has no matching App Router page (expected app/**/page.tsx for route /x/dyn); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: `/x/${id}`,"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 30,
+          "message": "next.config.ts: nextjs-redirect-destinations extraction is incomplete in rewrites(); use bounded immutable constants, arrays and map callbacks so every rewrite destination can be checked.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "async rewrites() {"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 34,
+          "message": "next.config.ts: rewrite destination '/missing-rw-literal' has no matching App Router page (expected app/**/page.tsx for route /missing-rw-literal); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: \"/missing-rw-literal\","
+        },
+        {
+          "file": "next.config.ts",
+          "line": 38,
+          "message": "next.config.ts: rewrite destination '/missing-rw-tpl' has no matching App Router page (expected app/**/page.tsx for route /missing-rw-tpl); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: `/missing-rw-tpl`,"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 42,
+          "message": "next.config.ts: rewrite destination '/y/dyn' has no matching App Router page (expected app/**/page.tsx for route /y/dyn); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: `/y/${id}`,"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 5,
+          "message": "next.config.ts: nextjs-redirect-destinations extraction is incomplete in redirects(); use bounded immutable constants, arrays and map callbacks so every redirect destination can be checked.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "async redirects() {"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 9,
+          "message": "next.config.ts: redirect destination '/missing-literal' has no matching App Router page (expected app/**/page.tsx for route /missing-literal); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: \"/missing-literal\","
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed_low_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next.config.ts",
+          "line": 14,
+          "message": "next.config.ts: redirect destination '/missing-tpl' has no matching App Router page (expected app/**/page.tsx for route /missing-tpl); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: `/missing-tpl`,"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 30,
+          "message": "next.config.ts: nextjs-redirect-destinations extraction is unanalyzable in rewrites() at effort low; return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b' }]",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "async rewrites() {"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 34,
+          "message": "next.config.ts: rewrite destination '/missing-rw-literal' has no matching App Router page (expected app/**/page.tsx for route /missing-rw-literal); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: \"/missing-rw-literal\","
+        },
+        {
+          "file": "next.config.ts",
+          "line": 38,
+          "message": "next.config.ts: rewrite destination '/missing-rw-tpl' has no matching App Router page (expected app/**/page.tsx for route /missing-rw-tpl); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: `/missing-rw-tpl`,"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 5,
+          "message": "next.config.ts: nextjs-redirect-destinations extraction is unanalyzable in redirects() at effort low; return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b', permanent: true }]",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "async redirects() {"
+        },
+        {
+          "file": "next.config.ts",
+          "line": 9,
+          "message": "next.config.ts: redirect destination '/missing-literal' has no matching App Router page (expected app/**/page.tsx for route /missing-literal); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: \"/missing-literal\","
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "non_string": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "non_string_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "next.config.ts",
+          "line": 4,
+          "message": "next.config.ts: nextjs-redirect-destinations found destination properties in redirects() that are not string literals at effort low; return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b', permanent: true }]",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "async redirects() {"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "non_string_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reexport": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next-shared.ts",
+          "line": 3,
+          "message": "next-shared.ts: redirect destination '/gone' has no matching App Router page (expected app/**/page.tsx for route /gone); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "return [{ source: \"/old\", destination: \"/gone\", permanent: true }];"
+        },
+        {
+          "file": "next-shared.ts",
+          "line": 6,
+          "message": "next-shared.ts: rewrite destination '/missing' has no matching App Router page (expected app/**/page.tsx for route /missing); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "return [{ source: \"/alias\", destination: \"/missing\" }];"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "rewrite_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next.config.ts",
+          "line": 16,
+          "message": "next.config.ts: rewrite destination '/missing-before' has no matching App Router page (expected app/**/page.tsx for route /missing-before); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: \"/missing-before\","
+        },
+        {
+          "file": "next.config.ts",
+          "line": 22,
+          "message": "next.config.ts: rewrite destination '/missing-after' has no matching App Router page (expected app/**/page.tsx for route /missing-after); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: \"/missing-after\","
+        },
+        {
+          "file": "next.config.ts",
+          "line": 28,
+          "message": "next.config.ts: rewrite destination '/missing-fallback' has no matching App Router page (expected app/**/page.tsx for route /missing-fallback); remove the rewrite or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: \"/missing-fallback\","
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "skip_private": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next.config.ts",
+          "line": 6,
+          "message": "next.config.ts: redirect destination '/secret' has no matching App Router page (expected app/**/page.tsx for route /secret); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: '/secret',"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tuples_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/next.config.ts",
+          "line": 8,
+          "message": "web/next.config.ts: redirect destination '/missing-route' has no matching App Router page (expected web/app/**/page.tsx for route /missing-route); remove the redirect or restore the page so users are not sent to a 404.",
+          "rule": "nextjs-redirect-destinations",
+          "sourceLine": "destination: `/${dst}`,"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tuples_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

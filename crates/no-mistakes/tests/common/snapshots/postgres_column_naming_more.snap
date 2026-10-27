@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "schema.json: column:tasks.assignee_user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column references teams",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"assignee_user_id\": {",
           "target": "column:tasks.assignee_user_id"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "schema.json: column:tasks.assignee_user_id: foreign key to teams must end in team_id (for example assignee_user_team_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"assignee_user_id\": {",
           "target": "column:tasks.assignee_user_id"
         }
       ],
@@ -43,6 +45,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "schema.json: column:audits.xuser_id: foreign key to users must end in _user_id (for example xuser_user_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"xuser_id\": {",
           "target": "column:audits.xuser_id"
         },
         {
@@ -50,6 +53,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": "schema.json: column:markers.user: foreign key to users must end in _user_id (for example user_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"user\": {",
           "target": "column:markers.user"
         },
         {
@@ -57,6 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "schema.json: column:orders.owner_id: foreign key to users must end in _user_id (for example owner_user_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"owner_id\": {",
           "target": "column:orders.owner_id"
         }
       ],
@@ -77,6 +82,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "schema.json: column:audits.xuser_id: foreign key to users must end in _user_id (for example xuser_user_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"xuser_id\": {",
           "target": "column:audits.xuser_id"
         },
         {
@@ -84,6 +90,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": "schema.json: column:markers.user: foreign key to users must end in _user_id (for example user_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"user\": {",
           "target": "column:markers.user"
         },
         {
@@ -91,6 +98,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "schema.json: column:orders.owner_id: foreign key to users must end in _user_id (for example owner_user_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"owner_id\": {",
           "target": "column:orders.owner_id"
         }
       ],
@@ -123,6 +131,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "schema.json: column:seat_grants.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column is part of a composite foreign key to account_seats, which does not lead to users or deleted_user_identities",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"user_id\": {",
           "target": "column:seat_grants.user_id"
         }
       ],
@@ -155,6 +164,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "schema.json: column:line_grants.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column is only part of a composite foreign key to account_members",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"user_id\": {",
           "target": "column:line_grants.user_id"
         }
       ],
@@ -175,6 +185,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 31,
           "message": "schema.json: column:b.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column is part of a composite foreign key to a, which does not lead to users or deleted_user_identities",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"user_id\": {",
           "target": "column:b.user_id"
         },
         {
@@ -182,6 +193,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "schema.json: column:a.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column is part of a composite foreign key to b, which does not lead to users or deleted_user_identities",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"user_id\": {",
           "target": "column:a.user_id"
         }
       ],
@@ -238,6 +250,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^only_on_link",
           "rule": "postgres-column-naming",
+          "sourceLine": "{",
           "target": "^only_on_link"
         }
       ],
@@ -258,6 +271,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "schema.json: column:repair_markers.delivery_key: foreign key to delivery_records must end in record_delivery_key (for example delivery_key_record_delivery_key)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"delivery_key\": {",
           "target": "column:repair_markers.delivery_key"
         },
         {
@@ -265,6 +279,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": "schema.json: column:recommendation_hosts.post_id: foreign key to post_recommendations must end in recommendation_post_id (for example post_id_recommendation_post_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"post_id\": {",
           "target": "column:recommendation_hosts.post_id"
         },
         {
@@ -272,6 +287,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 49,
           "message": "schema.json: column:audits.source_delivery_key: foreign key to delivery_records must end in record_delivery_key (for example source_record_delivery_key)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"source_delivery_key\": {",
           "target": "column:audits.source_delivery_key"
         },
         {
@@ -279,6 +295,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "schema.json: column:provider_follows.provider_user_id: foreign key to provider_accounts must end in account_provider_user_id (for example provider_user_id_account_provider_user_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"provider_user_id\": {",
           "target": "column:provider_follows.provider_user_id"
         }
       ],
@@ -299,6 +316,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "schema.json: column:repair_markers.delivery_key: foreign key to delivery_records must end in record_delivery_key (for example delivery_key_record_delivery_key)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"delivery_key\": {",
           "target": "column:repair_markers.delivery_key"
         },
         {
@@ -306,6 +324,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": "schema.json: column:recommendation_hosts.post_id: foreign key to post_recommendations must end in recommendation_post_id (for example post_id_recommendation_post_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"post_id\": {",
           "target": "column:recommendation_hosts.post_id"
         },
         {
@@ -313,6 +332,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 49,
           "message": "schema.json: column:audits.source_delivery_key: foreign key to delivery_records must end in record_delivery_key (for example source_record_delivery_key)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"source_delivery_key\": {",
           "target": "column:audits.source_delivery_key"
         },
         {
@@ -320,6 +340,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "schema.json: column:provider_follows.provider_user_id: foreign key to provider_accounts must end in account_provider_user_id (for example provider_user_id_account_provider_user_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"provider_user_id\": {",
           "target": "column:provider_follows.provider_user_id"
         }
       ],
@@ -352,6 +373,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "schema.json: column:bookmarks.item_id: foreign key to articles must end in article_id (for example item_article_id)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"item_id\": {",
           "target": "column:bookmarks.item_id"
         },
         {
@@ -359,6 +381,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 35,
           "message": "schema.json: column:audits.xdelivery_key: foreign key to delivery_records must end in record_delivery_key (for example xdelivery_key_record_delivery_key)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"xdelivery_key\": {",
           "target": "column:audits.xdelivery_key"
         },
         {
@@ -366,6 +389,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "schema.json: column:orders.currency: foreign key to currencies must end in currency_code (for example currency_code)",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"currency\": {",
           "target": "column:orders.currency"
         }
       ],
@@ -446,6 +470,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:audit_rows.order_id: uuid column name matches _id$ but the column is not part of any foreign key; add a foreign key, or an exempt pattern or allow entry with a reason",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"order_id\": {",
           "target": "column:audit_rows.order_id"
         }
       ],
@@ -514,6 +539,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:sessions.reviewer_user_id: _user_id is reserved for foreign keys to users; this text column has no foreign key",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"reviewer_user_id\": {",
           "target": "column:sessions.reviewer_user_id"
         }
       ],
@@ -534,6 +560,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:sessions.reviewer_user_id: _user_id is reserved for foreign keys to users; this uuid column has no foreign key",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"reviewer_user_id\": {",
           "target": "column:sessions.reviewer_user_id"
         }
       ],
@@ -566,6 +593,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:links.url: _url is reserved for foreign keys to links; this text column has no foreign key; store the URL in links and reference it with a <name>_link_id column",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"url\": {",
           "target": "column:links.url"
         }
       ],
@@ -586,6 +614,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:bookmarks.page_url: _url is reserved for foreign keys to links; this text column has no foreign key; store the URL in links and reference it with a <name>_link_id column",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"page_url\": {",
           "target": "column:bookmarks.page_url"
         }
       ],
@@ -618,6 +647,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:sessions.reviewer_user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this uuid column has no foreign key",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"reviewer_user_id\": {",
           "target": "column:sessions.reviewer_user_id"
         }
       ],
@@ -638,6 +668,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "schema.json: column:sessions.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this uuid column has no foreign key",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"user_id\": {",
           "target": "column:sessions.user_id"
         }
       ],
@@ -658,6 +689,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "schema.json: column:tasks.assignee_user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column references teams",
           "rule": "postgres-column-naming",
+          "sourceLine": "\"assignee_user_id\": {",
           "target": "column:tasks.assignee_user_id"
         }
       ],
@@ -678,6 +710,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^cursor_",
           "rule": "postgres-column-naming",
+          "sourceLine": "{",
           "target": "^cursor_"
         }
       ],
@@ -698,6 +731,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^cursor_",
           "rule": "postgres-column-naming",
+          "sourceLine": "{",
           "target": "^cursor_"
         }
       ],
@@ -718,6 +752,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^never$",
           "rule": "postgres-column-naming",
+          "sourceLine": "{",
           "target": "^never$"
         }
       ],

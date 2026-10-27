@@ -15,7 +15,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "script.sh",
           "line": 1,
           "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "exec('git', 'config', 'user.name', 'Bot')"
         }
       ],
       "warnings": []
@@ -94,13 +95,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "setup.sh",
           "line": 2,
           "message": "setup.sh:2: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.name \"Bot\""
         },
         {
           "file": "setup.sh",
           "line": 3,
           "message": "setup.sh:3: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.email \"bot@example.com\""
         }
       ],
       "warnings": []
@@ -119,7 +122,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "script.sh",
           "line": 1,
           "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.email \"bot@example.com\""
         }
       ],
       "warnings": []
@@ -138,7 +142,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "script.sh",
           "line": 1,
           "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git('config', 'user.name', 'Bot')"
         }
       ],
       "warnings": []
@@ -157,7 +162,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "script.sh",
           "line": 1,
           "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config \\"
         }
       ],
       "warnings": []
@@ -176,7 +182,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "script.sh",
           "line": 3,
           "message": "script.sh:3: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.name \"Bot\""
         }
       ],
       "warnings": []
@@ -195,205 +202,239 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "managed.yml",
           "line": 5,
           "message": "managed.yml:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "- run: git -C . 'config' user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 10,
           "message": "mutations.sh:10: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --config-env=core.editor=EDITOR config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 11,
           "message": "mutations.sh:11: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --exec-path=/usr/bin --attr-source=HEAD config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 12,
           "message": "mutations.sh:12: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "'git' config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 13,
           "message": "mutations.sh:13: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "\"git\" config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 14,
           "message": "mutations.sh:14: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git 'config' user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 15,
           "message": "mutations.sh:15: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "'git' \"config\" user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 16,
           "message": "mutations.sh:16: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "\"git\" '-C' '.' 'config' user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 17,
           "message": "mutations.sh:17: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -c 'color.ui=false' config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 18,
           "message": "mutations.sh:18: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C '--get' config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 19,
           "message": "mutations.sh:19: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . \\"
         },
         {
           "file": "mutations.sh",
           "line": 22,
           "message": "mutations.sh:22: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C \"$ROOT\" config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 23,
           "message": "mutations.sh:23: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --git-dir=\"`directory`\" config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 25,
           "message": "mutations.sh:25: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --get user.email; git config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 26,
           "message": "mutations.sh:26: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --get user.email && git config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 27,
           "message": "mutations.sh:27: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --get user.email || git config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 28,
           "message": "mutations.sh:28: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file 'path;name' user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 29,
           "message": "mutations.sh:29: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file=\"path|name\" user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 3,
           "message": "mutations.sh:3: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 31,
           "message": "mutations.sh:31: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config --file $CONFIG user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 32,
           "message": "mutations.sh:32: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config --file $(config_path) user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 33,
           "message": "mutations.sh:33: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config --file `config_path` user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 35,
           "message": "mutations.sh:35: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git '--git-dir=.git' config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 36,
           "message": "mutations.sh:36: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git \"--work-tree=$ROOT\" config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 37,
           "message": "mutations.sh:37: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file path#name user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 38,
           "message": "mutations.sh:38: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file 'path#name' user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 39,
           "message": "mutations.sh:39: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file \"#path\" user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 4,
           "message": "mutations.sh:4: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 5,
           "message": "mutations.sh:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C 'directory with spaces' config user.name 'Build Bot'"
         },
         {
           "file": "mutations.sh",
           "line": 6,
           "message": "mutations.sh:6: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . -c color.ui=false --no-pager config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 7,
           "message": "mutations.sh:7: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --git-dir=.git config --local user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 8,
           "message": "mutations.sh:8: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --git-dir '.git' --work-tree . config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 9,
           "message": "mutations.sh:9: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --namespace=automation --bare config user.email bot@example.com"
         },
         {
           "file": "self-hosted.yml",
           "line": 5,
           "message": "self-hosted.yml:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "- run: git -C . 'config' user.email bot@example.com"
         }
       ],
       "warnings": []
@@ -412,7 +453,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "self-hosted.yml",
           "line": 5,
           "message": "self-hosted.yml:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "- run: git -C . 'config' user.email bot@example.com"
         }
       ],
       "warnings": []
@@ -431,199 +473,232 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "mutations.sh",
           "line": 10,
           "message": "mutations.sh:10: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --config-env=core.editor=EDITOR config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 11,
           "message": "mutations.sh:11: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --exec-path=/usr/bin --attr-source=HEAD config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 12,
           "message": "mutations.sh:12: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "'git' config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 13,
           "message": "mutations.sh:13: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "\"git\" config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 14,
           "message": "mutations.sh:14: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git 'config' user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 15,
           "message": "mutations.sh:15: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "'git' \"config\" user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 16,
           "message": "mutations.sh:16: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "\"git\" '-C' '.' 'config' user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 17,
           "message": "mutations.sh:17: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -c 'color.ui=false' config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 18,
           "message": "mutations.sh:18: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C '--get' config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 19,
           "message": "mutations.sh:19: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . \\"
         },
         {
           "file": "mutations.sh",
           "line": 22,
           "message": "mutations.sh:22: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C \"$ROOT\" config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 23,
           "message": "mutations.sh:23: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --git-dir=\"`directory`\" config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 25,
           "message": "mutations.sh:25: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --get user.email; git config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 26,
           "message": "mutations.sh:26: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --get user.email && git config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 27,
           "message": "mutations.sh:27: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --get user.email || git config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 28,
           "message": "mutations.sh:28: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file 'path;name' user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 29,
           "message": "mutations.sh:29: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file=\"path|name\" user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 3,
           "message": "mutations.sh:3: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 31,
           "message": "mutations.sh:31: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config --file $CONFIG user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 32,
           "message": "mutations.sh:32: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config --file $(config_path) user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 33,
           "message": "mutations.sh:33: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config --file `config_path` user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 35,
           "message": "mutations.sh:35: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git '--git-dir=.git' config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 36,
           "message": "mutations.sh:36: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git \"--work-tree=$ROOT\" config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 37,
           "message": "mutations.sh:37: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file path#name user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 38,
           "message": "mutations.sh:38: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file 'path#name' user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 39,
           "message": "mutations.sh:39: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config --file \"#path\" user.email Bot"
         },
         {
           "file": "mutations.sh",
           "line": 4,
           "message": "mutations.sh:4: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 5,
           "message": "mutations.sh:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C 'directory with spaces' config user.name 'Build Bot'"
         },
         {
           "file": "mutations.sh",
           "line": 6,
           "message": "mutations.sh:6: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git -C . -c color.ui=false --no-pager config user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 7,
           "message": "mutations.sh:7: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --git-dir=.git config --local user.email bot@example.com"
         },
         {
           "file": "mutations.sh",
           "line": 8,
           "message": "mutations.sh:8: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --git-dir '.git' --work-tree . config user.name Bot"
         },
         {
           "file": "mutations.sh",
           "line": 9,
           "message": "mutations.sh:9: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git --namespace=automation --bare config user.email bot@example.com"
         },
         {
           "file": "self-hosted.yml",
           "line": 5,
           "message": "self-hosted.yml:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "- run: git -C . 'config' user.email bot@example.com"
         }
       ],
       "warnings": []
@@ -750,7 +825,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/ci.yml",
           "line": 2,
           "message": ".github/workflows/ci.yml:2: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.name \"Bot\""
         }
       ],
       "warnings": []
@@ -769,7 +845,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "deploy",
           "line": 2,
           "message": "deploy:2: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.name \"Bot\""
         }
       ],
       "warnings": []
@@ -788,7 +865,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "script.sh",
           "line": 1,
           "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.name \"Bot\""
         }
       ],
       "warnings": []
@@ -807,7 +885,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "scripts/setup.sh",
           "line": 1,
           "message": "scripts/setup.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
-          "rule": "no-git-identity-mutation"
+          "rule": "no-git-identity-mutation",
+          "sourceLine": "git config user.name Bot"
         }
       ],
       "warnings": []

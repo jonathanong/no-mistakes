@@ -28,6 +28,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/api/package.json: workspace package cycle detected: @x/api -> @x/domain -> @x/api",
           "rule": "workspace-package-cycles",
+          "sourceLine": "{",
           "target": "@x/api -> @x/domain -> @x/api"
         }
       ],
@@ -72,6 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
           "rule": "workspace-package-cycles",
+          "sourceLine": "{",
           "target": "a -> b -> a"
         }
       ],
@@ -104,6 +106,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
           "rule": "workspace-package-cycles",
+          "sourceLine": "{",
           "target": "a -> b -> a"
         }
       ],
@@ -136,6 +139,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
           "rule": "workspace-package-cycles",
+          "sourceLine": "{",
           "target": "a -> b -> a"
         }
       ],
@@ -156,6 +160,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
           "rule": "workspace-package-cycles",
+          "sourceLine": "{",
           "target": "a -> b -> a"
         }
       ],
@@ -176,6 +181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
           "rule": "workspace-package-cycles",
+          "sourceLine": "{",
           "target": "a -> b -> a"
         }
       ],
@@ -208,6 +214,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
           "rule": "workspace-package-cycles",
+          "sourceLine": "{",
           "target": "a -> b -> a"
         }
       ],
@@ -228,6 +235,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "packages/storybook/package.json: workspace package cycle detected: storybook -> storybook",
           "rule": "workspace-package-cycles",
+          "sourceLine": "{",
           "target": "storybook -> storybook"
         }
       ],

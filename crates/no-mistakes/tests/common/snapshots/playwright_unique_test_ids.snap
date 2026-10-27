@@ -1,0 +1,536 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 30,
+          "message": "selector [data-testid=\"{identifierId}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={identifierId}>From const</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={identifierId}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 31,
+          "message": "selector [data-testid=\"{flag ? 'ternary-on' : 'ternary-off'}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={flag ? 'ternary-on' : 'ternary-off'}>Ternary</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={flag ? 'ternary-on' : 'ternary-off'}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 32,
+          "message": "selector [data-testid=\"{flag && 'logical-id'}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={flag && 'logical-id'}>Logical</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={flag && 'logical-id'}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 33,
+          "message": "selector [data-testid=\"user-${templateId}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={`user-${templateId}`}>Template</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid=user-${templateId}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 34,
+          "message": "selector [data-testid=\"{IMPORTED_ID}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={IMPORTED_ID}>Imported</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={IMPORTED_ID}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 35,
+          "message": "selector [data-testid=\"{makeId()}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={makeId()}>Helper</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={makeId()}"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "export function OtherSave() {",
+          "target": "data-testid=save"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=save"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "component_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/suppressed.tsx",
+          "line": 2,
+          "message": "directive names disabled or out-of-scope rule `playwright-unique-html-ids`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file playwright-unique-html-ids",
+          "target": "playwright-unique-html-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/component.tsx",
+          "line": 6,
+          "message": "selector [id=\"{componentId}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "return <Widget htmlId={componentId} />; // EXPECT_COMPONENT",
+          "target": "id={componentId}"
+        },
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID } from './ids';",
+          "target": "data-testid=literal-test"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "target": "data-testid=literal-test"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 14,
+          "message": "selector [data-testid=\"{TEST_ID}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={TEST_ID} /> {/* EXPECT_TEST */}",
+          "target": "data-testid={TEST_ID}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "configured_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/suppressed.tsx",
+          "line": 2,
+          "message": "directive names disabled or out-of-scope rule `playwright-unique-html-ids`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file playwright-unique-html-ids",
+          "target": "playwright-unique-html-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID } from './ids';",
+          "target": "data-testid=literal-test"
+        },
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [id=\"derived-html-id\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID } from './ids';",
+          "target": "id=derived-html-id"
+        },
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-id\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID } from './ids';",
+          "target": "id=literal-id"
+        },
+        {
+          "file": "web/app/other.tsx",
+          "line": 7,
+          "message": "selector [id=\"derived-html-id\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<div id={SHARED_ID} /> {/* EXPECT_HTML */}",
+          "target": "id=derived-html-id"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "target": "data-testid=literal-test"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [id=\"derived-html-id\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "target": "id=derived-html-id"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-id\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "target": "id=literal-id"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 11,
+          "message": "selector [id=\"derived-html-id\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<div id={SHARED_ID} /> {/* EXPECT_HTML */}",
+          "target": "id=derived-html-id"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 12,
+          "message": "selector [id=\"{makeId()}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<div id={makeId()} /> {/* EXPECT_HTML */}",
+          "target": "id={makeId()}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 14,
+          "message": "selector [data-testid=\"derived-test-id\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={TEST_ID} /> {/* EXPECT_TEST */}",
+          "target": "data-testid=derived-test-id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "coverage_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/suppressed.tsx",
+          "line": 2,
+          "message": "directive names disabled or out-of-scope rule `playwright-unique-html-ids`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file playwright-unique-html-ids",
+          "target": "playwright-unique-html-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID } from './ids';",
+          "target": "data-testid=literal-test"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "target": "data-testid=literal-test"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 14,
+          "message": "selector [data-testid=\"derived-test-id\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={TEST_ID} /> {/* EXPECT_TEST */}",
+          "target": "data-testid=derived-test-id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dedicated_html_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID } from './ids';",
+          "target": "data-testid=literal-test"
+        },
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-id\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { SHARED_ID } from './ids';",
+          "target": "id=literal-id"
+        },
+        {
+          "file": "web/app/other.tsx",
+          "line": 7,
+          "message": "selector [id=\"{SHARED_ID}\"] is unanalyzable at effort low; use a literal HTML id such as id=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "<div id={SHARED_ID} /> {/* EXPECT_HTML */}",
+          "target": "id={SHARED_ID}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "target": "data-testid=literal-test"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-id\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "target": "id=literal-id"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 11,
+          "message": "selector [id=\"{SHARED_ID}\"] is unanalyzable at effort low; use a literal HTML id such as id=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "<div id={SHARED_ID} /> {/* EXPECT_HTML */}",
+          "target": "id={SHARED_ID}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 12,
+          "message": "selector [id=\"{makeId()}\"] is unanalyzable at effort low; use a literal HTML id such as id=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "<div id={makeId()} /> {/* EXPECT_HTML */}",
+          "target": "id={makeId()}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 14,
+          "message": "selector [data-testid=\"{TEST_ID}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={TEST_ID} /> {/* EXPECT_TEST */}",
+          "target": "data-testid={TEST_ID}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 17,
+          "message": "directive for `playwright-unique-test-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line playwright-unique-test-ids",
+          "target": "playwright-unique-test-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "export function OtherSave() {",
+          "target": "data-testid=save"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=save"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "export default function Page() {",
+          "target": "data-testid=save"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/page.tsx",
+          "line": 17,
+          "message": "directive for `playwright-unique-test-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line playwright-unique-test-ids",
+          "target": "playwright-unique-test-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "export function OtherSave() {",
+          "target": "data-testid=save"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=save"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/other.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "export function OtherSave() {",
+          "target": "data-testid=save"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "data-testid=save"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 30,
+          "message": "selector [data-testid=\"{identifierId}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={identifierId}>From const</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={identifierId}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 31,
+          "message": "selector [data-testid=\"{flag ? 'ternary-on' : 'ternary-off'}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={flag ? 'ternary-on' : 'ternary-off'}>Ternary</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={flag ? 'ternary-on' : 'ternary-off'}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 32,
+          "message": "selector [data-testid=\"{flag && 'logical-id'}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={flag && 'logical-id'}>Logical</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={flag && 'logical-id'}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 33,
+          "message": "selector [data-testid=\"user-${templateId}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={`user-${templateId}`}>Template</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid=user-${templateId}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 34,
+          "message": "selector [data-testid=\"{IMPORTED_ID}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={IMPORTED_ID}>Imported</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={IMPORTED_ID}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 35,
+          "message": "selector [data-testid=\"{makeId()}\"] is unanalyzable at effort low; use a literal test id such as data-pw=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={makeId()}>Helper</button> {/* EXPECT_SHAPE */}",
+          "target": "data-testid={makeId()}"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,38 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": "ts-shared/utils/index.mts: Vitest project `ts-shared` full-suite trigger path is not covered by CI path filters: .github/workflows/ci.yml:backend",
+          "rule": "vitest-ci-path-coverage",
+          "sourceLine": "name: CI",
+          "target": "ts-shared/utils/index.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

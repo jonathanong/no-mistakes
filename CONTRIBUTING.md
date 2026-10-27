@@ -16,7 +16,10 @@ This repository is a huge token sink. Thus, contributions are welcomed.
    diffs like code. Rust `check --format json` snapshots use
    `crates/no-mistakes/tests/common/check_json_snapshot.rs`, which compares `--jobs 1`
    with `--jobs 2` and rewrites absolute paths, temp directories, process ids, and
-   timings so the file is stable on Linux, macOS, and Windows. CI sets `INSTA_UPDATE=no`
+   timings so the file is stable on Linux, macOS, and Windows. Each finding with a
+   `file` and `line` also gets `sourceLine`, the trimmed text of that fixture line
+   (LF, no absolute paths; absent when the file is not a readable fixture file), so a
+   finding on the wrong line shows up in the snapshot diff. CI sets `INSTA_UPDATE=no`
    and fails when a snapshot is missing or changed. The shared full Rust test
    command (`bash .github/scripts/rust-validation.sh test`) also collects
    executed snapshot references and rejects orphan `.snap` files in workspace

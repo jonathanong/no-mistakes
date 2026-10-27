@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/guide.md is not linked from a configured parent markdown file; add a whole-file markdown link to this file from a parent",
           "rule": "markdown-child-links",
+          "sourceLine": "# Guide",
           "target": "docs/guide.md"
         }
       ],
@@ -60,6 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/guide.md is not linked from a configured parent markdown file; add a whole-file markdown link to this file from a parent",
           "rule": "markdown-child-links",
+          "sourceLine": "# Guide",
           "target": "docs/guide.md"
         }
       ],
@@ -92,6 +94,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/guide.md is not linked from a configured parent markdown file; add a markdown link to this file from a parent",
           "rule": "markdown-child-links",
+          "sourceLine": "# Guide",
           "target": "docs/guide.md"
         }
       ],
@@ -112,6 +115,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/guide.md is not linked from a configured parent markdown file; add a whole-file markdown link to this file from a parent",
           "rule": "markdown-child-links",
+          "sourceLine": "# Guide",
           "target": "docs/guide.md"
         }
       ],

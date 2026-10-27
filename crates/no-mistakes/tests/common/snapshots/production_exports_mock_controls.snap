@@ -11,6 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `actualValue` include an unknown import selector: other/actual.mts:3 `../src/actual.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/actual.mjs\"), () => vi.importActual(\"../src/actual.mjs\"));",
           "target": "unanalyzable"
         },
         {
@@ -18,6 +19,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `aliasValue` include an unknown import selector: other/alias.mts:3 `../src/alias.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "mockApi.mock(import(\"../src/alias.mjs\"), () => ({ aliasValue: 2 }));",
           "target": "unanalyzable"
         },
         {
@@ -25,6 +27,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/bare-callee.mts:3 `../src/bare-callee.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "mock(import(\"../src/bare-callee.mjs\"), () => ({}));",
           "target": "unanalyzable"
         },
         {
@@ -32,6 +35,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/captured-property.mts:3 `../src/captured-property.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/captured-property.mjs\"), () => ({ value: replacement }));",
           "target": "unanalyzable"
         },
         {
@@ -39,6 +43,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/constructor.mts:3 `../src/constructor.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/constructor.mjs\"), () => ({ value: () => new Loader() }));",
           "target": "unanalyzable"
         },
         {
@@ -46,6 +51,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/generator.mts:3 `../src/generator.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/generator.mjs\"), function* () { return {}; });",
           "target": "unanalyzable"
         },
         {
@@ -53,6 +59,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/getter.mts:3 `../src/getter.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/getter.mjs\"), () => ({ get value() { return opaque.original; } }));",
           "target": "unanalyzable"
         },
         {
@@ -60,6 +67,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/local-binding.mts:3 `../src/local-binding.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/local-binding.mjs\"), () => ({ value: 2 }));",
           "target": "unanalyzable"
         },
         {
@@ -67,6 +75,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `localValue` include an unknown import selector: other/local.mts:3 `../src/local.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/local.mjs\"), () => ({ localValue: 2 }));",
           "target": "unanalyzable"
         },
         {
@@ -74,6 +83,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/multiple-statements.mts:3 `../src/multiple-statements.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/multiple-statements.mjs\"), () => { const value = 1; return { value }; });",
           "target": "unanalyzable"
         },
         {
@@ -81,6 +91,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/nested-callee.mts:3 `../src/nested-callee.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "api.vi.mock(import(\"../src/nested-callee.mjs\"), () => ({}));",
           "target": "unanalyzable"
         },
         {
@@ -88,6 +99,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/nested-import.mts:3 `../src/nested-import.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/nested-import.mjs\"), () => ({ value: () => import(\"../src/nested-import.mjs\") }));",
           "target": "unanalyzable"
         },
         {
@@ -95,6 +107,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/no-factory.mts:3 `../src/no-factory.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/no-factory.mjs\"));",
           "target": "unanalyzable"
         },
         {
@@ -102,6 +115,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/opaque-call.mts:3 `../src/opaque-call.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/opaque-call.mjs\"), () => ({ value: () => opaqueLoader() }));",
           "target": "unanalyzable"
         },
         {
@@ -109,6 +123,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/opaque-member.mts:3 `../src/opaque-member.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/opaque-member.mjs\"), () => opaque.original);",
           "target": "unanalyzable"
         },
         {
@@ -116,6 +131,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/opaque-reference.mts:3 `../src/opaque-reference.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/opaque-reference.mjs\"), () => replacement);",
           "target": "unanalyzable"
         },
         {
@@ -123,6 +139,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/optional.mts:3 `../src/optional.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock?.(import(\"../src/optional.mjs\"), () => ({ value: 2 }));",
           "target": "unanalyzable"
         },
         {
@@ -130,6 +147,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `originalValue` include an unknown import selector: other/original.mts:3 `../src/original.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/original.mjs\"), (original) => original());",
           "target": "unanalyzable"
         },
         {
@@ -137,6 +155,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/other-method.mts:3 `../src/other-method.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.other(import(\"../src/other-method.mjs\"), () => ({}));",
           "target": "unanalyzable"
         },
         {
@@ -144,6 +163,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/reference.mts:3 `../src/reference.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/reference.mjs\"), replacementFactory);",
           "target": "unanalyzable"
         },
         {
@@ -151,6 +171,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/shadowed.mts:3 `../src/shadowed.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "function replace(vi: unknown) { vi.mock(import(\"../src/shadowed.mjs\"), () => ({ value: 2 })); }",
           "target": "unanalyzable"
         },
         {
@@ -158,6 +179,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `sharedValue` include an unknown import selector: other/shared.mts:3 `../src/shared.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/shared.mjs\"), () => ({ sharedValue: 2 })); void import(\"../src/shared.mjs\");",
           "target": "unanalyzable"
         },
         {
@@ -165,6 +187,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/spread.mts:3 `../src/spread.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/spread.mjs\"), () => ({ ...replacement }));",
           "target": "unanalyzable"
         },
         {
@@ -172,6 +195,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/tagged.mts:3 `../src/tagged.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/tagged.mjs\"), () => ({ value: () => tag`replacement` }));",
           "target": "unanalyzable"
         },
         {
@@ -179,6 +203,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/unbound.mts:3 `../src/unbound.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/unbound.mjs\"), () => ({ value: 2 }));",
           "target": "unanalyzable"
         },
         {
@@ -186,6 +211,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/wrong-binding.mts:3 `../src/wrong-binding.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "vi.mock(import(\"../src/wrong-binding.mjs\"), () => ({ value: 2 }));",
           "target": "unanalyzable"
         }
       ],

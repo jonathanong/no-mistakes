@@ -1,0 +1,281 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/derived-a.tsx",
+          "line": 3,
+          "message": "selector [id=\"{LOCAL_ID}\"] is unanalyzable at effort low; use a literal HTML id such as id=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "return <section id={LOCAL_ID}>Local const owner</section>; // EXPECT_LOW_UNANALYZABLE_LOCAL",
+          "target": "id={LOCAL_ID}"
+        },
+        {
+          "file": "web/app/derived-b.tsx",
+          "line": 4,
+          "message": "selector [id=\"{IMPORTED_ID}\"] is unanalyzable at effort low; use a literal HTML id such as id=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "return <aside id={IMPORTED_ID}>Imported const owner</aside>; // EXPECT_LOW_UNANALYZABLE_IMPORTED",
+          "target": "id={IMPORTED_ID}"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/literal-a.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        },
+        {
+          "file": "web/app/literal-b.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/suppressed-file.tsx",
+          "line": 1,
+          "message": "directive for `playwright-unique-html-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file playwright-unique-html-ids",
+          "target": "playwright-unique-html-ids"
+        },
+        {
+          "file": "web/app/suppressed.tsx",
+          "line": 3,
+          "message": "directive for `playwright-unique-html-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line playwright-unique-html-ids",
+          "target": "playwright-unique-html-ids"
+        },
+        {
+          "file": "web/app/suppressed.tsx",
+          "line": 8,
+          "message": "directive for `playwright-unique-html-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "return <aside id={id} />; // no-mistakes-disable-line playwright-unique-html-ids",
+          "target": "playwright-unique-html-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/derived-a.tsx",
+          "line": 1,
+          "message": "selector [id=\"recovered-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "export function DerivedA() {",
+          "target": "id=recovered-duplicate"
+        },
+        {
+          "file": "web/app/derived-b.tsx",
+          "line": 1,
+          "message": "selector [id=\"recovered-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "target": "id=recovered-duplicate"
+        },
+        {
+          "file": "web/app/literal-a.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        },
+        {
+          "file": "web/app/literal-b.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/app/suppressed-file.tsx",
+          "line": 1,
+          "message": "directive for `playwright-unique-html-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file playwright-unique-html-ids",
+          "target": "playwright-unique-html-ids"
+        },
+        {
+          "file": "web/app/suppressed.tsx",
+          "line": 3,
+          "message": "directive for `playwright-unique-html-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line playwright-unique-html-ids",
+          "target": "playwright-unique-html-ids"
+        },
+        {
+          "file": "web/app/suppressed.tsx",
+          "line": 8,
+          "message": "directive for `playwright-unique-html-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "return <aside id={id} />; // no-mistakes-disable-line playwright-unique-html-ids",
+          "target": "playwright-unique-html-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/literal-a.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        },
+        {
+          "file": "web/app/literal-b.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/derived-a.tsx",
+          "line": 3,
+          "message": "selector [id=\"recovered-duplicate\"] is unanalyzable at effort low; use a literal HTML id such as id=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "return <section id={LOCAL_ID}>Local const owner</section>; // EXPECT_LOW_UNANALYZABLE_LOCAL",
+          "target": "id=recovered-duplicate"
+        },
+        {
+          "file": "web/app/derived-b.tsx",
+          "line": 4,
+          "message": "selector [id=\"recovered-duplicate\"] is unanalyzable at effort low; use a literal HTML id such as id=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "return <aside id={IMPORTED_ID}>Imported const owner</aside>; // EXPECT_LOW_UNANALYZABLE_IMPORTED",
+          "target": "id=recovered-duplicate"
+        },
+        {
+          "file": "web/app/literal-a.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"recovered-test-control\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "data-testid=recovered-test-control"
+        },
+        {
+          "file": "web/app/literal-a.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        },
+        {
+          "file": "web/app/literal-b.tsx",
+          "line": 1,
+          "message": "selector [data-testid=\"recovered-test-control\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "data-testid=recovered-test-control"
+        },
+        {
+          "file": "web/app/literal-b.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/derived-a.tsx",
+          "line": 3,
+          "message": "selector [id=\"{LOCAL_ID}\"] is unanalyzable at effort low; use a literal HTML id such as id=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "return <section id={LOCAL_ID}>Local const owner</section>; // EXPECT_LOW_UNANALYZABLE_LOCAL",
+          "target": "id={LOCAL_ID}"
+        },
+        {
+          "file": "web/app/derived-b.tsx",
+          "line": 4,
+          "message": "selector [id=\"{IMPORTED_ID}\"] is unanalyzable at effort low; use a literal HTML id such as id=\"save-button\", or a prop with a literal default",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "return <aside id={IMPORTED_ID}>Imported const owner</aside>; // EXPECT_LOW_UNANALYZABLE_IMPORTED",
+          "target": "id={IMPORTED_ID}"
+        },
+        {
+          "file": "web/app/literal-a.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        },
+        {
+          "file": "web/app/literal-b.tsx",
+          "line": 1,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "target": "id=literal-duplicate"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -17,6 +17,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `bare_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE bare_orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -25,6 +26,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -33,6 +35,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "writes.sql:4: do not write generated column `transaction_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE transaction_orders SET computed = 1;",
           "target": "computed"
         }
       ],
@@ -54,6 +57,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write generated column `orders.new_gen`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO orders VALUES (1, DEFAULT, 2);",
           "target": "new_gen"
         },
         {
@@ -62,6 +66,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write generated column `orders.old_gen`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO orders VALUES (1, DEFAULT, 2);",
           "target": "old_gen"
         }
       ],
@@ -83,6 +88,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write generated column `orders.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO orders VALUES (1, 'paid', DEFAULT, now());",
           "target": "created_at"
         },
         {
@@ -91,6 +97,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -99,6 +106,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO orders VALUES (1, 'paid', DEFAULT, now());",
           "target": "updated_at"
         }
       ],
@@ -120,6 +128,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "external.sql:1: do not write trigger-maintained column `external_orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE external_orders SET updated_at = now();",
           "target": "updated_at"
         }
       ],
@@ -141,6 +150,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "write.ts:2: do not write generated column `orders.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "write(`UPDATE orders SET created_at = now(), updated_at = now()`);",
           "target": "created_at"
         },
         {
@@ -149,6 +159,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "write.ts:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "write(`UPDATE orders SET created_at = now(), updated_at = now()`);",
           "target": "updated_at"
         },
         {
@@ -157,6 +168,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET created_at = now(), updated_at = now();",
           "target": "created_at"
         },
         {
@@ -165,6 +177,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET created_at = now(), updated_at = now();",
           "target": "updated_at"
         }
       ],
@@ -186,6 +199,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "write.ts:5: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "`chr(85)||chr(80)||chr(68)||chr(65)||chr(84)||chr(69)||' items SET created_at = now()'`,",
           "target": "created_at"
         }
       ],
@@ -207,6 +221,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET computed = 1;",
           "target": "computed"
         }
       ],
@@ -228,6 +243,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET computed = 1;",
           "target": "computed"
         }
       ],
@@ -249,6 +265,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "writes.sql:10: do not write generated column `\"public.orders\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE \"public.orders\" SET computed = 1;",
           "target": "computed"
         },
         {
@@ -257,6 +274,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "writes.sql:9: do not write generated column `external_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE external_orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -265,6 +283,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "writes.sql:11: do not write generated column `outside.external_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE outside.external_orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -273,6 +292,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `pg_temp.orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -281,6 +301,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `pg_temp.orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE pg_temp.orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -289,6 +310,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write generated column `public.orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -297,6 +319,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "writes.sql:4: do not write generated column `public.orders.id`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.orders SET id = 1;",
           "target": "id"
         },
         {
@@ -305,6 +328,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "writes.sql:7: do not write generated column `unique_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE audit.unique_orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -313,6 +337,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "writes.sql:8: do not write generated column `unique_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE unique_orders SET computed = 1;",
           "target": "computed"
         }
       ],
@@ -334,6 +359,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.total`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET total = 1;",
           "target": "total"
         }
       ],
@@ -367,6 +393,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "write.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return run(`UPDATE items SET created_at = now()`)",
           "target": "created_at"
         }
       ],
@@ -388,6 +415,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "writes.sql:7: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO orders (computed) VALUES (3);",
           "target": "computed"
         },
         {
@@ -396,6 +424,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "writes.sql:8: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET computed = 4;",
           "target": "computed"
         }
       ],
@@ -417,6 +446,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -425,6 +455,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "writes.sql:6: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -433,6 +464,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "writes.sql:7: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "DO $café$ BEGIN UPDATE orders SET updated_at = now(); END $café$;",
           "target": "updated_at"
         },
         {
@@ -441,6 +473,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "writes.sql:8: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "DO $東京$ BEGIN UPDATE orders SET updated_at = now(); END $東京$;",
           "target": "updated_at"
         },
         {
@@ -448,6 +481,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "writes.sql:5: SQL statement `SELECT café$tag$bar, foo$$bar, $1$not_a_quote FROM other_table` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "SELECT café$tag$bar, foo$$bar, $1$not_a_quote FROM other_table;",
           "target": "SELECT café$tag$bar, foo$$bar, $1$not_a_quote FROM other_table"
         }
       ],
@@ -469,6 +503,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "execution-writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET computed = 1;",
           "target": "computed"
         }
       ],
@@ -514,6 +549,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -522,6 +558,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write trigger-maintained column `other_orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE other_orders SET updated_at = now();",
           "target": "updated_at"
         }
       ],
@@ -543,6 +580,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-insert-cols.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`INSERT INTO items (id, created_at, note) VALUES ($1, $2, $3)`)",
           "target": "created_at"
         },
         {
@@ -551,6 +589,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-insert-columnless.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`INSERT INTO items VALUES ($1, $2, $3)`)",
           "target": "created_at"
         },
         {
@@ -559,6 +598,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "fail-merge.sql:1: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "MERGE INTO items t",
           "target": "created_at"
         },
         {
@@ -567,6 +607,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-update.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE items SET created_at = now()`)",
           "target": "created_at"
         },
         {
@@ -575,6 +616,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "fail-upsert.ts:5: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "`INSERT INTO items (id, note) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET created_at = now()`,",
           "target": "created_at"
         }
       ],
@@ -608,6 +650,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET computed = 1;",
           "target": "computed"
         }
       ],
@@ -629,6 +672,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "write.ts:4: do not write generated column `votes.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE votes SET created_at = now()`)",
           "target": "created_at"
         }
       ],
@@ -650,6 +694,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `dynamic_identifier.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE dynamic_identifier SET computed = 1;",
           "target": "computed"
         },
         {
@@ -658,6 +703,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write generated column `dynamic_value.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE dynamic_value SET computed = 1;",
           "target": "computed"
         },
         {
@@ -666,6 +712,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `literal_format.escaped_percent`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE literal_format SET escaped_percent = 1;",
           "target": "escaped_percent"
         },
         {
@@ -674,6 +721,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "writes.sql:4: do not write generated column `literal_format.literal_value`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE literal_format SET literal_value = 1;",
           "target": "literal_value"
         },
         {
@@ -682,6 +730,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "writes.sql:5: do not write generated column `plain_format.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE plain_format SET generated = 1;",
           "target": "generated"
         }
       ],
@@ -703,6 +752,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write generated column `reverse_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE reverse_orders SET computed = 1;",
           "target": "computed"
         }
       ],
@@ -724,6 +774,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `items.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE items SET generated = 1;",
           "target": "generated"
         },
         {
@@ -732,6 +783,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `items.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES (1, 2, DEFAULT);",
           "target": "generated"
         },
         {
@@ -740,6 +792,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write trigger-maintained column `items.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE items SET updated_at = 1;",
           "target": "updated_at"
         },
         {
@@ -748,6 +801,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write trigger-maintained column `items.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES (1, 2, DEFAULT);",
           "target": "updated_at"
         },
         {
@@ -756,6 +810,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "writes.sql:4: do not write generated column `other.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE other SET generated = 1;",
           "target": "generated"
         }
       ],
@@ -776,6 +831,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "broken.sql:1: SQL statement `CREATE TABLE broken (` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "CREATE TABLE broken (",
           "target": "CREATE TABLE broken ("
         }
       ],
@@ -797,6 +853,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.total`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET total = 1;",
           "target": "total"
         }
       ],
@@ -818,6 +875,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "fail-merge.sql:1: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "MERGE INTO items t",
           "target": "created_at"
         }
       ],
@@ -839,6 +897,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET generated = 1;",
           "target": "generated"
         }
       ],
@@ -860,6 +919,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "001_create.sql:2: do not write generated column `t.g`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO t (g) VALUES (1);",
           "target": "g"
         }
       ],
@@ -893,6 +953,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "write.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE items SET created_at = now()`)",
           "target": "created_at"
         }
       ],
@@ -914,6 +975,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.total`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET total = 1;",
           "target": "total"
         }
       ],
@@ -935,6 +997,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-update.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE items SET created_at = now()`)",
           "target": "created_at"
         }
       ],
@@ -968,6 +1031,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `public.orders.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.orders SET generated = 1;",
           "target": "generated"
         },
         {
@@ -976,6 +1040,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `public.orders.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO public.orders VALUES (1, 2);",
           "target": "generated"
         }
       ],
@@ -997,6 +1062,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `items.Foo`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE items SET \"Foo\" = 1;",
           "target": "Foo"
         }
       ],
@@ -1030,6 +1096,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "write.ts:3: do not write generated column `\"ORDERS\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "write(`UPDATE \"Orders\" SET computed = 1; UPDATE \"ORDERS\" SET computed = 1`);",
           "target": "computed"
         },
         {
@@ -1038,6 +1105,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "write.ts:3: do not write generated column `\"Orders\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "write(`UPDATE \"Orders\" SET computed = 1; UPDATE \"ORDERS\" SET computed = 1`);",
           "target": "computed"
         }
       ],
@@ -1059,6 +1127,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "writes.sql:5: do not write generated column `\"Quoted.Name\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE \"Quoted.Name\" SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1067,6 +1136,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "writes.sql:7: do not write generated column `\"has.\"\"quote\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE \"has.\"\"quote\" SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1075,6 +1145,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1083,6 +1154,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO public.orders VALUES (1, 2);",
           "target": "computed"
         }
       ],
@@ -1104,6 +1176,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.total`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET total = 1;",
           "target": "total"
         }
       ],
@@ -1125,6 +1198,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.updated_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET updated_at = now();",
           "target": "updated_at"
         }
       ],
@@ -1146,6 +1220,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -1154,6 +1229,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO orders VALUES (1, now(), 'note');",
           "target": "updated_at"
         }
       ],
@@ -1175,6 +1251,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "writes.sql:9: do not write trigger-maintained column `\"dotted.orders\".updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.\"dotted.orders\" SET updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -1183,6 +1260,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "writes.sql:4: do not write generated column `computed_orders.updated_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE computed_orders SET updated_at = 1;",
           "target": "updated_at"
         },
         {
@@ -1191,6 +1269,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "writes.sql:5: do not write generated column `computed_orders.updated_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO computed_orders VALUES (1, 2);",
           "target": "updated_at"
         },
         {
@@ -1199,6 +1278,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.orders SET updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -1207,6 +1287,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET note = E'it\\'s; pending', updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -1215,6 +1296,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "/* outer /* inner */ ; still outer */ UPDATE orders SET updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -1223,6 +1305,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "writes.sql:6: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET note = 'it''s; pending', updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -1231,6 +1314,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "writes.sql:7: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET note = E'continued\\",
           "target": "updated_at"
         }
       ],
@@ -1252,6 +1336,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "001_same_line.sql:2: do not write generated column `t.g`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "CREATE TABLE t (id int, g int GENERATED ALWAYS AS (id) STORED); INSERT INTO t (g) VALUES (1);",
           "target": "g"
         }
       ],
@@ -1285,6 +1370,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "stale extraGeneratedColumns entry: `items.created_at` is already a generated column in schema SQL",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "- table: items",
           "target": "created_at"
         },
         {
@@ -1293,6 +1379,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-insert-cols.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`INSERT INTO items (id, created_at, note) VALUES ($1, $2, $3)`)",
           "target": "created_at"
         },
         {
@@ -1301,6 +1388,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-insert-columnless.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`INSERT INTO items VALUES ($1, $2, $3)`)",
           "target": "created_at"
         },
         {
@@ -1309,6 +1397,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "fail-merge.sql:1: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "MERGE INTO items t",
           "target": "created_at"
         },
         {
@@ -1317,6 +1406,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-update.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE items SET created_at = now()`)",
           "target": "created_at"
         },
         {
@@ -1325,6 +1415,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "fail-upsert.ts:5: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "`INSERT INTO items (id, note) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET created_at = now()`,",
           "target": "created_at"
         }
       ],
@@ -1358,6 +1449,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1366,6 +1458,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1374,6 +1467,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO orders VALUES (1, 2);",
           "target": "computed"
         }
       ],
@@ -1395,6 +1489,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `pg_temp.reverse_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE reverse_orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1403,6 +1498,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "writes.sql:6: do not write generated column `pg_temp.reverse_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE pg_temp.reverse_orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1411,6 +1507,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "writes.sql:2: do not write generated column `public.orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.orders SET computed = 1;",
           "target": "computed"
         }
       ],
@@ -1432,6 +1529,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "writes.sql:4: do not write generated column `orders.committed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET committed = 1;",
           "target": "committed"
         },
         {
@@ -1440,6 +1538,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET computed = 1;",
           "target": "computed"
         }
       ],
@@ -1461,6 +1560,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-both.ts:4: do not write trigger-maintained column `orders.modified_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE orders SET updated_at = now(), modified_at = now()`)",
           "target": "modified_at"
         },
         {
@@ -1469,6 +1569,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-both.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE orders SET updated_at = now(), modified_at = now()`)",
           "target": "updated_at"
         }
       ],
@@ -1502,6 +1603,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-generated.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE items SET created_at = now()`)",
           "target": "created_at"
         }
       ],
@@ -1523,6 +1625,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-clock.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE orders SET updated_at = $2 WHERE id = $1`)",
           "target": "updated_at"
         },
         {
@@ -1531,6 +1634,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-insert.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`INSERT INTO orders (id, status, updated_at) VALUES ($1, 'new', now())`)",
           "target": "updated_at"
         },
         {
@@ -1539,6 +1643,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "fail-merge.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "MERGE INTO orders o USING incoming_orders i ON o.id = i.id",
           "target": "updated_at"
         },
         {
@@ -1547,6 +1652,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-noop.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`INSERT INTO orders (id, status) VALUES ($1, 'new') ON CONFLICT (id) DO UPDATE SET updated_at = orders.updated_at RETURNING id`)",
           "target": "updated_at"
         },
         {
@@ -1555,6 +1661,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-update.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE orders SET status = 'paid', updated_at = now() WHERE id = $1`)",
           "target": "updated_at"
         },
         {
@@ -1563,6 +1670,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-upsert.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`INSERT INTO orders (id, status) VALUES ($1, 'new') ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status, updated_at = CURRENT_TIMESTAMP`)",
           "target": "updated_at"
         }
       ],
@@ -1596,6 +1704,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "stale triggerMaintainedColumns entry: `touched_at` matches no column in schema SQL",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "triggerMaintainedColumns: [touched_at]",
           "target": "touched_at"
         }
       ],
@@ -1629,6 +1738,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-twice.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`INSERT INTO orders (id, updated_at) VALUES ($1, now()) ON CONFLICT (id) DO UPDATE SET updated_at = EXCLUDED.updated_at`)",
           "target": "updated_at"
         }
       ],
@@ -1650,6 +1760,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail-update.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE orders SET status = 'paid', updated_at = now() WHERE id = $1`)",
           "target": "updated_at"
         }
       ],
@@ -1671,6 +1782,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "fail-upper.sql:1: do not write trigger-maintained column `orders.UPDATED_AT`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET UPDATED_AT = now() WHERE id = $1;",
           "target": "UPDATED_AT"
         }
       ],
@@ -1691,6 +1803,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "write.ts:10: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE items SET ${column} = now()`)",
           "target": "unanalyzable"
         },
         {
@@ -1698,6 +1811,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "write.ts:15: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`INSERT INTO ${table} (note) VALUES ($1)`, ['x'])",
           "target": "unanalyzable"
         },
         {
@@ -1705,6 +1819,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "write.ts:20: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`UPDATE logs SET ${column} = now()`)",
           "target": "unanalyzable"
         },
         {
@@ -1712,6 +1827,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 39,
           "message": "write.ts:39: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`WITH changed AS (UPDATE items SET ${column} = now() RETURNING *) SELECT * FROM changed`)",
           "target": "unanalyzable"
         },
         {
@@ -1719,6 +1835,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 42,
           "message": "write.ts:42: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(`WITH changed AS (UPDATE items SET ${column} = now() RETURNING *) DELETE FROM logs`)",
           "target": "unanalyzable"
         },
         {
@@ -1726,6 +1843,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "write.ts:5: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "return write(sql)",
           "target": "unanalyzable"
         }
       ],
@@ -1741,6 +1859,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": "directive for `postgres-no-generated-column-writes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-generated-column-writes",
           "target": "postgres-no-generated-column-writes"
         }
       ],
@@ -1761,6 +1880,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": "directive for `postgres-no-generated-column-writes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-generated-column-writes",
           "target": "postgres-no-generated-column-writes"
         }
       ],
@@ -1781,6 +1901,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": "directive for `postgres-no-generated-column-writes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-no-generated-column-writes",
           "target": "postgres-no-generated-column-writes"
         }
       ],
@@ -1807,6 +1928,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.orders SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1815,6 +1937,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "writes.sql:7: do not write generated column `pg_temp.shadowed.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE shadowed SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1823,6 +1946,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write generated column `public.\"odd.name\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.\"odd.name\" SET computed = 1;",
           "target": "computed"
         },
         {
@@ -1831,6 +1955,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "writes.sql:6: do not write generated column `public.ambiguous.retained`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE public.ambiguous SET retained = 1;",
           "target": "retained"
         }
       ],
@@ -1852,6 +1977,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "upper.sql:1: do not write generated column `orders.CREATED_AT`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE ORDERS SET CREATED_AT = now();",
           "target": "CREATED_AT"
         }
       ],
@@ -1873,6 +1999,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "writes.sql:3: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET updated_at = now();",
           "target": "updated_at"
         },
         {
@@ -1881,6 +2008,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "writes.sql:8: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
           "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "UPDATE orders SET updated_at = now();",
           "target": "updated_at"
         }
       ],

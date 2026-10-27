@@ -68,6 +68,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "tsconfig.dependency-cruiser.json: auxiliary tsconfig is not a JSON object",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "[]",
           "target": "tsconfig.dependency-cruiser.json"
         }
       ],
@@ -88,6 +89,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/index.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const value: number = 1;",
           "target": "src/index.ts"
         },
         {
@@ -95,6 +97,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/legacy.cts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const legacy: string = \"ok\";",
           "target": "src/legacy.cts"
         },
         {
@@ -102,6 +105,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/util.mts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const util: string = \"ok\";",
           "target": "src/util.mts"
         },
         {
@@ -109,6 +113,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/widget.tsx is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const Widget = () => null;",
           "target": "src/widget.tsx"
         },
         {
@@ -116,6 +121,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "tsconfig.json: auxiliary tsconfig basename must be tsconfig.dependency-cruiser.json",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "{",
           "target": "tsconfig.json"
         },
         {
@@ -123,6 +129,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "tsconfig.json: auxiliary tsconfig must not declare files, include, exclude, or references",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "{",
           "target": "tsconfig.json"
         }
       ],
@@ -155,6 +162,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "index.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export {}",
           "target": "index.ts"
         }
       ],
@@ -175,6 +183,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/index.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const value: number = 1;",
           "target": "src/index.ts"
         },
         {
@@ -182,6 +191,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/legacy.cts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const legacy: string = \"ok\";",
           "target": "src/legacy.cts"
         },
         {
@@ -189,6 +199,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/util.mts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const util: string = \"ok\";",
           "target": "src/util.mts"
         },
         {
@@ -196,6 +207,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/widget.tsx is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const Widget = () => null;",
           "target": "src/widget.tsx"
         },
         {
@@ -203,6 +215,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "tsconfig.json: auxiliary tsconfig must not declare files, include, exclude, or references",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "{",
           "target": "tsconfig.json"
         }
       ],
@@ -243,6 +256,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "scripts/generate.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const generated: number = 1;",
           "target": "scripts/generate.ts"
         },
         {
@@ -250,6 +264,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "tsconfig-file-coverage allow entry `scripts/generate.ts` has an empty reason",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const generated: number = 1;",
           "target": "scripts/generate.ts"
         }
       ],
@@ -270,6 +285,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "tsconfig-file-coverage auxiliaryConfigs entry `tsconfig.dependency-cruiser.json` has an empty reason",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "{",
           "target": "tsconfig.dependency-cruiser.json"
         }
       ],
@@ -290,6 +306,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "orphan.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export {}",
           "target": "orphan.ts"
         }
       ],
@@ -329,6 +346,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "helper.json: auxiliary tsconfig basename must be tsconfig.dependency-cruiser.json",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "{}",
           "target": "helper.json"
         },
         {
@@ -336,6 +354,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "stale tsconfig-file-coverage auxiliaryConfigs entry `helper.json`",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "{}",
           "target": "helper.json"
         },
         {
@@ -343,6 +362,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "tsconfig-file-coverage allow entry `index.ts` has an empty reason",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export {}",
           "target": "index.ts"
         }
       ],
@@ -375,6 +395,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "tsconfig-file-coverage allow entry `src/../src/index.ts` must be a repository-relative path without parent traversals",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export const value: number = 1;",
           "target": "src/../src/index.ts"
         }
       ],
@@ -395,6 +416,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/extra.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "export {}",
           "target": "src/extra.ts"
         }
       ],
@@ -435,6 +457,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "foo.json: auxiliary tsconfig must not declare files, include, exclude, or references",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "{ \"include\": [\"index.ts\"] }",
           "target": "foo.json"
         },
         {
@@ -442,6 +465,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "stale tsconfig-file-coverage auxiliaryConfigs entry `foo.json`",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "{ \"include\": [\"index.ts\"] }",
           "target": "foo.json"
         }
       ],
@@ -462,6 +486,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "orphan.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
           "rule": "tsconfig-file-coverage",
+          "sourceLine": "// Intentionally outside tsconfig.json's \"include\": [\"src\"] to verify orphan detection.",
           "target": "orphan.ts"
         }
       ],

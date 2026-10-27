@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/combined.ts:9: queries against documents must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM documents",
           "target": "documents"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/combined.ts:9: queries against documents must include `owner_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM documents",
           "target": "documents"
         }
       ],
@@ -55,6 +57,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-required-predicates allow entry: table:missing",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:missing"
         },
         {
@@ -62,6 +65,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:events: cannot derive a column from partition key expression date_trunc('day'::text, created_at); add a partitionKeyExemptions entry for events",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:events"
         }
       ],
@@ -83,6 +87,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-ambiguous.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT e.id FROM events e JOIN orders o ON o.id = e.owner_id WHERE account_id = $1;",
           "target": "events"
         },
         {
@@ -91,6 +96,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-ambiguous.sql:1: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT e.id FROM events e JOIN orders o ON o.id = e.owner_id WHERE account_id = $1;",
           "target": "orders"
         }
       ],
@@ -124,6 +130,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/cte-mutations.sql:1: UPDATE on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "WITH changed AS (UPDATE orders SET status = 'x' WHERE id = $1 RETURNING id) SELECT id FROM changed;",
           "target": "orders"
         },
         {
@@ -132,6 +139,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/cte-mutations.sql:2: DELETE on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "WITH changed AS (DELETE FROM orders WHERE id = $1 RETURNING id) SELECT id FROM changed;",
           "target": "orders"
         },
         {
@@ -140,6 +148,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/cte-mutations.sql:3: UPDATE on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "WITH ids AS (SELECT 1) UPDATE orders SET status = 'x' WHERE id = $1;",
           "target": "orders"
         },
         {
@@ -148,6 +157,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/cte-mutations.sql:4: DELETE on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "WITH ids AS (SELECT 1) DELETE FROM orders WHERE id = $1;",
           "target": "orders"
         },
         {
@@ -156,6 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/cte-mutations.sql:5: INSERT … SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "WITH inserted AS (INSERT INTO logs (id) SELECT id FROM orders RETURNING id) SELECT id FROM inserted;",
           "target": "orders"
         }
       ],
@@ -177,6 +188,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/ctes.sql:2: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "WITH \"Orders\" AS (SELECT 1) SELECT id FROM orders;",
           "target": "orders"
         }
       ],
@@ -221,6 +233,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: executed SQL is not statically recoverable for required predicates",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE id = $1`);",
           "target": "unanalyzable"
         }
       ],
@@ -241,6 +254,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/query.ts:4: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return query(`SELECT id FROM topics WHERE id = $1`);",
           "target": "topics"
         }
       ],
@@ -256,6 +270,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -281,6 +296,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/archived-by.sql:3: queries against documents must include `archived_by_id IS NULL`; an equality on `archived_by_id` selects only rows where it is not NULL, which `archived_by_id is null` excludes. If this query intentionally reads those rows, add `requireColumns: [archived_by_id]` instead of `require`, or suppress with `no-mistakes-disable-next-line postgres-required-predicates` and a reason",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM documents WHERE archived_by_id = $1 AND deleted_at IS NULL ORDER BY id;",
           "target": "documents"
         }
       ],
@@ -301,6 +317,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/unrelated.sql:2: queries against documents must include `archived_by_id IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM documents WHERE owner_id = $1 AND deleted_at IS NULL;",
           "target": "documents"
         }
       ],
@@ -316,6 +333,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -353,6 +371,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:events: cannot derive a column from partition key expression date_trunc('day'::text, created_at); add a partitionKeyExemptions entry for events",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:events"
         }
       ],
@@ -374,6 +393,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-delete.sql:1: DELETE on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "DELETE FROM orders WHERE id = $1;",
           "target": "orders"
         }
       ],
@@ -395,6 +415,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-insert.sql:1: INSERT … SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO archive (id) SELECT id FROM events WHERE kind = 'login';",
           "target": "events"
         }
       ],
@@ -416,6 +437,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-join.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT e.id FROM events e JOIN accounts a ON a.id = e.owner_id;",
           "target": "events"
         }
       ],
@@ -437,6 +459,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-kind.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM events WHERE kind = 'login';",
           "target": "events"
         }
       ],
@@ -458,6 +481,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-null.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM events WHERE account_id IS NULL;",
           "target": "events"
         }
       ],
@@ -479,6 +503,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-or.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM events WHERE account_id = $1 OR kind = 'login';",
           "target": "events"
         }
       ],
@@ -500,6 +525,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-self.sql:1: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT o.id FROM orders o JOIN orders p ON p.account_id = $1 WHERE o.id = p.id;",
           "target": "orders"
         }
       ],
@@ -520,6 +546,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/generic-only.ts:9: queries against documents must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM documents",
           "target": "documents"
         },
         {
@@ -527,6 +554,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/generic-only.ts:9: queries against documents must include `owner_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM documents",
           "target": "documents"
         }
       ],
@@ -547,6 +575,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/imported-tag.ts:8: executed SQL is not statically recoverable for required predicates",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return query(sql`",
           "target": "unanalyzable"
         }
       ],
@@ -562,6 +591,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -575,6 +605,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM topics WHERE id = $1;",
           "target": "topics"
         }
       ],
@@ -607,6 +638,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/comment-only.ts:6: queries against documents must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM documents",
           "target": "documents"
         },
         {
@@ -614,6 +646,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/comment-only.ts:6: queries against documents must include `owner_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM documents",
           "target": "documents"
         }
       ],
@@ -629,6 +662,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -642,6 +676,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/left-join.sql:2: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM posts",
           "target": "topics"
         }
       ],
@@ -669,6 +704,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -682,6 +718,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM topics WHERE id = $1;",
           "target": "topics"
         }
       ],
@@ -702,6 +739,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:missing: partitioned table is missing physicalPartition.key; refresh the schema catalog",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:missing"
         },
         {
@@ -710,6 +748,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/mixed.sql:1: SELECT reads partitioned table mixed without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM mixed;",
           "target": "mixed"
         }
       ],
@@ -730,6 +769,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:missing: partitioned table is missing physicalPartition.key; refresh the schema catalog",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:missing"
         },
         {
@@ -737,6 +777,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:mixed: cannot derive a column from partition key expression lower(region), lower(kind); add a partitionKeyExemptions entry for mixed",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:mixed"
         },
         {
@@ -745,6 +786,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/mixed.sql:1: SELECT reads partitioned table mixed without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM mixed;",
           "target": "mixed"
         }
       ],
@@ -765,6 +807,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-required-predicates allow entry: table:absent",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:absent"
         },
         {
@@ -772,6 +815,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:absent: stale postgres-required-predicates partitionKeyExemptions entry: absent",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:absent"
         },
         {
@@ -779,6 +823,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:missing: partitioned table is missing physicalPartition.key; refresh the schema catalog",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:missing"
         },
         {
@@ -786,6 +831,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:mixed: cannot derive a column from partition key expression lower(region), lower(kind); add a partitionKeyExemptions entry for mixed",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:mixed"
         },
         {
@@ -794,6 +840,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/mixed.sql:1: SELECT reads partitioned table mixed without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM mixed;",
           "target": "mixed"
         }
       ],
@@ -814,6 +861,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/imported-tag-other-module.ts:7: executed SQL is not statically recoverable for required predicates",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return query(sql`",
           "target": "unanalyzable"
         }
       ],
@@ -835,6 +883,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/outer-full.sql:1: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT e.id FROM accounts a FULL JOIN orders e ON e.account_id = $1;",
           "target": "orders"
         }
       ],
@@ -856,6 +905,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/outer-right.sql:1: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT e.id FROM accounts a RIGHT JOIN orders e ON e.account_id = $1;",
           "target": "orders"
         }
       ],
@@ -1033,6 +1083,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/qualified.sql:2: SELECT reads partitioned table archive.events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM archive.events;",
           "target": "archive.events"
         },
         {
@@ -1041,6 +1092,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/qualified.sql:1: SELECT reads partitioned table public.events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM public.events;",
           "target": "public.events"
         }
       ],
@@ -1062,6 +1114,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/query-expressions.sql:1: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT 1 ORDER BY (SELECT id FROM orders);",
           "target": "orders"
         },
         {
@@ -1070,6 +1123,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/query-expressions.sql:2: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT 1 LIMIT (SELECT id FROM orders);",
           "target": "orders"
         },
         {
@@ -1078,6 +1132,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/query-expressions.sql:3: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT ARRAY[(SELECT id FROM orders)];",
           "target": "orders"
         },
         {
@@ -1086,6 +1141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/query-expressions.sql:4: INSERT … SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "INSERT INTO logs (id) VALUES ((SELECT id FROM orders));",
           "target": "orders"
         }
       ],
@@ -1107,6 +1163,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/quoted.sql:1: SELECT reads partitioned table quoted without constraining partition key column TenantId; add a predicate on TenantId or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM quoted WHERE tenantid = $1;",
           "target": "quoted"
         }
       ],
@@ -1128,6 +1185,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "queries.ts:5: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"SELECT id FROM orders\");",
           "target": "orders"
         },
         {
@@ -1136,6 +1194,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "queries.ts:7: UPDATE on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"UPDATE orders SET status = 'x'\");",
           "target": "orders"
         },
         {
@@ -1144,6 +1203,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "queries.ts:9: DELETE on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "query(\"DELETE FROM orders\");",
           "target": "orders"
         }
       ],
@@ -1165,6 +1225,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/locations.sql:3: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM orders;",
           "target": "orders"
         }
       ],
@@ -1198,6 +1259,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/returning.sql:1: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "UPDATE accounts SET status = 'x' RETURNING (SELECT id FROM orders);",
           "target": "orders"
         },
         {
@@ -1206,6 +1268,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/returning.sql:2: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "DELETE FROM accounts RETURNING ARRAY[(SELECT id FROM orders)];",
           "target": "orders"
         }
       ],
@@ -1227,6 +1290,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/self-in.sql:1: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM orders WHERE account_id IN (account_id);",
           "target": "orders"
         }
       ],
@@ -1259,6 +1323,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:topics: stale postgres-required-predicates partitionKeyExemptions entry: topics",
           "rule": "postgres-required-predicates",
+          "sourceLine": "{",
           "target": "table:topics"
         }
       ],
@@ -1274,6 +1339,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -1287,6 +1353,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/standalone-table.sql:2: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "TABLE topics;",
           "target": "topics"
         },
         {
@@ -1294,6 +1361,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/standalone-table.sql:3: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "TABLE topics;",
           "target": "topics"
         }
       ],
@@ -1309,6 +1377,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "SELECT id FROM events WHERE kind = 'login'; -- no-mistakes-disable-line postgres-required-predicates",
           "target": "postgres-required-predicates"
         },
         {
@@ -1316,6 +1385,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -1336,6 +1406,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-required-predicates",
           "target": "postgres-required-predicates"
         },
         {
@@ -1343,6 +1414,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -1363,6 +1435,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-required-predicates",
           "target": "postgres-required-predicates"
         },
         {
@@ -1370,6 +1443,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "SELECT id FROM events WHERE kind = 'login'; -- no-mistakes-disable-line postgres-required-predicates",
           "target": "postgres-required-predicates"
         }
       ],
@@ -1390,6 +1464,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -1403,6 +1478,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/table-left-arm.sql:1: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "TABLE topics UNION ALL SELECT id FROM safe;",
           "target": "topics"
         },
         {
@@ -1410,6 +1486,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/table-right-arm.sql:1: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM safe UNION ALL TABLE topics;",
           "target": "topics"
         }
       ],
@@ -1430,6 +1507,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/imported-tag-sibling.ts:6: executed SQL is not statically recoverable for required predicates",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return query(sql`",
           "target": "unanalyzable"
         }
       ],
@@ -1450,6 +1528,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/imported-tag-subpath.ts:8: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM topics",
           "target": "topics"
         }
       ],
@@ -1483,6 +1562,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": "src/tagged.ts:17: SELECT on orders does not constrain required column account_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM orders",
           "target": "orders"
         },
         {
@@ -1490,6 +1570,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "src/tagged.ts:9: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM topics",
           "target": "topics"
         }
       ],
@@ -1505,6 +1586,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -1519,6 +1601,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: SELECT on topics does not constrain required column parent_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM topics WHERE id = $1;",
           "target": "topics"
         },
         {
@@ -1526,6 +1609,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/001.sql:1: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM topics WHERE id = $1;",
           "target": "topics"
         }
       ],
@@ -1546,6 +1630,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/imported-tag.ts:10: queries against topics must include `parent_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM topics",
           "target": "topics"
         }
       ],
@@ -1578,6 +1663,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/typed-param-only.ts:6: queries against documents must include `deleted_at IS NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM documents",
           "target": "documents"
         },
         {
@@ -1585,6 +1671,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/typed-param-only.ts:6: queries against documents must include `owner_id IS NOT NULL`",
           "rule": "postgres-required-predicates",
+          "sourceLine": "FROM documents",
           "target": "documents"
         }
       ],
@@ -1606,6 +1693,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/fail-unknown-peer.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT e.id FROM events e JOIN topics t ON t.id = e.id WHERE account_id = $1;",
           "target": "events"
         }
       ],
@@ -1621,6 +1709,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-required-predicates: reporting query",
           "target": "postgres-required-predicates"
         }
       ],
@@ -1634,6 +1723,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "sql/unparseable.sql:1: SQL could not be analyzed for required predicates",
           "rule": "postgres-required-predicates",
+          "sourceLine": "SELECT id FROM topics WHERE",
           "target": "unanalyzable"
         }
       ],
@@ -1654,6 +1744,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "src/imported-tag.ts:8: executed SQL is not statically recoverable for required predicates",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return query(sql`",
           "target": "unanalyzable"
         }
       ],
@@ -1674,6 +1765,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "src/imported-tag-suppressed.ts:7: executed SQL is not statically recoverable for required predicates",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return query(sql`",
           "target": "unanalyzable"
         }
       ],
@@ -1694,6 +1786,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/caller.ts:5: SELECT on accounts does not constrain required column region_id; SELECT on accounts does not constrain required column tenant_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "const base = sql`SELECT id FROM accounts`;",
           "target": "accounts"
         },
         {
@@ -1702,6 +1795,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/helper.ts:2: SELECT on accounts does not constrain required column region_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return \"SELECT id FROM accounts\";",
           "target": "accounts"
         },
         {
@@ -1710,6 +1804,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/helper.ts:2: SELECT on accounts does not constrain required column tenant_id",
           "rule": "postgres-required-predicates",
+          "sourceLine": "return \"SELECT id FROM accounts\";",
           "target": "accounts"
         }
       ],

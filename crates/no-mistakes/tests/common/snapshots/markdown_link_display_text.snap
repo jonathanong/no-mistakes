@@ -29,6 +29,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"OLD-NAME.md\" does not match target basename \"new-name.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[`OLD-NAME.md`](<docs/new-name.md>)",
           "target": "new-name.md"
         }
       ],
@@ -50,6 +51,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"SOURCE-STORIES.md\" does not match target basename \"news-story-clusters.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[SOURCE-STORIES.md](docs/news-story-clusters.md)",
           "target": "news-story-clusters.md"
         }
       ],
@@ -71,6 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"new.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "``<!-- ` not closed`` [OLD.md](new.md)",
           "target": "new.md"
         },
         {
@@ -79,6 +82,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "docs/index.md: link text \"OLD2.md\" does not match target basename \"new2.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "-->` [OLD2.md](new2.md)",
           "target": "new2.md"
         }
       ],
@@ -100,6 +104,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD.md][]",
           "target": "news-story-clusters.md"
         }
       ],
@@ -133,6 +138,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/page.mdx: link text \"OLD.mdx\" does not match target basename \"new.mdx\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD.mdx](new.mdx)",
           "target": "new.mdx"
         }
       ],
@@ -166,6 +172,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "See `[OLD.md](new.md) \\` still code` and [REAL.md](actual.md)",
           "target": "actual.md"
         }
       ],
@@ -187,6 +194,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"ADR].md\" does not match target basename \"ADR.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[ADR\\].md](docs/ADR.md)",
           "target": "ADR.md"
         }
       ],
@@ -232,6 +240,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[REAL.md](actual.md)",
           "target": "actual.md"
         }
       ],
@@ -265,6 +274,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD.md](docs/news-story-clusters.md)",
           "target": "news-story-clusters.md"
         },
         {
@@ -273,6 +283,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "docs/index.md: link text \"OLD2.md\" does not match target basename \"news-story-clusters.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "`<!--` [OLD2.md](docs/news-story-clusters.md)",
           "target": "news-story-clusters.md"
         }
       ],
@@ -306,6 +317,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[REAL.md](actual.md)",
           "target": "actual.md"
         }
       ],
@@ -339,6 +351,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[REAL.md](actual.md)",
           "target": "actual.md"
         }
       ],
@@ -372,6 +385,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "docs/index.md: link text \"REAL.md\" does not match target basename \"actual.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[REAL.md](actual.md)",
           "target": "actual.md"
         }
       ],
@@ -393,6 +407,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"ADR[1].md\" does not match target basename \"ADR[2].md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[ADR[1].md](docs/ADR[2].md)",
           "target": "ADR[2].md"
         }
       ],
@@ -414,6 +429,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD.md](docs/news-story-clusters.md)",
           "target": "news-story-clusters.md"
         }
       ],
@@ -459,6 +475,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"new.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD.md](new.md)",
           "target": "new.md"
         }
       ],
@@ -516,6 +533,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "docs/index.md: link text \"OLD3.md\" does not match target basename \"new.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD3.md][story]",
           "target": "new.md"
         }
       ],
@@ -537,6 +555,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"new.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD.md][story]",
           "target": "new.md"
         }
       ],
@@ -558,6 +577,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD.md][story]",
           "target": "news-story-clusters.md"
         }
       ],
@@ -579,6 +599,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD.md]",
           "target": "news-story-clusters.md"
         }
       ],
@@ -612,6 +633,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"news-story-clusters.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "[OLD.md](docs/news-story-clusters.md)",
           "target": "news-story-clusters.md"
         }
       ],
@@ -633,6 +655,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "docs/index.md: link text \"OLD.md\" does not match target basename \"new.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "Escaped \\` [OLD.md](new.md)",
           "target": "new.md"
         },
         {
@@ -641,6 +664,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "docs/index.md: link text \"OLD2.md\" does not match target basename \"new2.md\"",
           "rule": "markdown-link-display-text",
+          "sourceLine": "Unmatched ` [OLD2.md](new2.md)",
           "target": "new2.md"
         }
       ],

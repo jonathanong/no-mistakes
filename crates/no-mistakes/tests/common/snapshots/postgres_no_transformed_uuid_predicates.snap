@@ -40,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "aggregate-operands-positive.sql:10: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE fn(token) <= id;",
           "target": "accounts.token"
         },
         {
@@ -47,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "aggregate-operands-positive.sql:11: HAVING applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts GROUP BY id, token HAVING COALESCE(MIN(id), token) = $1;",
           "target": "accounts.token"
         },
         {
@@ -54,6 +56,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "aggregate-operands-positive.sql:14: HAVING applies \"MIN\" to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING \"MIN\"(id) = $1;",
           "target": "accounts.id"
         },
         {
@@ -61,6 +64,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "aggregate-operands-positive.sql:15: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COUNT((SELECT 1 FROM accounts a WHERE a.id::text = $1)) > 1;",
           "target": "accounts.id"
         },
         {
@@ -68,6 +72,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "aggregate-operands-positive.sql:16: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COALESCE(COUNT(id) FILTER (WHERE id::text = $1), 0) > 1;",
           "target": "accounts.id"
         },
         {
@@ -75,6 +80,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": "aggregate-operands-positive.sql:17: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COALESCE(COUNT(id) FILTER (WHERE fn(id) = $1), 0) > 1;",
           "target": "accounts.id"
         },
         {
@@ -82,6 +88,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "aggregate-operands-positive.sql:2: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COUNT(id) FILTER (WHERE id::text = $1) > 1;",
           "target": "accounts.id"
         },
         {
@@ -89,6 +96,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "aggregate-operands-positive.sql:3: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COUNT(id) FILTER (WHERE fn(id) > $1) > 1;",
           "target": "accounts.id"
         },
         {
@@ -96,6 +104,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "aggregate-operands-positive.sql:4: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING fn(id) >= $1;",
           "target": "accounts.id"
         },
         {
@@ -103,6 +112,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "aggregate-operands-positive.sql:5: HAVING applies app.count to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING app.count(id) > 1;",
           "target": "accounts.id"
         },
         {
@@ -110,6 +120,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "aggregate-operands-positive.sql:6: HAVING applies app.min to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING app.min(id) = $1;",
           "target": "accounts.id"
         },
         {
@@ -117,6 +128,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "aggregate-operands-positive.sql:7: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE fn(id) >= $1;",
           "target": "accounts.id"
         },
         {
@@ -124,6 +136,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "aggregate-operands-positive.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id::text = $1;",
           "target": "accounts.id"
         },
         {
@@ -131,6 +144,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "aggregate-operands-positive.sql:9: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id >= fn(token);",
           "target": "accounts.token"
         }
       ],
@@ -151,6 +165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "aggregate-operands-positive.sql:10: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE fn(token) <= id;",
           "target": "accounts.token"
         },
         {
@@ -158,6 +173,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "aggregate-operands-positive.sql:11: HAVING applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts GROUP BY id, token HAVING COALESCE(MIN(id), token) = $1;",
           "target": "accounts.token"
         },
         {
@@ -165,6 +181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "aggregate-operands-positive.sql:14: HAVING applies \"MIN\" to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING \"MIN\"(id) = $1;",
           "target": "accounts.id"
         },
         {
@@ -172,6 +189,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "aggregate-operands-positive.sql:15: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COUNT((SELECT 1 FROM accounts a WHERE a.id::text = $1)) > 1;",
           "target": "accounts.id"
         },
         {
@@ -179,6 +197,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 16,
           "message": "aggregate-operands-positive.sql:16: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COALESCE(COUNT(id) FILTER (WHERE id::text = $1), 0) > 1;",
           "target": "accounts.id"
         },
         {
@@ -186,6 +205,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 17,
           "message": "aggregate-operands-positive.sql:17: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COALESCE(COUNT(id) FILTER (WHERE fn(id) = $1), 0) > 1;",
           "target": "accounts.id"
         },
         {
@@ -193,6 +213,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "aggregate-operands-positive.sql:2: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COUNT(id) FILTER (WHERE id::text = $1) > 1;",
           "target": "accounts.id"
         },
         {
@@ -200,6 +221,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "aggregate-operands-positive.sql:3: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING COUNT(id) FILTER (WHERE fn(id) > $1) > 1;",
           "target": "accounts.id"
         },
         {
@@ -207,6 +229,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "aggregate-operands-positive.sql:4: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING fn(id) >= $1;",
           "target": "accounts.id"
         },
         {
@@ -214,6 +237,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "aggregate-operands-positive.sql:5: HAVING applies app.count to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING app.count(id) > 1;",
           "target": "accounts.id"
         },
         {
@@ -221,6 +245,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "aggregate-operands-positive.sql:6: HAVING applies app.min to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT email FROM accounts GROUP BY email HAVING app.min(id) = $1;",
           "target": "accounts.id"
         },
         {
@@ -228,6 +253,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "aggregate-operands-positive.sql:7: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE fn(id) >= $1;",
           "target": "accounts.id"
         },
         {
@@ -235,6 +261,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "aggregate-operands-positive.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id::text = $1;",
           "target": "accounts.id"
         },
         {
@@ -242,6 +269,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "aggregate-operands-positive.sql:9: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id >= fn(token);",
           "target": "accounts.token"
         }
       ],
@@ -262,6 +290,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "aggregate-operands.ts:10: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT email FROM accounts GROUP BY email HAVING COUNT(id) FILTER (WHERE id::text = $1) > 1\");",
           "target": "accounts.id"
         },
         {
@@ -269,6 +298,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "aggregate-operands.ts:11: HAVING applies app.min to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT email FROM accounts GROUP BY email HAVING app.min(id) = $1\");",
           "target": "accounts.id"
         },
         {
@@ -276,6 +306,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "aggregate-operands.ts:12: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE fn(id) >= $1\");",
           "target": "accounts.id"
         },
         {
@@ -283,6 +314,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "aggregate-operands.ts:13: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE id::text = $1\");",
           "target": "accounts.id"
         },
         {
@@ -290,6 +322,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "aggregate-operands.ts:14: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE id >= fn(token)\");",
           "target": "accounts.token"
         },
         {
@@ -297,6 +330,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "aggregate-operands.ts:15: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE fn(token) <= id\");",
           "target": "accounts.token"
         }
       ],
@@ -317,6 +351,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "aggregate-operands.ts:10: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT email FROM accounts GROUP BY email HAVING COUNT(id) FILTER (WHERE id::text = $1) > 1\");",
           "target": "accounts.id"
         },
         {
@@ -324,6 +359,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "aggregate-operands.ts:11: HAVING applies app.min to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT email FROM accounts GROUP BY email HAVING app.min(id) = $1\");",
           "target": "accounts.id"
         },
         {
@@ -331,6 +367,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "aggregate-operands.ts:12: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE fn(id) >= $1\");",
           "target": "accounts.id"
         },
         {
@@ -338,6 +375,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "aggregate-operands.ts:13: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE id::text = $1\");",
           "target": "accounts.id"
         },
         {
@@ -345,6 +383,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "aggregate-operands.ts:14: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE id >= fn(token)\");",
           "target": "accounts.token"
         },
         {
@@ -352,6 +391,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "aggregate-operands.ts:15: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE fn(token) <= id\");",
           "target": "accounts.token"
         }
       ],
@@ -384,6 +424,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "scope.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN other o ON true WHERE id::text = $1;",
           "target": "accounts.id"
         },
         {
@@ -391,6 +432,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "scope.sql:11: WHERE applies cast to UUID column public.dupes.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM public.dupes WHERE id::text = $1;",
           "target": "public.dupes.id"
         },
         {
@@ -398,6 +440,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "scope.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM public.accounts a WHERE a.id::text = $1;",
           "target": "accounts.id"
         }
       ],
@@ -418,6 +461,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "crlf.ts:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "WHERE id::text = $1`);",
           "target": "accounts.id"
         },
         {
@@ -425,6 +469,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "crlf.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "WHERE CAST(id AS text) = $1`;",
           "target": "accounts.id"
         }
       ],
@@ -445,6 +490,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "crlf.ts:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "WHERE id::text = $1`);",
           "target": "accounts.id"
         },
         {
@@ -452,6 +498,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "crlf.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "WHERE CAST(id AS text) = $1`;",
           "target": "accounts.id"
         }
       ],
@@ -472,6 +519,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "ctes.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "WITH accounts AS (SELECT 1 FROM accounts WHERE id::text = $1) SELECT 1 FROM accounts;",
           "target": "accounts.id"
         },
         {
@@ -479,6 +527,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "ctes.sql:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "WITH accounts AS (SELECT id FROM text_ids) SELECT 1 FROM public.accounts WHERE id::text = $1;",
           "target": "accounts.id"
         },
         {
@@ -486,6 +535,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "ctes.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "WITH outer_name AS (SELECT 1 FROM accounts WHERE CAST(id AS text) = $1) SELECT * FROM outer_name;",
           "target": "accounts.id"
         },
         {
@@ -493,6 +543,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "ctes.sql:7: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM (SELECT 1 FROM accounts WHERE id::text = $1) derived WHERE derived.id::text = $1;",
           "target": "accounts.id"
         },
         {
@@ -500,6 +551,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "ctes.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id::text = $1 UNION ALL SELECT 1 FROM text_ids WHERE id::text = $1;",
           "target": "accounts.id"
         }
       ],
@@ -520,6 +572,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "Keep identity lookups indexable: embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE id::text = $1\");",
           "target": "accounts.id"
         },
         {
@@ -527,6 +580,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "Keep identity lookups indexable: embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "const statement = \"SELECT 1 FROM accounts WHERE CAST(id AS text) = $1\";",
           "target": "accounts.id"
         },
         {
@@ -534,6 +588,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "Keep identity lookups indexable: embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT 1 FROM accounts WHERE uuid_extract_timestamp(id) > $1`);",
           "target": "accounts.id"
         }
       ],
@@ -554,6 +609,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "Keep identity lookups indexable: embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE id::text = $1\");",
           "target": "accounts.id"
         },
         {
@@ -561,6 +617,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "Keep identity lookups indexable: embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "const statement = \"SELECT 1 FROM accounts WHERE CAST(id AS text) = $1\";",
           "target": "accounts.id"
         },
         {
@@ -568,6 +625,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "Keep identity lookups indexable: embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT 1 FROM accounts WHERE uuid_extract_timestamp(id) > $1`);",
           "target": "accounts.id"
         }
       ],
@@ -588,6 +646,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE id::text = $1\");",
           "target": "accounts.id"
         },
         {
@@ -595,6 +654,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "const statement = \"SELECT 1 FROM accounts WHERE CAST(id AS text) = $1\";",
           "target": "accounts.id"
         },
         {
@@ -602,6 +662,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT 1 FROM accounts WHERE uuid_extract_timestamp(id) > $1`);",
           "target": "accounts.id"
         }
       ],
@@ -622,6 +683,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE id::text = $1\");",
           "target": "accounts.id"
         },
         {
@@ -629,6 +691,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "const statement = \"SELECT 1 FROM accounts WHERE CAST(id AS text) = $1\";",
           "target": "accounts.id"
         },
         {
@@ -636,6 +699,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT 1 FROM accounts WHERE uuid_extract_timestamp(id) > $1`);",
           "target": "accounts.id"
         }
       ],
@@ -680,6 +744,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "fail.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id::text = $1;",
           "target": "accounts.id"
         },
         {
@@ -687,6 +752,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "fail.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id AS text) = $1;",
           "target": "accounts.id"
         },
         {
@@ -694,6 +760,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "fail.sql:3: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE uuid_extract_timestamp(id) > $1;",
           "target": "accounts.id"
         },
         {
@@ -701,6 +768,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail.sql:4: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders o JOIN accounts a ON o.account_id::text = a.id::text;",
           "target": "accounts.id"
         },
         {
@@ -708,6 +776,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail.sql:4: JOIN ON applies cast to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders o JOIN accounts a ON o.account_id::text = a.id::text;",
           "target": "orders.account_id"
         },
         {
@@ -715,6 +784,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "fail.sql:5: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts GROUP BY id HAVING id::text > $1;",
           "target": "accounts.id"
         },
         {
@@ -722,6 +792,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "fail.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "UPDATE accounts SET email = $1 WHERE id::text = $2;",
           "target": "accounts.id"
         },
         {
@@ -729,6 +800,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "fail.sql:7: WHERE applies uuid_extract_timestamp to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "DELETE FROM orders WHERE uuid_extract_timestamp(id) < $1;",
           "target": "orders.id"
         },
         {
@@ -736,6 +808,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "fail.sql:9: WHERE applies cast to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE token::text = $1;",
           "target": "accounts.token"
         }
       ],
@@ -751,6 +824,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "low-inputs.ts:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE i\\u0064::text = $1\");",
           "target": "uuid-predicates"
         },
         {
@@ -758,6 +832,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "low-inputs.ts:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT 1 FROM accounts WHERE id::text = ${value}`);",
           "target": "uuid-predicates"
         }
       ],
@@ -771,6 +846,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "low-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function build() { return \"SELECT 1 FROM accounts WHERE id::text = $1\"; }",
           "target": "accounts.id"
         }
       ],
@@ -791,6 +867,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "low-inputs.ts:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE i\\u0064::text = $1\");",
           "target": "unanalyzable"
         },
         {
@@ -798,6 +875,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "low-inputs.ts:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT 1 FROM accounts WHERE id::text = ${value}`);",
           "target": "unanalyzable"
         },
         {
@@ -805,6 +883,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "low-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "function build() { return \"SELECT 1 FROM accounts WHERE id::text = $1\"; }",
           "target": "accounts.id"
         }
       ],
@@ -825,6 +904,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "nested-joins.sql:1: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM (accounts a JOIN orders o ON a.id::text = $1);",
           "target": "accounts.id"
         },
         {
@@ -832,6 +912,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "nested-joins.sql:2: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN (orders o JOIN accounts b ON o.account_id::text = b.id::text) ON a.id = o.account_id;",
           "target": "accounts.id"
         },
         {
@@ -839,6 +920,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "nested-joins.sql:2: JOIN ON applies cast to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN (orders o JOIN accounts b ON o.account_id::text = b.id::text) ON a.id = o.account_id;",
           "target": "orders.account_id"
         },
         {
@@ -846,6 +928,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "nested-joins.sql:3: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM (accounts a JOIN orders o ON a.id::text = $1) joined;",
           "target": "accounts.id"
         },
         {
@@ -853,6 +936,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "nested-joins.sql:4: JOIN ON applies cast to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM (accounts a JOIN (orders o JOIN accounts b ON o.id::text = $1) ON a.id = b.id) WHERE a.id::text = $1;",
           "target": "orders.id"
         },
         {
@@ -860,6 +944,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "nested-joins.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM (accounts a JOIN (orders o JOIN accounts b ON o.id::text = $1) ON a.id = b.id) WHERE a.id::text = $1;",
           "target": "accounts.id"
         }
       ],
@@ -904,6 +989,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "operand-boundaries-positive.sql:10: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE COALESCE(id::text IN ($1, $2), false);",
           "target": "accounts.id"
         },
         {
@@ -911,6 +997,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "operand-boundaries-positive.sql:11: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE COALESCE(id::text LIKE $1, false);",
           "target": "accounts.id"
         },
         {
@@ -918,6 +1005,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "operand-boundaries-positive.sql:12: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id::text IS NOT NULL AS boolean);",
           "target": "accounts.id"
         },
         {
@@ -925,6 +1013,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "operand-boundaries-positive.sql:13: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE uuid_extract_timestamp(id) BETWEEN $1 AND $2;",
           "target": "accounts.id"
         },
         {
@@ -932,6 +1021,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "operand-boundaries-positive.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id::text = $1 AS boolean);",
           "target": "accounts.id"
         },
         {
@@ -939,6 +1029,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "operand-boundaries-positive.sql:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE COALESCE(id::text = $1, false);",
           "target": "accounts.id"
         },
         {
@@ -946,6 +1037,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "operand-boundaries-positive.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(CASE WHEN id = $1 THEN id ELSE $1::uuid END AS text) = $2;",
           "target": "accounts.id"
         },
         {
@@ -953,6 +1045,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "operand-boundaries-positive.sql:5: WHERE applies lower to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE lower(CASE id WHEN $1 THEN id::text ELSE email END) = $2;",
           "target": "accounts.id"
         },
         {
@@ -960,6 +1053,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "operand-boundaries-positive.sql:6: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(CASE WHEN uuid_extract_timestamp(id) > $1 THEN email ELSE email END AS text) = $2;",
           "target": "accounts.id"
         },
         {
@@ -967,6 +1061,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "operand-boundaries-positive.sql:7: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE COALESCE((uuid_extract_timestamp(id) + INTERVAL '1 day') > $1, false);",
           "target": "accounts.id"
         },
         {
@@ -974,6 +1069,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "operand-boundaries-positive.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id::text || $1 AS text) = $2;",
           "target": "accounts.id"
         },
         {
@@ -981,6 +1077,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "operand-boundaries-positive.sql:9: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(NOT (id::text = $1) AS boolean);",
           "target": "accounts.id"
         }
       ],
@@ -1001,6 +1098,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "operand-boundaries-positive.sql:10: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE COALESCE(id::text IN ($1, $2), false);",
           "target": "accounts.id"
         },
         {
@@ -1008,6 +1106,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "operand-boundaries-positive.sql:11: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE COALESCE(id::text LIKE $1, false);",
           "target": "accounts.id"
         },
         {
@@ -1015,6 +1114,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "operand-boundaries-positive.sql:12: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id::text IS NOT NULL AS boolean);",
           "target": "accounts.id"
         },
         {
@@ -1022,6 +1122,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "operand-boundaries-positive.sql:13: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE uuid_extract_timestamp(id) BETWEEN $1 AND $2;",
           "target": "accounts.id"
         },
         {
@@ -1029,6 +1130,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "operand-boundaries-positive.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id::text = $1 AS boolean);",
           "target": "accounts.id"
         },
         {
@@ -1036,6 +1138,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "operand-boundaries-positive.sql:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE COALESCE(id::text = $1, false);",
           "target": "accounts.id"
         },
         {
@@ -1043,6 +1146,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "operand-boundaries-positive.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(CASE WHEN id = $1 THEN id ELSE $1::uuid END AS text) = $2;",
           "target": "accounts.id"
         },
         {
@@ -1050,6 +1154,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "operand-boundaries-positive.sql:5: WHERE applies lower to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE lower(CASE id WHEN $1 THEN id::text ELSE email END) = $2;",
           "target": "accounts.id"
         },
         {
@@ -1057,6 +1162,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "operand-boundaries-positive.sql:6: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(CASE WHEN uuid_extract_timestamp(id) > $1 THEN email ELSE email END AS text) = $2;",
           "target": "accounts.id"
         },
         {
@@ -1064,6 +1170,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "operand-boundaries-positive.sql:7: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE COALESCE((uuid_extract_timestamp(id) + INTERVAL '1 day') > $1, false);",
           "target": "accounts.id"
         },
         {
@@ -1071,6 +1178,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "operand-boundaries-positive.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id::text || $1 AS text) = $2;",
           "target": "accounts.id"
         },
         {
@@ -1078,6 +1186,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "operand-boundaries-positive.sql:9: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(NOT (id::text = $1) AS boolean);",
           "target": "accounts.id"
         }
       ],
@@ -1098,6 +1207,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "operand-boundaries.ts:10: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE CAST(CASE WHEN id = $1 THEN id ELSE $1::uuid END AS text) = $2\");",
           "target": "accounts.id"
         },
         {
@@ -1105,6 +1215,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "operand-boundaries.ts:11: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE COALESCE((uuid_extract_timestamp(id) + INTERVAL '1 day') > $1, false)\");",
           "target": "accounts.id"
         },
         {
@@ -1112,6 +1223,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "operand-boundaries.ts:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE CAST(id::text = $1 AS boolean)\");",
           "target": "accounts.id"
         },
         {
@@ -1119,6 +1231,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "operand-boundaries.ts:9: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE COALESCE(id::text = $1, false)\");",
           "target": "accounts.id"
         }
       ],
@@ -1139,6 +1252,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "operand-boundaries.ts:10: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE CAST(CASE WHEN id = $1 THEN id ELSE $1::uuid END AS text) = $2\");",
           "target": "accounts.id"
         },
         {
@@ -1146,6 +1260,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "operand-boundaries.ts:11: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE COALESCE((uuid_extract_timestamp(id) + INTERVAL '1 day') > $1, false)\");",
           "target": "accounts.id"
         },
         {
@@ -1153,6 +1268,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "operand-boundaries.ts:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE CAST(id::text = $1 AS boolean)\");",
           "target": "accounts.id"
         },
         {
@@ -1160,6 +1276,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "operand-boundaries.ts:9: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE COALESCE(id::text = $1, false)\");",
           "target": "accounts.id"
         }
       ],
@@ -1175,6 +1292,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "ambiguous.sql:1: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: ambiguous-column-owner",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON true WHERE id::text = $1;",
           "target": "uuid-predicates"
         }
       ],
@@ -1195,6 +1313,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "ambiguous.sql:1: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: ambiguous-column-owner",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON true WHERE id::text = $1;",
           "target": "uuid-predicates"
         }
       ],
@@ -1220,6 +1339,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "ambiguous.sql:1: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON true WHERE id::text = $1;",
           "target": "unanalyzable"
         }
       ],
@@ -1240,6 +1360,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "ambiguous.sql:1: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON true WHERE id::text = $1;",
           "target": "unanalyzable"
         }
       ],
@@ -1279,6 +1400,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "invalid.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: invalid-sql",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (;",
           "target": "uuid-predicates"
         }
       ],
@@ -1299,6 +1421,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "invalid.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: invalid-sql",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (;",
           "target": "uuid-predicates"
         }
       ],
@@ -1324,6 +1447,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "invalid.sql:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (;",
           "target": "unanalyzable"
         }
       ],
@@ -1344,6 +1468,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "invalid.sql:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts WHERE (;",
           "target": "unanalyzable"
         }
       ],
@@ -1383,6 +1508,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "invalid.ts:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT id FROM accounts WHERE (\");",
           "target": "uuid-predicates"
         }
       ],
@@ -1403,6 +1529,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "invalid.ts:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: invalid-sql",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT id FROM accounts WHERE (\");",
           "target": "uuid-predicates"
         }
       ],
@@ -1428,6 +1555,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "invalid.ts:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT id FROM accounts WHERE (\");",
           "target": "unanalyzable"
         }
       ],
@@ -1448,6 +1576,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "invalid.ts:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT id FROM accounts WHERE (\");",
           "target": "unanalyzable"
         }
       ],
@@ -1468,6 +1597,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "predicate-forms.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE (coalesce(id, $1))::text = $2;",
           "target": "accounts.id"
         },
         {
@@ -1475,6 +1605,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "predicate-forms.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE NOT (id::text IN ($1, $2));",
           "target": "accounts.id"
         },
         {
@@ -1482,6 +1613,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "predicate-forms.sql:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id::text BETWEEN $1 AND $2;",
           "target": "accounts.id"
         },
         {
@@ -1489,6 +1621,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "predicate-forms.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id::text IS NULL;",
           "target": "accounts.id"
         },
         {
@@ -1496,6 +1629,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "predicate-forms.sql:5: WHERE applies f to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE f(id => id) = $1;",
           "target": "accounts.id"
         },
         {
@@ -1503,6 +1637,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "predicate-forms.sql:6: WHERE applies cast to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "UPDATE accounts a SET email = $1 FROM orders o WHERE a.id = o.account_id AND o.id::text = $2;",
           "target": "orders.id"
         },
         {
@@ -1510,6 +1645,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "predicate-forms.sql:7: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "DELETE FROM orders o USING accounts a WHERE o.account_id = a.id AND a.id::text = $1;",
           "target": "accounts.id"
         }
       ],
@@ -1530,6 +1666,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "quoted.sql:1: WHERE applies cast to UUID column \"Case\".ID; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM \"Case\" WHERE \"ID\"::text = $1;",
           "target": "\"Case\".ID"
         },
         {
@@ -1537,6 +1674,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "quoted.sql:3: WHERE applies cast to UUID column \"Case\".ID; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM \"Case\" \"A\" WHERE \"A\".\"ID\"::text = $1;",
           "target": "\"Case\".ID"
         },
         {
@@ -1544,6 +1682,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "quoted.sql:4: WHERE applies cast to UUID column \"Case\".ID; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM public.\"Case\" WHERE public.\"Case\".\"ID\"::text = $1;",
           "target": "\"Case\".ID"
         },
         {
@@ -1551,6 +1690,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "quoted.sql:5: WHERE applies cast to UUID column \"dot.table\".id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM \"dot.table\" WHERE \"dot.table\".id::text = $1;",
           "target": "\"dot.table\".id"
         },
         {
@@ -1558,6 +1698,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "quoted.sql:6: WHERE applies cast to UUID column \"odd.schema\".\"Mixed\".ID; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM \"odd.schema\".\"Mixed\" \"Alias\" WHERE \"Alias\".\"ID\"::text = $1;",
           "target": "\"odd.schema\".\"Mixed\".ID"
         }
       ],
@@ -1590,6 +1731,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts WHERE id::text = $1\");",
           "target": "accounts.id"
         },
         {
@@ -1597,6 +1739,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "const statement = \"SELECT 1 FROM accounts WHERE CAST(id AS text) = $1\";",
           "target": "accounts.id"
         },
         {
@@ -1604,6 +1747,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT 1 FROM accounts WHERE uuid_extract_timestamp(id) > $1`);",
           "target": "accounts.id"
         },
         {
@@ -1611,6 +1755,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "fail.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE id::text = $1;",
           "target": "accounts.id"
         },
         {
@@ -1618,6 +1763,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "fail.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(id AS text) = $1;",
           "target": "accounts.id"
         },
         {
@@ -1625,6 +1771,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "fail.sql:3: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE uuid_extract_timestamp(id) > $1;",
           "target": "accounts.id"
         },
         {
@@ -1632,6 +1779,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail.sql:4: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders o JOIN accounts a ON o.account_id::text = a.id::text;",
           "target": "accounts.id"
         },
         {
@@ -1639,6 +1787,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "fail.sql:4: JOIN ON applies cast to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM orders o JOIN accounts a ON o.account_id::text = a.id::text;",
           "target": "orders.account_id"
         },
         {
@@ -1646,6 +1795,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "fail.sql:5: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT id FROM accounts GROUP BY id HAVING id::text > $1;",
           "target": "accounts.id"
         },
         {
@@ -1653,6 +1803,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "fail.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "UPDATE accounts SET email = $1 WHERE id::text = $2;",
           "target": "accounts.id"
         },
         {
@@ -1660,6 +1811,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "fail.sql:7: WHERE applies uuid_extract_timestamp to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "DELETE FROM orders WHERE uuid_extract_timestamp(id) < $1;",
           "target": "orders.id"
         },
         {
@@ -1667,6 +1819,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "fail.sql:9: WHERE applies cast to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE token::text = $1;",
           "target": "accounts.token"
         }
       ],
@@ -1711,6 +1864,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "scope.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN other o ON true WHERE id::text = $1;",
           "target": "accounts.id"
         },
         {
@@ -1718,6 +1872,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "scope.sql:10: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM dupes WHERE id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1725,6 +1880,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "scope.sql:11: WHERE applies cast to UUID column public.dupes.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM public.dupes WHERE id::text = $1;",
           "target": "public.dupes.id"
         },
         {
@@ -1732,6 +1888,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "scope.sql:12: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON later.id::text = $1 JOIN accounts later ON true;",
           "target": "unanalyzable"
         },
         {
@@ -1739,6 +1896,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "scope.sql:13: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN accounts b ON true WHERE id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1746,6 +1904,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "scope.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM public.accounts a WHERE a.id::text = $1;",
           "target": "accounts.id"
         },
         {
@@ -1753,6 +1912,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "scope.sql:3: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM audit.accounts a WHERE a.id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1760,6 +1920,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "scope.sql:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON true WHERE id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1767,6 +1928,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "scope.sql:5: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN missing o ON true WHERE id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1774,6 +1936,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "scope.sql:6: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a WHERE accounts.id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1781,6 +1944,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "scope.sql:8: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a(alias_id, id) WHERE a.id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1788,6 +1952,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "scope.sql:9: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "WITH accounts AS (SELECT id FROM text_ids) SELECT 1 FROM accounts WHERE id::text = $1;",
           "target": "unanalyzable"
         }
       ],
@@ -1808,6 +1973,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "unknown-scope.sql:1: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 WHERE id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1815,6 +1981,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "unknown-scope.sql:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE missing::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1822,6 +1989,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "unknown-scope.sql:3: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM (SELECT id FROM accounts) derived WHERE derived.id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1829,6 +1997,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "unknown-scope.sql:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts($1) a WHERE a.id::text = $2;",
           "target": "unanalyzable"
         },
         {
@@ -1836,6 +2005,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "unknown-scope.sql:5: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM (accounts a JOIN orders o ON true) joined WHERE joined.id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1843,6 +2013,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "unknown-scope.sql:6: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN accounts a ON true WHERE a.id::text = $1;",
           "target": "unanalyzable"
         },
         {
@@ -1850,6 +2021,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "unknown-scope.sql:7: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a(alias_id, id) WHERE a.id::text = $1;",
           "target": "unanalyzable"
         }
       ],
@@ -1882,6 +2054,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "unknown.ts:3: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql);",
           "target": "unanalyzable"
         }
       ],
@@ -1914,6 +2087,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "values.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "(SELECT 1 FROM accounts WHERE id::text = $1) UNION ALL (SELECT 1 FROM text_ids WHERE id::text = $1);",
           "target": "accounts.id"
         }
       ],
@@ -1929,6 +2103,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "verdict-inputs.ts:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.missing::text = $1\");",
           "target": "uuid-predicates"
         },
         {
@@ -1936,6 +2111,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "verdict-inputs.ts:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: ambiguous-column-owner",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a JOIN orders o ON true WHERE id::text = $1\");",
           "target": "uuid-predicates"
         },
         {
@@ -1943,6 +2119,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "verdict-inputs.ts:5: postgres-no-transformed-uuid-predicates application #0 proved a violation, but remaining SQL is unresolved for uuid-predicates: unresolved-column-owner",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.id::text = $1 AND a.missing::text = $2\");",
           "target": "uuid-predicates"
         },
         {
@@ -1950,6 +2127,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "verdict-inputs.ts:6: postgres-no-transformed-uuid-predicates application #0 proved a violation, but remaining SQL is unresolved for uuid-predicates: unresolved-column-owner",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.missing::text = $1 AND a.id::text = $2\");",
           "target": "uuid-predicates"
         }
       ],
@@ -1963,6 +2141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "verdict-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.id::text = $1 AND a.missing::text = $2\");",
           "target": "accounts.id"
         },
         {
@@ -1970,6 +2149,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "verdict-inputs.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.missing::text = $1 AND a.id::text = $2\");",
           "target": "accounts.id"
         }
       ],
@@ -1985,6 +2165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "verdict-inputs.ts:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.missing::text = $1\");",
           "target": "uuid-predicates"
         },
         {
@@ -1992,6 +2173,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "verdict-inputs.ts:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: ambiguous-column-owner",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a JOIN orders o ON true WHERE id::text = $1\");",
           "target": "uuid-predicates"
         }
       ],
@@ -2005,6 +2187,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "verdict-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.id::text = $1 AND a.missing::text = $2\");",
           "target": "accounts.id"
         },
         {
@@ -2012,6 +2195,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "verdict-inputs.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.missing::text = $1 AND a.id::text = $2\");",
           "target": "accounts.id"
         }
       ],
@@ -2032,6 +2216,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "verdict-inputs.ts:3: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.missing::text = $1\");",
           "target": "unanalyzable"
         },
         {
@@ -2039,6 +2224,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "verdict-inputs.ts:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a JOIN orders o ON true WHERE id::text = $1\");",
           "target": "unanalyzable"
         },
         {
@@ -2046,6 +2232,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "verdict-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.id::text = $1 AND a.missing::text = $2\");",
           "target": "accounts.id"
         },
         {
@@ -2053,6 +2240,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "verdict-inputs.ts:5: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.id::text = $1 AND a.missing::text = $2\");",
           "target": "unanalyzable"
         },
         {
@@ -2060,6 +2248,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "verdict-inputs.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.missing::text = $1 AND a.id::text = $2\");",
           "target": "accounts.id"
         },
         {
@@ -2067,6 +2256,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "verdict-inputs.ts:6: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(\"SELECT 1 FROM accounts a WHERE a.missing::text = $1 AND a.id::text = $2\");",
           "target": "unanalyzable"
         }
       ],

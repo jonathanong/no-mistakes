@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml:8: `${{ github.sha }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.sha }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "- run: echo \"${{ github.ref }} ${{ github.sha }}\"",
           "target": "github.sha"
         }
       ],
@@ -36,6 +37,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": ".github/actions/pack/action.yml:11: `${{ inputs.name }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ inputs.name }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "run: echo \"${{ inputs.name }}\"",
           "target": "inputs.name"
         },
         {
@@ -43,6 +45,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": ".github/actions/pack/action.yml:14: `${{ github.actor }}` in an `actions/github-script` `script` is expanded before JavaScript parses the script. Pass the value through `env` and read `process.env`.",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "script: console.log(`${{ github.actor }}`)",
           "target": "github.actor"
         },
         {
@@ -50,6 +53,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": ".github/workflows/ci.yml:11: `${{ secrets.TOKEN }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ secrets.TOKEN }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "echo \"${{ secrets.TOKEN }}\"",
           "target": "secrets.TOKEN"
         },
         {
@@ -57,6 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": ".github/workflows/ci.yml:12: `${{ inputs.name }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ inputs.name }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "echo \"${{ inputs.name }}\"",
           "target": "inputs.name"
         },
         {
@@ -64,6 +69,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": ".github/workflows/ci.yml:13: `${{ vars.FOO }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ vars.FOO }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "echo \"${{ vars.FOO }}\"",
           "target": "vars.FOO"
         },
         {
@@ -71,6 +77,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": ".github/workflows/ci.yml:14: `${{ env.FOO }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ env.FOO }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "echo \"${{ env.FOO }}\"",
           "target": "env.FOO"
         },
         {
@@ -78,6 +85,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": ".github/workflows/ci.yml:18: `${{ github.event.issue.title }}` in an `actions/github-script` `script` is expanded before JavaScript parses the script. Pass the value through `env` and read `process.env`.",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "return \"${{ github.event.issue.title }}\"",
           "target": "github.event.issue.title"
         },
         {
@@ -85,6 +93,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": ".github/workflows/ci.yml:20: `${{ steps.id.outputs.value }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ steps.id.outputs.value }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "- run: echo \"${{ steps.id.outputs.value }}\"",
           "target": "steps.id.outputs.value"
         },
         {
@@ -92,6 +101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": ".github/workflows/ci.yml:21: `${{ github.sha || 'unknown' }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.sha || 'unknown' }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "- run: echo \"${{ github.sha || 'unknown' }}\"",
           "target": "github.sha || 'unknown'"
         },
         {
@@ -99,6 +109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 22,
           "message": ".github/workflows/ci.yml:22: `${{ job.services.redis.ports[6379] }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ job.services.redis.ports[6379] }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "- run: echo \"${{ job.services.redis.ports[6379] }}\"",
           "target": "job.services.redis.ports[6379]"
         },
         {
@@ -106,6 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": ".github/workflows/ci.yml:25: `${{ github.actor }}` in an `actions/github-script` `script` is expanded before JavaScript parses the script. Pass the value through `env` and read `process.env`.",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "script: return \"${{ github.actor }}\"",
           "target": "github.actor"
         },
         {
@@ -113,6 +125,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": ".github/workflows/ci.yml:7: `${{ github.ref }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.ref }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "- run: echo \"${{ github.ref }}\"",
           "target": "github.ref"
         },
         {
@@ -120,6 +133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": ".github/workflows/ci.yml:8: `${{ github.actor }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.actor }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "- run: echo \"${{ github.actor }} ${{ github.sha }}\"",
           "target": "github.actor"
         },
         {
@@ -127,6 +141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": ".github/workflows/ci.yml:9: `${{ github.event.head_commit.message }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.event.head_commit.message }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "- run: echo \"${{ github.event.head_commit.message }}\"",
           "target": "github.event.head_commit.message"
         }
       ],
@@ -159,6 +174,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": ".github/workflows/ci.yml:10: `${{ github.event.head_commit.message }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.event.head_commit.message }}`, then `run: echo \"$VALUE\"`).",
           "rule": "github-actions-script-expressions",
+          "sourceLine": "- run: echo \"${{ github.event.head_commit.message }}\"",
           "target": "github.event.head_commit.message"
         }
       ],
@@ -178,13 +194,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/alias.yml",
           "line": 1,
           "message": ".github/workflows/alias.yml: script expressions could not be aligned to source locations. Rewrite anchors, aliases, and flow-style steps into ordinary block-style `run` or `with.script` bodies so this rule can judge them.",
-          "rule": "github-actions-script-expressions"
+          "rule": "github-actions-script-expressions",
+          "sourceLine": "# Alias reuse expands in YAML. The rule will not guess the copied script."
         },
         {
           "file": ".github/workflows/flow.yml",
           "line": 1,
           "message": ".github/workflows/flow.yml: script expressions could not be aligned to source locations. Rewrite anchors, aliases, and flow-style steps into ordinary block-style `run` or `with.script` bodies so this rule can judge them.",
-          "rule": "github-actions-script-expressions"
+          "rule": "github-actions-script-expressions",
+          "sourceLine": "# Flow-style steps must be rewritten as block-style run bodies."
         }
       ],
       "warnings": []

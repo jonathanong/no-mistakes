@@ -15,7 +15,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "only_comment.ts",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "// comment"
         }
       ],
       "warnings": []
@@ -34,7 +35,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "only_comment.ts",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "// comment only"
         }
       ],
       "warnings": []
@@ -53,7 +55,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "empty.ts",
           "line": 1,
           "message": "file is empty",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": ""
         }
       ],
       "warnings": []
@@ -72,7 +75,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "placeholder.ts",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "// comment: implement later"
         }
       ],
       "warnings": []
@@ -91,7 +95,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "doc.md",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "<!-- comment -->"
         }
       ],
       "warnings": []
@@ -134,7 +139,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "a.ts",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "/* block comment */"
         }
       ],
       "warnings": []
@@ -153,7 +159,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "a.ts",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "// comment"
         }
       ],
       "warnings": []
@@ -184,7 +191,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "doc.md",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "<!-- only a comment -->"
         }
       ],
       "warnings": []
@@ -203,7 +211,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "a.mjs",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "// comment"
         }
       ],
       "warnings": []
@@ -234,13 +243,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "a.ts",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "// comment: implement A"
         },
         {
           "file": "b.ts",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "// TODO: implement B"
         }
       ],
       "warnings": []
@@ -259,7 +270,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "query.sql",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "-- drop table"
         }
       ],
       "warnings": []
@@ -290,7 +302,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "empty.xml",
           "line": 1,
           "message": "file is empty",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": ""
         }
       ],
       "warnings": []
@@ -309,7 +322,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "a.ts",
           "line": 1,
           "message": "file contains only comments — add real content or remove it",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": "/* unterminated block comment"
         }
       ],
       "warnings": []
@@ -328,7 +342,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "ws.ts",
           "line": 1,
           "message": "file is empty",
-          "rule": "no-empty-or-comments-only-files"
+          "rule": "no-empty-or-comments-only-files",
+          "sourceLine": ""
         }
       ],
       "warnings": []

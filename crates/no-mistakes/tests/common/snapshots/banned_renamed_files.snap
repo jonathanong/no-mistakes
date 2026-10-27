@@ -15,19 +15,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "web/webpack.config.dev.ts",
           "line": 1,
           "message": "remove webpack.config.* — bundling is handled by the framework",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "export default {};"
         },
         {
           "file": "web/webpack.config.js",
           "line": 1,
           "message": "remove webpack.config.* — bundling is handled by the framework",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "module.exports = {};"
         },
         {
           "file": "web/webpack.config.prod.js",
           "line": 1,
           "message": "remove webpack.config.* — bundling is handled by the framework",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "module.exports = {};"
         }
       ],
       "warnings": []
@@ -46,19 +49,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "webpack.config.dev.ts",
           "line": 1,
           "message": "remove webpack config",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
         },
         {
           "file": "webpack.config.js",
           "line": 1,
           "message": "remove webpack config",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
         },
         {
           "file": "webpack.config.prod.js",
           "line": 1,
           "message": "remove webpack config",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
         }
       ],
       "warnings": []
@@ -101,7 +107,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "web/middleware.ts",
           "line": 1,
           "message": "rename middleware.{ts,mts,js} to proxy.ts (Next.js 16+)",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "export function middleware(): void {}"
         }
       ],
       "warnings": []
@@ -120,7 +127,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "web/middleware.ts",
           "line": 1,
           "message": "rename middleware.{ts,mts,js} to proxy.ts (Next.js 16+)",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
         }
       ],
       "warnings": []
@@ -139,7 +147,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "web/middleware.mts",
           "line": 1,
           "message": "rename it",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
         }
       ],
       "warnings": []
@@ -170,7 +179,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "anywhere/middleware.ts",
           "line": 1,
           "message": "rename it",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
         }
       ],
       "warnings": []
@@ -249,7 +259,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "jest.config.cjs",
           "line": 1,
           "message": "remove jest.config.* — tests run under vitest",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "module.exports = {};"
         }
       ],
       "warnings": []
@@ -268,13 +279,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "web/jest.config.cjs",
           "line": 1,
           "message": "remove jest.config.* — tests run under vitest",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "module.exports = {};"
         },
         {
           "file": "web/jest.config.js",
           "line": 1,
           "message": "remove jest.config.* — tests run under vitest",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "module.exports = {};"
         }
       ],
       "warnings": []
@@ -305,7 +318,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "web/middleware.ts",
           "line": 1,
           "message": "rename middleware.{ts,mts,js} to proxy.ts (Next.js 16+)",
-          "rule": "banned-renamed-files"
+          "rule": "banned-renamed-files",
+          "sourceLine": "export {};"
         }
       ],
       "warnings": []

@@ -1,0 +1,369 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/require-bridge.cjs",
+          "line": 4,
+          "message": "src/require-bridge.cjs:4: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "true && require('./conditional-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/require-bridge.cjs",
+          "line": 5,
+          "message": "src/require-bridge.cjs:5: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "void require('./void-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/require-bridge.cjs",
+          "line": 6,
+          "message": "src/require-bridge.cjs:6: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "require('./seq-a.cjs'), // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/require-bridge.cjs",
+          "line": 7,
+          "message": "src/require-bridge.cjs:7: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "require('./seq-b.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 13,
+          "message": "src/setup.mts:13: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "vi.mock(dynamicName) // EXPECT_SHAPE",
+          "target": "mock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 14,
+          "message": "src/setup.mts:14: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "jest.mock(dynamicName) // EXPECT_SHAPE",
+          "target": "mock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 18,
+          "message": "src/setup.mts:18: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "mock('./direct-target.mts') // EXPECT_SHAPE",
+          "target": "mock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 19,
+          "message": "src/setup.mts:19: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "vi['mock']('./nested-target.mts') // EXPECT_SHAPE",
+          "target": "mock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 20,
+          "message": "src/setup.mts:20: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "module.require('./require-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 22,
+          "message": "src/setup.mts:22: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "requireAlias('./require-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 23,
+          "message": "src/setup.mts:23: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "import equalsTarget = require('./require-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 25,
+          "message": "src/setup.mts:25: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "vi.doMock('./do-target.mts', () => ({ value: 'do' })) // EXPECT_SHAPE",
+          "target": "doMock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 26,
+          "message": "src/setup.mts:26: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "import('./dynamic-helper.mts') // EXPECT_SHAPE",
+          "target": "import"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 27,
+          "message": "src/setup.mts:27: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "jest.setMock('./set-target.mts', { value: 'set' }) // EXPECT_SHAPE",
+          "target": "setMock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 28,
+          "message": "src/setup.mts:28: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "jest.unstable_mockModule('./unstable-target.mts', () => ({ value: 'unstable' })) // EXPECT_SHAPE",
+          "target": "unstable_mockModule"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/conditional.test.mts",
+          "import": "./conditional-target.mts",
+          "line": 4,
+          "message": "dynamic import dependency `src/conditional-target.mts` must be mocked",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "await import('./conditional-target.mts') // EXPECT_UNMOCKED",
+          "target": "src/conditional-target.mts"
+        },
+        {
+          "file": "src/do-mock.test.mts",
+          "import": "./do-target.mts",
+          "line": 4,
+          "message": "dynamic import dependency `src/do-target.mts` must be mocked",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "await import('./do-target.mts') // EXPECT_UNMOCKED",
+          "target": "src/do-target.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/setup.mts",
+          "line": 30,
+          "message": "directive for `test-no-unmocked-dynamic-imports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line test-no-unmocked-dynamic-imports",
+          "target": "test-no-unmocked-dynamic-imports"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/setup.mts",
+          "line": 30,
+          "message": "directive for `test-no-unmocked-dynamic-imports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line test-no-unmocked-dynamic-imports",
+          "target": "test-no-unmocked-dynamic-imports"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/conditional.test.mts",
+          "import": "./conditional-target.mts",
+          "line": 4,
+          "message": "dynamic import dependency `src/conditional-target.mts` must be mocked",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "await import('./conditional-target.mts') // EXPECT_UNMOCKED",
+          "target": "src/conditional-target.mts"
+        },
+        {
+          "file": "src/do-mock.test.mts",
+          "import": "./do-target.mts",
+          "line": 4,
+          "message": "dynamic import dependency `src/do-target.mts` must be mocked",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "await import('./do-target.mts') // EXPECT_UNMOCKED",
+          "target": "src/do-target.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/conditional.test.mts",
+          "import": "./conditional-target.mts",
+          "line": 4,
+          "message": "dynamic import dependency `src/conditional-target.mts` must be mocked",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "await import('./conditional-target.mts') // EXPECT_UNMOCKED",
+          "target": "src/conditional-target.mts"
+        },
+        {
+          "file": "src/do-mock.test.mts",
+          "import": "./do-target.mts",
+          "line": 4,
+          "message": "dynamic import dependency `src/do-target.mts` must be mocked",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "await import('./do-target.mts') // EXPECT_UNMOCKED",
+          "target": "src/do-target.mts"
+        },
+        {
+          "file": "src/require-bridge.cjs",
+          "line": 4,
+          "message": "src/require-bridge.cjs:4: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "true && require('./conditional-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/require-bridge.cjs",
+          "line": 5,
+          "message": "src/require-bridge.cjs:5: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "void require('./void-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/require-bridge.cjs",
+          "line": 6,
+          "message": "src/require-bridge.cjs:6: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "require('./seq-a.cjs'), // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/require-bridge.cjs",
+          "line": 7,
+          "message": "src/require-bridge.cjs:7: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "require('./seq-b.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 13,
+          "message": "src/setup.mts:13: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "vi.mock(dynamicName) // EXPECT_SHAPE",
+          "target": "mock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 14,
+          "message": "src/setup.mts:14: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "jest.mock(dynamicName) // EXPECT_SHAPE",
+          "target": "mock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 18,
+          "message": "src/setup.mts:18: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "mock('./direct-target.mts') // EXPECT_SHAPE",
+          "target": "mock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 19,
+          "message": "src/setup.mts:19: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "vi['mock']('./nested-target.mts') // EXPECT_SHAPE",
+          "target": "mock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 20,
+          "message": "src/setup.mts:20: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "module.require('./require-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 22,
+          "message": "src/setup.mts:22: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "requireAlias('./require-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 23,
+          "message": "src/setup.mts:23: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "import equalsTarget = require('./require-helper.cjs') // EXPECT_SHAPE",
+          "target": "require"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 25,
+          "message": "src/setup.mts:25: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "vi.doMock('./do-target.mts', () => ({ value: 'do' })) // EXPECT_SHAPE",
+          "target": "doMock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 26,
+          "message": "src/setup.mts:26: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "import('./dynamic-helper.mts') // EXPECT_SHAPE",
+          "target": "import"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 27,
+          "message": "src/setup.mts:27: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "jest.setMock('./set-target.mts', { value: 'set' }) // EXPECT_SHAPE",
+          "target": "setMock"
+        },
+        {
+          "file": "src/setup.mts",
+          "line": 28,
+          "message": "src/setup.mts:28: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "jest.unstable_mockModule('./unstable-target.mts', () => ({ value: 'unstable' })) // EXPECT_SHAPE",
+          "target": "unstable_mockModule"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -28,6 +28,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:external_enum_keys.external_enum_keys_pkey: primary key uses shared.priority column id; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:external_enum_keys.external_enum_keys_pkey"
         }
       ],
@@ -48,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:domain_keys.domain_keys_pkey: review this key",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:domain_keys.domain_keys_pkey"
         },
         {
@@ -55,6 +57,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:locale_keys.locale_keys_pkey: review this key",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:locale_keys.locale_keys_pkey"
         },
         {
@@ -62,6 +65,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:missing_key_column.missing_key_column_pkey: review this key",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:missing_key_column.missing_key_column_pkey"
         },
         {
@@ -69,6 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_flags.order_flags_pkey: review this key",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_flags.order_flags_pkey"
         },
         {
@@ -76,6 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_notes.order_notes_pkey: review this key",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_notes.order_notes_pkey"
         },
         {
@@ -83,6 +89,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_currency_code_fkey: review this key",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_currency_code_fkey"
         },
         {
@@ -90,6 +97,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_natural_pkey: review this key",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_natural_pkey"
         },
         {
@@ -97,6 +105,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:partitioned_orders.partitioned_orders_pkey: review this key",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:partitioned_orders.partitioned_orders_pkey"
         }
       ],
@@ -117,6 +126,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:non_numeric_modifier.non_numeric_modifier_pkey: primary key uses custom(foo) column id; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:non_numeric_modifier.non_numeric_modifier_pkey"
         },
         {
@@ -124,6 +134,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:numeric_precision.numeric_precision_pkey: primary key uses numeric(10,2) column id; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:numeric_precision.numeric_precision_pkey"
         },
         {
@@ -131,6 +142,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:unterminated_type.unterminated_type_pkey: primary key uses custom(12 column id; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:unterminated_type.unterminated_type_pkey"
         }
       ],
@@ -151,6 +163,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:domain_keys.domain_keys_pkey: primary key uses order_id_domain column id; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:domain_keys.domain_keys_pkey"
         },
         {
@@ -158,6 +171,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:locale_keys.locale_keys_pkey: primary key uses character varying column locale; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:locale_keys.locale_keys_pkey"
         },
         {
@@ -165,6 +179,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:missing_key_column.missing_key_column_pkey: primary key uses unknown column missing_id; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:missing_key_column.missing_key_column_pkey"
         },
         {
@@ -172,6 +187,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_flags.order_flags_pkey: primary key uses order_flag_kinds column flag; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_flags.order_flags_pkey"
         },
         {
@@ -179,6 +195,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_notes.order_notes_pkey: primary key uses text column author_email; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_notes.order_notes_pkey"
         },
         {
@@ -186,6 +203,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_currency_code_fkey: foreign key uses text column currency_code (references currencies); review the referenced key's type and use a compatible configured type",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_currency_code_fkey"
         },
         {
@@ -193,6 +211,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_natural_pkey: primary key uses text column code; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_natural_pkey"
         },
         {
@@ -200,6 +219,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:partitioned_orders.partitioned_orders_pkey: primary key uses text column code; use one of uuid, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:partitioned_orders.partitioned_orders_pkey"
         }
       ],
@@ -220,6 +240,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:domain_keys.domain_keys_pkey: primary key uses order_id_domain column id; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:domain_keys.domain_keys_pkey"
         },
         {
@@ -227,6 +248,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:locale_keys.locale_keys_pkey: primary key uses character varying column locale; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:locale_keys.locale_keys_pkey"
         },
         {
@@ -234,6 +256,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:missing_key_column.missing_key_column_pkey: primary key uses unknown column missing_id; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:missing_key_column.missing_key_column_pkey"
         },
         {
@@ -241,6 +264,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_notes.order_notes_pkey: primary key uses text column author_email; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_notes.order_notes_pkey"
         },
         {
@@ -248,6 +272,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_currency_code_fkey: foreign key uses text column currency_code (references currencies); review the referenced key's type and use a compatible configured type",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_currency_code_fkey"
         },
         {
@@ -255,6 +280,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_natural_pkey: primary key uses text column code; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_natural_pkey"
         },
         {
@@ -262,6 +288,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:partitioned_orders.partitioned_orders_pkey: primary key uses text column code; use one of uuid, bigint, integer, smallint, or an enum, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:partitioned_orders.partitioned_orders_pkey"
         }
       ],
@@ -282,6 +309,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:domain_priority_keys.domain_priority_keys_pkey: primary key uses priority column id; use one of uuid or an enum, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:domain_priority_keys.domain_priority_keys_pkey"
         }
       ],
@@ -302,6 +330,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:domain_keys.domain_keys_pkey: primary key uses order_id_domain column id; use one of UUID, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:domain_keys.domain_keys_pkey"
         },
         {
@@ -309,6 +338,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:locale_keys.locale_keys_pkey: primary key uses character varying column locale; use one of UUID, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:locale_keys.locale_keys_pkey"
         },
         {
@@ -316,6 +346,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:missing_key_column.missing_key_column_pkey: primary key uses unknown column missing_id; use one of UUID, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:missing_key_column.missing_key_column_pkey"
         },
         {
@@ -323,6 +354,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_flags.order_flags_pkey: primary key uses order_flag_kinds column flag; use one of UUID, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_flags.order_flags_pkey"
         },
         {
@@ -330,6 +362,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_notes.order_notes_pkey: primary key uses text column author_email; use one of UUID, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_notes.order_notes_pkey"
         },
         {
@@ -337,6 +370,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_natural_pkey: primary key uses text column code; use one of UUID, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_natural_pkey"
         },
         {
@@ -344,6 +378,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:partitioned_orders.partitioned_orders_pkey: primary key uses text column code; use one of UUID, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:partitioned_orders.partitioned_orders_pkey"
         }
       ],
@@ -364,6 +399,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:domain_keys.domain_keys_pkey: primary key uses order_id_domain column id; use one of uuid or varchar, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:domain_keys.domain_keys_pkey"
         },
         {
@@ -371,6 +407,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:locale_keys.locale_keys_pkey: primary key uses character varying column locale; use one of uuid or varchar, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:locale_keys.locale_keys_pkey"
         },
         {
@@ -378,6 +415,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:missing_key_column.missing_key_column_pkey: primary key uses unknown column missing_id; use one of uuid or varchar, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:missing_key_column.missing_key_column_pkey"
         },
         {
@@ -385,6 +423,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_flags.order_flags_pkey: primary key uses order_flag_kinds column flag; use one of uuid or varchar, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_flags.order_flags_pkey"
         },
         {
@@ -392,6 +431,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_notes.order_notes_pkey: primary key uses text column author_email; use one of uuid or varchar, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_notes.order_notes_pkey"
         },
         {
@@ -399,6 +439,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_natural_pkey: primary key uses text column code; use one of uuid or varchar, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_natural_pkey"
         },
         {
@@ -406,6 +447,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:partitioned_orders.partitioned_orders_pkey: primary key uses text column code; use one of uuid or varchar, and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:partitioned_orders.partitioned_orders_pkey"
         }
       ],
@@ -438,6 +480,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:partitioned_leaf.partitioned_leaf_external_fkey: foreign key uses text column external_id (references external_objects); review the referenced key's type and use a compatible configured type",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:partitioned_leaf.partitioned_leaf_external_fkey"
         }
       ],
@@ -458,6 +501,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_currency_code_fkey: foreign key uses text column currency_code (references currencies); review the referenced key's type and use a compatible configured type",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_currency_code_fkey"
         }
       ],
@@ -490,6 +534,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:domain_keys.domain_keys_pkey: primary key uses order_id_domain column id; use one of UUID or CHARACTER VARYING(32), and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:domain_keys.domain_keys_pkey"
         },
         {
@@ -497,6 +542,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:missing_key_column.missing_key_column_pkey: primary key uses unknown column missing_id; use one of UUID or CHARACTER VARYING(32), and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:missing_key_column.missing_key_column_pkey"
         },
         {
@@ -504,6 +550,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_flags.order_flags_pkey: primary key uses order_flag_kinds column flag; use one of UUID or CHARACTER VARYING(32), and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_flags.order_flags_pkey"
         },
         {
@@ -511,6 +558,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:order_notes.order_notes_pkey: primary key uses text column author_email; use one of UUID or CHARACTER VARYING(32), and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:order_notes.order_notes_pkey"
         },
         {
@@ -518,6 +566,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_currency_code_fkey: foreign key uses text column currency_code (references currencies); review the referenced key's type and use a compatible configured type",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_currency_code_fkey"
         },
         {
@@ -525,6 +574,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:orders.orders_natural_pkey: primary key uses text column code; use one of UUID or CHARACTER VARYING(32), and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:orders.orders_natural_pkey"
         },
         {
@@ -532,6 +582,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: constraint:partitioned_orders.partitioned_orders_pkey: primary key uses text column code; use one of UUID or CHARACTER VARYING(32), and keep any natural key as a separate unique constraint",
           "rule": "postgres-key-column-types",
+          "sourceLine": "{",
           "target": "constraint:partitioned_orders.partitioned_orders_pkey"
         }
       ],

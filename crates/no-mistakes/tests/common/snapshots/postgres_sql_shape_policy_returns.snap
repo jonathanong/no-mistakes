@@ -28,6 +28,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "dynamic.test.ts:2: SQL could not be analyzed for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(sql`${dynamicSql}`);",
           "target": "banned-function-call"
         }
       ],
@@ -48,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "embedded.test.ts:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query('SELECT pg_sleep(1)');",
           "target": "banned-function-call"
         },
         {
@@ -55,6 +57,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "embedded.test.ts:3: function call \"pg_catalog\".\"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(sql`SELECT pg_catalog.pg_sleep_for(${duration})`);",
           "target": "banned-function-call"
         },
         {
@@ -62,6 +65,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "embedded.test.ts:4: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(sql`WITH timer AS (SELECT pg_sleep_until(${until}::timestamptz)) SELECT * FROM timer`);",
           "target": "banned-function-call"
         },
         {
@@ -69,6 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "embedded.test.ts:5: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(sql`SELECT pg_sleep(GREATEST(EXTRACT(EPOCH FROM ${until}::timestamptz - clock_timestamp()), 0))`);",
           "target": "banned-function-call"
         },
         {
@@ -76,6 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "embedded.test.ts:6: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(sql`SELECT ${unrelated}::text, pg_sleep(1)`);",
           "target": "banned-function-call"
         }
       ],
@@ -96,6 +102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "positions.sql:1: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_sleep(1);",
           "target": "banned-function-call"
         },
         {
@@ -103,6 +110,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "positions.sql:10: function call \"pg_catalog\".\"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM LATERAL pg_catalog.pg_sleep(1);",
           "target": "banned-function-call"
         },
         {
@@ -110,6 +118,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "positions.sql:11: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "UPDATE items SET value = pg_sleep(1) WHERE id = 1;",
           "target": "banned-function-call"
         },
         {
@@ -117,6 +126,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "positions.sql:12: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO items(value) VALUES(pg_sleep(1)) RETURNING pg_sleep(2);",
           "target": "banned-function-call"
         },
         {
@@ -124,6 +134,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "positions.sql:2: function call \"pg_catalog\".\"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.pg_sleep_for('1 second');",
           "target": "banned-function-call"
         },
         {
@@ -131,6 +142,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "positions.sql:3: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH timer AS (SELECT pg_sleep_until(now())) SELECT * FROM timer;",
           "target": "banned-function-call"
         },
         {
@@ -138,6 +150,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "positions.sql:4: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT pg_sleep(1));",
           "target": "banned-function-call"
         },
         {
@@ -145,6 +158,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "positions.sql:5: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT CASE WHEN true THEN pg_sleep(1) ELSE NULL END;",
           "target": "banned-function-call"
         },
         {
@@ -152,6 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "positions.sql:6: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 WHERE pg_sleep(1) IS NULL;",
           "target": "banned-function-call"
         },
         {
@@ -159,6 +174,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "positions.sql:7: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT coalesce(pg_sleep(1), pg_sleep(2));",
           "target": "banned-function-call"
         },
         {
@@ -166,6 +182,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "positions.sql:8: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT sum(1) OVER (ORDER BY pg_sleep(1));",
           "target": "banned-function-call"
         },
         {
@@ -173,6 +190,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "positions.sql:9: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT * FROM pg_sleep(1);",
           "target": "banned-function-call"
         }
       ],
@@ -193,6 +211,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "procedural.sql:11: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH timer AS (SELECT pg_sleep(1)) SELECT * FROM timer;",
           "target": "banned-function-call"
         },
         {
@@ -200,6 +219,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "procedural.sql:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "IF CASE WHEN true THEN pg_sleep(1) ELSE NULL END IS NULL THEN NULL; END IF;",
           "target": "banned-function-call"
         },
         {
@@ -207,6 +227,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "procedural.sql:5: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "IF pg_sleep(1) IS NULL THEN",
           "target": "banned-function-call"
         },
         {
@@ -214,6 +235,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "procedural.sql:6: function call \"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_sleep_for('1 second');",
           "target": "banned-function-call"
         },
         {
@@ -221,6 +243,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "procedural.sql:7: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "ELSE PERFORM pg_sleep_until(now()); END IF;",
           "target": "banned-function-call"
         },
         {
@@ -228,6 +251,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "procedural.sql:8: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "RETURN QUERY SELECT pg_sleep(1);",
           "target": "banned-function-call"
         }
       ],
@@ -248,6 +272,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "routines.sql:12: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_sleep_until(now());",
           "target": "banned-function-call"
         },
         {
@@ -255,6 +280,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "routines.sql:13: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "EXECUTE 'SELECT pg_sleep(1)';",
           "target": "banned-function-call"
         },
         {
@@ -262,6 +288,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "routines.sql:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "PERFORM pg_sleep(1);",
           "target": "banned-function-call"
         },
         {
@@ -269,6 +296,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "routines.sql:3: function call \"pg_catalog\".\"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.pg_sleep_for('1 second');",
           "target": "banned-function-call"
         },
         {
@@ -276,6 +304,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "routines.sql:4: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "IF true THEN PERFORM pg_sleep_until(now()); END IF;",
           "target": "banned-function-call"
         },
         {
@@ -283,6 +312,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "routines.sql:5: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "EXECUTE 'SELECT pg_sleep(1)';",
           "target": "banned-function-call"
         },
         {
@@ -290,6 +320,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "routines.sql:8: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "PERFORM pg_sleep(1);",
           "target": "banned-function-call"
         },
         {
@@ -297,6 +328,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "routines.sql:9: function call \"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "RETURN pg_sleep_for('1 second');",
           "target": "banned-function-call"
         }
       ],
@@ -317,6 +349,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "names.sql:6: function call \"custom\".\"other\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT custom.other(1);",
           "target": "banned-function-call"
         }
       ],
@@ -337,6 +370,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "names.sql:7: function call \"custom\".\"Other\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT custom.\"Other\"(1);",
           "target": "banned-function-call"
         }
       ],
@@ -357,6 +391,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "names.sql:1: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT PG_SLEEP(1);",
           "target": "banned-function-call"
         },
         {
@@ -364,6 +399,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "names.sql:2: function call \"public\".\"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT public.pg_sleep(1);",
           "target": "banned-function-call"
         },
         {
@@ -371,6 +407,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "names.sql:3: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT \"pg_sleep\"(1);",
           "target": "banned-function-call"
         }
       ],
@@ -391,6 +428,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "names.sql:2: function call \"public\".\"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT public.pg_sleep(1);",
           "target": "banned-function-call"
         }
       ],
@@ -411,6 +449,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "names.sql:5: function call \"custom.schema\".\"odd.function\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT \"custom.schema\".\"odd.function\"(1);",
           "target": "banned-function-call"
         }
       ],
@@ -431,6 +470,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "names.sql:4: function call \"PG_SLEEP\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT \"PG_SLEEP\"(1);",
           "target": "banned-function-call"
         }
       ],
@@ -451,6 +491,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "positions.sql:8: uuidv7() is banned in DEFAULT; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "CREATE TABLE generated_ids (id uuid DEFAULT uuidv7());",
           "target": "banned-function-call"
         },
         {
@@ -458,6 +499,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "positions.sql:9: uuidv7() is banned in DEFAULT; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "ALTER TABLE generated_ids ALTER COLUMN id SET DEFAULT uuidv7();",
           "target": "banned-function-call"
         }
       ],
@@ -478,6 +520,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "positions.sql:2: uuidv7() is banned in HAVING; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders WHERE uuidv7() IS NOT NULL GROUP BY id HAVING uuidv7() IS NOT NULL ORDER BY uuidv7();",
           "target": "banned-function-call"
         }
       ],
@@ -498,6 +541,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "positions.sql:10: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT uuidv7() WHERE uuidv7() IS NOT NULL) WHERE min_id_for(uuidv7()) IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -505,6 +549,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "positions.sql:11: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "CREATE VIEW recent_orders AS SELECT id FROM orders WHERE id >= uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -512,6 +557,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "positions.sql:12: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH recent AS (SELECT id FROM orders WHERE id >= uuidv7()) SELECT uuidv7() FROM recent;",
           "target": "banned-function-call"
         },
         {
@@ -519,6 +565,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "positions.sql:13: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE CASE WHEN id >= uuidv7() THEN true ELSE false END;",
           "target": "banned-function-call"
         },
         {
@@ -526,6 +573,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "positions.sql:14: function call \"pg_catalog\".\"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.uuidv7() WHERE pg_catalog.uuidv7() IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -533,6 +581,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "positions.sql:15: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id = e.id WHEN MATCHED THEN DELETE RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -540,6 +589,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "positions.sql:2: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders WHERE uuidv7() IS NOT NULL GROUP BY id HAVING uuidv7() IS NOT NULL ORDER BY uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -547,6 +597,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "positions.sql:3: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders o JOIN events e ON e.id >= uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -554,6 +605,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "positions.sql:4: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO orders (id) VALUES (uuidv7()) ON CONFLICT (id) DO UPDATE SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -561,6 +613,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "positions.sql:5: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "UPDATE orders SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -568,6 +621,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "positions.sql:6: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "DELETE FROM orders WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -575,6 +629,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "positions.sql:7: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id >= uuidv7() WHEN MATCHED AND e.id >= uuidv7() THEN UPDATE SET id = uuidv7() WHEN NOT MATCHED THEN INSERT (id) VALUES (uuidv7());",
           "target": "banned-function-call"
         },
         {
@@ -582,6 +637,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "positions.sql:8: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "CREATE TABLE generated_ids (id uuid DEFAULT uuidv7());",
           "target": "banned-function-call"
         },
         {
@@ -589,6 +645,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "positions.sql:9: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "ALTER TABLE generated_ids ALTER COLUMN id SET DEFAULT uuidv7();",
           "target": "banned-function-call"
         }
       ],
@@ -609,6 +666,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "positions.sql:3: uuidv7() is banned in JOIN ON; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders o JOIN events e ON e.id >= uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -616,6 +674,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "positions.sql:7: uuidv7() is banned in JOIN ON; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id >= uuidv7() WHEN MATCHED AND e.id >= uuidv7() THEN UPDATE SET id = uuidv7() WHEN NOT MATCHED THEN INSERT (id) VALUES (uuidv7());",
           "target": "banned-function-call"
         }
       ],
@@ -636,6 +695,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "positions.sql:10: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT uuidv7() WHERE uuidv7() IS NOT NULL) WHERE min_id_for(uuidv7()) IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -643,6 +703,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "positions.sql:11: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "CREATE VIEW recent_orders AS SELECT id FROM orders WHERE id >= uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -650,6 +711,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "positions.sql:12: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH recent AS (SELECT id FROM orders WHERE id >= uuidv7()) SELECT uuidv7() FROM recent;",
           "target": "banned-function-call"
         },
         {
@@ -657,6 +719,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "positions.sql:13: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE CASE WHEN id >= uuidv7() THEN true ELSE false END;",
           "target": "banned-function-call"
         },
         {
@@ -664,6 +727,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "positions.sql:14: function call \"pg_catalog\".\"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.uuidv7() WHERE pg_catalog.uuidv7() IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -671,6 +735,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "positions.sql:15: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id = e.id WHEN MATCHED THEN DELETE RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -678,6 +743,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "positions.sql:2: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders WHERE uuidv7() IS NOT NULL GROUP BY id HAVING uuidv7() IS NOT NULL ORDER BY uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -685,6 +751,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "positions.sql:3: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders o JOIN events e ON e.id >= uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -692,6 +759,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "positions.sql:4: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO orders (id) VALUES (uuidv7()) ON CONFLICT (id) DO UPDATE SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -699,6 +767,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "positions.sql:5: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "UPDATE orders SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -706,6 +775,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "positions.sql:6: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "DELETE FROM orders WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -713,6 +783,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "positions.sql:7: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id >= uuidv7() WHEN MATCHED AND e.id >= uuidv7() THEN UPDATE SET id = uuidv7() WHEN NOT MATCHED THEN INSERT (id) VALUES (uuidv7());",
           "target": "banned-function-call"
         },
         {
@@ -720,6 +791,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "positions.sql:8: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "CREATE TABLE generated_ids (id uuid DEFAULT uuidv7());",
           "target": "banned-function-call"
         },
         {
@@ -727,6 +799,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "positions.sql:9: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "ALTER TABLE generated_ids ALTER COLUMN id SET DEFAULT uuidv7();",
           "target": "banned-function-call"
         }
       ],
@@ -747,6 +820,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "positions.sql:2: uuidv7() is banned in ORDER BY; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders WHERE uuidv7() IS NOT NULL GROUP BY id HAVING uuidv7() IS NOT NULL ORDER BY uuidv7();",
           "target": "banned-function-call"
         }
       ],
@@ -767,6 +841,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "positions.sql:15: uuidv7() is banned in RETURNING; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id = e.id WHEN MATCHED THEN DELETE RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -774,6 +849,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "positions.sql:4: uuidv7() is banned in RETURNING; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO orders (id) VALUES (uuidv7()) ON CONFLICT (id) DO UPDATE SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -781,6 +857,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "positions.sql:5: uuidv7() is banned in RETURNING; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "UPDATE orders SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -788,6 +865,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "positions.sql:6: uuidv7() is banned in RETURNING; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "DELETE FROM orders WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         }
       ],
@@ -808,6 +886,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "positions.sql:10: uuidv7() is banned in SELECT list; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT uuidv7() WHERE uuidv7() IS NOT NULL) WHERE min_id_for(uuidv7()) IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -815,6 +894,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "positions.sql:12: uuidv7() is banned in SELECT list; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH recent AS (SELECT id FROM orders WHERE id >= uuidv7()) SELECT uuidv7() FROM recent;",
           "target": "banned-function-call"
         },
         {
@@ -822,6 +902,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "positions.sql:14: pg_catalog.uuidv7() is banned in SELECT list; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.uuidv7() WHERE pg_catalog.uuidv7() IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -829,6 +910,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "positions.sql:2: uuidv7() is banned in SELECT list; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders WHERE uuidv7() IS NOT NULL GROUP BY id HAVING uuidv7() IS NOT NULL ORDER BY uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -836,6 +918,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "positions.sql:3: uuidv7() is banned in SELECT list; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders o JOIN events e ON e.id >= uuidv7();",
           "target": "banned-function-call"
         }
       ],
@@ -856,6 +939,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "positions.sql:4: uuidv7() is banned in SET; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO orders (id) VALUES (uuidv7()) ON CONFLICT (id) DO UPDATE SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -863,6 +947,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "positions.sql:5: uuidv7() is banned in SET; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "UPDATE orders SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -870,6 +955,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "positions.sql:7: uuidv7() is banned in SET; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id >= uuidv7() WHEN MATCHED AND e.id >= uuidv7() THEN UPDATE SET id = uuidv7() WHEN NOT MATCHED THEN INSERT (id) VALUES (uuidv7());",
           "target": "banned-function-call"
         }
       ],
@@ -890,6 +976,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "positions.sql:10: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT uuidv7() WHERE uuidv7() IS NOT NULL) WHERE min_id_for(uuidv7()) IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -897,6 +984,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "positions.sql:11: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "CREATE VIEW recent_orders AS SELECT id FROM orders WHERE id >= uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -904,6 +992,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "positions.sql:12: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH recent AS (SELECT id FROM orders WHERE id >= uuidv7()) SELECT uuidv7() FROM recent;",
           "target": "banned-function-call"
         },
         {
@@ -911,6 +1000,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "positions.sql:13: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE CASE WHEN id >= uuidv7() THEN true ELSE false END;",
           "target": "banned-function-call"
         },
         {
@@ -918,6 +1008,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "positions.sql:14: function call \"pg_catalog\".\"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.uuidv7() WHERE pg_catalog.uuidv7() IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -925,6 +1016,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "positions.sql:15: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id = e.id WHEN MATCHED THEN DELETE RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -932,6 +1024,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "positions.sql:2: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders WHERE uuidv7() IS NOT NULL GROUP BY id HAVING uuidv7() IS NOT NULL ORDER BY uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -939,6 +1032,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "positions.sql:3: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders o JOIN events e ON e.id >= uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -946,6 +1040,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "positions.sql:4: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO orders (id) VALUES (uuidv7()) ON CONFLICT (id) DO UPDATE SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -953,6 +1048,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "positions.sql:5: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "UPDATE orders SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -960,6 +1056,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "positions.sql:6: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "DELETE FROM orders WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -967,6 +1064,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "positions.sql:7: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id >= uuidv7() WHEN MATCHED AND e.id >= uuidv7() THEN UPDATE SET id = uuidv7() WHEN NOT MATCHED THEN INSERT (id) VALUES (uuidv7());",
           "target": "banned-function-call"
         },
         {
@@ -974,6 +1072,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "positions.sql:8: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "CREATE TABLE generated_ids (id uuid DEFAULT uuidv7());",
           "target": "banned-function-call"
         },
         {
@@ -981,6 +1080,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "positions.sql:9: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "ALTER TABLE generated_ids ALTER COLUMN id SET DEFAULT uuidv7();",
           "target": "banned-function-call"
         }
       ],
@@ -1001,6 +1101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "positions.sql:4: uuidv7() is banned in VALUES; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO orders (id) VALUES (uuidv7()) ON CONFLICT (id) DO UPDATE SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -1008,6 +1109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "positions.sql:7: uuidv7() is banned in VALUES; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id >= uuidv7() WHEN MATCHED AND e.id >= uuidv7() THEN UPDATE SET id = uuidv7() WHEN NOT MATCHED THEN INSERT (id) VALUES (uuidv7());",
           "target": "banned-function-call"
         }
       ],
@@ -1028,6 +1130,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "positions.sql:10: uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT (SELECT uuidv7() WHERE uuidv7() IS NOT NULL) WHERE min_id_for(uuidv7()) IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -1035,6 +1138,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "positions.sql:11: uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "CREATE VIEW recent_orders AS SELECT id FROM orders WHERE id >= uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -1042,6 +1146,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 12,
           "message": "positions.sql:12: uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "WITH recent AS (SELECT id FROM orders WHERE id >= uuidv7()) SELECT uuidv7() FROM recent;",
           "target": "banned-function-call"
         },
         {
@@ -1049,6 +1154,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "positions.sql:13: uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT id FROM orders WHERE CASE WHEN id >= uuidv7() THEN true ELSE false END;",
           "target": "banned-function-call"
         },
         {
@@ -1056,6 +1162,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "positions.sql:14: pg_catalog.uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.uuidv7() WHERE pg_catalog.uuidv7() IS NOT NULL;",
           "target": "banned-function-call"
         },
         {
@@ -1063,6 +1170,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "positions.sql:2: uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT uuidv7() FROM orders WHERE uuidv7() IS NOT NULL GROUP BY id HAVING uuidv7() IS NOT NULL ORDER BY uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -1070,6 +1178,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "positions.sql:4: uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO orders (id) VALUES (uuidv7()) ON CONFLICT (id) DO UPDATE SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -1077,6 +1186,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "positions.sql:5: uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "UPDATE orders SET id = uuidv7() WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -1084,6 +1194,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "positions.sql:6: uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "DELETE FROM orders WHERE id >= uuidv7() RETURNING uuidv7();",
           "target": "banned-function-call"
         },
         {
@@ -1091,6 +1202,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "positions.sql:7: uuidv7() is banned in WHERE; stable bound",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "MERGE INTO orders o USING events e ON o.id >= uuidv7() WHEN MATCHED AND e.id >= uuidv7() THEN UPDATE SET id = uuidv7() WHEN NOT MATCHED THEN INSERT (id) VALUES (uuidv7());",
           "target": "banned-function-call"
         }
       ],
@@ -1123,6 +1235,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "const common = sql` WHERE pg_sleep(1) IS NULL`;",
           "target": "banned-function-call"
         }
       ],
@@ -1143,6 +1256,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "const common = sql`SELECT pg_sleep(1)`;",
           "target": "banned-function-call"
         }
       ],
@@ -1163,6 +1277,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/query.ts:10: builder SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "? sql` WHERE (`",
           "target": "banned-function-call"
         },
         {
@@ -1170,6 +1285,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/query.ts:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "const unsafe = sql` WHERE pg_sleep(1) IS NULL`;",
           "target": "banned-function-call"
         }
       ],
@@ -1190,6 +1306,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "src/from-less-builders.ts:10: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "LIMIT 500`;",
           "target": "literal-limit"
         },
         {
@@ -1197,6 +1314,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/from-less-builders.ts:6: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "LIMIT 500`;",
           "target": "literal-limit"
         }
       ],
@@ -1229,6 +1347,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "sql/implicit-fetch-origins.sql:14: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "(SELECT id FROM inner_rows FETCH FIRST ROW ONLY)",
           "target": "literal-limit"
         },
         {
@@ -1236,6 +1355,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": "sql/implicit-fetch-origins.sql:23: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY",
           "target": "literal-limit"
         },
         {
@@ -1243,6 +1363,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 26,
           "message": "sql/implicit-fetch-origins.sql:26: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY",
           "target": "literal-limit"
         },
         {
@@ -1250,6 +1371,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 31,
           "message": "sql/implicit-fetch-origins.sql:31: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "(TABLE public.left_rows FETCH FIRST ROW ONLY)",
           "target": "literal-limit"
         },
         {
@@ -1257,6 +1379,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 33,
           "message": "sql/implicit-fetch-origins.sql:33: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "(TABLE public.right_rows FETCH FIRST ROW ONLY)",
           "target": "literal-limit"
         },
         {
@@ -1264,6 +1387,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 36,
           "message": "sql/implicit-fetch-origins.sql:36: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "TABLE public.standalone_first FETCH FIRST ROW ONLY;",
           "target": "literal-limit"
         },
         {
@@ -1271,6 +1395,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/implicit-fetch-origins.sql:4: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "FETCH FIRST ROW ONLY",
           "target": "literal-limit"
         }
       ],
@@ -1291,6 +1416,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/class-field-arrow.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 3 LIMIT 4'",
           "target": "literal-limit"
         }
       ],
@@ -1311,6 +1437,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/class-method.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 3 LIMIT 4'",
           "target": "literal-limit"
         }
       ],
@@ -1331,6 +1458,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/method-forwarding.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 3 LIMIT 4'",
           "target": "literal-limit"
         }
       ],
@@ -1351,6 +1479,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/named-property-function.ts:4: LIMIT 7 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 7 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 6 LIMIT 7'",
           "target": "literal-limit"
         }
       ],
@@ -1371,6 +1500,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/object-method.ts:4: LIMIT 5 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 5 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 4 LIMIT 5'",
           "target": "literal-limit"
         }
       ],
@@ -1391,6 +1521,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/property-function.ts:4: LIMIT 7 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 7 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 6 LIMIT 7'",
           "target": "literal-limit"
         }
       ],
@@ -1411,6 +1542,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/this-method.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 3 LIMIT 4'",
           "target": "literal-limit"
         }
       ],
@@ -1431,6 +1563,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "src/unused-method.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 3 LIMIT 4'",
           "target": "literal-limit"
         }
       ],
@@ -1451,6 +1584,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/custom-executors.ts:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "first(`SELECT id FROM orders WHERE id NOT IN (SELECT id FROM archived)`);",
           "target": "not-in-subquery"
         },
         {
@@ -1458,6 +1592,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/custom-executors.ts:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "last(`SELECT id FROM orders WHERE id NOT IN (SELECT id FROM archived)`);",
           "target": "not-in-subquery"
         }
       ],
@@ -1478,6 +1613,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "positions.sql:14: pg_catalog.uuidv7() is banned in WHERE",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT pg_catalog.uuidv7() WHERE pg_catalog.uuidv7() IS NOT NULL;",
           "target": "banned-function-call"
         }
       ],
@@ -1498,6 +1634,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/await.ts:3: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 1 LIMIT 2'",
           "target": "literal-limit"
         }
       ],
@@ -1518,6 +1655,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "src/named.ts:3: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 1 LIMIT 2'",
           "target": "literal-limit"
         }
       ],
@@ -1538,6 +1676,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/recursive.ts:6: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "return 'SELECT 1 LIMIT 2'",
           "target": "literal-limit"
         }
       ],
@@ -1558,6 +1697,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/shadow.ts:5: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "function label() { return 'SELECT 1 LIMIT 2' }",
           "target": "literal-limit"
         }
       ],
@@ -1578,6 +1718,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/shadow-edge.ts:5: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "function label() { return 'SELECT 1 LIMIT 2' }",
           "target": "literal-limit"
         }
       ],
@@ -1598,6 +1739,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "review.sql:5: \"custom.schema\".\"odd.function\"() is banned in WHERE",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 WHERE \"custom.schema\".\"odd.function\"() IS NOT NULL;",
           "target": "banned-function-call"
         }
       ],
@@ -1618,6 +1760,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "review.sql:8: \"select\"() is banned in WHERE",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 WHERE \"select\"() IS NOT NULL;",
           "target": "banned-function-call"
         }
       ],
@@ -1638,6 +1781,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "review.sql:6: \"Upper\".\"quote\"\"function\"() is banned in WHERE",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 WHERE \"Upper\".\"quote\"\"function\"() IS NOT NULL;",
           "target": "banned-function-call"
         }
       ],
@@ -1658,6 +1802,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "review.sql:7: _simple$9() is banned in WHERE",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "SELECT 1 WHERE _simple$9() IS NOT NULL;",
           "target": "banned-function-call"
         }
       ],
@@ -1678,6 +1823,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "review.sql:2: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO events(id) VALUES (1) ON CONFLICT (id) WHERE uuidv7() IS NOT NULL DO NOTHING;",
           "target": "banned-function-call"
         },
         {
@@ -1685,6 +1831,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "review.sql:3: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO events(id) VALUES (2) ON CONFLICT (id) WHERE uuidv7() IS NOT NULL DO UPDATE SET id = 2;",
           "target": "banned-function-call"
         },
         {
@@ -1692,6 +1839,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "review.sql:4: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO events(id) VALUES (3) ON CONFLICT ((uuidv7())) DO NOTHING;",
           "target": "banned-function-call"
         }
       ],
@@ -1712,6 +1860,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "review.sql:2: uuidv7() is banned in WHERE",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO events(id) VALUES (1) ON CONFLICT (id) WHERE uuidv7() IS NOT NULL DO NOTHING;",
           "target": "banned-function-call"
         },
         {
@@ -1719,6 +1868,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "review.sql:3: uuidv7() is banned in WHERE",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "INSERT INTO events(id) VALUES (2) ON CONFLICT (id) WHERE uuidv7() IS NOT NULL DO UPDATE SET id = 2;",
           "target": "banned-function-call"
         }
       ],
@@ -1739,6 +1889,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/shadow.ts:5: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "function label() { return 'SELECT 1 LIMIT 2' }",
           "target": "literal-limit"
         },
         {
@@ -1746,6 +1897,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "src/shadow.ts:6: executed SQL is not statically recoverable for shape policy",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(label())",
           "target": "literal-limit"
         }
       ],
@@ -1766,6 +1918,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 10,
           "message": "sql/table-pages.sql:10: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "TABLE orders",
           "target": "keyset-only-sweep"
         },
         {
@@ -1773,6 +1926,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "sql/table-pages.sql:2: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "TABLE orders ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1780,6 +1934,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "sql/table-pages.sql:3: walks every row of public.orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"public\".\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "TABLE public.orders ORDER BY orders.id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1787,6 +1942,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "sql/table-pages.sql:4: walks every row of Order Items in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"Order Items\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "TABLE \"Order Items\" ORDER BY id LIMIT 5;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1794,6 +1950,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "sql/table-pages.sql:5: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "(TABLE orders) ORDER BY id LIMIT $1;",
           "target": "keyset-only-sweep"
         },
         {
@@ -1801,6 +1958,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "src/table-pages.ts:2: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
           "rule": "postgres-sql-shape-policy",
+          "sourceLine": "query(`TABLE orders ORDER BY id LIMIT $1`);",
           "target": "keyset-only-sweep"
         }
       ],

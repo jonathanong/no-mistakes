@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "composite action step \"Custom\" sets \"uses\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "uses: actions/checkout@main",
           "target": "uses"
         }
       ],
@@ -60,6 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "composite action step \"Run\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "timeout-minutes: 5",
           "target": "timeout-minutes"
         }
       ],
@@ -164,6 +166,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "composite action step \"fallback\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "timeout-minutes: 1",
           "target": "timeout-minutes"
         }
       ],
@@ -184,6 +187,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "composite action step \"actions/checkout@main\" sets \"env\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "env:",
           "target": "env"
         }
       ],
@@ -204,6 +208,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "composite action step \"Flow\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "- {name: Flow, timeout-minutes: 4, run: echo, shell: bash}",
           "target": "timeout-minutes"
         }
       ],
@@ -224,6 +229,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "composite action step \"only-id\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "timeout-minutes: 1",
           "target": "timeout-minutes"
         }
       ],
@@ -243,7 +249,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/actions/my-action/action.yml",
           "line": 2,
           "message": ".github/actions/my-action/action.yml: invalid YAML (did not find expected ',' or '}' at line 2 column 1, while parsing a flow mapping at line 1 column 34)",
-          "rule": "github-actions-composite-step-schema"
+          "rule": "github-actions-composite-step-schema",
+          "sourceLine": ""
         }
       ],
       "warnings": []
@@ -263,6 +270,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "composite action step \"actions/checkout@main\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "timeout-minutes: 2",
           "target": "timeout-minutes"
         },
         {
@@ -270,6 +278,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "composite action step \"step #2\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "timeout-minutes: 3",
           "target": "timeout-minutes"
         }
       ],
@@ -338,6 +347,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "composite action step \"step #1\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "timeout-minutes: 1",
           "target": "timeout-minutes"
         }
       ],
@@ -370,6 +380,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "composite action step \"Do something\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
           "rule": "github-actions-composite-step-schema",
+          "sourceLine": "timeout-minutes: 5",
           "target": "timeout-minutes"
         }
       ],

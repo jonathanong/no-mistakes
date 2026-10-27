@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:both_names: table stores status column state next to lifecycle timestamps started_at, finished_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:both_names"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:generated_state: table stores status column state next to lifecycle timestamps sent_at, bounced_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:generated_state"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payment_intents: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payment_intents"
         },
         {
@@ -37,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payments: table stores status column status next to lifecycle timestamps payment_failed_at, paid_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payments"
         },
         {
@@ -44,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:precise_events: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:precise_events"
         }
       ],
@@ -64,6 +69,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:both_names: table stores status column state next to lifecycle timestamps started_at, finished_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:both_names"
         },
         {
@@ -71,6 +77,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:deliveries: table stores status column state next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:deliveries"
         },
         {
@@ -78,6 +85,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:generated_state: table stores status column state next to lifecycle timestamps sent_at, bounced_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:generated_state"
         },
         {
@@ -85,6 +93,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payment_intents: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payment_intents"
         },
         {
@@ -92,6 +101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payments: table stores status column status next to lifecycle timestamps payment_failed_at, paid_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payments"
         },
         {
@@ -99,6 +109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:precise_events: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:precise_events"
         }
       ],
@@ -119,6 +130,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:deliveries: use one source of truth",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:deliveries"
         }
       ],
@@ -163,6 +175,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:both_names: table stores status column state next to lifecycle timestamps started_at, finished_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:both_names"
         },
         {
@@ -170,6 +183,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:deliveries: table stores status column state next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:deliveries"
         },
         {
@@ -177,6 +191,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:generated_state: table stores status column state next to lifecycle timestamps sent_at, bounced_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:generated_state"
         },
         {
@@ -184,6 +199,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payments: table stores status column status next to lifecycle timestamps payment_failed_at, paid_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payments"
         },
         {
@@ -191,6 +207,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:precise_events: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:precise_events"
         }
       ],
@@ -211,6 +228,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:both_names: table stores status column state next to lifecycle timestamps started_at, finished_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:both_names"
         },
         {
@@ -218,6 +236,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:dated_approvals: table stores status column status next to lifecycle timestamps started_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:dated_approvals"
         },
         {
@@ -225,6 +244,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:deliveries: table stores status column state next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:deliveries"
         },
         {
@@ -232,6 +252,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:generated_state: table stores status column state next to lifecycle timestamps sent_at, bounced_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:generated_state"
         },
         {
@@ -239,6 +260,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:invoice_drafts: table stores status column status next to lifecycle timestamps sent_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:invoice_drafts"
         },
         {
@@ -246,6 +268,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payment_intents: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payment_intents"
         },
         {
@@ -253,6 +276,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payments: table stores status column status next to lifecycle timestamps payment_failed_at, paid_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payments"
         },
         {
@@ -260,6 +284,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:precise_events: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:precise_events"
         },
         {
@@ -267,6 +292,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:resent_jobs: table stores status column status next to lifecycle timestamps failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:resent_jobs"
         }
       ],
@@ -311,6 +337,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-status-with-lifecycle-timestamps allow entry: table:missing",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:missing"
         },
         {
@@ -318,6 +345,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payment_intents: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payment_intents"
         },
         {
@@ -325,6 +353,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:precise_events: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:precise_events"
         }
       ],
@@ -345,6 +374,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:both_names: table stores status column status next to lifecycle timestamps started_at, finished_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:both_names"
         },
         {
@@ -352,6 +382,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payment_intents: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payment_intents"
         },
         {
@@ -359,6 +390,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:payments: table stores status column status next to lifecycle timestamps payment_failed_at, paid_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:payments"
         },
         {
@@ -366,6 +398,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:precise_events: table stores status column status next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
           "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
           "target": "table:precise_events"
         }
       ],

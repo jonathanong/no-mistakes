@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "undeclared-executor-types.ts:11: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "unrelated.query('SELECT 6');",
           "target": "annotation"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "undeclared-executor-types.ts:13: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "function nested(omitted: unknown) { omitted.query('SELECT 7'); }",
           "target": "annotation"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "undeclared-executor-types.ts:14: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "{ const omitted = unrelated; omitted.query('SELECT 8'); }",
           "target": "annotation"
         },
         {
@@ -37,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "undeclared-executor-types.ts:15: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.query('SELECT 9');",
           "target": "annotation"
         },
         {
@@ -44,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "undeclared-executor-types.ts:18: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query('SELECT 10');",
           "target": "annotation"
         },
         {
@@ -51,6 +56,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "undeclared-executor-types.ts:20: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "annotated.query('SELECT 11');",
           "target": "annotation"
         },
         {
@@ -58,6 +64,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "undeclared-executor-types.ts:21: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "const arrow = (receiver: Client) => receiver.query('SELECT 12');",
           "target": "annotation"
         },
         {
@@ -65,6 +72,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": "undeclared-executor-types.ts:23: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "receiver.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -72,6 +80,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": "undeclared-executor-types.ts:24: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "untyped.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -79,6 +88,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "undeclared-executor-types.ts:25: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "primitive.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -86,6 +96,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": "undeclared-executor-types.ts:34: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "acquire().query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -93,6 +104,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 36,
           "message": "undeclared-executor-types.ts:36: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "alias.query('SELECT 13');",
           "target": "annotation"
         },
         {
@@ -100,6 +112,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 40,
           "message": "undeclared-executor-types.ts:40: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "mutable.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -107,6 +120,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 43,
           "message": "undeclared-executor-types.ts:43: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "local.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -114,6 +128,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 45,
           "message": "undeclared-executor-types.ts:45: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "Client.query('SELECT ignored'); // Type-only imports have no runtime receiver.",
           "target": "annotation"
         },
         {
@@ -121,6 +136,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 48,
           "message": "undeclared-executor-types.ts:48: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "explicitlyDeclared.query('SELECT unresolved');",
           "target": "annotation"
         },
         {
@@ -128,6 +144,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "declared.query('SELECT 1');",
           "target": "annotation"
         },
         {
@@ -135,6 +152,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "undeclared-executor-types.ts:7: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.query('SELECT 2');",
           "target": "annotation"
         },
         {
@@ -142,6 +160,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "undeclared-executor-types.ts:8: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted['query']('SELECT 3');",
           "target": "annotation"
         }
       ],
@@ -163,6 +182,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "undeclared-constructor-alias.ts:4: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "connection.query(\"SELECT 1\"); // diagnostic",
           "target": "undeclared-executor-type"
         }
       ],
@@ -184,6 +204,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "undeclared-executor-types.ts:11: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "unrelated.query('SELECT 6');",
           "target": "annotation"
         },
         {
@@ -191,6 +212,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 13,
           "message": "undeclared-executor-types.ts:13: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "function nested(omitted: unknown) { omitted.query('SELECT 7'); }",
           "target": "annotation"
         },
         {
@@ -198,6 +220,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "undeclared-executor-types.ts:14: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "{ const omitted = unrelated; omitted.query('SELECT 8'); }",
           "target": "annotation"
         },
         {
@@ -205,6 +228,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "undeclared-executor-types.ts:15: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.query('SELECT 9');",
           "target": "annotation"
         },
         {
@@ -212,6 +236,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "undeclared-executor-types.ts:18: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query('SELECT 10');",
           "target": "annotation"
         },
         {
@@ -219,6 +244,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "undeclared-executor-types.ts:20: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "annotated.query('SELECT 11');",
           "target": "annotation"
         },
         {
@@ -226,6 +252,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "undeclared-executor-types.ts:21: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "const arrow = (receiver: Client) => receiver.query('SELECT 12');",
           "target": "annotation"
         },
         {
@@ -233,6 +260,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 23,
           "message": "undeclared-executor-types.ts:23: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "receiver.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -240,6 +268,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 24,
           "message": "undeclared-executor-types.ts:24: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "untyped.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -247,6 +276,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 25,
           "message": "undeclared-executor-types.ts:25: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "primitive.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -254,6 +284,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 34,
           "message": "undeclared-executor-types.ts:34: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "acquire().query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -261,6 +292,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 36,
           "message": "undeclared-executor-types.ts:36: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "alias.query('SELECT 13');",
           "target": "annotation"
         },
         {
@@ -268,6 +300,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 40,
           "message": "undeclared-executor-types.ts:40: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "mutable.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -275,6 +308,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 43,
           "message": "undeclared-executor-types.ts:43: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "local.query('SELECT ignored');",
           "target": "annotation"
         },
         {
@@ -282,6 +316,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 45,
           "message": "undeclared-executor-types.ts:45: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "Client.query('SELECT ignored'); // Type-only imports have no runtime receiver.",
           "target": "annotation"
         },
         {
@@ -289,6 +324,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 48,
           "message": "undeclared-executor-types.ts:48: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "explicitlyDeclared.query('SELECT unresolved');",
           "target": "annotation"
         },
         {
@@ -296,6 +332,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "declared.query('SELECT 1');",
           "target": "annotation"
         },
         {
@@ -303,6 +340,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "undeclared-executor-types.ts:7: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.query('SELECT 2');",
           "target": "annotation"
         },
         {
@@ -310,6 +348,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "undeclared-executor-types.ts:8: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted['query']('SELECT 3');",
           "target": "annotation"
         }
       ],
@@ -338,6 +377,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "undeclared-executor-types.ts:15: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.query('SELECT 9');",
           "target": "undeclared-executor-type"
         },
         {
@@ -345,6 +385,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "undeclared-executor-types.ts:18: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db/client`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query('SELECT 10');",
           "target": "undeclared-executor-type"
         },
         {
@@ -352,6 +393,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "undeclared-executor-types.ts:20: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "annotated.query('SELECT 11');",
           "target": "undeclared-executor-type"
         },
         {
@@ -359,6 +401,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "undeclared-executor-types.ts:21: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "const arrow = (receiver: Client) => receiver.query('SELECT 12');",
           "target": "undeclared-executor-type"
         },
         {
@@ -366,6 +409,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 36,
           "message": "undeclared-executor-types.ts:36: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db/client`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "alias.query('SELECT 13');",
           "target": "undeclared-executor-type"
         },
         {
@@ -373,6 +417,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 48,
           "message": "undeclared-executor-types.ts:48: postgres-require-query-annotation application #0 has unresolved SQL for unresolved-configured-executor-receiver: configured executor receiver of type `Executor` from `@example/db` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "explicitlyDeclared.query('SELECT unresolved');",
           "target": "unresolved-configured-executor-receiver"
         },
         {
@@ -380,6 +425,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "undeclared-executor-types.ts:7: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.query('SELECT 2');",
           "target": "undeclared-executor-type"
         },
         {
@@ -387,6 +433,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "undeclared-executor-types.ts:8: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted['query']('SELECT 3');",
           "target": "undeclared-executor-type"
         },
         {
@@ -394,6 +441,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "undeclared-executor-types.ts:9: postgres-require-query-annotation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.execute('SELECT 4');",
           "target": "undeclared-executor-type"
         }
       ],
@@ -407,6 +455,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "declared.query('SELECT 1');",
           "target": "annotation"
         }
       ],
@@ -428,6 +477,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "declared.query('SELECT 1');",
           "target": "annotation"
         }
       ],
@@ -450,6 +500,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 15,
           "message": "undeclared-executor-types.ts:15: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.query('SELECT 9');",
           "target": "undeclared-executor-type"
         },
         {
@@ -458,6 +509,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 20,
           "message": "undeclared-executor-types.ts:20: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "annotated.query('SELECT 11');",
           "target": "undeclared-executor-type"
         },
         {
@@ -466,6 +518,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 21,
           "message": "undeclared-executor-types.ts:21: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "const arrow = (receiver: Client) => receiver.query('SELECT 12');",
           "target": "undeclared-executor-type"
         },
         {
@@ -474,6 +527,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 48,
           "message": "undeclared-executor-types.ts:48: configured executor receiver of type `Executor` from `@example/db` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "explicitlyDeclared.query('SELECT unresolved');",
           "target": "unresolved-configured-executor-receiver"
         },
         {
@@ -482,6 +536,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "undeclared-executor-types.ts:7: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.query('SELECT 2');",
           "target": "undeclared-executor-type"
         },
         {
@@ -490,6 +545,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "undeclared-executor-types.ts:8: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted['query']('SELECT 3');",
           "target": "undeclared-executor-type"
         },
         {
@@ -498,6 +554,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "undeclared-executor-types.ts:9: undeclared executor type `PoolClient` from `@example/db`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "omitted.execute('SELECT 4');",
           "target": "undeclared-executor-type"
         },
         {
@@ -506,6 +563,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 18,
           "message": "undeclared-executor-types.ts:18: undeclared executor type `PoolClient` from `@example/db/client`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "client.query('SELECT 10');",
           "target": "undeclared-executor-type"
         },
         {
@@ -514,6 +572,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 36,
           "message": "undeclared-executor-types.ts:36: undeclared executor type `PoolClient` from `@example/db/client`; add `PoolClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "alias.query('SELECT 13');",
           "target": "undeclared-executor-type"
         },
         {
@@ -521,6 +580,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "undeclared-executor-types.ts:6: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
+          "sourceLine": "declared.query('SELECT 1');",
           "target": "annotation"
         }
       ],

@@ -10,6 +10,8 @@ mod cli_check_rule_severity;
 mod cli_shellcheck_policy;
 
 // Share stateless fixture helpers across the modules in this harness.
+#[path = "common/check_json_case.rs"]
+mod check_json_case;
 #[path = "common/check_json_snapshot.rs"]
 mod check_json_snapshot;
 #[path = "common/git_tracked_rule.rs"]
@@ -148,6 +150,20 @@ mod cli_rra_snapshot_strict_package_layout;
 mod cli_rra_snapshot_structured_config_policy;
 #[path = "cli_rra_snapshot_unconstructed_error_class.rs"]
 mod cli_rra_snapshot_unconstructed_error_class;
+#[path = "cli_rrb_snapshot_lexical.rs"]
+mod cli_rrb_snapshot_lexical;
+#[path = "cli_rrb_snapshot_nextjs.rs"]
+mod cli_rrb_snapshot_nextjs;
+#[path = "cli_rrb_snapshot_playwright.rs"]
+mod cli_rrb_snapshot_playwright;
+#[path = "cli_rrb_snapshot_policy.rs"]
+mod cli_rrb_snapshot_policy;
+#[path = "cli_rrb_snapshot_scope.rs"]
+mod cli_rrb_snapshot_scope;
+#[path = "cli_rrb_snapshot_shellcheck.rs"]
+mod cli_rrb_snapshot_shellcheck;
+#[path = "cli_rrb_snapshot_tests.rs"]
+mod cli_rrb_snapshot_tests;
 
 #[path = "cli_check_git_identity_prefixes.rs"]
 mod cli_check_git_identity_prefixes;

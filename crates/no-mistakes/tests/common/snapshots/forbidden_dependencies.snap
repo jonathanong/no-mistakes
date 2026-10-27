@@ -17,6 +17,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship all --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import { processImage } from \"../lib/image.mts\";",
           "target": "sharp"
         }
       ],
@@ -32,6 +33,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-dependencies` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file forbidden-dependencies",
           "target": "forbidden-dependencies"
         }
       ],
@@ -46,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "backend/[as]*/**/*.mts reaches forbidden file 'shared/testing/helper.mts' via import. Reproduce: no-mistakes dependencies 'backend/services/service.mts' --filter 'shared/testing/helper.mts' --relationship import --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import '../../shared/runtime.mjs';",
           "target": "shared/testing/helper.mts"
         }
       ],
@@ -67,6 +70,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship all --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import { processImage } from \"../lib/image.mts\";",
           "target": "sharp"
         }
       ],
@@ -88,6 +92,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "web/app reaches forbidden module 'fs' via import. Reproduce: no-mistakes dependencies 'web/app/nested/page.ts' --target-module 'fs' --relationship import --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import '../../shared/server';",
           "target": "fs"
         },
         {
@@ -96,6 +101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "web/app reaches forbidden module 'fs' via import. Reproduce: no-mistakes dependencies 'web/app/page.ts' --target-module 'fs' --relationship import --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import 'fs';",
           "target": "fs"
         }
       ],
@@ -111,6 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `forbidden-dependencies` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file forbidden-dependencies",
           "target": "forbidden-dependencies"
         }
       ],
@@ -125,6 +132,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "ci/check-coverage.mts reaches forbidden file 'tests/other.mts' via import. Reproduce: no-mistakes dependencies 'ci/check-coverage.mts' --filter 'tests/other.mts' --relationship import --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "// Allowing this helper must not hide the forbidden target it imports.",
           "target": "tests/other.mts"
         },
         {
@@ -133,6 +141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "ci/check-health.mts reaches forbidden file 'shared/testing/coverage.mts' via import. Reproduce: no-mistakes dependencies 'ci/check-health.mts' --filter 'shared/testing/coverage.mts' --relationship import --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import '../shared/testing/helper.mjs';",
           "target": "shared/testing/coverage.mts"
         },
         {
@@ -141,6 +150,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "ci/check-health.mts reaches forbidden file 'tests/other.mts' via import. Reproduce: no-mistakes dependencies 'ci/check-health.mts' --filter 'tests/other.mts' --relationship import --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import '../shared/testing/helper.mjs';",
           "target": "tests/other.mts"
         }
       ],
@@ -174,6 +184,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship import --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import { processImage } from \"../lib/image.mts\";",
           "target": "sharp"
         }
       ],
@@ -195,6 +206,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/api.mts reaches forbidden file 'entrypoints/worker.mts' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --filter 'entrypoints/worker.mts' --relationship all --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import { run } from \"./worker.mts\";",
           "target": "entrypoints/worker.mts"
         }
       ],
@@ -216,6 +228,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/api.mts reaches forbidden module '@scope/heavy' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module '@scope/heavy' --relationship all --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import { heavy } from \"@scope/heavy\";",
           "target": "@scope/heavy"
         }
       ],
@@ -237,6 +250,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/api.mts reaches forbidden module 'sharp' via type-import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship import-type --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import type { Sharp } from \"sharp\";",
           "target": "sharp"
         }
       ],
@@ -258,6 +272,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/api.mts reaches forbidden file 'packages/local/src/worker.mts' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --filter 'packages/local/src/worker.mts' --relationship import --relationship workspace --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import '@local/pkg'",
           "target": "packages/local/src/worker.mts"
         },
         {
@@ -266,6 +281,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship import --relationship workspace --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import '@local/pkg'",
           "target": "sharp"
         }
       ],
@@ -287,6 +303,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "src/**/*.mts reaches forbidden file 'tests/helper.mts' via import. Reproduce: no-mistakes dependencies 'src/entry.mts' --filter 'tests/helper.mts' --relationship import --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import '../tests/helper.mjs';",
           "target": "tests/helper.mts"
         }
       ],
@@ -308,6 +325,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship all --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import sharp from \"sharp\";",
           "target": "sharp"
         },
         {
@@ -316,6 +334,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/worker.mts reaches forbidden module 'canvas' via import. Reproduce: no-mistakes dependencies 'entrypoints/worker.mts' --target-module 'canvas' --relationship all --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import { createCanvas } from \"canvas\";",
           "target": "canvas"
         }
       ],
@@ -349,6 +368,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship all --format json",
           "rule": "forbidden-dependencies",
+          "sourceLine": "import { processImage } from \"../lib/image.mts\";",
           "target": "sharp"
         }
       ],

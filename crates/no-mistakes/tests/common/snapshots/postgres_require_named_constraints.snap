@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "migrations/001.sql:1: ALTER TABLE ADD CHECK constraints must have an explicit name for validation pairing",
           "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE children ADD CHECK (parent_id IS NOT NULL) NOT VALID;",
           "target": "children.CHECK"
         }
       ],
@@ -48,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "migrations/001.sql:2: ALTER TABLE ADD FOREIGN KEY constraints must have an explicit name for validation pairing",
           "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE children ADD FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE NOT VALID;",
           "target": "children.FOREIGN KEY"
         }
       ],
@@ -68,6 +70,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "migrations/001.sql:1: ALTER TABLE ADD FOREIGN KEY constraints must have an explicit name for validation pairing",
           "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE children ADD FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE NOT VALID;",
           "target": "children.FOREIGN KEY"
         }
       ],

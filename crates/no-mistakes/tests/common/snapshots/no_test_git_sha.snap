@@ -15,7 +15,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/example.test.ts",
           "line": 1,
           "message": "tests/example.test.ts:1: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
-          "rule": "no-test-git-sha"
+          "rule": "no-test-git-sha",
+          "sourceLine": "const literal = \"0123456789abcdef0123456789abcdef01234567\";"
         }
       ],
       "warnings": []
@@ -34,13 +35,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/example.test.ts",
           "line": 1,
           "message": "tests/example.test.ts:1: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
-          "rule": "no-test-git-sha"
+          "rule": "no-test-git-sha",
+          "sourceLine": "const literal = \"0123456789abcdef0123456789abcdef01234567\";"
         },
         {
           "file": "tests/example.test.ts",
           "line": 2,
           "message": "tests/example.test.ts:2: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
-          "rule": "no-test-git-sha"
+          "rule": "no-test-git-sha",
+          "sourceLine": "const generated = syntheticSha(\"0123456789abcdef0123456789abcdef01234567\");"
         }
       ],
       "warnings": []
@@ -71,7 +74,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tests/boundaries.test.ts",
           "line": 1,
           "message": "tests/boundaries.test.ts:1: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
-          "rule": "no-test-git-sha"
+          "rule": "no-test-git-sha",
+          "sourceLine": "const underscored = \"revision_0123456789abcdef0123456789abcdef01234567_fixture\""
         }
       ],
       "warnings": []
@@ -90,7 +94,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/value.ts",
           "line": 1,
           "message": "src/value.ts:1: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
-          "rule": "no-test-git-sha"
+          "rule": "no-test-git-sha",
+          "sourceLine": "export const revision = \"0123456789abcdef0123456789abcdef01234567\";"
         }
       ],
       "warnings": []

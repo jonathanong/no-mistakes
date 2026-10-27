@@ -17,6 +17,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -38,6 +39,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> 3d-domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -59,6 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '7zip-bin' through package.json dependency chain: @acme/app -> 7zip-bin. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "7zip-bin"
         }
       ],
@@ -80,6 +83,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -113,6 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@fixture/api reaches forbidden package 'is-odd' through package.json dependency chain: @fixture/api -> @fixture/shared -> is-odd. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{\"name\":\"@fixture/shared\",\"private\":true,\"dependencies\":{\"is-odd\":\"3.0.1\"}}",
           "target": "is-odd"
         }
       ],
@@ -132,7 +137,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "snapshot-config.yml",
           "line": 9,
           "message": "forbidden-workspace-closure: forbidden-workspace-closure: lockfile pnpm-lock.yaml could not be parsed",
-          "rule": "forbidden-workspace-closure"
+          "rule": "forbidden-workspace-closure",
+          "sourceLine": "lockfile: pnpm-lock.yaml"
         }
       ],
       "warnings": []
@@ -151,7 +157,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "snapshot-config.yml",
           "line": 9,
           "message": "forbidden-workspace-closure: forbidden-workspace-closure: lockfile pnpm-lock.yaml has a non-env document before the project lockfile",
-          "rule": "forbidden-workspace-closure"
+          "rule": "forbidden-workspace-closure",
+          "sourceLine": "lockfile: pnpm-lock.yaml"
         }
       ],
       "warnings": []
@@ -172,6 +179,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@fixture/api reaches forbidden package 'is-odd' through package.json dependency chain: @fixture/api -> @fixture/shared -> is-odd. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{\"name\":\"@fixture/shared\",\"private\":true,\"dependencies\":{\"is-odd\":\"3.0.1\"}}",
           "target": "is-odd"
         }
       ],
@@ -193,6 +201,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -214,6 +223,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -235,6 +245,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret-optional' through package.json dependency chain: @acme/app -> @acme/secret-optional. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret-optional"
         }
       ],
@@ -256,6 +267,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -277,6 +289,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -298,6 +311,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret-peer' through package.json dependency chain: @acme/app -> @acme/secret-peer. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret-peer"
         }
       ],
@@ -329,7 +343,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "snapshot-config.yml",
           "line": 8,
           "message": "forbidden-workspace-closure: forbidden-workspace-closure: lockfile pnpm-lock.yaml has a non-env document before the project lockfile",
-          "rule": "forbidden-workspace-closure"
+          "rule": "forbidden-workspace-closure",
+          "sourceLine": "lockfile: pnpm-lock.yaml"
         }
       ],
       "warnings": []
@@ -350,6 +365,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -371,6 +387,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -404,6 +421,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/root reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/root -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -425,6 +443,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -446,6 +465,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -467,6 +487,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -488,6 +509,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],
@@ -509,6 +531,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
           "rule": "forbidden-workspace-closure",
+          "sourceLine": "{",
           "target": "@acme/secret"
         }
       ],

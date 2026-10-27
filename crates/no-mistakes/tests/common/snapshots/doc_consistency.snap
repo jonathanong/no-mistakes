@@ -1,0 +1,178 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "CLAUDE.md",
+          "line": 1,
+          "message": "CLAUDE.md: missing required heading \"## Related issues\"",
+          "rule": "doc-consistency",
+          "sourceLine": "# Guide"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "patterns": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "docs/apostrophe-tracked.mdx",
+          "line": 3,
+          "message": "directive for `doc-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "PIN-301 <!-- no-mistakes-disable-line doc-consistency -->",
+          "target": "doc-consistency"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/apostrophe-disabled.markdown",
+          "line": 5,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-203"
+        },
+        {
+          "file": "docs/apostrophe-disabled.md",
+          "line": 4,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-104"
+        },
+        {
+          "file": "docs/apostrophe-tracked.mdx",
+          "line": 3,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-301 <!-- no-mistakes-disable-line doc-consistency -->"
+        },
+        {
+          "file": "docs/crlf.md",
+          "line": 3,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "café PIN-444"
+        },
+        {
+          "file": "docs/crlf.md",
+          "line": 5,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-555"
+        },
+        {
+          "file": "docs/dash-disabled.md",
+          "line": 3,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-111"
+        },
+        {
+          "file": "docs/hash-disabled.md",
+          "line": 3,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-109"
+        },
+        {
+          "file": "docs/line-disabled.md",
+          "line": 3,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-103"
+        },
+        {
+          "file": "docs/living.md",
+          "line": 1,
+          "message": "docs/living.md: contains banned substring \"legacy API\"",
+          "rule": "doc-consistency",
+          "sourceLine": "# Living"
+        },
+        {
+          "file": "docs/living.md",
+          "line": 11,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "later PIN-333"
+        },
+        {
+          "file": "docs/living.md",
+          "line": 3,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "café PIN-777"
+        },
+        {
+          "file": "docs/living.md",
+          "line": 5,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-111 and PIN-222"
+        },
+        {
+          "file": "docs/living.md",
+          "line": 7,
+          "message": "Move this secret block to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "BEGIN-SECRET"
+        },
+        {
+          "file": "docs/next-disabled.md",
+          "line": 3,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-105"
+        },
+        {
+          "file": "docs/overlap.md",
+          "line": 1,
+          "message": "repeated token",
+          "rule": "doc-consistency",
+          "sourceLine": "ZZZZ"
+        },
+        {
+          "file": "docs/overlap.md",
+          "line": 2,
+          "message": "repeated token",
+          "rule": "doc-consistency",
+          "sourceLine": "ZZ"
+        },
+        {
+          "file": "docs/slash-disabled.md",
+          "line": 3,
+          "message": "Move this pin to versions.md.",
+          "rule": "doc-consistency",
+          "sourceLine": "PIN-107"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

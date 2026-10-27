@@ -15,13 +15,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "opened/tsconfig.json",
           "line": 1,
           "message": "opened/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project opened/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"include\":[\"index.ts\"]}"
         },
         {
           "file": "unreachable/tsconfig.json",
           "line": 1,
           "message": "unreachable/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project unreachable/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"include\":[\"index.ts\"]}"
         }
       ],
       "warnings": []
@@ -41,6 +43,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "allowProjects entries `./collision/tsconfig.json` and `collision/tsconfig.json` normalize to the same path `collision/tsconfig.json`",
           "rule": "tsconfig-gate-coverage",
+          "sourceLine": "version: 2",
           "target": "collision/tsconfig.json"
         },
         {
@@ -48,6 +51,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "allowProjects entry `../outside/tsconfig.json` must be a static repository-relative tsconfig path",
           "rule": "tsconfig-gate-coverage",
+          "sourceLine": "version: 2",
           "target": "../outside/tsconfig.json"
         },
         {
@@ -55,6 +59,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "allowProjects entry `allowed/tsconfig.json` must include a non-empty reason",
           "rule": "tsconfig-gate-coverage",
+          "sourceLine": "version: 2",
           "target": "allowed/tsconfig.json"
         },
         {
@@ -62,6 +67,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "allowProjects entry `docs/readme.json` is not a tsconfig path",
           "rule": "tsconfig-gate-coverage",
+          "sourceLine": "version: 2",
           "target": "docs/readme.json"
         },
         {
@@ -69,13 +75,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "stale allowProjects entry `gone/tsconfig.json` does not name a tracked tsconfig; remove it",
           "rule": "tsconfig-gate-coverage",
+          "sourceLine": "version: 2",
           "target": "gone/tsconfig.json"
         },
         {
           "file": "allowed/tsconfig.json",
           "line": 1,
           "message": "allowed/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project allowed/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         }
       ],
       "warnings": []
@@ -106,7 +114,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "app/tsconfig.json",
           "line": 1,
           "message": "app/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project app/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"compilerOptions\":{\"noEmit\":true},\"include\":[\"index.ts\"]}"
         }
       ],
       "warnings": []
@@ -149,43 +158,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "failing-action/tsconfig.json",
           "line": 1,
           "message": "failing-action/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project failing-action/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "invalid/tsconfig.json",
           "line": 1,
           "message": "invalid/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project invalid/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "malformed-metadata/tsconfig.json",
           "line": 1,
           "message": "malformed-metadata/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project malformed-metadata/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "missing-dockerfile/tsconfig.json",
           "line": 1,
           "message": "missing-dockerfile/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project missing-dockerfile/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "missing-entrypoint/tsconfig.json",
           "line": 1,
           "message": "missing-entrypoint/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project missing-entrypoint/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "missing-working-directory/tsconfig.json",
           "line": 1,
           "message": "missing-working-directory/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project missing-working-directory/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "missing/tsconfig.json",
           "line": 1,
           "message": "missing/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project missing/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         }
       ],
       "warnings": []
@@ -204,13 +220,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/bad.yml",
           "line": 1,
           "message": ".github/workflows/bad.yml: could not parse workflow YAML: did not find expected ',' or '}' at line 2 column 1, while parsing a flow mapping at line 1 column 18",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "jobs: { broken: {{ invalid"
         },
         {
           "file": "app/tsconfig.json",
           "line": 1,
           "message": "app/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project app/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         }
       ],
       "warnings": []
@@ -229,7 +247,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "tools/tsconfig.tools.json",
           "line": 1,
           "message": "tools/tsconfig.tools.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project tools/tsconfig.tools.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         }
       ],
       "warnings": []
@@ -248,7 +267,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "app/tsconfig.json",
           "line": 1,
           "message": "app/tsconfig.json: tsconfig has no local typecheck registration; add an `always: true` `checks.commands` entry with `fileArgs: none` that statically runs `tsc --noEmit --project app/tsconfig.json`, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         }
       ],
       "warnings": []
@@ -267,7 +287,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "app/tsconfig.json",
           "line": 1,
           "message": "app/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project app/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"compilerOptions\":{\"noEmit\":true},\"include\":[\"index.ts\"]}"
         }
       ],
       "warnings": []
@@ -286,13 +307,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "direct/tsconfig.json",
           "line": 1,
           "message": "direct/tsconfig.json: effective compilerOptions.noCheck is true, so tsc cannot enforce ordinary type errors; remove or disable noCheck, or add a reasoned allowProjects entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{"
         },
         {
           "file": "inherited/tsconfig.json",
           "line": 1,
           "message": "inherited/tsconfig.json: effective compilerOptions.noCheck is true, so tsc cannot enforce ordinary type errors; remove or disable noCheck, or add a reasoned allowProjects entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{"
         }
       ],
       "warnings": []
@@ -311,67 +334,78 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "constant-nonblocking-step/tsconfig.json",
           "line": 1,
           "message": "constant-nonblocking-step/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project constant-nonblocking-step/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "disabled-job/tsconfig.json",
           "line": 1,
           "message": "disabled-job/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project disabled-job/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "disabled-step/tsconfig.json",
           "line": 1,
           "message": "disabled-step/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project disabled-step/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "dynamic-runner/tsconfig.json",
           "line": 1,
           "message": "dynamic-runner/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project dynamic-runner/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "expression/tsconfig.json",
           "line": 1,
           "message": "expression/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project expression/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "failure-mode-mutated/tsconfig.json",
           "line": 1,
           "message": "failure-mode-mutated/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project failure-mode-mutated/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "implicit-windows-shell/tsconfig.json",
           "line": 1,
           "message": "implicit-windows-shell/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project implicit-windows-shell/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "missing-runner/tsconfig.json",
           "line": 1,
           "message": "missing-runner/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project missing-runner/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "non-posix-shell/tsconfig.json",
           "line": 1,
           "message": "non-posix-shell/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project non-posix-shell/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "nonblocking-job/tsconfig.json",
           "line": 1,
           "message": "nonblocking-job/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project nonblocking-job/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "nonblocking-step/tsconfig.json",
           "line": 1,
           "message": "nonblocking-step/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project nonblocking-step/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         }
       ],
       "warnings": []
@@ -390,7 +424,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "app/tsconfig.json",
           "line": 1,
           "message": "app/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project app/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"include\":[\"src\"]}"
         }
       ],
       "warnings": []
@@ -421,25 +456,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "omitted-job/tsconfig.json",
           "line": 1,
           "message": "omitted-job/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project omitted-job/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"include\": [\"index.ts\"]}"
         },
         {
           "file": "omitted-step/tsconfig.json",
           "line": 1,
           "message": "omitted-step/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project omitted-step/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"include\": [\"index.ts\"]}"
         },
         {
           "file": "push-default/tsconfig.json",
           "line": 1,
           "message": "push-default/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project push-default/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"include\": [\"index.ts\"]}"
         },
         {
           "file": "schedule-default/tsconfig.json",
           "line": 1,
           "message": "schedule-default/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project schedule-default/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"include\": [\"index.ts\"]}"
         }
       ],
       "warnings": []
@@ -458,325 +497,379 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "action-outcome/tsconfig.json",
           "line": 1,
           "message": "action-outcome/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project action-outcome/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "branch-main-only/tsconfig.json",
           "line": 1,
           "message": "branch-main-only/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project branch-main-only/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "checkout/tsconfig.json",
           "line": 1,
           "message": "checkout/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project checkout/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "composite-remote/tsconfig.json",
           "line": 1,
           "message": "composite-remote/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project composite-remote/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "composite-secret/tsconfig.json",
           "line": 1,
           "message": "composite-secret/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project composite-secret/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "composite/tsconfig.json",
           "line": 1,
           "message": "composite/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project composite/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "conclusion-blocked/tsconfig.json",
           "line": 1,
           "message": "conclusion-blocked/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project conclusion-blocked/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "container-dependent/tsconfig.json",
           "line": 1,
           "message": "container-dependent/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project container-dependent/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "docker-args-invalid/tsconfig.json",
           "line": 1,
           "message": "docker-args-invalid/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project docker-args-invalid/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "docker-invalid/tsconfig.json",
           "line": 1,
           "message": "docker-invalid/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project docker-invalid/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "duplicate-service-port/tsconfig.json",
           "line": 1,
           "message": "duplicate-service-port/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project duplicate-service-port/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "dynamic-continue-on-error/tsconfig.json",
           "line": 1,
           "message": "dynamic-continue-on-error/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project dynamic-continue-on-error/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "dynamic-dependent/tsconfig.json",
           "line": 1,
           "message": "dynamic-dependent/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project dynamic-dependent/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "dynamic-shell/tsconfig.json",
           "line": 1,
           "message": "dynamic-shell/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project dynamic-shell/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "dynamic-working-directory/tsconfig.json",
           "line": 1,
           "message": "dynamic-working-directory/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project dynamic-working-directory/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "env/tsconfig.json",
           "line": 1,
           "message": "env/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project env/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "fail-fast-default/tsconfig.json",
           "line": 1,
           "message": "fail-fast-default/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project fail-fast-default/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "fail-fast-true/tsconfig.json",
           "line": 1,
           "message": "fail-fast-true/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project fail-fast-true/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "file-working-directory/tsconfig.json",
           "line": 1,
           "message": "file-working-directory/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project file-working-directory/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "fork-secret/tsconfig.json",
           "line": 1,
           "message": "fork-secret/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project fork-secret/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "hidden-ref/tsconfig.json",
           "line": 1,
           "message": "hidden-ref/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project hidden-ref/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "incompatible-hosted-runner/tsconfig.json",
           "line": 1,
           "message": "incompatible-hosted-runner/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project incompatible-hosted-runner/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "input-condition/tsconfig.json",
           "line": 1,
           "message": "input-condition/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project input-condition/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "job-status/tsconfig.json",
           "line": 1,
           "message": "job-status/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project job-status/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "join/tsconfig.json",
           "line": 1,
           "message": "join/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project join/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "json-error/tsconfig.json",
           "line": 1,
           "message": "json-error/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project json-error/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "logical-and/tsconfig.json",
           "line": 1,
           "message": "logical-and/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project logical-and/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "mapping-env/tsconfig.json",
           "line": 1,
           "message": "mapping-env/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project mapping-env/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "matrix-object/tsconfig.json",
           "line": 1,
           "message": "matrix-object/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project matrix-object/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "matrix/tsconfig.json",
           "line": 1,
           "message": "matrix/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project matrix/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "needs-action/tsconfig.json",
           "line": 1,
           "message": "needs-action/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project needs-action/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "non-pipefail-pipeline/tsconfig.json",
           "line": 1,
           "message": "non-pipefail-pipeline/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project non-pipefail-pipeline/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "output/tsconfig.json",
           "line": 1,
           "message": "output/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project output/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "pr-target/tsconfig.json",
           "line": 1,
           "message": "pr-target/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project pr-target/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "pre-if/tsconfig.json",
           "line": 1,
           "message": "pre-if/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project pre-if/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "pull-request-event-base-ref/tsconfig.json",
           "line": 1,
           "message": "pull-request-event-base-ref/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project pull-request-event-base-ref/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "pull-request-merged/tsconfig.json",
           "line": 1,
           "message": "pull-request-merged/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project pull-request-merged/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "push-head-ref/tsconfig.json",
           "line": 1,
           "message": "push-head-ref/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project push-head-ref/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "ref-type/tsconfig.json",
           "line": 1,
           "message": "ref-type/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project ref-type/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "runner-dependent/tsconfig.json",
           "line": 1,
           "message": "runner-dependent/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project runner-dependent/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "runner/tsconfig.json",
           "line": 1,
           "message": "runner/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project runner/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "script/tsconfig.json",
           "line": 1,
           "message": "script/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project script/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "sparse-checkout/tsconfig.json",
           "line": 1,
           "message": "sparse-checkout/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project sparse-checkout/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "step-env/tsconfig.json",
           "line": 1,
           "message": "step-env/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project step-env/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "strategy-dependent/tsconfig.json",
           "line": 1,
           "message": "strategy-dependent/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project strategy-dependent/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "strategy-index/tsconfig.json",
           "line": 1,
           "message": "strategy-index/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project strategy-index/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "tag-ref/tsconfig.json",
           "line": 1,
           "message": "tag-ref/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project tag-ref/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "tags-only/tsconfig.json",
           "line": 1,
           "message": "tags-only/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project tags-only/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "to-json-structured/tsconfig.json",
           "line": 1,
           "message": "to-json-structured/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project to-json-structured/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "to-json/tsconfig.json",
           "line": 1,
           "message": "to-json/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project to-json/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "trigger-typo/tsconfig.json",
           "line": 1,
           "message": "trigger-typo/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project trigger-typo/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "wildcard-exclusion/tsconfig.json",
           "line": 1,
           "message": "wildcard-exclusion/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project wildcard-exclusion/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "wildcard-negation/tsconfig.json",
           "line": 1,
           "message": "wildcard-negation/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project wildcard-negation/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "workflow-job-output/tsconfig.json",
           "line": 1,
           "message": "workflow-job-output/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project workflow-job-output/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         }
       ],
       "warnings": []
@@ -807,25 +900,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "caller-only/tsconfig.json",
           "line": 1,
           "message": "caller-only/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project caller-only/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "caller-only/tsconfig.json",
           "line": 1,
           "message": "caller-only/tsconfig.json: tsconfig has no local typecheck registration; add an `always: true` `checks.commands` entry with `fileArgs: none` that statically runs `tsc --noEmit --project caller-only/tsconfig.json`, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{}"
         },
         {
           "file": "invalid-literal-fail-fast/tsconfig.json",
           "line": 1,
           "message": "invalid-literal-fail-fast/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project invalid-literal-fail-fast/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{"
         },
         {
           "file": "invalid-literal-matrix/tsconfig.json",
           "line": 1,
           "message": "invalid-literal-matrix/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project invalid-literal-matrix/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{"
         }
       ],
       "warnings": []
@@ -856,7 +953,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "app/tsconfig.json",
           "line": 1,
           "message": "app/tsconfig.json: tsconfig has no CI typecheck registration; add a static `tsc --noEmit --project app/tsconfig.json` command to a configured workflow, or add a reasoned `allowProjects` entry",
-          "rule": "tsconfig-gate-coverage"
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "{\"compilerOptions\":{\"noEmit\":true},\"include\":[\"index.ts\"]}"
         }
       ],
       "warnings": []

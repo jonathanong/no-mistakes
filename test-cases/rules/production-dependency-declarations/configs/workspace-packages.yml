@@ -1,0 +1,5 @@
+rules:
+  - rule: production-dependency-declarations
+    scope: repository
+    options:
+      workspaceRoots: [packages]

@@ -454,7 +454,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".no-mistakes.yml",
           "line": 1,
           "message": "secret inventory analysis incomplete: unused declaration location is unavailable or ambiguous; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "version: 2"
         }
       ],
       "warnings": []
@@ -473,7 +474,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 6,
           "message": "undeclared secret MISSING_SOURCE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "ALIAS: '${{ secrets.MISSING_SOURCE }}'"
         }
       ],
       "warnings": []
@@ -492,13 +494,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "actions/example/action.yml",
           "line": 7,
           "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- run: echo '${{ secrets.DIRECT }}'"
         },
         {
           "file": "actions/example/action.yml",
           "line": 9,
           "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- if: secrets[inputs.selector] != ''"
         }
       ],
       "warnings": []
@@ -517,7 +521,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 7,
           "message": "undeclared secret GITHUB_TOKEN; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "replaced_default: '${{ secrets.GITHUB_TOKEN }}'"
         }
       ],
       "warnings": []
@@ -548,7 +553,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/a.yml",
           "line": 1,
           "message": "secret inventory analysis incomplete: reusable call cycle; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "on: workflow_call"
         }
       ],
       "warnings": []
@@ -567,7 +573,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/actions/deploy/action.yml",
           "line": 4,
           "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- run: echo '${{ secrets.DEPLOY_TOKEN }}'"
         }
       ],
       "warnings": []
@@ -586,31 +593,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 14,
           "message": "secret inventory analysis incomplete: job environment is not a literal name; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "environment: '${{ inputs.environment }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 17,
           "message": "undeclared secret NOT_LISTED; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing: '${{ secrets.NOT_LISTED }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 3,
           "message": "secret inventory analysis incomplete: dynamic selector or whole secrets context; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "dyn: '${{ secrets[inputs.secret] }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 8,
           "message": "secret inventory analysis incomplete: dynamic selector or whole secrets context; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "selected: '${{ secrets[inputs.secret] }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 9,
           "message": "secret inventory analysis incomplete: dynamic selector or whole secrets context; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "everything: '${{ toJSON(secrets) }}'"
         }
       ],
       "warnings": []
@@ -629,19 +641,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 15,
           "message": "undeclared secret ENV_ONLY; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "wrong_scope: '${{ secrets.ENV_ONLY }}'"
         },
         {
           "file": ".no-mistakes.yml",
           "line": 14,
           "message": "unused declared secret ENV_UNUSED in Prod; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- ENV_UNUSED"
         },
         {
           "file": ".no-mistakes.yml",
           "line": 8,
           "message": "unused declared secret SHARED in repository; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- SHARED"
         }
       ],
       "warnings": []
@@ -660,7 +675,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 1,
           "message": "secret inventory analysis incomplete: reusable contract also has direct triggers; secret sources depend on the trigger; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "on:"
         }
       ],
       "warnings": []
@@ -679,7 +695,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".no-mistakes.yml",
           "line": 7,
           "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "repository: [UNUSED]"
         }
       ],
       "warnings": []
@@ -698,7 +715,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 4,
           "message": "secret inventory analysis incomplete: reusable call inherits secrets; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: ./.github/workflows/reusable.yml"
         }
       ],
       "warnings": []
@@ -717,13 +735,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 1,
           "message": "secret inventory analysis incomplete: document unavailable: did not find expected node content at line 3 column 1, while parsing a flow node; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "on: push"
         },
         {
           "file": "actions/broken/action.yml",
           "line": 1,
           "message": "secret inventory analysis incomplete: document unavailable: did not find expected node content at line 2 column 1, while parsing a flow node; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "runs: ["
         }
       ],
       "warnings": []
@@ -742,31 +762,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 12,
           "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "TOKEN: {invalid: value}"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 15,
           "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: {1: value}"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 19,
           "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "TOKEN: [value]"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 5,
           "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: not-inherit"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 8,
           "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: [TOKEN]"
         }
       ],
       "warnings": []
@@ -785,7 +810,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 3,
           "message": "secret inventory analysis incomplete: job must be a mapping; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "invalid: false"
         }
       ],
       "warnings": []
@@ -804,7 +830,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 2,
           "message": "secret inventory analysis incomplete: jobs must be a mapping; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "jobs: false"
         }
       ],
       "warnings": []
@@ -823,7 +850,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 4,
           "message": "secret inventory analysis incomplete: reusable call cannot be resolved locally; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: ./.github/workflows/reusable.yml"
         }
       ],
       "warnings": []
@@ -842,13 +870,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 5,
           "message": "undeclared secret ENV_ONLY; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "K: ${{ secrets.ENV_ONLY }}"
         },
         {
           "file": ".no-mistakes.yml",
           "line": 12,
           "message": "unused declared secret OTHER_UNUSED in stage; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- OTHER_UNUSED"
         }
       ],
       "warnings": []
@@ -867,13 +897,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 8,
           "message": "undeclared secret FOO; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "single: \"${{ secrets['FOO'] }}\""
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 9,
           "message": "secret inventory analysis incomplete: dynamic selector or whole secrets context; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "double: '${{ secrets[\"FOO\"] }}'"
         }
       ],
       "warnings": []
@@ -892,7 +924,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".no-mistakes.yml",
           "line": 7,
           "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "repository: [UNUSED]"
         }
       ],
       "warnings": []
@@ -911,13 +944,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 15,
           "message": "undeclared secret ALSO_MISSING; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- run: echo '${{ secrets.ALSO_MISSING }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 8,
           "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "TOKEN: ${{ secrets.MISSING }}"
         }
       ],
       "warnings": []
@@ -936,25 +971,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 10,
           "message": "undeclared secret REPEATED; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "echo '${{ secrets.REPEATED }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 7,
           "message": "undeclared secret REPEATED; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "echo '${{ secrets.REPEATED }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 8,
           "message": "undeclared secret REPEATED; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "echo '${{ secrets.REPEATED }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 9,
           "message": "undeclared secret OTHER; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "echo '${{ secrets.OTHER }}'"
         }
       ],
       "warnings": []
@@ -973,19 +1012,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 10,
           "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- if: secrets.BARE != ''"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 13,
           "message": "undeclared secret MULTILINE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "echo \"${{ secrets.MULTILINE }}\""
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 8,
           "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing: \"${{ secrets.MISSING }}\""
         }
       ],
       "warnings": []
@@ -1016,25 +1058,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 10,
           "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- if: secrets.BARE != ''"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 13,
           "message": "undeclared secret MULTILINE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "echo \"${{ secrets.MULTILINE }}\""
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 6,
           "message": "undeclared secret allowed; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "declared: \"${{ secrets.allowed }}\""
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 8,
           "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing: \"${{ secrets.MISSING }}\""
         }
       ],
       "warnings": []
@@ -1065,25 +1111,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 10,
           "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- if: secrets.BARE != ''"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 13,
           "message": "undeclared secret MULTILINE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "echo \"${{ secrets.MULTILINE }}\""
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 7,
           "message": "undeclared secret GITHUB_TOKEN; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "builtin: \"${{ secrets.GITHUB_TOKEN }}\""
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 8,
           "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing: \"${{ secrets.MISSING }}\""
         }
       ],
       "warnings": []
@@ -1102,7 +1152,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".no-mistakes.yml",
           "line": 7,
           "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "repository: [REPO_SOURCE, UNUSED]"
         }
       ],
       "warnings": []
@@ -1121,13 +1172,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/reusable.yml",
           "line": 16,
           "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- run: echo '${{ secrets.MISSING }}'"
         },
         {
           "file": ".github/workflows/reusable.yml",
           "line": 21,
           "message": "undeclared secret ALSO_MISSING; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- run: echo '${{ secrets.ALSO_MISSING }}'"
         }
       ],
       "warnings": []
@@ -1146,7 +1199,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "action.yml",
           "line": 5,
           "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "run: echo '${{ secrets.ROOT }}'"
         }
       ],
       "warnings": []
@@ -1165,19 +1219,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 11,
           "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- if: secrets . BARE != ''"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 7,
           "message": "undeclared secret REAL; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "quoted_noise: \"${{ format('secrets.QUOTED }}', secrets.REAL) }}\""
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 8,
           "message": "undeclared secret BRACKET; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "utf8: \"é ${{ secrets['BRACKET'] }}\""
         }
       ],
       "warnings": []
@@ -1196,7 +1253,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 9,
           "message": "undeclared secret THREE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "three: '${{ secrets.THREE }}'"
         }
       ],
       "warnings": []
@@ -1227,25 +1285,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 12,
           "message": "secret inventory analysis incomplete: job environment is not a literal name; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "environment: ${{ inputs.env }}"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 14,
           "message": "secret inventory analysis incomplete: reusable secret has no declared contract source; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- run: echo '${{ secrets.ALIAS }} ${{ secrets.OTHER }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 14,
           "message": "undeclared secret OTHER; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- run: echo '${{ secrets.ALIAS }} ${{ secrets.OTHER }}'"
         },
         {
           "file": ".github/workflows/check.yml",
           "line": 9,
           "message": "secret inventory analysis incomplete: reusable secret has no declared contract source; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- run: echo '${{ secrets.REPO_NAME }}'"
         }
       ],
       "warnings": []
@@ -1264,13 +1326,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "actions/inner/action.yml",
           "line": 6,
           "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "run: echo '${{ secrets.INNER }}'"
         },
         {
           "file": "actions/outer/action.yml",
           "line": 6,
           "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "run: echo '${{ secrets.OUTER }}'"
         }
       ],
       "warnings": []
@@ -1289,7 +1353,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 4,
           "message": "secret inventory analysis incomplete: reusable call cannot be resolved locally; declarations cannot be proven unused",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: ./.github/workflows/missing.yml"
         }
       ],
       "warnings": []
@@ -1308,13 +1373,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".no-mistakes.yml",
           "line": 12,
           "message": "unused declared secret UNUSED_ENV in Stage; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- UNUSED_ENV"
         },
         {
           "file": ".no-mistakes.yml",
           "line": 9,
           "message": "unused declared secret UNUSED_REPO in repository; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- UNUSED_REPO"
         }
       ],
       "warnings": []
@@ -1333,13 +1400,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 10,
           "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- if: secrets.BARE != ''"
         },
         {
           "file": ".no-mistakes.yml",
           "line": 8,
           "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- UNUSED"
         }
       ],
       "warnings": []
@@ -1358,13 +1427,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": ".github/workflows/check.yml",
           "line": 4,
           "message": "undeclared secret WORKFLOW_MISSING; declare its name in secretInventory.repository or the selected environment inventory",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing: '${{ secrets.WORKFLOW_MISSING }}'"
         },
         {
           "file": ".no-mistakes.yml",
           "line": 7,
           "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
-          "rule": "workflow-topology-policy"
+          "rule": "workflow-topology-policy",
+          "sourceLine": "repository: [WORKFLOW_SOURCE, UNUSED]"
         }
       ],
       "warnings": []

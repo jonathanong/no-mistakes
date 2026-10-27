@@ -27,13 +27,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "packages/api/index.js",
           "line": 1,
           "message": "packages/api/index.js: root-level file must be in allowedRootFiles, a test file, or a .md file",
-          "rule": "strict-package-layout"
+          "rule": "strict-package-layout",
+          "sourceLine": "module.exports = {}"
         },
         {
           "file": "packages/api/tmp/debug.ts",
           "line": 1,
           "message": "packages/api/tmp/debug.ts: subdirectory tmp/ is not allowed (allowedSubdirs: [src, __tests__])",
-          "rule": "strict-package-layout"
+          "rule": "strict-package-layout",
+          "sourceLine": "export {}"
         }
       ],
       "warnings": []
@@ -88,13 +90,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "queues/email/helpers.js",
           "line": 1,
           "message": "queues/email/helpers.js: root-level file must be in allowedRootFiles, a test file, or a .md file",
-          "rule": "strict-package-layout"
+          "rule": "strict-package-layout",
+          "sourceLine": "export function helper() {}"
         },
         {
           "file": "queues/email/utils/format.mts",
           "line": 1,
           "message": "queues/email/utils/format.mts: subdirectory utils/ is not allowed (allowedSubdirs: [enqueues])",
-          "rule": "strict-package-layout"
+          "rule": "strict-package-layout",
+          "sourceLine": "export function format(s: string) { return s; }"
         }
       ],
       "warnings": []

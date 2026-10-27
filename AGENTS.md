@@ -86,6 +86,9 @@ graph. Details:
   report. Normalization rewrites absolute paths to `<root>`, temporary
   directories to `<temp>`, process ids to `<pid>`, and timings to `<timing>`,
   uses `/` separators, and sorts arrays so Linux, macOS, and Windows agree.
+  Each finding with a `file` and `line` also carries `sourceLine`, the trimmed
+  text of that line read from the saved fixture, so a finding on the wrong line
+  is visible in the snapshot diff.
   CI sets `INSTA_UPDATE=no` (quoted in `.github/workflows/ci.yml` and
   `release.yml`); a missing or changed `.snap` fails. Regenerate only on
   purpose with `INSTA_UPDATE=1 cargo test -p no-mistakes --test suite_cli_rules check_json_snapshot`

@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "slow.test.mts reads a markdown file and evals a shell block inside a spawned bash/sh/zsh process. Port content assertions to a spawn-free test, or add this exact relative path to options.allow with a rationale.",
           "rule": "markdown-eval-tests",
+          "sourceLine": "import { execFileSync } from \"node:child_process\";",
           "target": "slow.test.mts"
         }
       ],

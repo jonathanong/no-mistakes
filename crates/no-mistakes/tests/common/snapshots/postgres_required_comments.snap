@@ -16,6 +16,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.code: column comment is shorter than 10 characters. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.code"
         },
         {
@@ -23,6 +24,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.secret: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.secret"
         },
         {
@@ -30,6 +32,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.title: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.title"
         },
         {
@@ -37,6 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:schema_migrations.version: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:schema_migrations.version"
         },
         {
@@ -44,6 +48,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: materialized-view:paid_orders: materialized view has no COMMENT ON MATERIALIZED VIEW. Add COMMENT ON MATERIALIZED VIEW with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "materialized-view:paid_orders"
         },
         {
@@ -51,6 +56,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:blank_rows: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:blank_rows"
         },
         {
@@ -58,6 +64,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:events: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:events"
         },
         {
@@ -65,6 +72,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:schema_migrations: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:schema_migrations"
         },
         {
@@ -72,6 +80,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:short_rows: table comment is shorter than 10 characters. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:short_rows"
         },
         {
@@ -79,6 +88,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: view:blank_view: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "view:blank_view"
         },
         {
@@ -86,6 +96,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: view:open_orders: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "view:open_orders"
         },
         {
@@ -93,6 +104,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: view:tiny_view: view comment is shorter than 10 characters. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "view:tiny_view"
         }
       ],
@@ -113,6 +125,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.code: column comment is shorter than 10 characters. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.code"
         },
         {
@@ -120,6 +133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.title: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.title"
         },
         {
@@ -127,6 +141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:schema_migrations.version: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:schema_migrations.version"
         },
         {
@@ -134,6 +149,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: stale postgres-required-comments allow entry: table:not_real",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:not_real"
         },
         {
@@ -141,6 +157,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:blank_rows: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:blank_rows"
         },
         {
@@ -148,6 +165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:events: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:events"
         },
         {
@@ -155,6 +173,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:short_rows: table comment is shorter than 10 characters. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:short_rows"
         },
         {
@@ -162,6 +181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: view:blank_view: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "view:blank_view"
         },
         {
@@ -169,6 +189,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: view:tiny_view: view comment is shorter than 10 characters. Add COMMENT ON VIEW with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "view:tiny_view"
         }
       ],
@@ -189,6 +210,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.code: column comment is shorter than 10 characters. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.code"
         },
         {
@@ -196,6 +218,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.secret: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.secret"
         },
         {
@@ -203,6 +226,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.title: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.title"
         }
       ],
@@ -223,6 +247,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:blank_rows: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 1 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:blank_rows"
         },
         {
@@ -230,6 +255,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:events: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 1 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:events"
         },
         {
@@ -237,6 +263,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:schema_migrations: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 1 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:schema_migrations"
         }
       ],
@@ -257,6 +284,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.secret: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 1 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.secret"
         },
         {
@@ -264,6 +292,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:orders.title: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 1 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:orders.title"
         },
         {
@@ -271,6 +300,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: column:schema_migrations.version: column has no COMMENT ON COLUMN. Add COMMENT ON COLUMN with at least 1 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "column:schema_migrations.version"
         }
       ],
@@ -303,6 +333,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: materialized-view:paid_orders: materialized view has no COMMENT ON MATERIALIZED VIEW. Add COMMENT ON MATERIALIZED VIEW with at least 1 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "materialized-view:paid_orders"
         }
       ],
@@ -323,6 +354,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:blank_rows: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:blank_rows"
         },
         {
@@ -330,6 +362,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:events: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:events"
         },
         {
@@ -337,6 +370,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:schema_migrations: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:schema_migrations"
         },
         {
@@ -344,6 +378,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: table:short_rows: table comment is shorter than 10 characters. Add COMMENT ON TABLE with at least 10 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "table:short_rows"
         }
       ],
@@ -376,6 +411,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: view:blank_view: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 1 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "view:blank_view"
         },
         {
@@ -383,6 +419,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "schema.json: view:open_orders: view has no COMMENT ON VIEW. Add COMMENT ON VIEW with at least 1 characters so agents know what the object is for.",
           "rule": "postgres-required-comments",
+          "sourceLine": "{",
           "target": "view:open_orders"
         }
       ],

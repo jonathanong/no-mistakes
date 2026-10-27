@@ -11,6 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "cannot analyze production export importers: symbol consumers of `uncertainValue` include an unknown import selector: other/candidate.mts:2 `../src/candidate.mjs` (namespace selector), other/z-candidate.mts:2 `../src/candidate.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as values from \"../src/candidate.mjs\";",
           "target": "unanalyzable"
         },
         {
@@ -18,6 +19,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "cannot analyze production export importers: symbol consumers of `firstValue` include an unknown import selector: other/pair.mts:2 `../src/first.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as first from \"../src/first.mjs\";",
           "target": "unanalyzable"
         },
         {
@@ -25,6 +27,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "cannot analyze production export importers: symbol consumers of `secondValue` include an unknown import selector: other/pair.mts:4 `../src/second.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import * as second from \"../src/second.mjs\";",
           "target": "unanalyzable"
         }
       ],
@@ -38,6 +41,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "production export `mockOnlyValue` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const mockOnlyValue = 1;",
           "target": "mockOnlyValue"
         },
         {
@@ -45,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "production export `testOnlyValue` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const testOnlyValue = 1;",
           "target": "testOnlyValue"
         }
       ],

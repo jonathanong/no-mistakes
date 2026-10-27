@@ -11,6 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
+          "sourceLine": "//! no-mistakes-disable-file rust-no-inline-tests",
           "target": "rust-no-inline-tests"
         },
         {
@@ -18,6 +19,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
+          "sourceLine": "/// no-mistakes-disable-line rust-no-inline-tests",
           "target": "rust-no-inline-tests"
         },
         {
@@ -25,6 +27,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
+          "sourceLine": "/// no-mistakes-disable-next-line rust-no-inline-tests",
           "target": "rust-no-inline-tests"
         }
       ],
@@ -37,13 +40,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "inner.rs",
           "line": 5,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         },
         {
           "file": "outer.rs",
           "line": 2,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -62,13 +67,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "inner.rs",
           "line": 5,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         },
         {
           "file": "outer.rs",
           "line": 2,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
@@ -88,19 +95,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
+          "sourceLine": "//! no-mistakes-disable-file rust-no-inline-tests",
           "target": "rust-no-inline-tests"
         },
         {
           "file": "inner.rs",
           "line": 5,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         },
         {
           "file": "line.rs",
           "line": 1,
           "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
+          "sourceLine": "/// no-mistakes-disable-line rust-no-inline-tests",
           "target": "rust-no-inline-tests"
         },
         {
@@ -108,13 +118,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
+          "sourceLine": "/// no-mistakes-disable-next-line rust-no-inline-tests",
           "target": "rust-no-inline-tests"
         },
         {
           "file": "outer.rs",
           "line": 2,
           "message": "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source",
-          "rule": "rust-no-inline-tests"
+          "rule": "rust-no-inline-tests",
+          "sourceLine": "#[cfg(test)]"
         }
       ],
       "warnings": []
