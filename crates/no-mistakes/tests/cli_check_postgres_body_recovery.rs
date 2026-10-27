@@ -14,6 +14,24 @@ fn check(root: &Path, config: &str) -> (bool, Value) {
     (output.status.success(), report)
 }
 
+fn assert_configured_rule_set(root: &Path, config: &str, actual: Vec<String>, context: &str) {
+    let expected = no_mistakes::config::v2::load_v2_config(root, Some(&root.join(config)))
+        .unwrap()
+        .rules
+        .into_iter()
+        .filter(|rule| rule.enabled)
+        .map(|rule| rule.rule)
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(actual.len(), expected.len(), "{context}");
+    assert_eq!(
+        actual
+            .into_iter()
+            .collect::<std::collections::BTreeSet<_>>(),
+        expected,
+        "{context}"
+    );
+}
+
 #[test]
 fn schema_body_defaults_preserve_top_level_errors_and_explicit_policies() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -76,7 +94,15 @@ fn opaque_body_advisories_do_not_fail_the_cli() {
     assert!(success, "{report}");
     assert_eq!(report["rules"], serde_json::json!([]));
     let advisories = report["advisories"].as_array().unwrap();
-    assert_eq!(advisories.len(), 11, "{report}");
+    assert_configured_rule_set(
+        &root,
+        "default.yml",
+        advisories
+            .iter()
+            .map(|item| item["rule"].as_str().unwrap().to_owned())
+            .collect(),
+        &report.to_string(),
+    );
     assert!(advisories.iter().all(|item| item["line"] == 4));
 }
 

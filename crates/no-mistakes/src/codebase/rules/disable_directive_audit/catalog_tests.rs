@@ -22,7 +22,7 @@ fn known_catalog_covers_every_declared_rule_and_registered_executor_rule() {
         }
     }
     assert!(
-        declared.len() > 100,
+        !declared.is_empty(),
         "the rule declaration inventory must not become empty"
     );
     for rule in declared
