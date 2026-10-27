@@ -1,0 +1,94 @@
+[
+  {
+    "file": "pattern-widget.jsx",
+    "findings": [],
+    "name": "applies componentNamePattern instead of the default PascalCase filter: default",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "pattern-widget.jsx",
+    "findings": [
+      {
+        "column": 10,
+        "endColumn": 31,
+        "endLine": 2,
+        "file": "pattern-widget.jsx",
+        "line": 2,
+        "message": "Exported component 'widget' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "applies componentNamePattern instead of the default PascalCase filter: widget",
+    "options": {
+      "componentNamePattern": "^widget$"
+    },
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "unlisted-card.jsx",
+    "findings": [
+      {
+        "column": 10,
+        "endColumn": 31,
+        "endLine": 2,
+        "file": "unlisted-card.jsx",
+        "line": 2,
+        "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "checks only listed components when components is set: Button",
+    "options": {
+      "components": [
+        "Button"
+      ]
+    },
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "unlisted-card.jsx",
+    "findings": [
+      {
+        "column": 10,
+        "endColumn": 33,
+        "endLine": 6,
+        "file": "unlisted-card.jsx",
+        "line": 6,
+        "message": "Exported component 'Card' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "checks only listed components when components is set: Card",
+    "options": {
+      "components": [
+        "Card"
+      ]
+    },
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "ignore-button.jsx",
+    "findings": [],
+    "name": "does not check ignored exported components",
+    "options": {
+      "ignoreComponents": [
+        "Button"
+      ]
+    },
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "lowercase-hook.jsx",
+    "findings": [],
+    "name": "does not check lowercase hooks under the default name pattern",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  }
+]

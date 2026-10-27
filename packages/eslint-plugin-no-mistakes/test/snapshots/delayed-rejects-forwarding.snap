@@ -1,0 +1,272 @@
+[
+  {
+    "file": "forwarding-suppressed.ts",
+    "findings": [],
+    "name": "honors file, line and next-line suppression: forwarding-suppressed",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "forwarding-suppressed-file.ts",
+    "findings": [],
+    "name": "honors file, line and next-line suppression: forwarding-suppressed-file",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/forwarding-controls.ts",
+    "findings": [],
+    "name": "matches Oxlint for forwarded observers, controls and suppressions: test-no-delayed-rejects/forwarding-controls.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/forwarding-receiver.ts",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/forwarding-receiver.ts",
+        "line": 8,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/forwarding-receiver.ts",
+        "line": 14,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/forwarding-receiver.ts",
+        "line": 21,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      }
+    ],
+    "name": "matches Oxlint for forwarded observers, controls and suppressions: test-no-delayed-rejects/forwarding-receiver.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/forwarding-suppressed-file.ts",
+    "findings": [],
+    "name": "matches Oxlint for forwarded observers, controls and suppressions: test-no-delayed-rejects/forwarding-suppressed-file.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/forwarding-suppressed.ts",
+    "findings": [],
+    "name": "matches Oxlint for forwarded observers, controls and suppressions: test-no-delayed-rejects/forwarding-suppressed.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/forwarding.ts",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/forwarding.ts",
+        "line": 9,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/forwarding.ts",
+        "line": 14,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/forwarding.ts",
+        "line": 19,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/forwarding.ts",
+        "line": 24,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/forwarding.ts",
+        "line": 30,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      }
+    ],
+    "name": "matches Oxlint for forwarded observers, controls and suppressions: test-no-delayed-rejects/forwarding.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "forwarding-controls.ts",
+    "findings": [],
+    "name": "preserves malformed calls, poll, unknown arguments, shadowing and early observers",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "forwarding.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 42,
+        "endLine": 9,
+        "file": "forwarding.ts",
+        "line": 9,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 62,
+        "endLine": 14,
+        "file": "forwarding.ts",
+        "line": 14,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 68,
+        "endLine": 19,
+        "file": "forwarding.ts",
+        "line": 19,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 54,
+        "endLine": 24,
+        "file": "forwarding.ts",
+        "line": 24,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 51,
+        "endLine": 30,
+        "file": "forwarding.ts",
+        "line": 30,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "reads the promise argument after call/apply forwarding",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "forwarding-receiver.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 32,
+        "endLine": 8,
+        "file": "forwarding-receiver.ts",
+        "line": 8,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 32,
+        "endLine": 14,
+        "file": "forwarding-receiver.ts",
+        "line": 14,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 32,
+        "endLine": 21,
+        "file": "forwarding-receiver.ts",
+        "line": 21,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "requires the actual function receiver before counting nested early observers",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-error-message-matching/nested-alias.ts",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 3,
+        "file": "test-no-error-message-matching/nested-alias.ts",
+        "line": 4,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 3,
+        "file": "test-no-error-message-matching/nested-alias.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      }
+    ],
+    "name": "matches Oxlint for forwarded observers, controls and suppressions: test-no-error-message-matching/nested-alias.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "nested-alias.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 42,
+        "endLine": 4,
+        "file": "nested-alias.ts",
+        "line": 4,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 6,
+        "file": "nested-alias.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "shares proven nested aliases with error-message assertions, preserving shadowing",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  }
+]

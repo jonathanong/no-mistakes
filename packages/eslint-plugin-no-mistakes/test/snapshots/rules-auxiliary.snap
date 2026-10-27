@@ -1,0 +1,163 @@
+[
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 20,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use 'data-pw' instead of 'data-testid' for test IDs.",
+        "messageId": "attribute",
+        "ruleId": "no-mistakes/playwright-consistent-attribute",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 27,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Test ID 'Save' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.",
+        "messageId": "naming",
+        "ruleId": "no-mistakes/playwright-naming-convention",
+        "severity": 2
+      }
+    ],
+    "name": "runs the strict rule set",
+    "options": null
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 31,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Test ID 'SaveButton' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.",
+        "messageId": "naming",
+        "ruleId": "no-mistakes/playwright-naming-convention",
+        "severity": 2
+      }
+    ],
+    "name": "checks literal values against a configurable pattern: default",
+    "options": null,
+    "rule": "playwright-naming-convention"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "checks literal values against a configurable pattern: uppercase",
+    "options": {
+      "pattern": "^[A-Z][A-Za-z]+$"
+    },
+    "rule": "playwright-naming-convention"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 21,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Test ID must not be empty.",
+        "messageId": "empty",
+        "ruleId": "no-mistakes/playwright-no-empty",
+        "severity": 2
+      }
+    ],
+    "name": "reports empty literal test IDs",
+    "options": null,
+    "rule": "playwright-no-empty"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 29,
+        "endLine": 2,
+        "file": "fixture.jsx",
+        "line": 2,
+        "message": "Prefer getByTestId('direct') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 14,
+        "endColumn": 32,
+        "endLine": 6,
+        "file": "fixture.jsx",
+        "line": 6,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 14,
+        "endColumn": 32,
+        "endLine": 7,
+        "file": "fixture.jsx",
+        "line": 7,
+        "message": "Prefer getByTestId('open') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 14,
+        "endColumn": 38,
+        "endLine": 8,
+        "file": "fixture.jsx",
+        "line": 8,
+        "message": "Prefer getByTestId('unquoted') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 14,
+        "endColumn": 35,
+        "endLine": 9,
+        "file": "fixture.jsx",
+        "line": 9,
+        "message": "Prefer getByTestId('flagged') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 18,
+        "endColumn": 42,
+        "endLine": 11,
+        "file": "fixture.jsx",
+        "line": 11,
+        "message": "Prefer getByTestId('source') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 44,
+        "endColumn": 64,
+        "endLine": 11,
+        "file": "fixture.jsx",
+        "line": 11,
+        "message": "Prefer getByTestId('target') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "reports exact CSS test-id selectors in Playwright selector calls",
+    "options": null,
+    "rule": "playwright-prefer-get-by-test-id"
+  }
+]

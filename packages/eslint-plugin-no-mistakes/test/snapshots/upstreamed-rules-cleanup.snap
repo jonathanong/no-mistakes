@@ -1,0 +1,228 @@
+[
+  {
+    "file": "shared-state-cleanup-named.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-cleanup-named.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-cleanup-path.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 30,
+        "endLine": 13,
+        "file": "shared-state-cleanup-path.invalid.test.ts",
+        "line": 13,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 27,
+        "endLine": 17,
+        "file": "shared-state-cleanup-path.invalid.test.ts",
+        "line": 17,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-cleanup-path.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-cleanup-registry.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-cleanup-registry.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-cleanup-scope.invalid.test.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 34,
+        "endLine": 15,
+        "file": "shared-state-cleanup-scope.invalid.test.ts",
+        "line": 15,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-cleanup-scope.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-mutating-hook.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 8,
+        "file": "shared-state-mutating-hook.invalid.test.ts",
+        "line": 8,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-mutating-hook.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-nested-cleanup-helper.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 10,
+        "file": "shared-state-nested-cleanup-helper.invalid.test.ts",
+        "line": 10,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-nested-cleanup-helper.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-nested-named-cleanup.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-nested-named-cleanup.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-non-reset-assignment.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 8,
+        "file": "shared-state-non-reset-assignment.invalid.test.ts",
+        "line": 8,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-non-reset-assignment.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-once-hook-allowed.valid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 8,
+        "file": "shared-state-once-hook-allowed.valid.test.ts",
+        "line": 8,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-once-hook-allowed.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-once-hook-allowed.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-once-hook-allowed.valid.test.ts {\"allowBeforeAllAssignments\":true}",
+    "options": {
+      "allowBeforeAllAssignments": true
+    },
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-once-hook.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 8,
+        "file": "shared-state-once-hook.invalid.test.ts",
+        "line": 8,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-once-hook.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-out-of-scope-cleanup.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 6,
+        "file": "shared-state-out-of-scope-cleanup.invalid.test.ts",
+        "line": 6,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-out-of-scope-cleanup.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-sibling-named-cleanup.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-sibling-named-cleanup.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-test-beforeall.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-test-beforeall.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-uncleaned-registry.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 10,
+        "file": "shared-state-uncleaned-registry.invalid.test.ts",
+        "line": 10,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-uncleaned-registry.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  }
+]

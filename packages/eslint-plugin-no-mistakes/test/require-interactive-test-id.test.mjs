@@ -1,23 +1,20 @@
-import { RuleTester } from "eslint";
-import assert from "node:assert/strict";
-import { afterAll, describe, it } from "vitest";
-import rule from "../src/rules/playwright-require-interactive-test-id.js";
-import { fixture, messages } from "./helpers.mjs";
+import { expect, it } from "vitest";
+import {
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+  snapshotSuite,
+} from "./diagnostic-snapshot.mjs";
+import { fixture } from "./helpers.mjs";
 
-RuleTester.describe = describe;
-RuleTester.it = it;
-RuleTester.itOnly = it.only;
-RuleTester.afterAll = afterAll;
+const ruleName = "playwright-require-interactive-test-id";
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 
-const tester = new RuleTester({
-  languageOptions: {
-    ecmaVersion: 2024,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-tester.run("playwright-require-interactive-test-id", rule, {
+const suite = {
   valid: [
     { code: "<a />;" },
     { code: "<Foo.bar data-testid='id' />;" },
@@ -55,109 +52,75 @@ tester.run("playwright-require-interactive-test-id", rule, {
   ],
   invalid: [
     {
-      // Exercise slots through the direct rule entrypoint as well as the plugin loader.
+      // Eight slot findings, one on each missing Button slot.
       code: fixture("playwright-require-interactive-test-id/slots-missing.tsx"),
       options: [{ interactiveComponents: ["Button"] }],
-      errors: [2, 5, 8, 11, 14, 17, 20, 23].map((line) => ({
-        messageId: "slot",
-        line,
-      })),
     },
     {
       code: fixture("playwright-require-interactive-test-id/slots-controls.tsx"),
       options: [{ interactiveComponents: ["Button"] }],
-      errors: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22]
-        .map((line) => ({ messageId: "missing", line }))
-        .concat([
-          { messageId: "slot", line: 23 },
-          { messageId: "missing", line: 23 },
-          { messageId: "missing", line: 23 },
-        ]),
     },
     {
       code: fixture("playwright-require-interactive-test-id/branches.jsx"),
       options: [{ interactiveComponents: ["/(/"] }],
-      errors: Array.from({ length: 4 }, () => ({ messageId: "missing" })),
     },
     {
       code: fixture("playwright-require-interactive-test-id/branches.jsx"),
       options: [{ interactiveComponents: ["Button", "Card"] }],
-      errors: Array.from({ length: 10 }, () => ({ messageId: "missing" })),
     },
     {
       code: "<div role='button' />;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<button />;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<div className='x' role='button' />;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<Comp.Button onClick={fn} />;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<div onClick={fn} role='presentation' />;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<a href='/x' />;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<Foo.Bar onClick={handler} />;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<><button /><input /><select /><textarea /></>;",
-      errors: [
-        { messageId: "missing" },
-        { messageId: "missing" },
-        { messageId: "missing" },
-        { messageId: "missing" },
-      ],
     },
     {
       code: "<><a href='/x' /><a>link</a></>;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<div onClick={() => {}} />;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<Link href='/login'>Create your free page</Link>;",
       options: [{ interactiveComponents: ["Link"] }],
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<Button type='submit'>Submit</Button>;",
       options: [{ interactiveComponents: ["Button"] }],
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<SelectItem value='incorrect_facts'>The facts cited are incorrect</SelectItem>;",
       options: [{ interactiveComponents: ["SelectItem"] }],
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<Ui.Button>Submit</Ui.Button>;",
       options: [{ interactiveComponents: ["Ui.Button"] }],
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<Menu.Item>Open</Menu.Item>;",
       options: [{ interactiveComponents: ["/\\.Item$/"] }],
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "<><Button /><Button /></>;",
       options: [{ interactiveComponents: ["/^Button$/g"] }],
-      errors: [{ messageId: "missing" }, { messageId: "missing" }],
     },
     {
       code: [
@@ -173,86 +136,69 @@ tester.run("playwright-require-interactive-test-id", rule, {
         '  <div role="textbox" />',
         "</>",
       ].join("\n"),
-      errors: [
-        { messageId: "missing", line: 2, column: 4 },
-        { messageId: "missing", line: 3, column: 4 },
-        { messageId: "missing", line: 4, column: 4 },
-        { messageId: "missing", line: 5, column: 4 },
-        { messageId: "missing", line: 6, column: 4 },
-        { messageId: "missing", line: 7, column: 4 },
-        { messageId: "missing", line: 8, column: 4 },
-        { messageId: "missing", line: 9, column: 4 },
-        { messageId: "missing", line: 10, column: 4 },
-      ],
     },
     {
       code: '<>\n<button data-qa="save" />\n<button data-pw="save" />\n</>',
       options: [{ selectorAttributes: ["data-qa"] }],
-      errors: [{ messageId: "missing", line: 3, column: 2 }],
     },
   ],
-});
+};
 
-describe("messages coverage", () => {
-  it("reports anchor href and onClick controls without selectors", () => {
-    assert.deepEqual(messages("<a href='/x' />;", "playwright-require-interactive-test-id"), [
-      "missing",
-    ]);
-    assert.deepEqual(messages("<div onClick={fn} />;", "playwright-require-interactive-test-id"), [
-      "missing",
-    ]);
-  });
-
-  it("ignores non-interactive role without onClick", () => {
-    assert.deepEqual(
-      messages("<div role='presentation' />;", "playwright-require-interactive-test-id"),
-      [],
-    );
-  });
-
-  it("covers intrinsic controls and non-role attributes", () => {
-    assert.deepEqual(messages("<button />;", "playwright-require-interactive-test-id"), [
-      "missing",
-    ]);
-    assert.deepEqual(
-      messages("<span title='copy' />;", "playwright-require-interactive-test-id"),
-      [],
-    );
-  });
-
-  it("reports configured component matchers", () => {
-    assert.deepEqual(
-      messages("<Button />;", "playwright-require-interactive-test-id", {
-        interactiveComponents: ["Button"],
-      }),
-      ["missing"],
-    );
-    assert.deepEqual(
-      messages("<Menu.Item />;", "playwright-require-interactive-test-id", {
-        interactiveComponents: ["/\\.Item$/"],
-      }),
-      ["missing"],
-    );
-  });
-
-  it("ignores empty configured component matchers and unsupported JSX names", () => {
-    assert.deepEqual(
-      messages("<Button />;", "playwright-require-interactive-test-id", {
-        interactiveComponents: [""],
-      }),
-      [],
-    );
-    assert.deepEqual(
-      messages("<svg:path />;", "playwright-require-interactive-test-id", {
-        interactiveComponents: ["svg:path"],
-      }),
-      [],
-    );
-    assert.deepEqual(
-      messages("<Button />;", "playwright-require-interactive-test-id", {
-        interactiveComponents: ["/(/"],
-      }),
-      [],
-    );
-  });
+it("snapshots playwright-require-interactive-test-id diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      messages: snapshotCases([
+        {
+          findings: pluginFindings("<a href='/x' />;", ruleName),
+          name: "reports anchor href without selectors",
+        },
+        {
+          findings: pluginFindings("<div onClick={fn} />;", ruleName),
+          name: "reports onClick controls without selectors",
+        },
+        {
+          findings: pluginFindings("<div role='presentation' />;", ruleName),
+          name: "ignores non-interactive role without onClick",
+        },
+        {
+          findings: pluginFindings("<button />;", ruleName),
+          name: "covers intrinsic controls",
+        },
+        {
+          findings: pluginFindings("<span title='copy' />;", ruleName),
+          name: "covers non-role attributes",
+        },
+        {
+          findings: pluginFindings("<Button />;", ruleName, { interactiveComponents: ["Button"] }),
+          name: "reports configured Button matcher",
+          options: { interactiveComponents: ["Button"] },
+        },
+        {
+          findings: pluginFindings("<Menu.Item />;", ruleName, {
+            interactiveComponents: ["/\\.Item$/"],
+          }),
+          name: "reports configured Menu.Item matcher",
+          options: { interactiveComponents: ["/\\.Item$/"] },
+        },
+        {
+          findings: pluginFindings("<Button />;", ruleName, { interactiveComponents: [""] }),
+          name: "ignores empty configured component matchers",
+          options: { interactiveComponents: [""] },
+        },
+        {
+          findings: pluginFindings("<svg:path />;", ruleName, {
+            interactiveComponents: ["svg:path"],
+          }),
+          name: "ignores unsupported JSX names",
+          options: { interactiveComponents: ["svg:path"] },
+        },
+        {
+          findings: pluginFindings("<Button />;", ruleName, { interactiveComponents: ["/(/"] }),
+          name: "ignores invalid component matchers",
+          options: { interactiveComponents: ["/(/"] },
+        },
+      ]),
+      ruleTester: snapshotSuite(ruleName, languageOptions, suite),
+    }),
+  ).toMatchFileSnapshot("snapshots/require-interactive-test-id.snap");
 });

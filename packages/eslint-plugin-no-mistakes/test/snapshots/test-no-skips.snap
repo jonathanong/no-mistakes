@@ -1,0 +1,1738 @@
+{
+  "eslint": [
+    {
+      "file": "suite.spec.ts",
+      "findings": [
+        {
+          "column": 43,
+          "endColumn": 55,
+          "endLine": 7,
+          "file": "suite.spec.ts",
+          "line": 7,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 52,
+          "endLine": 11,
+          "file": "suite.spec.ts",
+          "line": 11,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "allow-annotations allow fixme",
+      "options": {
+        "allow": [
+          "fixme"
+        ]
+      },
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.spec.ts",
+      "findings": [
+        {
+          "column": 43,
+          "endColumn": 55,
+          "endLine": 7,
+          "file": "suite.spec.ts",
+          "line": 7,
+          "message": "Playwright 'fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 52,
+          "endLine": 11,
+          "file": "suite.spec.ts",
+          "line": 11,
+          "message": "Playwright 'fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "allow-annotations allow skip",
+      "options": {
+        "allow": [
+          "skip"
+        ]
+      },
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.spec.ts",
+      "findings": [],
+      "name": "allow-annotations allow skip and fixme",
+      "options": {
+        "allow": [
+          "skip",
+          "fixme"
+        ]
+      },
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.spec.ts",
+      "findings": [
+        {
+          "column": 25,
+          "endColumn": 57,
+          "endLine": 18,
+          "file": "suite.spec.ts",
+          "line": 18,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 47,
+          "endLine": 19,
+          "file": "suite.spec.ts",
+          "line": 19,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 58,
+          "endLine": 20,
+          "file": "suite.spec.ts",
+          "line": 20,
+          "message": "Playwright 'fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 69,
+          "endLine": 21,
+          "file": "suite.spec.ts",
+          "line": 21,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 77,
+          "endLine": 22,
+          "file": "suite.spec.ts",
+          "line": 22,
+          "message": "Playwright 'fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 50,
+          "endColumn": 67,
+          "endLine": 23,
+          "file": "suite.spec.ts",
+          "line": 23,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 34,
+          "endColumn": 66,
+          "endLine": 24,
+          "file": "suite.spec.ts",
+          "line": 24,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 34,
+          "endColumn": 72,
+          "endLine": 25,
+          "file": "suite.spec.ts",
+          "line": 25,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 26,
+          "file": "suite.spec.ts",
+          "line": 26,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 75,
+          "endLine": 26,
+          "file": "suite.spec.ts",
+          "line": 26,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 62,
+          "endLine": 29,
+          "file": "suite.spec.ts",
+          "line": 29,
+          "message": "Playwright 'skip or fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 62,
+          "endLine": 36,
+          "file": "suite.spec.ts",
+          "line": 36,
+          "message": "Playwright 'fixme or skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 61,
+          "endLine": 41,
+          "file": "suite.spec.ts",
+          "line": 41,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 14,
+          "endLine": 44,
+          "file": "suite.spec.ts",
+          "line": 44,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 51,
+          "file": "suite.spec.ts",
+          "line": 51,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 62,
+          "endLine": 60,
+          "file": "suite.spec.ts",
+          "line": 60,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 63,
+          "endLine": 65,
+          "file": "suite.spec.ts",
+          "line": 65,
+          "message": "Playwright 'fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 90,
+          "endLine": 70,
+          "file": "suite.spec.ts",
+          "line": 70,
+          "message": "Playwright 'skip or fixme' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "annotations",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.spec.ts",
+      "findings": [],
+      "name": "annotations allow modifiers",
+      "options": {
+        "allow": [
+          "skip",
+          "skipIf",
+          "runIf",
+          "only",
+          "todo",
+          "fixme"
+        ]
+      },
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.spec.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 19,
+          "endLine": 12,
+          "file": "suite.spec.ts",
+          "line": 12,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 21,
+          "endLine": 13,
+          "file": "suite.spec.ts",
+          "line": 13,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 47,
+          "endColumn": 79,
+          "endLine": 14,
+          "file": "suite.spec.ts",
+          "line": 14,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 23,
+          "endLine": 16,
+          "file": "suite.spec.ts",
+          "line": 16,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 25,
+          "endLine": 17,
+          "file": "suite.spec.ts",
+          "line": 17,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "configured-namespace",
+      "options": {
+        "testModules": [
+          "./fixtures"
+        ]
+      },
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 36,
+          "endColumn": 40,
+          "endLine": 4,
+          "file": "suite.test.ts",
+          "line": 4,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 41,
+          "endLine": 5,
+          "file": "suite.test.ts",
+          "line": 5,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 48,
+          "endLine": 6,
+          "file": "suite.test.ts",
+          "line": 6,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 62,
+          "endColumn": 66,
+          "endLine": 7,
+          "file": "suite.test.ts",
+          "line": 7,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 7,
+          "endLine": 10,
+          "file": "suite.test.ts",
+          "line": 10,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 8,
+          "endLine": 15,
+          "file": "suite.test.ts",
+          "line": 15,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 7,
+          "endLine": 19,
+          "file": "suite.test.ts",
+          "line": 19,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 56,
+          "endColumn": 60,
+          "endLine": 21,
+          "file": "suite.test.ts",
+          "line": 21,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 7,
+          "endLine": 24,
+          "file": "suite.test.ts",
+          "line": 24,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "context-bindings",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [],
+      "name": "context-bindings allow skip",
+      "options": {
+        "allow": [
+          "skip"
+        ]
+      },
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 17,
+          "file": "suite.test.ts",
+          "line": 17,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 19,
+          "endLine": 18,
+          "file": "suite.test.ts",
+          "line": 18,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 28,
+          "endLine": 19,
+          "file": "suite.test.ts",
+          "line": 19,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 74,
+          "endColumn": 78,
+          "endLine": 21,
+          "file": "suite.test.ts",
+          "line": 21,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "edge-bindings",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 4,
+          "endColumn": 8,
+          "endLine": 1,
+          "file": "suite.test.ts",
+          "line": 1,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 11,
+          "endLine": 2,
+          "file": "suite.test.ts",
+          "line": 2,
+          "message": "Test modifier 'runIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 14,
+          "endLine": 3,
+          "file": "suite.test.ts",
+          "line": 3,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 30,
+          "endLine": 4,
+          "file": "suite.test.ts",
+          "line": 4,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "globals",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [],
+      "name": "immutable-key-controls",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 16,
+          "endLine": 7,
+          "file": "suite.test.ts",
+          "line": 7,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 9,
+          "endLine": 8,
+          "file": "suite.test.ts",
+          "line": 8,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 10,
+          "file": "suite.test.ts",
+          "line": 10,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 12,
+          "file": "suite.test.ts",
+          "line": 12,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 28,
+          "endLine": 13,
+          "file": "suite.test.ts",
+          "line": 13,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 22,
+          "endLine": 14,
+          "file": "suite.test.ts",
+          "line": 14,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 15,
+          "endLine": 15,
+          "file": "suite.test.ts",
+          "line": 15,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 14,
+          "endLine": 18,
+          "file": "suite.test.ts",
+          "line": 18,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 16,
+          "endLine": 20,
+          "file": "suite.test.ts",
+          "line": 20,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "immutable-keys",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "service.ts",
+      "findings": [],
+      "name": "import-equals-non-test",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 6,
+          "endColumn": 10,
+          "endLine": 4,
+          "file": "suite.test.ts",
+          "line": 4,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 22,
+          "endLine": 5,
+          "file": "suite.test.ts",
+          "line": 5,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "import-equals-skip",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "service.ts",
+      "findings": [],
+      "name": "import-equals-unsupported",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [],
+      "name": "lookalikes",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 2,
+          "file": "suite.test.ts",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 3,
+          "file": "suite.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skipIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 4,
+          "file": "suite.test.ts",
+          "line": 4,
+          "message": "Test modifier 'runIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 10,
+          "endLine": 5,
+          "file": "suite.test.ts",
+          "line": 5,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 10,
+          "endLine": 6,
+          "file": "suite.test.ts",
+          "line": 6,
+          "message": "Test modifier 'todo' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 11,
+          "endLine": 7,
+          "file": "suite.test.ts",
+          "line": 7,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 21,
+          "endLine": 8,
+          "file": "suite.test.ts",
+          "line": 8,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 9,
+          "file": "suite.test.ts",
+          "line": 9,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 29,
+          "endLine": 10,
+          "file": "suite.test.ts",
+          "line": 10,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 11,
+          "file": "suite.test.ts",
+          "line": 11,
+          "message": "Test modifier 'skipIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 57,
+          "endColumn": 61,
+          "endLine": 12,
+          "file": "suite.test.ts",
+          "line": 12,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 52,
+          "endColumn": 56,
+          "endLine": 15,
+          "file": "suite.test.ts",
+          "line": 15,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "modifiers",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [],
+      "name": "modifiers allow all",
+      "options": {
+        "allow": [
+          "skip",
+          "skipIf",
+          "runIf",
+          "only",
+          "todo",
+          "fixme"
+        ]
+      },
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 2,
+          "file": "suite.test.ts",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 3,
+          "file": "suite.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skipIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 4,
+          "file": "suite.test.ts",
+          "line": 4,
+          "message": "Test modifier 'runIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 10,
+          "endLine": 5,
+          "file": "suite.test.ts",
+          "line": 5,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 11,
+          "endLine": 7,
+          "file": "suite.test.ts",
+          "line": 7,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 21,
+          "endLine": 8,
+          "file": "suite.test.ts",
+          "line": 8,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 9,
+          "file": "suite.test.ts",
+          "line": 9,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 29,
+          "endLine": 10,
+          "file": "suite.test.ts",
+          "line": 10,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 11,
+          "file": "suite.test.ts",
+          "line": 11,
+          "message": "Test modifier 'skipIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 57,
+          "endColumn": 61,
+          "endLine": 12,
+          "file": "suite.test.ts",
+          "line": 12,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 52,
+          "endColumn": 56,
+          "endLine": 15,
+          "file": "suite.test.ts",
+          "line": 15,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "modifiers allow todo",
+      "options": {
+        "allow": [
+          "todo"
+        ]
+      },
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 18,
+          "endLine": 2,
+          "file": "suite.test.ts",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 22,
+          "endLine": 3,
+          "file": "suite.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 25,
+          "endLine": 5,
+          "file": "suite.test.ts",
+          "line": 5,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 22,
+          "endLine": 8,
+          "file": "suite.test.ts",
+          "line": 8,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 15,
+          "endLine": 11,
+          "file": "suite.test.ts",
+          "line": 11,
+          "message": "Test modifier 'todo' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 29,
+          "endLine": 14,
+          "file": "suite.test.ts",
+          "line": 14,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "module-bindings",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 6,
+          "endColumn": 12,
+          "endLine": 2,
+          "file": "suite.test.ts",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 12,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "suite.test.ts",
+          "line": 3,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 23,
+          "endLine": 4,
+          "file": "suite.test.ts",
+          "line": 4,
+          "message": "Test modifier 'runIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 35,
+          "endColumn": 39,
+          "endLine": 5,
+          "file": "suite.test.ts",
+          "line": 5,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "namespace",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 7,
+          "file": "suite.test.ts",
+          "line": 7,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 8,
+          "endLine": 10,
+          "file": "suite.test.ts",
+          "line": 10,
+          "message": "Test modifier 'todo' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 13,
+          "endLine": 13,
+          "file": "suite.test.ts",
+          "line": 13,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 16,
+          "file": "suite.test.ts",
+          "line": 16,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 13,
+          "endLine": 19,
+          "file": "suite.test.ts",
+          "line": 19,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 20,
+          "endLine": 22,
+          "file": "suite.test.ts",
+          "line": 22,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 14,
+          "endLine": 39,
+          "file": "suite.test.ts",
+          "line": 39,
+          "message": "Test modifier 'runIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "pattern-bindings",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.spec.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 3,
+          "file": "suite.spec.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 14,
+          "endLine": 4,
+          "file": "suite.spec.ts",
+          "line": 4,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 5,
+          "file": "suite.spec.ts",
+          "line": 5,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 22,
+          "endLine": 6,
+          "file": "suite.spec.ts",
+          "line": 6,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 7,
+          "file": "suite.spec.ts",
+          "line": 7,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 22,
+          "endLine": 9,
+          "file": "suite.spec.ts",
+          "line": 9,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "playwright",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.spec.ts",
+      "findings": [
+        {
+          "column": 6,
+          "endColumn": 10,
+          "endLine": 14,
+          "file": "suite.spec.ts",
+          "line": 14,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 14,
+          "endLine": 15,
+          "file": "suite.spec.ts",
+          "line": 15,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 21,
+          "endLine": 16,
+          "file": "suite.spec.ts",
+          "line": 16,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 57,
+          "endLine": 17,
+          "file": "suite.spec.ts",
+          "line": 17,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 19,
+          "endLine": 18,
+          "file": "suite.spec.ts",
+          "line": 18,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-extend",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.spec.ts",
+      "findings": [],
+      "name": "playwright-test-modules",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.spec.ts",
+      "findings": [
+        {
+          "column": 6,
+          "endColumn": 10,
+          "endLine": 8,
+          "file": "suite.spec.ts",
+          "line": 8,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 68,
+          "endLine": 9,
+          "file": "suite.spec.ts",
+          "line": 9,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 10,
+          "endLine": 10,
+          "file": "suite.spec.ts",
+          "line": 10,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 19,
+          "endLine": 11,
+          "file": "suite.spec.ts",
+          "line": 11,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 14,
+          "endLine": 13,
+          "file": "suite.spec.ts",
+          "line": 13,
+          "message": "Test modifier 'todo' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "playwright-test-modules testModules",
+      "options": {
+        "testModules": [
+          "./fixtures",
+          "@app/test"
+        ]
+      },
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 4,
+          "endColumn": 8,
+          "endLine": 5,
+          "file": "suite.test.ts",
+          "line": 5,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 6,
+          "file": "suite.test.ts",
+          "line": 6,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 10,
+          "endLine": 8,
+          "file": "suite.test.ts",
+          "line": 8,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 12,
+          "endLine": 9,
+          "file": "suite.test.ts",
+          "line": 9,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "recall",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 4,
+          "endColumn": 8,
+          "endLine": 5,
+          "file": "suite.test.ts",
+          "line": 5,
+          "message": "Test modifier 'todo' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 9,
+          "endLine": 7,
+          "file": "suite.test.ts",
+          "line": 7,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 9,
+          "endLine": 9,
+          "file": "suite.test.ts",
+          "line": 9,
+          "message": "Test modifier 'runIf' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "name": "suppression",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [],
+      "name": "suppression-file",
+      "options": null,
+      "rule": "test-no-skips"
+    }
+  ],
+  "oxlint": [
+    {
+      "file": "context-bindings.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 36,
+          "file": "context-bindings.ts",
+          "line": 4,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 37,
+          "file": "context-bindings.ts",
+          "line": 5,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 44,
+          "file": "context-bindings.ts",
+          "line": 6,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 62,
+          "file": "context-bindings.ts",
+          "line": 7,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 3,
+          "file": "context-bindings.ts",
+          "line": 10,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 3,
+          "file": "context-bindings.ts",
+          "line": 15,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 3,
+          "file": "context-bindings.ts",
+          "line": 19,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 56,
+          "file": "context-bindings.ts",
+          "line": 21,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 3,
+          "file": "context-bindings.ts",
+          "line": 24,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        }
+      ],
+      "name": "context-bindings",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "import-equals-non-test.ts",
+      "findings": [],
+      "name": "import-equals-non-test",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "import-equals-skip.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 6,
+          "file": "import-equals-skip.ts",
+          "line": 4,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 17,
+          "file": "import-equals-skip.ts",
+          "line": 5,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        }
+      ],
+      "name": "import-equals-skip",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "import-equals-unsupported.ts",
+      "findings": [],
+      "name": "import-equals-unsupported",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "playwright.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 9,
+          "file": "playwright.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 9,
+          "file": "playwright.ts",
+          "line": 4,
+          "message": "Test modifier 'fixme' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 9,
+          "file": "playwright.ts",
+          "line": 5,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 18,
+          "file": "playwright.ts",
+          "line": 6,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 9,
+          "file": "playwright.ts",
+          "line": 7,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        },
+        {
+          "code": "no-mistakes(test-no-skips)",
+          "column": 18,
+          "file": "playwright.ts",
+          "line": 9,
+          "message": "Test modifier 'only' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier."
+        }
+      ],
+      "name": "playwright",
+      "options": null,
+      "rule": "test-no-skips"
+    },
+    {
+      "file": "suppression-file.ts",
+      "findings": [],
+      "name": "suppression-file",
+      "options": null,
+      "rule": "test-no-skips"
+    }
+  ]
+}

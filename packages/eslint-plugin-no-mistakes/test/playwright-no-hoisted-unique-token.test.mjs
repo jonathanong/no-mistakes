@@ -1,20 +1,13 @@
 import tsParser from "@typescript-eslint/parser";
-import { RuleTester } from "eslint";
-import { describe, it } from "vitest";
-import { plugin } from "./helpers.mjs";
+import { expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 
-const rule = plugin.rules["playwright-no-hoisted-unique-token"];
-
-RuleTester.describe = describe;
-RuleTester.it = it;
-
-const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2024, sourceType: "module" },
-});
+const ruleName = "playwright-no-hoisted-unique-token";
+const languageOptions = { ecmaVersion: 2024, sourceType: "module" };
 
 const TOKEN_FACTORIES = [{ tokenFactories: ["randomSuffix"] }];
 
-ruleTester.run("playwright-no-hoisted-unique-token", rule, {
+const suite = {
   valid: [
     // No options configured: the rule is inert regardless of shape.
     {
@@ -217,7 +210,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/tags/tag-limit.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // Exact pre-fix content-language.spec.mts shape: describe-scope hoist.
     {
@@ -229,7 +221,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/posts/content-language.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // Bare (unqualified) beforeAll is also recognized.
     {
@@ -239,7 +230,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/tags/tag-limit.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // Two independent beforeAll hooks each reading the same hoisted token: reported once per read.
     {
@@ -252,10 +242,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/tags/tag-limit.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [
-        { messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } },
-        { messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } },
-      ],
     },
     // Multiple hoisted tokens read by the same hook are each reported.
     {
@@ -266,10 +252,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/tags/tag-limit.spec.mts",
       options: [{ tokenFactories: ["randomSuffix"] }],
-      errors: [
-        { messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } },
-        { messageId: "hoisted", data: { name: "otherSuffix", factory: "randomSuffix" } },
-      ],
     },
     // A non-computed member-expression property (`config.suffix`) sharing the hoisted token's
     // name is a binding position, not a reference — it must not be double-reported alongside
@@ -283,7 +265,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/tags/tag-limit.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // describe.each(...)('...', fn) shape: fn's enclosing call has a CallExpression callee
     // (`describe.each([...])`), neither a bare Identifier nor a non-computed MemberExpression.
@@ -298,7 +279,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/tags/tag-limit.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // test.describe.only(...) / .skip(...) still has "describe" in its callee chain — it
     // registers once, exactly like plain describe, and must not be misread as a safe test-body
@@ -312,7 +292,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/posts/content-language.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // A file path that doesn't match the naming convention is still recognized once it imports
     // @playwright/test. The same import statement also carries a default specifier (not an
@@ -327,7 +306,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "src/util.ts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // A `suffix as string` cast is a runtime value position (the value-wrapper recurses into its
     // own `.expression`), so the read underneath it is still a real, stale read and must still
@@ -340,7 +318,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       filename: "playwright/tests/posts/post-lock.spec.mts",
       options: TOKEN_FACTORIES,
       languageOptions: { parser: tsParser },
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // An angle-bracket `<string>suffix` assertion is the same runtime value wrapper as `as string`,
     // just under TypeScript's other assertion syntax, and must be recursed into the same way.
@@ -352,7 +329,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       filename: "playwright/tests/posts/post-lock.spec.mts",
       options: TOKEN_FACTORIES,
       languageOptions: { parser: tsParser },
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // The reassignment is nested inside a conditional branch, so it is not guaranteed to run
     // before the later read — `collectEvents`'s source-order traversal must not treat a merely
@@ -367,7 +343,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/posts/post-lock.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // The reassignment lives inside a helper function nested in the callback. Even though the
     // helper is called unconditionally right after its declaration, `isUnconditionalWrite` cannot
@@ -384,7 +359,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/posts/post-lock.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // The helper is declared but never called at all — the read of `suffix` observes the
     // untouched hoisted value. Declaring a same-named helper must not, by itself, suppress the
@@ -399,7 +373,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/posts/post-lock.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // A `var` redeclared in the same scope (`var suffix; var suffix = randomSuffix();`) is a
     // single Variable with two defs — the factory-call declarator is defs[1], not defs[0] — and
@@ -412,7 +385,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/posts/post-lock.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // A self-referential write (`suffix = suffix.trim()`) still reads the pre-write, potentially
     // stale value on its own right-hand side before the assignment takes effect — the read
@@ -426,10 +398,6 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/posts/post-lock.spec.mts",
       options: TOKEN_FACTORIES,
-      errors: [
-        { messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } },
-        { messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } },
-      ],
     },
     // An aliased `import { test as pw } from "@playwright/test"` must be recognized the same as
     // the bare `test`/`it`/`describe` names — `pw.beforeAll(...)` is exactly as re-entry-hazardous
@@ -442,7 +410,14 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "src/util.ts",
       options: TOKEN_FACTORIES,
-      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
   ],
+};
+
+it("snapshots playwright-no-hoisted-unique-token diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      ruleTester: snapshotSuite(ruleName, languageOptions, suite),
+    }),
+  ).toMatchFileSnapshot("snapshots/playwright-no-hoisted-unique-token.snap");
 });

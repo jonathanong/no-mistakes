@@ -1,0 +1,506 @@
+{
+  "oxlint": [
+    {
+      "file": "forwarded.test.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 43,
+          "file": "forwarded.test.ts",
+          "line": 5,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 45,
+          "file": "forwarded.test.ts",
+          "line": 6,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 43,
+          "file": "forwarded.test.ts",
+          "line": 7,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 20,
+          "file": "forwarded.test.ts",
+          "line": 9,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 45,
+          "file": "forwarded.test.ts",
+          "line": 16,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 21,
+          "file": "forwarded.test.ts",
+          "line": 28,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 56,
+          "file": "forwarded.test.ts",
+          "line": 35,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 67,
+          "file": "forwarded.test.ts",
+          "line": 37,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 49,
+          "file": "forwarded.test.ts",
+          "line": 38,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 55,
+          "file": "forwarded.test.ts",
+          "line": 40,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        },
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 58,
+          "file": "forwarded.test.ts",
+          "line": 46,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        }
+      ],
+      "name": "forwarded",
+      "status": 1
+    },
+    {
+      "file": "forwarded-controls.test.ts",
+      "findings": [],
+      "name": "forwarded-controls",
+      "status": 0
+    },
+    {
+      "file": "forwarded-invalid-intrinsics.test.ts",
+      "findings": [],
+      "name": "forwarded-invalid-intrinsics",
+      "status": 0
+    },
+    {
+      "file": "forwarded-shadowed-callbacks.test.ts",
+      "findings": [],
+      "name": "forwarded-shadowed-callbacks",
+      "status": 0
+    },
+    {
+      "file": "forwarded-suppressed.test.ts",
+      "findings": [],
+      "name": "forwarded-suppressed",
+      "status": 0
+    },
+    {
+      "file": "forwarded-file.test.ts",
+      "findings": [],
+      "name": "forwarded-file",
+      "status": 0
+    },
+    {
+      "file": "forwarded-shadowed-serial.test.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(test-no-shared-state)",
+          "column": 47,
+          "file": "forwarded-shadowed-serial.test.ts",
+          "line": 10,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead."
+        }
+      ],
+      "name": "forwarded-shadowed-serial",
+      "status": 1
+    },
+    {
+      "file": "forwarded-serial.test.ts",
+      "findings": [],
+      "name": "forwarded-serial",
+      "status": 0
+    }
+  ],
+  "pluginLoader": [
+    {
+      "file": "forwarded.test.ts",
+      "findings": [
+        {
+          "column": 43,
+          "endColumn": 56,
+          "endLine": 5,
+          "file": "forwarded.test.ts",
+          "line": 5,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 45,
+          "endColumn": 58,
+          "endLine": 6,
+          "file": "forwarded.test.ts",
+          "line": 6,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 56,
+          "endLine": 7,
+          "file": "forwarded.test.ts",
+          "line": 7,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 33,
+          "endLine": 9,
+          "file": "forwarded.test.ts",
+          "line": 9,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 45,
+          "endColumn": 58,
+          "endLine": 16,
+          "file": "forwarded.test.ts",
+          "line": 16,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 38,
+          "endLine": 28,
+          "file": "forwarded.test.ts",
+          "line": 28,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 56,
+          "endColumn": 75,
+          "endLine": 35,
+          "file": "forwarded.test.ts",
+          "line": 35,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 67,
+          "endColumn": 80,
+          "endLine": 37,
+          "file": "forwarded.test.ts",
+          "line": 37,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 49,
+          "endColumn": 62,
+          "endLine": 38,
+          "file": "forwarded.test.ts",
+          "line": 38,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 55,
+          "endColumn": 68,
+          "endLine": 40,
+          "file": "forwarded.test.ts",
+          "line": 40,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 58,
+          "endColumn": 76,
+          "endLine": 46,
+          "file": "forwarded.test.ts",
+          "line": 46,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "name": "forwarded",
+      "options": null
+    },
+    {
+      "file": "forwarded-controls.test.ts",
+      "findings": [],
+      "name": "forwarded-controls",
+      "options": null
+    },
+    {
+      "file": "forwarded-file.test.ts",
+      "findings": [],
+      "name": "forwarded-file",
+      "options": null
+    },
+    {
+      "file": "forwarded-invalid-intrinsics.test.ts",
+      "findings": [],
+      "name": "forwarded-invalid-intrinsics",
+      "options": null
+    },
+    {
+      "file": "forwarded-serial.test.ts",
+      "findings": [],
+      "name": "forwarded-serial",
+      "options": null
+    },
+    {
+      "file": "forwarded-shadowed-callbacks.test.ts",
+      "findings": [],
+      "name": "forwarded-shadowed-callbacks",
+      "options": null
+    },
+    {
+      "file": "forwarded-shadowed-serial.test.ts",
+      "findings": [
+        {
+          "column": 47,
+          "endColumn": 67,
+          "endLine": 10,
+          "file": "forwarded-shadowed-serial.test.ts",
+          "line": 10,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "name": "forwarded-shadowed-serial",
+      "options": null
+    },
+    {
+      "file": "forwarded-suppressed.test.ts",
+      "findings": [],
+      "name": "forwarded-suppressed",
+      "options": null
+    }
+  ],
+  "ruleTester": [
+    {
+      "file": "forwarded-controls.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "forwarded-invalid-intrinsics.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "forwarded-shadowed-callbacks.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "forwarded-suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "forwarded-file.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "forwarded-serial.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "forwarded.test.ts",
+      "findings": [
+        {
+          "column": 43,
+          "endColumn": 56,
+          "endLine": 5,
+          "file": "forwarded.test.ts",
+          "line": 5,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 45,
+          "endColumn": 58,
+          "endLine": 6,
+          "file": "forwarded.test.ts",
+          "line": 6,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 56,
+          "endLine": 7,
+          "file": "forwarded.test.ts",
+          "line": 7,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 33,
+          "endLine": 9,
+          "file": "forwarded.test.ts",
+          "line": 9,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 45,
+          "endColumn": 58,
+          "endLine": 16,
+          "file": "forwarded.test.ts",
+          "line": 16,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 38,
+          "endLine": 28,
+          "file": "forwarded.test.ts",
+          "line": 28,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 56,
+          "endColumn": 75,
+          "endLine": 35,
+          "file": "forwarded.test.ts",
+          "line": 35,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 67,
+          "endColumn": 80,
+          "endLine": 37,
+          "file": "forwarded.test.ts",
+          "line": 37,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 49,
+          "endColumn": 62,
+          "endLine": 38,
+          "file": "forwarded.test.ts",
+          "line": 38,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 55,
+          "endColumn": 68,
+          "endLine": 40,
+          "file": "forwarded.test.ts",
+          "line": 40,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 58,
+          "endColumn": 76,
+          "endLine": 46,
+          "file": "forwarded.test.ts",
+          "line": 46,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "forwarded-shadowed-serial.test.ts",
+      "findings": [
+        {
+          "column": 47,
+          "endColumn": 67,
+          "endLine": 10,
+          "file": "forwarded-shadowed-serial.test.ts",
+          "line": 10,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

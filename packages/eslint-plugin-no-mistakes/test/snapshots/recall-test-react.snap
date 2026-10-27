@@ -1,0 +1,673 @@
+[
+  {
+    "file": "poll.ts",
+    "findings": [],
+    "name": "test-no-delayed-rejects poll.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "recall.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 33,
+        "endLine": 10,
+        "file": "recall.ts",
+        "line": 10,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 36,
+        "endLine": 16,
+        "file": "recall.ts",
+        "line": 16,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 33,
+        "endLine": 22,
+        "file": "recall.ts",
+        "line": 22,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-delayed-rejects recall.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "suppressed.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 30,
+        "endLine": 16,
+        "file": "suppressed.ts",
+        "line": 16,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-delayed-rejects suppressed.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "binary-suppressed.test.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 26,
+        "endLine": 6,
+        "file": "binary-suppressed.test.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching binary-suppressed.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "bracket-call.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 7,
+        "file": "bracket-call.test.ts",
+        "line": 7,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 8,
+        "file": "bracket-call.test.ts",
+        "line": 8,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching bracket-call.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "bun-expect.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 6,
+        "file": "bun-expect.test.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching bun-expect.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "chai-expect.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 6,
+        "file": "chai-expect.test.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching chai-expect.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "cjs-expect.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 6,
+        "file": "cjs-expect.test.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching cjs-expect.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "commonjs.test.cjs",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 4,
+        "file": "commonjs.test.cjs",
+        "line": 4,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching commonjs.test.cjs",
+    "options": null,
+    "rule": "test-no-error-message-matching",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "function-expect.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 8,
+        "file": "function-expect.test.ts",
+        "line": 8,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching function-expect.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "let-expect.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 6,
+        "file": "let-expect.test.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching let-expect.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "local-expect.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 8,
+        "file": "local-expect.test.ts",
+        "line": 8,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching local-expect.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "matcher-call.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 7,
+        "file": "matcher-call.test.ts",
+        "line": 7,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 52,
+        "endLine": 8,
+        "file": "matcher-call.test.ts",
+        "line": 8,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching matcher-call.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "playwright-expect.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 6,
+        "file": "playwright-expect.test.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching playwright-expect.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "recall.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 37,
+        "endLine": 13,
+        "file": "recall.test.ts",
+        "line": 13,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 37,
+        "endLine": 14,
+        "file": "recall.test.ts",
+        "line": 14,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 36,
+        "endLine": 15,
+        "file": "recall.test.ts",
+        "line": 15,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 33,
+        "endLine": 16,
+        "file": "recall.test.ts",
+        "line": 16,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 37,
+        "endLine": 17,
+        "file": "recall.test.ts",
+        "line": 17,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 40,
+        "endLine": 18,
+        "file": "recall.test.ts",
+        "line": 18,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 38,
+        "endLine": 19,
+        "file": "recall.test.ts",
+        "line": 19,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 38,
+        "endLine": 20,
+        "file": "recall.test.ts",
+        "line": 20,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 40,
+        "endLine": 21,
+        "file": "recall.test.ts",
+        "line": 21,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 46,
+        "endLine": 22,
+        "file": "recall.test.ts",
+        "line": 22,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 45,
+        "endLine": 23,
+        "file": "recall.test.ts",
+        "line": 23,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 38,
+        "endLine": 25,
+        "file": "recall.test.ts",
+        "line": 25,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 34,
+        "endLine": 26,
+        "file": "recall.test.ts",
+        "line": 26,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 38,
+        "endLine": 27,
+        "file": "recall.test.ts",
+        "line": 27,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching recall.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "setup-expect.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 6,
+        "file": "setup-expect.test.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-error-message-matching setup-expect.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "alias-describe.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 20,
+        "endLine": 13,
+        "file": "alias-describe.test.ts",
+        "line": 13,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-shared-state alias-describe.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "computed-describe.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 20,
+        "endLine": 12,
+        "file": "computed-describe.test.ts",
+        "line": 12,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-shared-state computed-describe.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "namespace-serial.test.ts",
+    "findings": [],
+    "name": "test-no-shared-state namespace-serial.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "recall.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 15,
+        "endLine": 10,
+        "file": "recall.test.ts",
+        "line": 10,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 15,
+        "endLine": 13,
+        "file": "recall.test.ts",
+        "line": 13,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 15,
+        "endLine": 16,
+        "file": "recall.test.ts",
+        "line": 16,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 15,
+        "endLine": 19,
+        "file": "recall.test.ts",
+        "line": 19,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 15,
+        "endLine": 22,
+        "file": "recall.test.ts",
+        "line": 22,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-shared-state recall.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "sequence-describe.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 20,
+        "endLine": 12,
+        "file": "sequence-describe.test.ts",
+        "line": 12,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-shared-state sequence-describe.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "serial-alias.test.ts",
+    "findings": [],
+    "name": "test-no-shared-state serial-alias.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shadow-namespace.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 20,
+        "endLine": 13,
+        "file": "shadow-namespace.test.ts",
+        "line": 13,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-shared-state shadow-namespace.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shadow-test-alias.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 20,
+        "endLine": 13,
+        "file": "shadow-test-alias.test.ts",
+        "line": 13,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-shared-state shadow-test-alias.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "suppressed-alias.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 20,
+        "endLine": 9,
+        "file": "suppressed-alias.test.ts",
+        "line": 9,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "test-no-shared-state suppressed-alias.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  }
+]

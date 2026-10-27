@@ -1,0 +1,1049 @@
+[
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "absentFulfillmentHandler",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 13,
+        "endColumn": 35,
+        "endLine": 5,
+        "file": "fixture.jsx",
+        "line": 5,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "deferredField",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 13,
+        "endColumn": 35,
+        "endLine": 5,
+        "file": "fixture.jsx",
+        "line": 5,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "destructuringDefault",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "global-invalid.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 7,
+        "file": "global-invalid.ts",
+        "line": 7,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "global-invalid.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "guaranteedCatch",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "invalid.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 17,
+        "file": "invalid.ts",
+        "line": 17,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 24,
+        "file": "invalid.ts",
+        "line": 24,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 29,
+        "file": "invalid.ts",
+        "line": 29,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 35,
+        "file": "invalid.ts",
+        "line": 35,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 42,
+        "file": "invalid.ts",
+        "line": 42,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 52,
+        "file": "invalid.ts",
+        "line": 52,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 13,
+        "endColumn": 35,
+        "endLine": 62,
+        "file": "invalid.ts",
+        "line": 62,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 71,
+        "file": "invalid.ts",
+        "line": 71,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 80,
+        "file": "invalid.ts",
+        "line": 80,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 94,
+        "file": "invalid.ts",
+        "line": 94,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 101,
+        "file": "invalid.ts",
+        "line": 101,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 109,
+        "file": "invalid.ts",
+        "line": 109,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 117,
+        "file": "invalid.ts",
+        "line": 117,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 125,
+        "file": "invalid.ts",
+        "line": 125,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 132,
+        "file": "invalid.ts",
+        "line": 132,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 13,
+        "endColumn": 35,
+        "endLine": 141,
+        "file": "invalid.ts",
+        "line": 141,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 13,
+        "endColumn": 35,
+        "endLine": 151,
+        "file": "invalid.ts",
+        "line": 151,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 39,
+        "endLine": 163,
+        "file": "invalid.ts",
+        "line": 163,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 37,
+        "endLine": 176,
+        "file": "invalid.ts",
+        "line": 176,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 39,
+        "endLine": 191,
+        "file": "invalid.ts",
+        "line": 191,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 37,
+        "endLine": 208,
+        "file": "invalid.ts",
+        "line": 208,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 37,
+        "endLine": 225,
+        "file": "invalid.ts",
+        "line": 225,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 39,
+        "endLine": 242,
+        "file": "invalid.ts",
+        "line": 242,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 258,
+        "file": "invalid.ts",
+        "line": 258,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 264,
+        "file": "invalid.ts",
+        "line": 264,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 34,
+        "endLine": 270,
+        "file": "invalid.ts",
+        "line": 270,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 36,
+        "endLine": 276,
+        "file": "invalid.ts",
+        "line": 276,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 284,
+        "file": "invalid.ts",
+        "line": 284,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 290,
+        "file": "invalid.ts",
+        "line": 290,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 298,
+        "file": "invalid.ts",
+        "line": 298,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 307,
+        "file": "invalid.ts",
+        "line": 307,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 16,
+        "endColumn": 38,
+        "endLine": 315,
+        "file": "invalid.ts",
+        "line": 315,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 50,
+        "endLine": 322,
+        "file": "invalid.ts",
+        "line": 322,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 37,
+        "endLine": 332,
+        "file": "invalid.ts",
+        "line": 332,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 50,
+        "endLine": 343,
+        "file": "invalid.ts",
+        "line": 343,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 35,
+        "endColumn": 57,
+        "endLine": 350,
+        "file": "invalid.ts",
+        "line": 350,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 48,
+        "endLine": 358,
+        "file": "invalid.ts",
+        "line": 358,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 55,
+        "endLine": 364,
+        "file": "invalid.ts",
+        "line": 364,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 32,
+        "endLine": 370,
+        "file": "invalid.ts",
+        "line": 370,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 375,
+        "file": "invalid.ts",
+        "line": 375,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 382,
+        "file": "invalid.ts",
+        "line": 382,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 394,
+        "file": "invalid.ts",
+        "line": 394,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 410,
+        "file": "invalid.ts",
+        "line": 410,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 428,
+        "file": "invalid.ts",
+        "line": 428,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 444,
+        "file": "invalid.ts",
+        "line": 444,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 450,
+        "file": "invalid.ts",
+        "line": 450,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 456,
+        "file": "invalid.ts",
+        "line": 456,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 462,
+        "file": "invalid.ts",
+        "line": 462,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 469,
+        "file": "invalid.ts",
+        "line": 469,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 477,
+        "file": "invalid.ts",
+        "line": 477,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 484,
+        "file": "invalid.ts",
+        "line": 484,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 491,
+        "file": "invalid.ts",
+        "line": 491,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 499,
+        "file": "invalid.ts",
+        "line": 499,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 506,
+        "file": "invalid.ts",
+        "line": 506,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 515,
+        "file": "invalid.ts",
+        "line": 515,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 526,
+        "file": "invalid.ts",
+        "line": 526,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 535,
+        "file": "invalid.ts",
+        "line": 535,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 542,
+        "file": "invalid.ts",
+        "line": 542,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 551,
+        "file": "invalid.ts",
+        "line": 551,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 559,
+        "file": "invalid.ts",
+        "line": 559,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 568,
+        "file": "invalid.ts",
+        "line": 568,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 581,
+        "file": "invalid.ts",
+        "line": 581,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 593,
+        "file": "invalid.ts",
+        "line": 593,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 605,
+        "file": "invalid.ts",
+        "line": 605,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 620,
+        "file": "invalid.ts",
+        "line": 620,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 635,
+        "file": "invalid.ts",
+        "line": 635,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 650,
+        "file": "invalid.ts",
+        "line": 650,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 665,
+        "file": "invalid.ts",
+        "line": 665,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 675,
+        "file": "invalid.ts",
+        "line": 675,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 686,
+        "file": "invalid.ts",
+        "line": 686,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 694,
+        "file": "invalid.ts",
+        "line": 694,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 709,
+        "file": "invalid.ts",
+        "line": 709,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 721,
+        "file": "invalid.ts",
+        "line": 721,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 733,
+        "file": "invalid.ts",
+        "line": 733,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 33,
+        "endLine": 743,
+        "file": "invalid.ts",
+        "line": 743,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 761,
+        "file": "invalid.ts",
+        "line": 761,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 777,
+        "file": "invalid.ts",
+        "line": 777,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 793,
+        "file": "invalid.ts",
+        "line": 793,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 809,
+        "file": "invalid.ts",
+        "line": 809,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 825,
+        "file": "invalid.ts",
+        "line": 825,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 837,
+        "file": "invalid.ts",
+        "line": 837,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 843,
+        "file": "invalid.ts",
+        "line": 843,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "invalid.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "jest-invalid.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 31,
+        "endLine": 9,
+        "file": "jest-invalid.ts",
+        "line": 9,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "jest-invalid.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "module-level-catch-before-await.ts",
+    "findings": [],
+    "name": "module-level-catch-before-await.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "module-level-invalid.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 29,
+        "endLine": 9,
+        "file": "module-level-invalid.ts",
+        "line": 9,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "module-level-invalid.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "module-level-valid.ts",
+    "findings": [],
+    "name": "module-level-valid.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "non-framework-expect-valid.ts",
+    "findings": [],
+    "name": "non-framework-expect-valid.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "valid.ts",
+    "findings": [],
+    "name": "valid.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  }
+]

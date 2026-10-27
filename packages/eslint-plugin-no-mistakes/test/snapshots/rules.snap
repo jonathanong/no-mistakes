@@ -1,0 +1,477 @@
+[
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "requires the configured canonical attribute: data-pw",
+    "options": null,
+    "rule": "playwright-consistent-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "requires the configured canonical attribute: data-qa",
+    "options": {
+      "canonicalAttribute": "data-qa",
+      "selectorAttributes": [
+        "data-qa"
+      ]
+    },
+    "rule": "playwright-consistent-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 20,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use 'data-pw' instead of 'data-testid' for test IDs.",
+        "messageId": "attribute",
+        "ruleId": "no-mistakes/playwright-consistent-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "requires the configured canonical attribute: data-testid",
+    "options": null,
+    "rule": "playwright-consistent-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "accepts const destructured literal defaults",
+    "options": null,
+    "rule": "playwright-defaults"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 93,
+        "endColumn": 107,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Test ID prop passthrough must have a literal default.",
+        "messageId": "default",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      },
+      {
+        "column": 173,
+        "endColumn": 190,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Test ID prop passthrough must have a literal default.",
+        "messageId": "default",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      },
+      {
+        "column": 301,
+        "endColumn": 317,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Test ID prop passthrough must have a literal default.",
+        "messageId": "default",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      }
+    ],
+    "name": "rejects const defaults from non-props, before declaration, and mismatched parameters",
+    "options": null,
+    "rule": "playwright-defaults"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 197,
+        "endColumn": 213,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Test ID prop passthrough must have a literal default.",
+        "messageId": "default",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      },
+      {
+        "column": 224,
+        "endColumn": 241,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Test ID prop passthrough must have a literal default.",
+        "messageId": "default",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      },
+      {
+        "column": 252,
+        "endColumn": 269,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Test ID prop passthrough must have a literal default.",
+        "messageId": "default",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      }
+    ],
+    "name": "rejects shadowed and unsafe const destructured defaults",
+    "options": null,
+    "rule": "playwright-defaults"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 26,
+        "endColumn": 42,
+        "endLine": 5,
+        "file": "fixture.jsx",
+        "line": 5,
+        "message": "Test ID prop passthrough must have a literal default.",
+        "messageId": "default",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      }
+    ],
+    "name": "rejects shadowed defaulted props",
+    "options": null,
+    "rule": "playwright-defaults"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 15,
+        "endColumn": 31,
+        "endLine": 14,
+        "file": "fixture.jsx",
+        "line": 14,
+        "message": "Test ID prop passthrough must have a literal default.",
+        "messageId": "default",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 30,
+        "endLine": 15,
+        "file": "fixture.jsx",
+        "line": 15,
+        "message": "Test ID prop passthrough must have a literal default.",
+        "messageId": "default",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      }
+    ],
+    "name": "requires literal defaults for prop passthrough",
+    "options": null,
+    "rule": "playwright-defaults"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "accepts const destructured literal defaults",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "accepts defaulted props through nested scopes only when unshadowed",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "accepts literals, expression literals, empty static templates, static templates, and defaulted props",
+    "options": {
+      "allowStaticTemplates": true
+    },
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 50,
+        "endColumn": 66,
+        "endLine": 2,
+        "file": "fixture.jsx",
+        "line": 2,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      }
+    ],
+    "name": "can be configured for literal-only mode and custom attributes",
+    "options": {
+      "allowDefaultedProps": false,
+      "selectorAttributes": [
+        "data-qa"
+      ]
+    },
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 63,
+        "endColumn": 77,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      }
+    ],
+    "name": "does not treat rest bindings as defaulted props",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 26,
+        "endColumn": 42,
+        "endLine": 5,
+        "file": "fixture.jsx",
+        "line": 5,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      }
+    ],
+    "name": "does not treat shadowed locals as defaulted props",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 19,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 38,
+        "endColumn": 44,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      }
+    ],
+    "name": "rejects missing getByTestId arguments and identifiers outside functions",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 24,
+        "endColumn": 41,
+        "endLine": 5,
+        "file": "fixture.jsx",
+        "line": 5,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      }
+    ],
+    "name": "rejects templates without static text and allows defaulted identifiers outside props",
+    "options": {
+      "allowStaticTemplates": true
+    },
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 231,
+        "endColumn": 246,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 257,
+        "endColumn": 274,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 285,
+        "endColumn": 302,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 313,
+        "endColumn": 330,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      }
+    ],
+    "name": "rejects unsafe const destructured defaults",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 20,
+        "endColumn": 22,
+        "endLine": 2,
+        "file": "fixture.jsx",
+        "line": 2,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 21,
+        "endLine": 3,
+        "file": "fixture.jsx",
+        "line": 3,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 22,
+        "endLine": 6,
+        "file": "fixture.jsx",
+        "line": 6,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 27,
+        "endLine": 7,
+        "file": "fixture.jsx",
+        "line": 7,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 31,
+        "endLine": 8,
+        "file": "fixture.jsx",
+        "line": 8,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 37,
+        "endLine": 9,
+        "file": "fixture.jsx",
+        "line": 9,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      }
+    ],
+    "name": "reports missing, dynamic, non-defaulted, and forbidden template values",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "reports duplicate exact literals within a file: dynamic id",
+    "options": null,
+    "rule": "playwright-unique"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 31,
+        "endLine": 3,
+        "file": "fixture.jsx",
+        "line": 3,
+        "message": "Test ID 'save' is already used in this file.",
+        "messageId": "duplicate",
+        "ruleId": "no-mistakes/playwright-unique",
+        "severity": 2
+      },
+      {
+        "column": 11,
+        "endColumn": 27,
+        "endLine": 4,
+        "file": "fixture.jsx",
+        "line": 4,
+        "message": "Test ID 'save' is already used in this file.",
+        "messageId": "duplicate",
+        "ruleId": "no-mistakes/playwright-unique",
+        "severity": 2
+      }
+    ],
+    "name": "reports duplicate exact literals within a file: unique.jsx",
+    "options": null,
+    "rule": "playwright-unique"
+  }
+]

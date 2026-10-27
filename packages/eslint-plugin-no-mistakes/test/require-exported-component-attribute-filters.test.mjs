@@ -1,32 +1,50 @@
-import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { fixture, messages } from "./helpers.mjs";
+import { expect, it } from "vitest";
+import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
+import { fixture } from "./helpers.mjs";
 
 const RULE = "playwright-require-exported-component-attribute";
 const DIR = "playwright-require-exported-component-attribute";
 
-function run(name, option) {
-  return messages(fixture(`${DIR}/${name}`), RULE, option, `${name}`);
+function filterCase(name, file, option) {
+  return {
+    name,
+    file,
+    rule: RULE,
+    ...(option !== undefined ? { options: option } : {}),
+    findings: pluginFindings(fixture(`${DIR}/${file}`), RULE, option, file),
+  };
 }
 
-describe("playwright-require-exported-component-attribute filters", () => {
-  it("does not check ignored exported components", () => {
-    assert.deepEqual(run("ignore-button.jsx", { ignoreComponents: ["Button"] }), []);
-  });
-
-  it("does not check lowercase hooks under the default name pattern", () => {
-    assert.deepEqual(run("lowercase-hook.jsx"), []);
-  });
-
-  it("checks only listed components when components is set", () => {
-    assert.deepEqual(run("unlisted-card.jsx", { components: ["Card"] }), ["missing"]);
-    assert.deepEqual(run("unlisted-card.jsx", { components: ["Button"] }), ["missing"]);
-  });
-
-  it("applies componentNamePattern instead of the default PascalCase filter", () => {
+it("snapshots require-exported-component-attribute-filters diagnostics", async () => {
+  const cases = [
+    filterCase("does not check ignored exported components", "ignore-button.jsx", {
+      ignoreComponents: ["Button"],
+    }),
+    filterCase(
+      "does not check lowercase hooks under the default name pattern",
+      "lowercase-hook.jsx",
+    ),
+    filterCase("checks only listed components when components is set: Card", "unlisted-card.jsx", {
+      components: ["Card"],
+    }),
+    filterCase(
+      "checks only listed components when components is set: Button",
+      "unlisted-card.jsx",
+      { components: ["Button"] },
+    ),
     // Button already has data-pw, so a default PascalCase run is silent.
     // The configured run can report missing only if widget is selected.
-    assert.deepEqual(run("pattern-widget.jsx", { componentNamePattern: "^widget$" }), ["missing"]);
-    assert.deepEqual(run("pattern-widget.jsx"), []);
-  });
+    filterCase(
+      "applies componentNamePattern instead of the default PascalCase filter: widget",
+      "pattern-widget.jsx",
+      { componentNamePattern: "^widget$" },
+    ),
+    filterCase(
+      "applies componentNamePattern instead of the default PascalCase filter: default",
+      "pattern-widget.jsx",
+    ),
+  ];
+  await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+    "snapshots/require-exported-component-attribute-filters.snap",
+  );
 });

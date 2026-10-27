@@ -1,0 +1,76 @@
+[
+  {
+    "file": "callee-factory.test.js",
+    "findings": [],
+    "name": "keeps unrelated objects, loaders and factories outside runner bindings: callee-factory.test.js",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "custom-loader.test.js",
+    "findings": [],
+    "name": "keeps unrelated objects, loaders and factories outside runner bindings: custom-loader.test.js",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "factory-loader.test.js",
+    "findings": [],
+    "name": "keeps unrelated objects, loaders and factories outside runner bindings: factory-loader.test.js",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "ordinary-object.test.js",
+    "findings": [],
+    "name": "keeps unrelated objects, loaders and factories outside runner bindings: ordinary-object.test.js",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "redeclared-custom.test.js",
+    "findings": [],
+    "name": "keeps unrelated objects, loaders and factories outside runner bindings: redeclared-custom.test.js",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "computed-require.test.cjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 3,
+        "file": "computed-require.test.cjs",
+        "line": 3,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "reports computed CommonJS destructuring through its default wrapper",
+    "options": null,
+    "rule": "test-no-error-message-matching",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "literal-import.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 3,
+        "file": "literal-import.test.ts",
+        "line": 3,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "reports literal-named ESM imports at the exact assertion",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  }
+]

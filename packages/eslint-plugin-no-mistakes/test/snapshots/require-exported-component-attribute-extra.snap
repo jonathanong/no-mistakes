@@ -1,0 +1,191 @@
+[
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 23,
+        "endColumn": 33,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Exported component 'default' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "checks anonymous default exported expressions when enabled",
+    "options": {
+      "checkAnonymousDefault": true
+    },
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 36,
+        "endColumn": 46,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "checks array expression returns",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 26,
+        "endLine": 3,
+        "file": "fixture.jsx",
+        "line": 3,
+        "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "checks default exported wrapped named functions",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 44,
+        "endColumn": 54,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "checks logical expression returns",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 45,
+        "endColumn": 55,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "checks sequence expression returns",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 26,
+        "endLine": 3,
+        "file": "fixture.jsx",
+        "line": 3,
+        "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "deduplicates components exported inline and by specifier",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "ignores exported variables without function initializers: destructure",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "ignores exported variables without function initializers: let",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "ignores exported variables without function initializers: memo identifier",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "ignores returns inside nested classes",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 43,
+        "endColumn": 53,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "reports a component wrapped in a static computed memo call",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.tsx",
+    "findings": [],
+    "name": "unwraps syntax wrappers around configured wrapper arguments",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.tsx",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 26,
+        "endLine": 3,
+        "file": "fixture.tsx",
+        "line": 3,
+        "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "unwraps TypeScript syntax wrappers around returned JSX",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  }
+]

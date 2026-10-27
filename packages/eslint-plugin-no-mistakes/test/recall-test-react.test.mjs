@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { fixture, lint, messages } from "./helpers.mjs";
+import { describe, expect, it } from "vitest";
+import {
+  configuredFindings,
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+} from "./diagnostic-snapshot.mjs";
+import { fixture, messages } from "./helpers.mjs";
 
 const snippet = (name) => fixture(name);
 
@@ -134,186 +140,76 @@ describe("test and react same-file recall", () => {
     );
   });
 
-  it("reports error message assertions through expect aliases and static keys", () => {
-    assert.equal(
-      messages(
-        snippet("test-no-error-message-matching/recall.test.ts"),
+  it("snapshots test diagnostics", async () => {
+    const groups = [
+      [
         "test-no-error-message-matching",
-        undefined,
-        "recall.test.ts",
-      ).length,
-      14,
+        [
+          "recall.test.ts",
+          "playwright-expect.test.ts",
+          "setup-expect.test.ts",
+          "bun-expect.test.ts",
+          "chai-expect.test.ts",
+          "cjs-expect.test.ts",
+          "local-expect.test.ts",
+          "function-expect.test.ts",
+          "let-expect.test.ts",
+          "bracket-call.test.ts",
+          "binary-suppressed.test.ts",
+          "matcher-call.test.ts",
+        ],
+      ],
+      [
+        "test-no-shared-state",
+        [
+          "recall.test.ts",
+          "computed-describe.test.ts",
+          "alias-describe.test.ts",
+          "sequence-describe.test.ts",
+          "serial-alias.test.ts",
+          "shadow-test-alias.test.ts",
+          "namespace-serial.test.ts",
+          "suppressed-alias.test.ts",
+        ],
+      ],
+      ["test-no-delayed-rejects", ["recall.ts", "poll.ts", "suppressed.ts"]],
+    ];
+    const cases = groups.flatMap(([rule, files]) =>
+      files.map((file) => ({
+        file,
+        findings: pluginFindings(snippet(`${rule}/${file}`), rule, undefined, file),
+        name: `${rule} ${file}`,
+        rule,
+      })),
     );
-    for (const name of [
-      "playwright-expect.test.ts",
-      "setup-expect.test.ts",
-      "bun-expect.test.ts",
-      "chai-expect.test.ts",
-      "cjs-expect.test.ts",
-      "local-expect.test.ts",
-      "function-expect.test.ts",
-      "let-expect.test.ts",
-    ]) {
-      assert.deepEqual(
-        messages(
-          snippet(`test-no-error-message-matching/${name}`),
+    cases.push(
+      {
+        file: "commonjs.test.cjs",
+        findings: pluginFindings(
+          snippet("test-no-error-message-matching/commonjs.test.cjs"),
           "test-no-error-message-matching",
           undefined,
-          name,
+          "commonjs.test.cjs",
+          {},
+          "commonjs",
         ),
-        ["message"],
-      );
-    }
-    assert.deepEqual(
-      messages(
-        snippet("test-no-error-message-matching/bracket-call.test.ts"),
-        "test-no-error-message-matching",
-        undefined,
-        "bracket-call.test.ts",
-      ),
-      ["message", "message"],
+        name: "test-no-error-message-matching commonjs.test.cjs",
+        rule: "test-no-error-message-matching",
+        sourceType: "commonjs",
+      },
+      {
+        file: "shadow-namespace.test.ts",
+        findings: configuredFindings(
+          snippet("test-no-shared-state/shadow-namespace.test.ts"),
+          { "no-mistakes/test-no-shared-state": "error" },
+          "shadow-namespace.test.ts",
+        ),
+        name: "test-no-shared-state shadow-namespace.test.ts",
+        rule: "test-no-shared-state",
+      },
     );
-    assert.deepEqual(
-      messages(
-        snippet("test-no-error-message-matching/binary-suppressed.test.ts"),
-        "test-no-error-message-matching",
-        undefined,
-        "binary-suppressed.test.ts",
-      ),
-      ["message"],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("test-no-error-message-matching/matcher-call.test.ts"),
-        "test-no-error-message-matching",
-        undefined,
-        "matcher-call.test.ts",
-      ),
-      ["message", "message"],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("test-no-error-message-matching/commonjs.test.cjs"),
-        "test-no-error-message-matching",
-        undefined,
-        "commonjs.test.cjs",
-        {},
-        "commonjs",
-      ),
-      ["message"],
-    );
-  });
-
-  it("reports shared state inside aliased and namespace test calls", () => {
-    assert.equal(
-      messages(
-        snippet("test-no-shared-state/recall.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "recall.test.ts",
-      ).length,
-      5,
-    );
-    assert.equal(
-      messages(
-        snippet("test-no-shared-state/computed-describe.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "computed-describe.test.ts",
-      ).length,
-      1,
-    );
-    assert.equal(
-      messages(
-        snippet("test-no-shared-state/alias-describe.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "alias-describe.test.ts",
-      ).length,
-      1,
-    );
-    assert.equal(
-      messages(
-        snippet("test-no-shared-state/sequence-describe.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "sequence-describe.test.ts",
-      ).length,
-      1,
-    );
-    assert.deepEqual(
-      lint(
-        snippet("test-no-shared-state/shadow-namespace.test.ts"),
-        { "no-mistakes/test-no-shared-state": "error" },
-        "shadow-namespace.test.ts",
-      ).map(({ messageId, line }) => [messageId, line]),
-      [["shared", 13]],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("test-no-shared-state/serial-alias.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "serial-alias.test.ts",
-      ),
-      [],
-    );
-    assert.equal(
-      messages(
-        snippet("test-no-shared-state/shadow-test-alias.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shadow-test-alias.test.ts",
-      ).length,
-      1,
-    );
-    assert.deepEqual(
-      messages(
-        snippet("test-no-shared-state/namespace-serial.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "namespace-serial.test.ts",
-      ),
-      [],
-    );
-    assert.equal(
-      messages(
-        snippet("test-no-shared-state/suppressed-alias.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "suppressed-alias.test.ts",
-      ).length,
-      1,
-    );
-  });
-
-  it("reports delayed rejects through renamed expect and static keys", () => {
-    assert.equal(
-      messages(
-        snippet("test-no-delayed-rejects/recall.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "recall.ts",
-      ).length,
-      3,
-    );
-    assert.deepEqual(
-      messages(
-        snippet("test-no-delayed-rejects/poll.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "poll.ts",
-      ),
-      [],
-    );
-    assert.equal(
-      messages(
-        snippet("test-no-delayed-rejects/suppressed.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "suppressed.ts",
-      ).length,
-      1,
+    await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+      "snapshots/recall-test-react.snap",
     );
   });
 });

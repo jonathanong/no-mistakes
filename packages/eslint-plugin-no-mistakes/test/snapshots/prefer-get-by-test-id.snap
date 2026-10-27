@@ -1,0 +1,351 @@
+{
+  "ruleTester": [
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "selectorAttributes": [
+            "data-qa"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 4,
+          "file": "",
+          "line": 4,
+          "message": "Prefer getByTestId('target') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 31,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('direct') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 34,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('save') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 32,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('open') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 38,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('unquoted') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 35,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('flagged') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 44,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('source') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        },
+        {
+          "column": 46,
+          "endColumn": 68,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('target') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 34,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('save') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 45,
+          "endColumn": 68,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('ignored') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 28,
+          "endColumn": 50,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('target') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 40,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('source') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 34,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Prefer getByTestId('save') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "selectorAttributes": [
+            "data-qa"
+          ]
+        }
+      ]
+    }
+  ]
+}

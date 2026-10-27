@@ -3,40 +3,55 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { __dirname } from "./helpers.mjs";
+import { oxlintFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
+
+function runJsonPlugin(filename, source, rules) {
+  const root = mkdtempSync(join(tmpdir(), "pac-oxlint-"));
+  try {
+    writeFileSync(join(root, filename), source);
+    writeFileSync(
+      join(root, ".oxlintrc.json"),
+      JSON.stringify({
+        jsPlugins: [{ name: "no-mistakes", specifier: resolve(__dirname, "../src/index.js") }],
+        rules,
+      }),
+    );
+    return spawnSync(
+      process.execPath,
+      [
+        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+        "--config",
+        ".oxlintrc.json",
+        "--format",
+        "json",
+        filename,
+      ],
+      { cwd: root, encoding: "utf8" },
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+const playwrightLiteralsSource = "<button data-pw={id} />;\n";
+const delayedRejectsSource = `import { expect } from "vitest";
+
+async function test() {
+  const operation = startOperation();
+  await release();
+  await expect(operation).rejects.toThrow();
+}
+`;
 
 describe("oxlint support", () => {
   it("loads the plugin through jsPlugins", () => {
-    const root = mkdtempSync(join(tmpdir(), "pac-oxlint-"));
-    try {
-      writeFileSync(join(root, "fixture.jsx"), "<button data-pw={id} />;\n");
-      writeFileSync(
-        join(root, ".oxlintrc.json"),
-        JSON.stringify({
-          jsPlugins: [{ name: "no-mistakes", specifier: resolve(__dirname, "../src/index.js") }],
-          rules: { "no-mistakes/playwright-literals": "error" },
-        }),
-      );
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          ".oxlintrc.json",
-          "fixture.jsx",
-        ],
-        {
-          cwd: root,
-          encoding: "utf8",
-        },
-      );
-      assert.notEqual(result.status, 0);
-      assert.match(`${result.stderr || ""}${result.stdout || ""}`, /literal|test ID/i);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
+    const result = runJsonPlugin("fixture.jsx", playwrightLiteralsSource, {
+      "no-mistakes/playwright-literals": "error",
+    });
+    assert.notEqual(result.status, 0);
   });
 
   it("reports const aliases through the plugin", () => {
@@ -105,44 +120,39 @@ describe("oxlint support", () => {
   });
 
   it("reports delayed rejection observers through the plugin", () => {
-    const root = mkdtempSync(join(tmpdir(), "pac-oxlint-"));
-    try {
-      writeFileSync(
-        join(root, "fixture.ts"),
-        `import { expect } from "vitest";
+    const result = runJsonPlugin("fixture.ts", delayedRejectsSource, {
+      "no-mistakes/test-no-delayed-rejects": "error",
+    });
+    assert.notEqual(result.status, 0);
+  });
 
-async function test() {
-  const operation = startOperation();
-  await release();
-  await expect(operation).rejects.toThrow();
-}
-`,
-      );
-      writeFileSync(
-        join(root, ".oxlintrc.json"),
-        JSON.stringify({
-          jsPlugins: [{ name: "no-mistakes", specifier: resolve(__dirname, "../src/index.js") }],
-          rules: { "no-mistakes/test-no-delayed-rejects": "error" },
-        }),
-      );
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          ".oxlintrc.json",
-          "fixture.ts",
-        ],
-        {
-          cwd: root,
-          encoding: "utf8",
-        },
-      );
-      assert.notEqual(result.status, 0);
-      assert.match(`${result.stderr || ""}${result.stdout || ""}`, /rejection|observer|await/i);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
+  it("snapshots playwright-literals and test-no-delayed-rejects diagnostics", async () => {
+    const literals = runJsonPlugin("fixture.jsx", playwrightLiteralsSource, {
+      "no-mistakes/playwright-literals": "error",
+    });
+    const delayed = runJsonPlugin("fixture.ts", delayedRejectsSource, {
+      "no-mistakes/test-no-delayed-rejects": "error",
+    });
+    assert.notEqual(literals.status, 0);
+    assert.notEqual(delayed.status, 0);
+    await expect(
+      snapshotDocument(
+        snapshotCases([
+          {
+            name: "playwright-literals",
+            file: "fixture.jsx",
+            rule: "playwright-literals",
+            findings: oxlintFindings(JSON.parse(literals.stdout).diagnostics, "fixture.jsx"),
+          },
+          {
+            name: "test-no-delayed-rejects",
+            file: "fixture.ts",
+            rule: "test-no-delayed-rejects",
+            findings: oxlintFindings(JSON.parse(delayed.stdout).diagnostics, "fixture.ts"),
+          },
+        ]),
+      ),
+    ).toMatchFileSnapshot("snapshots/oxlint.snap");
   });
 
   it("reports aliased imported calls missing required options", () => {

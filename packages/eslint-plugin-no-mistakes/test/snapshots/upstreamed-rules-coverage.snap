@@ -1,0 +1,418 @@
+[
+  {
+    "file": "e2e.spec.tsx",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 128,
+        "file": "e2e.spec.tsx",
+        "line": 128,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 50,
+        "endLine": 130,
+        "file": "e2e.spec.tsx",
+        "line": 130,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 48,
+        "endLine": 131,
+        "file": "e2e.spec.tsx",
+        "line": 131,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      }
+    ],
+    "name": "coverage.tsx e2e.spec.tsx playwright-assertion-timeout-cap",
+    "options": null,
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "e2e.spec.tsx",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 128,
+        "file": "e2e.spec.tsx",
+        "line": 128,
+        "message": "Assertion timeout must not exceed 20000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      }
+    ],
+    "name": "coverage.tsx e2e.spec.tsx playwright-assertion-timeout-cap {\"max\":20000}",
+    "options": {
+      "max": 20000
+    },
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "unit.tsx",
+    "findings": [],
+    "name": "coverage.tsx unit.tsx playwright-assertion-timeout-cap",
+    "options": null,
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "e2e.spec.tsx",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 22,
+        "endLine": 121,
+        "file": "e2e.spec.tsx",
+        "line": 121,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      }
+    ],
+    "name": "coverage.tsx e2e.spec.tsx playwright-selector-priority",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "unit.tsx",
+    "findings": [],
+    "name": "coverage.tsx unit.tsx playwright-selector-priority",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "coverage.tsx",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 46,
+        "endLine": 26,
+        "file": "coverage.tsx",
+        "line": 26,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 42,
+        "endLine": 27,
+        "file": "coverage.tsx",
+        "line": 27,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 50,
+        "endLine": 28,
+        "file": "coverage.tsx",
+        "line": 28,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 44,
+        "endLine": 29,
+        "file": "coverage.tsx",
+        "line": 29,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 36,
+        "endLine": 36,
+        "file": "coverage.tsx",
+        "line": 36,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 33,
+        "endLine": 37,
+        "file": "coverage.tsx",
+        "line": 37,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 34,
+        "endLine": 40,
+        "file": "coverage.tsx",
+        "line": 40,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "coverage.tsx test-no-error-message-matching",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "message-angle.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 48,
+        "endLine": 1,
+        "file": "message-angle.ts",
+        "line": 1,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "message-angle.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "coverage.tsx",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 16,
+        "endLine": 56,
+        "file": "coverage.tsx",
+        "line": 56,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 59,
+        "file": "coverage.tsx",
+        "line": 59,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 21,
+        "endLine": 62,
+        "file": "coverage.tsx",
+        "line": 62,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 14,
+        "endLine": 66,
+        "file": "coverage.tsx",
+        "line": 66,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 16,
+        "endLine": 69,
+        "file": "coverage.tsx",
+        "line": 69,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 13,
+        "endLine": 72,
+        "file": "coverage.tsx",
+        "line": 72,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 21,
+        "endLine": 73,
+        "file": "coverage.tsx",
+        "line": 73,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 74,
+        "file": "coverage.tsx",
+        "line": 74,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 26,
+        "endLine": 75,
+        "file": "coverage.tsx",
+        "line": 75,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 23,
+        "endLine": 76,
+        "file": "coverage.tsx",
+        "line": 76,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 20,
+        "endLine": 77,
+        "file": "coverage.tsx",
+        "line": 77,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 23,
+        "endLine": 78,
+        "file": "coverage.tsx",
+        "line": 78,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 22,
+        "endLine": 79,
+        "file": "coverage.tsx",
+        "line": 79,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 25,
+        "endLine": 80,
+        "file": "coverage.tsx",
+        "line": 80,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 21,
+        "endLine": 81,
+        "file": "coverage.tsx",
+        "line": 81,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 16,
+        "endLine": 89,
+        "file": "coverage.tsx",
+        "line": 89,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 92,
+        "file": "coverage.tsx",
+        "line": 92,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 13,
+        "endLine": 97,
+        "file": "coverage.tsx",
+        "line": 97,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 14,
+        "endLine": 107,
+        "file": "coverage.tsx",
+        "line": 107,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "coverage.tsx test-no-shared-state",
+    "options": null,
+    "rule": "test-no-shared-state"
+  }
+]

@@ -1,0 +1,1303 @@
+[
+  {
+    "file": "e2e/branches.spec.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 47,
+        "endLine": 23,
+        "file": "e2e/branches.spec.ts",
+        "line": 23,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 51,
+        "endLine": 29,
+        "file": "e2e/branches.spec.ts",
+        "line": 29,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-assertion-timeout-cap/branches.spec.ts",
+    "options": null,
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "e2e/playwright-assertion-timeout-cap/expect-cycle.spec.ts",
+    "findings": [],
+    "name": "playwright-assertion-timeout-cap/expect-cycle.spec.ts",
+    "options": null,
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "e2e/recall.spec.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 47,
+        "endLine": 4,
+        "file": "e2e/recall.spec.ts",
+        "line": 4,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 58,
+        "endLine": 5,
+        "file": "e2e/recall.spec.ts",
+        "line": 5,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 54,
+        "endLine": 6,
+        "file": "e2e/recall.spec.ts",
+        "line": 6,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 68,
+        "endLine": 7,
+        "file": "e2e/recall.spec.ts",
+        "line": 7,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 48,
+        "endLine": 16,
+        "file": "e2e/recall.spec.ts",
+        "line": 16,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-assertion-timeout-cap/recall.spec.ts",
+    "options": null,
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "e2e/playwright-assertion-timeout-cap/rest-binding.spec.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 47,
+        "endLine": 4,
+        "file": "e2e/playwright-assertion-timeout-cap/rest-binding.spec.ts",
+        "line": 4,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-assertion-timeout-cap/rest-binding.spec.ts",
+    "options": null,
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "e2e/single-write-alias.spec.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 48,
+        "endLine": 5,
+        "file": "e2e/single-write-alias.spec.ts",
+        "line": 5,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 51,
+        "endLine": 7,
+        "file": "e2e/single-write-alias.spec.ts",
+        "line": 7,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 54,
+        "endLine": 9,
+        "file": "e2e/single-write-alias.spec.ts",
+        "line": 9,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 48,
+        "endLine": 11,
+        "file": "e2e/single-write-alias.spec.ts",
+        "line": 11,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 55,
+        "endLine": 13,
+        "file": "e2e/single-write-alias.spec.ts",
+        "line": 13,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-assertion-timeout-cap/single-write-alias.spec.ts",
+    "options": null,
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "playwright-literals/branches.jsx",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 21,
+        "endColumn": 23,
+        "endLine": 2,
+        "file": "fixture.jsx",
+        "line": 2,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 23,
+        "endLine": 3,
+        "file": "fixture.jsx",
+        "line": 3,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 23,
+        "endLine": 4,
+        "file": "fixture.jsx",
+        "line": 4,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 13,
+        "endColumn": 15,
+        "endLine": 6,
+        "file": "fixture.jsx",
+        "line": 6,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 29,
+        "endColumn": 31,
+        "endLine": 7,
+        "file": "fixture.jsx",
+        "line": 7,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 23,
+        "endColumn": 25,
+        "endLine": 8,
+        "file": "fixture.jsx",
+        "line": 8,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-literals/recall.jsx",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 6,
+        "endColumn": 23,
+        "endLine": 2,
+        "file": "fixture.jsx",
+        "line": 2,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      },
+      {
+        "column": 6,
+        "endColumn": 8,
+        "endLine": 4,
+        "file": "fixture.jsx",
+        "line": 4,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+        "messageId": "literal",
+        "ruleId": "no-mistakes/playwright-literals",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-literals/single-write-alias.jsx",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "playwright/branches.spec.js",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 15,
+        "endLine": 11,
+        "file": "playwright/branches.spec.js",
+        "line": 11,
+        "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 34,
+        "endLine": 37,
+        "file": "playwright/branches.spec.js",
+        "line": 37,
+        "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 34,
+        "endLine": 40,
+        "file": "playwright/branches.spec.js",
+        "line": 40,
+        "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 34,
+        "endLine": 44,
+        "file": "playwright/branches.spec.js",
+        "line": 44,
+        "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 34,
+        "endLine": 50,
+        "file": "playwright/branches.spec.js",
+        "line": 50,
+        "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-hoisted-unique-token/branches.spec.js",
+    "options": {
+      "tokenFactories": [
+        "randomSuffix"
+      ]
+    },
+    "rule": "playwright-no-hoisted-unique-token"
+  },
+  {
+    "file": "e2e/playwright-no-hoisted-unique-token/loop-binding.spec.js",
+    "findings": [],
+    "name": "playwright-no-hoisted-unique-token/loop-binding.spec.js",
+    "options": {
+      "tokenFactories": [
+        "randomSuffix"
+      ]
+    },
+    "rule": "playwright-no-hoisted-unique-token"
+  },
+  {
+    "file": "playwright/recall.spec.js",
+    "findings": [
+      {
+        "column": 28,
+        "endColumn": 34,
+        "endLine": 10,
+        "file": "playwright/recall.spec.js",
+        "line": 10,
+        "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 33,
+        "endLine": 13,
+        "file": "playwright/recall.spec.js",
+        "line": 13,
+        "message": "`other` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 34,
+        "endLine": 16,
+        "file": "playwright/recall.spec.js",
+        "line": 16,
+        "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-hoisted-unique-token/recall.spec.js",
+    "options": {
+      "tokenFactories": [
+        "randomSuffix"
+      ]
+    },
+    "rule": "playwright-no-hoisted-unique-token"
+  },
+  {
+    "file": "e2e/playwright-no-hoisted-unique-token/rest-factory.spec.js",
+    "findings": [],
+    "name": "playwright-no-hoisted-unique-token/rest-factory.spec.js",
+    "options": {
+      "tokenFactories": [
+        "randomSuffix"
+      ]
+    },
+    "rule": "playwright-no-hoisted-unique-token"
+  },
+  {
+    "file": "playwright/single-write-alias.spec.js",
+    "findings": [
+      {
+        "column": 28,
+        "endColumn": 34,
+        "endLine": 14,
+        "file": "playwright/single-write-alias.spec.js",
+        "line": 14,
+        "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 38,
+        "endLine": 17,
+        "file": "playwright/single-write-alias.spec.js",
+        "line": 17,
+        "message": "`fromMember` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 37,
+        "endLine": 18,
+        "file": "playwright/single-write-alias.spec.js",
+        "line": 18,
+        "message": "`fromOther` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+        "messageId": "hoisted",
+        "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-hoisted-unique-token/single-write-alias.spec.js",
+    "options": {
+      "tokenFactories": [
+        "randomSuffix"
+      ]
+    },
+    "rule": "playwright-no-hoisted-unique-token"
+  },
+  {
+    "file": "e2e/branches.spec.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 4,
+        "file": "e2e/branches.spec.js",
+        "line": 4,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-raw-scroll-pagination/branches.spec.js",
+    "options": null,
+    "rule": "playwright-no-raw-scroll-pagination"
+  },
+  {
+    "file": "e2e/forwarded-cursor.spec.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 24,
+        "endLine": 5,
+        "file": "e2e/forwarded-cursor.spec.js",
+        "line": 5,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-raw-scroll-pagination/forwarded-cursor.spec.js",
+    "options": null,
+    "rule": "playwright-no-raw-scroll-pagination"
+  },
+  {
+    "file": "e2e/playwright-no-raw-scroll-pagination/loop-binding.spec.js",
+    "findings": [],
+    "name": "playwright-no-raw-scroll-pagination/loop-binding.spec.js",
+    "options": null,
+    "rule": "playwright-no-raw-scroll-pagination"
+  },
+  {
+    "file": "e2e/recall.spec.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 4,
+        "file": "e2e/recall.spec.js",
+        "line": 4,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 5,
+        "file": "e2e/recall.spec.js",
+        "line": 5,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 25,
+        "endLine": 6,
+        "file": "e2e/recall.spec.js",
+        "line": 6,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 8,
+        "file": "e2e/recall.spec.js",
+        "line": 8,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 37,
+        "endLine": 9,
+        "file": "e2e/recall.spec.js",
+        "line": 9,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 11,
+        "endLine": 11,
+        "file": "e2e/recall.spec.js",
+        "line": 11,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-raw-scroll-pagination/recall.spec.js",
+    "options": null,
+    "rule": "playwright-no-raw-scroll-pagination"
+  },
+  {
+    "file": "e2e/shadowed-cursor.spec.js",
+    "findings": [],
+    "name": "playwright-no-raw-scroll-pagination/shadowed-cursor.spec.js",
+    "options": null,
+    "rule": "playwright-no-raw-scroll-pagination"
+  },
+  {
+    "file": "e2e/single-write-alias.spec.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 6,
+        "file": "e2e/single-write-alias.spec.js",
+        "line": 6,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 12,
+        "endLine": 8,
+        "file": "e2e/single-write-alias.spec.js",
+        "line": 8,
+        "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+        "messageId": "rawScroll",
+        "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-raw-scroll-pagination/single-write-alias.spec.js",
+    "options": null,
+    "rule": "playwright-no-raw-scroll-pagination"
+  },
+  {
+    "file": "e2e/window-member-alias.spec.js",
+    "findings": [],
+    "name": "playwright-no-raw-scroll-pagination/window-member-alias.spec.js",
+    "options": null,
+    "rule": "playwright-no-raw-scroll-pagination"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 25,
+        "endLine": 2,
+        "file": "fixture.jsx",
+        "line": 2,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 23,
+        "endLine": 7,
+        "file": "fixture.jsx",
+        "line": 7,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 34,
+        "endLine": 12,
+        "file": "fixture.jsx",
+        "line": 12,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-prefer-get-by-test-id/branches.jsx",
+    "options": null,
+    "rule": "playwright-prefer-get-by-test-id"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 17,
+        "endColumn": 33,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 33,
+        "endLine": 2,
+        "file": "fixture.jsx",
+        "line": 2,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 33,
+        "endLine": 3,
+        "file": "fixture.jsx",
+        "line": 3,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 25,
+        "endLine": 5,
+        "file": "fixture.jsx",
+        "line": 5,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 25,
+        "endColumn": 41,
+        "endLine": 6,
+        "file": "fixture.jsx",
+        "line": 6,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 19,
+        "endColumn": 35,
+        "endLine": 7,
+        "file": "fixture.jsx",
+        "line": 7,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-prefer-get-by-test-id/recall.jsx",
+    "options": null,
+    "rule": "playwright-prefer-get-by-test-id"
+  },
+  {
+    "file": "e2e/playwright-prefer-get-by-test-id/rest-binding.jsx",
+    "findings": [],
+    "name": "playwright-prefer-get-by-test-id/rest-binding.jsx",
+    "options": null,
+    "rule": "playwright-prefer-get-by-test-id"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 6,
+        "endColumn": 24,
+        "endLine": 2,
+        "file": "fixture.jsx",
+        "line": 2,
+        "message": "Prefer getByTestId('save') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 29,
+        "endLine": 4,
+        "file": "fixture.jsx",
+        "line": 4,
+        "message": "Prefer getByTestId('edit') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-prefer-get-by-test-id/single-write-alias.jsx",
+    "options": null,
+    "rule": "playwright-prefer-get-by-test-id"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 21,
+        "endLine": 4,
+        "file": "fixture.jsx",
+        "line": 4,
+        "message": "Prefer getByTestId('target') for exact test ID selectors.",
+        "messageId": "prefer",
+        "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-prefer-get-by-test-id/suppressed-drag.jsx",
+    "options": null,
+    "rule": "playwright-prefer-get-by-test-id"
+  },
+  {
+    "file": "recall.tsx",
+    "findings": [
+      {
+        "column": 10,
+        "endColumn": 31,
+        "endLine": 2,
+        "file": "recall.tsx",
+        "line": 2,
+        "message": "Exported component 'Save' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 31,
+        "endLine": 8,
+        "file": "recall.tsx",
+        "line": 8,
+        "message": "Exported component 'Memoed' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 31,
+        "endLine": 12,
+        "file": "recall.tsx",
+        "line": 12,
+        "message": "Exported component 'Forwarded' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 34,
+        "endLine": 17,
+        "file": "recall.tsx",
+        "line": 17,
+        "message": "Exported component 'Applied' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      },
+      {
+        "column": 17,
+        "endColumn": 27,
+        "endLine": 22,
+        "file": "recall.tsx",
+        "line": 22,
+        "message": "Exported component 'Other' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 20,
+        "endLine": 26,
+        "file": "recall.tsx",
+        "line": 26,
+        "message": "Exported component 'Later' must return JSX containing one of: data-pw.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-require-exported-component-attribute/recall.tsx",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 2,
+        "endColumn": 6,
+        "endLine": 1,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-require-interactive-test-id/before-import.jsx",
+    "options": {
+      "interactiveComponents": [
+        "SaveButton"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 8,
+        "endColumn": 14,
+        "endLine": 17,
+        "file": "fixture.jsx",
+        "line": 17,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 14,
+        "endLine": 20,
+        "file": "fixture.jsx",
+        "line": 20,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 13,
+        "endLine": 21,
+        "file": "fixture.jsx",
+        "line": 21,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 13,
+        "endLine": 22,
+        "file": "fixture.jsx",
+        "line": 22,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 14,
+        "endLine": 23,
+        "file": "fixture.jsx",
+        "line": 23,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 17,
+        "endLine": 24,
+        "file": "fixture.jsx",
+        "line": 24,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 23,
+        "endLine": 25,
+        "file": "fixture.jsx",
+        "line": 25,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 9,
+        "endLine": 26,
+        "file": "fixture.jsx",
+        "line": 26,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 11,
+        "endLine": 27,
+        "file": "fixture.jsx",
+        "line": 27,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 11,
+        "endLine": 28,
+        "file": "fixture.jsx",
+        "line": 28,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-require-interactive-test-id/branches.jsx",
+    "options": {
+      "interactiveComponents": [
+        "Button",
+        "Card"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "column": 2,
+        "endColumn": 15,
+        "endLine": 5,
+        "file": "fixture.jsx",
+        "line": 5,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 2,
+        "endColumn": 6,
+        "endLine": 6,
+        "file": "fixture.jsx",
+        "line": 6,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 2,
+        "endColumn": 7,
+        "endLine": 7,
+        "file": "fixture.jsx",
+        "line": 7,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-require-interactive-test-id/recall.jsx",
+    "options": {
+      "interactiveComponents": [
+        "SaveButton"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "e2e/playwright-require-interactive-test-id/shadowed-kinds.jsx",
+    "findings": [],
+    "name": "playwright-require-interactive-test-id/shadowed-kinds.jsx",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "e2e/playwright-require-interactive-test-id/unresolved-alias.jsx",
+    "findings": [
+      {
+        "column": 2,
+        "endColumn": 7,
+        "endLine": 5,
+        "file": "e2e/playwright-require-interactive-test-id/unresolved-alias.jsx",
+        "line": 5,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-require-interactive-test-id/unresolved-alias.jsx",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "e2e/bare-locator.spec.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 4,
+        "file": "e2e/bare-locator.spec.js",
+        "line": 4,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-selector-priority/bare-locator.spec.js",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "e2e/branches.spec.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 22,
+        "endLine": 1,
+        "file": "e2e/branches.spec.js",
+        "line": 1,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-selector-priority/branches.spec.js",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "e2e/recall.spec.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 25,
+        "endLine": 3,
+        "file": "e2e/recall.spec.js",
+        "line": 3,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 25,
+        "endLine": 4,
+        "file": "e2e/recall.spec.js",
+        "line": 4,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 22,
+        "endLine": 5,
+        "file": "e2e/recall.spec.js",
+        "line": 5,
+        "message": "Use getByRole('heading', { level: N }) instead of a heading-tag locator.",
+        "messageId": "heading",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 21,
+        "endLine": 7,
+        "file": "e2e/recall.spec.js",
+        "line": 7,
+        "message": "Use getByText() instead of a text= locator.",
+        "messageId": "text",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 33,
+        "endLine": 8,
+        "file": "e2e/recall.spec.js",
+        "line": 8,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 9,
+        "file": "e2e/recall.spec.js",
+        "line": 9,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-selector-priority/recall.spec.js",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "e2e/single-write-alias.spec.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 5,
+        "file": "e2e/single-write-alias.spec.js",
+        "line": 5,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 12,
+        "endLine": 8,
+        "file": "e2e/single-write-alias.spec.js",
+        "line": 8,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 9,
+        "file": "e2e/single-write-alias.spec.js",
+        "line": 9,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 19,
+        "endLine": 11,
+        "file": "e2e/single-write-alias.spec.js",
+        "line": 11,
+        "message": "Use getByText() instead of a text= locator.",
+        "messageId": "text",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 13,
+        "endLine": 13,
+        "file": "e2e/single-write-alias.spec.js",
+        "line": 13,
+        "message": "Use getByRole('heading', { level: N }) instead of a heading-tag locator.",
+        "messageId": "heading",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-selector-priority/single-write-alias.spec.js",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "e2e/playwright-selector-priority/unknown-bindings.spec.js",
+    "findings": [],
+    "name": "playwright-selector-priority/unknown-bindings.spec.js",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "e2e/using-binding.spec.ts",
+    "findings": [],
+    "name": "playwright-selector-priority/using-binding.spec.ts",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "e2e/binding-branches.ts",
+    "findings": [],
+    "name": "playwright-test-timeout-cap/binding-branches.ts",
+    "options": null,
+    "rule": "playwright-test-timeout-cap"
+  }
+]

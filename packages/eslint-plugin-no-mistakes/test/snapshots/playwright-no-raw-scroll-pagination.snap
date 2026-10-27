@@ -1,0 +1,529 @@
+{
+  "ruleTester": [
+    {
+      "file": "src/util.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/feed/news-discuss-scroll.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "cursorParams": [
+            "after"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "src/util.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "cursorParams": [
+            "cursor"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "cursorParams": [
+            "after"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 73,
+          "endLine": 4,
+          "file": "playwright/reviews.spec.mts",
+          "line": 4,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 33,
+          "endColumn": 79,
+          "endLine": 4,
+          "file": "playwright/reviews.spec.mts",
+          "line": 4,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "e2e/reviews.spec.ts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 43,
+          "endLine": 2,
+          "file": "e2e/reviews.spec.ts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 4,
+          "file": "playwright/reviews.spec.mts",
+          "line": 4,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 50,
+          "endLine": 5,
+          "file": "playwright/reviews.spec.mts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "cursorParams": [
+            "page"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 73,
+          "endLine": 4,
+          "file": "playwright/reviews.spec.mts",
+          "line": 4,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use scrollToLoadMore, which scrolls repeatedly until the request fires, instead.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "scrollHelper": "scrollToLoadMore"
+        }
+      ]
+    },
+    {
+      "file": "reviews.pw.spec.ts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 73,
+          "endLine": 4,
+          "file": "reviews.pw.spec.ts",
+          "line": 4,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 71,
+          "endLine": 4,
+          "file": "playwright/reviews.spec.mts",
+          "line": 4,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 39,
+          "endLine": 4,
+          "file": "playwright/reviews.spec.mts",
+          "line": 4,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "src/util.ts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 73,
+          "endLine": 5,
+          "file": "src/util.ts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 76,
+          "endLine": 4,
+          "file": "playwright/reviews.spec.mts",
+          "line": 4,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "playwright/reviews.spec.mts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 48,
+          "endLine": 2,
+          "file": "playwright/reviews.spec.mts",
+          "line": 2,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

@@ -1,83 +1,103 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { fixture, lint, __dirname } from "./helpers.mjs";
+import { expect, it } from "vitest";
+import {
+  oxlintFindings,
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+} from "./diagnostic-snapshot.mjs";
+import { __dirname, fixture } from "./helpers.mjs";
 
 const id = "test-no-delayed-rejects";
-function check(name) {
-  return lint(fixture(`${id}/${name}.ts`), { [`no-mistakes/${id}`]: "error" }, `${name}.ts`);
+const messageRule = "test-no-error-message-matching";
+
+function delayedCase(name, fixtureName) {
+  const file = `${fixtureName}.ts`;
+  return {
+    name,
+    file,
+    rule: id,
+    findings: pluginFindings(fixture(`${id}/${file}`), id, undefined, file),
+  };
 }
-describe("delayed rejection forwarding", () => {
-  it("reads the promise argument after call/apply forwarding", () => {
-    assert.deepEqual(
-      check("forwarding").map((message) => [message.line, message.messageId]),
-      [
-        [9, "delayedReject"],
-        [14, "delayedReject"],
-        [19, "delayedReject"],
-        [24, "delayedReject"],
-        [30, "delayedReject"],
-      ],
-    );
-  });
-  it("preserves malformed calls, poll, unknown arguments, shadowing and early observers", () => {
-    assert.deepEqual(check("forwarding-controls"), []);
-  });
-  it("honors file, line and next-line suppression", () => {
-    assert.deepEqual(check("forwarding-suppressed"), []);
-    assert.deepEqual(check("forwarding-suppressed-file"), []);
-  });
-  it("requires the actual function receiver before counting nested early observers", () => {
-    assert.deepEqual(
-      check("forwarding-receiver").map((message) => [message.line, message.messageId]),
-      [
-        [8, "delayedReject"],
-        [14, "delayedReject"],
-        [21, "delayedReject"],
-      ],
-    );
-  });
-  it("shares proven nested aliases with error-message assertions, preserving shadowing", () => {
-    const rule = "test-no-error-message-matching";
-    assert.deepEqual(
-      lint(
-        fixture(`${rule}/nested-alias.ts`),
-        {
-          [`no-mistakes/${rule}`]: "error",
-        },
+
+function oxlintDiagnostics(relativeFile) {
+  const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture");
+  const result = spawnSync(
+    process.execPath,
+    [
+      resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+      "--config",
+      resolve(root, id, ".oxlintrc-forwarding.json"),
+      "--format",
+      "json",
+      resolve(root, relativeFile),
+    ],
+    { encoding: "utf8" },
+  );
+  let parsed;
+  try {
+    parsed = JSON.parse(result.stdout);
+  } catch (error) {
+    throw new Error(`${relativeFile} oxlint status ${result.status}: ${result.stderr}\n${error}`);
+  }
+  return { diagnostics: parsed.diagnostics, status: result.status, stderr: result.stderr };
+}
+
+it("snapshots delayed-rejects-forwarding diagnostics", async () => {
+  const cases = [
+    delayedCase("reads the promise argument after call/apply forwarding", "forwarding"),
+    delayedCase(
+      "preserves malformed calls, poll, unknown arguments, shadowing and early observers",
+      "forwarding-controls",
+    ),
+    delayedCase(
+      "honors file, line and next-line suppression: forwarding-suppressed",
+      "forwarding-suppressed",
+    ),
+    delayedCase(
+      "honors file, line and next-line suppression: forwarding-suppressed-file",
+      "forwarding-suppressed-file",
+    ),
+    delayedCase(
+      "requires the actual function receiver before counting nested early observers",
+      "forwarding-receiver",
+    ),
+    {
+      name: "shares proven nested aliases with error-message assertions, preserving shadowing",
+      file: "nested-alias.ts",
+      rule: messageRule,
+      findings: pluginFindings(
+        fixture(`${messageRule}/nested-alias.ts`),
+        messageRule,
+        undefined,
         "nested-alias.ts",
-      ).map((message) => [message.line, message.messageId]),
-      [
-        [4, "message"],
-        [6, "message"],
-      ],
-    );
-  });
-  it("matches Oxlint for forwarded observers, controls and suppressions", () => {
-    const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture");
-    for (const [file, count] of [
-      [`${id}/forwarding.ts`, 5],
-      [`${id}/forwarding-controls.ts`, 0],
-      [`${id}/forwarding-suppressed.ts`, 0],
-      [`${id}/forwarding-suppressed-file.ts`, 0],
-      [`${id}/forwarding-receiver.ts`, 3],
-      ["test-no-error-message-matching/nested-alias.ts", 2],
-    ]) {
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          resolve(root, id, ".oxlintrc-forwarding.json"),
-          "--format",
-          "json",
-          resolve(root, file),
-        ],
-        { encoding: "utf8" },
-      );
-      assert.equal(result.status, count ? 1 : 0, `${file}: ${result.stderr}`);
-      assert.equal(JSON.parse(result.stdout).diagnostics.length, count, file);
-    }
-  });
+      ),
+    },
+  ];
+  const oxlintFiles = [
+    [`${id}/forwarding.ts`, "forwarding.ts"],
+    [`${id}/forwarding-controls.ts`, "forwarding-controls.ts"],
+    [`${id}/forwarding-suppressed.ts`, "forwarding-suppressed.ts"],
+    [`${id}/forwarding-suppressed-file.ts`, "forwarding-suppressed-file.ts"],
+    [`${id}/forwarding-receiver.ts`, "forwarding-receiver.ts"],
+    [`${messageRule}/nested-alias.ts`, "nested-alias.ts"],
+  ];
+  for (const [file, eslintFile] of oxlintFiles) {
+    const oxlint = oxlintDiagnostics(file);
+    const eslint = cases.find((item) => item.file === eslintFile);
+    assert.equal(oxlint.status, eslint.findings.length ? 1 : 0, oxlint.stderr);
+    assert.equal(oxlint.diagnostics.length, eslint.findings.length, file);
+    cases.push({
+      name: `matches Oxlint for forwarded observers, controls and suppressions: ${file}`,
+      file,
+      rule: file.startsWith(`${messageRule}/`) ? messageRule : id,
+      findings: oxlintFindings(oxlint.diagnostics, file),
+    });
+  }
+  await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+    "snapshots/delayed-rejects-forwarding.snap",
+  );
 });
