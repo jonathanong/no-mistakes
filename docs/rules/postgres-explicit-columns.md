@@ -284,6 +284,13 @@ alternatives, and use fresh configured builders. Findings retain the physical SQ
 locations. SQL files selected by `sqlInclude` keep their existing behavior at both
 efforts.
 
+Low does not infer SQL through a namespace-member value: `query(queries.list)`
+remains unanalyzable even when `queries.list` is a literal constant. Pass a direct
+literal or a local `const` initialized to a literal, or use `effort: max` for
+namespace-constant inference. A namespace-member executor such as
+`db.query('SELECT id FROM orders')` remains eligible when configured; this limit
+applies to the SQL value, not the executor binding.
+
 For example, low checks each call below, including the known star in the bounded
 helper:
 

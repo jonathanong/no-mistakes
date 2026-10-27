@@ -271,6 +271,13 @@ existing behavior at both efforts.
 Use `effort: max` to analyze shapes outside the bounded low subset. The default
 remains `max`.
 
+Low does not infer SQL through a namespace-member value: `query(queries.list)`
+remains unanalyzable even when `queries.list` is a literal constant. Pass a direct
+literal or a local `const` initialized to a literal, or use `effort: max` for
+namespace-constant inference. A namespace-member executor such as
+`db.query('SELECT id FROM orders')` remains eligible when configured; this limit
+applies to the SQL value, not the executor binding.
+
 ### Unanalyzable inputs
 
 Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
