@@ -77,6 +77,21 @@ fn source_helpers_cover_paths_lines_wrappers_and_property_names() {
         relative_slash_path(Path::new(r"\\?\D:\repo"), Path::new(r"D:\other\file.yml")),
         "D:/other/file.yml"
     );
+    assert_eq!(
+        relative_slash_path(Path::new(r"\\?\D:\repo"), Path::new(r"D:\repo")),
+        ""
+    );
+    assert_eq!(
+        relative_slash_path(Path::new(r"\\?\"), Path::new("stale.yml")),
+        "stale.yml"
+    );
+    assert_eq!(
+        relative_slash_path(
+            Path::new(r"\\?\UNC\server\share"),
+            Path::new(r"\\?\UNC\server\share\dir\file.txt")
+        ),
+        "dir/file.txt"
+    );
     assert_eq!(line_number("a\nb\nc", 2), 2);
 
     let allocator = Allocator::default();
