@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@example/db": ["src/db.ts"],
+      "sql-template-strings": ["src/sql-template-strings.ts"]
+    },
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  }
+}
