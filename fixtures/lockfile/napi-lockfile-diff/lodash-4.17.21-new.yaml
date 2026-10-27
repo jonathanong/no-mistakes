@@ -2,4 +2,4 @@ lockfileVersion: '9.0'
 
 packages:
   lodash@4.17.21:
-    resolution: {integrity: sha512-new}
+    resolution: {integrity: sha512-new-changed}

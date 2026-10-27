@@ -66,7 +66,8 @@ fn tests_plan_json_base_head_preserves_tabs_and_newlines_in_changed_file_invento
     let root = fixture.path();
     crate::test_support::git_init(root);
     // Tab and newline filenames cannot live in the fixture tree; copy the
-    // saved before/after bytes onto those paths.
+    // saved before/after bytes onto those paths. value-2.ts is longer than
+    // value-1.ts so a same-mtime copy still shows up as a git change.
     let paths = ["tab\tname.ts", "line\nbreak.ts"];
     for path in paths {
         std::fs::copy(bytes.path().join("value-1.ts"), root.join(path)).unwrap();

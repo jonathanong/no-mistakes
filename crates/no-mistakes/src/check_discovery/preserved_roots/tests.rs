@@ -315,10 +315,10 @@ fn descendant_dirs_matching_suffix_ignores_disk_only_empty_directory() {
 #[test]
 fn descendant_dirs_matching_suffix_falls_back_to_walk_outside_git_repositories() {
     let source = root_fixture("preserved-roots-disk-fallback");
+    // Saved README.md is an intentional plain file so the raw walk hits the
+    // skip-non-directory branch. "fixtures" itself is a hardcoded skip dir and
+    // would otherwise prune descent before any file is seen.
     let dir = crate::test_support::materialize_saved_fixture(&source);
-    // A plain file alongside the walked directories exercises the raw walk's
-    // "skip non-directory entries" branch, since "fixtures" itself is a hardcoded
-    // skip dir and would otherwise prune descent before any file is ever seen.
 
     let mut cache = GitFilesCache::new();
     let roots = descendant_dirs_matching_suffix(

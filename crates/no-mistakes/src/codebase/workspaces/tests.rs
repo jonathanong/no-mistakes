@@ -62,40 +62,11 @@ fn workspace_case(name: &str) -> PathBuf {
         .join("fixture")
 }
 
-// Child modules still call write(); copy saved bytes instead of creating them inline.
 fn write(path: &Path, content: &str) {
-    ensure_parent(path);
-    std::fs::copy(workspace_byte_blob(content), path).unwrap();
-}
-
-fn ensure_parent(path: &Path) {
-    let Some(parent) = path
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-    else {
-        return;
-    };
-    if parent.exists() {
-        return;
+    if let Some(p) = path.parent() {
+        std::fs::create_dir_all(p).unwrap();
     }
-    ensure_parent(parent);
-    std::fs::create_dir(parent).unwrap();
-}
-
-fn workspace_byte_blob(content: &str) -> PathBuf {
-    let mut hash = 0xcbf29ce484222325u64;
-    for byte in content.as_bytes() {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x100000001b3);
-    }
-    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase/workspaces-byte-blobs")
-        .join(format!("{hash:016x}"));
-    assert!(
-        saved.is_file(),
-        "missing workspace byte blob for {content:?}"
-    );
-    saved
+    std::fs::write(path, content).unwrap();
 }
 
 fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {

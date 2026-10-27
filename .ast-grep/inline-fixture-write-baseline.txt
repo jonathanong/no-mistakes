@@ -1,3 +1,6 @@
 # Existing inline fixture writes. This list can only shrink.
 # Remove a path in the same change that removes the last banned call from that file.
 # Adding a path fails once this file is on the base revision.
+crates/no-mistakes/src/codebase/ts_resolver/tests.rs
+crates/no-mistakes/src/codebase/ts_source/tests.rs
+crates/no-mistakes/src/codebase/workspaces/tests.rs

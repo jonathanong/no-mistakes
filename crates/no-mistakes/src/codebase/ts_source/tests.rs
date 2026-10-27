@@ -176,36 +176,10 @@ fn git_add_all(dir: &Path) {
     crate::test_support::git_add_all(dir);
 }
 
-// Child modules still call write(); copy saved bytes instead of creating them inline.
 fn write(dir: &Path, path: &str, content: &str) {
     let full = dir.join(path);
-    ensure_parent(&full);
-    std::fs::copy(byte_blob(content), full).unwrap();
-}
-
-fn ensure_parent(path: &Path) {
-    let Some(parent) = path
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-    else {
-        return;
-    };
-    if parent.exists() {
-        return;
-    }
-    ensure_parent(parent);
-    std::fs::create_dir(parent).unwrap();
-}
-
-fn byte_blob(content: &str) -> PathBuf {
-    let mut hash = 0xcbf29ce484222325u64;
-    for byte in content.as_bytes() {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x100000001b3);
-    }
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ts-source/byte-blobs")
-        .join(format!("{hash:016x}"))
+    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
+    std::fs::write(full, content).unwrap();
 }
 
 fn fixture(path: &str) -> PathBuf {
@@ -485,7 +459,8 @@ fn file_disable_skips_leading_blank_lines() {
 
 #[test]
 fn file_disable_skips_leading_line_comments() {
-    let source = "// Copyright 2026\n// eslint-disable no-console\n// no-mistakes-disable-file my-rule\nexport const x = 1";
+    let source =
+        "// Copyright 2026\n// eslint-disable no-console\n// no-mistakes-disable-file my-rule\nexport const x = 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 
