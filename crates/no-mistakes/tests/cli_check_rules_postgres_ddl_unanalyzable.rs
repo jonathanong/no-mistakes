@@ -1,8 +1,28 @@
 use std::path::PathBuf;
 use std::process::Command;
 
+fn configured_rule_ids(root: &std::path::Path, config: &str) -> std::collections::BTreeSet<String> {
+    no_mistakes::config::v2::load_v2_config(root, Some(&root.join(config)))
+        .unwrap()
+        .rules
+        .into_iter()
+        .filter(|rule| rule.enabled)
+        .map(|rule| rule.rule)
+        .collect()
+}
+
+fn assert_configured_rule_set(
+    root: &std::path::Path,
+    config: &str,
+    actual: impl IntoIterator<Item = String>,
+    context: &str,
+) {
+    let actual: std::collections::BTreeSet<_> = actual.into_iter().collect();
+    assert_eq!(actual, configured_rule_ids(root, config), "{context}");
+}
+
 #[test]
-fn malformed_ddl_survey_still_reports_in_all_eleven_schema_rules() {
+fn malformed_ddl_survey_reports_each_configured_schema_rule() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey");
     let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
@@ -39,12 +59,17 @@ fn malformed_ddl_survey_still_reports_in_all_eleven_schema_rules() {
     for rules in by_line.values_mut() {
         rules.sort_unstable();
         rules.dedup();
-        assert_eq!(rules.len(), 11, "{report}");
+        assert_configured_rule_set(
+            &root,
+            "malformed.yml",
+            rules.iter().map(|rule| (*rule).to_owned()),
+            &report.to_string(),
+        );
     }
 }
 
 #[test]
-fn invalid_array_slice_stride_reports_in_all_eleven_schema_rules() {
+fn invalid_array_slice_stride_reports_each_configured_schema_rule() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey");
     let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
@@ -82,7 +107,12 @@ fn invalid_array_slice_stride_reports_in_all_eleven_schema_rules() {
         assert!((1..=3).contains(line), "{report}");
         rules.sort_unstable();
         rules.dedup();
-        assert_eq!(rules.len(), 11, "line {line}: {report}");
+        assert_configured_rule_set(
+            &root,
+            "stride.yml",
+            rules.iter().map(|rule| (*rule).to_owned()),
+            &format!("line {line}: {report}"),
+        );
     }
 }
 
@@ -125,7 +155,7 @@ fn postgres_17_ddl_family_survey_preserves_all_schema_rule_policies() {
             assert!(expected.is_empty(), "{report}");
             continue;
         }
-        // Each of the eleven rules must retain the unsupported ALTER DOMAIN
+        // Every configured rule must retain the unsupported ALTER DOMAIN
         // diagnostic; accepting it by silently discarding the SQL is incorrect.
         let mut rules = expected
             .iter()
@@ -134,7 +164,12 @@ fn postgres_17_ddl_family_survey_preserves_all_schema_rule_policies() {
             .collect::<Vec<_>>();
         rules.sort_unstable();
         rules.dedup();
-        assert_eq!(rules.len(), 11, "{policy}: {report}");
+        assert_configured_rule_set(
+            &root,
+            &format!("{policy}.yml"),
+            rules.into_iter().map(str::to_owned),
+            &format!("{policy}: {report}"),
+        );
     }
 }
 
@@ -296,7 +331,12 @@ fn original_heads_and_rejected_branch_locations_survive_cli_preparation() {
                     head.to_owned(),
                 ));
         }
-        assert_eq!(by_rule.len(), 11);
+        assert_configured_rule_set(
+            &root,
+            config,
+            by_rule.keys().cloned(),
+            &format!("{config}: {report}"),
+        );
         for (rule, mut findings) in by_rule {
             findings.sort_unstable();
             let expected_for_rule = expected
