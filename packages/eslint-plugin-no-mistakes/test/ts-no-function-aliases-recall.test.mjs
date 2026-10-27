@@ -1,42 +1,48 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { fixture, messages, require } from "./helpers.mjs";
+import { describe, expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture, require } from "./helpers.mjs";
+
+const rule = "ts-no-function-aliases";
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function recallCase(name) {
+  const filename = `ts-no-function-aliases/${name}`;
+  return {
+    code: fixture(filename),
+    filename,
+    languageOptions: { parser: tsParser },
+  };
+}
+
+const suite = {
+  valid: [
+    // Line and file suppression remove the finding.
+    recallCase("suppress-line.ts"),
+    recallCase("suppress-file.ts"),
+  ],
+  invalid: [
+    // 2 alias. Released identifier findings on the private receiver fixture.
+    recallCase("private-recall.ts"),
+    // 1 alias. Next-line suppression leaves the other finding.
+    recallCase("suppress-next-line.ts"),
+  ],
+};
 
 describe("ts-no-function-aliases recall", () => {
-  it("preserves released identifier findings in the private receiver fixture", () => {
-    assert.deepEqual(
-      messages(
-        fixture("ts-no-function-aliases/private-recall.ts"),
-        "ts-no-function-aliases",
-        undefined,
-        "ts-no-function-aliases/private-recall.ts",
-      ),
-      ["alias", "alias"],
-    );
-  });
-
-  it("keeps all three rule-specific suppression forms", () => {
-    assert.deepEqual(
-      messages(
-        fixture("ts-no-function-aliases/suppress-next-line.ts"),
-        "ts-no-function-aliases",
-        undefined,
-        "ts-no-function-aliases/suppress-next-line.ts",
-      ),
-      ["alias"],
-    );
-    for (const name of ["suppress-line.ts", "suppress-file.ts"]) {
-      assert.deepEqual(
-        messages(
-          fixture(`ts-no-function-aliases/${name}`),
-          "ts-no-function-aliases",
-          undefined,
-          `ts-no-function-aliases/${name}`,
-        ),
-        [],
-      );
-    }
-  });
+  it("snapshots ts-no-function-aliases-recall diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/ts-no-function-aliases-recall.snap");
+  }, 30_000);
 
   it("ignores non-binding AST nodes when checking shadowed parameter names", () => {
     const { patternHasName } = require("../src/rules/ts-no-function-aliases.js").__test;

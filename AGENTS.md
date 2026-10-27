@@ -94,9 +94,10 @@ graph. Details:
   fixture-relative `/` paths and sorted findings. CI runs `vitest run` and
   does not pass `-u`. Update with `pnpm exec vitest run <test> -u` only when
   the new output is intended. `agents-md-max-size`,
-  `async-call-disposition` proven-consumers, and the `test-*` /
-  `playwright-*` ESLint diagnostics (`packages/eslint-plugin-no-mistakes/test/diagnostic-snapshot.mjs`)
-  are the examples.
+  `async-call-disposition` proven-consumers, the `test-*` /
+  `playwright-*` ESLint diagnostics, and the remaining ESLint rules
+  (`packages/eslint-plugin-no-mistakes/test/diagnostic-snapshot.mjs`,
+  `snapshotSuite`) are the examples.
 - After broad mechanical renames, run `rg` for the old names before the first
   compile to catch stragglers.
 - After editing nearby test arguments or fixture paths, re-read the exact diff

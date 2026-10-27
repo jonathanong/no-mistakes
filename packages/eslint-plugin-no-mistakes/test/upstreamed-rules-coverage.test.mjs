@@ -1,9 +1,14 @@
-import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
-import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
-import { __dirname, messages } from "./helpers.mjs";
+import {
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+  snapshotSuite,
+} from "./diagnostic-snapshot.mjs";
+import { __dirname } from "./helpers.mjs";
 
 function fixture(name) {
   return readFileSync(
@@ -12,31 +17,48 @@ function fixture(name) {
   );
 }
 
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const typescript = { parser: tsParser, sourceType: "module", globals: {} };
+
 describe("upstreamed generic rule coverage", () => {
-  it("covers additional branches in upstreamed rules", () => {
+  it("snapshots remaining diagnostics", async () => {
     const code = fixture("coverage.tsx");
-    assert.deepEqual(messages(code, "await-array-methods", undefined, "coverage.tsx"), [
-      "awaited",
-      "awaited",
-    ]);
-    assert.deepEqual(messages(code, "no-delete-property", undefined, "coverage.tsx"), [
-      "delete",
-      "delete",
-    ]);
-    assert.deepEqual(
-      messages(code, "nextjs-metadata-exports-location", undefined, "app/components/meta.tsx"),
-      ["location", "location", "location"],
-    );
-    // test.sequential.each reports once, on the inner call.
-    assert.deepEqual(messages(code, "no-vitest-sequential", undefined, "coverage.tsx"), [
-      "sequential",
-      "sequential",
-      "sequential",
-      "sequential",
-      "sequential",
-      "sequential",
-    ]);
-  });
+    const coverage = { code, filename: "coverage.tsx", languageOptions: typescript };
+    await expect(
+      snapshotDocument({
+        "await-array-methods": snapshotSuite("await-array-methods", languageOptions, {
+          invalid: [coverage],
+        }),
+        "nextjs-metadata-exports-location": snapshotSuite(
+          "nextjs-metadata-exports-location",
+          languageOptions,
+          {
+            invalid: [
+              {
+                code,
+                filename: "app/components/meta.tsx",
+                languageOptions: typescript,
+              },
+            ],
+          },
+        ),
+        "no-delete-property": snapshotSuite("no-delete-property", languageOptions, {
+          invalid: [coverage],
+        }),
+        "no-vitest-sequential": snapshotSuite("no-vitest-sequential", languageOptions, {
+          invalid: [
+            // test.sequential.each reports once, on the inner call. 6 sequential diagnostics.
+            coverage,
+          ],
+        }),
+      }),
+    ).toMatchFileSnapshot("snapshots/upstreamed-rules-coverage-remaining.snap");
+  }, 30_000);
 
   it("snapshots test and playwright diagnostics", async () => {
     const code = fixture("coverage.tsx");

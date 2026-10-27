@@ -1,31 +1,41 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { it } from "vitest";
+import { expect, it } from "vitest";
 import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { fixture, lint, require, __dirname } from "./helpers.mjs";
 
 const rule = "vitest-timeout-cap";
 const name = `${rule}/reason-adjacency.ts`;
 const findings = () => lint(fixture(name), { [`no-mistakes/${rule}`]: "error" }, "fixture.test.ts");
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 
-it("looks through grouping and ordinary comments without crossing blank lines or other code", () => {
-  assert.deepEqual(
-    findings().map(({ line, messageId }) => [line, messageId]),
-    [
-      [6, "reason"],
-      [19, "reason"],
-      [21, "reason"],
-      [23, "reason"],
-      [26, "reason"],
-      [30, "reason"],
-      [47, "reason"],
-      [50, "reason"],
-      [53, "reason"],
-    ],
-  );
-});
+// Grouping and ordinary comments are visible. Blank lines and other code are not.
+// 9 reason. Severity is "error" with no options object.
+const suite = {
+  invalid: [
+    {
+      code: fixture(name),
+      filename: "fixture.test.ts",
+      languageOptions: { parser: tsParser },
+    },
+  ],
+};
+
+it("snapshots grouped-timeout-reason diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      [rule]: snapshotSuite(rule, languageOptions, suite),
+    }),
+  ).toMatchFileSnapshot("snapshots/grouped-timeout-reason.snap");
+}, 30_000);
 
 it("keeps ESLint and Oxlint grouped annotation boundaries identical", () => {
   const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", rule);

@@ -1,0 +1,231 @@
+{
+  "postgres-no-executor-adapter": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+      "findings": [
+        {
+          "column": 11,
+          "endColumn": 18,
+          "endLine": 35,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 35,
+          "message": "This call passes execute into a helper. Name the executor inside the helper (`execute(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 26,
+          "endLine": 38,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 38,
+          "message": "This call passes options.execute into a helper. Name the executor inside the helper (`options.execute(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 24,
+          "endLine": 41,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 41,
+          "message": "This call passes options.query into a helper. Name the executor inside the helper (`options.query(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        },
+        {
+          "column": 30,
+          "endColumn": 34,
+          "endLine": 43,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 43,
+          "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 30,
+          "endLine": 44,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 44,
+          "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 33,
+          "endLine": 45,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 45,
+          "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorTypeNames": [
+            "QueryExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ],
+  "postgres-no-manual-transaction": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 12,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 15,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 18,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 18,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 27,
+          "endLine": 21,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 21,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorTypeNames": [
+            "QueryExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 15,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorTypeNames": [
+            "QueryExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ],
+  "postgres-no-unbounded-query-fanout": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorTypeNames": [
+            "QueryExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 59,
+          "endLine": 25,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 25,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 67,
+          "endLine": 28,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 28,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 65,
+          "endLine": 31,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/scoped-options-sql.ts",
+          "line": 31,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorTypeNames": [
+            "QueryExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ]
+}

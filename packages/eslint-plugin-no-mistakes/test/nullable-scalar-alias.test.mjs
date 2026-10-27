@@ -1,11 +1,19 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { __dirname, fixture, lint } from "./helpers.mjs";
 
 const rule = "ts-preserve-null-option-defaults";
 const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", rule);
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 const cases = [
   ["invalid", [7, 7, 13, 20, 27, 33]],
   ["controls", []],
@@ -21,19 +29,29 @@ const diagnostics = (name) =>
     resolve(root, filename(name)),
   );
 
+function aliasCase(name) {
+  // Same diagnostics as the absolute path passed to lint(). A relative filename
+  // keeps the snapshot portable; pathAllowed sees either form.
+  return {
+    code: fixture(`${rule}/${filename(name)}`),
+    filename: `test-cases/eslint-snippets/fixture/${rule}/${filename(name)}`,
+    languageOptions: { parser: tsParser },
+  };
+}
+
+const suite = {
+  valid: cases.filter(([, lines]) => lines.length === 0).map(([name]) => aliasCase(name)),
+  invalid: cases.filter(([, lines]) => lines.length > 0).map(([name]) => aliasCase(name)),
+};
+
 describe("nullable option scalar const aliases", () => {
-  for (const [name, lines] of cases) {
-    it(`preserves the saved ${name} decisions`, () => {
-      const actual = diagnostics(name);
-      assert.deepEqual(
-        actual.map(({ line, messageId }) => [line, messageId]),
-        lines.map((line) => [line, "default"]),
-      );
-      for (const diagnostic of actual) {
-        assert.match(diagnostic.message, /Preserve explicit null and check undefined explicitly/);
-      }
-    });
-  }
+  it("snapshots nullable-scalar-alias diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/nullable-scalar-alias.snap");
+  }, 30_000);
 
   it("matches exact Oxlint report locations and messages", () => {
     for (const [name, lines] of cases) {

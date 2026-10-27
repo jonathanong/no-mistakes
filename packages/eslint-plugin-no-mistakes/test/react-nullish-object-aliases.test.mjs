@@ -1,31 +1,48 @@
-import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { fixture, lint } from "./helpers.mjs";
+import { describe, expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture } from "./helpers.mjs";
 
 const rule = "react-no-nullish-react-node";
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function aliasCase(name) {
+  return {
+    code: fixture(`${rule}/${name}.tsx`),
+    filename: "fixture.tsx",
+    languageOptions: { parser: tsParser },
+  };
+}
+
+const suite = {
+  valid: [
+    aliasCase("object-alias-rewrite"),
+    aliasCase("object-alias-suppressed"),
+    aliasCase("object-alias-file-suppressed"),
+  ],
+  invalid: [
+    // 5 nullish.
+    aliasCase("object-aliases"),
+    // 3 nullish.
+    aliasCase("object-alias-loop-bindings"),
+    // 8 nullish.
+    aliasCase("object-alias-target-shadows"),
+    // 1 nullish.
+    aliasCase("object-alias-controls"),
+  ],
+};
+
 describe("ReactNode prop object aliases and template destructuring", () => {
-  for (const [name, lines] of [
-    ["object-aliases", [7, 12, 18, 24, 30]],
-    ["object-alias-loop-bindings", [15, 27, 39]],
-    ["object-alias-target-shadows", [13, 23, 29, 31, 33, 43, 50, 50]],
-    ["object-alias-controls", [7]],
-    ["object-alias-rewrite", []],
-    ["object-alias-suppressed", []],
-    ["object-alias-file-suppressed", []],
-  ]) {
-    it(`preserves the saved ${name} decisions`, () => {
-      const diagnostics = lint(
-        fixture(`${rule}/${name}.tsx`),
-        { [`no-mistakes/${rule}`]: "error" },
-        "fixture.tsx",
-      );
-      assert.deepEqual(
-        diagnostics.map(({ line, messageId }) => [line, messageId]),
-        lines.map((line) => [line, "nullish"]),
-      );
-      for (const diagnostic of diagnostics) {
-        assert.match(diagnostic.message, /use an explicit undefined check for fallbacks/);
-      }
-    });
-  }
+  it("snapshots react-nullish-object-aliases diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/react-nullish-object-aliases.snap");
+  }, 30_000);
 });

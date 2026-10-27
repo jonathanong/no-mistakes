@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { Linter } from "eslint";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { fixture, lint, plugin } from "./helpers.mjs";
 import {
   check,
+  chains,
   drawer,
   entry,
   fixtureRoot,
@@ -16,6 +19,32 @@ import {
   slot,
 } from "./forbidden-member-chains-helpers.mjs";
 describe(id, () => {
+  it("snapshots static chain diagnostics across saved syntax shapes", async () => {
+    const item = (name) => ({
+      code: fixture(`${id}/${name}`),
+      filename: resolve(fixtureRoot, name),
+      options: [{ chains }],
+      ...(name.endsWith(".ts") ? { languageOptions: { parser: tsParser } } : {}),
+    });
+    await expect(
+      snapshotDocument(
+        snapshotSuite(
+          id,
+          {
+            ecmaVersion: 2024,
+            sourceType: "module",
+            globals: {},
+            parserOptions: { ecmaFeatures: { jsx: true } },
+          },
+          {
+            valid: [item("safe.mjs")],
+            invalid: ["unsafe.mjs", "markup.jsx", "nested.mjs", "wrappers.ts"].map(item),
+          },
+        ),
+      ),
+    ).toMatchFileSnapshot("snapshots/forbidden-member-chains.snap");
+  });
+
   it("matches reads, calls, literal keys, optionals, and static roots", () => {
     assert.deepEqual(
       hits(check("unsafe.mjs")).map(([line, , , message]) => [line, message]),

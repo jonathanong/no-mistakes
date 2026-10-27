@@ -1,0 +1,4715 @@
+{
+  "async-call-disposition": [
+    {
+      "file": "valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "param-var.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue/"
+              ],
+              "sourceSpecifierPatterns": [
+                "/[/"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [],
+              "sourceSpecifierPatterns": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "suppressed-file.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-invalid.ts",
+      "findings": [
+        {
+          "column": 32,
+          "endColumn": 49,
+          "endLine": 5,
+          "file": "retained-invalid.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 32,
+          "endLine": 6,
+          "file": "retained-invalid.ts",
+          "line": 6,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 41,
+          "endLine": 7,
+          "file": "retained-invalid.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 54,
+          "endLine": 8,
+          "file": "retained-invalid.ts",
+          "line": 8,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 66,
+          "endColumn": 83,
+          "endLine": 9,
+          "file": "retained-invalid.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 60,
+          "endColumn": 77,
+          "endLine": 10,
+          "file": "retained-invalid.ts",
+          "line": 10,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 61,
+          "endColumn": 78,
+          "endLine": 11,
+          "file": "retained-invalid.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 82,
+          "endColumn": 99,
+          "endLine": 12,
+          "file": "retained-invalid.ts",
+          "line": 12,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 92,
+          "endColumn": 109,
+          "endLine": 13,
+          "file": "retained-invalid.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 84,
+          "endColumn": 101,
+          "endLine": 14,
+          "file": "retained-invalid.ts",
+          "line": 14,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 61,
+          "endColumn": 78,
+          "endLine": 15,
+          "file": "retained-invalid.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 74,
+          "endColumn": 91,
+          "endLine": 16,
+          "file": "retained-invalid.ts",
+          "line": 16,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 48,
+          "endColumn": 65,
+          "endLine": 17,
+          "file": "retained-invalid.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 59,
+          "endLine": 18,
+          "file": "retained-invalid.ts",
+          "line": 18,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 59,
+          "endLine": 20,
+          "file": "retained-invalid.ts",
+          "line": 20,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 61,
+          "endLine": 21,
+          "file": "retained-invalid.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 70,
+          "endColumn": 87,
+          "endLine": 22,
+          "file": "retained-invalid.ts",
+          "line": 22,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 30,
+          "endColumn": 47,
+          "endLine": 23,
+          "file": "retained-invalid.ts",
+          "line": 23,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 70,
+          "endColumn": 87,
+          "endLine": 24,
+          "file": "retained-invalid.ts",
+          "line": 24,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 67,
+          "endColumn": 84,
+          "endLine": 25,
+          "file": "retained-invalid.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 58,
+          "endColumn": 75,
+          "endLine": 26,
+          "file": "retained-invalid.ts",
+          "line": 26,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 68,
+          "endColumn": 85,
+          "endLine": 27,
+          "file": "retained-invalid.ts",
+          "line": 27,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 61,
+          "endColumn": 78,
+          "endLine": 28,
+          "file": "retained-invalid.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 67,
+          "endColumn": 84,
+          "endLine": 29,
+          "file": "retained-invalid.ts",
+          "line": 29,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 64,
+          "endColumn": 81,
+          "endLine": 30,
+          "file": "retained-invalid.ts",
+          "line": 30,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 72,
+          "endColumn": 89,
+          "endLine": 31,
+          "file": "retained-invalid.ts",
+          "line": 31,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 46,
+          "endLine": 32,
+          "file": "retained-invalid.ts",
+          "line": 32,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 56,
+          "endLine": 33,
+          "file": "retained-invalid.ts",
+          "line": 33,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 91,
+          "endColumn": 108,
+          "endLine": 34,
+          "file": "retained-invalid.ts",
+          "line": 34,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 39,
+          "endLine": 39,
+          "file": "retained-invalid.ts",
+          "line": 39,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 34,
+          "endLine": 40,
+          "file": "retained-invalid.ts",
+          "line": 40,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 43,
+          "endLine": 41,
+          "file": "retained-invalid.ts",
+          "line": 41,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 41,
+          "endLine": 42,
+          "file": "retained-invalid.ts",
+          "line": 42,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 58,
+          "endLine": 43,
+          "file": "retained-invalid.ts",
+          "line": 43,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 115,
+          "endColumn": 132,
+          "endLine": 45,
+          "file": "retained-invalid.ts",
+          "line": 45,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 110,
+          "endColumn": 127,
+          "endLine": 46,
+          "file": "retained-invalid.ts",
+          "line": 46,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 105,
+          "endColumn": 122,
+          "endLine": 47,
+          "file": "retained-invalid.ts",
+          "line": 47,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 136,
+          "endColumn": 153,
+          "endLine": 48,
+          "file": "retained-invalid.ts",
+          "line": 48,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-globals.ts",
+      "findings": [
+        {
+          "column": 19,
+          "endColumn": 35,
+          "endLine": 5,
+          "file": "retained-globals.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-global.ts",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 30,
+          "endLine": 3,
+          "file": "retained-mutated-global.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-spy-write.ts",
+      "findings": [
+        {
+          "column": 52,
+          "endColumn": 69,
+          "endLine": 5,
+          "file": "retained-mutated-spy-write.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-spy-delete.ts",
+      "findings": [
+        {
+          "column": 52,
+          "endColumn": 69,
+          "endLine": 5,
+          "file": "retained-mutated-spy-delete.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-spy-update.ts",
+      "findings": [
+        {
+          "column": 52,
+          "endColumn": 69,
+          "endLine": 5,
+          "file": "retained-mutated-spy-update.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-framework.ts",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 30,
+          "endLine": 5,
+          "file": "retained-mutated-framework.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "suppressed-lines.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 6,
+          "file": "suppressed-lines.ts",
+          "line": 6,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 8,
+          "file": "suppressed-lines.ts",
+          "line": 8,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 3,
+          "file": "docs.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [
+        {
+          "column": 32,
+          "endColumn": 46,
+          "endLine": 7,
+          "file": "docs.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 10,
+          "file": "invalid.ts",
+          "line": 10,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 11,
+          "file": "invalid.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 12,
+          "file": "invalid.ts",
+          "line": 12,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 25,
+          "endLine": 13,
+          "file": "invalid.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 24,
+          "endLine": 14,
+          "file": "invalid.ts",
+          "line": 14,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 30,
+          "endLine": 15,
+          "file": "invalid.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 16,
+          "file": "invalid.ts",
+          "line": 16,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 17,
+          "file": "invalid.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 18,
+          "file": "invalid.ts",
+          "line": 18,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 24,
+          "endLine": 19,
+          "file": "invalid.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 25,
+          "endLine": 20,
+          "file": "invalid.ts",
+          "line": 20,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 21,
+          "file": "invalid.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 35,
+          "endColumn": 53,
+          "endLine": 25,
+          "file": "invalid.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 43,
+          "endLine": 26,
+          "file": "invalid.ts",
+          "line": 26,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 44,
+          "endLine": 27,
+          "file": "invalid.ts",
+          "line": 27,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 49,
+          "endLine": 28,
+          "file": "invalid.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 45,
+          "endLine": 29,
+          "file": "invalid.ts",
+          "line": 29,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 51,
+          "endLine": 30,
+          "file": "invalid.ts",
+          "line": 30,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 45,
+          "endColumn": 63,
+          "endLine": 31,
+          "file": "invalid.ts",
+          "line": 31,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 60,
+          "endLine": 32,
+          "file": "invalid.ts",
+          "line": 32,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 25,
+          "endLine": 35,
+          "file": "invalid.ts",
+          "line": 35,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 41,
+          "file": "invalid.ts",
+          "line": 41,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 40,
+          "endLine": 47,
+          "file": "invalid.ts",
+          "line": 47,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 50,
+          "endLine": 48,
+          "file": "invalid.ts",
+          "line": 48,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "mutable-cjs.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 4,
+          "file": "mutable-cjs.ts",
+          "line": 4,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 5,
+          "file": "mutable-cjs.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 6,
+          "file": "mutable-cjs.ts",
+          "line": 6,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "async-try-catch-return-await": [
+    {
+      "file": "valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "handlers": [
+            {
+              "calleeNamePatterns": [
+                "/^handle.*RateLimit$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/rate-limit"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "handlers": [
+            {
+              "calleeNamePatterns": [
+                "/[/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/**"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [
+        {
+          "column": 5,
+          "endColumn": 22,
+          "endLine": 13,
+          "file": "invalid.ts",
+          "line": 13,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 19,
+          "endLine": 22,
+          "file": "invalid.ts",
+          "line": 22,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 19,
+          "endLine": 32,
+          "file": "invalid.ts",
+          "line": 32,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 21,
+          "endLine": 42,
+          "file": "invalid.ts",
+          "line": 42,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 21,
+          "endLine": 53,
+          "file": "invalid.ts",
+          "line": 53,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 39,
+          "endLine": 62,
+          "file": "invalid.ts",
+          "line": 62,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 29,
+          "endLine": 71,
+          "file": "invalid.ts",
+          "line": 71,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 19,
+          "endLine": 81,
+          "file": "invalid.ts",
+          "line": 81,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 19,
+          "endLine": 91,
+          "file": "invalid.ts",
+          "line": 91,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 19,
+          "endLine": 104,
+          "file": "invalid.ts",
+          "line": 104,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 22,
+          "endLine": 112,
+          "file": "invalid.ts",
+          "line": 112,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 22,
+          "endLine": 120,
+          "file": "invalid.ts",
+          "line": 120,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 22,
+          "endLine": 128,
+          "file": "invalid.ts",
+          "line": 128,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 20,
+          "endLine": 137,
+          "file": "invalid.ts",
+          "line": 137,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 48,
+          "endLine": 145,
+          "file": "invalid.ts",
+          "line": 145,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 54,
+          "endLine": 153,
+          "file": "invalid.ts",
+          "line": 153,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 34,
+          "endLine": 161,
+          "file": "invalid.ts",
+          "line": 161,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 32,
+          "endLine": 169,
+          "file": "invalid.ts",
+          "line": 169,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 22,
+          "endLine": 177,
+          "file": "invalid.ts",
+          "line": 177,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "handlers": [
+            {
+              "calleeNamePatterns": [
+                "/^handle.*RateLimit$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/rate-limit"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "no-banned-import-outside-allowed-paths": [
+    {
+      "file": "src/app/build.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "bannedImports": [
+            {
+              "module": "typescript",
+              "names": [
+                "createProgram",
+                "createWatchProgram"
+              ]
+            },
+            {
+              "module": "@acme/rate-limit",
+              "names": [
+                "default",
+                "invalidateAll"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/app/build.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "src/app/build.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "checkedPathPatterns": [
+            "src/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/internal/build.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "src/internal/**"
+          ],
+          "bannedImports": [
+            {
+              "module": "typescript",
+              "names": [
+                "createProgram",
+                "createWatchProgram"
+              ]
+            },
+            {
+              "module": "@acme/rate-limit",
+              "names": [
+                "default",
+                "invalidateAll"
+              ]
+            }
+          ],
+          "checkedPathPatterns": [
+            "src/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "backend/jobs/build.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "src/internal/**"
+          ],
+          "bannedImports": [
+            {
+              "module": "typescript",
+              "names": [
+                "createProgram",
+                "createWatchProgram"
+              ]
+            },
+            {
+              "module": "@acme/rate-limit",
+              "names": [
+                "default",
+                "invalidateAll"
+              ]
+            }
+          ],
+          "checkedPathPatterns": [
+            "src/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/app/build.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "src/internal/**"
+          ],
+          "bannedImports": [
+            {
+              "module": "typescript",
+              "names": [
+                "createProgram",
+                "createWatchProgram"
+              ]
+            },
+            {
+              "module": "@acme/rate-limit",
+              "names": [
+                "default",
+                "invalidateAll"
+              ]
+            }
+          ],
+          "checkedPathPatterns": [
+            "src/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/legacy/rate-limit-shim.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "src/internal/**",
+            "src/legacy/rate-limit-shim.ts"
+          ],
+          "bannedImports": [
+            {
+              "module": "typescript",
+              "names": [
+                "createProgram",
+                "createWatchProgram"
+              ]
+            },
+            {
+              "module": "@acme/rate-limit",
+              "names": [
+                "default",
+                "invalidateAll"
+              ]
+            }
+          ],
+          "checkedPathPatterns": [
+            "src/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/app/build.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "src/internal/**"
+          ],
+          "bannedImports": [
+            {
+              "module": "@acme/rate-limit",
+              "names": [
+                "default"
+              ]
+            }
+          ],
+          "checkedPathPatterns": [
+            "src/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/app/build.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 2,
+          "file": "src/app/build.ts",
+          "line": 2,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 6,
+          "file": "src/app/build.ts",
+          "line": 6,
+          "message": "Reachable use of banned import \"createWatchProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 9,
+          "file": "src/app/build.ts",
+          "line": 9,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 13,
+          "file": "src/app/build.ts",
+          "line": 13,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 8,
+          "endLine": 16,
+          "file": "src/app/build.ts",
+          "line": 16,
+          "message": "Reachable use of banned import \"default\" from \"@acme/rate-limit\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 19,
+          "file": "src/app/build.ts",
+          "line": 19,
+          "message": "Reachable use of banned import \"invalidateAll\" from \"@acme/rate-limit\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 4,
+          "endLine": 22,
+          "file": "src/app/build.ts",
+          "line": 22,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 25,
+          "file": "src/app/build.ts",
+          "line": 25,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 30,
+          "file": "src/app/build.ts",
+          "line": 30,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 35,
+          "endLine": 38,
+          "file": "src/app/build.ts",
+          "line": 38,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 35,
+          "endLine": 43,
+          "file": "src/app/build.ts",
+          "line": 43,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 52,
+          "file": "src/app/build.ts",
+          "line": 52,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 8,
+          "endLine": 56,
+          "file": "src/app/build.ts",
+          "line": 56,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 61,
+          "file": "src/app/build.ts",
+          "line": 61,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 63,
+          "file": "src/app/build.ts",
+          "line": 63,
+          "message": "Do not re-export banned import \"createProgram\" from \"typescript\"; it stays reachable outside allowed paths.",
+          "messageId": "bannedReExport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 13,
+          "endLine": 66,
+          "file": "src/app/build.ts",
+          "line": 66,
+          "message": "Do not re-export banned import \"createWatchProgram\" from \"typescript\"; it stays reachable outside allowed paths.",
+          "messageId": "bannedReExport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 69,
+          "file": "src/app/build.ts",
+          "line": 69,
+          "message": "Do not re-export banned import \"*\" from \"@acme/rate-limit\"; it stays reachable outside allowed paths.",
+          "messageId": "bannedReExport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 71,
+          "file": "src/app/build.ts",
+          "line": 71,
+          "message": "Do not re-export banned import \"*\" from \"typescript\"; it stays reachable outside allowed paths.",
+          "messageId": "bannedReExport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 75,
+          "file": "src/app/build.ts",
+          "line": 75,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 78,
+          "file": "src/app/build.ts",
+          "line": 78,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 22,
+          "endLine": 85,
+          "file": "src/app/build.ts",
+          "line": 85,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 31,
+          "endLine": 93,
+          "file": "src/app/build.ts",
+          "line": 93,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 4,
+          "endLine": 110,
+          "file": "src/app/build.ts",
+          "line": 110,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 23,
+          "endLine": 117,
+          "file": "src/app/build.ts",
+          "line": 117,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 12,
+          "endLine": 132,
+          "file": "src/app/build.ts",
+          "line": 132,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 12,
+          "endLine": 144,
+          "file": "src/app/build.ts",
+          "line": 144,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 12,
+          "endLine": 154,
+          "file": "src/app/build.ts",
+          "line": 154,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 12,
+          "endLine": 160,
+          "file": "src/app/build.ts",
+          "line": 160,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 12,
+          "endLine": 166,
+          "file": "src/app/build.ts",
+          "line": 166,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 9,
+          "endLine": 181,
+          "file": "src/app/build.ts",
+          "line": 181,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 188,
+          "file": "src/app/build.ts",
+          "line": 188,
+          "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 69,
+          "endLine": 193,
+          "file": "src/app/build.ts",
+          "line": 193,
+          "message": "Do not re-export banned import \"createProgram\" from \"typescript\"; it stays reachable outside allowed paths.",
+          "messageId": "bannedReExport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 18,
+          "endLine": 198,
+          "file": "src/app/build.ts",
+          "line": 198,
+          "message": "Reachable use of banned import \"default\" from \"@acme/rate-limit\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "src/internal/**"
+          ],
+          "bannedImports": [
+            {
+              "module": "typescript",
+              "names": [
+                "createProgram",
+                "createWatchProgram"
+              ]
+            },
+            {
+              "module": "@acme/rate-limit",
+              "names": [
+                "default",
+                "invalidateAll"
+              ]
+            }
+          ],
+          "checkedPathPatterns": [
+            "src/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/app/other.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 28,
+          "endLine": 3,
+          "file": "src/app/other.ts",
+          "line": 3,
+          "message": "Reachable use of banned import \"invalidateAll\" from \"@acme/rate-limit\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "src/internal/**",
+            "src/legacy/rate-limit-shim.ts"
+          ],
+          "bannedImports": [
+            {
+              "module": "typescript",
+              "names": [
+                "createProgram",
+                "createWatchProgram"
+              ]
+            },
+            {
+              "module": "@acme/rate-limit",
+              "names": [
+                "default",
+                "invalidateAll"
+              ]
+            }
+          ],
+          "checkedPathPatterns": [
+            "src/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/app/build.ts",
+      "findings": [
+        {
+          "column": 11,
+          "endColumn": 43,
+          "endLine": 3,
+          "file": "src/app/build.ts",
+          "line": 3,
+          "message": "Do not re-export banned import \"createProgram\" from \"typescript\"; it stays reachable outside allowed paths.",
+          "messageId": "bannedReExport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "src/internal/**"
+          ],
+          "bannedImports": [
+            {
+              "module": "typescript",
+              "names": [
+                "createProgram",
+                "createWatchProgram"
+              ]
+            },
+            {
+              "module": "@acme/rate-limit",
+              "names": [
+                "default",
+                "invalidateAll"
+              ]
+            }
+          ],
+          "checkedPathPatterns": [
+            "src/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "no-global-fetch-outside-helper": [
+    {
+      "file": "web/app/page.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "web/lib/api/users.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "web/lib/api/**",
+            "web/lib/client/**"
+          ],
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "backend/jobs/users.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "web/lib/api/**",
+            "web/lib/client/**"
+          ],
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/users.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "web/lib/api/**",
+            "web/lib/client/**"
+          ],
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/users.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "web/lib/api/**",
+            "web/lib/client/**"
+          ],
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/users.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 1,
+          "file": "web/app/users.ts",
+          "line": 1,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 2,
+          "file": "web/app/users.ts",
+          "line": 2,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 3,
+          "file": "web/app/users.ts",
+          "line": 3,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 4,
+          "file": "web/app/users.ts",
+          "line": 4,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 5,
+          "file": "web/app/users.ts",
+          "line": 5,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 8,
+          "endLine": 8,
+          "file": "web/app/users.ts",
+          "line": 8,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 11,
+          "file": "web/app/users.ts",
+          "line": 11,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 14,
+          "file": "web/app/users.ts",
+          "line": 14,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 12,
+          "endLine": 18,
+          "file": "web/app/users.ts",
+          "line": 18,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 21,
+          "file": "web/app/users.ts",
+          "line": 21,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 7,
+          "endLine": 26,
+          "file": "web/app/users.ts",
+          "line": 26,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 7,
+          "endLine": 27,
+          "file": "web/app/users.ts",
+          "line": 27,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 28,
+          "file": "web/app/users.ts",
+          "line": 28,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 40,
+          "endLine": 29,
+          "file": "web/app/users.ts",
+          "line": 29,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 18,
+          "endLine": 30,
+          "file": "web/app/users.ts",
+          "line": 30,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 31,
+          "file": "web/app/users.ts",
+          "line": 31,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 15,
+          "endLine": 34,
+          "file": "web/app/users.ts",
+          "line": 34,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 8,
+          "endLine": 38,
+          "file": "web/app/users.ts",
+          "line": 38,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 8,
+          "endLine": 43,
+          "file": "web/app/users.ts",
+          "line": 43,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 48,
+          "file": "web/app/users.ts",
+          "line": 48,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "web/lib/api/**",
+            "web/lib/client/**"
+          ],
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/users.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 14,
+          "endLine": 6,
+          "file": "web/app/users.ts",
+          "line": 6,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "web/lib/api/**",
+            "web/lib/client/**"
+          ],
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/users.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 15,
+          "endLine": 4,
+          "file": "web/app/users.ts",
+          "line": 4,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 19,
+          "endLine": 6,
+          "file": "web/app/users.ts",
+          "line": 6,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 20,
+          "endLine": 13,
+          "file": "web/app/users.ts",
+          "line": 13,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 15,
+          "endLine": 16,
+          "file": "web/app/users.ts",
+          "line": 16,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 14,
+          "endLine": 25,
+          "file": "web/app/users.ts",
+          "line": 25,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 15,
+          "endLine": 27,
+          "file": "web/app/users.ts",
+          "line": 27,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 18,
+          "endLine": 30,
+          "file": "web/app/users.ts",
+          "line": 30,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 18,
+          "endLine": 36,
+          "file": "web/app/users.ts",
+          "line": 36,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 23,
+          "endLine": 41,
+          "file": "web/app/users.ts",
+          "line": 41,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 22,
+          "endLine": 49,
+          "file": "web/app/users.ts",
+          "line": 49,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 33,
+          "endLine": 57,
+          "file": "web/app/users.ts",
+          "line": 57,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 30,
+          "endLine": 67,
+          "file": "web/app/users.ts",
+          "line": 67,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 30,
+          "endLine": 82,
+          "file": "web/app/users.ts",
+          "line": 82,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 21,
+          "endLine": 88,
+          "file": "web/app/users.ts",
+          "line": 88,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 30,
+          "endLine": 90,
+          "file": "web/app/users.ts",
+          "line": 90,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 38,
+          "endLine": 95,
+          "file": "web/app/users.ts",
+          "line": 95,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 15,
+          "endLine": 106,
+          "file": "web/app/users.ts",
+          "line": 106,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 31,
+          "endLine": 109,
+          "file": "web/app/users.ts",
+          "line": 109,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 20,
+          "endLine": 113,
+          "file": "web/app/users.ts",
+          "line": 113,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 22,
+          "endLine": 126,
+          "file": "web/app/users.ts",
+          "line": 126,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 19,
+          "endLine": 139,
+          "file": "web/app/users.ts",
+          "line": 139,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 14,
+          "endLine": 149,
+          "file": "web/app/users.ts",
+          "line": 149,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 22,
+          "endLine": 151,
+          "file": "web/app/users.ts",
+          "line": 151,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 19,
+          "endLine": 157,
+          "file": "web/app/users.ts",
+          "line": 157,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 23,
+          "endLine": 163,
+          "file": "web/app/users.ts",
+          "line": 163,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 14,
+          "endLine": 168,
+          "file": "web/app/users.ts",
+          "line": 168,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 16,
+          "endLine": 186,
+          "file": "web/app/users.ts",
+          "line": 186,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 26,
+          "endLine": 194,
+          "file": "web/app/users.ts",
+          "line": 194,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 50,
+          "endLine": 213,
+          "file": "web/app/users.ts",
+          "line": 213,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 20,
+          "endLine": 238,
+          "file": "web/app/users.ts",
+          "line": 238,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 23,
+          "endLine": 245,
+          "file": "web/app/users.ts",
+          "line": 245,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 23,
+          "endLine": 250,
+          "file": "web/app/users.ts",
+          "line": 250,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "web/lib/api/**",
+            "web/lib/client/**"
+          ],
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/users.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 3,
+          "file": "web/app/users.ts",
+          "line": 3,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "web/app/users.ts",
+          "line": 4,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "web/lib/api/**",
+            "web/lib/client/**"
+          ],
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/users.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 4,
+          "file": "web/app/users.ts",
+          "line": 4,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 19,
+          "endLine": 5,
+          "file": "web/app/users.ts",
+          "line": 5,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowedPathPatterns": [
+            "web/lib/api/**",
+            "web/lib/client/**"
+          ],
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "react-no-nullish-react-node": [
+    {
+      "file": "valid.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.tsx",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 41,
+          "endLine": 14,
+          "file": "invalid.tsx",
+          "line": 14,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 35,
+          "endLine": 15,
+          "file": "invalid.tsx",
+          "line": 15,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 33,
+          "endLine": 28,
+          "file": "invalid.tsx",
+          "line": 28,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "coverage.tsx",
+      "findings": [
+        {
+          "column": 52,
+          "endColumn": 79,
+          "endLine": 42,
+          "file": "coverage.tsx",
+          "line": 42,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 34,
+          "endLine": 45,
+          "file": "coverage.tsx",
+          "line": 45,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 32,
+          "endLine": 49,
+          "file": "coverage.tsx",
+          "line": 49,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 30,
+          "endLine": 50,
+          "file": "coverage.tsx",
+          "line": 50,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 33,
+          "endColumn": 66,
+          "endLine": 54,
+          "file": "coverage.tsx",
+          "line": 54,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 75,
+          "endLine": 56,
+          "file": "coverage.tsx",
+          "line": 56,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 60,
+          "file": "coverage.tsx",
+          "line": 60,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 59,
+          "endLine": 63,
+          "file": "coverage.tsx",
+          "line": 63,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 85,
+          "endLine": 65,
+          "file": "coverage.tsx",
+          "line": 65,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 77,
+          "endLine": 67,
+          "file": "coverage.tsx",
+          "line": 67,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 69,
+          "endLine": 69,
+          "file": "coverage.tsx",
+          "line": 69,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 40,
+          "endLine": 75,
+          "file": "coverage.tsx",
+          "line": 75,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 79,
+          "file": "coverage.tsx",
+          "line": 79,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 37,
+          "endLine": 89,
+          "file": "coverage.tsx",
+          "line": 89,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 97,
+          "file": "coverage.tsx",
+          "line": 97,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "server-require-nullable-fetch-wrapper": [
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "backend/users.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^serverApi\\.get$"
+          ],
+          "nullableReturnTypeNames": [
+            "MaybeUser"
+          ],
+          "requiredWrapperCallee": "nullableEntity"
+        }
+      ]
+    },
+    {
+      "file": "backend/services/users.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^client\\.fetchEntity$"
+          ],
+          "inferNullableFromTopLevelEntityPath": true,
+          "requiredWrapperCallee": "asNullable",
+          "topLevelEntityPathPatterns": [
+            "backend/entities/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/users.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^client\\.fetchEntity$"
+          ],
+          "includePathPatterns": [
+            "backend/**"
+          ],
+          "requiredWrapperCallee": "asNullable"
+        }
+      ]
+    },
+    {
+      "file": "backend/users.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 11,
+          "file": "backend/users.ts",
+          "line": 11,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 50,
+          "endColumn": 75,
+          "endLine": 14,
+          "file": "backend/users.ts",
+          "line": 14,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 17,
+          "file": "backend/users.ts",
+          "line": 17,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 21,
+          "file": "backend/users.ts",
+          "line": 21,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 36,
+          "endLine": 25,
+          "file": "backend/users.ts",
+          "line": 25,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 29,
+          "file": "backend/users.ts",
+          "line": 29,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 67,
+          "endLine": 32,
+          "file": "backend/users.ts",
+          "line": 32,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 38,
+          "file": "backend/users.ts",
+          "line": 38,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 42,
+          "file": "backend/users.ts",
+          "line": 42,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 67,
+          "endLine": 47,
+          "file": "backend/users.ts",
+          "line": 47,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 62,
+          "endLine": 50,
+          "file": "backend/users.ts",
+          "line": 50,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 56,
+          "file": "backend/users.ts",
+          "line": 56,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 48,
+          "endLine": 60,
+          "file": "backend/users.ts",
+          "line": 60,
+          "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^serverApi\\.get$"
+          ],
+          "nullableReturnTypeNames": [
+            "MaybeUser"
+          ],
+          "requiredWrapperCallee": "nullableEntity"
+        }
+      ]
+    },
+    {
+      "file": "backend/users.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 40,
+          "endLine": 10,
+          "file": "backend/users.ts",
+          "line": 10,
+          "message": "Wrap nullable entity fetch 'client.fetchEntity' in asNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 40,
+          "endLine": 14,
+          "file": "backend/users.ts",
+          "line": 14,
+          "message": "Wrap nullable entity fetch 'client.fetchEntity' in asNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^client\\.fetchEntity$"
+          ],
+          "nullableReturnTypeNames": [
+            "EntityResult"
+          ],
+          "requiredWrapperCallee": "asNullable"
+        }
+      ]
+    },
+    {
+      "file": "backend/entities/users.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 40,
+          "endLine": 10,
+          "file": "backend/entities/users.ts",
+          "line": 10,
+          "message": "Wrap nullable entity fetch 'client.fetchEntity' in asNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 40,
+          "endLine": 14,
+          "file": "backend/entities/users.ts",
+          "line": 14,
+          "message": "Wrap nullable entity fetch 'client.fetchEntity' in asNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "getterCalleePatterns": [
+            "^client\\.fetchEntity$"
+          ],
+          "inferNullableFromTopLevelEntityPath": true,
+          "requiredWrapperCallee": "asNullable",
+          "topLevelEntityPathPatterns": [
+            "backend/entities/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "ts-no-const-aliases": [
+    {
+      "file": "valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "typed.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 28,
+          "endLine": 3,
+          "file": "invalid.ts",
+          "line": 3,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 38,
+          "endLine": 4,
+          "file": "invalid.ts",
+          "line": 4,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 29,
+          "endLine": 5,
+          "file": "invalid.ts",
+          "line": 5,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 6,
+          "file": "invalid.ts",
+          "line": 6,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 40,
+          "endLine": 9,
+          "file": "invalid.ts",
+          "line": 9,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 43,
+          "endLine": 10,
+          "file": "invalid.ts",
+          "line": 10,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "coverage.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 31,
+          "endLine": 5,
+          "file": "coverage.ts",
+          "line": 5,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 43,
+          "endLine": 7,
+          "file": "coverage.ts",
+          "line": 7,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "ts-no-export-renaming": [
+    {
+      "file": "valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "web/app/index.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "includePathPatterns": [
+            "^backend/"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "backend/index.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "includePathPatterns": [
+            "["
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 5,
+          "file": "invalid.ts",
+          "line": 5,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 31,
+          "endLine": 6,
+          "file": "invalid.ts",
+          "line": 6,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "invalid.ts",
+          "line": 7,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "coverage.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 4,
+          "file": "coverage.ts",
+          "line": 4,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 5,
+          "file": "coverage.ts",
+          "line": 5,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "web/app/index.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 1,
+          "file": "web/app/index.ts",
+          "line": 1,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 53,
+          "endLine": 2,
+          "file": "web/app/index.ts",
+          "line": 2,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "web/app/index.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 53,
+          "endLine": 2,
+          "file": "web/app/index.ts",
+          "line": 2,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowDefaultReExports": true
+        }
+      ]
+    },
+    {
+      "file": "backend/index.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 1,
+          "file": "backend/index.ts",
+          "line": 1,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 53,
+          "endLine": 2,
+          "file": "backend/index.ts",
+          "line": 2,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "includePathPatterns": [
+            "^backend/"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "backend/index.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 1,
+          "file": "backend/index.ts",
+          "line": 1,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 53,
+          "endLine": 2,
+          "file": "backend/index.ts",
+          "line": 2,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "includePathPatterns": [
+            "^backend/",
+            "["
+          ]
+        }
+      ]
+    }
+  ],
+  "ts-no-function-aliases": [
+    {
+      "file": "valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [
+        {
+          "column": 23,
+          "endColumn": 39,
+          "endLine": 3,
+          "file": "invalid.ts",
+          "line": 3,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 48,
+          "endLine": 4,
+          "file": "invalid.ts",
+          "line": 4,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 51,
+          "endLine": 5,
+          "file": "invalid.ts",
+          "line": 5,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 49,
+          "endLine": 6,
+          "file": "invalid.ts",
+          "line": 6,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 57,
+          "endLine": 7,
+          "file": "invalid.ts",
+          "line": 7,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 61,
+          "endLine": 8,
+          "file": "invalid.ts",
+          "line": 8,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 64,
+          "endLine": 10,
+          "file": "invalid.ts",
+          "line": 10,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "coverage.ts",
+      "findings": [
+        {
+          "column": 28,
+          "endColumn": 2,
+          "endLine": 3,
+          "file": "coverage.ts",
+          "line": 1,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 51,
+          "endLine": 15,
+          "file": "coverage.ts",
+          "line": 15,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 54,
+          "endLine": 17,
+          "file": "coverage.ts",
+          "line": 17,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "ts-preserve-null-option-defaults": [
+    {
+      "file": "valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "web/options.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "includePathPatterns": [
+            "backend/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/options.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "excludePathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 7,
+          "file": "invalid.ts",
+          "line": 7,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 11,
+          "file": "invalid.ts",
+          "line": 11,
+          "message": "Do not default nullable option 'alias' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 31,
+          "endLine": 15,
+          "file": "invalid.ts",
+          "line": 15,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 31,
+          "endLine": 16,
+          "file": "invalid.ts",
+          "line": 16,
+          "message": "Do not default nullable option 'alias' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-keys.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 40,
+          "endLine": 6,
+          "file": "static-keys.ts",
+          "line": 6,
+          "message": "Do not default nullable option 'label' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 40,
+          "endLine": 10,
+          "file": "static-keys.ts",
+          "line": 10,
+          "message": "Do not default nullable option 'label' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 15,
+          "file": "static-keys.ts",
+          "line": 15,
+          "message": "Do not default nullable option 'text' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "backend/options.ts",
+      "findings": [
+        {
+          "column": 11,
+          "endColumn": 38,
+          "endLine": 24,
+          "file": "backend/options.ts",
+          "line": 24,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 71,
+          "endLine": 24,
+          "file": "backend/options.ts",
+          "line": 24,
+          "message": "Do not default nullable option 'inherited' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "optionObjectNames": [
+            "Options"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "backend/options.ts",
+      "findings": [
+        {
+          "column": 11,
+          "endColumn": 38,
+          "endLine": 24,
+          "file": "backend/options.ts",
+          "line": 24,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 71,
+          "endLine": 24,
+          "file": "backend/options.ts",
+          "line": 24,
+          "message": "Do not default nullable option 'inherited' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 43,
+          "endLine": 37,
+          "file": "backend/options.ts",
+          "line": 37,
+          "message": "Do not default nullable option 'publicValue' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "optionObjectNamePatterns": [
+            "Options$"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "backend/options.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 43,
+          "endLine": 37,
+          "file": "backend/options.ts",
+          "line": 37,
+          "message": "Do not default nullable option 'publicValue' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "optionObjectNames": [
+            "PublicOptions"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "coverage.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 38,
+          "endLine": 39,
+          "file": "coverage.ts",
+          "line": 39,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 47,
+          "endLine": 43,
+          "file": "coverage.ts",
+          "line": 43,
+          "message": "Do not default nullable option 'literal-name' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 47,
+          "file": "coverage.ts",
+          "line": 47,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 71,
+          "endLine": 50,
+          "file": "coverage.ts",
+          "line": 50,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 56,
+          "file": "coverage.ts",
+          "line": 56,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 60,
+          "file": "coverage.ts",
+          "line": 60,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 70,
+          "file": "coverage.ts",
+          "line": 70,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 75,
+          "file": "coverage.ts",
+          "line": 75,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 80,
+          "file": "coverage.ts",
+          "line": 80,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 85,
+          "file": "coverage.ts",
+          "line": 85,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 90,
+          "file": "coverage.ts",
+          "line": 90,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 38,
+          "endLine": 94,
+          "file": "coverage.ts",
+          "line": 94,
+          "message": "Do not default nullable option 'first' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 68,
+          "endLine": 94,
+          "file": "coverage.ts",
+          "line": 94,
+          "message": "Do not default nullable option 'second' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 41,
+          "endLine": 98,
+          "file": "coverage.ts",
+          "line": 98,
+          "message": "Do not default nullable option 'defaulted' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 102,
+          "file": "coverage.ts",
+          "line": 102,
+          "message": "Do not default nullable option 'label' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 42,
+          "endLine": 106,
+          "file": "coverage.ts",
+          "line": 106,
+          "message": "Do not default nullable option 'inherited' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 69,
+          "endLine": 106,
+          "file": "coverage.ts",
+          "line": 106,
+          "message": "Do not default nullable option 'own' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 116,
+          "file": "coverage.ts",
+          "line": 116,
+          "message": "Do not default nullable option 'label' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 120,
+          "file": "coverage.ts",
+          "line": 120,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 124,
+          "file": "coverage.ts",
+          "line": 124,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 34,
+          "endLine": 129,
+          "file": "coverage.ts",
+          "line": 129,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 137,
+          "file": "coverage.ts",
+          "line": 137,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 143,
+          "file": "coverage.ts",
+          "line": 143,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 56,
+          "endLine": 147,
+          "file": "coverage.ts",
+          "line": 147,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 39,
+          "endLine": 151,
+          "file": "coverage.ts",
+          "line": 151,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 69,
+          "endLine": 151,
+          "file": "coverage.ts",
+          "line": 151,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 155,
+          "file": "coverage.ts",
+          "line": 155,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 34,
+          "endLine": 160,
+          "file": "coverage.ts",
+          "line": 160,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 42,
+          "endLine": 164,
+          "file": "coverage.ts",
+          "line": 164,
+          "message": "Do not default nullable option 'inherited' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 77,
+          "endLine": 164,
+          "file": "coverage.ts",
+          "line": 164,
+          "message": "Do not default nullable option 'intersected' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 171,
+          "file": "coverage.ts",
+          "line": 171,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 182,
+          "file": "coverage.ts",
+          "line": 182,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 30,
+          "endLine": 193,
+          "file": "coverage.ts",
+          "line": 193,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 31,
+          "endLine": 205,
+          "file": "coverage.ts",
+          "line": 205,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 31,
+          "endLine": 206,
+          "file": "coverage.ts",
+          "line": 206,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 30,
+          "endLine": 213,
+          "file": "coverage.ts",
+          "line": 213,
+          "message": "Do not default nullable option 'copied' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 217,
+          "file": "coverage.ts",
+          "line": 217,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 34,
+          "endLine": 223,
+          "file": "coverage.ts",
+          "line": 223,
+          "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

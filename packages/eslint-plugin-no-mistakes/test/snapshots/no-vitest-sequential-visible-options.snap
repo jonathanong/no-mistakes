@@ -1,0 +1,44 @@
+{
+  "no-vitest-sequential": [
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 11,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

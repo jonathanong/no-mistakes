@@ -1,0 +1,267 @@
+{
+  "ts-no-function-aliases": [
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 77,
+          "endLine": 3,
+          "file": "fixture.ts",
+          "line": 3,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 58,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 70,
+          "endLine": 5,
+          "file": "fixture.ts",
+          "line": 5,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 54,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 30,
+          "endColumn": 54,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 71,
+          "endLine": 8,
+          "file": "fixture.ts",
+          "line": 8,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 85,
+          "endLine": 9,
+          "file": "fixture.ts",
+          "line": 9,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 62,
+          "endLine": 10,
+          "file": "fixture.ts",
+          "line": 10,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 65,
+          "endLine": 11,
+          "file": "fixture.ts",
+          "line": 11,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 45,
+          "endLine": 12,
+          "file": "fixture.ts",
+          "line": 12,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 62,
+          "endLine": 14,
+          "file": "fixture.ts",
+          "line": 14,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 12,
+          "endColumn": 36,
+          "endLine": 16,
+          "file": "fixture.ts",
+          "line": 16,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 38,
+          "endLine": 18,
+          "file": "fixture.ts",
+          "line": 18,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 58,
+          "endLine": 22,
+          "file": "fixture.ts",
+          "line": 22,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 16,
+          "endColumn": 48,
+          "endLine": 3,
+          "file": "fixture.ts",
+          "line": 3,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "fixture.mjs",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 60,
+          "endLine": 3,
+          "file": "fixture.mjs",
+          "line": 3,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 51,
+          "endLine": 5,
+          "file": "fixture.mjs",
+          "line": 5,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 67,
+          "endLine": 6,
+          "file": "fixture.mjs",
+          "line": 6,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 41,
+          "endLine": 8,
+          "file": "fixture.mjs",
+          "line": 8,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 62,
+          "endLine": 10,
+          "file": "fixture.mjs",
+          "line": 10,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 46,
+          "endLine": 12,
+          "file": "fixture.mjs",
+          "line": 12,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 50,
+          "endLine": 14,
+          "file": "fixture.mjs",
+          "line": 14,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

@@ -1,83 +1,78 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { it, expect } from "vitest";
-import { eslintFindings, snapshotDocument } from "./diagnostic-snapshot.mjs";
+import { expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { eslintFindings, snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { fixture, lint, __dirname } from "./helpers.mjs";
+
 const rule = "vitest-timeout-cap";
-const expected = [2, 6, 8, 10, 12, 14, 16, 24, 24, 26, 28, 31, 35, 37, 40, 55, 69];
+const finding = { unknownValues: "finding" };
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 const findings = (options = {}, name = "reasons") =>
   lint(
     fixture(`${rule}/${name}.ts`),
-    {
-      [`no-mistakes/${rule}`]: ["error", options],
-    },
+    { [`no-mistakes/${rule}`]: ["error", options] },
     "fixture.test.ts",
   );
-it("requires local non-placeholder reasons while retaining diagnostic priorities", () => {
-  assert.deepEqual(
-    findings()
-      .filter((item) => item.messageId === "reason")
-      .map((item) => item.line),
-    expected,
-  );
-  assert.deepEqual(
-    findings()
-      .filter((item) => item.messageId !== "reason")
-      .map(({ line, messageId }) => [line, messageId]),
-    [
-      [42, "timeout"],
-      [44, "invalid"],
-    ],
-  );
-  assert.deepEqual(
-    findings({ unknownValues: "finding" })
-      .filter((item) => item.messageId === "unknown")
-      .map((item) => item.line),
-    [47],
-  );
-  assert.deepEqual(
-    findings({ defaultMax: 6000 }).filter((item) => item.messageId === "reason"),
-    [],
-  );
-});
-it("allows cap-only rollout without changing caps, invalid values or unknown policy", async () => {
+
+function capCase(name, options = {}) {
+  return {
+    code: fixture(`${rule}/${name}.ts`),
+    filename: "fixture.test.ts",
+    languageOptions: { parser: tsParser },
+    options: [options],
+  };
+}
+
+const suite = {
+  valid: [
+    capCase("reason-adjacency", { requireReason: false }),
+    capCase("reason-placeholders", { requireReason: false }),
+  ],
+  invalid: [
+    // 17 reason, 1 timeout, 1 invalid. Local non-placeholder reasons keep diagnostic priority.
+    capCase("reasons"),
+    // 17 reason, 1 timeout, 1 invalid, 1 unknown.
+    capCase("reasons", finding),
+    // 1 timeout, 1 invalid. A higher defaultMax drops the reason findings.
+    capCase("reasons", { defaultMax: 6000 }),
+    // 17 reason, 2 timeout. Reasons stay local across hook contexts, spreads and defaults.
+    capCase("reason-carriers"),
+    // 9 reason. Blank comment lines and another call's syntax do not reuse a reason.
+    capCase("reason-adjacency"),
+    // 8 reason. Unfilled explanation and specific reason templates.
+    capCase("reason-placeholders"),
+    // Cap-only rollout retains cap, invalid-value and unknown-value diagnostics.
+    capCase("reasons", { requireReason: false }),
+    capCase("reasons", { requireReason: false, ...finding }),
+    capCase("reason-carriers", { requireReason: false }),
+  ],
+};
+
+it("snapshots vitest-timeout-reasons diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      [rule]: snapshotSuite(rule, languageOptions, suite),
+    }),
+  ).toMatchFileSnapshot("snapshots/vitest-timeout-reasons.snap");
+}, 30_000);
+
+it("keeps reason enforcement enabled by default", async () => {
   assert.deepEqual(findings({ requireReason: true }), findings());
-  const capOnly = { requireReason: false };
-  assert.deepEqual(
-    findings(capOnly).map(({ line, messageId }) => [line, messageId]),
-    [
-      [42, "timeout"],
-      [44, "invalid"],
-    ],
-  );
-  assert.deepEqual(
-    findings({ ...capOnly, unknownValues: "finding" }).map(({ line, messageId }) => [
-      line,
-      messageId,
-    ]),
-    [
-      [42, "timeout"],
-      [44, "invalid"],
-      [47, "unknown"],
-    ],
-  );
-  assert.deepEqual(
-    findings(capOnly, "reason-carriers").map(({ line, messageId }) => [line, messageId]),
-    [
-      [32, "timeout"],
-      [34, "timeout"],
-    ],
-  );
-  for (const name of ["reason-adjacency", "reason-placeholders"])
-    assert.deepEqual(findings(capOnly, name), []);
   await expect(
     snapshotDocument({
       default: eslintFindings(findings(), "reasons.ts"),
-      capOnly: eslintFindings(findings(capOnly), "reasons.ts"),
+      capOnly: eslintFindings(findings({ requireReason: false }), "reasons.ts"),
     }),
   ).toMatchFileSnapshot("snapshots/vitest-timeout-require-reason.snap");
 });
+
 it("rejects non-boolean requireReason options", () => {
   for (const requireReason of [null, 0, 1, "false", {}, []])
     assert.throws(() => findings({ requireReason }), /should be boolean/u);
@@ -111,30 +106,4 @@ it("preserves reason and cap diagnostics through Oxlint for every carrier", () =
       );
     }
   }
-});
-
-it("rejects unfilled explanation and specific reason templates", () => {
-  assert.deepEqual(
-    findings({}, "reason-placeholders").map(({ line, messageId }) => [line, messageId]),
-    [4, 6, 8, 10, 12, 14, 16, 18].map((line) => [line, "reason"]),
-  );
-});
-
-it("keeps reasons local across hook contexts, effective spreads and config defaults", () => {
-  assert.deepEqual(
-    findings({}, "reason-carriers").map(({ line, messageId }) => [line, messageId]),
-    [
-      ...[3, 4, 5, 6, 7, 8, 22, 23].map((line) => [line, "reason"]),
-      [32, "timeout"],
-      [34, "timeout"],
-      ...[36, 43, 47, 58, 60, 62, 64, 66, 68].map((line) => [line, "reason"]),
-    ],
-  );
-});
-
-it("does not reuse reasons across blank comment lines or another call's syntax", () => {
-  assert.deepEqual(
-    findings({}, "reason-adjacency").map(({ line, messageId }) => [line, messageId]),
-    [6, 19, 21, 23, 26, 30, 47, 50, 53].map((line) => [line, "reason"]),
-  );
 });

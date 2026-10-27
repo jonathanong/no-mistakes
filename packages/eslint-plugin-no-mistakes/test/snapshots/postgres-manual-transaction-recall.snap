@@ -1,0 +1,470 @@
+[
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [],
+        "importSpecifier": "pg"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [
+          "execute"
+        ],
+        "importSpecifier": "pg"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [],
+        "importSpecifier": "@data-stores/psql"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [
+          "execute"
+        ],
+        "importSpecifier": "@data-stores/psql"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/controls.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@data-stores/psql"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [],
+        "importSpecifier": "pg"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [
+          "execute"
+        ],
+        "importSpecifier": "pg"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [],
+        "importSpecifier": "@data-stores/psql"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [
+          "execute"
+        ],
+        "importSpecifier": "@data-stores/psql"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/controls.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@data-stores/psql"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 28,
+        "endLine": 4,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 4,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 31,
+        "endLine": 5,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 5,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 31,
+        "endLine": 8,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 8,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 40,
+        "endLine": 10,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 10,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 30,
+        "endLine": 12,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 12,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 30,
+        "endLine": 15,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 15,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 29,
+        "endLine": 18,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 18,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "pg"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 28,
+        "endLine": 3,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 3,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 31,
+        "endLine": 4,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 4,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 31,
+        "endLine": 7,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 7,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 40,
+        "endLine": 9,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 9,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 30,
+        "endLine": 11,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 11,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 30,
+        "endLine": 14,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 14,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 29,
+        "endLine": 17,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 17,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@data-stores/psql"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 28,
+        "endLine": 4,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 4,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 31,
+        "endLine": 5,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 5,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 31,
+        "endLine": 8,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 8,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 40,
+        "endLine": 10,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 10,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 30,
+        "endLine": 12,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 12,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 30,
+        "endLine": 15,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 15,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 29,
+        "endLine": 18,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/pg.ts",
+        "line": 18,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "pg"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 28,
+        "endLine": 3,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 3,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 31,
+        "endLine": 4,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 4,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 31,
+        "endLine": 7,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 7,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 40,
+        "endLine": 9,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 9,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 30,
+        "endLine": 11,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 11,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 30,
+        "endLine": 14,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 14,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 29,
+        "endLine": 17,
+        "file": "test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture/configured.ts",
+        "line": 17,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@data-stores/psql"
+      }
+    ]
+  }
+]

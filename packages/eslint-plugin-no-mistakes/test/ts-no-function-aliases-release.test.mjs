@@ -2,58 +2,73 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { __dirname, fixture, lint, messages } from "./helpers.mjs";
+import { describe, expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { __dirname, fixture, lint } from "./helpers.mjs";
 
 const rule = "ts-no-function-aliases";
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const tsLanguage = { parser: tsParser };
+const privateWrappers = readFileSync(
+  resolve(__dirname, "../../../test-cases/eslint-plugin", rule, "fixture/private-wrappers.ts"),
+  "utf8",
+);
+
+function releaseCase(code, filename) {
+  const item = { code, filename };
+  if (/\.[cm]?tsx?$/.test(filename)) item.languageOptions = tsLanguage;
+  return item;
+}
+
+const oxlintNames = [
+  ["release-controls.ts", 34],
+  ["release-jsdoc.mjs", 7],
+  ["release-positive.ts", 41],
+  ["release-default-const.ts", 2],
+  ["legacy-compatibility.ts", 14],
+  ["legacy-instantiation.ts", 1],
+  ["expanded-contracts.ts", 11],
+  ["private-recall.ts", 2],
+  ["suppress-next-line.ts", 1],
+  ["suppress-line.ts", 0],
+  ["suppress-file.ts", 0],
+];
+
+const suite = {
+  valid: oxlintNames
+    .filter(([, count]) => count === 0)
+    .map(([name]) => releaseCase(fixture(`${rule}/${name}`), name)),
+  invalid: [
+    // 13 alias. Released identifier findings in historical private receiver cases.
+    releaseCase(privateWrappers, "fixture.ts"),
+    // 34 alias. These lines match the frozen v0.95.0 oracle, including private targets.
+    releaseCase(fixture(`${rule}/release-controls.ts`), "fixture.ts"),
+    // 41 alias. Reachable imported and exported pass-throughs, including forwarding.
+    releaseCase(fixture(`${rule}/release-positive.ts`), "fixture.ts"),
+    ...oxlintNames
+      .filter(([, count]) => count !== 0)
+      .map(([name]) => releaseCase(fixture(`${rule}/${name}`), name)),
+  ],
+};
+
 describe("reachable function alias release regression", () => {
-  it("preserves released identifier findings in historical private receiver cases", () => {
-    const code = readFileSync(
-      resolve(__dirname, "../../../test-cases/eslint-plugin", rule, "fixture/private-wrappers.ts"),
-      "utf8",
-    );
-    assert.deepEqual(
-      lint(code, { [`no-mistakes/${rule}`]: "error" }, "fixture.ts").map((item) => item.line),
-      [1, 5, 9, 13, 15, 17, 19, 21, 25, 27, 29, 45, 50],
-    );
-  });
-  it("keeps expanded controls while preserving all released identifier findings", () => {
-    const diagnostics = lint(
-      fixture(`${rule}/release-controls.ts`),
-      { [`no-mistakes/${rule}`]: "error" },
-      "fixture.ts",
-    );
-    // These lines match the frozen v0.95.0 oracle, including private targets.
-    assert.deepEqual(
-      diagnostics.map((item) => item.line),
-      [
-        18, 19, 20, 21, 30, 31, 32, 34, 36, 37, 40, 41, 42, 44, 45, 46, 50, 54, 56, 59, 61, 65, 66,
-        75, 77, 79, 81, 84, 89, 90, 100, 103, 104, 106,
-      ],
-    );
-  });
-  it("reports reachable imported and exported pass-throughs including forwarding", () => {
-    assert.deepEqual(
-      messages(fixture(`${rule}/release-positive.ts`), rule, undefined, "fixture.ts"),
-      Array.from({ length: 41 }, () => "alias"),
-    );
-  });
+  it("snapshots ts-no-function-aliases-release diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/ts-no-function-aliases-release.snap");
+  }, 30_000);
 });
 
 describe("reachable function alias Oxlint parity", () => {
-  for (const [name, count] of [
-    ["release-controls.ts", 34],
-    ["release-jsdoc.mjs", 7],
-    ["release-positive.ts", 41],
-    ["release-default-const.ts", 2],
-    ["legacy-compatibility.ts", 14],
-    ["legacy-instantiation.ts", 1],
-    ["expanded-contracts.ts", 11],
-    ["private-recall.ts", 2],
-    ["suppress-next-line.ts", 1],
-    ["suppress-line.ts", 0],
-    ["suppress-file.ts", 0],
-  ]) {
+  for (const [name, count] of oxlintNames) {
     it(`preserves ${name} with the actual plugin loader`, () => {
       const cwd = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", rule);
       const result = spawnSync(

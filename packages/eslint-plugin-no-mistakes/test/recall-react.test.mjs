@@ -1,41 +1,50 @@
-import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { fixture, messages } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture } from "./helpers.mjs";
 
 const snippet = (name) => fixture(name);
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const typescript = { parser: tsParser, sourceType: "module", globals: {} };
 
-describe("react same-file recall", () => {
-  it("reports immediately invoked functions reached through forwarding", () => {
-    assert.deepEqual(messages(snippet("react-no-iife-in-jsx/recall.tsx"), "react-no-iife-in-jsx"), [
-      "iife",
-      "iife",
-      "iife",
-      "iife",
-      "iife",
-    ]);
-  });
-
-  it("reports nullish react nodes reached through static keys and const aliases", () => {
-    assert.equal(
-      messages(
-        snippet("react-no-nullish-react-node/recall.tsx"),
-        "react-no-nullish-react-node",
-        undefined,
-        "recall.tsx",
-      ).length,
-      4,
-    );
-  });
-
-  it("reports React.use(Promise.resolve) through the same-file spellings", () => {
-    assert.equal(
-      messages(
-        snippet("react-no-use-promise-resolve/recall.tsx"),
+it("snapshots remaining diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      "react-no-iife-in-jsx": snapshotSuite("react-no-iife-in-jsx", languageOptions, {
+        invalid: [
+          // 5 iife diagnostics. messages() default filename is fixture.jsx.
+          { code: snippet("react-no-iife-in-jsx/recall.tsx"), filename: "fixture.jsx" },
+        ],
+      }),
+      "react-no-nullish-react-node": snapshotSuite("react-no-nullish-react-node", languageOptions, {
+        invalid: [
+          // 4 diagnostics through static keys and const aliases.
+          {
+            code: snippet("react-no-nullish-react-node/recall.tsx"),
+            filename: "recall.tsx",
+            languageOptions: typescript,
+          },
+        ],
+      }),
+      "react-no-use-promise-resolve": snapshotSuite(
         "react-no-use-promise-resolve",
-        undefined,
-        "recall.tsx",
-      ).length,
-      12,
-    );
-  });
-});
+        languageOptions,
+        {
+          invalid: [
+            // 12 diagnostics through the same-file spellings.
+            {
+              code: snippet("react-no-use-promise-resolve/recall.tsx"),
+              filename: "recall.tsx",
+              languageOptions: typescript,
+            },
+          ],
+        },
+      ),
+    }),
+  ).toMatchFileSnapshot("snapshots/recall-react-remaining.snap");
+}, 30_000);

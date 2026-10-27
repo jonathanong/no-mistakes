@@ -1,6 +1,22 @@
-import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { fixture, messages } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture } from "./helpers.mjs";
+
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const typescript = { parser: tsParser, sourceType: "module", globals: {} };
+
+function lintCase(code, filename, option) {
+  const item = { code, filename };
+  if (/\.[cm]?tsx?$/.test(filename)) item.languageOptions = typescript;
+  if (option !== undefined) item.options = [option];
+  return item;
+}
 
 const jobs = {
   targets: [
@@ -42,503 +58,293 @@ const server = {
 };
 
 describe("call-binding recall", () => {
-  it("follows default imports, static keys, and forwarded calls", () => {
-    assert.equal(
-      messages(
-        fixture("async-call-disposition/recall.mjs"),
-        "async-call-disposition",
-        jobs,
-        "recall.mjs",
-      ).length,
-      6,
-    );
-    assert.equal(
-      messages(
-        fixture("async-call-disposition/call-method.mjs"),
-        "async-call-disposition",
-        {
-          targets: [
-            {
-              sourceSpecifierPatterns: ["@app/jobs"],
-              calleeNamePatterns: ["call", "enqueueEmail"],
-            },
-          ],
-        },
-        "call-method.mjs",
-      ).length,
-      2,
-    );
-    assert.deepEqual(
-      messages(
-        fixture("async-call-disposition/comma-alias.mjs"),
-        "async-call-disposition",
-        jobs,
-        "comma-alias.mjs",
-      ),
-      ["disposition", "disposition", "disposition"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("async-call-disposition/instantiated-alias.ts"),
-        "async-call-disposition",
-        jobs,
-        "instantiated-alias.ts",
-      ),
-      ["disposition", "disposition"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("async-call-disposition/namespace-alias.mjs"),
-        "async-call-disposition",
-        jobs,
-        "namespace-alias.mjs",
-      ),
-      ["disposition", "disposition"],
-    );
-    assert.equal(
-      messages(
-        fixture("async-try-catch-return-await/recall.mjs"),
-        "async-try-catch-return-await",
-        handlers,
-        "recall.mjs",
-      ).length,
-      2,
-    );
-    assert.deepEqual(
-      messages(
-        fixture("gh-api-argument-safety/recall.mjs"),
-        "gh-api-argument-safety",
-        undefined,
-        "recall.mjs",
-      ),
-      Array(7).fill("endpointQuery"),
-    );
-    assert.equal(
-      messages(
-        fixture("require-options-on-imported-call/recall.mjs"),
-        "require-options-on-imported-call",
-        ssrf,
-        "recall.mjs",
-      ).length,
-      6,
-    );
-    assert.equal(
-      messages(
-        fixture("require-options-on-imported-call/apply-method.mjs"),
-        "require-options-on-imported-call",
-        {
-          targets: [
-            {
-              receiverPatterns: ["client"],
-              calleeNamePatterns: ["apply"],
-              optionsPosition: 2,
-              requiredProperties: ["signal"],
-            },
-          ],
-        },
-        "apply-method.mjs",
-      ).length,
-      1,
-    );
-    assert.equal(
-      messages(
-        fixture("module-mock-boundary/dynamic-key.mjs"),
-        "module-mock-boundary",
-        undefined,
-        "dynamic-key.mjs",
-      ).length,
-      1,
-    );
-    assert.equal(
-      messages(
-        fixture("no-argv-main-guard/recall.mjs"),
-        "no-argv-main-guard",
-        undefined,
-        "recall.mjs",
-      ).length,
-      7,
-    );
-    assert.equal(
-      messages(
-        fixture("no-inline-noop-promise-catch/recall.mjs"),
-        "no-inline-noop-promise-catch",
-        undefined,
-        "recall.mjs",
-      ).length,
-      4,
-    );
-    assert.equal(
-      messages(
-        fixture("no-inline-noop-promise-catch/asserted.ts"),
-        "no-inline-noop-promise-catch",
-        undefined,
-        "asserted.ts",
-      ).length,
-      2,
-    );
-    assert.equal(
-      messages(
-        fixture("await-array-methods/recall.mjs"),
-        "await-array-methods",
-        undefined,
-        "recall.mjs",
-      ).length,
-      6,
-    );
-    assert.deepEqual(
-      messages(
-        fixture("await-array-methods/asserted-alias.ts"),
-        "await-array-methods",
-        undefined,
-        "asserted-alias.ts",
-      ),
-      ["awaited", "awaited"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("await-array-methods/shadowed-alias.mjs"),
-        "await-array-methods",
-        undefined,
-        "shadowed-alias.mjs",
-      ),
-      ["awaited", "awaited"],
-    );
-    assert.equal(
-      messages(
-        fixture("nextjs-static-fetch-method/recall.mjs"),
-        "nextjs-static-fetch-method",
-        undefined,
-        "recall.mjs",
-      ).length,
-      6,
-    );
-    assert.equal(
-      messages(
-        fixture("nextjs-static-fetch-url/recall.mjs"),
-        "nextjs-static-fetch-url",
-        undefined,
-        "recall.mjs",
-      ).length,
-      3,
-    );
-    assert.equal(
-      messages(
-        fixture("nextjs-static-fetch-url/dynamic-fetch-key.mjs"),
-        "nextjs-static-fetch-url",
-        undefined,
-        "dynamic-fetch-key.mjs",
-      ).length,
-      1,
-    );
-    assert.equal(
-      messages(
-        fixture("nextjs-static-fetch-url/asserted-alias.ts"),
-        "nextjs-static-fetch-url",
-        undefined,
-        "asserted-alias.ts",
-      ).length,
-      1,
-    );
-    assert.deepEqual(
-      messages(
-        fixture("nextjs-static-fetch-url/asserted-global.ts"),
-        "nextjs-static-fetch-url",
-        undefined,
-        "asserted-global.ts",
-      ),
-      ["dynamic", "dynamic"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("nextjs-static-fetch-url/asserted-global.ts"),
-        "nextjs-static-fetch-method",
-        undefined,
-        "asserted-global.ts",
-      ),
-      ["dynamic", "dynamic"],
-    );
-    assert.equal(
-      messages(
-        fixture("module-mock-boundary/recall.mjs"),
-        "module-mock-boundary",
-        undefined,
-        "recall.mjs",
-      ).length,
-      6,
-    );
-    assert.equal(
-      messages(
-        fixture("module-mock-preserve-exports/recall.mjs"),
-        "module-mock-preserve-exports",
-        undefined,
-        "recall.mjs",
-      ).length,
-      3,
-    );
-    assert.equal(
-      messages(
-        fixture("module-mock-preserve-exports/asserted.ts"),
-        "module-mock-preserve-exports",
-        undefined,
-        "asserted.ts",
-      ).length,
-      2,
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/asserted-method.ts"),
-        "module-mock-preserve-exports",
-        undefined,
-        "asserted-method.ts",
-      ),
-      ["preserve", "preserve"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/aliased-spread.mjs"),
-        "module-mock-preserve-exports",
-        undefined,
-        "aliased-spread.mjs",
-      ),
-      ["preserve", "preserve"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/aliased-spread.mjs"),
-        "module-mock-boundary",
-        undefined,
-        "aliased-spread.mjs",
-      ),
-      ["boundary", "boundary"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/dynamic-method-key.mjs"),
-        "module-mock-preserve-exports",
-        undefined,
-        "dynamic-method-key.mjs",
-      ),
-      ["preserve", "preserve", "preserve"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/dynamic-method-key.mjs"),
-        "module-mock-boundary",
-        undefined,
-        "dynamic-method-key.mjs",
-      ),
-      ["boundary", "boundary", "boundary"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/factory-less-alias.mjs"),
-        "module-mock-preserve-exports",
-        undefined,
-        "factory-less-alias.mjs",
-      ),
-      ["preserve"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/factory-less-alias.mjs"),
-        "module-mock-boundary",
-        undefined,
-        "factory-less-alias.mjs",
-      ),
-      ["boundary", "boundary", "boundary"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/reassigned-alias.mjs"),
-        "module-mock-preserve-exports",
-        undefined,
-        "reassigned-alias.mjs",
-      ),
-      ["preserve", "preserve"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/reassigned-alias.mjs"),
-        "module-mock-boundary",
-        undefined,
-        "reassigned-alias.mjs",
-      ),
-      ["boundary", "boundary"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/comma-alias.mjs"),
-        "module-mock-preserve-exports",
-        undefined,
-        "comma-alias.mjs",
-      ),
-      ["preserve", "preserve"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/comma-alias.mjs"),
-        "module-mock-boundary",
-        undefined,
-        "comma-alias.mjs",
-      ),
-      ["boundary", "boundary"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/asserted-alias.ts"),
-        "module-mock-preserve-exports",
-        undefined,
-        "asserted-alias.ts",
-      ),
-      ["preserve"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("module-mock-preserve-exports/asserted-alias.ts"),
-        "module-mock-boundary",
-        undefined,
-        "asserted-alias.ts",
-      ),
-      ["boundary"],
-    );
-    assert.equal(
-      messages(
-        fixture("no-global-fetch-outside-helper/recall.mjs"),
-        "no-global-fetch-outside-helper",
-        { checkedPathPatterns: ["**"] },
-        "recall.mjs",
-      ).length,
-      5,
-    );
-    assert.equal(
-      messages(
-        fixture("no-global-fetch-outside-helper/dynamic-fetch-key.mjs"),
-        "no-global-fetch-outside-helper",
-        { checkedPathPatterns: ["**"] },
-        "dynamic-fetch-key.mjs",
-      ).length,
-      2,
-    );
-    assert.equal(
-      messages(
-        fixture("no-banned-import-outside-allowed-paths/recall.mjs"),
-        "no-banned-import-outside-allowed-paths",
-        banned,
-        "src/app/recall.mjs",
-      ).length,
-      2,
-    );
-    assert.equal(
-      messages(
-        fixture("server-require-nullable-fetch-wrapper/recall.ts"),
-        "server-require-nullable-fetch-wrapper",
-        server,
-        "backend/users.ts",
-      ).length,
-      6,
-    );
-    assert.deepEqual(
-      messages(
-        fixture("server-require-nullable-fetch-wrapper/forwarded-this.ts"),
-        "server-require-nullable-fetch-wrapper",
-        server,
-        "backend/users.ts",
-      ),
-      ["wrapper", "wrapper"],
-    );
+  it("snapshots remaining diagnostics", async () => {
     const localGetter = fixture("server-require-nullable-fetch-wrapper/local-getter-name.ts");
-    assert.deepEqual(
-      messages(
-        localGetter,
-        "server-require-nullable-fetch-wrapper",
+    const localAlias = fixture("server-require-nullable-fetch-wrapper/local-alias.ts");
+    const applyOptions = {
+      targets: [
         {
-          getterCalleePatterns: ["^getUser$"],
-          requiredWrapperCallee: "nullableEntity",
+          receiverPatterns: ["client"],
+          calleeNamePatterns: ["apply"],
+          optionsPosition: 2,
+          requiredProperties: ["signal"],
         },
-        "backend/users.ts",
-      ),
-      ["wrapper"],
-    );
-    assert.deepEqual(
-      messages(
-        localGetter,
-        "server-require-nullable-fetch-wrapper",
-        {
-          getterCalleePatterns: ["^lookup$"],
-          requiredWrapperCallee: "nullableEntity",
-        },
-        "backend/users.ts",
-      ),
-      ["wrapper"],
-    );
-  });
-
-  it("keeps a configured local wrapper and a forwarded allowed origin", () => {
-    const local = fixture("server-require-nullable-fetch-wrapper/local-alias.ts");
-    assert.deepEqual(
-      messages(
-        local,
-        "server-require-nullable-fetch-wrapper",
-        {
-          ...server,
-          requiredWrapperCallee: "wrap",
-        },
-        "backend/users.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(local, "server-require-nullable-fetch-wrapper", server, "backend/users.ts"),
-      [],
-    );
-    const getterAlias = messages(
-      fixture("server-require-nullable-fetch-wrapper/local-getter-alias.ts"),
-      "server-require-nullable-fetch-wrapper",
-      {
-        getterCalleePatterns: ["^getUser$"],
-        requiredWrapperCallee: "wrap",
-      },
-      "backend/users.ts",
-    );
-    assert.deepEqual(getterAlias, ["wrapper"]);
-    assert.equal(
-      messages(
-        fixture("server-require-nullable-fetch-wrapper/named-call.ts"),
-        "server-require-nullable-fetch-wrapper",
-        {
-          getterCalleePatterns: ["^rpc\\.call$"],
-          requiredWrapperCallee: "nullableEntity",
-        },
-        "backend/users.ts",
-      ).length,
-      2,
-    );
-    assert.deepEqual(
-      messages(
-        fixture("no-inline-noop-promise-catch/forwarded-origin.mjs"),
-        "no-inline-noop-promise-catch",
-        { allowedCalleeNamePatterns: ["releaseLock"] },
-        "forwarded-origin.mjs",
-      ),
-      ["noopCatch"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("no-inline-noop-promise-catch/allowed-call-origin.mjs"),
-        "no-inline-noop-promise-catch",
-        { allowedCalleeNamePatterns: ["call", "apply"] },
-        "allowed-call-origin.mjs",
-      ),
-      ["noopCatch"],
-    );
-    assert.equal(
-      messages(
-        fixture("no-inline-noop-promise-catch/allowed-call-origin.mjs"),
-        "no-inline-noop-promise-catch",
-        { allowedCalleeNamePatterns: ["fetch"] },
-        "allowed-call-origin.mjs",
-      ).length,
-      3,
-    );
-  });
+      ],
+    };
+    await expect(
+      snapshotDocument({
+        "async-call-disposition": snapshotSuite("async-call-disposition", languageOptions, {
+          invalid: [
+            // Six findings through a default import and forwarded calls.
+            lintCase(fixture("async-call-disposition/recall.mjs"), "recall.mjs", jobs),
+            // Static call-method and enqueueEmail selectors both remain recognized.
+            lintCase(fixture("async-call-disposition/call-method.mjs"), "call-method.mjs", {
+              targets: [
+                {
+                  sourceSpecifierPatterns: ["@app/jobs"],
+                  calleeNamePatterns: ["call", "enqueueEmail"],
+                },
+              ],
+            }),
+            lintCase(fixture("async-call-disposition/comma-alias.mjs"), "comma-alias.mjs", jobs),
+            lintCase(
+              fixture("async-call-disposition/instantiated-alias.ts"),
+              "instantiated-alias.ts",
+              jobs,
+            ),
+            lintCase(
+              fixture("async-call-disposition/namespace-alias.mjs"),
+              "namespace-alias.mjs",
+              jobs,
+            ),
+          ],
+        }),
+        "async-try-catch-return-await": snapshotSuite(
+          "async-try-catch-return-await",
+          languageOptions,
+          {
+            invalid: [
+              // 2 diagnostics.
+              lintCase(fixture("async-try-catch-return-await/recall.mjs"), "recall.mjs", handlers),
+            ],
+          },
+        ),
+        "await-array-methods": snapshotSuite("await-array-methods", languageOptions, {
+          invalid: [
+            // 6 diagnostics.
+            lintCase(fixture("await-array-methods/recall.mjs"), "recall.mjs"),
+            lintCase(fixture("await-array-methods/asserted-alias.ts"), "asserted-alias.ts"),
+            lintCase(fixture("await-array-methods/shadowed-alias.mjs"), "shadowed-alias.mjs"),
+          ],
+        }),
+        "gh-api-argument-safety": snapshotSuite("gh-api-argument-safety", languageOptions, {
+          invalid: [
+            // 7 endpointQuery diagnostics.
+            lintCase(fixture("gh-api-argument-safety/recall.mjs"), "recall.mjs"),
+          ],
+        }),
+        "module-mock-boundary": snapshotSuite("module-mock-boundary", languageOptions, {
+          invalid: [
+            // 1 diagnostic.
+            lintCase(fixture("module-mock-boundary/dynamic-key.mjs"), "dynamic-key.mjs"),
+            // 6 diagnostics.
+            lintCase(fixture("module-mock-boundary/recall.mjs"), "recall.mjs"),
+            lintCase(
+              fixture("module-mock-preserve-exports/aliased-spread.mjs"),
+              "aliased-spread.mjs",
+            ),
+            lintCase(
+              fixture("module-mock-preserve-exports/dynamic-method-key.mjs"),
+              "dynamic-method-key.mjs",
+            ),
+            lintCase(
+              fixture("module-mock-preserve-exports/factory-less-alias.mjs"),
+              "factory-less-alias.mjs",
+            ),
+            lintCase(
+              fixture("module-mock-preserve-exports/reassigned-alias.mjs"),
+              "reassigned-alias.mjs",
+            ),
+            lintCase(fixture("module-mock-preserve-exports/comma-alias.mjs"), "comma-alias.mjs"),
+            lintCase(
+              fixture("module-mock-preserve-exports/asserted-alias.ts"),
+              "asserted-alias.ts",
+            ),
+          ],
+        }),
+        "module-mock-preserve-exports": snapshotSuite(
+          "module-mock-preserve-exports",
+          languageOptions,
+          {
+            invalid: [
+              // 3 diagnostics.
+              lintCase(fixture("module-mock-preserve-exports/recall.mjs"), "recall.mjs"),
+              // 2 diagnostics.
+              lintCase(fixture("module-mock-preserve-exports/asserted.ts"), "asserted.ts"),
+              lintCase(
+                fixture("module-mock-preserve-exports/asserted-method.ts"),
+                "asserted-method.ts",
+              ),
+              lintCase(
+                fixture("module-mock-preserve-exports/aliased-spread.mjs"),
+                "aliased-spread.mjs",
+              ),
+              lintCase(
+                fixture("module-mock-preserve-exports/dynamic-method-key.mjs"),
+                "dynamic-method-key.mjs",
+              ),
+              lintCase(
+                fixture("module-mock-preserve-exports/factory-less-alias.mjs"),
+                "factory-less-alias.mjs",
+              ),
+              lintCase(
+                fixture("module-mock-preserve-exports/reassigned-alias.mjs"),
+                "reassigned-alias.mjs",
+              ),
+              lintCase(fixture("module-mock-preserve-exports/comma-alias.mjs"), "comma-alias.mjs"),
+              lintCase(
+                fixture("module-mock-preserve-exports/asserted-alias.ts"),
+                "asserted-alias.ts",
+              ),
+            ],
+          },
+        ),
+        "nextjs-static-fetch-method": snapshotSuite("nextjs-static-fetch-method", languageOptions, {
+          invalid: [
+            // 6 diagnostics.
+            lintCase(fixture("nextjs-static-fetch-method/recall.mjs"), "recall.mjs"),
+            lintCase(fixture("nextjs-static-fetch-url/asserted-global.ts"), "asserted-global.ts"),
+          ],
+        }),
+        "nextjs-static-fetch-url": snapshotSuite("nextjs-static-fetch-url", languageOptions, {
+          invalid: [
+            // 3 diagnostics.
+            lintCase(fixture("nextjs-static-fetch-url/recall.mjs"), "recall.mjs"),
+            // 1 diagnostic.
+            lintCase(
+              fixture("nextjs-static-fetch-url/dynamic-fetch-key.mjs"),
+              "dynamic-fetch-key.mjs",
+            ),
+            // 1 diagnostic.
+            lintCase(fixture("nextjs-static-fetch-url/asserted-alias.ts"), "asserted-alias.ts"),
+            lintCase(fixture("nextjs-static-fetch-url/asserted-global.ts"), "asserted-global.ts"),
+          ],
+        }),
+        "no-argv-main-guard": snapshotSuite("no-argv-main-guard", languageOptions, {
+          invalid: [
+            // 7 diagnostics.
+            lintCase(fixture("no-argv-main-guard/recall.mjs"), "recall.mjs"),
+          ],
+        }),
+        "no-banned-import-outside-allowed-paths": snapshotSuite(
+          "no-banned-import-outside-allowed-paths",
+          languageOptions,
+          {
+            invalid: [
+              // 2 diagnostics.
+              lintCase(
+                fixture("no-banned-import-outside-allowed-paths/recall.mjs"),
+                "src/app/recall.mjs",
+                banned,
+              ),
+            ],
+          },
+        ),
+        "no-global-fetch-outside-helper": snapshotSuite(
+          "no-global-fetch-outside-helper",
+          languageOptions,
+          {
+            invalid: [
+              // 5 diagnostics.
+              lintCase(fixture("no-global-fetch-outside-helper/recall.mjs"), "recall.mjs", {
+                checkedPathPatterns: ["**"],
+              }),
+              // 2 diagnostics.
+              lintCase(
+                fixture("no-global-fetch-outside-helper/dynamic-fetch-key.mjs"),
+                "dynamic-fetch-key.mjs",
+                { checkedPathPatterns: ["**"] },
+              ),
+            ],
+          },
+        ),
+        "no-inline-noop-promise-catch": snapshotSuite(
+          "no-inline-noop-promise-catch",
+          languageOptions,
+          {
+            invalid: [
+              // 4 diagnostics.
+              lintCase(fixture("no-inline-noop-promise-catch/recall.mjs"), "recall.mjs"),
+              // 2 diagnostics.
+              lintCase(fixture("no-inline-noop-promise-catch/asserted.ts"), "asserted.ts"),
+              lintCase(
+                fixture("no-inline-noop-promise-catch/forwarded-origin.mjs"),
+                "forwarded-origin.mjs",
+                { allowedCalleeNamePatterns: ["releaseLock"] },
+              ),
+              lintCase(
+                fixture("no-inline-noop-promise-catch/allowed-call-origin.mjs"),
+                "allowed-call-origin.mjs",
+                { allowedCalleeNamePatterns: ["call", "apply"] },
+              ),
+              // 3 diagnostics.
+              lintCase(
+                fixture("no-inline-noop-promise-catch/allowed-call-origin.mjs"),
+                "allowed-call-origin.mjs",
+                { allowedCalleeNamePatterns: ["fetch"] },
+              ),
+            ],
+          },
+        ),
+        "require-options-on-imported-call": snapshotSuite(
+          "require-options-on-imported-call",
+          languageOptions,
+          {
+            invalid: [
+              // 6 diagnostics.
+              lintCase(fixture("require-options-on-imported-call/recall.mjs"), "recall.mjs", ssrf),
+              // 1 diagnostic.
+              lintCase(
+                fixture("require-options-on-imported-call/apply-method.mjs"),
+                "apply-method.mjs",
+                applyOptions,
+              ),
+            ],
+          },
+        ),
+        "server-require-nullable-fetch-wrapper": snapshotSuite(
+          "server-require-nullable-fetch-wrapper",
+          languageOptions,
+          {
+            valid: [
+              // A configured local wrapper and a forwarded allowed origin stay silent.
+              lintCase(localAlias, "backend/users.ts", {
+                ...server,
+                requiredWrapperCallee: "wrap",
+              }),
+              lintCase(localAlias, "backend/users.ts", server),
+            ],
+            invalid: [
+              // 6 diagnostics.
+              lintCase(
+                fixture("server-require-nullable-fetch-wrapper/recall.ts"),
+                "backend/users.ts",
+                server,
+              ),
+              lintCase(
+                fixture("server-require-nullable-fetch-wrapper/forwarded-this.ts"),
+                "backend/users.ts",
+                server,
+              ),
+              lintCase(localGetter, "backend/users.ts", {
+                getterCalleePatterns: ["^getUser$"],
+                requiredWrapperCallee: "nullableEntity",
+              }),
+              lintCase(localGetter, "backend/users.ts", {
+                getterCalleePatterns: ["^lookup$"],
+                requiredWrapperCallee: "nullableEntity",
+              }),
+              lintCase(
+                fixture("server-require-nullable-fetch-wrapper/local-getter-alias.ts"),
+                "backend/users.ts",
+                {
+                  getterCalleePatterns: ["^getUser$"],
+                  requiredWrapperCallee: "wrap",
+                },
+              ),
+              // 2 diagnostics.
+              lintCase(
+                fixture("server-require-nullable-fetch-wrapper/named-call.ts"),
+                "backend/users.ts",
+                {
+                  getterCalleePatterns: ["^rpc\\.call$"],
+                  requiredWrapperCallee: "nullableEntity",
+                },
+              ),
+            ],
+          },
+        ),
+      }),
+    ).toMatchFileSnapshot("snapshots/recall-call-bindings-remaining.snap");
+  }, 30_000);
 });

@@ -1,37 +1,38 @@
 import assert from "node:assert/strict";
 import { resolve, dirname } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
 import tsParser from "@typescript-eslint/parser";
 import { Linter } from "eslint";
-import { fixture, __dirname, plugin } from "./helpers.mjs";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture, __dirname } from "./helpers.mjs";
 
 const require = createRequire(import.meta.url);
 const { allowsCollectionKey } = require("../src/rules/postgres-no-executor-adapter-collection");
 
-function reports(name, typed = true, parser = tsParser) {
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const collectionOption = { importSpecifier: "@example/db" };
+
+function collectionCase(name, typed = true) {
   const filename = resolve(
     __dirname,
     `../../../test-cases/eslint-snippets/fixture/executor-collection-key/${name}`,
   );
-  return new Linter({ cwd: dirname(filename) })
-    .verify(
-      fixture(`executor-collection-key/${name}`),
-      {
-        files: ["**/*.ts"],
-        languageOptions: {
-          parser,
-          parserOptions: typed ? { project: resolve(dirname(filename), "tsconfig.json") } : {},
-        },
-        plugins: { "no-mistakes": plugin },
-        rules: {
-          "no-mistakes/postgres-no-executor-adapter": ["error", { importSpecifier: "@example/db" }],
-        },
-      },
-      { filename },
-    )
-    .map((message) => [message.line, message.messageId]);
+  return {
+    code: fixture(`executor-collection-key/${name}`),
+    filename,
+    options: [collectionOption],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: typed ? { project: resolve(dirname(filename), "tsconfig.json") } : {},
+    },
+  };
 }
 
 function helperReports(name, parser = tsParser) {
@@ -166,221 +167,67 @@ describe("postgres-no-executor-adapter collection keys", () => {
     assert.deepEqual(helperReports("helper-api.ts", partialParserServices), []);
   });
 
-  it("allows only direct executor arguments in typed collection key slots", () => {
-    assert.deepEqual(reports("executor-calls.ts"), [
-      [8, "passed"],
-      [15, "passed"],
-      [20, "passed"],
-      [25, "passed"],
-      [32, "passed"],
-      [35, "passed"],
-      [37, "passed"],
-      [45, "passed"],
-      [54, "passed"],
-      [63, "passed"],
-      [65, "passed"],
-      [66, "passed"],
-      [67, "passed"],
-      [68, "passed"],
-      [71, "passed"],
-      [74, "passed"],
-      [75, "forward"],
-      [78, "passed"],
-      [82, "passed"],
-      [83, "passed"],
-      [88, "passed"],
-      [93, "passed"],
-      [98, "passed"],
-      [99, "passed"],
-      [101, "passed"],
-      [103, "passed"],
-      [104, "passed"],
-    ]);
-  });
-
-  it("keeps reporting when typed collection methods may have been changed", () => {
-    assert.deepEqual(reports("mutated-executor.ts"), [
-      [6, "passed"],
-      [10, "passed"],
-      [14, "passed"],
-      [18, "passed"],
-      [22, "passed"],
-    ]);
-    assert.deepEqual(reports("mutated-assign.ts"), [[5, "passed"]]);
-    assert.deepEqual(reports("mutated-assign-alias.ts"), [[6, "passed"]]);
-    assert.deepEqual(reports("mutated-assign-reassigned.ts"), [[7, "passed"]]);
-    assert.deepEqual(reports("mutated-assign-builtin.ts"), [[6, "passed"]]);
-    assert.deepEqual(reports("mutated-assign-bound.ts"), [[6, "passed"]]);
-    assert.deepEqual(reports("mutated-define.ts"), [[5, "passed"]]);
-    assert.deepEqual(reports("mutated-reflect.ts"), [[5, "passed"]]);
-    assert.deepEqual(reports("mutated-prototype.ts"), [[7, "passed"]]);
-    assert.deepEqual(reports("mutated-define-properties.ts"), [
-      [6, "passed"],
-      [12, "passed"],
-      [17, "passed"],
-      [21, "passed"],
-    ]);
-    assert.deepEqual(reports("mutated-set-prototype.ts"), [[5, "passed"]]);
-    assert.deepEqual(reports("mutated-global-map-binding.ts"), [[5, "passed"]]);
-  });
-
-  it("rejects collection keys after opaque property mutation", () => {
-    assert.deepEqual(reports("uncertain-mutation.ts"), [
-      [6, "passed"],
-      [10, "passed"],
-      [14, "passed"],
-      [19, "passed"],
-      [23, "passed"],
-    ]);
-  });
-
-  it("treats opaque mutation targets conservatively", () => {
-    assert.deepEqual(reports("uncertain-target.ts"), [[8, "passed"]]);
-    assert.deepEqual(reports("plain-property.ts"), []);
-  });
-
-  it("tracks collections passed directly or nested to opaque member calls", () => {
-    assert.deepEqual(reports("opaque-escapes.ts"), [
-      [7, "passed"],
-      [11, "passed"],
-      [21, "passed"],
-      [25, "passed"],
-      [29, "passed"],
-      [33, "passed"],
-      [37, "passed"],
-      [43, "passed"],
-    ]);
-  });
-
-  it("marks collections stored as Map and Set values as exposed", () => {
-    assert.deepEqual(reports("stored-collection-values.ts"), [
-      [9, "passed"],
-      [14, "passed"],
-      [19, "passed"],
-      [25, "passed"],
-      [30, "passed"],
-      [35, "passed"],
-      [40, "passed"],
-      [50, "passed"],
-      [56, "passed"],
-      [62, "passed"],
-    ]);
-  });
-
-  it("tracks collections assigned into opaque-typed aliases", () => {
-    assert.deepEqual(reports("collection-assignment-escape.ts"), [[7, "passed"]]);
-  });
-
-  it("tracks same-typed and logical assignment escapes", () => {
-    assert.deepEqual(reports("typed-assignment-escape.ts"), [
-      [9, "passed"],
-      [15, "passed"],
-      [20, "passed"],
-      [25, "passed"],
-      [30, "passed"],
-    ]);
-  });
-
-  it("tracks spread containers, opaque methods, and sibling aliases", () => {
-    assert.deepEqual(reports("escape-boundaries.ts"), [
-      [7, "passed"],
-      [11, "passed"],
-      [17, "passed"],
-      [24, "passed"],
-    ]);
-  });
-
-  it("does not infer a destructured receiver's allocation from its container", () => {
-    assert.deepEqual(reports("destructured-receiver.ts"), [[10, "passed"]]);
-  });
-
-  it("treats builtin prototypes passed to indirect mutation APIs as exposed", () => {
-    assert.deepEqual(reports("indirect-prototype.ts"), [[6, "passed"]]);
-    assert.deepEqual(reports("indirect-prototype-alias.ts"), [[6, "passed"]]);
-    assert.deepEqual(reports("indirect-prototype-computed.ts"), [[5, "passed"]]);
-    assert.deepEqual(reports("indirect-custom-prototype.ts"), []);
-  });
-
-  it("tracks reflective mutations of builtin collection prototypes", () => {
-    assert.deepEqual(reports("reflect-prototype-mutations.ts"), [
-      [5, "passed"],
-      [9, "passed"],
-      [14, "passed"],
-      [19, "passed"],
-      [24, "passed"],
-      [28, "passed"],
-    ]);
-  });
-
-  it("keeps reporting collections exposed through value containers and returns", () => {
-    assert.deepEqual(reports("receiver-boundaries.ts"), [
-      [7, "passed"],
-      [12, "passed"],
-      [17, "passed"],
-      [21, "passed"],
-      [25, "passed"],
-      [29, "passed"],
-      [53, "passed"],
-      [56, "passed"],
-    ]);
-  });
-
-  it("keeps reporting exported collection receivers", () => {
-    assert.deepEqual(reports("exported-receivers.ts"), [
-      [4, "passed"],
-      [8, "passed"],
-      [13, "passed"],
-      [17, "passed"],
-    ]);
-  });
-
-  it("invalidates collection proof after global constructor and delete mutations", () => {
-    assert.deepEqual(reports("mutated-global-ctor.ts"), [[6, "passed"]]);
-    assert.deepEqual(reports("deleted-prototype-method.ts"), [[5, "passed"]]);
-  });
-
-  it("requires typed builtin identity before allowing a key", () => {
-    assert.deepEqual(reports("executor-calls.ts", false), [
-      [4, "passed"],
-      [5, "passed"],
-      [6, "passed"],
-      [7, "passed"],
-      [8, "passed"],
-      [11, "passed"],
-      [12, "passed"],
-      [13, "passed"],
-      [14, "passed"],
-      [15, "passed"],
-      [18, "passed"],
-      [19, "passed"],
-      [20, "passed"],
-      [23, "passed"],
-      [24, "passed"],
-      [25, "passed"],
-      [32, "passed"],
-      [35, "passed"],
-      [37, "passed"],
-      [45, "passed"],
-      [54, "passed"],
-      [63, "passed"],
-      [65, "passed"],
-      [66, "passed"],
-      [67, "passed"],
-      [68, "passed"],
-      [71, "passed"],
-      [74, "passed"],
-      [75, "forward"],
-      [78, "passed"],
-      [82, "passed"],
-      [83, "passed"],
-      [86, "passed"],
-      [88, "passed"],
-      [93, "passed"],
-      [98, "passed"],
-      [99, "passed"],
-      [101, "passed"],
-      [103, "passed"],
-      [104, "passed"],
-    ]);
-  });
+  it("snapshots postgres-no-executor-adapter diagnostics", async () => {
+    const valid = [
+      // treats opaque mutation targets conservatively.
+      // Zero findings.
+      collectionCase("plain-property.ts"),
+      // treats builtin prototypes passed to indirect mutation APIs as exposed.
+      // Zero findings.
+      collectionCase("indirect-custom-prototype.ts"),
+    ];
+    const invalid = [
+      // allows only direct executor arguments in typed collection key slots.
+      collectionCase("executor-calls.ts"),
+      // keeps reporting when typed collection methods may have been changed.
+      collectionCase("mutated-executor.ts"),
+      collectionCase("mutated-assign.ts"),
+      collectionCase("mutated-assign-alias.ts"),
+      collectionCase("mutated-assign-reassigned.ts"),
+      collectionCase("mutated-assign-builtin.ts"),
+      collectionCase("mutated-assign-bound.ts"),
+      collectionCase("mutated-define.ts"),
+      collectionCase("mutated-reflect.ts"),
+      collectionCase("mutated-prototype.ts"),
+      collectionCase("mutated-define-properties.ts"),
+      collectionCase("mutated-set-prototype.ts"),
+      collectionCase("mutated-global-map-binding.ts"),
+      // rejects collection keys after opaque property mutation.
+      collectionCase("uncertain-mutation.ts"),
+      // treats opaque mutation targets conservatively.
+      collectionCase("uncertain-target.ts"),
+      // tracks collections passed directly or nested to opaque member calls.
+      collectionCase("opaque-escapes.ts"),
+      // marks collections stored as Map and Set values as exposed.
+      collectionCase("stored-collection-values.ts"),
+      // tracks collections assigned into opaque-typed aliases.
+      collectionCase("collection-assignment-escape.ts"),
+      // tracks same-typed and logical assignment escapes.
+      collectionCase("typed-assignment-escape.ts"),
+      // tracks spread containers, opaque methods, and sibling aliases.
+      collectionCase("escape-boundaries.ts"),
+      // does not infer a destructured receiver's allocation from its container.
+      collectionCase("destructured-receiver.ts"),
+      // treats builtin prototypes passed to indirect mutation APIs as exposed.
+      collectionCase("indirect-prototype.ts"),
+      collectionCase("indirect-prototype-alias.ts"),
+      collectionCase("indirect-prototype-computed.ts"),
+      // tracks reflective mutations of builtin collection prototypes.
+      collectionCase("reflect-prototype-mutations.ts"),
+      // keeps reporting collections exposed through value containers and returns.
+      collectionCase("receiver-boundaries.ts"),
+      // keeps reporting exported collection receivers.
+      collectionCase("exported-receivers.ts"),
+      // invalidates collection proof after global constructor and delete mutations.
+      collectionCase("mutated-global-ctor.ts"),
+      collectionCase("deleted-prototype-method.ts"),
+      // requires typed builtin identity before allowing a key.
+      collectionCase("executor-calls.ts", false),
+    ];
+    await expect(
+      snapshotDocument(
+        snapshotSuite("postgres-no-executor-adapter", languageOptions, { valid, invalid }),
+      ),
+    ).toMatchFileSnapshot("snapshots/postgres-no-executor-adapter-collection.snap");
+  }, 30_000);
 });

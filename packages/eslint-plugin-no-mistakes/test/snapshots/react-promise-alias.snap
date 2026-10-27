@@ -1,0 +1,337 @@
+{
+  "react-no-use-promise-resolve": [
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-controls.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-sibling-write.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-export-sibling.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-root-assign.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-root-define.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-root-reassign.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-outer-call.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-outer-apply.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-window-write.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-window-alias.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-self-write.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-global-write.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-global-object-assign.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-global-object-update.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-global-object-delete.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-global-object-method.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-root-patch.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-other-write.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-update.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-delete.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-dynamic-global.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-tdz.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-unbound.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-globalthis-write.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-globalthis-define.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-globalthis-alias.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-globalthis-chain.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-with.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-suppressed.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-suppressed-file.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+      "findings": [
+        {
+          "column": 16,
+          "endColumn": 50,
+          "endLine": 4,
+          "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+          "line": 4,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 47,
+          "endLine": 6,
+          "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+          "line": 6,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 51,
+          "endLine": 9,
+          "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+          "line": 9,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 54,
+          "endLine": 13,
+          "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+          "line": 13,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 56,
+          "endLine": 15,
+          "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+          "line": 15,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 58,
+          "endLine": 16,
+          "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+          "line": 16,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 41,
+          "endLine": 20,
+          "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+          "line": 20,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 46,
+          "endLine": 23,
+          "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+          "line": 23,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 53,
+          "endLine": 30,
+          "file": "react-no-use-promise-resolve/promise-alias-invalid.tsx",
+          "line": 30,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-window-read.tsx",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 38,
+          "endLine": 4,
+          "file": "react-no-use-promise-resolve/promise-alias-window-read.tsx",
+          "line": 4,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "react-no-use-promise-resolve/promise-alias-legacy.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 34,
+          "endLine": 7,
+          "file": "react-no-use-promise-resolve/promise-alias-legacy.tsx",
+          "line": 7,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 48,
+          "endLine": 8,
+          "file": "react-no-use-promise-resolve/promise-alias-legacy.tsx",
+          "line": 8,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

@@ -1,144 +1,81 @@
-import assert from "node:assert/strict";
+import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
 import {
   configuredFindings,
   pluginFindings,
   snapshotCases,
   snapshotDocument,
+  snapshotSuite,
 } from "./diagnostic-snapshot.mjs";
-import { fixture, messages } from "./helpers.mjs";
+import { fixture } from "./helpers.mjs";
 
 const snippet = (name) => fixture(name);
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const typescript = { parser: tsParser, sourceType: "module", globals: {} };
+
+function tsCase(ruleDirectory, filename) {
+  return {
+    code: snippet(`${ruleDirectory}/${filename}`),
+    filename,
+    languageOptions: typescript,
+  };
+}
+
+function jsCase(ruleDirectory, filename) {
+  return { code: snippet(`${ruleDirectory}/${filename}`), filename };
+}
 
 describe("test and react same-file recall", () => {
-  it("reports vitest sequential through aliases and static keys", () => {
-    assert.equal(
-      messages(
-        snippet("no-vitest-sequential/recall.test.ts"),
-        "no-vitest-sequential",
-        undefined,
-        "recall.test.ts",
-      ).length,
-      15,
-    );
-    assert.deepEqual(
-      messages(
-        snippet("no-vitest-sequential/created-runner.test.ts"),
-        "no-vitest-sequential",
-        undefined,
-        "created-runner.test.ts",
-      ),
-      ["sequential"],
-    );
-    for (const name of [
-      "renamed-fixture.test.ts",
-      "default-import.test.ts",
-      "module-function.test.ts",
-      "module-let.test.ts",
-      "module-var.test.ts",
-    ]) {
-      assert.deepEqual(
-        messages(snippet(`no-vitest-sequential/${name}`), "no-vitest-sequential", undefined, name),
-        ["sequential"],
-      );
-    }
-    assert.deepEqual(
-      messages(
-        snippet("no-vitest-sequential/const-alias.test.ts"),
-        "no-vitest-sequential",
-        undefined,
-        "const-alias.test.ts",
-      ),
-      ["sequential", "sequential"],
-    );
-  });
-
-  it("treats an expression-free template require as a test import", () => {
-    assert.deepEqual(
-      messages(
-        snippet("no-import-only-test-files/recall.test.js"),
-        "no-import-only-test-files",
-        undefined,
-        "recall.test.js",
-      ),
-      ["aggregate"],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("no-import-only-test-files/dynamic.test.js"),
-        "no-import-only-test-files",
-        undefined,
-        "dynamic.test.js",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("no-import-only-test-files/suppressed.test.js"),
-        "no-import-only-test-files",
-        undefined,
-        "suppressed.test.js",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("no-import-only-test-files/forwarded.test.js"),
-        "no-import-only-test-files",
-        undefined,
-        "forwarded.test.js",
-      ),
-      ["aggregate"],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("no-import-only-test-files/dynamic-forward.test.js"),
-        "no-import-only-test-files",
-        undefined,
-        "dynamic-forward.test.js",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("no-import-only-test-files/next-line.test.js"),
-        "no-import-only-test-files",
-        undefined,
-        "next-line.test.js",
-      ),
-      [],
-    );
-  });
-
-  it("recognizes vitest namespace module mocks and ignores the default export", () => {
-    assert.deepEqual(
-      messages(
-        snippet("vitest-mock-test-file-naming/recall.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "recall.test.ts",
-      ),
-      ["needsMock"],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("vitest-mock-test-file-naming/default.mock.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "default.mock.test.ts",
-      ),
-      ["unnecessaryMock"],
-    );
-    assert.deepEqual(
-      messages(
-        snippet("vitest-mock-test-file-naming/suppressed.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "suppressed.test.ts",
-      ),
-      [],
-    );
-  });
+  it("snapshots remaining diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        "no-import-only-test-files": snapshotSuite("no-import-only-test-files", languageOptions, {
+          valid: [
+            jsCase("no-import-only-test-files", "dynamic.test.js"),
+            jsCase("no-import-only-test-files", "suppressed.test.js"),
+            jsCase("no-import-only-test-files", "dynamic-forward.test.js"),
+            jsCase("no-import-only-test-files", "next-line.test.js"),
+          ],
+          invalid: [
+            // An expression-free template require is a test import.
+            jsCase("no-import-only-test-files", "recall.test.js"),
+            jsCase("no-import-only-test-files", "forwarded.test.js"),
+          ],
+        }),
+        "no-vitest-sequential": snapshotSuite("no-vitest-sequential", languageOptions, {
+          invalid: [
+            // 15 sequential diagnostics through aliases and static keys.
+            tsCase("no-vitest-sequential", "recall.test.ts"),
+            tsCase("no-vitest-sequential", "created-runner.test.ts"),
+            tsCase("no-vitest-sequential", "renamed-fixture.test.ts"),
+            tsCase("no-vitest-sequential", "default-import.test.ts"),
+            tsCase("no-vitest-sequential", "module-function.test.ts"),
+            tsCase("no-vitest-sequential", "module-let.test.ts"),
+            tsCase("no-vitest-sequential", "module-var.test.ts"),
+            tsCase("no-vitest-sequential", "const-alias.test.ts"),
+          ],
+        }),
+        "vitest-mock-test-file-naming": snapshotSuite(
+          "vitest-mock-test-file-naming",
+          languageOptions,
+          {
+            valid: [tsCase("vitest-mock-test-file-naming", "suppressed.test.ts")],
+            invalid: [
+              // Namespace module mocks require a .mock.test name.
+              tsCase("vitest-mock-test-file-naming", "recall.test.ts"),
+              // The default export is not a module mock.
+              tsCase("vitest-mock-test-file-naming", "default.mock.test.ts"),
+            ],
+          },
+        ),
+      }),
+    ).toMatchFileSnapshot("snapshots/recall-test-react-remaining.snap");
+  }, 30_000);
 
   it("snapshots test diagnostics", async () => {
     const groups = [

@@ -1,0 +1,579 @@
+{
+  "vitest-timeout-cap": [
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 47,
+          "endColumn": 56,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 12,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 46,
+          "endColumn": 53,
+          "endLine": 17,
+          "file": "fixture.test.ts",
+          "line": 17,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 47,
+          "endLine": 19,
+          "file": "fixture.test.ts",
+          "line": 19,
+          "message": "Vitest testTimeout exceeds 5000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 51,
+          "endLine": 24,
+          "file": "fixture.test.ts",
+          "line": 24,
+          "message": "Vitest testTimeout exceeds 5000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 50,
+          "endLine": 39,
+          "file": "fixture.test.ts",
+          "line": 39,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 51,
+          "endLine": 45,
+          "file": "fixture.test.ts",
+          "line": 45,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 37,
+          "endLine": 50,
+          "file": "fixture.test.ts",
+          "line": 50,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 47,
+          "endLine": 55,
+          "file": "fixture.test.ts",
+          "line": 55,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 49,
+          "endLine": 60,
+          "file": "fixture.test.ts",
+          "line": 60,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 49,
+          "endLine": 66,
+          "file": "fixture.test.ts",
+          "line": 66,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 47,
+          "endColumn": 56,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 12,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 46,
+          "endColumn": 53,
+          "endLine": 17,
+          "file": "fixture.test.ts",
+          "line": 17,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 47,
+          "endLine": 19,
+          "file": "fixture.test.ts",
+          "line": 19,
+          "message": "Vitest testTimeout exceeds 5000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 51,
+          "endLine": 24,
+          "file": "fixture.test.ts",
+          "line": 24,
+          "message": "Vitest testTimeout exceeds 5000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 50,
+          "endLine": 39,
+          "file": "fixture.test.ts",
+          "line": 39,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 51,
+          "endLine": 45,
+          "file": "fixture.test.ts",
+          "line": 45,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 37,
+          "endLine": 50,
+          "file": "fixture.test.ts",
+          "line": 50,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 47,
+          "endLine": 55,
+          "file": "fixture.test.ts",
+          "line": 55,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 49,
+          "endLine": 60,
+          "file": "fixture.test.ts",
+          "line": 60,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 49,
+          "endLine": 66,
+          "file": "fixture.test.ts",
+          "line": 66,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 47,
+          "endLine": 68,
+          "file": "fixture.test.ts",
+          "line": 68,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 47,
+          "endLine": 68,
+          "file": "fixture.test.ts",
+          "line": 68,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 45,
+          "endLine": 68,
+          "file": "fixture.test.ts",
+          "line": 68,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 47,
+          "endLine": 77,
+          "file": "fixture.test.ts",
+          "line": 77,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 49,
+          "endLine": 83,
+          "file": "fixture.test.ts",
+          "line": 83,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 33,
+          "endColumn": 40,
+          "endLine": 88,
+          "file": "fixture.test.ts",
+          "line": 88,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 93,
+          "file": "fixture.test.ts",
+          "line": 93,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 49,
+          "endLine": 95,
+          "file": "fixture.test.ts",
+          "line": 95,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 49,
+          "endLine": 95,
+          "file": "fixture.test.ts",
+          "line": 95,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 47,
+          "endLine": 95,
+          "file": "fixture.test.ts",
+          "line": 95,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 51,
+          "endLine": 103,
+          "file": "fixture.test.ts",
+          "line": 103,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 58,
+          "endColumn": 65,
+          "endLine": 108,
+          "file": "fixture.test.ts",
+          "line": 108,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 40,
+          "endColumn": 46,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 42,
+          "endLine": 17,
+          "file": "fixture.test.ts",
+          "line": 17,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 53,
+          "endLine": 26,
+          "file": "fixture.test.ts",
+          "line": 26,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 41,
+          "endLine": 31,
+          "file": "fixture.test.ts",
+          "line": 31,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 53,
+          "endColumn": 63,
+          "endLine": 39,
+          "file": "fixture.test.ts",
+          "line": 39,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 54,
+          "endColumn": 69,
+          "endLine": 46,
+          "file": "fixture.test.ts",
+          "line": 46,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 51,
+          "endColumn": 71,
+          "endLine": 53,
+          "file": "fixture.test.ts",
+          "line": 53,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 54,
+          "endColumn": 70,
+          "endLine": 60,
+          "file": "fixture.test.ts",
+          "line": 60,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 52,
+          "endColumn": 64,
+          "endLine": 66,
+          "file": "fixture.test.ts",
+          "line": 66,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 46,
+          "endColumn": 53,
+          "endLine": 72,
+          "file": "fixture.test.ts",
+          "line": 72,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 46,
+          "endLine": 77,
+          "file": "fixture.test.ts",
+          "line": 77,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 54,
+          "endColumn": 62,
+          "endLine": 82,
+          "file": "fixture.test.ts",
+          "line": 82,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 37,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 28,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 28,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    }
+  ]
+}

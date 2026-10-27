@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { __dirname, fixture, lint, messages, plugin } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { __dirname, fixture, plugin } from "./helpers.mjs";
 const readRule = "no-consecutive-unbatched-reads";
 const registrationRule = "require-top-level-registration";
 const importedReads = {
@@ -15,75 +17,67 @@ const registration = {
   callback: "onStop",
 };
 const code = (name) => fixture(`client-contracts/${name}.ts`);
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parser: tsParser,
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const diagnosticCase = (name, options) => ({
+  code: code(name),
+  filename: "fixture.ts",
+  ...(options === undefined ? {} : { options: [options] }),
+});
 describe("configured client contracts", () => {
-  it("reports adjacent same-client reads through aliased runtime imports", () => {
-    assert.deepEqual(
-      messages(code("reads-invalid"), readRule, importedReads, "fixture.ts"),
-      Array(3).fill("unbatchedReads"),
-    );
-  });
-  it("unwraps transparent TypeScript receiver wrappers", () => {
-    assert.deepEqual(
-      messages(code("reads-receiver-wrappers"), readRule, importedReads, "fixture.ts"),
-      Array(3).fill("unbatchedReads"),
-    );
-  });
-  it("preserves result dependencies, batching, scope, and method exclusions", () => {
-    for (const name of ["reads-valid", "reads-shapes", "reads-wrong-import", "reads-shadowed"])
-      assert.deepEqual(messages(code(name), readRule, importedReads, "fixture.ts"), [], name);
-    assert.equal(messages(code("reads-edge"), readRule, localReads, "fixture.ts").length, 2);
-    assert.deepEqual(
-      messages(code("reads-invalid"), readRule, { readMethods: ["get"] }, "fixture.ts"),
-      [],
-    );
-    assert.deepEqual(messages(code("reads-invalid"), readRule, undefined, "fixture.ts"), []);
-  });
-  it("requires a genuine runtime registration directly at module top level", () => {
-    assert.deepEqual(
-      messages(code("registration-string-import"), registrationRule, registration, "fixture.ts"),
-      [],
-    );
-    assert.deepEqual(
-      messages(code("registration-valid"), registrationRule, registration, "fixture.ts"),
-      [],
-    );
-    for (const name of [
-      "registration-invalid",
-      "registration-type",
-      "registration-type-specifier",
-      "registration-wrong",
-      "registration-local",
-      "registration-unbound",
-      "registration-empty",
-    ])
-      assert.deepEqual(
-        messages(code(name), registrationRule, registration, "fixture.ts"),
-        ["registration"],
-        name,
-      );
-    assert.deepEqual(
-      messages(code("registration-empty"), registrationRule, undefined, "fixture.ts"),
-      [],
-    );
-  });
-  it("supports custom diagnostics and all suppression forms", () => {
-    for (const [kind, rule, options] of [
-      ["reads", readRule, localReads],
-      ["registration", registrationRule, registration],
-    ]) {
-      for (const suffix of ["file", "line", "next"])
-        assert.deepEqual(
-          messages(code(`${kind}-suppressed-${suffix}`), rule, options, "fixture.ts"),
-          [],
-        );
-      const invalid = kind === "reads" ? "reads-invalid" : "registration-invalid";
-      const results = lint(
-        code(invalid),
-        { [`no-mistakes/${rule}`]: ["error", { ...options, message: "Custom contract" }] },
-        "fixture.ts",
-      );
-      assert.ok(results.every((result) => result.message === "Custom contract"));
-    }
+  it("snapshots read and registration diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [readRule]: snapshotSuite(readRule, languageOptions, {
+          valid: [
+            ...["reads-valid", "reads-shapes", "reads-wrong-import", "reads-shadowed"].map((name) =>
+              diagnosticCase(name, importedReads),
+            ),
+            diagnosticCase("reads-invalid", { readMethods: ["get"] }),
+            diagnosticCase("reads-invalid"),
+            ...["file", "line", "next"].map((suffix) =>
+              diagnosticCase(`reads-suppressed-${suffix}`, localReads),
+            ),
+          ],
+          invalid: [
+            diagnosticCase("reads-invalid", importedReads),
+            diagnosticCase("reads-receiver-wrappers", importedReads),
+            diagnosticCase("reads-edge", localReads),
+            diagnosticCase("reads-invalid", { ...localReads, message: "Custom contract" }),
+          ],
+        }),
+        [registrationRule]: snapshotSuite(registrationRule, languageOptions, {
+          valid: [
+            diagnosticCase("registration-string-import", registration),
+            diagnosticCase("registration-valid", registration),
+            diagnosticCase("registration-empty"),
+            ...["file", "line", "next"].map((suffix) =>
+              diagnosticCase(`registration-suppressed-${suffix}`, registration),
+            ),
+          ],
+          invalid: [
+            ...[
+              "registration-invalid",
+              "registration-type",
+              "registration-type-specifier",
+              "registration-wrong",
+              "registration-local",
+              "registration-unbound",
+              "registration-empty",
+            ].map((name) => diagnosticCase(name, registration)),
+            diagnosticCase("registration-invalid", {
+              ...registration,
+              message: "Custom contract",
+            }),
+          ],
+        }),
+      }),
+    ).toMatchFileSnapshot("snapshots/client-contracts.snap");
   });
   it("honors suppression directives through Oxlint", () => {
     const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture/client-contracts");

@@ -1,0 +1,793 @@
+{
+  "postgres-no-manual-transaction": [
+    {
+      "file": "app.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/relative-inside/orders-missing.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/relative-inside/orders-external.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/relative-outside/orders.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/broken-json/orders.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/numeric-name/orders.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/nested-modules/orders.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/package-name-slash/orders.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/package-name-empty/orders.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@scope/"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/package-name-dot/orders.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "./db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 5,
+          "file": "app.ts",
+          "line": 5,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 10,
+          "file": "app.ts",
+          "line": 10,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 15,
+          "file": "app.ts",
+          "line": 15,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 20,
+          "file": "app.ts",
+          "line": 20,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 25,
+          "file": "app.ts",
+          "line": 25,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 36,
+          "endLine": 30,
+          "file": "app.ts",
+          "line": 30,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "app.ts",
+          "line": 4,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 24,
+          "endLine": 8,
+          "file": "app.ts",
+          "line": 8,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 55,
+          "endLine": 11,
+          "file": "app.ts",
+          "line": 11,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 24,
+          "endLine": 14,
+          "file": "app.ts",
+          "line": 14,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 18,
+          "file": "app.ts",
+          "line": 18,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 22,
+          "file": "app.ts",
+          "line": 22,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 26,
+          "file": "app.ts",
+          "line": 26,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 5,
+          "file": "app.ts",
+          "line": 5,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "app.ts",
+          "line": 4,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 16,
+          "endLine": 16,
+          "file": "app.ts",
+          "line": 16,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 8,
+          "file": "app.ts",
+          "line": 8,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 15,
+          "endLine": 9,
+          "file": "app.ts",
+          "line": 9,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 10,
+          "file": "app.ts",
+          "line": 10,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 9,
+          "file": "app.ts",
+          "line": 9,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/relative-inside/orders.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 20,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/postgres-scoped/relative-inside/orders.ts",
+          "line": 5,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 7,
+          "file": "app.ts",
+          "line": 7,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 8,
+          "file": "app.ts",
+          "line": 8,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorNames": [],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": ""
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 23,
+          "endLine": 5,
+          "file": "app.ts",
+          "line": 5,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 23,
+          "endLine": 5,
+          "file": "app.ts",
+          "line": 5,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 7,
+          "file": "app.ts",
+          "line": 7,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 8,
+          "file": "app.ts",
+          "line": 8,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "app.ts",
+          "line": 4,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 8,
+          "file": "app.ts",
+          "line": 8,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 20,
+          "endLine": 5,
+          "file": "app.ts",
+          "line": 5,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-scoped/nested-modules/orders-inside.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 20,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/postgres-scoped/nested-modules/orders-inside.ts",
+          "line": 5,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ],
+  "postgres-no-unbounded-query-fanout": [
+    {
+      "file": "app.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 73,
+          "endLine": 5,
+          "file": "app.ts",
+          "line": 5,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ]
+}

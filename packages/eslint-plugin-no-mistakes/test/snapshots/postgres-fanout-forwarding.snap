@@ -1,0 +1,219 @@
+[
+  {
+    "file": "fixture.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 44,
+        "endLine": 2,
+        "file": "fixture.ts",
+        "line": 2,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 53,
+        "endLine": 3,
+        "file": "fixture.ts",
+        "line": 3,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 47,
+        "endLine": 4,
+        "file": "fixture.ts",
+        "line": 4,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 54,
+        "endLine": 5,
+        "file": "fixture.ts",
+        "line": 5,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 42,
+        "endLine": 6,
+        "file": "fixture.ts",
+        "line": 6,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 51,
+        "endLine": 7,
+        "file": "fixture.ts",
+        "line": 7,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 59,
+        "endLine": 8,
+        "file": "fixture.ts",
+        "line": 8,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 49,
+        "endLine": 9,
+        "file": "fixture.ts",
+        "line": 9,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 11,
+        "file": "fixture.ts",
+        "line": 11,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 42,
+        "endLine": 12,
+        "file": "fixture.ts",
+        "line": 12,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 40,
+        "endLine": 15,
+        "file": "fixture.ts",
+        "line": 15,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 17,
+        "file": "fixture.ts",
+        "line": 17,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 19,
+        "file": "fixture.ts",
+        "line": 19,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 20,
+        "file": "fixture.ts",
+        "line": 20,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 22,
+        "file": "fixture.ts",
+        "line": 22,
+        "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+        "messageId": "unboundedFanout",
+        "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  }
+]

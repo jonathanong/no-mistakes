@@ -1,53 +1,47 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { __dirname, fixture, lint } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { __dirname, fixture } from "./helpers.mjs";
 const rule = "no-consecutive-unbatched-reads";
 const options = { clients: ["client"], readMethods: ["get", "ttl"] };
 const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture/client-contracts");
-const results = (name, config = options) =>
-  lint(
-    fixture(`client-contracts/${name}.ts`),
-    {
-      [`no-mistakes/${rule}`]: ["error", config],
-    },
-    "fixture.ts",
-  );
 const expectedLines = [4, 7, 10, 17, 21, 24, 24, 25, 28, 28];
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parser: tsParser,
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const diagnosticCase = (name, config = options) => ({
+  code: fixture(`client-contracts/${name}.ts`),
+  filename: "fixture.ts",
+  options: [config],
+});
 describe("configured read statement shapes", () => {
-  it("reports assignments, exports, returns, cases, and sequential declarators at the second read", () => {
-    const diagnostics = results("reads-statements");
-    assert.deepEqual(
-      diagnostics.map(({ messageId }) => messageId),
-      Array(10).fill("unbatchedReads"),
-    );
-    assert.deepEqual(
-      diagnostics.map(({ line }) => line),
-      expectedLines,
-    );
-  });
-  it("uses the same shapes for configured runtime imports", () => {
-    assert.deepEqual(
-      results("reads-statements", {
-        imports: [{ source: "@app/cache", imported: "cache" }],
-        readMethods: ["get", "ttl"],
-      }).map(({ line }) => line),
-      expectedLines,
-    );
-  });
-  it("preserves assignment and declarator dependencies and sequence boundaries", () => {
-    assert.deepEqual(results("reads-statement-boundaries"), []);
-  });
-  it("honors file, line, and next-line suppressions at the newly supported locations", () => {
-    for (const name of ["reads-statements-suppressed", "reads-statements-suppressed-file"])
-      assert.deepEqual(results(name), []);
-  });
-  it("keeps individual-declarator suppression local to that read", () => {
-    assert.deepEqual(
-      results("reads-declarator-suppression-control").map(({ line }) => line),
-      [5, 6],
-    );
+  it("snapshots statement-shape and suppression diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, {
+          valid: [
+            diagnosticCase("reads-statement-boundaries"),
+            diagnosticCase("reads-statements-suppressed"),
+            diagnosticCase("reads-statements-suppressed-file"),
+          ],
+          invalid: [
+            diagnosticCase("reads-statements"),
+            diagnosticCase("reads-statements", {
+              imports: [{ source: "@app/cache", imported: "cache" }],
+              readMethods: ["get", "ttl"],
+            }),
+            diagnosticCase("reads-declarator-suppression-control"),
+          ],
+        }),
+      }),
+    ).toMatchFileSnapshot("snapshots/read-statement-shapes.snap");
   });
   it("matches ESLint findings and suppression locations through Oxlint", () => {
     const result = spawnSync(

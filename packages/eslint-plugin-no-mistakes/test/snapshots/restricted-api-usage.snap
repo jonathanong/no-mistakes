@@ -1,0 +1,843 @@
+{
+  "restricted-api-usage": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/suppressed.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginate[A-Z]",
+              "importedNamePattern": "^paginate[A-Z]",
+              "message": "Use explicit continuation.",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/file-suppressed.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginate[A-Z]",
+              "importedNamePattern": "^paginate[A-Z]",
+              "message": "Use explicit continuation.",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall-suppressed.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginate[A-Z]",
+              "importedNamePattern": "^paginate[A-Z]",
+              "message": "Use explicit continuation.",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall-file-suppressed.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginate[A-Z]",
+              "importedNamePattern": "^paginate[A-Z]",
+              "message": "Use explicit continuation.",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 34,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 1,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 8,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 7,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 8,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 9,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 10,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "importedNamePattern": "^paginate[A-Z]",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/default.mjs",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 14,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/default.mjs",
+          "line": 1,
+          "message": "Restricted API 'default'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 39,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/default.mjs",
+          "line": 2,
+          "message": "Restricted API 'paginate-entries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 9,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/default.mjs",
+          "line": 3,
+          "message": "Restricted API 'default'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/default.mjs",
+          "line": 4,
+          "message": "Restricted API 'paginate-entries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "importedNamePattern": "^(default|paginate-)",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 34,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 3,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 5,
+          "message": "Restricted API '@example/client'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 6,
+          "message": "Restricted API '@example/client'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 27,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 7,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 34,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 9,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 42,
+          "endLine": 11,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 11,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 13,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 24,
+          "endLine": 14,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 14,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 15,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 16,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 38,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 17,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 72,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 17,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 74,
+          "endColumn": 81,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 17,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 29,
+          "endLine": 19,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 19,
+          "message": "Restricted API 'paginateEntries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 27,
+          "endLine": 43,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 43,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 26,
+          "endLine": 45,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 45,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 46,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 46,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 47,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 47,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 27,
+          "endLine": 51,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 51,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "importedNamePattern": "^paginate[A-Z]",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 4,
+          "message": "Restricted API 'paginate-entries'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 5,
+          "message": "Restricted API '@example/client'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 6,
+          "message": "Restricted API '@example/client'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 42,
+          "endLine": 11,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 11,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 13,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 74,
+          "endColumn": 81,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 17,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 27,
+          "endLine": 43,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 43,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 26,
+          "endLine": 45,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 45,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 46,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 46,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 47,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 47,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 27,
+          "endLine": 51,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 51,
+          "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "importedNamePattern": "^paginate-",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 8,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 9,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 38,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 10,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 24,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 13,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 16,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 17,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 25,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 25,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 26,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 26,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginate[A-Z]",
+              "message": "Use explicit continuation."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 34,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 1,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 8,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 7,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 8,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 9,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 10,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 24,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 13,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 16,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 17,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 25,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 25,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 26,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/usage.ts",
+          "line": 26,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginate[A-Z]",
+              "importedNamePattern": "^paginate[A-Z]",
+              "message": "Use explicit continuation.",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/directives.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/directives.mjs",
+          "line": 3,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/directives.mjs",
+          "line": 5,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginate[A-Z]",
+              "message": "Use explicit continuation."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

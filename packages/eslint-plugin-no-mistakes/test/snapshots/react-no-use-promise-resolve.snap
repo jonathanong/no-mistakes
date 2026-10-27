@@ -1,0 +1,136 @@
+{
+  "react-no-use-promise-resolve": [
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 39,
+          "endLine": 3,
+          "file": "fixture.jsx",
+          "line": 3,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 39,
+          "endLine": 3,
+          "file": "fixture.jsx",
+          "line": 3,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 33,
+          "endLine": 3,
+          "file": "fixture.jsx",
+          "line": 3,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 35,
+          "endLine": 3,
+          "file": "fixture.jsx",
+          "line": 3,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

@@ -1,22 +1,83 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
-import { fixture, lint, messages, plugin, __dirname, require } from "./helpers.mjs";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture, plugin, __dirname, require } from "./helpers.mjs";
 
 const RULE = "postgres-no-correlated-sql-builder";
 const id = RULE;
 const OPTIONS = { builderMethods: ["append"], tagNames: ["sql"] };
 const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
 
-function check(name, option = OPTIONS) {
-  return lint(
-    fixture(`${id}/${name}`),
-    { [`no-mistakes/${RULE}`]: ["error", option] },
-    resolve(root, name),
-  );
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function correlatedFile(name, option = OPTIONS) {
+  return {
+    code: fixture(`${id}/${name}`),
+    filename: resolve(root, name),
+    options: [option],
+    languageOptions: { parser: tsParser },
+  };
 }
+
+const suite = {
+  valid: [
+    // reports repeated appends of one selector and leaves a single guard alone.
+    // Zero findings.
+    correlatedFile("silent.ts"),
+    // abstains on complete throwing chains and returning guards.
+    // Zero findings.
+    correlatedFile("complete-guards.ts"),
+    // reports static keys, member tags, call forwarding, and a one-step forwarder.
+    // Zero findings.
+    correlatedFile("static-call-limits.ts"),
+    // is inert until both builder methods and tag names are configured.
+    // Zero findings.
+    {
+      code: "export function f() {}",
+      filename: "fixture.jsx",
+      options: [{}],
+    },
+    {
+      code: "export function f() {}",
+      filename: "fixture.jsx",
+      options: [{ builderMethods: ["append"] }],
+    },
+    {
+      code: "export function f() {}",
+      filename: "fixture.jsx",
+      options: [{ tagNames: ["sql"] }],
+    },
+  ],
+  invalid: [
+    // reports repeated appends of one selector and leaves a single guard alone.
+    // Four correlated findings.
+    correlatedFile("repeated.ts"),
+    // One correlated finding.
+    correlatedFile("suppression.ts"),
+    // abstains on complete throwing chains and returning guards.
+    // 14 correlated findings.
+    correlatedFile("incomplete-guards.ts"),
+    // reports static keys, member tags, call forwarding, and a one-step forwarder.
+    // Nine correlated findings.
+    correlatedFile("static-calls.ts"),
+    // One correlated finding.
+    correlatedFile("call-method.ts", { builderMethods: ["call"], tagNames: ["sql"] }),
+  ],
+};
+
+it("snapshots postgres-no-correlated-sql-builder diagnostics", async () => {
+  await expect(snapshotDocument(snapshotSuite(RULE, languageOptions, suite))).toMatchFileSnapshot(
+    "snapshots/postgres-no-correlated-sql-builder.snap",
+  );
+}, 30_000);
 
 describe("postgres-no-correlated-sql-builder", () => {
   it("stays out of the presets and does not autofix", () => {
@@ -25,41 +86,6 @@ describe("postgres-no-correlated-sql-builder", () => {
     assert.equal(plugin.rules[RULE].meta.hasSuggestions, undefined);
     assert.equal(plugin.configs.recommended.rules[`no-mistakes/${RULE}`], undefined);
     assert.equal(plugin.configs.strict.rules[`no-mistakes/${RULE}`], undefined);
-  });
-
-  it("reports repeated appends of one selector and leaves a single guard alone", () => {
-    const reported = check("repeated.ts");
-    assert.equal(reported.length, 4);
-    assert.ok(reported.every((message) => message.messageId === "correlated"));
-    assert.match(reported[0].message, /appends on query/);
-    assert.match(reported[0].message, /empty path for access/);
-    assert.match(reported[0].message, /throwing default/);
-    assert.match(reported[0].message, /case "owned": case "member":/);
-    assert.match(reported[0].message, /own-key check/);
-    assert.equal(check("silent.ts").length, 0);
-    assert.equal(check("suppression.ts").length, 1);
-  });
-
-  it("abstains on complete throwing chains and returning guards", () => {
-    assert.equal(check("complete-guards.ts").length, 0);
-    assert.equal(check("incomplete-guards.ts").length, 14);
-  });
-
-  it("reports static keys, member tags, call forwarding, and a one-step forwarder", () => {
-    const reported = check("static-calls.ts");
-    assert.equal(reported.length, 9);
-    assert.ok(reported.some((message) => /appends on other/.test(message.message)));
-    assert.equal(
-      check("call-method.ts", { builderMethods: ["call"], tagNames: ["sql"] }).length,
-      1,
-    );
-    assert.equal(check("static-call-limits.ts").length, 0);
-  });
-
-  it("is inert until both builder methods and tag names are configured", () => {
-    assert.deepEqual(messages("export function f() {}", RULE, {}), []);
-    assert.deepEqual(messages("export function f() {}", RULE, { builderMethods: ["append"] }), []);
-    assert.deepEqual(messages("export function f() {}", RULE, { tagNames: ["sql"] }), []);
   });
 
   it("does not rewrite the file", () => {

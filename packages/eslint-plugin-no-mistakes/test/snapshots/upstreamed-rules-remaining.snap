@@ -1,0 +1,499 @@
+{
+  "await-array-methods": [
+    {
+      "file": "valid.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 7,
+          "file": "invalid.tsx",
+          "line": 7,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 8,
+          "file": "invalid.tsx",
+          "line": 8,
+          "message": "Do not await slice(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 11,
+          "file": "invalid.tsx",
+          "line": 11,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "nextjs-metadata-exports-location": [
+    {
+      "file": "app/page.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    }
+  ],
+  "nextjs-no-manual-script-tags": [
+    {
+      "file": "valid.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "components/widget.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/page.tsx",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 29,
+          "endLine": 43,
+          "file": "app/page.tsx",
+          "line": 43,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "components/widget.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 32,
+          "endLine": 4,
+          "file": "components/widget.tsx",
+          "line": 4,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-delete-property": [
+    {
+      "file": "valid.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 13,
+          "file": "invalid.tsx",
+          "line": 13,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-import-only-test-files": [
+    {
+      "file": "import-only.valid.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "import-only.invalid.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "import-only.invalid.test.ts",
+          "line": 1,
+          "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
+          "messageId": "aggregate",
+          "ruleId": "no-mistakes/no-import-only-test-files",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "import-only.invalid.test.cjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 5,
+          "file": "import-only.invalid.test.cjs",
+          "line": 1,
+          "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
+          "messageId": "aggregate",
+          "ruleId": "no-mistakes/no-import-only-test-files",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-placeholder-never-type-exports": [
+    {
+      "file": "valid.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 14,
+          "file": "invalid.tsx",
+          "line": 14,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 15,
+          "file": "invalid.tsx",
+          "line": 15,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 34,
+          "endLine": 18,
+          "file": "invalid.tsx",
+          "line": 18,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-vitest-sequential": [
+    {
+      "file": "valid.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 32,
+          "file": "invalid.tsx",
+          "line": 32,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "react-no-iife-in-jsx": [
+    {
+      "file": "valid.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.tsx",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 31,
+          "endLine": 44,
+          "file": "invalid.tsx",
+          "line": 44,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        },
+        {
+          "column": 30,
+          "endColumn": 49,
+          "endLine": 45,
+          "file": "invalid.tsx",
+          "line": 45,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 21,
+          "endColumn": 63,
+          "endLine": 3,
+          "file": "fixture.jsx",
+          "line": 3,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "react-no-use-promise-resolve": [
+    {
+      "file": "valid.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 33,
+          "file": "invalid.tsx",
+          "line": 33,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 34,
+          "file": "invalid.tsx",
+          "line": 34,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 35,
+          "file": "invalid.tsx",
+          "line": 35,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 36,
+          "file": "invalid.tsx",
+          "line": 36,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 37,
+          "file": "invalid.tsx",
+          "line": 37,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "vitest-mock-test-file-naming": [
+    {
+      "file": "mock-name.valid.mock.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "mock-name.valid.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "mock-name.jest-import.mock.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "mock-name.jest-require.mock.test.cjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "mock-name.fn-stub.valid.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "mock-name.invalid.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 8,
+          "file": "mock-name.invalid.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "mock-name.invalid.mock.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 2,
+          "file": "mock-name.invalid.mock.test.ts",
+          "line": 1,
+          "message": "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
+          "messageId": "unnecessaryMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "mock-name.global.invalid.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 6,
+          "file": "mock-name.global.invalid.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "mock-name.cjs.invalid.test.cjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "mock-name.cjs.invalid.test.cjs",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "mock-name.fn-stub.invalid.mock.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 7,
+          "file": "mock-name.fn-stub.invalid.mock.test.ts",
+          "line": 1,
+          "message": "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
+          "messageId": "unnecessaryMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

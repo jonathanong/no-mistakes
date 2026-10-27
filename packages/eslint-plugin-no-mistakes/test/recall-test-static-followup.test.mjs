@@ -2,43 +2,181 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
+import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
-import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
+import {
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+  snapshotSuite,
+} from "./diagnostic-snapshot.mjs";
 import { __dirname, fixture, lint, messages } from "./helpers.mjs";
 
-const check = (rule, file) => messages(fixture(`${rule}/${file}`), rule, undefined, file);
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function lintCase(code, filename, sourceType = "module") {
+  const item = { code, filename };
+  if (/\.[cm]?tsx?$/.test(filename)) {
+    item.languageOptions = { parser: tsParser, sourceType, globals: {} };
+  } else if (sourceType !== "module") {
+    item.languageOptions = { sourceType };
+  }
+  return item;
+}
+
+function explicitCase(rule, file) {
+  return lintCase(fixture(`${rule}/${file}`), file);
+}
+
+// ESLint diagnostics for fixture files the Oxlint loop compares, excluding
+// cases already listed above. Filename and sourceType match that lint() call.
+function oxlintEslintCases(rule, skip) {
+  const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", rule);
+  const files = readdirSync(root, { recursive: true })
+    .map(String)
+    .filter((file) => /\.[cm]?[jt]sx?$/.test(file))
+    .filter(
+      (file) => rule !== "no-import-only-test-files" || file !== "require-alias-cycle.test.js",
+    )
+    .filter((file) => !skip.has(file))
+    .sort();
+  const valid = [];
+  const invalid = [];
+  for (const file of files) {
+    const filename = resolve(root, file);
+    const sourceType = /\.(cjs|cts)$/.test(file)
+      ? "commonjs"
+      : file === "captured-with.js"
+        ? "script"
+        : "module";
+    const code = fixture(`${rule}/${file}`);
+    const ids = messages(code, rule, undefined, filename, {}, sourceType).filter(Boolean);
+    const item = lintCase(code, filename, sourceType);
+    (ids.length ? invalid : valid).push(item);
+  }
+  return { valid, invalid };
+}
 
 describe("test rule static recall follow-up", () => {
-  it("reads sequential options from literal apply arguments", () => {
-    assert.deepEqual(
-      check("no-vitest-sequential", "static-apply.test.ts"),
-      Array(4).fill("sequential"),
-    );
-    assert.deepEqual(check("no-vitest-sequential", "static-apply-controls.test.ts"), []);
-  });
-  it("recognizes mocking aliases and static forwarding", () => {
-    assert.deepEqual(check("vitest-mock-test-file-naming", "static-aliases.test.ts"), [
-      "needsMock",
+  it("snapshots remaining diagnostics", async () => {
+    const sequentialSkip = new Set(["static-apply.test.ts", "static-apply-controls.test.ts"]);
+    const mockSkip = new Set([
+      "static-aliases.test.ts",
+      "static-alias-const.test.ts",
+      "static-alias-call.test.ts",
+      "static-alias-apply.test.ts",
+      "static-alias-destructure.test.ts",
+      "static-alias-namespace.test.ts",
+      "static-alias-template.test.ts",
+      "static-alias-member.test.ts",
+      "static-alias-method.test.ts",
+      "static-aliases-controls.test.ts",
+      "static-alias-cycle.test.js",
     ]);
-    for (const name of [
-      "const",
-      "call",
-      "apply",
-      "destructure",
-      "namespace",
-      "template",
-      "member",
-      "method",
-    ]) {
-      assert.deepEqual(
-        check("vitest-mock-test-file-naming", `static-alias-${name}.test.ts`),
-        ["needsMock"],
-        name,
-      );
-    }
-    assert.deepEqual(check("vitest-mock-test-file-naming", "static-aliases-controls.test.ts"), []);
-    assert.deepEqual(check("vitest-mock-test-file-naming", "static-alias-cycle.test.js"), []);
-  });
+    const importSkip = new Set([
+      "require-alias.test.js",
+      ...[
+        "controls",
+        "shadow",
+        "mutable",
+        "suppressed",
+        "opaque",
+        "cycle",
+        "redeclared",
+        "dynamic",
+        "extra",
+        "file",
+        "line",
+      ].map((suffix) => `require-alias-${suffix}.test.js`),
+    ]);
+    const sequentialExtra = oxlintEslintCases("no-vitest-sequential", sequentialSkip);
+    const mockExtra = oxlintEslintCases("vitest-mock-test-file-naming", mockSkip);
+    const importExtra = oxlintEslintCases("no-import-only-test-files", importSkip);
+    const postgresExtra = oxlintEslintCases("postgres-no-correlated-sql-builder", new Set());
+    const reactExtra = oxlintEslintCases("react-no-nullish-react-node", new Set());
+    await expect(
+      snapshotDocument({
+        "no-import-only-test-files": snapshotSuite("no-import-only-test-files", languageOptions, {
+          valid: [
+            ...[
+              "controls",
+              "shadow",
+              "mutable",
+              "suppressed",
+              "opaque",
+              "cycle",
+              "redeclared",
+              "dynamic",
+              "extra",
+              "file",
+              "line",
+            ].map((suffix) =>
+              explicitCase("no-import-only-test-files", `require-alias-${suffix}.test.js`),
+            ),
+            ...importExtra.valid,
+          ],
+          invalid: [
+            explicitCase("no-import-only-test-files", "require-alias.test.js"),
+            ...importExtra.invalid,
+          ],
+        }),
+        "no-vitest-sequential": snapshotSuite("no-vitest-sequential", languageOptions, {
+          valid: [
+            explicitCase("no-vitest-sequential", "static-apply-controls.test.ts"),
+            ...sequentialExtra.valid,
+          ],
+          invalid: [
+            // 4 sequential diagnostics from literal apply arguments.
+            explicitCase("no-vitest-sequential", "static-apply.test.ts"),
+            ...sequentialExtra.invalid,
+          ],
+        }),
+        "postgres-no-correlated-sql-builder": snapshotSuite(
+          "postgres-no-correlated-sql-builder",
+          languageOptions,
+          postgresExtra,
+        ),
+        "react-no-nullish-react-node": snapshotSuite(
+          "react-no-nullish-react-node",
+          languageOptions,
+          reactExtra,
+        ),
+        "vitest-mock-test-file-naming": snapshotSuite(
+          "vitest-mock-test-file-naming",
+          languageOptions,
+          {
+            valid: [
+              explicitCase("vitest-mock-test-file-naming", "static-aliases-controls.test.ts"),
+              explicitCase("vitest-mock-test-file-naming", "static-alias-cycle.test.js"),
+              ...mockExtra.valid,
+            ],
+            invalid: [
+              explicitCase("vitest-mock-test-file-naming", "static-aliases.test.ts"),
+              ...[
+                "const",
+                "call",
+                "apply",
+                "destructure",
+                "namespace",
+                "template",
+                "member",
+                "method",
+              ].map((name) =>
+                explicitCase("vitest-mock-test-file-naming", `static-alias-${name}.test.ts`),
+              ),
+              ...mockExtra.invalid,
+            ],
+          },
+        ),
+      }),
+    ).toMatchFileSnapshot("snapshots/recall-test-static-followup-remaining.snap");
+  }, 30_000);
+
   it("snapshots test diagnostics", async () => {
     const specs = [
       ["test-no-error-message-matching", "static-runner.test.ts"],
@@ -58,28 +196,6 @@ describe("test rule static recall follow-up", () => {
     await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
       "snapshots/recall-test-static-followup.snap",
     );
-  });
-  it("recognizes require aliases while preserving real work and unknown loaders", () => {
-    assert.deepEqual(check("no-import-only-test-files", "require-alias.test.js"), ["aggregate"]);
-    for (const suffix of [
-      "controls",
-      "shadow",
-      "mutable",
-      "suppressed",
-      "opaque",
-      "cycle",
-      "redeclared",
-      "dynamic",
-      "extra",
-      "file",
-      "line",
-    ]) {
-      assert.deepEqual(
-        check("no-import-only-test-files", `require-alias-${suffix}.test.js`),
-        [],
-        suffix,
-      );
-    }
   });
   for (const rule of [
     "no-import-only-test-files",

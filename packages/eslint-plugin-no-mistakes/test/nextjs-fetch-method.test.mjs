@@ -1,174 +1,57 @@
-import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { messages } from "./helpers.mjs";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+
+const rule = "nextjs-static-fetch-method";
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function methodCase(code) {
+  return { code, filename: "fixture.jsx" };
+}
+
+const suite = {
+  valid: [
+    methodCase("fetch('https://api.example.com');"),
+    methodCase("fetch('https://api.example.com', {});"),
+    methodCase("fetch('https://api.example.com', { method: 'POST' });"),
+    methodCase('fetch("https://api.example.com", { method: "GET" });'),
+    methodCase("fetch('https://api.example.com', { method: `POST` });"),
+    methodCase("fetch('https://api.example.com', { cache: 'no-store' });"),
+    methodCase("fetch('https://api.example.com', opts);"),
+    methodCase("fetch('https://api.example.com', { ...opts });"),
+    methodCase("fetch('https://api.example.com', { ['method']: 'GET' });"),
+    methodCase("fetch('https://api.example.com', { 'method': 'POST' });"),
+    // The last duplicate method property is the literal.
+    methodCase("fetch('https://api.example.com', { method: verb, method: 'GET' });"),
+    methodCase("function f(fetch) { fetch('url', { method: verb }); }"),
+  ],
+  invalid: [
+    // 1 dynamic. Computed method key with a non-literal value.
+    methodCase("fetch('https://api.example.com', { ['method']: verb });"),
+    methodCase("fetch('https://api.example.com', { [`method`]: verb });"),
+    // 1 dynamic. String literal method key with a non-literal value.
+    methodCase("fetch('https://api.example.com', { 'method': verb });"),
+    // 1 dynamic.
+    methodCase("fetch('https://api.example.com', { method: method });"),
+    // 1 dynamic. The last duplicate method property wins.
+    methodCase("fetch('https://api.example.com', { method: 'GET', method: verb });"),
+    // 1 dynamic.
+    methodCase("fetch('https://api.example.com', { method: getMethod() });"),
+    // 1 dynamic.
+    methodCase("fetch('https://api.example.com', { method: `${verb}` });"),
+  ],
+};
 
 describe("nextjs-static-fetch-method", () => {
-  it("accepts fetch without options", () => {
-    assert.deepEqual(
-      messages("fetch('https://api.example.com');", "nextjs-static-fetch-method"),
-      [],
-    );
-  });
-
-  it("accepts fetch with empty options", () => {
-    assert.deepEqual(
-      messages("fetch('https://api.example.com', {});", "nextjs-static-fetch-method"),
-      [],
-    );
-  });
-
-  it("accepts fetch with string literal method", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { method: 'POST' });",
-        "nextjs-static-fetch-method",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        'fetch("https://api.example.com", { method: "GET" });',
-        "nextjs-static-fetch-method",
-      ),
-      [],
-    );
-  });
-
-  it("accepts fetch with expression-free template method", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { method: `POST` });",
-        "nextjs-static-fetch-method",
-      ),
-      [],
-    );
-  });
-
-  it("accepts fetch with no method property", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { cache: 'no-store' });",
-        "nextjs-static-fetch-method",
-      ),
-      [],
-    );
-  });
-
-  it("accepts fetch with non-object second argument", () => {
-    assert.deepEqual(
-      messages("fetch('https://api.example.com', opts);", "nextjs-static-fetch-method"),
-      [],
-    );
-  });
-
-  it("accepts fetch with spread-only options", () => {
-    assert.deepEqual(
-      messages("fetch('https://api.example.com', { ...opts });", "nextjs-static-fetch-method"),
-      [],
-    );
-  });
-
-  it("accepts fetch with computed method key", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { ['method']: 'GET' });",
-        "nextjs-static-fetch-method",
-      ),
-      [],
-    );
-  });
-
-  it("reports computed method key with non-literal value", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { ['method']: verb });",
-        "nextjs-static-fetch-method",
-      ),
-      ["dynamic"],
-    );
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { [`method`]: verb });",
-        "nextjs-static-fetch-method",
-      ),
-      ["dynamic"],
-    );
-  });
-
-  it("accepts fetch with string literal method key and literal value", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { 'method': 'POST' });",
-        "nextjs-static-fetch-method",
-      ),
-      [],
-    );
-  });
-
-  it("reports string literal method key with non-literal value", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { 'method': verb });",
-        "nextjs-static-fetch-method",
-      ),
-      ["dynamic"],
-    );
-  });
-
-  it("reports identifier method values", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { method: method });",
-        "nextjs-static-fetch-method",
-      ),
-      ["dynamic"],
-    );
-  });
-
-  it("uses the last duplicate method property", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { method: 'GET', method: verb });",
-        "nextjs-static-fetch-method",
-      ),
-      ["dynamic"],
-    );
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { method: verb, method: 'GET' });",
-        "nextjs-static-fetch-method",
-      ),
-      [],
-    );
-  });
-
-  it("reports call expression method values", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { method: getMethod() });",
-        "nextjs-static-fetch-method",
-      ),
-      ["dynamic"],
-    );
-  });
-
-  it("reports template literal method with expressions", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com', { method: `${verb}` });",
-        "nextjs-static-fetch-method",
-      ),
-      ["dynamic"],
-    );
-  });
-
-  it("does not report when fetch is shadowed", () => {
-    assert.deepEqual(
-      messages(
-        "function f(fetch) { fetch('url', { method: verb }); }",
-        "nextjs-static-fetch-method",
-      ),
-      [],
-    );
-  });
+  it("snapshots nextjs-fetch-method diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/nextjs-fetch-method.snap");
+  }, 30_000);
 });

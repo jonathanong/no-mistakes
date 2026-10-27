@@ -1,0 +1,10 @@
+{
+  "ts-preserve-null-option-defaults": [
+    {
+      "file": "a.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    }
+  ]
+}

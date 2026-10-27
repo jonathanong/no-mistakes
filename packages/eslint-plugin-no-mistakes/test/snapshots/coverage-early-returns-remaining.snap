@@ -1,0 +1,26 @@
+{
+  "no-import-only-test-files": [
+    {
+      "file": "a.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    }
+  ],
+  "no-vitest-sequential": [
+    {
+      "file": "a.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    }
+  ],
+  "react-no-iife-in-jsx": [
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    }
+  ]
+}

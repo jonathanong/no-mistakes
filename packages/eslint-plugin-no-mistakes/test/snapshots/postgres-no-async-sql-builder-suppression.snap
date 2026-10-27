@@ -1,0 +1,66 @@
+[
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
