@@ -1,5 +1,14 @@
 //! Cli postgres integration tests, linked in one harness.
 
+#[path = "common/check_json_snapshot.rs"]
+mod check_json_snapshot;
+#[path = "cli_postgres_snapshot_constraint_validate.rs"]
+mod cli_postgres_snapshot_constraint_validate;
+#[path = "cli_postgres_snapshot_fk_on_delete.rs"]
+mod cli_postgres_snapshot_fk_on_delete;
+#[path = "cli_postgres_snapshot_named_constraints.rs"]
+mod cli_postgres_snapshot_named_constraints;
+
 #[path = "cli_check_rules_postgres_json_relation_ids.rs"]
 mod cli_check_rules_postgres_json_relation_ids;
 

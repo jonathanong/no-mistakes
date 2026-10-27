@@ -4,7 +4,10 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+// Output cases moved to cli_postgres_snapshot_fk_on_delete. Keep the private
+// defaults, read-error, and pre-suppression invariants below.
 
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -24,49 +27,6 @@ fn config() -> NoMistakesConfig {
         }],
         ..Default::default()
     }
-}
-
-fn run(root: &Path) -> Vec<RuleFinding> {
-    let files = vec![root.join("migrations/001.sql")];
-    check_with_files(root, &config(), &files).unwrap()
-}
-
-#[test]
-fn flags_omitted_on_delete() {
-    let findings = run(&fixture("fail"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("children.parent_id"));
-    assert!(findings[0].message.contains("ON DELETE"), "{findings:?}");
-}
-
-#[test]
-fn flags_no_action() {
-    let findings = run(&fixture("fail-no-action"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("children.parent_id"));
-}
-
-#[test]
-fn flags_alter_table_fk_without_on_delete() {
-    let findings = run(&fixture("fail-alter"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("children.parent_id"));
-}
-
-#[test]
-fn flags_omitted_on_delete_inside_do_block() {
-    let findings = run(&fixture("fail-do-block"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("children.parent_id"));
-}
-
-#[test]
-fn explicit_on_delete_is_clean() {
-    assert!(run(&fixture("pass")).is_empty());
-    let findings = run(&fixture("pass-postgres-regress"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("FKTABLE_FAIL1.ftest1"));
-    assert_eq!(findings[0].line, 3);
 }
 
 #[test]

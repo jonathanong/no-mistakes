@@ -1,0 +1,109 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "check": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "migrations/001.sql:1: ALTER TABLE ADD CHECK constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "target": "children.CHECK"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled_next_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "do_block": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 2,
+          "message": "migrations/001.sql:2: ALTER TABLE ADD FOREIGN KEY constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "target": "children.FOREIGN KEY"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "foreign_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-require-named-constraints` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-require-named-constraints"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "migrations/001.sql:1: ALTER TABLE ADD FOREIGN KEY constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "target": "children.FOREIGN KEY"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "named_and_create_table": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "postgres_regression_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

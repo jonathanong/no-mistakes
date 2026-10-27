@@ -30,6 +30,11 @@ reports with the sibling compiled CLI, including SQL advisory aggregation.
 The Linux JavaScript job builds the CLI before the addon so both artifacts are
 available to these parity tests, as in the native platform matrix.
 
+The native macOS and Windows jobs also run `suite_cli_postgres` tests matching
+`cli_postgres_snapshot_`. These replay the committed PostgreSQL JSON snapshots
+without updating them; each case compares normalized output at `--jobs 1` and
+`--jobs 2`. Linux runs the same cases in the full Rust coverage suite.
+
 Compiled Vitest workers use independent invocation locks. Linux keeps a private
 `XDG_RUNTIME_DIR`; macOS and Windows use the existing Cargo test marker
 `CARGO_BIN_EXE_no-mistakes` to select a lock keyed by process ID. Calls within

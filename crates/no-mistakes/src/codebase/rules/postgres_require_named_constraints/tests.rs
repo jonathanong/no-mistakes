@@ -4,7 +4,10 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+// Output cases moved to cli_postgres_snapshot_named_constraints. Keep the
+// private defaults, read-error, and pre-suppression invariants below.
 
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -24,40 +27,6 @@ fn config() -> NoMistakesConfig {
         }],
         ..Default::default()
     }
-}
-
-fn run(root: &Path) -> Vec<RuleFinding> {
-    let files = vec![root.join("migrations/001.sql")];
-    check_with_files(root, &config(), &files).unwrap()
-}
-
-#[test]
-fn flags_unnamed_foreign_key() {
-    let findings = run(&fixture("fail-fk"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("children.FOREIGN KEY"));
-    assert!(findings[0].message.contains("FOREIGN KEY"), "{findings:?}");
-}
-
-#[test]
-fn flags_unnamed_check() {
-    let findings = run(&fixture("fail-check"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("children.CHECK"));
-    assert!(findings[0].message.contains("CHECK"), "{findings:?}");
-}
-
-#[test]
-fn flags_unnamed_constraint_inside_do_block() {
-    let findings = run(&fixture("fail-do-block"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].target.as_deref(), Some("children.FOREIGN KEY"));
-}
-
-#[test]
-fn named_constraints_and_create_table_are_clean() {
-    assert!(run(&fixture("pass")).is_empty());
-    assert!(run(&fixture("pass-postgres-regress")).is_empty());
 }
 
 #[test]

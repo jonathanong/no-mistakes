@@ -228,7 +228,7 @@ fn sort_value(value: &mut Value) {
     }
 }
 
-fn rules_path(rule: &str, kind: &str, name: &str) -> PathBuf {
+pub fn rules_path(rule: &str, kind: &str, name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules")

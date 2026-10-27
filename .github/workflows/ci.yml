@@ -542,6 +542,8 @@ jobs:
           else
             cargo test --locked -p no-mistakes --test macos_invocation
           fi
+          # Compare the same committed JSON snapshots on both native platforms.
+          cargo test --locked -p no-mistakes --test suite_cli_postgres cli_postgres_snapshot_
 
       - name: Run native CLI smoke test
         timeout-minutes: 2
