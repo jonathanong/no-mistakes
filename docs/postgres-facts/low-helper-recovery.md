@@ -4,7 +4,8 @@ The low-effort SQL structure rules can recover SQL through a bounded subset of
 JavaScript helpers. This is analysis of the helper body, not an exemption for a
 typed parameter. It applies to `postgres-no-offset`,
 `postgres-no-unbounded-sql-identifier`, `postgres-no-mutable-sql-registry`, and
-`postgres-no-transformed-uuid-predicates`. The annotation rule and maximum-effort
+`postgres-no-transformed-uuid-predicates`, `postgres-explicit-columns`, and
+`postgres-required-predicates`. The annotation rule and maximum-effort
 analysis keep their existing behavior.
 
 ## Supported shapes

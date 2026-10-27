@@ -20,7 +20,6 @@ pub(super) fn record(
     catalog: Option<&SchemaCatalog>,
     facts: &dyn SqlFactContext,
 ) -> anyhow::Result<()> {
-    let prepared = facts.prepared();
     let mut obligations = Vec::new();
     for relation in &opts.relations {
         for required in &relation.require {
@@ -48,7 +47,7 @@ pub(super) fn record(
             crate::codebase::postgres::SqlPolicyVerdictContext {
                 facts,
                 embedded: file,
-                statements: prepared.postgres_statements(&file.path, Some(&opts.embedded))?,
+                statements: facts.postgres_statements(&file.path, Some(&opts.embedded))?,
             },
             super::super::RULE_ID,
             &relative_slash_path(root, &file.path),

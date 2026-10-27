@@ -25,6 +25,8 @@ pub(crate) fn prepare_rule_sql_facts(
     let patterns = sql_patterns(config, rule_ids)?;
     let low_ids = [
         "postgres-no-offset",
+        "postgres-explicit-columns",
+        "postgres-required-predicates",
         "postgres-no-transformed-uuid-predicates",
     ];
     let low_sql = low_ids.iter().any(|id| {

@@ -12,6 +12,8 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 "postgres-no-unbounded-sql-identifier",
                 "postgres-no-mutable-sql-registry",
                 "postgres-no-offset",
+                "postgres-explicit-columns",
+                "postgres-required-predicates",
                 "postgres-no-transformed-uuid-predicates",
             ]
             .contains(rule_id)

@@ -104,10 +104,18 @@ colocated-test coverage without transitive render-chain or dynamic/mock boundary
 analysis. `check({ effort: "low" })` and a check report in `analyzeProject()` use
 the same shared unanalyzable policy as CLI `--effort low`.
 For `postgres-no-offset`, `low` checks
-[literal SQL](rules/postgres-no-offset.md#effort) without helper evaluation.
+[literal SQL and the bounded helper/builder subset](rules/postgres-no-offset.md#effort).
 `check({ effort: "low" })` and check reports in `analyzeProject()` use the same
 unanalyzable policy, source locations, suppression, and SQL verdict controls as
-the CLI. Raw SQL files retain their existing analysis.
+the CLI. Configured SQL-template interpolations are bind values; unsupported
+shapes follow the shared policy, and raw SQL files retain their existing
+analysis. See the [bounded helper contract](postgres-facts/low-helper-recovery.md).
+`postgres-explicit-columns` and `postgres-required-predicates` also support
+`low` through `check()` and `analyzeProject()` with the same bounded SQL helper
+subset and `unanalyzable` policy as the CLI. See the
+[explicit-columns](rules/postgres-explicit-columns.md#effort) and
+[required-predicates](rules/postgres-required-predicates.md#effort) Effort
+sections.
 
 For `finite-set-consistency`, `low` evaluates YAML sequences, YAML string
 selectors, and path-regex captures. Other extractor kinds use the same

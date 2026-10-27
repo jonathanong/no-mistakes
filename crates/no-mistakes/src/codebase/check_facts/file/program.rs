@@ -41,8 +41,11 @@ pub(crate) fn collect_file_facts_from_program(
     .flatten();
     let mut ts_plan = ts_extract_plan(root, plan, path, playwright);
     ts_plan.module_bindings |= !head_candidates.is_empty() || loop_heads.is_some();
-    let stored_source =
-        owned_source.or_else(|| should_store_source(plan, path).then(|| Arc::<str>::from(source)));
+    let stored_source = owned_source.or_else(|| {
+        (should_store_source(plan, path)
+            || super::sql_identifier::policy_selected(root, path, plan))
+        .then(|| Arc::<str>::from(source))
+    });
     let super::prepared_program::PreparedProgramFacts { ts, semantic } =
         super::prepared_program::collect(
             root,

@@ -116,6 +116,7 @@ pub(crate) fn embedded_call_facts_with_json_writes(
 mod embedded;
 
 mod rebase;
+pub(crate) use rebase::rebase_embedded_lines;
 
 #[cfg(test)]
 mod tests;

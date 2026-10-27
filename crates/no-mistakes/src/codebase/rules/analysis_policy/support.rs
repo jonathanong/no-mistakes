@@ -14,6 +14,16 @@ pub struct RuleEffortSupport {
 // unsupported syntax explicitly under the caller's unanalyzable policy.
 pub(super) const SUPPORT: &[RuleEffortSupport] = &[
     RuleEffortSupport {
+        rule: "postgres-explicit-columns",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
+        rule: "postgres-required-predicates",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "postgres-no-transformed-uuid-predicates",
         partners: &[],
         partner_scope: |_, _| false,

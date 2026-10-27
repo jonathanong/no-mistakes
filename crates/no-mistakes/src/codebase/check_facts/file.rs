@@ -11,7 +11,6 @@ mod program;
 mod program_walk;
 mod sql_identifier;
 mod variants;
-
 use plan::{requires_parse, should_store_source, ts_source};
 pub(crate) use program::collect_file_facts_from_program;
 pub(crate) use variants::{
@@ -158,7 +157,8 @@ fn collect_file_facts_from_source(
             playwright,
             parsed_source,
             program,
-            should_store_source(plan, path).then(|| Arc::clone(&source)),
+            (should_store_source(plan, path) || sql_identifier::policy_selected(root, path, plan))
+                .then(|| Arc::clone(&source)),
         )
     };
     let collected = if legacy_symbols {

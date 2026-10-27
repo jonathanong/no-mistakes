@@ -1,6 +1,7 @@
 //! Low-effort SQL inputs from the request's parsed program and semantic bindings.
 //! This does not evaluate JavaScript or infer provenance through executor/value aliases.
 pub(crate) mod literal_projection;
+pub(crate) mod statement_policy;
 use super::EmbeddedSqlOptions;
 use crate::codebase::ts_source::{facts::TsFileFacts, unwrap_ts_wrappers};
 use crate::fx::{FxHashMap, FxHashSet};
@@ -37,6 +38,9 @@ pub(crate) type TransformedLiteral =
 #[derive(Default)]
 pub(crate) struct FileFacts {
     pub low_applications: Vec<(EmbeddedSqlOptions, String, usize)>,
+    pub policy_projection: std::sync::OnceLock<statement_policy::Projections>,
+    pub policy_direct: std::sync::OnceLock<statement_policy::direct::Literals>,
+    pub recovered_raw: std::sync::OnceLock<literal_projection::recovered::RawStatements>,
     pub profiles: Vec<(EmbeddedSqlOptions, Vec<SqlCall>)>,
     pub recovery: helper_recovery::FileModels,
     pub application_calls:

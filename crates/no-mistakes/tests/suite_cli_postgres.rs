@@ -204,3 +204,5 @@ mod postgres_embedded_statement_api;
 
 #[path = "cli_check_rules_postgres_test_state.rs"]
 mod cli_check_rules_postgres_test_state;
+#[path = "cli_check_sql_policy_effort.rs"]
+mod cli_check_sql_policy_effort;

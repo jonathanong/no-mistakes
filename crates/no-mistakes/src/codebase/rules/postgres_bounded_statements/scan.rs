@@ -20,7 +20,7 @@ pub(super) fn scan(
         &opts.schema,
         &opts.schema_catalog_path,
         &opts.embedded,
-        prepared.map(|facts| facts.prepared()),
+        prepared,
     )?;
     let catalog = inputs.catalog;
     let views = ViewBounds::compile(&opts.view_bounds, catalog)?;

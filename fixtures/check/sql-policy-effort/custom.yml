@@ -1,0 +1,33 @@
+version: 2
+effort: low
+unanalyzable: ignore
+rules:
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorNames:
+        - query
+      include:
+        - src/queries.ts
+        - src/disabled.ts
+      schemaCatalogPath: schema.json
+      relations:
+        - accounts
+      maxColumns: 0
+      checkReturning: true
+    message: Use explicit account columns.
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorNames:
+        - query
+      include:
+        - src/queries.ts
+        - src/disabled.ts
+      relations:
+        - table: accounts
+          require:
+            - deleted_at IS NULL
+    message: Keep the account deletion filter.

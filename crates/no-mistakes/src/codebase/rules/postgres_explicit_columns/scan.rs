@@ -17,20 +17,23 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&dyn SqlFactContext>,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    // Every entrypoint prepares request-owned SQL facts before reaching this scan.
+    let prepared =
+        prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
     let inputs = crate::codebase::rules::collect_prepared_sql_inputs(
         root,
         files,
         &opts.schema,
         &opts.schema_catalog_path,
         &opts.embedded,
-        prepared.map(|facts| facts.prepared()),
+        Some(prepared),
     )?;
     let catalog = inputs.catalog;
     let statements = inputs.statements;
     let embedded = inputs.embedded;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
-    if let Some(prepared) = prepared.filter(|facts| facts.wants_sql_verdicts()) {
+    if prepared.wants_sql_verdicts() {
         verdicts::record(root, opts, &embedded, catalog, prepared)?;
     }
     for file in embedded {
@@ -40,7 +43,9 @@ pub(super) fn scan(
                 findings.push(sql_finding(
                     &rel,
                     call.line.max(1) as usize,
-                    "executed SQL is not statically recoverable for explicit columns",
+                    &prepared.sql_unanalyzable_message(
+                        "executed SQL is not statically recoverable for explicit columns",
+                    ),
                     "unanalyzable",
                 ));
             }

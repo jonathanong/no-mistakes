@@ -25,7 +25,9 @@ fn lazy_advisory_sink_stays_off_the_regular_verdict_path() {
     assert!(facts.sql_advisories.get().is_none());
     assert!(facts.sql_verdicts().is_empty());
 
-    facts.record_sql_advisory(verdict("invalid-composed-variant"));
+    // Standalone scans borrow this trait, so exercise its default forwarding too.
+    let context: &dyn SqlFactContext = &facts;
+    context.record_sql_advisory(verdict("invalid-composed-variant"));
 
     assert!(!facts.wants_sql_verdicts());
     assert_eq!(facts.sql_verdicts().len(), 1);
