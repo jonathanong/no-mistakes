@@ -27,9 +27,14 @@ fn prepare_mode(mixed: bool, legacy: bool) -> (CheckFactMap, crate::config::v2::
             .insert("effort".into(), "max".into());
         config.rules.push(max);
     }
-    let files = ["src/query.mts", "src/helpers.mts", "schema.sql"]
-        .map(|name| root.join(name))
-        .to_vec();
+    let files = [
+        "src/query.mts",
+        "src/helpers.mts",
+        "schema.sql",
+        "tsconfig.json",
+    ]
+    .map(|name| root.join(name))
+    .to_vec();
     let sources = crate::codebase::rules::source_store_for_files(&files);
     crate::codebase::rules::analysis_policy::prepare_rule_analysis(
         &root,
