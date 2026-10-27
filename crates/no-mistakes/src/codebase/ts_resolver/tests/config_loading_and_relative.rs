@@ -2,8 +2,8 @@ use super::*;
 
 #[test]
 fn load_tsconfig_parses_paths() {
-    let dir = TempDir::new().unwrap();
-    let tc = make_tsconfig(dir.path(), r#"{"@utils/*": ["./utils/*"]}"#);
+    let dir = saved_resolver_fixture("load-tsconfig-parses-paths");
+    let tc = load_tsconfig(&dir.path().join("tsconfig.json")).unwrap();
     assert_eq!(tc.paths.len(), 1);
     assert_eq!(tc.paths[0].0, "@utils/*");
 }
@@ -52,24 +52,22 @@ fn load_tsconfig_rejects_lone_surrogates_before_collecting_paths() {
 
 #[test]
 fn load_tsconfig_empty_returns_defaults() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("load-tsconfig-empty-returns-defaults");
     let p = dir.path().join("tsconfig.json");
-    write(&p, "{}");
     let tc = load_tsconfig(&p).unwrap();
     assert!(tc.paths.is_empty());
 }
 
 #[test]
 fn load_tsconfig_invalid_json_errors() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("load-tsconfig-invalid-json-errors");
     let p = dir.path().join("tsconfig.json");
-    write(&p, "{ bad json }");
     assert!(load_tsconfig(&p).is_err());
 }
 
 #[test]
 fn load_tsconfig_missing_file_errors() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("load-tsconfig-missing-file-errors");
     assert!(load_tsconfig(&dir.path().join("tsconfig.json")).is_err());
 }
 
@@ -77,9 +75,8 @@ fn load_tsconfig_missing_file_errors() {
 
 #[test]
 fn find_tsconfig_finds_in_dir() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("find-tsconfig-finds-in-dir");
     let p = dir.path().join("tsconfig.json");
-    write(&p, "{}");
     assert_eq!(find_tsconfig(dir.path()), Some(p));
 }
 
@@ -93,11 +90,9 @@ fn find_tsconfig_finds_in_parent() {
 
 #[test]
 fn find_tsconfig_finds_from_file() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("find-tsconfig-finds-from-file");
     let tsc = dir.path().join("tsconfig.json");
-    write(&tsc, "{}");
     let file = dir.path().join("src").join("main.mts");
-    write(&file, "");
     assert_eq!(find_tsconfig(&file), Some(tsc));
 }
 
@@ -105,9 +100,8 @@ fn find_tsconfig_finds_from_file() {
 
 #[test]
 fn resolves_relative_with_extension() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("resolves-relative-with-extension");
     let target = dir.path().join("src").join("utils.mts");
-    write(&target, "");
     let importer = dir.path().join("src").join("main.mts");
     let tc = TsConfig {
         dir: dir.path().to_path_buf(),
@@ -120,9 +114,8 @@ fn resolves_relative_with_extension() {
 
 #[test]
 fn resolves_relative_no_ext_tries_mts() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("resolves-relative-no-ext-tries-mts");
     let target = dir.path().join("src").join("utils.mts");
-    write(&target, "");
     let importer = dir.path().join("src").join("main.mts");
     let tc = TsConfig {
         dir: dir.path().to_path_buf(),
@@ -135,9 +128,8 @@ fn resolves_relative_no_ext_tries_mts() {
 
 #[test]
 fn resolves_relative_no_ext_falls_back_to_ts() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("resolves-relative-no-ext-falls-back-to-ts");
     let target = dir.path().join("src").join("utils.ts");
-    write(&target, "");
     let importer = dir.path().join("src").join("main.mts");
     let tc = TsConfig {
         dir: dir.path().to_path_buf(),
@@ -210,9 +202,8 @@ fn resolves_relative_parent() {
 
 #[test]
 fn resolves_relative_index_fallback() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("resolves-relative-index-fallback");
     let target = dir.path().join("src").join("utils").join("index.mts");
-    write(&target, "");
     let importer = dir.path().join("src").join("main.mts");
     let tc = TsConfig {
         dir: dir.path().to_path_buf(),
@@ -225,7 +216,7 @@ fn resolves_relative_index_fallback() {
 
 #[test]
 fn relative_nonexistent_returns_none() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_resolver_fixture("relative-nonexistent-returns-none");
     let importer = dir.path().join("main.mts");
     let tc = TsConfig {
         dir: dir.path().to_path_buf(),

@@ -13,6 +13,12 @@ pub(crate) use js_string::{
 };
 pub(crate) use workflow_topology_impact::materialize_workflow_topology_impact_fixture;
 
+pub(crate) fn fixture_root(name: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures")
+        .join(name)
+}
+
 pub(crate) fn rule_fixture_root(rule: &str) -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules")
