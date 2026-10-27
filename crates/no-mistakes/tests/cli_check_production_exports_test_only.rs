@@ -263,7 +263,8 @@ fn type_references_do_not_consume_value_exports_snapshot() {
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(output.status.code(), Some(1), "{report}");
     // Type-position references to functions, const, let and var never count as
-    // production use; classes, interfaces and enums keep counting.
+    // production use (enums included: `Status` is reported, `TypeOnlyLevel` has
+    // no runtime consumer at all); classes and interfaces keep counting.
     let mut targets: Vec<_> = report["rules"]
         .as_array()
         .unwrap()
@@ -274,6 +275,7 @@ fn type_references_do_not_consume_value_exports_snapshot() {
     assert_eq!(
         targets,
         [
+            "Status",
             "constInline",
             "fnChain",
             "fnImportQualified",
@@ -281,6 +283,7 @@ fn type_references_do_not_consume_value_exports_snapshot() {
             "fnNamespace",
             "fnQualified",
             "letValue",
+            "starTestOnly",
             "testOnlyDefault",
             "varValue",
         ],

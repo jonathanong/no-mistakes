@@ -21,12 +21,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": "src/star-values.mts",
+          "line": 4,
+          "message": "production export `starTestOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function starTestOnly() { return 4; }",
+          "target": "starTestOnly"
+        },
+        {
           "file": "src/test-default.mts",
           "line": 3,
           "message": "production export `testOnlyDefault` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export default function testOnlyDefault() { return 2; }",
           "target": "testOnlyDefault"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 12,
+          "message": "production export `Status` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export enum Status { On, Off }",
+          "target": "Status"
         },
         {
           "file": "src/values.mts",

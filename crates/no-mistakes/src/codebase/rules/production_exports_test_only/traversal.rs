@@ -16,10 +16,12 @@ pub(super) struct Consumers {
 }
 
 impl Consumers {
-    /// A type reference is not a runtime use of a value export, but the class,
-    /// interface, alias or enum type is part of the production API. An export
-    /// whose kind cannot be determined keeps its type-only importers as an
-    /// advisory instead of silently dropping or counting them.
+    /// A type reference is not a runtime use of a value export (function,
+    /// const, let, var, enum), but the class, interface or alias type is part
+    /// of the production API. An enum is a runtime object whose members cannot
+    /// be produced from a type reference, so it follows the value exports. An
+    /// export whose kind cannot be determined keeps its type-only importers as
+    /// an advisory instead of silently dropping or counting them.
     pub(super) fn settle(
         &mut self,
         kind: &ExportKind,
@@ -27,13 +29,12 @@ impl Consumers {
     ) -> BTreeSet<(PathBuf, NodeId)> {
         let typed = std::mem::take(&mut self.typed);
         match kind {
-            ExportKind::Function | ExportKind::Const | ExportKind::Let | ExportKind::Var => {
-                BTreeSet::new()
-            }
-            ExportKind::Class
-            | ExportKind::TypeAlias
-            | ExportKind::Interface
-            | ExportKind::Enum => {
+            ExportKind::Function
+            | ExportKind::Const
+            | ExportKind::Let
+            | ExportKind::Var
+            | ExportKind::Enum => BTreeSet::new(),
+            ExportKind::Class | ExportKind::TypeAlias | ExportKind::Interface => {
                 self.files.extend(typed.into_iter().map(|(file, _)| file));
                 BTreeSet::new()
             }
