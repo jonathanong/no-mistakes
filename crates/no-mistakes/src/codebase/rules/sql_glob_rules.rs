@@ -48,7 +48,20 @@ pub(crate) fn run_sql_rule_with_glob_filters<O: DeserializeOwned + Default, C>(
                         && (exclude.is_empty() || !exclude.is_match(&rel))
                 })
                 .collect();
-            let view = facts.for_sql_application(index, rule.name.as_deref());
+            let view = if matches!(
+                rule_id,
+                "postgres-explicit-columns" | "postgres-required-predicates"
+            ) && config.effective_rule_analysis(rule)?.effort
+                == crate::config::v2::Effort::Low
+            {
+                Some(
+                    facts
+                        .for_sql_application_with_advice(index, rule.name.as_deref())
+                        .with_low_sql(rule_id),
+                )
+            } else {
+                facts.for_sql_application(index, rule.name.as_deref())
+            };
             scan(
                 root,
                 &compiled,

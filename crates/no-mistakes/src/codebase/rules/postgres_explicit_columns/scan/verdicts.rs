@@ -13,7 +13,6 @@ pub(super) fn record(
     catalog: &SchemaCatalog,
     facts: &dyn SqlFactContext,
 ) -> anyhow::Result<()> {
-    let prepared = facts.prepared();
     let mut checks = vec!["select-star".to_string()];
     if opts.check_returning {
         checks.push("returning-star".to_string());
@@ -23,7 +22,7 @@ pub(super) fn record(
             crate::codebase::postgres::SqlPolicyVerdictContext {
                 facts,
                 embedded: file,
-                statements: prepared.postgres_statements(&file.path, Some(&opts.embedded))?,
+                statements: facts.postgres_statements(&file.path, Some(&opts.embedded))?,
             },
             RULE_ID,
             &relative_slash_path(root, &file.path),

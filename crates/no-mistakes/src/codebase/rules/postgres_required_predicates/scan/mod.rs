@@ -30,15 +30,15 @@ pub(super) fn scan(
     let mut statements = Vec::new();
     let mut embedded = Vec::new();
     for path in &sql_paths {
-        statements.extend(prepared.postgres_statements(path, None)?.iter());
+        statements.extend(context.postgres_statements(path, None)?.iter());
     }
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
     {
-        embedded.push(prepared.embedded_sql(path, &opts.embedded)?);
+        embedded.push(context.embedded_sql(path, &opts.embedded)?);
         statements.extend(
-            prepared
+            context
                 .postgres_statements(path, Some(&opts.embedded))?
                 .iter(),
         );
@@ -62,7 +62,9 @@ pub(super) fn scan(
                 findings.push(check::sql_finding(
                     &rel,
                     call.line.max(1) as usize,
-                    "executed SQL is not statically recoverable for required predicates",
+                    &context.sql_unanalyzable_message(
+                        "executed SQL is not statically recoverable for required predicates",
+                    ),
                     Some("unanalyzable"),
                     None,
                 ));
@@ -82,7 +84,9 @@ pub(super) fn scan(
                     check::sql_finding(
                         &rel,
                         line,
-                        "SQL could not be analyzed for required predicates",
+                        &context.sql_unanalyzable_message(
+                            "SQL could not be analyzed for required predicates",
+                        ),
                         Some("unanalyzable"),
                         None,
                     ),

@@ -1,4 +1,4 @@
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     EmbeddedSqlFileFacts, EmbeddedSqlOptions, PostgresSchemaOptions, SchemaCatalog,
     SqlStatementFileFacts,
@@ -17,11 +17,11 @@ pub(crate) fn collect_prepared_sql_inputs<'a>(
     schema: &PostgresSchemaOptions,
     catalog_path: &str,
     embedded_options: &EmbeddedSqlOptions,
-    prepared: Option<&'a CheckFactMap>,
+    prepared: Option<&'a dyn SqlFactContext>,
 ) -> anyhow::Result<PreparedSqlInputs<'a>> {
     let prepared =
         prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
-    let catalog = prepared.postgres_schema_catalog(catalog_path)?;
+    let catalog = prepared.prepared().postgres_schema_catalog(catalog_path)?;
     let paths = crate::codebase::postgres::postgres_sql_paths(root, files, schema)?;
     let mut statements = Vec::new();
     let mut embedded = Vec::new();

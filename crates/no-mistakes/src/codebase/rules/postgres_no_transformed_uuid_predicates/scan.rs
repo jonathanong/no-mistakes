@@ -21,7 +21,7 @@ pub(super) fn scan(
         &opts.schema,
         &opts.schema_catalog_path,
         &opts.embedded,
-        Some(context.prepared()),
+        Some(context),
     )?;
     let columns = Columns::new(inputs.catalog);
     let mut findings = crate::codebase::rules::PostgresFindings::default();
