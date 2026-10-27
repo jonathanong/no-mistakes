@@ -1,0 +1,66 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "dynamic_imports": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/mixed-line.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: symbol consumers of `shared` include an unknown import selector: src/mixed-line.mts:3 `./mixed-line-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const both = [import(\"./mixed-line-target.mjs\").then((mod) => mod.shared), import(\"./mixed-line-target.mjs\")];",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unknown-consumer.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: symbol consumers of `unknownForm` include an unknown import selector: src/unknown-consumer.mts:3 `./unknown.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const unknownLoaded = import(\"./unknown.mjs\").then((mod) => mod[key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved-consumer.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: unresolved module selector `./missing.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const missingModule = import(\"./missing.mjs\").then((mod) => mod.X);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved-consumer.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: unresolved symbol `absent` from `./absent-target.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const missingMember = import(\"./absent-target.mjs\").then((mod) => mod.absent);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/wrapper-consumer.mts",
+          "line": 5,
+          "message": "cannot analyze production export importers: symbol consumers of `Retried` include an unknown import selector: src/wrapper-consumer.mts:5 `./retried.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const retried = retry(() => import(\"./retried.mjs\")).then((mod) => mod.Retried);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/wrapper-consumer.mts",
+          "line": 8,
+          "message": "cannot analyze production export importers: symbol consumers of `Wrapped` include an unknown import selector: src/wrapper-consumer.mts:8 `./wrapped.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "return await wrap(() => import(\"./wrapped.mjs\"));",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

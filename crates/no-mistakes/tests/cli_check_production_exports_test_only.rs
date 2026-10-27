@@ -307,3 +307,42 @@ fn type_references_do_not_consume_value_exports_snapshot() {
         )],
     );
 }
+
+#[test]
+fn dynamic_imports_check_json_snapshot() {
+    let output = check("dynamic-imports");
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(output.status.success(), "{report}");
+    // Proven dynamic selectors (`.then` member and destructure, a loader
+    // returning the import, awaited member and destructure) are production use.
+    assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
+    // A computed member read, an unresolved module, a missing member and an
+    // unproven import sharing a proven import's line keep their advisories.
+    let advisories = report["advisories"].as_array().unwrap();
+    let mut files: Vec<_> = advisories
+        .iter()
+        .map(|item| item["file"].as_str().unwrap().replace('\\', "/"))
+        .collect();
+    files.sort_unstable();
+    assert_eq!(
+        files,
+        [
+            "src/mixed-line.mts",
+            "src/unknown-consumer.mts",
+            "src/unresolved-consumer.mts",
+            "src/unresolved-consumer.mts",
+            "src/wrapper-consumer.mts",
+            "src/wrapper-consumer.mts",
+        ],
+        "{report}"
+    );
+    let root = crate::check_json_snapshot::rules_path(RULE, "fixture", "dynamic-imports");
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_dynamic_imports",
+        &[(
+            "dynamic_imports",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}
