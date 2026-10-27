@@ -20,7 +20,11 @@ impl Consumers {
     /// interface, alias or enum type is part of the production API. An export
     /// whose kind cannot be determined keeps its type-only importers as an
     /// advisory instead of silently dropping or counting them.
-    pub(super) fn settle(&mut self, kind: &ExportKind) -> BTreeSet<(PathBuf, NodeId)> {
+    pub(super) fn settle(
+        &mut self,
+        kind: &ExportKind,
+        is_test: impl Fn(&Path) -> bool,
+    ) -> BTreeSet<(PathBuf, NodeId)> {
         let typed = std::mem::take(&mut self.typed);
         match kind {
             ExportKind::Function | ExportKind::Const | ExportKind::Let | ExportKind::Var => {
@@ -33,7 +37,14 @@ impl Consumers {
                 self.files.extend(typed.into_iter().map(|(file, _)| file));
                 BTreeSet::new()
             }
-            ExportKind::Default | ExportKind::ReExport { .. } => typed,
+            ExportKind::Default | ExportKind::ReExport { .. } => {
+                // Test files are never production consumers, so their type
+                // references only need to count as test use of the export.
+                let (tests, production): (BTreeSet<_>, BTreeSet<_>) =
+                    typed.into_iter().partition(|(file, _)| is_test(file));
+                self.files.extend(tests.into_iter().map(|(file, _)| file));
+                production
+            }
         }
     }
 }

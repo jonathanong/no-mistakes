@@ -77,7 +77,7 @@ pub(crate) fn check_with_graph(
                         continue;
                     }
                     let mut consumers = traversal::consumers(graph, file, name);
-                    let undetermined = consumers.settle(&export.kind);
+                    let undetermined = consumers.settle(&export.kind, |file| options.test(file));
                     if consumers.files.iter().any(|file| !options.test(file)) {
                         continue;
                     }

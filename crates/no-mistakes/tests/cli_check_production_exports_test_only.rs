@@ -281,6 +281,7 @@ fn type_references_do_not_consume_value_exports_snapshot() {
             "fnNamespace",
             "fnQualified",
             "letValue",
+            "testOnlyDefault",
             "varValue",
         ],
         "{report}"
