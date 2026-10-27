@@ -6,7 +6,10 @@ use std::{path::PathBuf, sync::Arc};
 const EXPLICIT: &str = "postgres-explicit-columns";
 const REQUIRED: &str = "postgres-required-predicates";
 fn root() -> PathBuf {
-    crate::test_support::rule_fixture_root("postgres-low-policy")
+    // Resolver targets use normalized inventory identities, including imported helper files.
+    crate::codebase::ts_resolver::normalize_path(&crate::test_support::rule_fixture_root(
+        "postgres-low-policy",
+    ))
 }
 fn prepare(mixed: bool) -> (CheckFactMap, crate::config::v2::NoMistakesConfig) {
     prepare_mode(mixed, false)
