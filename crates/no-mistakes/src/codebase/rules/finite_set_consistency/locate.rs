@@ -1,7 +1,9 @@
 //! Best-effort 1-based source line of the key or declaration a set was read
 //! from, so findings point at the compared YAML/JSON key or TS declaration
-//! instead of line 1. Falls back to the closest ancestor found, then 1.
+//! instead of line 1. An unresolved key falls back to the nearest resolved
+//! ancestor, then line 1; it is never matched at the wrong depth.
 
+use super::comments::{strip_comments, strip_sql_comments};
 use super::SetSpec;
 use regex::Regex;
 
@@ -18,119 +20,181 @@ pub(super) fn set_line(spec: &SetSpec, source: &str) -> usize {
         | "ts-const-object-keys"
         | "ts-const-object-property"
         | "ts-array-literal"
-        | "ts-const-array-property"
-        | "sql-enum" => declaration_line(source, &spec.target),
+        | "ts-const-array-property" => declaration_line(
+            &strip_comments(source),
+            r"\b(?:type|const|let|var|enum|interface|function|class)\s+",
+            &spec.target,
+        ),
+        "sql-enum" => declaration_line(
+            &strip_sql_comments(source),
+            r"(?i)\bCREATE\s+TYPE\s+",
+            &spec.target,
+        ),
         _ => 1,
     }
 }
 
-fn declaration_line(source: &str, target: &str) -> usize {
+/// `source` has comments removed with newlines kept, so offsets map to lines.
+fn declaration_line(source: &str, prefix: &str, target: &str) -> usize {
     if target.is_empty() {
         return 1;
     }
-    let name = regex::escape(target);
-    let decl = format!(r"\b(type|const|let|var|enum|interface|function|class)\s+{name}\b");
-    [decl, format!(r"\b{name}\b")]
-        .iter()
-        .map(|pattern| Regex::new(pattern).expect("escaped target forms a valid pattern"))
-        .find_map(|re| source.lines().position(|line| re.is_match(line)))
-        .map_or(1, |index| index + 1)
+    let pattern = format!(r"{prefix}{}\b", regex::escape(target));
+    Regex::new(&pattern)
+        .ok()
+        .and_then(|re| re.find(source))
+        .map_or(1, |found| source[..found.start()].matches('\n').count() + 1)
 }
 
-/// Lines that belong to the value opened by the previously matched segment.
-#[derive(Clone, Copy)]
-struct Region {
-    /// First line to search (inclusive).
-    start: usize,
-    /// Indent of the line that opened the region.
-    base: usize,
-    /// A list may sit at the same indent as its parent key.
-    allow_sibling_dash: bool,
+/// A content line outside comments and block scalar bodies.
+struct Entry<'a> {
+    line: usize,
+    indent: usize,
+    /// Column where the mapping key starts, after any `- ` markers.
+    col: usize,
+    dash: bool,
+    text: &'a str,
 }
 
-fn indent(line: &str) -> usize {
-    line.len() - line.trim_start().len()
-}
-
-fn is_content(line: &str) -> bool {
-    let trimmed = line.trim_start();
-    !trimmed.is_empty() && !trimmed.starts_with('#')
-}
-
-fn is_dash(line: &str) -> bool {
-    let trimmed = line.trim_start();
-    trimmed == "-" || trimmed.starts_with("- ")
-}
-
-fn inside(line: &str, region: Option<Region>) -> bool {
-    region.is_none_or(|region| {
-        indent(line) > region.base
-            || (region.allow_sibling_dash && indent(line) == region.base && is_dash(line))
-    })
-}
-
-fn key_matches(line: &str, key: &str) -> bool {
-    let mut rest = line.trim_start();
-    while let Some(next) = rest.strip_prefix("- ") {
-        rest = next.trim_start();
+fn entries(source: &str) -> Vec<Entry<'_>> {
+    let mut out: Vec<Entry<'_>> = Vec::new();
+    let mut block: Option<usize> = None;
+    for (index, raw) in source.lines().enumerate() {
+        let trimmed = raw.trim_start();
+        if trimmed.is_empty() {
+            continue;
+        }
+        let indent = raw.len() - trimmed.len();
+        if block.is_some_and(|col| indent > col) {
+            continue;
+        }
+        block = None;
+        if trimmed.starts_with('#') {
+            continue;
+        }
+        let mut col = indent;
+        let mut text = trimmed;
+        let dash = text == "-" || text.starts_with("- ");
+        while let Some(next) = text.strip_prefix("- ") {
+            let rest = next.trim_start();
+            col += text.len() - rest.len();
+            text = rest;
+        }
+        if text == "-" {
+            text = "";
+        }
+        if opens_block_scalar(text) {
+            block = Some(col);
+        }
+        out.push(Entry {
+            line: index + 1,
+            indent,
+            col,
+            dash,
+            text,
+        });
     }
+    out
+}
+
+fn opens_block_scalar(text: &str) -> bool {
+    let value = text.rsplit_once(": ").map_or(text, |(_, value)| value);
+    let mut chars = value.trim_end().chars();
+    matches!(chars.next(), Some('|' | '>'))
+        && chars.all(|c| c == '+' || c == '-' || c.is_ascii_digit())
+}
+
+fn key_matches(text: &str, key: &str) -> bool {
     [
         format!("{key}:"),
         format!("\"{key}\":"),
         format!("'{key}':"),
     ]
     .iter()
-    .any(|prefix| rest.starts_with(prefix.as_str()))
+    .any(|prefix| {
+        text.strip_prefix(prefix.as_str())
+            .is_some_and(|rest| rest.is_empty() || rest.starts_with(char::is_whitespace))
+    })
+}
+
+/// Entries owned by the previously matched segment.
+#[derive(Clone, Copy)]
+struct Scope<'a, 'b> {
+    entries: &'b [Entry<'a>],
+    /// The first entry is a `- ` item line whose inline key is a direct child.
+    item: bool,
 }
 
 fn yaml_key_line(source: &str, path: &[String]) -> usize {
-    let lines = source.lines().collect::<Vec<_>>();
-    let mut region = None;
+    let all = entries(source);
+    // A JSON document opens with a bare brace; its keys are the next level.
+    let start = usize::from(all.first().is_some_and(|first| first.text == "{"));
+    let mut scope = Scope {
+        entries: &all[start..],
+        item: false,
+    };
     let mut found = 1;
     for segment in path {
         let hit = match segment.parse::<usize>() {
-            Ok(nth) => nth_item(&lines, region, nth).map(|at| (at, false)),
-            Err(_) => find_key(&lines, region, segment).map(|at| (at, true)),
+            Ok(nth) => nth_item(scope, nth),
+            Err(_) => find_key(scope, segment),
         };
-        let Some((at, is_key)) = hit else {
+        let Some((line, next)) = hit else {
             break;
         };
-        found = at + 1;
-        region = Some(Region {
-            start: if is_key { at + 1 } else { at },
-            base: indent(lines[at]),
-            allow_sibling_dash: is_key,
-        });
+        found = line;
+        scope = next;
     }
     found
 }
 
-fn region_lines<'a>(
-    lines: &'a [&'a str],
-    region: Option<Region>,
-) -> impl Iterator<Item = (usize, &'a str)> + 'a {
-    let start = region.map_or(0, |region| region.start);
-    lines
+/// Direct child mapping key `key` of `scope`, with the value scope it owns.
+fn find_key<'a, 'b>(scope: Scope<'a, 'b>, key: &str) -> Option<(usize, Scope<'a, 'b>)> {
+    let region = scope.entries;
+    let first = region.first()?;
+    let level = match (scope.item, first.text.is_empty()) {
+        (true, false) => first.col,
+        (true, true) => region.get(1)?.indent,
+        (false, _) if first.dash => return None,
+        (false, _) => first.indent,
+    };
+    let at = region.iter().enumerate().position(|(index, entry)| {
+        let direct = if scope.item && index == 0 {
+            entry.col == level
+        } else {
+            entry.indent == level && !entry.dash
+        };
+        direct && key_matches(entry.text, key)
+    })?;
+    let owner = &region[at];
+    let end = region[at + 1..]
         .iter()
-        .copied()
+        .position(|entry| !(entry.indent > owner.col || (entry.indent == owner.col && entry.dash)))
+        .map_or(region.len(), |offset| at + 1 + offset);
+    let next = Scope {
+        entries: &region[at + 1..end],
+        item: false,
+    };
+    Some((owner.line, next))
+}
+
+/// The `nth` direct `- ` item of `scope`, including its own line.
+fn nth_item<'a, 'b>(scope: Scope<'a, 'b>, nth: usize) -> Option<(usize, Scope<'a, 'b>)> {
+    let region = scope.entries;
+    let level = region.first().filter(|entry| entry.dash)?.indent;
+    let at = region
+        .iter()
         .enumerate()
-        .skip(start)
-        .filter(|(_, line)| is_content(line))
-        .take_while(move |(at, line)| *at == start || inside(line, region))
-}
-
-fn find_key(lines: &[&str], region: Option<Region>, key: &str) -> Option<usize> {
-    region_lines(lines, region)
-        .find(|(_, line)| key_matches(line, key))
-        .map(|(at, _)| at)
-}
-
-fn nth_item(lines: &[&str], region: Option<Region>, nth: usize) -> Option<usize> {
-    let mut list_indent = None;
-    region_lines(lines, region)
-        .filter(|(_, line)| {
-            is_dash(line) && *list_indent.get_or_insert(indent(line)) == indent(line)
-        })
-        .nth(nth)
-        .map(|(at, _)| at)
+        .filter(|(_, entry)| entry.dash && entry.indent == level)
+        .map(|(index, _)| index)
+        .nth(nth)?;
+    let end = region[at + 1..]
+        .iter()
+        .position(|entry| entry.indent <= level)
+        .map_or(region.len(), |offset| at + 1 + offset);
+    let next = Scope {
+        entries: &region[at..end],
+        item: true,
+    };
+    Some((region[at].line, next))
 }
