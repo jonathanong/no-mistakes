@@ -391,6 +391,11 @@ fn rust_doc_fences_join_attributes_across_gaps_and_keep_trailing_doc_directives(
                 DisableDirective::NextLine { line: 12 },
                 true
             ),
+            (
+                "indented-unfenced-doc".into(),
+                DisableDirective::Line { line: 15 },
+                true
+            ),
         ]
     );
 }

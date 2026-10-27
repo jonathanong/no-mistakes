@@ -11,3 +11,6 @@ fn target() {}
 /// no-mistakes-disable-line	tab-separator: rejected by the directive grammar
 /// no-mistakes-disable-next-line  	spaced-rule	with reason
 fn after_whitespace() {}
+// Indentation alone is not the explicitly fenced example exemption.
+///     no-mistakes-disable-line indented-unfenced-doc
+fn after_indented_doc() {}

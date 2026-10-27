@@ -1,6 +1,6 @@
 //! Audit Rust line documentation without making it an effective suppression.
 use super::super::{DisableDirective, NamedDisableDirective};
-use pulldown_cmark::{Event, Options, Parser, Tag};
+use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
 
 pub(super) fn directives(comments: &str) -> Vec<NamedDisableDirective> {
     let mut found = Vec::new();
@@ -52,7 +52,11 @@ fn collect(lines: &[(u32, &str)], found: &mut Vec<NamedDisableDirective>) {
     let mut code = Parser::new_ext(&markdown, Options::all())
         .into_offset_iter()
         .filter_map(|(event, range)| {
-            matches!(event, Event::Start(Tag::CodeBlock(_))).then_some(range)
+            matches!(
+                event,
+                Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(_)))
+            )
+            .then_some(range)
         })
         .peekable();
     let mut offset = 0;
