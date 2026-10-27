@@ -1,2 +1,2 @@
-// Import type selectors are conservatively unknown without a named binding.
-export type Compound = import('./source.mjs').Contract;
+// A bare module type carries no member name, so it is conservatively unknown.
+export type Compound = typeof import('./source.mjs');

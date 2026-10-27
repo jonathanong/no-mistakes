@@ -63,6 +63,41 @@ the test-only implementation to a configured helper root, or add a genuine
 production consumer. There is no automatic fix because moving or removing public
 APIs requires a design decision.
 
+## Type-only selectors
+
+Type-only imports name the export they read, so they are proven selectors rather
+than unknown ones. The same consumer rules apply as for `import { X }`; a type
+import neither hides nor invents a consumer.
+
+Proven (no advisory):
+
+```ts
+import type { Shape } from "./shapes.mjs"; // import type { X }
+import { type Shape } from "./shapes.mjs"; // inline type specifier
+import { value, type Shape } from "./shapes.mjs"; // mixed value and type
+export type { Shape } from "./shapes.mjs"; // type re-export (chains too)
+export type Round = import("./shapes.mjs").Circle; // import("x").Name
+import type * as Shapes from "./shapes.mjs"; // used only as Shapes.Circle
+export type Round = Shapes.Circle;
+```
+
+An `import type * as ns` counts exactly the members read as `ns.Member`
+(including `typeof ns.member`); other members of the module are not consumed.
+`import("x").A.B` consumes `A`.
+
+Still unresolved (reported or advised per `unanalyzable`):
+
+```ts
+export type Whole = typeof import("./shapes.mjs"); // bare module type, no member name
+import type * as Shapes from "./shapes.mjs";
+export type All = typeof Shapes; // namespace escapes as a whole
+export type Gone = Shapes.Absent; // member the module does not export
+import type { Gone } from "./missing.mjs"; // module that does not resolve
+```
+
+Rewrite these with explicit named type imports. An unused `import type * as ns`
+also stays unresolved because it names no member.
+
 ## Options and defaults
 
 - `productionRoots`: required nonempty list of explicit production directories or

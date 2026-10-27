@@ -1,0 +1,11 @@
+import type * as ns from "./a";
+import type * as whole from "./b";
+import type * as unused from "./c";
+import * as runtime from "./e";
+export type A = ns.X;
+export type B = typeof ns.y;
+export type C = ns.Sub.Z;
+export type D = typeof whole;
+export type E = import("./d").P.Q;
+export type F = import("./d");
+export const value = runtime;

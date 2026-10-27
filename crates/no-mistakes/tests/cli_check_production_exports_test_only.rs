@@ -201,3 +201,58 @@ fn mock_controls_check_json_snapshot() {
         &[("mock_controls", root.clone(), root.join(".no-mistakes.yml"))],
     );
 }
+
+#[test]
+fn type_imports_check_json_snapshot() {
+    let output = check("type-imports");
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(output.status.code(), Some(1), "{report}");
+    // Proven type selectors (named, inline, re-export chain, mixed, qualified
+    // and `import type * as`) leave only their test-only members reported.
+    let mut targets: Vec<_> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["target"].as_str().unwrap())
+        .collect();
+    targets.sort_unstable();
+    assert_eq!(
+        targets,
+        [
+            "ChainTestOnly",
+            "NamedTestOnly",
+            "PresentType",
+            "QualifiedTestOnly",
+            "Square",
+            "mixedTestOnlyValue",
+        ],
+        "{report}"
+    );
+    // A bare module type, an escaping namespace, a missing member and a missing
+    // module stay unresolved instead of being dropped.
+    let advisories = report["advisories"].as_array().unwrap();
+    for (file, reason) in [
+        ("other/whole-module.mts", "type import selector"),
+        ("other/whole-namespace.mts", "namespace selector"),
+        ("other/missing-member.mts", "unresolved symbol `Absent`"),
+        ("other/unresolved-module.mts", "unresolved module selector"),
+    ] {
+        assert!(
+            advisories.iter().any(|item| {
+                item["file"]
+                    .as_str()
+                    .unwrap()
+                    .replace('\\', "/")
+                    .ends_with(file)
+                    && item.to_string().contains(reason)
+            }),
+            "missing unresolved advisory for {file}: {report}"
+        );
+    }
+    assert_eq!(advisories.len(), 4, "{report}");
+    let root = crate::check_json_snapshot::rules_path(RULE, "fixture", "type-imports");
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_type_imports",
+        &[("type_imports", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}

@@ -134,6 +134,19 @@ fn type_import_references_are_unknown_but_assets_are_outside_the_export_catalog(
         NodeId::file(dir.path().join("source.mts")),
         EdgeKind::SymbolImportUnknown
     ));
+    // `import('x').Name` is a proven symbol consumer, not an unknown selector.
+    let qualified = NodeId::file(dir.path().join("type-qualified.mts"));
+    assert!(has_edge(
+        &graph,
+        qualified.clone(),
+        NodeId::symbol(dir.path().join("source.mts"), "Contract"),
+        EdgeKind::SymbolImport
+    ));
+    assert!(graph
+        .dependencies_of_node(&qualified)
+        .into_iter()
+        .flatten()
+        .all(|(_, kind)| *kind != EdgeKind::SymbolImportUnknown));
     assert!(graph
         .dependencies_of_node(&NodeId::file(dir.path().join("asset.mts")))
         .into_iter()

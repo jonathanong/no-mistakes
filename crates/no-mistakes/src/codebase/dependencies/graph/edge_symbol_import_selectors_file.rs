@@ -65,6 +65,12 @@ fn collect_symbol_import_selectors_file(
             continue;
         }
         if import.imported == "*" {
+            // A type namespace used only as `ns.Member` is resolved to its members.
+            if import.is_type_only
+                && type_namespace_members(file_facts, &import.source, &import.local).is_some()
+            {
+                continue;
+            }
             selector_unknown(
                 &inputs,
                 &import.source,
@@ -113,29 +119,7 @@ fn collect_symbol_import_selectors_file(
             }
         }
     }
-    // The semantic import record distinguishes declarations from TS import()
-    // references by binding identity, independent of declaration/specifier lines.
-    for module in file_facts.module_bindings.iter() {
-        for import in module
-            .imports
-            .iter()
-            .filter(|import| import.type_only && import.bindings.is_empty())
-        {
-            selector_unknown(
-                &inputs,
-                &import.specifier,
-                file_facts.source.as_deref().map_or(1, |source| {
-                    crate::codebase::ts_source::byte_offset_to_line(
-                        source,
-                        import.span.start as usize,
-                    ) as usize
-                }),
-                "type import selector",
-                &mut edges,
-                &mut sites,
-            );
-        }
-    }
+    collect_type_import_selectors(&inputs, file_facts, exported, &mut edges, &mut sites);
     let mock_sites = typed_mock_import_sites(file_facts);
     for import in &file_facts.imports {
         if !import.computed
