@@ -46,8 +46,10 @@ rules:
     severity: advisory
 ```
 
-Severity is applied after suppression directives, to the findings the rule
-puts in the `rules` and `codebase` sections of the check report. When a rule
+Severity applies to the findings the rule puts in the `rules` and `codebase`
+sections of the check report. Disable directives suppress an advisory rule's
+findings exactly as they do an `error` rule's, so a suppressed finding appears
+only in `suppressed`. When a rule
 has several enabled applications, its findings are advisory only if every
 application is `advisory`; one `error` application keeps the rule failing.
 A demoted `unique-exports` finding is converted to a rule finding, so it loses

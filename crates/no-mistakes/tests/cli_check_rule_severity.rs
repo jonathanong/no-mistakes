@@ -99,8 +99,9 @@ fn advisory_severity_moves_codebase_findings_to_advisories() {
 }
 
 #[test]
-fn suppression_runs_before_advisory_demotion() {
-    // The disable directive must win: the finding is only in `suppressed`.
+fn suppressed_advisory_rule_findings_land_only_in_suppressed() {
+    // Order-independent: suppression covers both `rules` and `advisories`, so
+    // the result is the same whether demotion runs before or after it.
     let (out, report) = check_with("rule-severity-suppressed", &["--include-suppressed"]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(len(&report, "rules"), 0, "{report}");
