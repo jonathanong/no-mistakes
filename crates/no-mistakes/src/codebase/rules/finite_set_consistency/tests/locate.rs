@@ -156,6 +156,27 @@ fn json_keys_match_without_space_after_colon() {
 }
 
 #[test]
+fn json_walk_skips_comments_scalars_and_nested_values() {
+    let source =
+        "{\n // c\n /* b\n */ 'a': 1,\n \"b\": [true, -1.5, \"s}\", {\"x\\\"\": [ ]}],\n \"c\": 1}";
+    assert_eq!(yaml("a", source), 4);
+    assert_eq!(yaml("c", source), 6);
+    // Descending into a scalar keeps the line of the last resolved ancestor.
+    assert_eq!(yaml("a.b", source), 4);
+    assert_eq!(yaml("b.9", source), 5);
+}
+
+#[test]
+fn json_walk_never_guesses_in_malformed_text() {
+    assert_eq!(yaml("b", "{\n  \"a\": \"x"), 1);
+    assert_eq!(yaml("b", "{\n  \"a\" 1\n}"), 1);
+    assert_eq!(yaml("b", "{ /* open\n \"a\": 1"), 1);
+    assert_eq!(yaml("b", "{\n  \"a\": [1, 2\n"), 1);
+    // A resolved ancestor survives a later parse failure.
+    assert_eq!(yaml("a.z", "{\n  \"a\": {\n    \"b\": \"x\n"), 2);
+}
+
+#[test]
 fn yaml_block_scalar_header_may_carry_a_comment() {
     let source = "run: | # note\n  a: not a key\nb: >- # c\n  c: nope\na:\n  - 1\n";
     assert_eq!(yaml("a", source), 5);
