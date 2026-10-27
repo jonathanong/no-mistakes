@@ -10,6 +10,16 @@ pub(super) fn restore(proofs: &mut Proofs, count: usize, original: &Proofs) {
 }
 
 pub(super) fn unchanged(proofs: &mut Proofs, current: &Proofs, before: &[Scope], after: &[Scope]) {
+    unchanged_with_reads(proofs, current, before, after, std::mem::drop);
+}
+
+fn unchanged_with_reads(
+    proofs: &mut Proofs,
+    current: &Proofs,
+    before: &[Scope],
+    after: &[Scope],
+    mut read: impl FnMut(()),
+) {
     for (env, names) in proofs {
         let fresh = current.get(env);
         // Empty/nonfresh sets never indexed the scope slices. Keep that proof
@@ -18,8 +28,7 @@ pub(super) fn unchanged(proofs: &mut Proofs, current: &Proofs, before: &[Scope],
         names.retain(|name| {
             fresh.is_some_and(|fresh| fresh.contains(name))
                 && (*shared.get_or_insert_with(|| before[*env].same_bindings(&after[*env])) || {
-                    #[cfg(test)]
-                    tests::record_binding_reads();
+                    read(());
                     before[*env].get(name) == after[*env].get(name)
                 })
         });

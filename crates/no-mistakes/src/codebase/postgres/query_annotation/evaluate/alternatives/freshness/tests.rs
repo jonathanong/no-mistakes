@@ -1,11 +1,5 @@
 use super::*;
 use crate::codebase::postgres::query_annotation::evaluate::Value;
-use std::cell::Cell;
-
-thread_local! { static READS: Cell<usize> = const { Cell::new(0) }; }
-pub(super) fn record_binding_reads() {
-    READS.set(READS.get() + 2);
-}
 fn proofs(names: &[&str]) -> Proofs {
     FxHashMap::from_iter([(0, names.iter().map(|name| (*name).into()).collect())])
 }
@@ -32,14 +26,17 @@ fn compare(
             }
         });
     }
+    let mut production = initial.clone();
+    unchanged(&mut production, current, before, after);
     let mut new = initial;
-    READS.set(0);
-    unchanged(&mut new, current, before, after);
+    let mut new_reads = 0;
+    unchanged_with_reads(&mut new, current, before, after, |()| new_reads += 2);
+    assert_eq!(new, production);
     assert_eq!(
         new, old,
         "the entire proof table, including empty sets, is unchanged"
     );
-    (new, reads, READS.get())
+    (new, reads, new_reads)
 }
 
 #[test]
