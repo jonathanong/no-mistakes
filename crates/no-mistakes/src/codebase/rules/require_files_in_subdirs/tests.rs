@@ -206,11 +206,14 @@ fn check_with_files_empty_packages_is_noop() {
 #[test]
 fn check_standalone_with_packages_discovers_files() {
     // Exercises lines 34-35 of check(): non-empty packages → discover_files.
-    // The required package.json is present, so discovery produces no finding.
-    let root = fixture("email-package-only");
+    // Copy the saved tree into a temp dir outside this checkout. `git ls-files`
+    // fails there, so discovery takes the non-git fallback walk this test used
+    // before the fixture lived inside the repo. package.json is present, so
+    // that walk produces no finding.
+    let tmp = crate::test_support::materialize_saved_fixture(&fixture("email-package-only"));
     let yaml = "packages:\n  - root: queues\n    requiredFiles: [package.json]";
     let config = config_with_rule(yaml);
-    let findings = check(&root, &config).unwrap();
+    let findings = check(tmp.path(), &config).unwrap();
     assert!(findings.is_empty());
 }
 

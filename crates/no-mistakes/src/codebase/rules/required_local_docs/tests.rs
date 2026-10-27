@@ -455,6 +455,7 @@ fn doc_section_findings_sorted() {
     });
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let findings = check_required_doc_section_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 3);
     for i in 1..findings.len() {
         assert!(findings[i - 1] <= findings[i]);
     }
