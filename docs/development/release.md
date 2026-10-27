@@ -18,8 +18,7 @@ resume the same tagged version to complete the release instead of bumping again.
 
 ## Timing evidence
 
-In [release run 38311606218](https://github.com/jonathanong/no-mistakes/actions/runs/38311606218)
-(release source `df841544b515984395cb5f349ae5fc5cb1f84d97`, version `0.87.3`),
+In release run 38311606218 (since expired from GitHub Actions; release source `df841544b515984395cb5f349ae5fc5cb1f84d97`, version `0.87.3`),
 validation finished at
 21:58:18 UTC, the final native build at 22:07:00 UTC, and the Publish job ran
 from 22:07:03 to 22:16:05 UTC. Its Cargo publishing step alone took 211 seconds
