@@ -12,7 +12,7 @@ pub(in crate::codebase::postgres::query_annotation) type CapturedBindings =
 /// Out-of-range IDs deliberately fail closed to the snapshot fallback.
 pub(super) fn prefix_is_unchanged(bindings: &CapturedBindings, base: Environment) -> bool {
     bindings.iter().all(|(owner, origins)| {
-        *owner < base && origins.max_origin().map_or(true, |origin| origin < base)
+        *owner < base && origins.max_origin().is_none_or(|origin| origin < base)
     })
 }
 
