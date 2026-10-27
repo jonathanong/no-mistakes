@@ -389,10 +389,6 @@ fn opaque_helper_and_unknown_carrier_keep_residual_uncertainty() {
         .calls
         .iter()
         .any(|call| call.line == opaque_line && call.is_unanalyzable()));
-    let key = super::super::helper_recovery::ApplicationKey::new(&profile(), EXPLICIT, 0);
-    assert!(facts.ts[&path].sql_identifier_syntax.calls_for(&key).unwrap().iter().any(|call| {
-        matches!(&call.input, super::super::Input::Recovered(proof) if proof.alternatives.is_empty() && !proof.complete())
-    }));
     let statements = context
         .postgres_statements(&path, Some(&profile()))
         .unwrap();

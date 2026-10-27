@@ -79,12 +79,14 @@ pub(super) fn build(
                     locate(&mut statement, path, call.line, index, 0);
                     out.statements.push(statement);
                 } else {
-                    let statements = recovered.get(&(key.clone(), call.span));
-                    for (variant_index, version) in projected.statement_calls().enumerate() {
-                        let Some(statement) = statements.and_then(|items| items.get(variant_index))
-                        else {
-                            continue;
-                        };
+                    // The request cache records every recovered call and retains one
+                    // fact payload per alternative, including partially invalid SQL.
+                    let statements = recovered
+                        .get(&(key.clone(), call.span))
+                        .expect("recovered SQL calls have prepared statement alternatives");
+                    for (variant_index, (version, statement)) in
+                        projected.statement_calls().zip(statements).enumerate()
+                    {
                         let mut statement = (**statement).clone();
                         crate::codebase::postgres::collect::dml::rebase_embedded_lines(
                             &mut statement,
