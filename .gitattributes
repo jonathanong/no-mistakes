@@ -1,4 +1,8 @@
 *.snap text eol=lf
+# Bytes from these fixtures are span-counted or quoted into check JSON.
+# Windows autocrlf would move the span and embed CR in the TOML error.
+test-cases/rules/forbidden-calls/malformed-roots/fixture/src/broken.mts text eol=lf
+test-cases/rules/version-pin-consistency/fixture/unavailable-source/versions.toml text eol=lf
 fixtures/rules/disable-directive-audit/boundaries-crlf.rs -text -whitespace
 fixtures/rules/markdown-structure-budget/exact-crlf.md -text -whitespace
 fixtures/postgres-facts/source/operator-line-comment-boundaries.sql -text -whitespace

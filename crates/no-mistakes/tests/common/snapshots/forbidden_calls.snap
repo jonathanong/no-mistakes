@@ -472,7 +472,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [],
       "warnings": [
-        "warning: rules check skipped: forbidden-calls: configured root `src/broken.mts` failed to parse: parsing <root>/src/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `)` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`)` expected\"), span: Span { start: 100, end: 100 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+        "warning: rules check skipped: forbidden-calls: configured root `src/broken.mts` failed to parse: parsing src/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `)` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`)` expected\"), span: Span { start: 100, end: 100 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
       ]
     }
   },

@@ -40,7 +40,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "admin/pnpm-lock.yaml",
           "line": 1,
-          "message": "admin/pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "message": "admin/pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: <io-error>. Repair the manifest or restore read access.",
           "rule": "package-json-registry-only",
           "target": "unanalyzable"
         }
@@ -77,7 +77,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "admin/pnpm-lock.yaml",
           "line": 1,
-          "message": "admin/pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "message": "admin/pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: <io-error>. Repair the manifest or restore read access.",
           "rule": "package-json-registry-only",
           "target": "unanalyzable"
         }
@@ -361,7 +361,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "nonexistent.yaml",
           "line": 1,
-          "message": "nonexistent.yaml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "message": "nonexistent.yaml: cannot verify dependency policy because this manifest could not be read or parsed: <io-error>. Repair the manifest or restore read access.",
           "rule": "package-json-registry-only",
           "target": "unanalyzable"
         }

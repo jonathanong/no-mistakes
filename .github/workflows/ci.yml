@@ -530,7 +530,7 @@ jobs:
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
 
       - name: Run platform-specific Rust tests
-        timeout-minutes: 20
+        timeout-minutes: 10
         shell: bash
         env:
           # Match the preceding build's N-API setting; Cargo may still

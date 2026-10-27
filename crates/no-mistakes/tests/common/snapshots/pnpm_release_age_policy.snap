@@ -300,7 +300,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "missing-lock.yaml",
           "line": 1,
-          "message": "missing-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: pnpm lockfile could not be read: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "message": "missing-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: pnpm lockfile could not be read: <io-error>. Repair the manifest or restore read access.",
           "rule": "pnpm-release-age-policy",
           "target": "unanalyzable"
         }
@@ -432,7 +432,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/dependabot.yml",
           "line": 1,
-          "message": ".github/dependabot.yml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "message": ".github/dependabot.yml: cannot verify dependency policy because this manifest could not be read or parsed: <io-error>. Repair the manifest or restore read access.",
           "rule": "pnpm-release-age-policy",
           "target": "unanalyzable"
         },
@@ -459,7 +459,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/dependabot.yml",
           "line": 1,
-          "message": ".github/dependabot.yml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "message": ".github/dependabot.yml: cannot verify dependency policy because this manifest could not be read or parsed: <io-error>. Repair the manifest or restore read access.",
           "rule": "pnpm-release-age-policy",
           "target": "unanalyzable"
         }
@@ -479,7 +479,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/dependabot.yml",
           "line": 1,
-          "message": ".github/dependabot.yml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "message": ".github/dependabot.yml: cannot verify dependency policy because this manifest could not be read or parsed: <io-error>. Repair the manifest or restore read access.",
           "rule": "pnpm-release-age-policy",
           "target": "unanalyzable"
         }
