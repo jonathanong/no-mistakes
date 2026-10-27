@@ -1,0 +1,6 @@
+rules:
+  - rule: no-empty-or-comments-only-files
+    severity: advisory
+    scope: repository
+    options:
+      extensions: [".ts"]

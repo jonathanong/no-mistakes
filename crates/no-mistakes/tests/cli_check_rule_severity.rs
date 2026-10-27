@@ -9,6 +9,10 @@ fn root(scenario: &str) -> PathBuf {
 }
 
 fn check(scenario: &str) -> (Output, serde_json::Value) {
+    check_with(scenario, &[])
+}
+
+fn check_with(scenario: &str, extra: &[&str]) -> (Output, serde_json::Value) {
     let root = root(scenario);
     let out = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args(["check", "--root"])
@@ -16,6 +20,7 @@ fn check(scenario: &str) -> (Output, serde_json::Value) {
         .arg("--config")
         .arg(root.join(".no-mistakes.yml"))
         .args(["--format", "json"])
+        .args(extra)
         .output()
         .unwrap();
     let report = serde_json::from_slice(&out.stdout).unwrap_or(serde_json::Value::Null);
@@ -91,4 +96,16 @@ fn advisory_severity_moves_codebase_findings_to_advisories() {
     let advisories = report["advisories"].as_array().unwrap();
     assert!(!advisories.is_empty(), "{report}");
     assert!(advisories.iter().all(|a| a["rule"] == "unique-exports"));
+}
+
+#[test]
+fn suppression_runs_before_advisory_demotion() {
+    // The disable directive must win: the finding is only in `suppressed`.
+    let (out, report) = check_with("rule-severity-suppressed", &["--include-suppressed"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(len(&report, "rules"), 0, "{report}");
+    assert_eq!(len(&report, "advisories"), 0, "{report}");
+    let suppressed = report["suppressed"].as_array().unwrap();
+    assert_eq!(suppressed.len(), 1, "{report}");
+    assert_eq!(suppressed[0]["rule"], "no-empty-or-comments-only-files");
 }
