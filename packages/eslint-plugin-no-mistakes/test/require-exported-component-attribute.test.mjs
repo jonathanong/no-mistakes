@@ -1,23 +1,21 @@
-import { RuleTester } from "eslint";
 import assert from "node:assert/strict";
-import { afterAll, describe, it } from "vitest";
-import rule from "../src/rules/playwright-require-exported-component-attribute.js";
-import { messages, plugin } from "./helpers.mjs";
+import { expect, it } from "vitest";
+import {
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+  snapshotSuite,
+} from "./diagnostic-snapshot.mjs";
+import { plugin } from "./helpers.mjs";
 
-RuleTester.describe = describe;
-RuleTester.it = it;
-RuleTester.itOnly = it.only;
-RuleTester.afterAll = afterAll;
+const ruleName = "playwright-require-exported-component-attribute";
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 
-const tester = new RuleTester({
-  languageOptions: {
-    ecmaVersion: 2024,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-tester.run("playwright-require-exported-component-attribute", rule, {
+const suite = {
   valid: [
     { code: "export function Button() { return <button data-pw='save' />; }" },
     { code: "export const Button = () => <button><span data-pw='save' /></button>;" },
@@ -75,84 +73,73 @@ tester.run("playwright-require-exported-component-attribute", rule, {
   invalid: [
     {
       code: "export function Button() { return <button />; }",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "export const Button = () => <button />;",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "function Button() { return <button />; } export { Button };",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "export default function Button() { return <button />; }",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "function Button() { return <button />; } export { Button as default };",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "const Button = memo(forwardRef(() => <button />)); export { Button };",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "export function Button() { if (ready) return <button />; return <button data-pw='save' />; }",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "export function Button() { return ready ? <button /> : <button data-pw='save' />; }",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "export function Button() { function helper() { return <button data-pw='nested' />; } return <button />; }",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "export function Button() { return <button aria-label='Save' />; }",
       options: [{ attributes: ["data-pw"] }],
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "export default function () { return <button />; }",
       options: [{ checkAnonymousDefault: true }],
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "export function Button() { return <button {...props} />; }",
-      errors: [{ messageId: "missing" }],
     },
     {
       code: "export function SaveButton() { return <button />; } export function CancelLink() { return <a data-pw='cancel' />; }",
       options: [{ components: ["/Button$/"] }],
-      errors: [{ messageId: "missing" }],
     },
   ],
+};
+
+it("snapshots playwright-require-exported-component-attribute diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      messages: snapshotCases([
+        {
+          findings: pluginFindings(
+            "export function Button() { return ready ? <button /> : <a />; }",
+            ruleName,
+          ),
+          name: "reports one missing branch per JSX return branch",
+        },
+        {
+          findings: pluginFindings(
+            "export function Button() { return ready ? <button data-pw='save' /> : null; }",
+            ruleName,
+          ),
+          name: "ignores null branches",
+        },
+      ]),
+      ruleTester: snapshotSuite(ruleName, languageOptions, suite),
+    }),
+  ).toMatchFileSnapshot("snapshots/require-exported-component-attribute.snap");
 });
 
-describe("require-exported-component-attribute", () => {
-  it("is exported by the plugin", () => {
-    assert.ok(plugin.rules["playwright-require-exported-component-attribute"]);
-  });
-
-  it("reports one missing branch per JSX return branch", () => {
-    assert.deepEqual(
-      messages(
-        "export function Button() { return ready ? <button /> : <a />; }",
-        "playwright-require-exported-component-attribute",
-      ),
-      ["missing", "missing"],
-    );
-  });
-
-  it("ignores null branches", () => {
-    assert.deepEqual(
-      messages(
-        "export function Button() { return ready ? <button data-pw='save' /> : null; }",
-        "playwright-require-exported-component-attribute",
-      ),
-      [],
-    );
-  });
+it("is exported by the plugin", () => {
+  assert.ok(plugin.rules["playwright-require-exported-component-attribute"]);
 });

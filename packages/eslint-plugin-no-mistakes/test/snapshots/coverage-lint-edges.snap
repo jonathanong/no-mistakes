@@ -1,0 +1,16 @@
+[
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "Button data-pw",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "name": "lowercase button",
+    "options": null,
+    "rule": "playwright-require-exported-component-attribute"
+  }
+]

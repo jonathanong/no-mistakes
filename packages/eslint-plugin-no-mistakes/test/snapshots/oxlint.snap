@@ -1,0 +1,39 @@
+[
+  {
+    "file": "fixture.jsx",
+    "findings": [
+      {
+        "code": "no-mistakes(playwright-literals)",
+        "column": 9,
+        "file": "fixture.jsx",
+        "line": 1,
+        "message": "Use a literal test ID, a static template, or a prop with a literal default."
+      }
+    ],
+    "name": "playwright-literals",
+    "options": null,
+    "rule": "playwright-literals"
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [
+      {
+        "code": "eslint(no-unused-vars)",
+        "column": 16,
+        "file": "fixture.ts",
+        "line": 3,
+        "message": "Function 'test' is declared but never used."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "fixture.ts",
+        "line": 6,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      }
+    ],
+    "name": "test-no-delayed-rejects",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  }
+]

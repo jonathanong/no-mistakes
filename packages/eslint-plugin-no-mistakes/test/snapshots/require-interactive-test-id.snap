@@ -1,0 +1,1317 @@
+{
+  "messages": [
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 8,
+          "endLine": 1,
+          "file": "fixture.jsx",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "covers intrinsic controls",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "name": "covers non-role attributes",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "name": "ignores empty configured component matchers",
+      "options": {
+        "interactiveComponents": [
+          ""
+        ]
+      }
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "name": "ignores invalid component matchers",
+      "options": {
+        "interactiveComponents": [
+          "/(/"
+        ]
+      }
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "name": "ignores non-interactive role without onClick",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "name": "ignores unsupported JSX names",
+      "options": {
+        "interactiveComponents": [
+          "svg:path"
+        ]
+      }
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 3,
+          "endLine": 1,
+          "file": "fixture.jsx",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "reports anchor href without selectors",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 8,
+          "endLine": 1,
+          "file": "fixture.jsx",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "reports configured Button matcher",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      }
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 11,
+          "endLine": 1,
+          "file": "fixture.jsx",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "reports configured Menu.Item matcher",
+      "options": {
+        "interactiveComponents": [
+          "/\\.Item$/"
+        ]
+      }
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 5,
+          "endLine": 1,
+          "file": "fixture.jsx",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "reports onClick controls without selectors",
+      "options": null
+    }
+  ],
+  "ruleTester": [
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "Button"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "Ui.Button"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "selectorAttributes": [
+            "data-qa"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 2,
+          "file": "",
+          "line": 2,
+          "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+          "messageId": "slot",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 5,
+          "file": "",
+          "line": 5,
+          "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+          "messageId": "slot",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 8,
+          "file": "",
+          "line": 8,
+          "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+          "messageId": "slot",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 11,
+          "file": "",
+          "line": 11,
+          "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+          "messageId": "slot",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 14,
+          "file": "",
+          "line": 14,
+          "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+          "messageId": "slot",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 17,
+          "file": "",
+          "line": 17,
+          "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+          "messageId": "slot",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 20,
+          "file": "",
+          "line": 20,
+          "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+          "messageId": "slot",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 23,
+          "file": "",
+          "line": 23,
+          "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+          "messageId": "slot",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "Button"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 45,
+          "endColumn": 46,
+          "endLine": 2,
+          "file": "",
+          "line": 2,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 47,
+          "endColumn": 48,
+          "endLine": 3,
+          "file": "",
+          "line": 3,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 45,
+          "endLine": 4,
+          "file": "",
+          "line": 4,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 42,
+          "endLine": 5,
+          "file": "",
+          "line": 5,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 41,
+          "endLine": 6,
+          "file": "",
+          "line": 6,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 43,
+          "endLine": 7,
+          "file": "",
+          "line": 7,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 30,
+          "endLine": 8,
+          "file": "",
+          "line": 8,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 48,
+          "endColumn": 49,
+          "endLine": 9,
+          "file": "",
+          "line": 9,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 53,
+          "endColumn": 54,
+          "endLine": 10,
+          "file": "",
+          "line": 10,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 38,
+          "endLine": 11,
+          "file": "",
+          "line": 11,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 56,
+          "endColumn": 62,
+          "endLine": 11,
+          "file": "",
+          "line": 11,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 12,
+          "file": "",
+          "line": 12,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 42,
+          "endLine": 13,
+          "file": "",
+          "line": 13,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 45,
+          "endLine": 14,
+          "file": "",
+          "line": 14,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 40,
+          "endLine": 15,
+          "file": "",
+          "line": 15,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 39,
+          "endLine": 16,
+          "file": "",
+          "line": 16,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 38,
+          "endLine": 17,
+          "file": "",
+          "line": 17,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 38,
+          "endLine": 18,
+          "file": "",
+          "line": 18,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 39,
+          "endLine": 19,
+          "file": "",
+          "line": 19,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 39,
+          "endLine": 21,
+          "file": "",
+          "line": 21,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 54,
+          "endColumn": 58,
+          "endLine": 22,
+          "file": "",
+          "line": 22,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 23,
+          "file": "",
+          "line": 23,
+          "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+          "messageId": "slot",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 21,
+          "endLine": 23,
+          "file": "",
+          "line": 23,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 46,
+          "endColumn": 52,
+          "endLine": 23,
+          "file": "",
+          "line": 23,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "Button"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 14,
+          "endLine": 17,
+          "file": "",
+          "line": 17,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 9,
+          "endLine": 26,
+          "file": "",
+          "line": 26,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 11,
+          "endLine": 27,
+          "file": "",
+          "line": 27,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 11,
+          "endLine": 28,
+          "file": "",
+          "line": 28,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "/(/"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 14,
+          "endLine": 17,
+          "file": "",
+          "line": 17,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 14,
+          "endLine": 20,
+          "file": "",
+          "line": 20,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 13,
+          "endLine": 21,
+          "file": "",
+          "line": 21,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 13,
+          "endLine": 22,
+          "file": "",
+          "line": 22,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 14,
+          "endLine": 23,
+          "file": "",
+          "line": 23,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 17,
+          "endLine": 24,
+          "file": "",
+          "line": 24,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 23,
+          "endLine": 25,
+          "file": "",
+          "line": 25,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 9,
+          "endLine": 26,
+          "file": "",
+          "line": 26,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 11,
+          "endLine": 27,
+          "file": "",
+          "line": 27,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 11,
+          "endLine": 28,
+          "file": "",
+          "line": 28,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "Button",
+            "Card"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 5,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 8,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 5,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 13,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 5,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 3,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 9,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 19,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 29,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 33,
+          "endColumn": 41,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 4,
+          "endColumn": 5,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 5,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 6,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "Link"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 8,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "Button"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 12,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "SelectItem"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 11,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "Ui.Button"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 11,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "/\\.Item$/"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 4,
+          "endColumn": 10,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 20,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "interactiveComponents": [
+            "/^Button$/g"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 2,
+          "file": "",
+          "line": 2,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 3,
+          "file": "",
+          "line": 3,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 4,
+          "file": "",
+          "line": 4,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 5,
+          "file": "",
+          "line": 5,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 6,
+          "file": "",
+          "line": 6,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 7,
+          "file": "",
+          "line": 7,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 8,
+          "file": "",
+          "line": 8,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 9,
+          "file": "",
+          "line": 9,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 7,
+          "endLine": 10,
+          "file": "",
+          "line": 10,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 8,
+          "endLine": 3,
+          "file": "",
+          "line": 3,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "selectorAttributes": [
+            "data-qa"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
 import { __dirname, messages } from "./helpers.mjs";
 
 function fixture(name) {
@@ -18,8 +19,6 @@ describe("upstreamed generic rules", () => {
       ["await-array-methods", "valid.tsx"],
       ["no-delete-property", "valid.tsx"],
       ["no-placeholder-never-type-exports", "valid.tsx"],
-      ["test-no-shared-state", "valid.tsx"],
-      ["test-no-error-message-matching", "valid.tsx"],
       ["no-vitest-sequential", "valid.tsx"],
       ["react-no-use-promise-resolve", "valid.tsx"],
       ["react-no-iife-in-jsx", "valid.tsx"],
@@ -38,8 +37,6 @@ describe("upstreamed generic rules", () => {
       ["await-array-methods", ["awaited", "awaited", "awaited"]],
       ["no-delete-property", ["delete"]],
       ["no-placeholder-never-type-exports", ["placeholder", "placeholder", "placeholder"]],
-      ["test-no-shared-state", ["shared"]],
-      ["test-no-error-message-matching", ["message", "message", "message"]],
       ["no-vitest-sequential", ["sequential"]],
       ["react-no-use-promise-resolve", ["resolve", "resolve", "resolve", "resolve", "resolve"]],
       ["react-no-iife-in-jsx", ["iife", "iife"]],
@@ -63,15 +60,6 @@ describe("upstreamed generic rules", () => {
         "components/widget.tsx",
       ),
       ["script"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-shadow.invalid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-shadow.invalid.test.ts",
-      ),
-      ["shared"],
     );
   });
 
@@ -211,21 +199,99 @@ describe("upstreamed generic rules", () => {
     );
   });
 
-  it("reports Playwright policy violations", () => {
-    const code = fixture("playwright.invalid.ts");
-    assert.deepEqual(messages(code, "playwright-assertion-timeout-cap", undefined, "e2e.spec.ts"), [
-      "timeout",
-    ]);
-    assert.deepEqual(messages(code, "playwright-selector-priority", undefined, "e2e.spec.ts"), [
-      "semantic",
-      "heading",
-      "text",
-    ]);
-    const valid = fixture("playwright.valid.ts");
-    assert.deepEqual(
-      messages(valid, "playwright-assertion-timeout-cap", undefined, "e2e.spec.ts"),
-      [],
+  it("snapshots test and playwright diagnostics", async () => {
+    const valid = fixture("valid.tsx");
+    const invalid = fixture("invalid.tsx");
+    const playwrightInvalid = fixture("playwright.invalid.ts");
+    const playwrightValid = fixture("playwright.valid.ts");
+    const cases = [
+      {
+        file: "valid.tsx",
+        findings: pluginFindings(valid, "test-no-shared-state", undefined, "valid.tsx"),
+        name: "valid.tsx test-no-shared-state",
+        rule: "test-no-shared-state",
+      },
+      {
+        file: "valid.tsx",
+        findings: pluginFindings(valid, "test-no-error-message-matching", undefined, "valid.tsx"),
+        name: "valid.tsx test-no-error-message-matching",
+        rule: "test-no-error-message-matching",
+      },
+      {
+        file: "invalid.tsx",
+        findings: pluginFindings(invalid, "test-no-shared-state", undefined, "invalid.tsx"),
+        name: "invalid.tsx test-no-shared-state",
+        rule: "test-no-shared-state",
+      },
+      {
+        file: "invalid.tsx",
+        findings: pluginFindings(
+          invalid,
+          "test-no-error-message-matching",
+          undefined,
+          "invalid.tsx",
+        ),
+        name: "invalid.tsx test-no-error-message-matching",
+        rule: "test-no-error-message-matching",
+      },
+      {
+        file: "shared-state-shadow.invalid.test.ts",
+        findings: pluginFindings(
+          fixture("shared-state-shadow.invalid.test.ts"),
+          "test-no-shared-state",
+          undefined,
+          "shared-state-shadow.invalid.test.ts",
+        ),
+        name: "shared-state-shadow.invalid.test.ts",
+        rule: "test-no-shared-state",
+      },
+      {
+        file: "e2e.spec.ts",
+        findings: pluginFindings(
+          playwrightInvalid,
+          "playwright-assertion-timeout-cap",
+          undefined,
+          "e2e.spec.ts",
+        ),
+        name: "playwright.invalid.ts playwright-assertion-timeout-cap",
+        rule: "playwright-assertion-timeout-cap",
+      },
+      {
+        file: "e2e.spec.ts",
+        findings: pluginFindings(
+          playwrightInvalid,
+          "playwright-selector-priority",
+          undefined,
+          "e2e.spec.ts",
+        ),
+        name: "playwright.invalid.ts playwright-selector-priority",
+        rule: "playwright-selector-priority",
+      },
+      {
+        file: "e2e.spec.ts",
+        findings: pluginFindings(
+          playwrightValid,
+          "playwright-assertion-timeout-cap",
+          undefined,
+          "e2e.spec.ts",
+        ),
+        name: "playwright.valid.ts playwright-assertion-timeout-cap",
+        rule: "playwright-assertion-timeout-cap",
+      },
+      {
+        file: "e2e.spec.ts",
+        findings: pluginFindings(
+          playwrightValid,
+          "playwright-selector-priority",
+          undefined,
+          "e2e.spec.ts",
+        ),
+        name: "playwright.valid.ts playwright-selector-priority",
+        rule: "playwright-selector-priority",
+      },
+    ];
+    await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+      "snapshots/upstreamed-rules.snap",
     );
-    assert.deepEqual(messages(valid, "playwright-selector-priority", undefined, "e2e.spec.ts"), []);
   });
 });

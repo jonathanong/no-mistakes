@@ -1,0 +1,74 @@
+[
+  {
+    "file": "anchor-plain.jsx",
+    "findings": [
+      {
+        "column": 4,
+        "endColumn": 5,
+        "endLine": 3,
+        "file": "anchor-plain.jsx",
+        "line": 3,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "requires a test id on an anchor only when it has href",
+    "options": null,
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "namespaced-path.jsx",
+    "findings": [
+      {
+        "column": 4,
+        "endColumn": 12,
+        "endLine": 3,
+        "file": "namespaced-path.jsx",
+        "line": 3,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "requires a test id on namespaced elements only when they are interactive",
+    "options": null,
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "invalid-regex-flags.jsx",
+    "findings": [],
+    "name": "treats invalid regex flags as an exact string, not a matcher: invalid flags",
+    "options": {
+      "interactiveComponents": [
+        "/^Button$/zzz"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "invalid-regex-flags.jsx",
+    "findings": [
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 2,
+        "file": "invalid-regex-flags.jsx",
+        "line": 2,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "treats invalid regex flags as an exact string, not a matcher: valid pattern",
+    "options": {
+      "interactiveComponents": [
+        "/^Button$/"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  }
+]

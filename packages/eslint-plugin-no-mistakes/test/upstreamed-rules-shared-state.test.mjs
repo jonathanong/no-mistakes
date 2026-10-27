@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { __dirname, messages } from "./helpers.mjs";
+import { describe, expect, it } from "vitest";
+import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
+import { __dirname } from "./helpers.mjs";
 
 const require = createRequire(import.meta.url);
 const calleeHelpers = require("../src/rules/test-no-shared-state-callees");
@@ -17,225 +18,35 @@ function fixture(name) {
 }
 
 describe("shared-state callbacks", () => {
-  it("avoids resolving shadowed non-function callbacks", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-callback-shadow.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-callback-shadow.valid.test.ts",
-      ),
-      [],
-    );
-  });
-
-  it("respects shadowed local state in callbacks", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-shadowed-local-state.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-shadowed-local-state.valid.test.ts",
-      ),
-      [],
-    );
-  });
-
-  it("tracks test.extend aliases and chained test callees", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-extend-alias.invalid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-extend-alias.invalid.test.ts",
-      ),
-      ["shared", "shared", "shared", "shared", "shared"],
-    );
-  });
-
-  it("tracks exported test.extend aliases", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-exported-extend-alias.invalid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-exported-extend-alias.invalid.test.ts",
-      ),
-      ["shared"],
-    );
-  });
-
-  it("ignores shadowed test.extend aliases", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-shadowed-extend-alias.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-shadowed-extend-alias.valid.test.ts",
-      ),
-      [],
-    );
-  });
-
-  it("allows Playwright serial beforeAll setup assignments", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-serial-beforeall.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-serial-beforeall.valid.test.ts",
-        { expect: "readonly" },
-      ),
-      [],
-    );
-  });
-
-  it("allows named beforeAll cleanup in serial suites", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-serial-named-beforeall.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-serial-named-beforeall.valid.test.ts",
-        { expect: "readonly" },
-      ),
-      [],
-    );
-  });
-
-  it("tracks setup cleanup from extended test aliases", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-extend-setup.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-extend-setup.valid.test.ts",
-      ),
-      [],
-    );
-  });
-
-  it("keeps cleanup scoped for describe modifier suites", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-describe-modifier.invalid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-describe-modifier.invalid.test.ts",
-      ),
-      ["shared"],
-    );
-  });
-
-  it("honors Playwright configure-based serial suites", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-configure-serial.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-configure-serial.valid.test.ts",
-        { expect: "readonly" },
-      ),
-      [],
-    );
-  });
-
-  it("honors serial configure calls after setup declarations", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-configure-serial-after-setup.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-configure-serial-after-setup.valid.test.ts",
-        { expect: "readonly" },
-      ),
-      [],
-    );
-  });
-
-  it("honors Playwright file-level serial configure", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-file-configure-serial.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-file-configure-serial.valid.test.ts",
-        { expect: "readonly" },
-      ),
-      [],
-    );
-  });
-
-  it("honors quoted Playwright serial configure keys", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-quoted-configure-serial.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-quoted-configure-serial.valid.test.ts",
-        { expect: "readonly" },
-      ),
-      [],
-    );
-  });
-
-  it("ignores non-test configure calls when detecting serial suites", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-non-test-configure.invalid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-non-test-configure.invalid.test.ts",
-      ),
-      ["shared"],
-    );
-  });
-
-  it("tracks aliased it imports as test calls", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-it-alias.invalid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-it-alias.invalid.test.ts",
-      ),
-      ["shared"],
-    );
-  });
-
-  it("keeps aliased describe suites scoped", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-describe-alias-scope.invalid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-describe-alias-scope.invalid.test.ts",
-      ),
-      ["shared"],
-    );
-  });
-
-  it("ignores shadowed it aliases", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-shadowed-it-alias.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-shadowed-it-alias.valid.test.ts",
-      ),
-      [],
-    );
-  });
-
-  it("does not infer serial mode from the test alias name", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-serial-alias-name.invalid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-serial-alias-name.invalid.test.ts",
-      ),
-      ["shared"],
+  it("snapshots test-no-shared-state diagnostics", async () => {
+    const specs = [
+      ["shared-state-callback-shadow.valid.test.ts"],
+      ["shared-state-shadowed-local-state.valid.test.ts"],
+      ["shared-state-extend-alias.invalid.test.ts"],
+      ["shared-state-exported-extend-alias.invalid.test.ts"],
+      ["shared-state-shadowed-extend-alias.valid.test.ts"],
+      ["shared-state-serial-beforeall.valid.test.ts", { expect: "readonly" }],
+      ["shared-state-serial-named-beforeall.valid.test.ts", { expect: "readonly" }],
+      ["shared-state-extend-setup.valid.test.ts"],
+      ["shared-state-describe-modifier.invalid.test.ts"],
+      ["shared-state-configure-serial.valid.test.ts", { expect: "readonly" }],
+      ["shared-state-configure-serial-after-setup.valid.test.ts", { expect: "readonly" }],
+      ["shared-state-file-configure-serial.valid.test.ts", { expect: "readonly" }],
+      ["shared-state-quoted-configure-serial.valid.test.ts", { expect: "readonly" }],
+      ["shared-state-non-test-configure.invalid.test.ts"],
+      ["shared-state-it-alias.invalid.test.ts"],
+      ["shared-state-describe-alias-scope.invalid.test.ts"],
+      ["shared-state-shadowed-it-alias.valid.test.ts"],
+      ["shared-state-serial-alias-name.invalid.test.ts"],
+    ];
+    const cases = specs.map(([file, globals]) => ({
+      file,
+      findings: pluginFindings(fixture(file), "test-no-shared-state", undefined, file, globals),
+      name: file,
+      rule: "test-no-shared-state",
+    }));
+    await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+      "snapshots/upstreamed-rules-shared-state.snap",
     );
   });
 

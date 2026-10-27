@@ -1,97 +1,140 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { fixture, lint, plugin, __dirname } from "./helpers.mjs";
+import {
+  oxlintFindings,
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+} from "./diagnostic-snapshot.mjs";
+
 const rule = "playwright-test-timeout-cap";
-const allFindings = (name, option = { unknownValues: "finding" }) =>
-  lint(
-    fixture(`${rule}/${name}.ts`),
-    { [`no-mistakes/${rule}`]: ["error", option] },
-    "fixture.test.ts",
+const finding = { unknownValues: "finding" };
+const tested = "fixture.test.ts";
+const allFindings = (name, option = finding) =>
+  lint(fixture(`${rule}/${name}.ts`), { [`no-mistakes/${rule}`]: ["error", option] }, tested);
+
+function eslintCase(name, fixtureName, filename, options) {
+  const setting = options === undefined ? undefined : { ...options };
+  return {
+    name,
+    file: filename,
+    rule,
+    ...(setting === undefined ? {} : { options: setting }),
+    findings: pluginFindings(fixture(`${rule}/${fixtureName}.ts`), rule, setting, filename),
+  };
+}
+
+function oxlintOn(name) {
+  const root = resolve(__dirname, `../../../test-cases/eslint-snippets/fixture/${rule}`);
+  return spawnSync(
+    process.execPath,
+    [
+      resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+      "--config",
+      resolve(root, ".oxlintrc.json"),
+      "--format",
+      "json",
+      resolve(root, name),
+    ],
+    { encoding: "utf8" },
   );
-// Existing assertions isolate explicit carrier/slot diagnostics; inherited registration
-// diagnostics are asserted independently below, not treated as qualified owner proofs.
-const findings = (name, option) =>
-  allFindings(name, option).filter((x) => x.messageId !== "effectiveSlot");
-const positions = (name) => findings(name).map(({ line, messageId }) => [line, messageId]);
+}
+
+function ruleFindings(result, filename) {
+  return oxlintFindings(
+    JSON.parse(result.stdout).diagnostics.filter((item) => item.code?.includes(rule)),
+    filename,
+  );
+}
+
 describe(rule, () => {
-  it("rejects callable deadlines and retains unknown state through slow multiplication", () => {
-    assert.deepEqual(positions("callable-timeout-sinks"), [
-      ...[3, 4, 5, 7, 8].map((line) => [line, "unknown"]),
-      [11, "timeout"],
-    ]);
-    assert.deepEqual(
-      findings("callable-timeout-sinks", {}).map(({ line, messageId }) => [line, messageId]),
-      [[11, "timeout"]],
-    );
+  it("snapshots diagnostics", async () => {
+    const computed = oxlintOn("null-computed-key.ts");
+    const repeated = oxlintOn("null-computed-key.ts");
+    for (const oxlint of [computed, repeated]) {
+      assert.equal(oxlint.status, 1, oxlint.stderr);
+      assert.equal(oxlint.stdout.includes("Error running JS plugin"), false);
+    }
+    const computedFindings = ruleFindings(computed, "null-computed-key.ts");
+    assert.deepEqual(computedFindings, ruleFindings(repeated, "null-computed-key.ts"));
+    const slow = oxlintOn("slow.ts");
+    assert.equal(slow.status, 1);
+    const eslintCases = [
+      eslintCase("callable-timeout-sinks", "callable-timeout-sinks", tested, finding),
+      eslintCase("callable-timeout-sinks empty option", "callable-timeout-sinks", tested, {}),
+      eslintCase("carrier-safety", "carrier-safety", tested, finding),
+      eslintCase("named-default-and-bound", "named-default-and-bound", tested, finding),
+      eslintCase("default-and-named", "default-and-named", tested, finding),
+      eslintCase("effective-registration", "effective-registration", tested, finding),
+      eslintCase("effective-registration ignore unknown", "effective-registration", tested, {
+        unknownValues: "ignore",
+      }),
+      eslintCase("helper-export-roles", "helper-export-roles", tested, {
+        unknownValues: "finding",
+        registrationPackages: ["./approved-test"],
+        exportRoles: { "./approved-test": { expect: "assertion", ordinary: "ordinary" } },
+      }),
+      eslintCase("setters", "setters", tested, finding),
+      eslintCase("slow", "slow", tested, finding),
+      eslintCase("suite-slow", "suite-slow", tested, finding),
+      eslintCase("carriers", "carriers", tested, finding),
+      eslintCase("controls", "controls", tested, finding),
+      eslintCase("suppression", "suppression", tested, finding),
+      eslintCase("slow ignore unknown", "slow", tested, { unknownValues: "ignore" }),
+      eslintCase("namespace", "namespace", tested, finding),
+      eslintCase("config-root", "config-root", tested, finding),
+      eslintCase("config-root config files", "config-root", tested, {
+        unknownValues: "finding",
+        configFiles: ["fixture.test.ts"],
+      }),
+      eslintCase("opaque-spread", "opaque-spread", tested, finding),
+      eslintCase("suppression-file", "suppression-file", tested, finding),
+      eslintCase("carriers fixture max", "carriers", tested, {
+        unknownValues: "finding",
+        fixtureMax: 60000,
+      }),
+      eslintCase("inherited-slow", "inherited-slow", tested, finding),
+      eslintCase("approved-helper", "approved-helper", tested, finding),
+      eslintCase("approved-helper registration packages", "approved-helper", tested, {
+        unknownValues: "finding",
+        registrationPackages: ["./approved-test"],
+      }),
+      eslintCase("helper-carriers", "helper-carriers", tested, {
+        unknownValues: "finding",
+        registrationPackages: ["./approved-test"],
+      }),
+      eslintCase("null-computed-key", "null-computed-key", "null-computed-key.ts"),
+      eslintCase(
+        "null-computed-key unknown values",
+        "null-computed-key",
+        "null-computed-key.ts",
+        finding,
+      ),
+    ];
+    await expect(
+      snapshotDocument({
+        eslint: snapshotCases(eslintCases),
+        oxlint: snapshotCases([
+          {
+            name: "null-computed-key",
+            file: "null-computed-key.ts",
+            rule,
+            findings: computedFindings,
+          },
+          {
+            name: "slow",
+            file: "slow.ts",
+            rule,
+            findings: ruleFindings(slow, "slow.ts"),
+          },
+        ]),
+      }),
+    ).toMatchFileSnapshot("snapshots/playwright-test-timeout-cap.snap");
   });
-  it("keeps opaque project/fixture carriers visible and false conditions inert", () => {
-    assert.deepEqual(positions("carrier-safety"), [
-      [2, "unknown"],
-      [3, "unknown"],
-      [3, "unknown"],
-      [4, "unknown"],
-      [8, "unknown"],
-      [11, "unknown"],
-      [12, "unknown"],
-    ]);
-  });
-  it("normalizes named SDK defaults and retains receiver-only bound callback parameters", () => {
-    assert.deepEqual(positions("named-default-and-bound"), [
-      [3, "timeout"],
-      [5, "timeout"],
-      [9, "unknown"],
-      [10, "unknown"],
-    ]);
-    assert.deepEqual(
-      allFindings("named-default-and-bound")
-        .filter((x) => x.messageId === "effectiveSlot")
-        .map((x) => x.line),
-      [7, 9, 10, 12],
-    );
-  });
-  it("retains SDK default identities and registration-bound named callback TestInfo", () => {
-    assert.deepEqual(positions("default-and-named"), [
-      [4, "timeout"],
-      [5, "invalid"],
-      [7, "timeout"],
-      [10, "invalid"],
-    ]);
-    assert.deepEqual(
-      allFindings("default-and-named")
-        .filter((x) => x.messageId === "effectiveSlot")
-        .map((x) => x.line),
-      [9, 11, 13],
-    );
-  });
-  it("reports every admitted registration's unresolved inherited slot", () => {
-    assert.deepEqual(
-      allFindings("effective-registration").map(({ line, messageId }) => [line, messageId]),
-      [
-        [2, "effectiveSlot"],
-        [3, "effectiveSlot"],
-        [4, "effectiveSlot"],
-        [5, "unknown"],
-      ],
-    );
-    assert.deepEqual(allFindings("effective-registration", { unknownValues: "ignore" }), []);
-  });
-  it("uses reviewed helper export roles without admitting assertions as registrars", () => {
-    const option = {
-      unknownValues: "finding",
-      registrationPackages: ["./approved-test"],
-      exportRoles: { "./approved-test": { expect: "assertion", ordinary: "ordinary" } },
-    };
-    assert.deepEqual(
-      allFindings("helper-export-roles", option).map(({ line, messageId }) => [line, messageId]),
-      [
-        [5, "unknown"],
-        [6, "effectiveSlot"],
-        [7, "unknown"],
-      ],
-    );
-  });
+
   it("rejects role configuration that erases proven SDK or helper registrar exports", () => {
     for (const source of ["@playwright/test", "./approved-test"])
       for (const key of ["test", "defineConfig", "mergeTests"])
@@ -113,185 +156,10 @@ describe(rule, () => {
       /builtin SDK exports/,
     );
   });
-  it("follows aliases, bound/destructured setters and real hook TestInfo parameters", () => {
-    assert.deepEqual(positions("setters"), [
-      [4, "timeout"],
-      [6, "invalid"],
-      [8, "invalid"],
-      [12, "timeout"],
-      [15, "invalid"],
-      [20, "invalid"],
-      [21, "timeout"],
-      [22, "invalid"],
-    ]);
-  });
-  it("models the SDK's idempotent slow latch and preserves false/short-slot semantics", () => {
-    assert.deepEqual(positions("slow"), [
-      [11, "timeout"],
-      [14, "unknown"],
-      [17, "unknown"],
-      [22, "unknown"],
-      [24, "unknown"],
-    ]);
-    assert.deepEqual(positions("suite-slow"), [
-      [2, "unknown"],
-      [5, "unknown"],
-    ]);
-  });
-  it("reports opaque admitted config/suite/fixture/API carriers rather than fixture payload data", () => {
-    assert.deepEqual(positions("carriers"), [
-      [3, "invalid"],
-      [3, "unknown"],
-      [4, "timeout"],
-      [5, "unknown"],
-      [7, "timeout"],
-      [8, "unknown"],
-      [9, "unknown"],
-    ]);
-  });
-  it("ignores ordinary/shadowed objects and honors positive finite cap boundaries", () => {
-    assert.deepEqual(findings("controls"), []);
-    assert.deepEqual(positions("suppression"), [[4, "invalid"]]);
-    assert.deepEqual(
-      findings("slow", { unknownValues: "ignore" }).map((x) => x.line),
-      [11],
-    );
-    for (const max of [0, -1, Infinity, NaN]) assert.throws(() => findings("controls", { max }));
+
+  it("rejects invalid caps and stays out of presets", () => {
+    for (const max of [0, -1, Infinity, NaN]) assert.throws(() => allFindings("controls", { max }));
     assert.ok(!plugin.configs.strict.rules[`no-mistakes/${rule}`]);
     assert.ok(!plugin.configs.recommended.rules[`no-mistakes/${rule}`]);
-  });
-  it("handles namespace/extended/merged registrars, false aliases and configured plain roots", () => {
-    assert.deepEqual(positions("namespace"), [
-      [4, "timeout"],
-      [7, "invalid"],
-    ]);
-    assert.deepEqual(findings("config-root"), []);
-    assert.deepEqual(
-      findings("config-root", { unknownValues: "finding", configFiles: ["fixture.test.ts"] }).map(
-        ({ line, messageId }) => [line, messageId],
-      ),
-      [[2, "timeout"]],
-    );
-    assert.deepEqual(positions("opaque-spread"), [[2, "unknown"]]);
-    assert.deepEqual(findings("suppression-file"), []);
-    assert.deepEqual(
-      findings("carriers", { unknownValues: "finding", fixtureMax: 60000 })
-        .filter((x) => x.messageId === "timeout")
-        .map((x) => x.line),
-      [4],
-    );
-  });
-  it("does not claim multiplication occurred when an inherited hook latch is unresolved", () => {
-    assert.deepEqual(positions("inherited-slow"), [
-      [2, "unknown"],
-      [5, "unknown"],
-    ]);
-  });
-  it("requires explicit helper admission and retains unknown effective helper slots", () => {
-    assert.deepEqual(findings("approved-helper"), []);
-    assert.deepEqual(
-      findings("approved-helper", {
-        unknownValues: "finding",
-        registrationPackages: ["./approved-test"],
-      }).map(({ line, messageId }) => [line, messageId]),
-      [
-        [2, "timeout"],
-        [4, "unknown"],
-      ],
-    );
-  });
-  it("reports admitted unresolved helper/merge/fixture carriers instead of losing their provenance", () => {
-    assert.deepEqual(
-      findings("helper-carriers", {
-        unknownValues: "finding",
-        registrationPackages: ["./approved-test"],
-      }).map(({ line, messageId }) => [line, messageId]),
-      [
-        [3, "unknown"],
-        [4, "unknown"],
-        [5, "unknown"],
-        [6, "unknown"],
-      ],
-    );
-  });
-  it("does not crash on a computed call keyed by a null initializer", () => {
-    const code = fixture(`${rule}/null-computed-key.ts`);
-    const reported = (option) =>
-      lint(
-        code,
-        { [`no-mistakes/${rule}`]: option ? ["error", option] : "error" },
-        "null-computed-key.ts",
-      )
-        .map(({ line, messageId }) => [line, messageId])
-        .sort((a, b) => a[0] - b[0] || a[1].localeCompare(b[1]));
-    const timeouts = [
-      [25, "timeout"],
-      [26, "timeout"],
-      [27, "timeout"],
-    ];
-    assert.deepEqual(reported(), timeouts);
-    assert.deepEqual(reported({ unknownValues: "finding" }), [...timeouts, [30, "unknown"]]);
-    const root = resolve(__dirname, `../../../test-cases/eslint-snippets/fixture/${rule}`);
-    for (let run = 0; run < 2; run += 1) {
-      const oxlint = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          resolve(root, ".oxlintrc.json"),
-          "--format",
-          "json",
-          resolve(root, "null-computed-key.ts"),
-        ],
-        { encoding: "utf8" },
-      );
-      assert.equal(oxlint.status, 1, oxlint.stderr);
-      assert.equal(oxlint.stdout.includes("Error running JS plugin"), false);
-      const runtime =
-        "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.";
-      assert.deepEqual(
-        JSON.parse(oxlint.stdout)
-          .diagnostics.filter((item) => item.code?.includes(rule))
-          .map((item) => [item.labels[0].span.line, item.message])
-          .sort((a, b) => a[0] - b[0]),
-        [
-          [25, runtime],
-          [26, runtime],
-          [
-            27,
-            "Playwright project timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
-          ],
-          [
-            30,
-            "Playwright dynamic framework API cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
-          ],
-        ],
-      );
-    }
-  });
-  it("retains exact locations through Oxlint", () => {
-    const root = resolve(__dirname, `../../../test-cases/eslint-snippets/fixture/${rule}`);
-    const run = spawnSync(
-      process.execPath,
-      [
-        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-        "--config",
-        resolve(root, ".oxlintrc.json"),
-        "--format",
-        "json",
-        resolve(root, "slow.ts"),
-      ],
-      { encoding: "utf8" },
-    );
-    assert.equal(run.status, 1);
-    assert.deepEqual(
-      JSON.parse(run.stdout)
-        .diagnostics.filter(
-          (x) => x.code?.includes(rule) && !x.message.includes("registration inherits"),
-        )
-        .map((x) => x.labels[0].span.line)
-        .sort((a, b) => a - b),
-      [11, 14, 17, 22, 24],
-    );
   });
 });

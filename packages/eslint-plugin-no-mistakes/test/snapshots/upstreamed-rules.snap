@@ -1,0 +1,169 @@
+[
+  {
+    "file": "e2e.spec.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 54,
+        "endLine": 3,
+        "file": "e2e.spec.ts",
+        "line": 3,
+        "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+        "messageId": "timeout",
+        "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+        "severity": 2
+      }
+    ],
+    "name": "playwright.invalid.ts playwright-assertion-timeout-cap",
+    "options": null,
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "e2e.spec.ts",
+    "findings": [],
+    "name": "playwright.valid.ts playwright-assertion-timeout-cap",
+    "options": null,
+    "rule": "playwright-assertion-timeout-cap"
+  },
+  {
+    "file": "e2e.spec.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 28,
+        "endLine": 4,
+        "file": "e2e.spec.ts",
+        "line": 4,
+        "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+        "messageId": "semantic",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 25,
+        "endLine": 5,
+        "file": "e2e.spec.ts",
+        "line": 5,
+        "message": "Use getByRole('heading', { level: N }) instead of a heading-tag locator.",
+        "messageId": "heading",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 32,
+        "endLine": 6,
+        "file": "e2e.spec.ts",
+        "line": 6,
+        "message": "Use getByText() instead of a text= locator.",
+        "messageId": "text",
+        "ruleId": "no-mistakes/playwright-selector-priority",
+        "severity": 2
+      }
+    ],
+    "name": "playwright.invalid.ts playwright-selector-priority",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "e2e.spec.ts",
+    "findings": [],
+    "name": "playwright.valid.ts playwright-selector-priority",
+    "options": null,
+    "rule": "playwright-selector-priority"
+  },
+  {
+    "file": "invalid.tsx",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 43,
+        "endLine": 25,
+        "file": "invalid.tsx",
+        "line": 25,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 36,
+        "endLine": 27,
+        "file": "invalid.tsx",
+        "line": 27,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 34,
+        "endLine": 28,
+        "file": "invalid.tsx",
+        "line": 28,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "invalid.tsx test-no-error-message-matching",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "valid.tsx",
+    "findings": [],
+    "name": "valid.tsx test-no-error-message-matching",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "invalid.tsx",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 12,
+        "endLine": 23,
+        "file": "invalid.tsx",
+        "line": 23,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "invalid.tsx test-no-shared-state",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-shadow.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 28,
+        "endLine": 9,
+        "file": "shared-state-shadow.invalid.test.ts",
+        "line": 9,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-shadow.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "valid.tsx",
+    "findings": [],
+    "name": "valid.tsx test-no-shared-state",
+    "options": null,
+    "rule": "test-no-shared-state"
+  }
+]

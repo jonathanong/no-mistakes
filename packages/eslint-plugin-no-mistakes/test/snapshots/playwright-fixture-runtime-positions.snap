@@ -1,0 +1,371 @@
+{
+  "eslint": [
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 35,
+          "endColumn": 49,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 30,
+          "endColumn": 44,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 63,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 53,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 39,
+          "endLine": 15,
+          "file": "fixture.test.ts",
+          "line": 15,
+          "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 40,
+          "endLine": 16,
+          "file": "fixture.test.ts",
+          "line": 16,
+          "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 47,
+          "endLine": 17,
+          "file": "fixture.test.ts",
+          "line": 17,
+          "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 56,
+          "endLine": 18,
+          "file": "fixture.test.ts",
+          "line": 18,
+          "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 56,
+          "endLine": 19,
+          "file": "fixture.test.ts",
+          "line": 19,
+          "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 22,
+          "endLine": 22,
+          "file": "fixture.test.ts",
+          "line": 22,
+          "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 71,
+          "endLine": 23,
+          "file": "fixture.test.ts",
+          "line": 23,
+          "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 56,
+          "endLine": 24,
+          "file": "fixture.test.ts",
+          "line": 24,
+          "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 53,
+          "endLine": 25,
+          "file": "fixture.test.ts",
+          "line": 25,
+          "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 45,
+          "endLine": 30,
+          "file": "fixture.test.ts",
+          "line": 30,
+          "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 28,
+          "endLine": 33,
+          "file": "fixture.test.ts",
+          "line": 33,
+          "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 46,
+          "endLine": 34,
+          "file": "fixture.test.ts",
+          "line": 34,
+          "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 19,
+          "endLine": 38,
+          "file": "fixture.test.ts",
+          "line": 38,
+          "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 36,
+          "endLine": 39,
+          "file": "fixture.test.ts",
+          "line": 39,
+          "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "fixture runtime positions",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 31,
+          "endColumn": 45,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright projects carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "growing project array",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "name": "growing project array defer-to-runner",
+      "options": {
+        "configUnknownValues": "defer-to-runner",
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    }
+  ],
+  "oxlint": [
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 35,
+      "file": "fixture-runtime-positions.ts",
+      "line": 4,
+      "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 30,
+      "file": "fixture-runtime-positions.ts",
+      "line": 6,
+      "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 15,
+      "file": "fixture-runtime-positions.ts",
+      "line": 8,
+      "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 39,
+      "file": "fixture-runtime-positions.ts",
+      "line": 9,
+      "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 37,
+      "file": "fixture-runtime-positions.ts",
+      "line": 15,
+      "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 36,
+      "file": "fixture-runtime-positions.ts",
+      "line": 16,
+      "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 39,
+      "file": "fixture-runtime-positions.ts",
+      "line": 17,
+      "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 42,
+      "file": "fixture-runtime-positions.ts",
+      "line": 18,
+      "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 42,
+      "file": "fixture-runtime-positions.ts",
+      "line": 19,
+      "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 15,
+      "file": "fixture-runtime-positions.ts",
+      "line": 22,
+      "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 40,
+      "file": "fixture-runtime-positions.ts",
+      "line": 23,
+      "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 40,
+      "file": "fixture-runtime-positions.ts",
+      "line": 24,
+      "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 38,
+      "file": "fixture-runtime-positions.ts",
+      "line": 25,
+      "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 38,
+      "file": "fixture-runtime-positions.ts",
+      "line": 30,
+      "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 15,
+      "file": "fixture-runtime-positions.ts",
+      "line": 33,
+      "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 32,
+      "file": "fixture-runtime-positions.ts",
+      "line": 34,
+      "message": "Playwright fixture timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 15,
+      "file": "fixture-runtime-positions.ts",
+      "line": 38,
+      "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    },
+    {
+      "code": "no-mistakes(playwright-test-timeout-cap)",
+      "column": 15,
+      "file": "fixture-runtime-positions.ts",
+      "line": 39,
+      "message": "Playwright fixture tuple position cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+    }
+  ]
+}

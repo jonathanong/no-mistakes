@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
 import { __dirname, fixture, lint, messages } from "./helpers.mjs";
 
 const check = (rule, file) => messages(fixture(`${rule}/${file}`), rule, undefined, file);
@@ -38,25 +39,25 @@ describe("test rule static recall follow-up", () => {
     assert.deepEqual(check("vitest-mock-test-file-naming", "static-aliases-controls.test.ts"), []);
     assert.deepEqual(check("vitest-mock-test-file-naming", "static-alias-cycle.test.js"), []);
   });
-  it("recognizes Playwright expect and test runner aliases", () => {
-    assert.deepEqual(
-      check("test-no-error-message-matching", "static-runner.test.ts"),
-      Array(5).fill("message"),
+  it("snapshots test diagnostics", async () => {
+    const specs = [
+      ["test-no-error-message-matching", "static-runner.test.ts"],
+      ["test-no-error-message-matching", "static-runner-controls.test.ts"],
+      ["test-no-error-message-matching", "static-runner-aliases.test.ts"],
+      ["test-no-error-message-matching", "static-runner-module.test.ts"],
+      ["test-no-error-message-matching", "static-runner-opaque.test.ts"],
+      ["test-no-error-message-matching", "static-namespace-write.test.js"],
+      ["test-no-delayed-rejects", "playwright-static-expect-controls.ts"],
+    ];
+    const cases = specs.map(([rule, file]) => ({
+      file,
+      findings: pluginFindings(fixture(`${rule}/${file}`), rule, undefined, file),
+      name: file,
+      rule,
+    }));
+    await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+      "snapshots/recall-test-static-followup.snap",
     );
-    assert.deepEqual(check("test-no-error-message-matching", "static-runner-controls.test.ts"), []);
-    assert.deepEqual(
-      check("test-no-error-message-matching", "static-runner-aliases.test.ts"),
-      Array(6).fill("message"),
-    );
-    assert.deepEqual(
-      check("test-no-error-message-matching", "static-runner-module.test.ts"),
-      Array(2).fill("message"),
-    );
-    assert.deepEqual(check("test-no-error-message-matching", "static-runner-opaque.test.ts"), []);
-    assert.deepEqual(check("test-no-error-message-matching", "static-namespace-write.test.js"), []);
-  });
-  it("keeps Playwright outside the delayed-rejects contract", () => {
-    assert.deepEqual(check("test-no-delayed-rejects", "playwright-static-expect-controls.ts"), []);
   });
   it("recognizes require aliases while preserving real work and unknown loaders", () => {
     assert.deepEqual(check("no-import-only-test-files", "require-alias.test.js"), ["aggregate"]);

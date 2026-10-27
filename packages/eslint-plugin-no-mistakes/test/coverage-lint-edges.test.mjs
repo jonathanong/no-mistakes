@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
+import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
 import { messages, require } from "./helpers.mjs";
 
 const {
@@ -42,16 +43,6 @@ describe("lint early-return edges", () => {
     );
   });
 
-  it("skips lowercase exported components", () => {
-    assert.deepEqual(
-      messages(
-        "export function button() { return <button />; }",
-        "playwright-require-exported-component-attribute",
-      ),
-      [],
-    );
-  });
-
   it("covers next metadata and script guard paths", () => {
     assert.deepEqual(
       messages(
@@ -90,13 +81,6 @@ describe("lint early-return edges", () => {
       ),
       [],
     );
-    assert.deepEqual(
-      messages(
-        'export function Button() { return <button data-pw="ok" />; }',
-        "playwright-require-exported-component-attribute",
-      ),
-      [],
-    );
     messages(
       'type Placeholder = never; export type { Placeholder as "alias" };',
       "no-placeholder-never-type-exports",
@@ -111,6 +95,32 @@ describe("lint early-return edges", () => {
       },
     );
     messages('<input data-pw="ok" />;', "playwright-require-interactive-test-id");
+  });
+
+  it("snapshots playwright diagnostics", async () => {
+    const cases = [
+      {
+        file: "fixture.jsx",
+        findings: pluginFindings(
+          "export function button() { return <button />; }",
+          "playwright-require-exported-component-attribute",
+        ),
+        name: "lowercase button",
+        rule: "playwright-require-exported-component-attribute",
+      },
+      {
+        file: "fixture.jsx",
+        findings: pluginFindings(
+          'export function Button() { return <button data-pw="ok" />; }',
+          "playwright-require-exported-component-attribute",
+        ),
+        name: "Button data-pw",
+        rule: "playwright-require-exported-component-attribute",
+      },
+    ];
+    await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+      "snapshots/coverage-lint-edges.snap",
+    );
   });
 });
 

@@ -1,0 +1,92 @@
+[
+  {
+    "file": "legacy-runner-namespace-controls.test.js",
+    "findings": [],
+    "name": "does not infer a namespace from repeated declarations",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "legacy-runner-names.test.ts",
+    "findings": [
+      {
+        "column": 22,
+        "endColumn": 50,
+        "endLine": 3,
+        "file": "legacy-runner-names.test.ts",
+        "line": 3,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 22,
+        "endColumn": 50,
+        "endLine": 7,
+        "file": "legacy-runner-names.test.ts",
+        "line": 7,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 20,
+        "endColumn": 54,
+        "endLine": 10,
+        "file": "legacy-runner-names.test.ts",
+        "line": 10,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 32,
+        "endColumn": 60,
+        "endLine": 19,
+        "file": "legacy-runner-names.test.ts",
+        "line": 19,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 27,
+        "endColumn": 55,
+        "endLine": 23,
+        "file": "legacy-runner-names.test.ts",
+        "line": 23,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "keeps test/it checks without assuming renamed parameters are runners",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "legacy-runner-commonjs.test.cjs",
+    "findings": [
+      {
+        "column": 27,
+        "endColumn": 55,
+        "endLine": 4,
+        "file": "legacy-runner-commonjs.test.cjs",
+        "line": 4,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "preserves CommonJS module runner aliases",
+    "options": null,
+    "rule": "test-no-error-message-matching",
+    "sourceType": "commonjs"
+  }
+]

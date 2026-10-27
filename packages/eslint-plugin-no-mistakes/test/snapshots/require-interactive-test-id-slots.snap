@@ -1,0 +1,984 @@
+[
+  {
+    "file": "slot.tsx",
+    "findings": [
+      {
+        "column": 6,
+        "endColumn": 7,
+        "endLine": 6,
+        "file": "slot.tsx",
+        "line": 6,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 48,
+        "endColumn": 54,
+        "endLine": 8,
+        "file": "slot.tsx",
+        "line": 8,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 43,
+        "endColumn": 48,
+        "endLine": 9,
+        "file": "slot.tsx",
+        "line": 9,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 42,
+        "endColumn": 43,
+        "endLine": 10,
+        "file": "slot.tsx",
+        "line": 10,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 36,
+        "endColumn": 37,
+        "endLine": 11,
+        "file": "slot.tsx",
+        "line": 11,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 41,
+        "endColumn": 42,
+        "endLine": 12,
+        "file": "slot.tsx",
+        "line": 12,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 46,
+        "endColumn": 47,
+        "endLine": 13,
+        "file": "slot.tsx",
+        "line": 13,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 63,
+        "endColumn": 69,
+        "endLine": 14,
+        "file": "slot.tsx",
+        "line": 14,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 52,
+        "endColumn": 58,
+        "endLine": 17,
+        "file": "slot.tsx",
+        "line": 17,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "can disable slot recognition",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ],
+      "slotProps": []
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "slot.tsx",
+    "findings": [],
+    "name": "covers the single direct child through literal parent selectors",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "slot.tsx",
+    "findings": [
+      {
+        "column": 45,
+        "endColumn": 46,
+        "endLine": 5,
+        "file": "slot.tsx",
+        "line": 5,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 46,
+        "endColumn": 47,
+        "endLine": 8,
+        "file": "slot.tsx",
+        "line": 8,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "does not inherit through a shadow of a configured import",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "slot.tsx",
+    "findings": [
+      {
+        "column": 37,
+        "endColumn": 38,
+        "endLine": 2,
+        "file": "slot.tsx",
+        "line": 2,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 46,
+        "endLine": 3,
+        "file": "slot.tsx",
+        "line": 3,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 44,
+        "endColumn": 45,
+        "endLine": 4,
+        "file": "slot.tsx",
+        "line": 4,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "does not treat configured intrinsic tags as slot components: any pattern",
+    "options": {
+      "interactiveComponents": [
+        "/.*/"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "slot.tsx",
+    "findings": [
+      {
+        "column": 37,
+        "endColumn": 38,
+        "endLine": 2,
+        "file": "slot.tsx",
+        "line": 2,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 46,
+        "endLine": 3,
+        "file": "slot.tsx",
+        "line": 3,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 44,
+        "endColumn": 45,
+        "endLine": 4,
+        "file": "slot.tsx",
+        "line": 4,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "does not treat configured intrinsic tags as slot components: native names",
+    "options": {
+      "interactiveComponents": [
+        "button",
+        "my-button",
+        "Native-Button"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "slot.tsx",
+    "findings": [],
+    "name": "keeps a suppressed parent finding suppressed through the child",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+    "findings": [
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 45,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 2,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 47,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 3,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 44,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 4,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 41,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 5,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 40,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 6,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 42,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 7,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 29,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 8,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 48,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 9,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 53,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 10,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 37,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 11,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 56,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 11,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 42,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 12,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 41,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 13,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 44,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 14,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 39,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 15,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 38,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 16,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 37,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 17,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 37,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 18,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 38,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 19,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 38,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 21,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 54,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 22,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 4,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 23,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 20,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 23,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 46,
+        "file": "playwright-require-interactive-test-id/slots-controls.tsx",
+        "line": 23,
+        "message": "Interactive elements should have a test ID."
+      }
+    ],
+    "name": "matches real Oxlint on saved slot fixtures and custom options: slots-controls",
+    "options": null,
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "playwright-require-interactive-test-id/slots-custom.tsx",
+    "findings": [
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 38,
+        "file": "playwright-require-interactive-test-id/slots-custom.tsx",
+        "line": 3,
+        "message": "Interactive elements should have a test ID."
+      }
+    ],
+    "name": "matches real Oxlint on saved slot fixtures and custom options: slots-custom",
+    "options": null,
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "playwright-require-interactive-test-id/slots-missing.tsx",
+    "findings": [
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 4,
+        "file": "playwright-require-interactive-test-id/slots-missing.tsx",
+        "line": 2,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 4,
+        "file": "playwright-require-interactive-test-id/slots-missing.tsx",
+        "line": 5,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 4,
+        "file": "playwright-require-interactive-test-id/slots-missing.tsx",
+        "line": 8,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 4,
+        "file": "playwright-require-interactive-test-id/slots-missing.tsx",
+        "line": 11,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 4,
+        "file": "playwright-require-interactive-test-id/slots-missing.tsx",
+        "line": 14,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 4,
+        "file": "playwright-require-interactive-test-id/slots-missing.tsx",
+        "line": 17,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 4,
+        "file": "playwright-require-interactive-test-id/slots-missing.tsx",
+        "line": 20,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 4,
+        "file": "playwright-require-interactive-test-id/slots-missing.tsx",
+        "line": 23,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector."
+      }
+    ],
+    "name": "matches real Oxlint on saved slot fixtures and custom options: slots-missing",
+    "options": null,
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "playwright-require-interactive-test-id/slots-shadowed.tsx",
+    "findings": [
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 45,
+        "file": "playwright-require-interactive-test-id/slots-shadowed.tsx",
+        "line": 5,
+        "message": "Interactive elements should have a test ID."
+      },
+      {
+        "code": "no-mistakes(playwright-require-interactive-test-id)",
+        "column": 46,
+        "file": "playwright-require-interactive-test-id/slots-shadowed.tsx",
+        "line": 8,
+        "message": "Interactive elements should have a test ID."
+      }
+    ],
+    "name": "matches real Oxlint on saved slot fixtures and custom options: slots-shadowed",
+    "options": null,
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "playwright-require-interactive-test-id/slots-suppressed.tsx",
+    "findings": [],
+    "name": "matches real Oxlint on saved slot fixtures and custom options: slots-suppressed",
+    "options": null,
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "playwright-require-interactive-test-id/slots-valid.tsx",
+    "findings": [],
+    "name": "matches real Oxlint on saved slot fixtures and custom options: slots-valid",
+    "options": null,
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "slot.tsx",
+    "findings": [
+      {
+        "column": 41,
+        "endColumn": 42,
+        "endLine": 2,
+        "file": "slot.tsx",
+        "line": 2,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "replaces the default slot prop and respects custom selector attributes: data-qa",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ],
+      "selectorAttributes": [
+        "data-qa"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "slot.tsx",
+    "findings": [
+      {
+        "column": 38,
+        "endColumn": 39,
+        "endLine": 3,
+        "file": "slot.tsx",
+        "line": 3,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "replaces the default slot prop and respects custom selector attributes: renderChild",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ],
+      "selectorAttributes": [
+        "data-qa"
+      ],
+      "slotProps": [
+        "renderChild"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "slot.tsx",
+    "findings": [
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 2,
+        "file": "slot.tsx",
+        "line": 2,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+        "messageId": "slot",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 5,
+        "file": "slot.tsx",
+        "line": 5,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+        "messageId": "slot",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 8,
+        "file": "slot.tsx",
+        "line": 8,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+        "messageId": "slot",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 11,
+        "file": "slot.tsx",
+        "line": 11,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+        "messageId": "slot",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 14,
+        "file": "slot.tsx",
+        "line": 14,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+        "messageId": "slot",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 17,
+        "file": "slot.tsx",
+        "line": 17,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+        "messageId": "slot",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 20,
+        "file": "slot.tsx",
+        "line": 20,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+        "messageId": "slot",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 23,
+        "file": "slot.tsx",
+        "line": 23,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+        "messageId": "slot",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "reports absent or nonliteral slot selectors only on the parent",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  },
+  {
+    "file": "slot.tsx",
+    "findings": [
+      {
+        "column": 45,
+        "endColumn": 46,
+        "endLine": 2,
+        "file": "slot.tsx",
+        "line": 2,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 47,
+        "endColumn": 48,
+        "endLine": 3,
+        "file": "slot.tsx",
+        "line": 3,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 44,
+        "endColumn": 45,
+        "endLine": 4,
+        "file": "slot.tsx",
+        "line": 4,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 41,
+        "endColumn": 42,
+        "endLine": 5,
+        "file": "slot.tsx",
+        "line": 5,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 41,
+        "endLine": 6,
+        "file": "slot.tsx",
+        "line": 6,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 42,
+        "endColumn": 43,
+        "endLine": 7,
+        "file": "slot.tsx",
+        "line": 7,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 29,
+        "endColumn": 30,
+        "endLine": 8,
+        "file": "slot.tsx",
+        "line": 8,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 48,
+        "endColumn": 49,
+        "endLine": 9,
+        "file": "slot.tsx",
+        "line": 9,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 53,
+        "endColumn": 54,
+        "endLine": 10,
+        "file": "slot.tsx",
+        "line": 10,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 37,
+        "endColumn": 38,
+        "endLine": 11,
+        "file": "slot.tsx",
+        "line": 11,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 56,
+        "endColumn": 62,
+        "endLine": 11,
+        "file": "slot.tsx",
+        "line": 11,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 42,
+        "endColumn": 48,
+        "endLine": 12,
+        "file": "slot.tsx",
+        "line": 12,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 41,
+        "endColumn": 42,
+        "endLine": 13,
+        "file": "slot.tsx",
+        "line": 13,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 44,
+        "endColumn": 45,
+        "endLine": 14,
+        "file": "slot.tsx",
+        "line": 14,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 39,
+        "endColumn": 40,
+        "endLine": 15,
+        "file": "slot.tsx",
+        "line": 15,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 38,
+        "endColumn": 39,
+        "endLine": 16,
+        "file": "slot.tsx",
+        "line": 16,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 37,
+        "endColumn": 38,
+        "endLine": 17,
+        "file": "slot.tsx",
+        "line": 17,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 37,
+        "endColumn": 38,
+        "endLine": 18,
+        "file": "slot.tsx",
+        "line": 18,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 38,
+        "endColumn": 39,
+        "endLine": 19,
+        "file": "slot.tsx",
+        "line": 19,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 38,
+        "endColumn": 39,
+        "endLine": 21,
+        "file": "slot.tsx",
+        "line": 21,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 54,
+        "endColumn": 58,
+        "endLine": 22,
+        "file": "slot.tsx",
+        "line": 22,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 10,
+        "endLine": 23,
+        "file": "slot.tsx",
+        "line": 23,
+        "message": "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+        "messageId": "slot",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 20,
+        "endColumn": 21,
+        "endLine": 23,
+        "file": "slot.tsx",
+        "line": 23,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      },
+      {
+        "column": 46,
+        "endColumn": 52,
+        "endLine": 23,
+        "file": "slot.tsx",
+        "line": 23,
+        "message": "Interactive elements should have a test ID.",
+        "messageId": "missing",
+        "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+        "severity": 2
+      }
+    ],
+    "name": "retains checks for non-slots, ambiguous children and overrides",
+    "options": {
+      "interactiveComponents": [
+        "Button"
+      ]
+    },
+    "rule": "playwright-require-interactive-test-id"
+  }
+]

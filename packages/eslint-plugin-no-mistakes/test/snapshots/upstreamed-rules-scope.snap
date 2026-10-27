@@ -1,0 +1,16 @@
+[
+  {
+    "file": "static-code-analysis/rules/example.test.ts",
+    "findings": [],
+    "name": "diagnostic-message.valid.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "backend/services/email-address-validator/errors.generated.test.mts",
+    "findings": [],
+    "name": "generated-message.generated.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  }
+]

@@ -1,0 +1,457 @@
+[
+  {
+    "file": "nested-try.mjs",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 4,
+        "endLine": 24,
+        "file": "nested-try.mjs",
+        "line": 22,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 4,
+        "endLine": 37,
+        "file": "nested-try.mjs",
+        "line": 35,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "does not attribute an inner catch to the outer boolean",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "suppression-file.mjs",
+    "findings": [],
+    "name": "honors file, line, and next-line suppression for this rule only: suppression-file.mjs",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "suppressions.mjs",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 47,
+        "endLine": 6,
+        "file": "suppressions.mjs",
+        "line": 6,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 47,
+        "endLine": 7,
+        "file": "suppressions.mjs",
+        "line": 7,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "honors file, line, and next-line suppression for this rule only: suppressions.mjs",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "attached.mjs",
+    "findings": [],
+    "name": "ignores non-literals, other methods, and awaits that leave the try: attached.mjs",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "valid-shapes.mjs",
+    "findings": [],
+    "name": "ignores non-literals, other methods, and awaits that leave the try: valid-shapes.mjs",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "attached.mjs",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 55,
+        "endLine": 3,
+        "file": "attached.mjs",
+        "line": 3,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "replaces the default method list: attached.mjs isAttached",
+    "options": {
+      "methods": [
+        "isAttached"
+      ]
+    },
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "catch-false.mjs",
+    "findings": [],
+    "name": "replaces the default method list: catch-false.mjs empty",
+    "options": {
+      "methods": []
+    },
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "catch-false.mjs",
+    "findings": [],
+    "name": "replaces the default method list: catch-false.mjs isAttached",
+    "options": {
+      "methods": [
+        "isAttached"
+      ]
+    },
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "catch-false.mjs",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 54,
+        "endLine": 3,
+        "file": "catch-false.mjs",
+        "line": 3,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "replaces the default method list: catch-false.mjs isVisible",
+    "options": {
+      "methods": [
+        "isVisible"
+      ]
+    },
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "catch-true.mjs",
+    "findings": [],
+    "name": "replaces the default method list: catch-true.mjs isVisible",
+    "options": {
+      "methods": [
+        "isVisible"
+      ]
+    },
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "catch-false.mjs",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 54,
+        "endLine": 3,
+        "file": "catch-false.mjs",
+        "line": 3,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "reports a catch that returns a boolean literal: catch-false.mjs",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "catch-true.mjs",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 52,
+        "endLine": 3,
+        "file": "catch-true.mjs",
+        "line": 3,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "reports a catch that returns a boolean literal: catch-true.mjs",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "bang-literal.mjs",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 44,
+        "endLine": 2,
+        "file": "bang-literal.mjs",
+        "line": 2,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 43,
+        "endLine": 3,
+        "file": "bang-literal.mjs",
+        "line": 3,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 4,
+        "endLine": 11,
+        "file": "bang-literal.mjs",
+        "line": 9,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "reports a numeric not and a returned state binding: bang-literal.mjs",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "bound-state.mjs",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 4,
+        "endLine": 10,
+        "file": "bound-state.mjs",
+        "line": 8,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 4,
+        "endLine": 19,
+        "file": "bound-state.mjs",
+        "line": 17,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "reports a numeric not and a returned state binding: bound-state.mjs",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "try-catch-literal.mjs",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 4,
+        "endLine": 6,
+        "file": "try-catch-literal.mjs",
+        "line": 4,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 4,
+        "endLine": 14,
+        "file": "try-catch-literal.mjs",
+        "line": 12,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "reports a try/catch that returns a boolean literal",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "asserted.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 66,
+        "endLine": 2,
+        "file": "asserted.ts",
+        "line": 2,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 4,
+        "endLine": 7,
+        "file": "asserted.ts",
+        "line": 5,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "reports block bodies, optional calls, and a returned await: asserted.ts",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "invalid-shapes.mjs",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 5,
+        "endLine": 4,
+        "file": "invalid-shapes.mjs",
+        "line": 2,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 52,
+        "endLine": 5,
+        "file": "invalid-shapes.mjs",
+        "line": 5,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 5,
+        "endLine": 8,
+        "file": "invalid-shapes.mjs",
+        "line": 6,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 47,
+        "endLine": 9,
+        "file": "invalid-shapes.mjs",
+        "line": 9,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 50,
+        "endLine": 10,
+        "file": "invalid-shapes.mjs",
+        "line": 10,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 4,
+        "endLine": 22,
+        "file": "invalid-shapes.mjs",
+        "line": 19,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "reports block bodies, optional calls, and a returned await: invalid-shapes.mjs",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "expect-assertion.mjs",
+    "findings": [],
+    "name": "stays silent for a plain expect assertion",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "catch-rethrow.mjs",
+    "findings": [],
+    "name": "stays silent when a named handler rethrows",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "catch-false.mjs",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 54,
+        "endLine": 3,
+        "file": "catch-false.mjs",
+        "line": 3,
+        "message": "Seed the row first.",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "uses the configured message: custom",
+    "options": {
+      "message": "Seed the row first."
+    },
+    "rule": "playwright-no-swallowed-visibility"
+  },
+  {
+    "file": "catch-false.mjs",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 54,
+        "endLine": 3,
+        "file": "catch-false.mjs",
+        "line": 3,
+        "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+        "messageId": "swallowed",
+        "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+        "severity": 2
+      }
+    ],
+    "name": "uses the configured message: fallback",
+    "options": null,
+    "rule": "playwright-no-swallowed-visibility"
+  }
+]

@@ -1,16 +1,11 @@
-import { RuleTester } from "eslint";
-import { describe, it } from "vitest";
-import rule from "../src/rules/playwright-prefer-get-by-test-id.js";
+import { expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { fixture } from "./helpers.mjs";
 
-RuleTester.describe = describe;
-RuleTester.it = it;
+const ruleName = "playwright-prefer-get-by-test-id";
+const languageOptions = { ecmaVersion: 2024, sourceType: "module" };
 
-const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2024, sourceType: "module" },
-});
-
-ruleTester.run("playwright-prefer-get-by-test-id", rule, {
+const suite = {
   valid: [
     { code: 'page.getByTestId("save")' },
     { code: 'page[method]("[data-pw=\\"computed\\"]")' },
@@ -38,55 +33,48 @@ ruleTester.run("playwright-prefer-get-by-test-id", rule, {
     {
       code: fixture("playwright-prefer-get-by-test-id/suppressed-drag.jsx"),
       // Suppressing the source must leave the target selector visible.
-      errors: [{ messageId: "prefer" }],
     },
     {
       code: 'locator("[data-pw=\\"direct\\"]")',
-      errors: [{ messageId: "prefer", data: { value: "direct" } }],
     },
     {
       code: 'page.locator("[data-pw=\\"save\\"]")',
-      errors: [{ messageId: "prefer", data: { value: "save" } }],
     },
     {
       code: "page.locator(\"[data-pw='open']\")",
-      errors: [{ messageId: "prefer", data: { value: "open" } }],
     },
     {
       code: 'page.locator("[ data-pw = unquoted ]")',
-      errors: [{ messageId: "prefer", data: { value: "unquoted" } }],
     },
     {
       code: 'page.locator("[data-pw=flagged i]")',
-      errors: [{ messageId: "prefer", data: { value: "flagged" } }],
     },
     {
       code: 'page.dragAndDrop("[data-testid=\\"source\\"]", "[data-pw=\\"target\\"]")',
-      errors: [
-        { messageId: "prefer", data: { value: "source" } },
-        { messageId: "prefer", data: { value: "target" } },
-      ],
     },
     {
       code: 'page.locator("[data-pw=\\"save\\"]", { hasText: "foo" })',
-      errors: [{ messageId: "prefer", data: { value: "save" } }],
     },
     {
       code: 'page.locator("invalid", { has: page.locator("[data-pw=\\"ignored\\"]") })',
-      errors: [{ messageId: "prefer", data: { value: "ignored" } }],
     },
     {
       code: 'page.dragAndDrop(selector, "[data-pw=\\"target\\"]")',
-      errors: [{ messageId: "prefer", data: { value: "target" } }],
     },
     {
       code: 'page.dragAndDrop("[data-pw=\\"source\\"]", selector)',
-      errors: [{ messageId: "prefer", data: { value: "source" } }],
     },
     {
       code: 'page.locator("[data-qa=\\"save\\"]")',
       options: [{ selectorAttributes: ["data-qa"] }],
-      errors: [{ messageId: "prefer", data: { value: "save" } }],
     },
   ],
+};
+
+it("snapshots playwright-prefer-get-by-test-id diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      ruleTester: snapshotSuite(ruleName, languageOptions, suite),
+    }),
+  ).toMatchFileSnapshot("snapshots/prefer-get-by-test-id.snap");
 });

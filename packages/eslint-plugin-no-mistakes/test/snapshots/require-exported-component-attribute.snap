@@ -1,0 +1,454 @@
+{
+  "messages": [
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "name": "ignores null branches",
+      "options": null
+    },
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 43,
+          "endColumn": 53,
+          "endLine": 1,
+          "file": "fixture.jsx",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        },
+        {
+          "column": 56,
+          "endColumn": 61,
+          "endLine": 1,
+          "file": "fixture.jsx",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "name": "reports one missing branch per JSX return branch",
+      "options": null
+    }
+  ],
+  "ruleTester": [
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "attributes": [
+            "data-pw",
+            "aria-label"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "ignoreComponents": [
+            "Button"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "components": [
+            "Card"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "componentNamePattern": "^widget$"
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowSpreadAttributes": true
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "exportTypes": [
+            "named"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "exportTypes": [
+            "named"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "checkAnonymousDefault": true
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "wrappers": [
+            "customWrapper"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 35,
+          "endColumn": 45,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 39,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 28,
+          "endColumn": 38,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 43,
+          "endColumn": 53,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 28,
+          "endColumn": 38,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 38,
+          "endColumn": 48,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 46,
+          "endColumn": 56,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 43,
+          "endColumn": 53,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 93,
+          "endColumn": 103,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 35,
+          "endColumn": 63,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "attributes": [
+            "data-pw"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 37,
+          "endColumn": 47,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'default' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "checkAnonymousDefault": true
+        }
+      ]
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 35,
+          "endColumn": 56,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'Button' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "<input>",
+      "findings": [
+        {
+          "column": 39,
+          "endColumn": 49,
+          "endLine": 1,
+          "file": "",
+          "line": 1,
+          "message": "Exported component 'SaveButton' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "components": [
+            "/Button$/"
+          ]
+        }
+      ]
+    }
+  ]
+}

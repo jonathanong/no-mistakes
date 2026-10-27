@@ -1,22 +1,19 @@
 import tsParser from "@typescript-eslint/parser";
-import { RuleTester } from "eslint";
-import { describe, it } from "vitest";
+import { expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { plugin } from "./helpers.mjs";
 
-const rule = plugin.rules["playwright-no-raw-scroll-pagination"];
-
-RuleTester.describe = describe;
-RuleTester.it = it;
-
-const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2024, sourceType: "module" },
-});
+const ruleName = "playwright-no-raw-scroll-pagination";
+const rule = plugin.rules[ruleName];
+const languageOptions = { ecmaVersion: 2024, sourceType: "module" };
+// RuleTester linted this plugin rule object.
+void rule;
 
 const PAGINATED_WAIT = `page.waitForRequest(
   (req) => req.url().includes("/api/v1/posts") && req.url().includes("after=")
 );`;
 
-ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
+const suite = {
   valid: [
     // Non-Playwright path: the rule is inert outside e2e/playwright specs.
     {
@@ -138,7 +135,6 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // waitForResponse variant, matching on the response URL's search params.
     {
@@ -147,73 +143,55 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
       );
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // Bare scrollBy, and the cursor param mentioned via a regex literal.
     {
       code: `page.waitForRequest((req) => /after=/.test(req.url()));\nawait page.evaluate(() => scrollBy(0, 200));`,
       filename: "e2e/reviews.spec.ts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // Cursor param mentioned via a template literal quasi.
     {
       code: "page.waitForRequest((req) => req.url().includes(`after=${cursor}`));\nawait page.evaluate(() => window.scrollTo(0, 0));",
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // Cursor param mentioned via a plain string literal passed directly (no predicate function).
     {
       code: 'page.waitForRequest("**/api/v1/posts?after=abc");\nawait page.evaluate(() => window.scrollTo(0, 0));',
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // Two raw scrolls in one file with a single qualifying wait — both are reported.
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, 0));\nawait page.evaluate(() => window.scrollBy(0, 100));`,
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }, { messageId: "rawScroll" }],
     },
     // Custom cursorParams option: "page" is not in the default set.
     {
       code: 'page.waitForRequest((req) => req.url().includes("/api/v1/posts?page=2"));\nawait page.evaluate(() => window.scrollTo(0, 0));',
       filename: "playwright/reviews.spec.mts",
       options: [{ cursorParams: ["page"] }],
-      errors: [{ messageId: "rawScroll" }],
     },
     // scrollHelper option is interpolated into the message.
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
       filename: "playwright/reviews.spec.mts",
       options: [{ scrollHelper: "scrollToLoadMore" }],
-      errors: [
-        {
-          messageId: "rawScroll",
-          data: {
-            helperHint:
-              " Use scrollToLoadMore, which scrolls repeatedly until the request fires, instead.",
-          },
-        },
-      ],
     },
     // .pw.spec path naming convention is also recognized as a Playwright file.
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
       filename: "reviews.pw.spec.ts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // window.scroll(...) is the same imperative position-based API as scrollTo, just under its
     // other name, and must be matched too.
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window.scroll(0, document.body.scrollHeight));`,
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // A bare, unshadowed `scroll()` call resolves to the global and is matched the same as
     // scrollTo/scrollBy.
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => scroll(0, 0));`,
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // The cursor param is mentioned via a regex literal whose own boundary syntax
     // (`[?&]after=`) leaves a `]` immediately before the param name in the pattern *source* —
@@ -222,61 +200,52 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
     {
       code: `page.waitForRequest((req) => /[?&]after=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // A file path that doesn't match the naming convention is still recognized once it imports
     // @playwright/test.
     {
       code: `import { test } from "@playwright/test";\n${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
       filename: "src/util.ts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // A computed member access with a static string property name (`window["scrollTo"]`) is just
     // as statically knowable as the dot form and must be matched the same way.
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window["scrollTo"](0, document.body.scrollHeight));`,
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // The cursor param is mentioned via a static (interpolation-free) template literal passed to
     // .searchParams.has(...) — just as statically knowable as a plain string literal argument.
     {
       code: "page.waitForRequest((req) => new URL(req.url()).searchParams.has(`after`));\nawait page.evaluate(() => window.scrollTo(0, 0));",
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // A regex whose pattern source has a bare `&` written directly before the param name (not one
     // of the compound alternation/class constructs above) is just as unambiguous a boundary.
     {
       code: `page.waitForRequest((req) => /&after=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // Same for a bare escaped `\?` written directly before the param name.
     {
       code: "page.waitForRequest((req) => /\\?after=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));",
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // Same for a `^` start anchor written directly before the param name.
     {
       code: `page.waitForRequest((req) => /^after=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // A statically computed cursor-wait access (`page["waitForRequest"]`) is just as unambiguous
     // as dot access and must be matched the same way.
     {
       code: 'page["waitForRequest"]((req) => req.url().includes("after="));\nawait page.evaluate(() => window.scrollTo(0, 0));',
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // .searchParams.getAll(...) is the same static cursor-param check as .has()/.get(), just
     // under its other name, and must be recognized too.
     {
       code: "page.waitForRequest((req) => new URL(req.url()).searchParams.getAll(`after`).length > 0);\nawait page.evaluate(() => window.scrollTo(0, 0));",
       filename: "playwright/reviews.spec.mts",
-      errors: [{ messageId: "rawScroll" }],
     },
     // A literal wrapped in a runtime `as` cast is still a real, evaluated value — the
     // value-wrapper recurses into its own `.expression`, so the literal underneath must still be
@@ -285,7 +254,14 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
       code: 'page.waitForRequest((req) => req.url().includes("after=" as string));\nawait page.evaluate(() => window.scrollTo(0, 0));',
       filename: "playwright/reviews.spec.mts",
       languageOptions: { parser: tsParser },
-      errors: [{ messageId: "rawScroll" }],
     },
   ],
+};
+
+it("snapshots playwright-no-raw-scroll-pagination diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      ruleTester: snapshotSuite(ruleName, languageOptions, suite),
+    }),
+  ).toMatchFileSnapshot("snapshots/playwright-no-raw-scroll-pagination.snap");
 });

@@ -1,0 +1,256 @@
+[
+  {
+    "file": "shared-state-callback-shadow.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-callback-shadow.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-configure-serial-after-setup.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-configure-serial-after-setup.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-configure-serial.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-configure-serial.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-describe-alias-scope.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 16,
+        "file": "shared-state-describe-alias-scope.invalid.test.ts",
+        "line": 16,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-describe-alias-scope.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-describe-modifier.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 16,
+        "file": "shared-state-describe-modifier.invalid.test.ts",
+        "line": 16,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-describe-modifier.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-exported-extend-alias.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 23,
+        "endLine": 8,
+        "file": "shared-state-exported-extend-alias.invalid.test.ts",
+        "line": 8,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-exported-extend-alias.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-extend-alias.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 11,
+        "endLine": 14,
+        "file": "shared-state-extend-alias.invalid.test.ts",
+        "line": 14,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 12,
+        "endLine": 18,
+        "file": "shared-state-extend-alias.invalid.test.ts",
+        "line": 18,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 12,
+        "endLine": 22,
+        "file": "shared-state-extend-alias.invalid.test.ts",
+        "line": 22,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 14,
+        "endLine": 26,
+        "file": "shared-state-extend-alias.invalid.test.ts",
+        "line": 26,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 11,
+        "endLine": 30,
+        "file": "shared-state-extend-alias.invalid.test.ts",
+        "line": 30,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-extend-alias.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-extend-setup.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-extend-setup.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-file-configure-serial.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-file-configure-serial.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-it-alias.invalid.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 23,
+        "endLine": 6,
+        "file": "shared-state-it-alias.invalid.test.ts",
+        "line": 6,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-it-alias.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-non-test-configure.invalid.test.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 25,
+        "endLine": 16,
+        "file": "shared-state-non-test-configure.invalid.test.ts",
+        "line": 16,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-non-test-configure.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-quoted-configure-serial.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-quoted-configure-serial.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-serial-alias-name.invalid.test.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 24,
+        "endLine": 12,
+        "file": "shared-state-serial-alias-name.invalid.test.ts",
+        "line": 12,
+        "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+        "messageId": "shared",
+        "ruleId": "no-mistakes/test-no-shared-state",
+        "severity": 2
+      }
+    ],
+    "name": "shared-state-serial-alias-name.invalid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-serial-beforeall.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-serial-beforeall.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-serial-named-beforeall.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-serial-named-beforeall.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-shadowed-extend-alias.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-shadowed-extend-alias.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-shadowed-it-alias.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-shadowed-it-alias.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  },
+  {
+    "file": "shared-state-shadowed-local-state.valid.test.ts",
+    "findings": [],
+    "name": "shared-state-shadowed-local-state.valid.test.ts",
+    "options": null,
+    "rule": "test-no-shared-state"
+  }
+]

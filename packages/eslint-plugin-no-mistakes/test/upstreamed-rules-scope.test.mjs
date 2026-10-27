@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
 import { __dirname, messages } from "./helpers.mjs";
 
 function fixture(name) {
@@ -117,24 +118,6 @@ describe("upstreamed generic rule scoping", () => {
     );
     assert.deepEqual(
       messages(
-        fixture("diagnostic-message.valid.test.ts"),
-        "test-no-error-message-matching",
-        undefined,
-        "static-code-analysis/rules/example.test.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("generated-message.generated.test.ts"),
-        "test-no-error-message-matching",
-        undefined,
-        "backend/services/email-address-validator/errors.generated.test.mts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
         fixture("next-script-inline-boot.tsx"),
         "nextjs-no-manual-script-tags",
         { allowInlineScriptIdPatterns: ["^theme-"] },
@@ -159,6 +142,36 @@ describe("upstreamed generic rule scoping", () => {
         "app/layout.tsx",
       ),
       [],
+    );
+  });
+
+  it("snapshots test-no-error-message-matching diagnostics", async () => {
+    const cases = [
+      {
+        file: "static-code-analysis/rules/example.test.ts",
+        findings: pluginFindings(
+          fixture("diagnostic-message.valid.test.ts"),
+          "test-no-error-message-matching",
+          undefined,
+          "static-code-analysis/rules/example.test.ts",
+        ),
+        name: "diagnostic-message.valid.test.ts",
+        rule: "test-no-error-message-matching",
+      },
+      {
+        file: "backend/services/email-address-validator/errors.generated.test.mts",
+        findings: pluginFindings(
+          fixture("generated-message.generated.test.ts"),
+          "test-no-error-message-matching",
+          undefined,
+          "backend/services/email-address-validator/errors.generated.test.mts",
+        ),
+        name: "generated-message.generated.test.ts",
+        rule: "test-no-error-message-matching",
+      },
+    ];
+    await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+      "snapshots/upstreamed-rules-scope.snap",
     );
   });
 });

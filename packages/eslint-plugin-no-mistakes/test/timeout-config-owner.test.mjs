@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { fixture, lint, require, __dirname } from "./helpers.mjs";
+import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
 
 const options = { unknownValues: "finding", defaultMax: 30000, overrideMax: 30000 };
 function findings(framework, file, configUnknownValues) {
@@ -55,32 +56,44 @@ describe("configuration timeout owner delegation", () => {
   it("retains Playwright fixture, suite, setter and inherited-slot findings", () => {
     const before = findings("playwright", "config-owner-mixed");
     const after = findings("playwright", "config-owner-mixed", "defer-to-runner");
-    assert.ok(before.some(({ line }) => line === 3));
-    assert.ok(!after.some(({ line }) => line === 3));
     assert.deepEqual(
       after,
       before.filter(({ line }) => line !== 3),
     );
-    assert.ok(after.some(({ line, messageId }) => line === 4 && messageId === "unknown"));
-    for (const line of [5, 6, 7]) assert.ok(after.some((finding) => finding.line === line));
-    assert.ok(after.some(({ line, messageId }) => line === 7 && messageId === "effectiveSlot"));
   });
   it("delegates opaque Playwright config merging without hiding known or mixed-origin risks", () => {
     const before = findings("playwright", "config-owner-known");
     const after = findings("playwright", "config-owner-known", "defer-to-runner");
-    for (const line of [3, 8]) assert.ok(before.some((finding) => finding.line === line));
     assert.deepEqual(
       after,
       before.filter(({ line }) => line !== 3 && line !== 8),
     );
-    assert.ok(after.some(({ line, messageId }) => line === 4 && messageId === "timeout"));
-    assert.equal(
-      after.filter(({ line, messageId }) => line === 4 && messageId === "invalid").length,
-      2,
-    );
-    assert.ok(after.some(({ line, messageId }) => line === 5 && messageId === "invalid"));
-    assert.ok(after.some(({ line, messageId }) => line === 6 && messageId === "unknown"));
-    assert.ok(after.some(({ line, messageId }) => line === 7 && messageId === "unknown"));
+  });
+  it("snapshots playwright configuration owner diagnostics", async () => {
+    const rule = "playwright-test-timeout-cap";
+    const ownerCase = (name, configUnknownValues) => {
+      const options =
+        configUnknownValues === undefined
+          ? { unknownValues: "finding" }
+          : { unknownValues: "finding", configUnknownValues };
+      return {
+        name: configUnknownValues === undefined ? name : `${name} ${configUnknownValues}`,
+        file: "fixture.test.ts",
+        rule,
+        options,
+        findings: pluginFindings(fixture(`${rule}/${name}.ts`), rule, options, "fixture.test.ts"),
+      };
+    };
+    await expect(
+      snapshotDocument(
+        snapshotCases([
+          ownerCase("config-owner-mixed"),
+          ownerCase("config-owner-mixed", "defer-to-runner"),
+          ownerCase("config-owner-known"),
+          ownerCase("config-owner-known", "defer-to-runner"),
+        ]),
+      ),
+    ).toMatchFileSnapshot("snapshots/timeout-config-owner.snap");
   });
   for (const framework of ["vitest", "playwright"]) {
     it(`${framework} retains located native findings without plugin exceptions`, () => {

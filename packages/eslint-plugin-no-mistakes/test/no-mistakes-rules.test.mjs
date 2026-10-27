@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
 import { __dirname, lint, messages, require } from "./helpers.mjs";
 
 function ruleFixture(rule, name) {
@@ -247,177 +248,7 @@ defaultedEnqueue("1");
 });
 
 describe("test-no-delayed-rejects", () => {
-  it("reports rejection observers attached after coordination awaits", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("test-no-delayed-rejects", "invalid.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "invalid.ts",
-      ),
-      [
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-        "delayedReject",
-      ],
-    );
-  });
-
-  it("allows immediate observation and unsupported indirection", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("test-no-delayed-rejects", "valid.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "valid.ts",
-      ),
-      [],
-    );
-  });
-
-  it("recognizes expect imported from @jest/globals but not other modules", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("test-no-delayed-rejects", "jest-invalid.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "jest-invalid.ts",
-      ),
-      ["delayedReject"],
-    );
-    assert.deepEqual(
-      messages(
-        ruleFixture("test-no-delayed-rejects", "non-framework-expect-valid.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "non-framework-expect-valid.ts",
-      ),
-      [],
-    );
-  });
-
-  it("reports a delayed rejects observer at module scope", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("test-no-delayed-rejects", "module-level-invalid.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "module-level-invalid.ts",
-      ),
-      ["delayedReject"],
-    );
-    assert.deepEqual(
-      messages(
-        ruleFixture("test-no-delayed-rejects", "module-level-valid.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "module-level-valid.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        ruleFixture("test-no-delayed-rejects", "module-level-catch-before-await.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "module-level-catch-before-await.ts",
-      ),
-      [],
-    );
-  });
-
-  it("recognizes the ordinary global expect binding", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("test-no-delayed-rejects", "global-invalid.ts"),
-        "test-no-delayed-rejects",
-        undefined,
-        "global-invalid.ts",
-      ),
-      ["delayedReject"],
-    );
-  });
-
-  it("does not count deferred or conditional observers as attached", () => {
+  it("snapshots test-no-delayed-rejects diagnostics", async () => {
     const deferredField = `async function run() {
       const update = startOperation();
       class Deferred { observed = update.catch(() => void 0); }
@@ -430,11 +261,6 @@ describe("test-no-delayed-rejects", () => {
       await release();
       await expect(update).rejects.toThrow();
     }`;
-    assert.deepEqual(messages(deferredField, "test-no-delayed-rejects"), ["delayedReject"]);
-    assert.deepEqual(messages(destructuringDefault, "test-no-delayed-rejects"), ["delayedReject"]);
-  });
-
-  it("recognizes guaranteed catch and primitive absent handlers", () => {
     const guaranteedCatch = `async function run() {
       const update = startOperation();
       try { throw new Error("expected"); }
@@ -448,8 +274,56 @@ describe("test-no-delayed-rejects", () => {
       await release();
       await expect(update).rejects.toThrow();
     }`;
-    assert.deepEqual(messages(guaranteedCatch, "test-no-delayed-rejects"), []);
-    assert.deepEqual(messages(absentFulfillmentHandler, "test-no-delayed-rejects"), []);
+    const files = [
+      "invalid.ts",
+      "valid.ts",
+      "jest-invalid.ts",
+      "non-framework-expect-valid.ts",
+      "module-level-invalid.ts",
+      "module-level-valid.ts",
+      "module-level-catch-before-await.ts",
+      "global-invalid.ts",
+    ];
+    const cases = [
+      ...files.map((file) => ({
+        file,
+        findings: pluginFindings(
+          ruleFixture("test-no-delayed-rejects", file),
+          "test-no-delayed-rejects",
+          undefined,
+          file,
+        ),
+        name: file,
+        rule: "test-no-delayed-rejects",
+      })),
+      {
+        file: "fixture.jsx",
+        findings: pluginFindings(deferredField, "test-no-delayed-rejects"),
+        name: "deferredField",
+        rule: "test-no-delayed-rejects",
+      },
+      {
+        file: "fixture.jsx",
+        findings: pluginFindings(destructuringDefault, "test-no-delayed-rejects"),
+        name: "destructuringDefault",
+        rule: "test-no-delayed-rejects",
+      },
+      {
+        file: "fixture.jsx",
+        findings: pluginFindings(guaranteedCatch, "test-no-delayed-rejects"),
+        name: "guaranteedCatch",
+        rule: "test-no-delayed-rejects",
+      },
+      {
+        file: "fixture.jsx",
+        findings: pluginFindings(absentFulfillmentHandler, "test-no-delayed-rejects"),
+        name: "absentFulfillmentHandler",
+        rule: "test-no-delayed-rejects",
+      },
+    ];
+    await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+      "snapshots/no-mistakes-rules-test-no-delayed-rejects.snap",
+    );
   });
 });
 

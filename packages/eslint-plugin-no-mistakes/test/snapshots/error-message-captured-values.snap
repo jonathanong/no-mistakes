@@ -1,0 +1,512 @@
+[
+  {
+    "file": "captured-eval.cjs",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 4,
+        "file": "captured-eval.cjs",
+        "line": 4,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "does not confuse direct eval bindings with outer CommonJS captures",
+    "options": null,
+    "rule": "test-no-error-message-matching",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "captured-source-change.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 6,
+        "file": "captured-source-change.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 9,
+        "file": "captured-source-change.ts",
+        "line": 9,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 26,
+        "endLine": 13,
+        "file": "captured-source-change.ts",
+        "line": 13,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "keeps captures message-derived after source binding or property changes",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-cjs-rewrite.cjs",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-cjs-rewrite.cjs",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-controls.ts",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-controls.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-eval.cjs",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 3,
+        "file": "test-no-error-message-matching/captured-eval.cjs",
+        "line": 4,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      }
+    ],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-eval.cjs",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-eval.cts",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-eval.cts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-order.ts",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-order.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-rewrites.ts",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-rewrites.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-satisfies-rewrite.ts",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-satisfies-rewrite.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-satisfies.ts",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 1,
+        "file": "test-no-error-message-matching/captured-satisfies.ts",
+        "line": 5,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 1,
+        "file": "test-no-error-message-matching/captured-satisfies.ts",
+        "line": 7,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 1,
+        "file": "test-no-error-message-matching/captured-satisfies.ts",
+        "line": 8,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 3,
+        "file": "test-no-error-message-matching/captured-satisfies.ts",
+        "line": 10,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 3,
+        "file": "test-no-error-message-matching/captured-satisfies.ts",
+        "line": 11,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      }
+    ],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-satisfies.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-source-change.ts",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 1,
+        "file": "test-no-error-message-matching/captured-source-change.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 1,
+        "file": "test-no-error-message-matching/captured-source-change.ts",
+        "line": 9,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 3,
+        "file": "test-no-error-message-matching/captured-source-change.ts",
+        "line": 13,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      }
+    ],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-source-change.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-source-rewrites.ts",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-source-rewrites.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-suppressed-file.ts",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-suppressed-file.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-suppressed.ts",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-suppressed.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-values.ts",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 1,
+        "file": "test-no-error-message-matching/captured-values.ts",
+        "line": 4,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 1,
+        "file": "test-no-error-message-matching/captured-values.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 1,
+        "file": "test-no-error-message-matching/captured-values.ts",
+        "line": 9,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 1,
+        "file": "test-no-error-message-matching/captured-values.ts",
+        "line": 11,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 3,
+        "file": "test-no-error-message-matching/captured-values.ts",
+        "line": 14,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 3,
+        "file": "test-no-error-message-matching/captured-values.ts",
+        "line": 15,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      },
+      {
+        "code": "no-mistakes(test-no-error-message-matching)",
+        "column": 3,
+        "file": "test-no-error-message-matching/captured-values.ts",
+        "line": 16,
+        "message": "Do not assert on err.message; check the error type or code instead."
+      }
+    ],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-values.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "test-no-error-message-matching/captured-with.js",
+    "findings": [],
+    "name": "matches real Oxlint for captures, controls and suppressions: captured-with.js",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured-suppressed-file.ts",
+    "findings": [],
+    "name": "preserves file, line, next-line and filename exclusions: captured-suppressed-file.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured-suppressed.ts",
+    "findings": [],
+    "name": "preserves file, line, next-line and filename exclusions: captured-suppressed.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured.generated.ts",
+    "findings": [],
+    "name": "preserves file, line, next-line and filename exclusions: generated",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "static-code-analysis/captured.ts",
+    "findings": [],
+    "name": "preserves file, line, next-line and filename exclusions: static-code-analysis",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured-satisfies-rewrite.ts",
+    "findings": [],
+    "name": "preserves identity through erased satisfies wrappers: captured-satisfies-rewrite.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured-satisfies.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 5,
+        "file": "captured-satisfies.ts",
+        "line": 5,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 52,
+        "endLine": 7,
+        "file": "captured-satisfies.ts",
+        "line": 7,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 64,
+        "endLine": 8,
+        "file": "captured-satisfies.ts",
+        "line": 8,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 28,
+        "endLine": 10,
+        "file": "captured-satisfies.ts",
+        "line": 10,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 41,
+        "endLine": 11,
+        "file": "captured-satisfies.ts",
+        "line": 11,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "preserves identity through erased satisfies wrappers: captured-satisfies.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured-cjs-rewrite.cjs",
+    "findings": [],
+    "name": "preserves mutable, shadowed, dynamic, body and unsupported value boundaries: captured-cjs-rewrite.cjs",
+    "options": null,
+    "rule": "test-no-error-message-matching",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "captured-controls.ts",
+    "findings": [],
+    "name": "preserves mutable, shadowed, dynamic, body and unsupported value boundaries: captured-controls.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured-eval.cts",
+    "findings": [],
+    "name": "preserves mutable, shadowed, dynamic, body and unsupported value boundaries: captured-eval.cts",
+    "options": null,
+    "rule": "test-no-error-message-matching",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "captured-order.ts",
+    "findings": [],
+    "name": "preserves mutable, shadowed, dynamic, body and unsupported value boundaries: captured-order.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured-rewrites.ts",
+    "findings": [],
+    "name": "preserves mutable, shadowed, dynamic, body and unsupported value boundaries: captured-rewrites.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured-source-rewrites.ts",
+    "findings": [],
+    "name": "preserves mutable, shadowed, dynamic, body and unsupported value boundaries: captured-source-rewrites.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "captured-with.js",
+    "findings": [],
+    "name": "preserves mutable, shadowed, dynamic, body and unsupported value boundaries: captured-with.js",
+    "options": null,
+    "rule": "test-no-error-message-matching",
+    "sourceType": "script"
+  },
+  {
+    "file": "captured-values.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 4,
+        "file": "captured-values.ts",
+        "line": 4,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 41,
+        "endLine": 6,
+        "file": "captured-values.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 51,
+        "endLine": 9,
+        "file": "captured-values.ts",
+        "line": 9,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 11,
+        "file": "captured-values.ts",
+        "line": 11,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 28,
+        "endLine": 14,
+        "file": "captured-values.ts",
+        "line": 14,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 22,
+        "endLine": 15,
+        "file": "captured-values.ts",
+        "line": 15,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 22,
+        "endLine": 16,
+        "file": "captured-values.ts",
+        "line": 16,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "reports immutable captures, static keys, wrappers and alias chains at their assertions",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  }
+]

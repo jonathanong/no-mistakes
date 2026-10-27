@@ -1,0 +1,313 @@
+[
+  {
+    "file": "test-no-delayed-rejects/promise-alias-with.cjs",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 32,
+        "endLine": 36,
+        "file": "test-no-delayed-rejects/promise-alias-with.cjs",
+        "line": 36,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "does not confuse with-object getters with lexical promise aliases in script mode",
+    "options": null,
+    "rule": "test-no-delayed-rejects",
+    "sourceType": "script"
+  },
+  {
+    "file": "test-no-delayed-rejects/promise-alias-with.cjs",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 11,
+        "file": "test-no-delayed-rejects/promise-alias-with.cjs",
+        "line": 36,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      }
+    ],
+    "name": "does not confuse with-object getters with lexical promise aliases in script mode: oxlint",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/promise-alias-controls.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 30,
+        "endLine": 66,
+        "file": "test-no-delayed-rejects/promise-alias-controls.ts",
+        "line": 66,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 26,
+        "endLine": 88,
+        "file": "test-no-delayed-rejects/promise-alias-controls.ts",
+        "line": 88,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "keeps saved promise-alias-controls behavior",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 30,
+        "endLine": 7,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 7,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 28,
+        "endLine": 15,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 15,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 30,
+        "endLine": 22,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 22,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 34,
+        "endLine": 28,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 28,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 43,
+        "endLine": 34,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 34,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 43,
+        "endLine": 41,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 41,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 33,
+        "endLine": 48,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 48,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 26,
+        "endLine": 58,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 58,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 30,
+        "endLine": 66,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 66,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 30,
+        "endLine": 73,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 73,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+        "messageId": "delayedReject",
+        "ruleId": "no-mistakes/test-no-delayed-rejects",
+        "severity": 2
+      }
+    ],
+    "name": "keeps saved promise-alias-invalid behavior",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/promise-alias-suppressed.ts",
+    "findings": [],
+    "name": "keeps saved promise-alias-suppressed behavior",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/promise-alias-suppressed-file.ts",
+    "findings": [],
+    "name": "keeps saved promise-alias-suppressed-file behavior",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/promise-alias-controls.ts",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-controls.ts",
+        "line": 66,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-controls.ts",
+        "line": 88,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      }
+    ],
+    "name": "matches Oxlint on every saved alias case: promise-alias-controls",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+    "findings": [
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 7,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 15,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 22,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 7,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 28,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 34,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 41,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 48,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 58,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 66,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      },
+      {
+        "code": "no-mistakes(test-no-delayed-rejects)",
+        "column": 9,
+        "file": "test-no-delayed-rejects/promise-alias-invalid.ts",
+        "line": 73,
+        "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it."
+      }
+    ],
+    "name": "matches Oxlint on every saved alias case: promise-alias-invalid",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/promise-alias-suppressed.ts",
+    "findings": [],
+    "name": "matches Oxlint on every saved alias case: promise-alias-suppressed",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "test-no-delayed-rejects/promise-alias-suppressed-file.ts",
+    "findings": [],
+    "name": "matches Oxlint on every saved alias case: promise-alias-suppressed-file",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  }
+]

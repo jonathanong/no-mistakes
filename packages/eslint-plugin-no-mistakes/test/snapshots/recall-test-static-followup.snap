@@ -1,0 +1,197 @@
+[
+  {
+    "file": "playwright-static-expect-controls.ts",
+    "findings": [],
+    "name": "playwright-static-expect-controls.ts",
+    "options": null,
+    "rule": "test-no-delayed-rejects"
+  },
+  {
+    "file": "static-namespace-write.test.js",
+    "findings": [],
+    "name": "static-namespace-write.test.js",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "static-runner-aliases.test.ts",
+    "findings": [
+      {
+        "column": 41,
+        "endColumn": 66,
+        "endLine": 8,
+        "file": "static-runner-aliases.test.ts",
+        "line": 8,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 44,
+        "endColumn": 63,
+        "endLine": 9,
+        "file": "static-runner-aliases.test.ts",
+        "line": 9,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 55,
+        "endColumn": 74,
+        "endLine": 10,
+        "file": "static-runner-aliases.test.ts",
+        "line": 10,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 46,
+        "endColumn": 65,
+        "endLine": 11,
+        "file": "static-runner-aliases.test.ts",
+        "line": 11,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 44,
+        "endColumn": 63,
+        "endLine": 12,
+        "file": "static-runner-aliases.test.ts",
+        "line": 12,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 65,
+        "endColumn": 84,
+        "endLine": 14,
+        "file": "static-runner-aliases.test.ts",
+        "line": 14,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "static-runner-aliases.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "static-runner-controls.test.ts",
+    "findings": [],
+    "name": "static-runner-controls.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "static-runner-module.test.ts",
+    "findings": [
+      {
+        "column": 44,
+        "endColumn": 63,
+        "endLine": 4,
+        "file": "static-runner-module.test.ts",
+        "line": 4,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 50,
+        "endColumn": 69,
+        "endLine": 5,
+        "file": "static-runner-module.test.ts",
+        "line": 5,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "static-runner-module.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "static-runner-opaque.test.ts",
+    "findings": [],
+    "name": "static-runner-opaque.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  },
+  {
+    "file": "static-runner.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 40,
+        "endLine": 6,
+        "file": "static-runner.test.ts",
+        "line": 6,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 7,
+        "file": "static-runner.test.ts",
+        "line": 7,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 42,
+        "endColumn": 61,
+        "endLine": 8,
+        "file": "static-runner.test.ts",
+        "line": 8,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 22,
+        "endColumn": 47,
+        "endLine": 9,
+        "file": "static-runner.test.ts",
+        "line": 9,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      },
+      {
+        "column": 45,
+        "endColumn": 64,
+        "endLine": 10,
+        "file": "static-runner.test.ts",
+        "line": 10,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
+    "name": "static-runner.test.ts",
+    "options": null,
+    "rule": "test-no-error-message-matching"
+  }
+]

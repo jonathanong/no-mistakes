@@ -1,0 +1,643 @@
+{
+  "ruleTester": [
+    {
+      "file": "playwright/tests/tags/tag-limit.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "src/util.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/tags/tag-limit.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/content-language.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/communities/community-features.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/admin/appeals.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/util.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/util.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/tags/tag-limit.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 3,
+          "file": "playwright/tests/tags/tag-limit.spec.mts",
+          "line": 3,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/content-language.spec.mts",
+      "findings": [
+        {
+          "column": 44,
+          "endColumn": 50,
+          "endLine": 4,
+          "file": "playwright/tests/posts/content-language.spec.mts",
+          "line": 4,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/tags/tag-limit.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 3,
+          "file": "playwright/tests/tags/tag-limit.spec.mts",
+          "line": 3,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/tags/tag-limit.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 3,
+          "file": "playwright/tests/tags/tag-limit.spec.mts",
+          "line": 3,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 48,
+          "endColumn": 54,
+          "endLine": 6,
+          "file": "playwright/tests/tags/tag-limit.spec.mts",
+          "line": 6,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/tags/tag-limit.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 4,
+          "file": "playwright/tests/tags/tag-limit.spec.mts",
+          "line": 4,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 57,
+          "endColumn": 68,
+          "endLine": 4,
+          "file": "playwright/tests/tags/tag-limit.spec.mts",
+          "line": 4,
+          "message": "`otherSuffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/tags/tag-limit.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 5,
+          "file": "playwright/tests/tags/tag-limit.spec.mts",
+          "line": 5,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/tags/tag-limit.spec.mts",
+      "findings": [
+        {
+          "column": 44,
+          "endColumn": 50,
+          "endLine": 4,
+          "file": "playwright/tests/tags/tag-limit.spec.mts",
+          "line": 4,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/content-language.spec.mts",
+      "findings": [
+        {
+          "column": 44,
+          "endColumn": 50,
+          "endLine": 4,
+          "file": "playwright/tests/posts/content-language.spec.mts",
+          "line": 4,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/util.ts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 4,
+          "file": "src/util.ts",
+          "line": 4,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 3,
+          "file": "playwright/tests/posts/post-lock.spec.mts",
+          "line": 3,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [
+        {
+          "column": 50,
+          "endColumn": 56,
+          "endLine": 3,
+          "file": "playwright/tests/posts/post-lock.spec.mts",
+          "line": 3,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 6,
+          "file": "playwright/tests/posts/post-lock.spec.mts",
+          "line": 6,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 7,
+          "file": "playwright/tests/posts/post-lock.spec.mts",
+          "line": 7,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 6,
+          "file": "playwright/tests/posts/post-lock.spec.mts",
+          "line": 6,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 4,
+          "file": "playwright/tests/posts/post-lock.spec.mts",
+          "line": 4,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "playwright/tests/posts/post-lock.spec.mts",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 24,
+          "endLine": 3,
+          "file": "playwright/tests/posts/post-lock.spec.mts",
+          "line": 3,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 4,
+          "file": "playwright/tests/posts/post-lock.spec.mts",
+          "line": 4,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/util.ts",
+      "findings": [
+        {
+          "column": 42,
+          "endColumn": 48,
+          "endLine": 4,
+          "file": "src/util.ts",
+          "line": 4,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    }
+  ]
+}

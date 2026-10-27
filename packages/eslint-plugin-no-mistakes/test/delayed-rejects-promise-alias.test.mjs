@@ -1,89 +1,99 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { __dirname, fixture, lint } from "./helpers.mjs";
+import { expect, it } from "vitest";
+import {
+  oxlintFindings,
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+} from "./diagnostic-snapshot.mjs";
+import { __dirname, fixture } from "./helpers.mjs";
 
 const rule = "test-no-delayed-rejects";
-const filename = (name) => `${rule}/${name}.ts`;
-function diagnostics(name) {
-  return lint(fixture(filename(name)), { [`no-mistakes/${rule}`]: "error" }, filename(name));
+
+function oxlintAliasFindings(relativeFile) {
+  const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture");
+  const result = spawnSync(
+    process.execPath,
+    [
+      resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+      "--config",
+      resolve(root, rule, ".oxlintrc-forwarding.json"),
+      "--format",
+      "json",
+      resolve(root, relativeFile),
+    ],
+    { encoding: "utf8" },
+  );
+  let parsed;
+  try {
+    parsed = JSON.parse(result.stdout);
+  } catch (error) {
+    throw new Error(`${relativeFile} oxlint status ${result.status}: ${result.stderr}\n${error}`);
+  }
+  const diagnostics = parsed.diagnostics.filter(
+    (diagnostic) => diagnostic.code === `no-mistakes(${rule})`,
+  );
+  return {
+    findings: oxlintFindings(diagnostics, relativeFile),
+    status: result.status,
+    stderr: result.stderr,
+  };
 }
 
-const cases = [
-  ["promise-alias-invalid", [7, 15, 22, 28, 34, 41, 48, 58, 66, 73]],
-  ["promise-alias-controls", [66, 88]],
-  ["promise-alias-suppressed", []],
-  ["promise-alias-suppressed-file", []],
-];
-
-describe("delayed rejection promise-value aliases", () => {
-  for (const [name, lines] of cases) {
-    it(`keeps saved ${name} behavior`, () => {
-      assert.deepEqual(
-        diagnostics(name).map((diagnostic) => [diagnostic.line, diagnostic.messageId]),
-        lines.map((line) => [line, "delayedReject"]),
-      );
+it("snapshots delayed-rejects-promise-alias diagnostics", async () => {
+  const cases = [];
+  for (const name of [
+    "promise-alias-invalid",
+    "promise-alias-controls",
+    "promise-alias-suppressed",
+    "promise-alias-suppressed-file",
+  ]) {
+    const file = `${rule}/${name}.ts`;
+    const findings = pluginFindings(fixture(file), rule, undefined, file);
+    const oxlint = oxlintAliasFindings(file);
+    assert.equal(oxlint.status, findings.length ? 1 : 0, oxlint.stderr);
+    assert.deepEqual(
+      oxlint.findings.map((item) => item.line),
+      findings.map((item) => item.line),
+      name,
+    );
+    cases.push({
+      name: `keeps saved ${name} behavior`,
+      file,
+      rule,
+      findings,
+    });
+    cases.push({
+      name: `matches Oxlint on every saved alias case: ${name}`,
+      file,
+      rule,
+      findings: oxlint.findings,
     });
   }
-
-  it("matches Oxlint on every saved alias case", () => {
-    const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture");
-    for (const [name, lines] of cases) {
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          resolve(root, rule, ".oxlintrc-forwarding.json"),
-          "--format",
-          "json",
-          resolve(root, filename(name)),
-        ],
-        { encoding: "utf8" },
-      );
-      assert.equal(result.status, lines.length ? 1 : 0, `${name}: ${result.stderr}`);
-      const actual = JSON.parse(result.stdout).diagnostics.filter(
-        (diagnostic) => diagnostic.code === `no-mistakes(${rule})`,
-      );
-      assert.deepEqual(
-        actual.map((diagnostic) => diagnostic.labels[0].span.line),
-        lines,
-        name,
-      );
-    }
+  const withFile = `${rule}/promise-alias-with.cjs`;
+  const withFindings = pluginFindings(fixture(withFile), rule, undefined, withFile, {}, "script");
+  const withOxlint = oxlintAliasFindings(withFile);
+  assert.equal(withOxlint.status, withFindings.length ? 1 : 0, withOxlint.stderr);
+  assert.deepEqual(
+    withOxlint.findings.map((item) => item.line),
+    withFindings.map((item) => item.line),
+  );
+  cases.push({
+    name: "does not confuse with-object getters with lexical promise aliases in script mode",
+    file: withFile,
+    rule,
+    sourceType: "script",
+    findings: withFindings,
   });
-
-  it("does not confuse with-object getters with lexical promise aliases in script mode", () => {
-    const name = "promise-alias-with.cjs";
-    const file = `${rule}/${name}`;
-    const source = fixture(file);
-    const eslint = lint(source, { [`no-mistakes/${rule}`]: "error" }, file, {}, "script");
-    assert.deepEqual(
-      eslint.map((diagnostic) => diagnostic.line),
-      [36],
-    );
-
-    const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture");
-    const result = spawnSync(
-      process.execPath,
-      [
-        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-        "--config",
-        resolve(root, rule, ".oxlintrc-forwarding.json"),
-        "--format",
-        "json",
-        resolve(root, file),
-      ],
-      { encoding: "utf8" },
-    );
-    assert.equal(result.status, 1, result.stderr);
-    const actual = JSON.parse(result.stdout).diagnostics.filter(
-      (diagnostic) => diagnostic.code === `no-mistakes(${rule})`,
-    );
-    assert.deepEqual(
-      actual.map((diagnostic) => diagnostic.labels[0].span.line),
-      [36],
-    );
+  cases.push({
+    name: "does not confuse with-object getters with lexical promise aliases in script mode: oxlint",
+    file: withFile,
+    rule,
+    findings: withOxlint.findings,
   });
+  await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
+    "snapshots/delayed-rejects-promise-alias.snap",
+  );
 });

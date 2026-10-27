@@ -1,0 +1,1629 @@
+{
+  "eslint": [
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "name": "approved-helper",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 22,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 88,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 100,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 85,
+          "endColumn": 96,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "approved-helper registration packages",
+      "options": {
+        "registrationPackages": [
+          "./approved-test"
+        ],
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 24,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright runtime timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 29,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright runtime timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 32,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright project timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 26,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright runtime timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 23,
+          "endLine": 11,
+          "file": "fixture.test.ts",
+          "line": 11,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "callable-timeout-sinks",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 23,
+          "endLine": 11,
+          "file": "fixture.test.ts",
+          "line": 11,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "callable-timeout-sinks empty option",
+      "options": {},
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 38,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Playwright projects carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 31,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright project timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 31,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright projects carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 32,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright fixture carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 74,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 94,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 63,
+          "endColumn": 90,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 80,
+          "endLine": 10,
+          "file": "fixture.test.ts",
+          "line": 10,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 75,
+          "endLine": 11,
+          "file": "fixture.test.ts",
+          "line": 11,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 49,
+          "endColumn": 71,
+          "endLine": 11,
+          "file": "fixture.test.ts",
+          "line": 11,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 89,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 12,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 65,
+          "endColumn": 85,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 12,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "carrier-safety",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 55,
+          "endColumn": 64,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright project timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 66,
+          "endColumn": 73,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright config carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 40,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright suite timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 32,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright suite timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 54,
+          "endColumn": 67,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright fixture timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 20,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Playwright fixture carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Playwright dynamic framework API cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "carriers",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 55,
+          "endColumn": 64,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright project timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 66,
+          "endColumn": 73,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright config carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 40,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright suite timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 32,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright suite timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 20,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Playwright fixture carrier cannot be resolved against 60000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Playwright dynamic framework API cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "carriers fixture max",
+      "options": {
+        "fixtureMax": 60000,
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "name": "config-root",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 71,
+          "endColumn": 84,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Playwright project timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "config-root config files",
+      "options": {
+        "configFiles": [
+          "fixture.test.ts"
+        ],
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 98,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "controls",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 24,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright runtime timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 46,
+          "endColumn": 51,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 47,
+          "endColumn": 48,
+          "endLine": 10,
+          "file": "fixture.test.ts",
+          "line": 10,
+          "message": "Playwright runtime timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 30,
+          "endLine": 11,
+          "file": "fixture.test.ts",
+          "line": 11,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 13,
+          "file": "fixture.test.ts",
+          "line": 13,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "default-and-named",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 52,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 131,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 56,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright admitted framework API carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "effective-registration",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "name": "effective-registration ignore unknown",
+      "options": {
+        "unknownValues": "ignore"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 33,
+          "endColumn": 49,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright merged registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 40,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright fixture entry carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "helper-carriers",
+      "options": {
+        "registrationPackages": [
+          "./approved-test"
+        ],
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 60,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "helper-export-roles",
+      "options": {
+        "exportRoles": {
+          "./approved-test": {
+            "expect": "assertion",
+            "ordinary": "ordinary"
+          }
+        },
+        "registrationPackages": [
+          "./approved-test"
+        ],
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 54,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 50,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 10,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "inherited-slow",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 22,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 46,
+          "endColumn": 51,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 47,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 46,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Playwright bound callback parameter carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 63,
+          "endLine": 10,
+          "file": "fixture.test.ts",
+          "line": 10,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 35,
+          "endColumn": 62,
+          "endLine": 10,
+          "file": "fixture.test.ts",
+          "line": 10,
+          "message": "Playwright bound callback parameter carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 58,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 12,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "named-default-and-bound",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 19,
+          "endColumn": 24,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 66,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 88,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 73,
+          "endColumn": 82,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright suite timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "namespace",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "null-computed-key.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 19,
+          "endLine": 25,
+          "file": "null-computed-key.ts",
+          "line": 25,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 22,
+          "endLine": 26,
+          "file": "null-computed-key.ts",
+          "line": 26,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 31,
+          "endColumn": 45,
+          "endLine": 27,
+          "file": "null-computed-key.ts",
+          "line": 27,
+          "message": "Playwright project timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "null-computed-key",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "null-computed-key.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 19,
+          "endLine": 25,
+          "file": "null-computed-key.ts",
+          "line": 25,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 22,
+          "endLine": 26,
+          "file": "null-computed-key.ts",
+          "line": 26,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 31,
+          "endColumn": 45,
+          "endLine": 27,
+          "file": "null-computed-key.ts",
+          "line": 27,
+          "message": "Playwright project timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 30,
+          "file": "null-computed-key.ts",
+          "line": 30,
+          "message": "Playwright dynamic framework API cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "null-computed-key unknown values",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 26,
+          "endColumn": 39,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Playwright suite timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "opaque-spread",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 9,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright runtime timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 9,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Playwright runtime timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 16,
+          "file": "fixture.test.ts",
+          "line": 10,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 15,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 12,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 28,
+          "endLine": 15,
+          "file": "fixture.test.ts",
+          "line": 15,
+          "message": "Playwright runtime timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 70,
+          "endLine": 20,
+          "file": "fixture.test.ts",
+          "line": 20,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 64,
+          "endColumn": 65,
+          "endLine": 20,
+          "file": "fixture.test.ts",
+          "line": 20,
+          "message": "Playwright runtime timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 68,
+          "endLine": 21,
+          "file": "fixture.test.ts",
+          "line": 21,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 58,
+          "endColumn": 63,
+          "endLine": 21,
+          "file": "fixture.test.ts",
+          "line": 21,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 63,
+          "endLine": 22,
+          "file": "fixture.test.ts",
+          "line": 22,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 56,
+          "endColumn": 58,
+          "endLine": 22,
+          "file": "fixture.test.ts",
+          "line": 22,
+          "message": "Playwright runtime timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 67,
+          "endLine": 23,
+          "file": "fixture.test.ts",
+          "line": 23,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "setters",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 11,
+          "file": "fixture.test.ts",
+          "line": 11,
+          "message": "Playwright slow effective timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 66,
+          "endLine": 13,
+          "file": "fixture.test.ts",
+          "line": 13,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 62,
+          "endLine": 14,
+          "file": "fixture.test.ts",
+          "line": 14,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 47,
+          "endColumn": 58,
+          "endLine": 14,
+          "file": "fixture.test.ts",
+          "line": 14,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 18,
+          "file": "fixture.test.ts",
+          "line": 15,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 39,
+          "endLine": 17,
+          "file": "fixture.test.ts",
+          "line": 17,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 25,
+          "file": "fixture.test.ts",
+          "line": 20,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 12,
+          "endLine": 22,
+          "file": "fixture.test.ts",
+          "line": 22,
+          "message": "Playwright partially bound framework deadline cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 24,
+          "file": "fixture.test.ts",
+          "line": 24,
+          "message": "Playwright partially bound framework deadline cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "slow",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 11,
+          "file": "fixture.test.ts",
+          "line": 11,
+          "message": "Playwright slow effective timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "slow ignore unknown",
+      "options": {
+        "unknownValues": "ignore"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 57,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms.",
+          "messageId": "effectiveSlot",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "suite-slow",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 18,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Playwright runtime timeout must be positive and finite; zero disables the deadline.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "suppression",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "name": "suppression-file",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    }
+  ],
+  "oxlint": [
+    {
+      "file": "null-computed-key.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 14,
+          "file": "null-computed-key.ts",
+          "line": 25,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 17,
+          "file": "null-computed-key.ts",
+          "line": 26,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 31,
+          "file": "null-computed-key.ts",
+          "line": 27,
+          "message": "Playwright project timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 3,
+          "file": "null-computed-key.ts",
+          "line": 30,
+          "message": "Playwright dynamic framework API cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        }
+      ],
+      "name": "null-computed-key",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "slow.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "slow.ts",
+          "line": 2,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "slow.ts",
+          "line": 9,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 3,
+          "file": "slow.ts",
+          "line": 11,
+          "message": "Playwright slow effective timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "slow.ts",
+          "line": 13,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "slow.ts",
+          "line": 14,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 47,
+          "file": "slow.ts",
+          "line": 14,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "slow.ts",
+          "line": 15,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 3,
+          "file": "slow.ts",
+          "line": 17,
+          "message": "Playwright slow effective timeout cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "slow.ts",
+          "line": 20,
+          "message": "Playwright registration inherits an unresolved effective deadline/latch; prove its configured owner and helper slots against 30000 ms."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 3,
+          "file": "slow.ts",
+          "line": 22,
+          "message": "Playwright partially bound framework deadline cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 3,
+          "file": "slow.ts",
+          "line": 24,
+          "message": "Playwright partially bound framework deadline cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        }
+      ],
+      "name": "slow",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    }
+  ]
+}
