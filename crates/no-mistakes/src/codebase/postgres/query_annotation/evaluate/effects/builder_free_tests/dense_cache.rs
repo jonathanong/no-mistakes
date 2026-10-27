@@ -111,10 +111,18 @@ fn argument_edges_keep_raw_dfs_for_in_progress_shared_container_cycles() {
         c,
         vec![Value::Aggregate(vec![builder(&spec, "sparse")].into())],
     );
+    let roots = [shared];
+    assert!(e.argument_objects[&a].cached_references().is_none());
+    assert!(e.argument_objects[&c].cached_references().is_none());
+    // The older cloning oracle predates immutable-container deduplication.
+    // This collision case must retain the current cold DFS, including D.
+    let cold = e.collect_builder_ids(&roots, std::mem::drop);
+    assert_eq!(cold, FxHashSet::from_iter([a, c, d]));
     assert!(!e.argument_objects[&a].references().arguments.is_empty());
     e.argument_objects[&c].references();
-    let (ids, visits) = collect(&e, &[shared]);
-    assert_eq!(ids, FxHashSet::from_iter([a, c, d]));
+    let mut visits = 0;
+    let ids = e.collect_builder_ids(&roots, |()| visits += 1);
+    assert_eq!(ids, cold);
     assert!(
         visits > 0,
         "the argument-bearing root must keep the original traversal"
