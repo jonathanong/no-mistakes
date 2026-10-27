@@ -1,17 +1,31 @@
 version: 2
 effort: low
 rules:
-  - rule: postgres-explicit-columns
-    scope: repository
-    options:
-      importSpecifier: '@example/db'
-      executorNames: [query]
-      include: ['src/**']
-      sqlInclude: ['schema.sql']
-  - rule: postgres-required-predicates
-    scope: repository
-    options:
-      importSpecifier: '@example/db'
-      executorNames: [query]
-      include: ['src/**']
-      sqlInclude: ['schema.sql']
+- rule: postgres-explicit-columns
+  scope: repository
+  options:
+    importSpecifier: '@example/db'
+    executorNames:
+    - query
+    include:
+    - src/**
+    sqlInclude:
+    - schema.sql
+    schemaCatalogPath: schema.json
+    relations:
+    - account
+    maxColumns: 0
+- rule: postgres-required-predicates
+  scope: repository
+  options:
+    importSpecifier: '@example/db'
+    executorNames:
+    - query
+    include:
+    - src/**
+    sqlInclude:
+    - schema.sql
+    relations:
+    - table: account
+      require:
+      - deleted_at IS NULL
