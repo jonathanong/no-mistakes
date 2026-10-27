@@ -73,9 +73,8 @@ fn selector_target(inputs: &ExportEdgeInputs<'_>, source: &str) -> Option<PathBu
         inputs
             .resolver
             .classify_import(source, inputs.path, inputs.workspace, inputs.graph_files);
-    // `preferred_path` keeps an invisible TS target and never consults the
-    // workspace exports entry. Match resolve-check: a visible resolver path,
-    // otherwise the prepared workspace source unless a paths alias owns it.
+    // A visible resolver path wins. Otherwise use the prepared workspace
+    // source, unless a tsconfig paths pattern owns the specifier.
     if let Some(path) = visible_selector_path(inputs, classification.resolver_path()) {
         return Some(path);
     }
@@ -94,27 +93,13 @@ fn visible_selector_path(inputs: &ExportEdgeInputs<'_>, path: Option<&Path>) -> 
         .map(Path::to_path_buf)
 }
 
-/// A paths rewrite that drops the specifier is an alias, not a baseUrl join.
+/// A tsconfig `paths` pattern owns the specifier. A `baseUrl` join does not,
+/// even when a candidate path happens to contain the specifier text.
 fn paths_alias_owns(inputs: &ExportEdgeInputs<'_>, source: &str) -> bool {
     if source.starts_with(['.', '/', '#']) {
         return false;
     }
-    inputs
-        .resolver
-        .resolution_candidates(source, inputs.path)
-        .iter()
-        .any(|candidate| !candidate_contains_specifier(candidate, source))
-}
-
-fn candidate_contains_specifier(candidate: &Path, specifier: &str) -> bool {
-    let text = candidate.to_string_lossy();
-    let needle = format!("/{specifier}");
-    text.match_indices(&needle).any(|(index, _)| {
-        matches!(
-            text[index + needle.len()..].chars().next(),
-            None | Some('.' | '/')
-        )
-    })
+    inputs.resolver.matches_paths_alias(source, inputs.path)
 }
 
 fn selector_unknown(inputs: &ExportEdgeInputs<'_>, source: &str, edges: &mut Vec<Edge>) {

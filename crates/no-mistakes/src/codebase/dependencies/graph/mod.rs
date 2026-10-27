@@ -84,6 +84,7 @@ include!("edge_symbols_http.rs");
 include!("edge_symbols_runtime.rs");
 include!("edge_symbols_exports.rs");
 include!("edge_symbols_star_candidates.rs");
+include!("edge_symbols_star_identity.rs");
 include!("edge_symbols_star_reexports.rs");
 include!("edge_symbols_star_shadow_keys.rs");
 include!("edge_symbols_helpers.rs");

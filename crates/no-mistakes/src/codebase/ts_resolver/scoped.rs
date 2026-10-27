@@ -6,6 +6,8 @@ use std::sync::atomic::{AtomicUsize as ScopedAtomicUsize, Ordering as ScopedOrde
 
 #[path = "scoped_facade.rs"]
 mod facade;
+#[path = "scoped_paths_alias.rs"]
+mod paths_alias;
 pub(crate) use facade::{ImportResolution, ImportResolverFacade, WorkspaceFallbackResolver};
 
 /// Identity of one selected catalog resolver scope within this facade.

@@ -2,6 +2,7 @@ use crate::codebase::rules::{run_check, RuleFinding};
 use std::path::PathBuf;
 
 mod gap;
+mod selector_shape;
 
 pub(super) fn fixture(case: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(

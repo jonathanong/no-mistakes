@@ -21,8 +21,9 @@ pub(super) fn project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathB
     roots
 }
 
-pub(super) fn is_entrypoint(file: &Path, roots: &[PathBuf]) -> bool {
+pub(super) fn consumed_export(file: &Path, roots: &[PathBuf], name: &str) -> bool {
     roots.iter().any(|project_root| {
         crate::codebase::unique_exports::is_framework_entrypoint_file(file, project_root)
+            && crate::codebase::unique_exports::framework_consumed_export(file, project_root, name)
     })
 }

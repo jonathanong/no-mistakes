@@ -15,7 +15,7 @@ mod scan;
 mod types;
 mod with_facts;
 
-pub(crate) use nextjs::is_framework_entrypoint_file;
+pub(crate) use nextjs::{framework_consumed_export, is_framework_entrypoint_file};
 
 use collector::collect_file_exports;
 use findings::unique_export_findings;

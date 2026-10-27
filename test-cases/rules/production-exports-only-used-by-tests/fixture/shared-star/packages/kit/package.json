@@ -1,0 +1,6 @@
+{
+  "name": "@scope/kit",
+  "exports": {
+    ".": "./index.mts"
+  }
+}

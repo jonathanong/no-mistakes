@@ -1,0 +1,5 @@
+{
+  "name": "paths-shape-fixture",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

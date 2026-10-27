@@ -51,10 +51,6 @@ pub(crate) fn check_with_graph(
             })
             .map(|file| {
                 let mut chunk = AnalysisDiagnostics::default();
-                // Next.js loads these files, so their exports are not test-only.
-                if nextjs::is_entrypoint(file, &nextjs_roots) {
-                    return chunk;
-                }
                 let Some(ts) = facts.get_ts_facts(file) else {
                     return chunk;
                 };
@@ -74,6 +70,10 @@ pub(crate) fn check_with_graph(
                     } else {
                         &export.name
                     };
+                    // Next.js reads these names. Other exports on the same file stay in scope.
+                    if nextjs::consumed_export(file, &nextjs_roots, name) {
+                        continue;
+                    }
                     let consumers = traversal::consumers(graph, file, name);
                     if !consumers.unknown.is_empty() {
                         chunk.unanalyzable(

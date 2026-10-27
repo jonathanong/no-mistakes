@@ -1,4 +1,4 @@
-use super::nextjs::{is_entrypoint, project_roots};
+use super::nextjs::project_roots;
 use super::tests::fixture;
 use crate::codebase::rules::run_check;
 use crate::codebase::unique_exports::is_framework_entrypoint_file;
@@ -19,13 +19,34 @@ fn nextjs_entrypoints_are_production_consumers_and_other_files_are_not() {
         })
         .collect();
     actual.sort();
-    // Entrypoint exports imported only by tests are absent. `fromPage` is
-    // imported by `app/page.tsx`, which stays a production consumer.
+    // Framework-consumed names stay quiet. Other exports on those files are
+    // reported. `fromPage` is imported by `app/page.tsx`, a production consumer.
     assert_eq!(
         actual,
         [
             "other/app/page.tsx otherPage",
+            "web/app/apple-icon.tsx appleIconMarker",
+            "web/app/blog/[slug]/page.tsx nestedMarker",
+            "web/app/default.tsx defaultMarker",
+            "web/app/error.tsx errorMarker",
+            "web/app/global-error.tsx globalErrorMarker",
+            "web/app/icon.tsx iconMarker",
+            "web/app/layout.tsx layoutMarker",
             "web/app/lib/helper.ts helperOnly",
+            "web/app/loading.tsx loadingMarker",
+            "web/app/manifest.ts manifestMarker",
+            "web/app/not-found.tsx notFoundMarker",
+            "web/app/page.tsx pageMarker",
+            "web/app/robots.ts robotsMarker",
+            "web/app/route.ts routeMarker",
+            "web/app/sitemap.ts sitemapMarker",
+            "web/app/template.tsx templateMarker",
+            "web/pages/_hidden.ts hiddenMarker",
+            "web/pages/index.tsx pagesMarker",
+            "web/proxy.ts proxyMarker",
+            "web/src/app/opengraph-image.tsx opengraphMarker",
+            "web/src/app/twitter-image.tsx twitterMarker",
+            "web/src/instrumentation-client.ts clientMarker",
             "web/src/util.ts utilOnly",
         ]
     );
@@ -83,9 +104,23 @@ fn entrypoint_files_follow_the_shared_inventory_and_project_type() {
         "next.config.cjs",
         "next.config.mts",
         "next.config.cts",
+        "pages/index.tsx",
+        "pages/page.tsx",
+        "pages/app/page.tsx",
+        "pages/blog/[slug].tsx",
+        "pages/api/health.ts",
+        "pages/_app.tsx",
+        "pages/_document.tsx",
+        "pages/_error.tsx",
+        "src/pages/page.tsx",
+        "src/pages/index.ts",
+        "proxy.ts",
+        "src/proxy.ts",
+        "instrumentation-client.ts",
+        "src/instrumentation-client.ts",
     ] {
         assert!(
-            is_entrypoint(&root.join("apps/web").join(rel), &roots),
+            is_framework_entrypoint_file(&root.join("apps/web").join(rel), &roots[0]),
             "{rel}"
         );
     }
@@ -93,8 +128,8 @@ fn entrypoint_files_follow_the_shared_inventory_and_project_type() {
     for rel in [
         "app/lib/helper.ts",
         "src/util.ts",
-        "pages/page.tsx",
-        "pages/app/page.tsx",
+        "pages/_hidden.ts",
+        "pages/_utils.ts",
         "app/page.test.tsx",
         "app/page.png",
         "app/icon.png",
@@ -105,15 +140,25 @@ fn entrypoint_files_follow_the_shared_inventory_and_project_type() {
         "next.config.tsx",
         "next.config.jsx",
         "lib/page.tsx",
-        "src/pages/page.tsx",
+        "app/proxy.ts",
+        "src/app/proxy.ts",
+        "src/lib/instrumentation-client.ts",
+        "src/proxy/proxy.ts",
     ] {
         assert!(
-            !is_entrypoint(&root.join("apps/web").join(rel), &roots),
+            !is_framework_entrypoint_file(&root.join("apps/web").join(rel), &roots[0]),
             "{rel}"
         );
     }
-    assert!(!is_entrypoint(&root.join("other/app/page.tsx"), &roots));
-    assert!(!is_entrypoint(&root.join("apps/web/app/page.tsx"), &[]));
+    assert!(!is_framework_entrypoint_file(
+        &root.join("other/app/page.tsx"),
+        &roots[0],
+    ));
+    assert!(!super::nextjs::consumed_export(
+        &root.join("apps/web/app/page.tsx"),
+        &[],
+        "default",
+    ));
     // An omitted root that inference cannot see contributes no entrypoints.
     let mut bare = NoMistakesConfig::default();
     bare.projects.insert(

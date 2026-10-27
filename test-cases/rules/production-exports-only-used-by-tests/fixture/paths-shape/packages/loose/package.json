@@ -1,0 +1,6 @@
+{
+  "name": "loose",
+  "exports": {
+    ".": "./src/index.mts"
+  }
+}

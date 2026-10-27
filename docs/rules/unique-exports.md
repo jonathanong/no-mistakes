@@ -13,7 +13,8 @@ rules:
 Counterexample: two files in the same checked scope both export `Button`.
 
 Next.js App Router / Pages convention exports (`metadata`, `generateMetadata`,
-HTTP method handlers on `route.ts`, and similar) are exempt only inside a
+HTTP method handlers on `route.ts`, Pages data helpers such as `getStaticProps`
+and `getInitialProps`, and similar) are exempt only inside a
 detected Next.js project. Remix route-module exports (`loader`, `action`,
 `clientLoader`, `clientAction`, `meta`, `links`, `ErrorBoundary`) are exempt
 only for files under a configured `type: remix` project's `app/routes/` (or
