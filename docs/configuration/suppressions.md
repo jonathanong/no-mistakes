@@ -19,7 +19,8 @@ reportUnusedDisableDirectives: advise
 
 `unused-disable-directive` means the named check rule is enabled but the
 comment hid nothing. `invalid-disable-directive` separately identifies an
-unknown rule name or a known rule that is disabled. Use the canonical rule ID,
+unknown rule name, a known rule that is disabled, or an ineffective comment
+placement. Use the canonical rule ID,
 not a rule application's `name`. The structured finding's `target` contains
 that ID; its `rule` identifies the hygiene diagnostic.
 
