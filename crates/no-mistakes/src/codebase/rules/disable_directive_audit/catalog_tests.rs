@@ -26,6 +26,19 @@ fn known_catalog_covers_every_declared_rule_and_registered_executor_rule() {
         !declared.is_empty(),
         "the rule declaration inventory must not become empty"
     );
+    // These independent dispatch registries bound how small the declaration
+    // scan may become; the floor grows as more registered rules are added.
+    let registered: BTreeSet<_> = super::super::filesystem_dispatch::FILESYSTEM_RULE_IDS
+        .iter()
+        .chain(crate::config::v2::schema::postgres_executors::RULE_IDS)
+        .copied()
+        .collect();
+    assert!(
+        declared.len() >= registered.len(),
+        "declaration inventory has {} rules, below the registered-rule floor {}",
+        declared.len(),
+        registered.len()
+    );
     // Independent sentinels keep a partial declaration scan from passing just
     // because one unrelated rule still matches the extraction expression.
     for rule in [
