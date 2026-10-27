@@ -71,33 +71,6 @@ fn project_scoped_rule_loads_workspace_from_project_root() {
 }
 
 #[test]
-fn pnpm_root_package_is_included_in_workspace_closure() {
-    let root = fixture_root("pnpm-root-package");
-    let files = package_files(
-        &root,
-        &[
-            "package.json",
-            "pnpm-workspace.yaml",
-            "packages/domain/package.json",
-        ],
-    );
-
-    let findings = check_with_files(
-        &root,
-        &config("packages: [\"@acme/root\"]\nforbidden: [\"@acme/secret\"]\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "packages/domain/package.json");
-    assert_eq!(
-        findings[0].import.as_deref(),
-        Some("@acme/root -> @acme/domain -> @acme/secret")
-    );
-}
-
-#[test]
 fn project_scoped_package_root_loads_repository_workspace() {
     let root = fixture_root("project-package-root-workspace");
     let files = package_files(&root, &["pnpm-workspace.yaml", "packages/app/package.json"]);

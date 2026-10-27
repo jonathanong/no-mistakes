@@ -1,0 +1,4 @@
+version: 2
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository

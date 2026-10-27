@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: config-path-references
+    scope: repository
+    include:
+      - config/app.yml
+    options:
+      files:
+        - config/app.yml
+      keys:
+        - paths.glob
+      allowGlobs: true

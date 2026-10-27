@@ -1,0 +1,496 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_dep_fields": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: \"a\": \"file:../a\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
+          "rule": "package-json-registry-only"
+        },
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: \"b\": \"link:../b\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
+          "rule": "package-json-registry-only"
+        },
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: \"c\": \"git+https://github.com/x/y\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
+          "rule": "package-json-registry-only"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "both_projects_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "admin/pnpm-lock.yaml",
+          "line": 1,
+          "message": "admin/pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "rule": "package-json-registry-only",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "both_projects_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "both_projects_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "admin/pnpm-lock.yaml",
+          "line": 1,
+          "message": "admin/pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "rule": "package-json-registry-only",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "broken_json": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/broken/package.json",
+          "line": 1,
+          "message": "packages/broken/package.json: cannot verify dependency policy because this manifest could not be read or parsed: EOF while parsing an object at line 2 column 0. Repair the manifest or restore read access.",
+          "rule": "package-json-registry-only",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "excluded_admin_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "excluded_admin_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "excluded_admin_report": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: \"my-lib\": \"file:../my-lib\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
+          "rule": "package-json-registry-only"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "finding_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: \"my-lib\": \"file:../my-lib\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
+          "rule": "package-json-registry-only"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_1035_exotic": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: package \"is-buffer@1.1.6\" has a non-registry resolution (tarball) — only npm registry packages are permitted",
+          "rule": "package-json-registry-only"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_1035_malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: pnpm lockfile could not be parsed: Malformed",
+          "rule": "package-json-registry-only",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_1035_non_env": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: pnpm lockfile has a non-env document before the project lockfile",
+          "rule": "package-json-registry-only",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_1035_single_doc": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "issue_1035_two_doc": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lockfile_excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lockfile_integrity": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lockfile_invalid_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: pnpm lockfile could not be parsed: Malformed",
+          "rule": "package-json-registry-only",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "lockfile_no_packages": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lockfile_no_resolution": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lockfile_tarball": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: package \"my-pkg@1.0.0\" has a non-registry resolution (tarball) — only npm registry packages are permitted",
+          "rule": "package-json-registry-only"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_lockfile": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "nonexistent.yaml",
+          "line": 1,
+          "message": "nonexistent.yaml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "rule": "package-json-registry-only",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pnpm12_duplicate_tarball": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: package \"config-plugin@1.0.0\" has a non-registry resolution (tarball) — only npm registry packages are permitted",
+          "rule": "package-json-registry-only"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pnpm12_env_tarball": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: package \"config-plugin@1.0.0\" has a non-registry resolution (tarball) — only npm registry packages are permitted",
+          "rule": "package-json-registry-only"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pnpm12_project_git": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: package \"github.com/org/repo\" has a non-registry resolution (repo) — only npm registry packages are permitted",
+          "rule": "package-json-registry-only"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scopes_a": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/a/package.json",
+          "line": 1,
+          "message": "packages/a/package.json: \"bad\": \"file:../bad\" is not allowed (only npm registry / workspace: / catalog: / npm: aliases permitted)",
+          "rule": "package-json-registry-only"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "web_only_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "web_only_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "web_only_report": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

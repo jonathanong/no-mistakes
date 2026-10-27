@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: version-pin-consistency
+    scope: repository
+    options:
+      unanalyzable: ignore
+      sourceFile: versions.toml
+      sourceKey: tools.pin
+      anchors:
+        - file: README.md
+          pattern: 'tool@([0-9.]+)'

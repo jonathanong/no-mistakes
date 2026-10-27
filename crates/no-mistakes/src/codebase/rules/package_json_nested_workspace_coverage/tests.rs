@@ -61,79 +61,7 @@ fn files(root: &Path) -> Vec<PathBuf> {
     paths
 }
 
-fn findings(name: &str, options: &str) -> Vec<RuleFinding> {
-    let root = fixture_root(name);
-    let files = files(&root);
-    check_with_files(&root, &config(options), &files).unwrap()
-}
-const OPTIONS: &str = "roots: [apps, lambdas/*]\ndependencyNamePrefixes: ['@shared/']\n";
-
-#[test]
-fn accepts_explicit_workspace_paths_for_root_and_nested_package_dependencies() {
-    assert!(findings("valid", OPTIONS).is_empty());
-}
-#[test]
-fn accepts_consecutive_parent_segments_in_nested_workspace_paths() {
-    assert!(findings("parent-path", OPTIONS).is_empty());
-}
-#[test]
-fn excludes_sibling_directories_that_only_share_the_workspace_name_prefix() {
-    assert!(findings(
-        "sibling-prefix",
-        "roots: [web]\ndependencyNamePrefixes: ['@shared/']\n"
-    )
-    .is_empty());
-}
-#[test]
-fn reports_explicit_workspace_entries_without_a_matching_dependency() {
-    let findings = findings("extra", OPTIONS);
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0]
-        .message
-        .contains("unused nested workspace entries"));
-}
-#[test]
-fn reports_matching_dependencies_missing_from_the_root_workspace_array() {
-    let findings = findings("missing", OPTIONS);
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0]
-        .message
-        .contains("missing nested workspace entries"));
-}
-#[test]
-fn rejects_wildcards_that_cover_configured_dependency_packages() {
-    let findings = findings("glob", OPTIONS);
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].message.contains("uses a wildcard"));
-}
-#[test]
-fn rejects_brace_globs_that_cover_configured_dependency_packages() {
-    let findings = findings("brace-glob", OPTIONS);
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].message.contains("uses a wildcard"));
-}
-#[test]
-fn expands_configured_root_globs_for_independent_nested_workspaces() {
-    let findings = findings("lambda", OPTIONS);
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].file, "lambdas/image/package.json");
-}
-#[test]
-fn skips_absent_configured_roots_in_partial_checkouts() {
-    assert!(findings(
-        "partial",
-        "roots: [apps, absent]\ndependencyNamePrefixes: ['@shared/']\n"
-    )
-    .is_empty());
-}
-#[test]
-fn fails_closed_when_a_matching_dependency_has_no_visible_target_manifest() {
-    let findings = findings("unresolved", OPTIONS);
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0]
-        .message
-        .contains("no unique visible package.json target"));
-}
+// Finding cases moved to cli_pkgcfg_snapshot_package_json_nested_workspace_coverage.
 
 #[test]
 fn normalizes_workspace_entries_without_collapsing_unresolved_parent_segments() {
@@ -160,9 +88,7 @@ fn preserves_wildcard_parent_traversal_that_cannot_be_normalized_lexically() {
 }
 
 #[test]
-fn empty_roots_or_prefixes_are_silent_and_invalid_root_globs_fail_closed() {
-    assert!(findings("valid", "roots: []\ndependencyNamePrefixes: ['@shared/']\n").is_empty());
-    assert!(findings("valid", "roots: [apps]\ndependencyNamePrefixes: []\n").is_empty());
+fn invalid_root_globs_fail_closed() {
     let root = fixture_root("valid");
     let error = check_with_files(
         &root,

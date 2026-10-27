@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/suppressed.mts }]
+      targets: [{ global: setTimeout }]

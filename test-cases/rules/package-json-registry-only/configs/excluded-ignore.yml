@@ -1,0 +1,16 @@
+version: 2
+projects:
+  web:
+    root: web
+  admin:
+    root: admin
+rules:
+  - rule: package-json-registry-only
+    projects:
+      - web
+      - admin
+    exclude:
+      - admin/pnpm-lock.yaml
+    options:
+      lockfile: pnpm-lock.yaml
+      unanalyzable: ignore

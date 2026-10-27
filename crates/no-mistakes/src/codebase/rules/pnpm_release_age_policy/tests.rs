@@ -5,6 +5,8 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
+// Output cases moved to the cli_pkgcfg_snapshot modules.
+
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -24,21 +26,6 @@ temporarySelectors:
   - demo-temporary-package@9.9.9
 scopedPrefixes:
   - '@acme/'
-"#
-}
-
-fn grouped_options_yaml() -> &'static str {
-    r#"
-permanentPackages:
-  - name: acme-lib
-    reason: first-party
-  - name: '@acme/core'
-    reason: first-party
-temporaryGroups:
-  - selectors:
-      - demo-temporary-package@9.9.9
-    reason: upstream regression pending
-    eligibleForRemovalAt: '2027-01-02T03:04:05Z'
 "#
 }
 
@@ -63,143 +50,11 @@ fn files(root: &Path) -> Vec<PathBuf> {
     ]
 }
 
-fn run(root: &Path) -> Vec<RuleFinding> {
-    check_with_files(root, &config(), &files(root)).unwrap()
-}
-
-#[test]
-fn pass_fixture_is_clean() {
-    assert!(run(&fixture("pass")).is_empty());
-}
-
-#[test]
-fn flags_unregistered_and_missing_excludes() {
-    let findings = run(&fixture("fail-exclude"));
-    let body = format!("{findings:?}");
-    assert!(body.contains("unknown-package"), "{body}");
-    assert!(
-        body.contains("missing from minimumReleaseAgeExclude"),
-        "{body}"
-    );
-}
-
-#[test]
-fn flags_dependabot_cooldown_miss() {
-    let findings = run(&fixture("fail-dependabot"));
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("cooldown.exclude")),
-        "{findings:?}"
-    );
-}
-
-fn pnpm12_age_root(name: &str) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/rules/pnpm-release-age-policy")
-            .join(name),
-    )
-}
-
-fn run_pnpm12(name: &str) -> Vec<RuleFinding> {
-    let root = pnpm12_age_root(name);
-    run(&root)
-}
-
-#[test]
-fn pnpm12_project_package_counts_as_present() {
-    let findings = run_pnpm12("pnpm12-project-package");
-    assert!(
-        !findings
-            .iter()
-            .any(|finding| finding.message.contains("absent from lockfile")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn pnpm12_env_package_counts_as_present() {
-    let findings = run_pnpm12("pnpm12-env-package");
-    assert!(
-        !findings
-            .iter()
-            .any(|finding| finding.message.contains("absent from lockfile")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn pnpm12_selector_missing_from_both_documents_is_absent() {
-    // The env document has packages, so a first-document reader must not treat
-    // that as "the lockfile was unreadable" and skip the absence check.
-    let findings = run_pnpm12("pnpm12-absent-project");
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("absent from lockfile")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn flags_temporary_selector_missing_from_lockfile() {
-    let findings = run(&fixture("fail-lockfile"));
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("absent from lockfile")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn empty_options_report_nothing() {
-    let root = fixture("fail-exclude");
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    assert!(check_with_files(&root, &config, &files(&root))
-        .unwrap()
-        .is_empty());
-}
-
 #[test]
 fn missing_workspace_yaml_is_clean() {
     let dir = tempfile::tempdir().unwrap();
     let root = crate::codebase::ts_resolver::normalize_path(dir.path());
     assert!(check_with_files(&root, &config(), &[]).unwrap().is_empty());
-}
-
-#[test]
-fn malformed_workspace_yaml_is_reported() {
-    // Intentionally invalid YAML so scan reports a parse error.
-    let root = fixture("malformed-workspace");
-    let yaml = root.join("pnpm-workspace.yaml");
-    let findings = check_with_files(&root, &config(), &[yaml]).unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("failed to parse YAML")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn scoped_prefix_discovers_unregistered_active_package() {
-    let root = fixture("fail-graph");
-    let findings = run(&root);
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("@acme/new-tool")),
-        "{findings:?}"
-    );
 }
 
 #[test]
@@ -253,145 +108,6 @@ fn temporary_group_selector_and_timestamp_validation_is_exact() {
     assert!(!super::policy::validation::is_canonical_timestamp(
         "2027-13-01T00:00:00Z"
     ));
-}
-
-#[test]
-fn grouped_temporary_selectors_are_flattened_for_existing_drift_checks() {
-    let root = fixture("pass");
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(grouped_options_yaml()).unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    assert!(check_with_files(&root, &config, &files(&root))
-        .unwrap()
-        .is_empty());
-}
-
-#[test]
-fn invalid_temporary_group_metadata_is_reported_without_using_its_selectors() {
-    let root = fixture("pass");
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(
-                r#"
-temporaryGroups:
-  - selectors: []
-    reason: ''
-    eligibleForRemovalAt: '2027-01-02T03:04:05+00:00'
-  - selectors:
-      - demo-temporary-package@^9.9.9
-    reason: stale selector
-    eligibleForRemovalAt: '2027-02-30T03:04:05Z'
-  - selectors:
-      - demo-temporary-package@9.9.9
-    reason: duplicate in invalid group
-    eligibleForRemovalAt: invalid
-temporarySelectors:
-  - demo-temporary-package@9.9.9
-"#,
-            )
-            .unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    let body = format!(
-        "{:?}",
-        check_with_files(&root, &config, &files(&root)).unwrap()
-    );
-    assert!(body.contains("selectors must contain"), "{body}");
-    assert!(body.contains("reason must be non-empty"), "{body}");
-    assert!(body.contains("canonical YYYY-MM-DDTHH:mm:ssZ"), "{body}");
-    assert!(
-        body.contains("duplicates another temporary selector"),
-        "{body}"
-    );
-    assert!(!body.contains("absent from lockfile"), "{body}");
-}
-
-#[test]
-fn duplicate_temporary_selectors_across_flat_and_grouped_configuration_are_reported() {
-    let root = fixture("pass");
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(
-                r#"
-temporarySelectors:
-  - demo-temporary-package@9.9.9
-temporaryGroups:
-  - selectors:
-      - demo-temporary-package@9.9.9
-    reason: duplicate
-    eligibleForRemovalAt: '2027-01-02T03:04:05Z'
-  - selectors:
-      - demo-temporary-package@9.9.9
-    reason: duplicate across groups
-    eligibleForRemovalAt: '2027-01-03T03:04:05Z'
-"#,
-            )
-            .unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    let body = format!(
-        "{:?}",
-        check_with_files(&root, &config, &files(&root)).unwrap()
-    );
-    assert!(
-        body.contains("duplicates another temporary selector"),
-        "{body}"
-    );
-}
-
-#[test]
-fn past_eligibility_date_is_audit_metadata_not_a_ci_failure() {
-    let root = fixture("pass");
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(
-                r#"
-permanentPackages:
-  - name: acme-lib
-    reason: first-party
-  - name: '@acme/core'
-    reason: first-party
-temporaryGroups:
-  - selectors:
-      - demo-temporary-package@9.9.9
-    reason: expired audit entry
-    eligibleForRemovalAt: '2000-02-29T00:00:00Z'
-"#,
-            )
-            .unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    assert!(check_with_files(&root, &config, &files(&root))
-        .unwrap()
-        .is_empty());
-}
-
-#[test]
-fn scan_covers_non_mapping_workspace() {
-    let root = fixture("non-mapping-workspace");
-    assert!(
-        check_with_files(&root, &config(), &[root.join("pnpm-workspace.yaml")])
-            .unwrap()
-            .is_empty()
-    );
 }
 
 #[test]

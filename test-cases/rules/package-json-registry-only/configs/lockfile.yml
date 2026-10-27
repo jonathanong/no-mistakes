@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: package-json-registry-only
+    scope: repository
+    options:
+      lockfile: pnpm-lock.yaml

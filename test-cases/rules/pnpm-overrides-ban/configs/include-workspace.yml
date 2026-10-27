@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: pnpm-overrides-ban
+    scope: repository
+    include:
+      - pnpm-workspace.yaml

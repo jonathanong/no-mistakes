@@ -13,29 +13,6 @@ fn validation_rejects_empty_glob_and_playwright_selectors() {
 }
 
 #[test]
-fn glob_root_selects_matching_files_before_analysis() {
-    let findings = coverage_findings("glob-unit-tests").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "src/unit/timer.test.mts");
-}
-
-#[test]
-fn glob_root_lists_union_matching_files() {
-    let findings = coverage_findings("glob-unit-and-integration").unwrap();
-
-    let mut files: Vec<_> = findings
-        .iter()
-        .map(|finding| finding.file.as_str())
-        .collect();
-    files.sort_unstable();
-    assert_eq!(
-        files,
-        ["src/integration/timer.test.mts", "src/unit/timer.test.mts"]
-    );
-}
-
-#[test]
 fn glob_root_errors_when_no_files_match() {
     let error = coverage_findings("glob-no-match").unwrap_err();
 
@@ -43,14 +20,6 @@ fn glob_root_errors_when_no_files_match() {
         error.to_string().contains("glob root matched no files"),
         "{error:#}"
     );
-}
-
-#[test]
-fn glob_root_keeps_exclude_as_a_finding_filter() {
-    let findings = coverage_findings("glob-exclude-integration").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "src/unit/timer.test.mts");
 }
 
 #[test]

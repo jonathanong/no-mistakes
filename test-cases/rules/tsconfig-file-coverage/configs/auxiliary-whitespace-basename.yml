@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    options:
+      requiredBasename: "  "
+      auxiliaryConfigs:
+        - path: tsconfig.dependency-cruiser.json
+          reason: dependency-cruiser resolver config

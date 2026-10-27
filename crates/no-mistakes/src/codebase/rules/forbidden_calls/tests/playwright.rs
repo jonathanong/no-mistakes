@@ -27,53 +27,6 @@ fn playwright_roots_require_a_catalog() {
 }
 
 #[test]
-fn playwright_true_selects_only_playwright_tests() {
-    let findings = fixture_findings("playwright-true-file-targets").unwrap();
-
-    let mut files: Vec<_> = findings
-        .iter()
-        .map(|finding| finding.file.as_str())
-        .collect();
-    files.sort_unstable();
-    files.dedup();
-    assert_eq!(files, ["e2e/sleep.spec.ts"], "{findings:#?}");
-    assert!(findings
-        .iter()
-        .any(|finding| finding.target.as_deref() == Some("global `setTimeout`")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.message.contains("exact `page.waitForTimeout`")));
-}
-
-#[test]
-fn playwright_terminal_matches_typed_page_parameter() {
-    let findings = fixture_findings("playwright-terminal-page").unwrap();
-
-    assert!(findings
-        .iter()
-        .any(|finding| finding.target.as_deref() == Some("global `setTimeout`")));
-    assert!(findings.iter().any(|finding| {
-        finding.target.as_deref() == Some("module export `node:timers#setTimeout`")
-    }));
-    assert!(
-        findings.iter().any(|finding| {
-            finding.target.as_deref() == Some("terminal `waitForTimeout`")
-                && finding.import.as_deref() == Some("page.waitForTimeout")
-        }),
-        "{findings:#?}"
-    );
-}
-
-#[test]
-fn named_playwright_roots_use_the_prepared_catalog() {
-    // This case isolates named project selection and the configured target.
-    let findings = fixture_findings("playwright-named-chromium").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "e2e/sleep.spec.ts");
-}
-
-#[test]
 fn playwright_roots_still_reject_unknown_names() {
     let error = fixture_findings("playwright-unknown-project").unwrap_err();
 

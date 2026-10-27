@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: version-pin-consistency
+    scope: repository
+    options:
+      sourceFile: .mise.toml
+      sourceKey: 'tools.aqua:lycheeverse/lychee'
+      anchors:
+        - file: .github/actions/setup-lychee/action.yml
+          pattern: 'LYCHEE_VERSION:('
+          label: lychee

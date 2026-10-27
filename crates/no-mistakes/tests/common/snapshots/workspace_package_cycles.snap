@@ -1,0 +1,237 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowlist": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cycle": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/api/package.json",
+          "line": 1,
+          "message": "packages/api/package.json: workspace package cycle detected: @x/api -> @x/domain -> @x/api",
+          "rule": "workspace-package-cycles",
+          "target": "@x/api -> @x/domain -> @x/api"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dev_dependencies_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "external_name": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/a/package.json",
+          "line": 1,
+          "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
+          "rule": "workspace-package-cycles",
+          "target": "a -> b -> a"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_package_json": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "link_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/a/package.json",
+          "line": 1,
+          "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
+          "rule": "workspace-package-cycles",
+          "target": "a -> b -> a"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "non_string_version": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "portal_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/a/package.json",
+          "line": 1,
+          "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
+          "rule": "workspace-package-cycles",
+          "target": "a -> b -> a"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "range": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/a/package.json",
+          "line": 1,
+          "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
+          "rule": "workspace-package-cycles",
+          "target": "a -> b -> a"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "star": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/a/package.json",
+          "line": 1,
+          "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
+          "rule": "workspace-package-cycles",
+          "target": "a -> b -> a"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unsatisfied_range": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "workspace_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/a/package.json",
+          "line": 1,
+          "message": "packages/a/package.json: workspace package cycle detected: a -> b -> a",
+          "rule": "workspace-package-cycles",
+          "target": "a -> b -> a"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workspace_self": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/storybook/package.json",
+          "line": 1,
+          "message": "packages/storybook/package.json: workspace package cycle detected: storybook -> storybook",
+          "rule": "workspace-package-cycles",
+          "target": "storybook -> storybook"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

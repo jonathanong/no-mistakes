@@ -530,7 +530,7 @@ jobs:
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
 
       - name: Run platform-specific Rust tests
-        timeout-minutes: 10
+        timeout-minutes: 20
         shell: bash
         env:
           # Match the preceding build's N-API setting; Cargo may still
@@ -548,6 +548,7 @@ jobs:
           # jobs do not compile suite_cli_rules inside the ten-minute step.
           cargo test --locked -p no-mistakes --test suite_cli_postgres cli_postgres_snapshot_
           cargo test --locked -p no-mistakes --test suite_cli_postgres cli_mrf_snapshot_
+          cargo test --locked -p no-mistakes --test suite_cli_package_config cli_pkgcfg_snapshot_
 
       - name: Run native CLI smoke test
         timeout-minutes: 2

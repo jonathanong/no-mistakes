@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    exclude: [src/integration/**]
+    options:
+      roots: [{ glob: src/**/*.test.mts }]
+      targets: [{ global: setTimeout }]

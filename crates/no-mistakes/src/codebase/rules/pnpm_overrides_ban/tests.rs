@@ -5,6 +5,8 @@ use crate::config::v2::{
 };
 use std::path::Path;
 
+// Output cases moved to the cli_pkgcfg_snapshot modules.
+
 fn config() -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
@@ -23,161 +25,6 @@ fn fixture_root(scenario: &str) -> PathBuf {
     )
 }
 
-fn findings_for(scenario: &str) -> Vec<RuleFinding> {
-    let root = fixture_root(scenario);
-    let config_path = root.join(".no-mistakes.yml");
-    check(
-        &root,
-        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
-    )
-    .unwrap()
-}
-
-#[test]
-fn pass_fixture_allows_package_extensions() {
-    let findings = findings_for("pass");
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
-fn fail_workspace_overrides() {
-    let findings = findings_for("fail-workspace");
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0]
-        .message
-        .contains("top-level \"overrides\" is banned"));
-    assert_eq!(findings[0].file, "pnpm-workspace.yaml");
-    assert_eq!(findings[0].line, 1);
-}
-
-#[test]
-fn fail_package_json_overrides() {
-    let findings = findings_for("fail-package-overrides");
-    assert!(
-        findings.iter().any(|finding| {
-            finding
-                .message
-                .contains("packages/app/package.json: top-level \"overrides\" is banned")
-                && finding.line == 4
-        }),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn fail_included_overrides_are_banned() {
-    let findings = findings_for("fail-included-overrides");
-    assert!(
-        findings.iter().any(|finding| {
-            finding.file == "pnpm/security.yaml"
-                && finding
-                    .message
-                    .contains("top-level \"overrides\" is banned")
-                && finding.line == 1
-        }),
-        "{findings:?}"
-    );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| finding.file != "pnpm-workspace.yaml"),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn selected_included_override_is_reported_without_the_root_file() {
-    let findings = findings_for("fail-included-selected");
-    assert!(
-        findings.iter().any(|finding| {
-            finding.file == "pnpm/security.yaml"
-                && finding
-                    .message
-                    .contains("top-level \"overrides\" is banned")
-        }),
-        "{findings:?}"
-    );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| finding.file != "pnpm-workspace.yaml"),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn excluded_included_override_file_is_not_reported() {
-    let findings = findings_for("fail-included-excluded");
-    assert!(
-        findings
-            .iter()
-            .all(|finding| finding.file != "pnpm/security.yaml"),
-        "{findings:?}"
-    );
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn fail_duplicate_overrides_reports_every_definition() {
-    let findings = findings_for("fail-duplicate-overrides");
-    let body = findings
-        .iter()
-        .map(|finding| finding.message.as_str())
-        .collect::<Vec<_>>()
-        .join("\n");
-    assert!(
-        body.contains("pnpm-workspace.yaml: top-level \"overrides\" is banned"),
-        "{body}"
-    );
-    assert!(
-        body.contains("pnpm/security.yaml: top-level \"overrides\" is banned"),
-        "{body}"
-    );
-    assert!(
-        body.contains(
-            "pnpm-workspace.yaml: setting \"overrides\" is claimed by more than one pnpm source"
-        ),
-        "{body}"
-    );
-}
-
-#[test]
-fn fail_package_json_pnpm_overrides() {
-    let findings = findings_for("fail-pnpm-overrides");
-    assert!(
-        findings.iter().any(|finding| {
-            finding
-                .message
-                .contains("packages/web/package.json: \"pnpm.overrides\" is banned")
-                && finding.line == 5
-        }),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn fail_unparseable_workspace_yaml() {
-    let findings = findings_for("fail-yaml");
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0].message.contains("failed to parse YAML"));
-    assert_eq!(findings[0].line, 1);
-}
-
-#[test]
-fn skips_non_mapping_workspace_yaml() {
-    let root = fixture_root("non-mapping-workspace");
-    let findings = check(&root, &config()).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn skips_non_object_package_json() {
-    let root = fixture_root("non-object-package");
-    let files = vec![root.join("package.json")];
-    let findings = check_with_files(&root, &config(), &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
 #[test]
 fn reports_unreadable_workspace_and_invalid_json() {
     let root = fixture_root("unanalyzable");
@@ -190,20 +37,6 @@ fn reports_unreadable_workspace_and_invalid_json() {
     assert!(findings
         .iter()
         .all(|finding| finding.target.as_deref() == Some("unanalyzable")));
-}
-
-#[test]
-fn check_with_files_and_sources_flags_both_package_override_forms() {
-    let root = fixture_root("both-override-forms");
-    let path = root.join("package.json");
-    let files = vec![path];
-    let sources = super::super::source_store_for_files(&files);
-    let findings = check_with_files_and_sources(&root, &config(), &files, &sources).unwrap();
-    assert_eq!(findings.len(), 2);
-    assert!(
-        findings.iter().all(|finding| finding.line == 1),
-        "{findings:?}"
-    );
 }
 
 #[test]

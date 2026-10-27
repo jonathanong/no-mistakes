@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: ['src/**/*.{ts,tsx}']
+      ruleIds: ['react/purity']
+      rulePrefixes: ['react-hooks-js/']
+      directives:
+        - eslint-disable
+        - eslint-disable-line
+        - eslint-disable-next-line
+        - oxlint-disable
+        - oxlint-disable-line
+        - oxlint-disable-next-line

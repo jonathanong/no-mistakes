@@ -1,26 +1,6 @@
 use super::*;
 
 #[test]
-fn directory_roots_are_recursive_filtered_and_deduplicated() {
-    let root = fixture("forbidden-dependencies-directory");
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let findings = check(&root, &config, None).unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|f| (f.file.as_str(), f.target.as_deref()))
-            .collect::<Vec<_>>(),
-        vec![
-            ("web/app/nested/page.ts", Some("fs")),
-            ("web/app/page.ts", Some("fs"))
-        ],
-    );
-    assert!(findings
-        .iter()
-        .all(|f| f.message.contains(&format!("dependencies '{}'", f.file))));
-}
-
-#[test]
 fn literal_roots_intersect_the_prepared_file_universe() {
     let root = fixture("forbidden-dependencies-directory");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();

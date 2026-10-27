@@ -1,0 +1,224 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "both_override_forms": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: \"pnpm.overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban"
+        },
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_duplicate_overrides": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: setting \"overrides\" is claimed by more than one pnpm source",
+          "rule": "pnpm-overrides-ban"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban"
+        },
+        {
+          "file": "pnpm/security.yaml",
+          "line": 1,
+          "message": "pnpm/security.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_included_excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail_included_overrides": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm/security.yaml",
+          "line": 1,
+          "message": "pnpm/security.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_included_selected": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm/security.yaml",
+          "line": 1,
+          "message": "pnpm/security.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_package_overrides": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/package.json",
+          "line": 4,
+          "message": "packages/app/package.json: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_pnpm_overrides": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/web/package.json",
+          "line": 5,
+          "message": "packages/web/package.json: \"pnpm.overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_workspace": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: top-level \"overrides\" is banned. Fix dependency metadata upstream or upgrade the parent dependency instead.",
+          "rule": "pnpm-overrides-ban"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: cannot verify dependency policy because this manifest could not be read or parsed: failed to parse YAML: did not find expected node content at line 4 column 1, while parsing a flow node. Repair the manifest or restore read access.",
+          "rule": "pnpm-overrides-ban",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "non_mapping_workspace": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "non_object_package": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

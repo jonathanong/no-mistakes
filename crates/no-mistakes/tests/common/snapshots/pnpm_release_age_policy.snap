@@ -1,0 +1,531 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "duplicate_exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: setting \"minimumReleaseAgeExclude\" is claimed by more than one pnpm source",
+          "rule": "pnpm-release-age-policy",
+          "target": "minimumReleaseAgeExclude"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate_selectors": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"@acme/core\" is not in a release-age exemption registry",
+          "rule": "pnpm-release-age-policy",
+          "target": "@acme/core"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"acme-lib\" is not in a release-age exemption registry",
+          "rule": "pnpm-release-age-policy",
+          "target": "acme-lib"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"demo-temporary-package@9.9.9\" duplicates another temporary selector",
+          "rule": "pnpm-release-age-policy",
+          "target": "demo-temporary-package@9.9.9"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_options": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail_dependabot": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: \"@acme/core\" is not covered by npm cooldown.exclude",
+          "rule": "pnpm-release-age-policy",
+          "target": "@acme/core"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"@acme/core\" is missing from minimumReleaseAgeExclude",
+          "rule": "pnpm-release-age-policy",
+          "target": "@acme/core"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"demo-temporary-package@9.9.9\" is missing from minimumReleaseAgeExclude",
+          "rule": "pnpm-release-age-policy",
+          "target": "demo-temporary-package@9.9.9"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"unknown-package\" is not in a release-age exemption registry",
+          "rule": "pnpm-release-age-policy",
+          "target": "unknown-package"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_graph": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: \"@acme/new-tool\" is an active first-party package missing from permanentPackages",
+          "rule": "pnpm-release-age-policy",
+          "target": "@acme/new-tool"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_lockfile": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: \"demo-temporary-package@9.9.9\" is absent from lockfile packages",
+          "rule": "pnpm-release-age-policy",
+          "target": "demo-temporary-package@9.9.9"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "grouped_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "included_exclude": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_groups": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"@acme/core\" is not in a release-age exemption registry",
+          "rule": "pnpm-release-age-policy",
+          "target": "@acme/core"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"acme-lib\" is not in a release-age exemption registry",
+          "rule": "pnpm-release-age-policy",
+          "target": "acme-lib"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"demo-temporary-package@9.9.9\" duplicates another temporary selector",
+          "rule": "pnpm-release-age-policy",
+          "target": "demo-temporary-package@9.9.9"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"demo-temporary-package@^9.9.9\" must be an exact package@version selector",
+          "rule": "pnpm-release-age-policy",
+          "target": "demo-temporary-package@^9.9.9"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"temporaryGroups\" eligibleForRemovalAt must be canonical YYYY-MM-DDTHH:mm:ssZ",
+          "rule": "pnpm-release-age-policy",
+          "target": "temporaryGroups"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"temporaryGroups\" reason must be non-empty",
+          "rule": "pnpm-release-age-policy",
+          "target": "temporaryGroups"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"temporaryGroups\" selectors must contain at least one exact package@version selector",
+          "rule": "pnpm-release-age-policy",
+          "target": "temporaryGroups"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_workspace_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: cannot verify dependency policy because this manifest could not be read or parsed: failed to parse YAML: did not find expected key at line 2 column 1, while parsing a block mapping. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: pnpm lockfile could not be parsed: Malformed. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_missing_lock": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "missing-lock.yaml",
+          "line": 1,
+          "message": "missing-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: pnpm lockfile could not be read: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_non_env": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: cannot verify dependency policy because this manifest could not be read or parsed: pnpm lockfile has a non-env document before the project lockfile. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_single_doc": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "issue_two_doc": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "malformed_workspace": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: cannot verify dependency policy because this manifest could not be read or parsed: failed to parse YAML: deserializing from YAML containing more than one document is not supported. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "non_mapping": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "non_mapping_scan": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "past_eligibility": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pnpm12_absent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "pnpm-lock.yaml",
+          "line": 1,
+          "message": "pnpm-lock.yaml: \"demo-temporary-package@9.9.9\" is absent from lockfile packages",
+          "rule": "pnpm-release-age-policy",
+          "target": "demo-temporary-package@9.9.9"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pnpm12_env": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pnpm12_project": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: cannot verify dependency policy because this manifest could not be read or parsed: No such file or directory (os error 2). Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unreadable_exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"@acme/core\" is missing from minimumReleaseAgeExclude",
+          "rule": "pnpm-release-age-policy",
+          "target": "@acme/core"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"acme-lib\" is missing from minimumReleaseAgeExclude",
+          "rule": "pnpm-release-age-policy",
+          "target": "acme-lib"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"demo-temporary-package@9.9.9\" is missing from minimumReleaseAgeExclude",
+          "rule": "pnpm-release-age-policy",
+          "target": "demo-temporary-package@9.9.9"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: included file \"./pnpm/missing.yaml\" could not be read",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

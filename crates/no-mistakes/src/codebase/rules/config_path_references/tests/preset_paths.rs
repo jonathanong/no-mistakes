@@ -95,29 +95,9 @@ rules:
 }
 
 #[test]
-fn invalid_preset_config_surfaces_parse_errors() {
-    let root = case_root("invalid-sgconfig");
-    let path = root.join("sgconfig.yml");
-    let findings = check_with_files(&root, &config("presets: [sgconfig]"), &[path]).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("failed to parse YAML"),
-        "{findings:?}"
-    );
-}
-
-#[test]
 fn preset_scanning_surfaces_parse_and_glob_errors() {
-    let invalid_yaml = case_root("pnpm-filter-invalid-yaml");
-    let workflow = invalid_yaml.join(".github/workflows/check.yml");
-    let findings = check_with_files(
-        &invalid_yaml,
-        &config("presets: [pnpm-workspace-filters]"),
-        std::slice::from_ref(&workflow),
-    )
-    .unwrap();
-    assert!(findings[0].message.contains("failed to parse YAML"));
-
+    // Invalid sgconfig and workflow YAML findings are in the check JSON snapshot.
+    // These inputs return configuration errors instead of a rule report.
     let bad_glob = case_root("pnpm-filter-bad-glob");
     let workflow = bad_glob.join(".github/workflows/check.yml");
     assert!(check_with_files(

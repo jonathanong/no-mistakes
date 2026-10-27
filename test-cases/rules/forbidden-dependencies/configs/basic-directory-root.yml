@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [entrypoints]
+      forbiddenModules: [sharp]

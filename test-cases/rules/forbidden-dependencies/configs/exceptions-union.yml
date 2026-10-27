@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [ci/check-coverage.mts, ci/check-health.mts]
+      forbiddenFiles: [shared/testing/**, tests/**]
+      relationships: [import]
+      exceptions:
+        - roots: [ci/check-*.mts]
+          allowedFiles: [shared/testing/helper.mts]
+        - roots: [ci/check-coverage.mts]
+          allowedFiles: [shared/testing/coverage.mts]

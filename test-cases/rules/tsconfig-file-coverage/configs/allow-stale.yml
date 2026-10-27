@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    options:
+      allow:
+        - path: missing.ts
+          reason: leftover allow

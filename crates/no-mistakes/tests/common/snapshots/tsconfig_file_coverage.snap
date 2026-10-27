@@ -1,0 +1,503 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "absolute_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "/src/index.ts",
+          "line": 1,
+          "message": "tsconfig-file-coverage allow entry `/src/index.ts` must be a repository-relative path without parent traversals",
+          "rule": "tsconfig-file-coverage",
+          "target": "/src/index.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "absolute_auxiliary": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "/tsconfig.dependency-cruiser.json",
+          "line": 1,
+          "message": "tsconfig-file-coverage auxiliaryConfigs entry `/tsconfig.dependency-cruiser.json` must be a repository-relative path without parent traversals",
+          "rule": "tsconfig-file-coverage",
+          "target": "/tsconfig.dependency-cruiser.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_orphan": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "auxiliary_array": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.dependency-cruiser.json",
+          "line": 1,
+          "message": "tsconfig.dependency-cruiser.json: auxiliary tsconfig is not a JSON object",
+          "rule": "tsconfig-file-coverage",
+          "target": "tsconfig.dependency-cruiser.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "auxiliary_basename": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/index.ts",
+          "line": 1,
+          "message": "src/index.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/index.ts"
+        },
+        {
+          "file": "src/legacy.cts",
+          "line": 1,
+          "message": "src/legacy.cts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/legacy.cts"
+        },
+        {
+          "file": "src/util.mts",
+          "line": 1,
+          "message": "src/util.mts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/util.mts"
+        },
+        {
+          "file": "src/widget.tsx",
+          "line": 1,
+          "message": "src/widget.tsx is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/widget.tsx"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 1,
+          "message": "tsconfig.json: auxiliary tsconfig basename must be tsconfig.dependency-cruiser.json",
+          "rule": "tsconfig-file-coverage",
+          "target": "tsconfig.json"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 1,
+          "message": "tsconfig.json: auxiliary tsconfig must not declare files, include, exclude, or references",
+          "rule": "tsconfig-file-coverage",
+          "target": "tsconfig.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "auxiliary_excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "auxiliary_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 1,
+          "message": "index.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "index.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "auxiliary_program_keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/index.ts",
+          "line": 1,
+          "message": "src/index.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/index.ts"
+        },
+        {
+          "file": "src/legacy.cts",
+          "line": 1,
+          "message": "src/legacy.cts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/legacy.cts"
+        },
+        {
+          "file": "src/util.mts",
+          "line": 1,
+          "message": "src/util.mts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/util.mts"
+        },
+        {
+          "file": "src/widget.tsx",
+          "line": 1,
+          "message": "src/widget.tsx is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/widget.tsx"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 1,
+          "message": "tsconfig.json: auxiliary tsconfig must not declare files, include, exclude, or references",
+          "rule": "tsconfig-file-coverage",
+          "target": "tsconfig.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_allow_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "",
+          "line": 1,
+          "message": "stale tsconfig-file-coverage allow entry ``",
+          "rule": "tsconfig-file-coverage",
+          "target": ""
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_allow_reason": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scripts/generate.ts",
+          "line": 1,
+          "message": "scripts/generate.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "scripts/generate.ts"
+        },
+        {
+          "file": "scripts/generate.ts",
+          "line": 1,
+          "message": "tsconfig-file-coverage allow entry `scripts/generate.ts` has an empty reason",
+          "rule": "tsconfig-file-coverage",
+          "target": "scripts/generate.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_auxiliary_reason": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.dependency-cruiser.json",
+          "line": 1,
+          "message": "tsconfig-file-coverage auxiliaryConfigs entry `tsconfig.dependency-cruiser.json` has an empty reason",
+          "rule": "tsconfig-file-coverage",
+          "target": "tsconfig.dependency-cruiser.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "files_and_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "orphan.ts",
+          "line": 1,
+          "message": "orphan.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "orphan.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "included": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "malformed_options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "/index.ts",
+          "line": 1,
+          "message": "tsconfig-file-coverage allow entry `/index.ts` must be a repository-relative path without parent traversals",
+          "rule": "tsconfig-file-coverage",
+          "target": "/index.ts"
+        },
+        {
+          "file": "helper.json",
+          "line": 1,
+          "message": "helper.json: auxiliary tsconfig basename must be tsconfig.dependency-cruiser.json",
+          "rule": "tsconfig-file-coverage",
+          "target": "helper.json"
+        },
+        {
+          "file": "helper.json",
+          "line": 1,
+          "message": "stale tsconfig-file-coverage auxiliaryConfigs entry `helper.json`",
+          "rule": "tsconfig-file-coverage",
+          "target": "helper.json"
+        },
+        {
+          "file": "index.ts",
+          "line": 1,
+          "message": "tsconfig-file-coverage allow entry `index.ts` has an empty reason",
+          "rule": "tsconfig-file-coverage",
+          "target": "index.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_tsconfig": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parent_traversal_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/../src/index.ts",
+          "line": 1,
+          "message": "tsconfig-file-coverage allow entry `src/../src/index.ts` must be a repository-relative path without parent traversals",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/../src/index.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "source_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/extra.ts",
+          "line": 1,
+          "message": "src/extra.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "src/extra.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stale_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "missing.ts",
+          "line": 1,
+          "message": "stale tsconfig-file-coverage allow entry `missing.ts`",
+          "rule": "tsconfig-file-coverage",
+          "target": "missing.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tracked_auxiliary": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "foo.json",
+          "line": 1,
+          "message": "foo.json: auxiliary tsconfig must not declare files, include, exclude, or references",
+          "rule": "tsconfig-file-coverage",
+          "target": "foo.json"
+        },
+        {
+          "file": "foo.json",
+          "line": 1,
+          "message": "stale tsconfig-file-coverage auxiliaryConfigs entry `foo.json`",
+          "rule": "tsconfig-file-coverage",
+          "target": "foo.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "uncovered": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "orphan.ts",
+          "line": 1,
+          "message": "orphan.ts is not covered by any tsconfig include/files set; add it to a tsconfig or a reasoned allow entry.",
+          "rule": "tsconfig-file-coverage",
+          "target": "orphan.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "whitespace_required_basename": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "windows_absolute_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "C:/repo/scripts/generate.ts",
+          "line": 1,
+          "message": "tsconfig-file-coverage allow entry `C:/repo/scripts/generate.ts` must be a repository-relative path without parent traversals",
+          "rule": "tsconfig-file-coverage",
+          "target": "C:/repo/scripts/generate.ts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

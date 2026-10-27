@@ -1,0 +1,224 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "glob_outside_include": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_sgconfig": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sgconfig.yml",
+          "line": 1,
+          "message": "sgconfig.yml: failed to parse YAML (did not find expected key, while parsing a block mapping)",
+          "rule": "config-path-references"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "config/invalid.yml",
+          "line": 1,
+          "message": "config/invalid.yml: failed to parse YAML (did not find expected node content at line 3 column 1, while parsing a flow node)",
+          "rule": "config-path-references"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_literal": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "config/app.yml",
+          "line": 1,
+          "message": "config/app.yml: config path `missing.json` from `paths.required` does not exist",
+          "rule": "config-path-references",
+          "target": "missing.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pnpm_invalid_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 1,
+          "message": ".github/workflows/check.yml: failed to parse YAML (did not find expected key, while parsing a block mapping)",
+          "rule": "config-path-references"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "presets_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".coverage-rules.yml",
+          "line": 1,
+          "message": ".coverage-rules.yml: config path `missing/**/*.rs` from `rules[0].paths` does not exist",
+          "rule": "config-path-references",
+          "target": "missing/**/*.rs"
+        },
+        {
+          "file": ".github/dependabot.yml",
+          "line": 1,
+          "message": ".github/dependabot.yml: config path `missing-app` from `updates[0].directory` does not exist",
+          "rule": "config-path-references",
+          "target": "missing-app"
+        },
+        {
+          "file": ".github/workflows/pnpm-filters.yml",
+          "line": 1,
+          "message": ".github/workflows/pnpm-filters.yml: config path `./missing-app` from `pnpm filter 0` does not exist",
+          "rule": "config-path-references",
+          "target": "./missing-app"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": ".no-mistakes.yml: config path `missing-playwright.config.ts` from `tests.playwright.configs[0]` does not exist",
+          "rule": "config-path-references",
+          "target": "missing-playwright.config.ts"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": ".no-mistakes.yml: config path `missing-project/src/missing.ts` from `testPlan.vitest.fullSuiteTriggers.projects.app[0]` does not exist",
+          "rule": "config-path-references",
+          "target": "missing-project/src/missing.ts"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": ".no-mistakes.yml: config path `missing-project` from `projects.app.root` does not exist",
+          "rule": "config-path-references",
+          "target": "missing-project"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": ".no-mistakes.yml: config path `missing-trigger.ts` from `testPlan.vitest.fullSuiteTriggers.triggers[0].paths[0]` does not exist",
+          "rule": "config-path-references",
+          "target": "missing-trigger.ts"
+        },
+        {
+          "file": ".oxlintrc.json",
+          "line": 1,
+          "message": ".oxlintrc.json: config path `./plugins/missing.js` from `jsPlugins[0].specifier` does not exist",
+          "rule": "config-path-references",
+          "target": "./plugins/missing.js"
+        },
+        {
+          "file": ".oxlintrc.json",
+          "line": 1,
+          "message": ".oxlintrc.json: config path `src/missing-baseline.ts` from `rules.custom/rule.baseline[0][0]` does not exist",
+          "rule": "config-path-references",
+          "target": "src/missing-baseline.ts"
+        },
+        {
+          "file": ".oxlintrc.json",
+          "line": 1,
+          "message": ".oxlintrc.json: config path `src/missing.ts` from `overrides[0].files[0]` does not exist",
+          "rule": "config-path-references",
+          "target": "src/missing.ts"
+        },
+        {
+          "file": ".syncpackrc.json",
+          "line": 1,
+          "message": ".syncpackrc.json: config path `missing/*/package.json` from `source[0]` does not exist",
+          "rule": "config-path-references",
+          "target": "missing/*/package.json"
+        },
+        {
+          "file": "knip.jsonc",
+          "line": 1,
+          "message": "knip.jsonc: config path `packages/app/src/missing.ts` from `workspaces.packages/app.entry[0]` does not exist",
+          "rule": "config-path-references",
+          "target": "packages/app/src/missing.ts"
+        },
+        {
+          "file": "knip.jsonc",
+          "line": 1,
+          "message": "knip.jsonc: config path `src/root-missing.ts` from `workspaces...entry[0]` does not exist",
+          "rule": "config-path-references",
+          "target": "src/root-missing.ts"
+        },
+        {
+          "file": "packages/app/.oxlintrc.json",
+          "line": 1,
+          "message": "packages/app/.oxlintrc.json: config path `./plugins/nested-missing.js` from `jsPlugins[0].specifier` does not exist",
+          "rule": "config-path-references",
+          "target": "./plugins/nested-missing.js"
+        },
+        {
+          "file": "sgconfig.yml",
+          "line": 1,
+          "message": "sgconfig.yml: config path `missing-rules` from `ruleDirs[0]` does not exist",
+          "rule": "config-path-references",
+          "target": "missing-rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "presets_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

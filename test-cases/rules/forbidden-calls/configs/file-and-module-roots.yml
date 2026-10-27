@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/entry.mts }, { module: src/selectors.mts }]
+      traversal: file
+      unknownCalls: ignore
+      targets: [{ global: setTimeout }]

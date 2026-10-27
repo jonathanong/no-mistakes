@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: package-json-nested-workspace-coverage
+    scope: repository
+    options:
+      roots: [apps, "lambdas/*"]
+      dependencyNamePrefixes: ['@shared/']

@@ -1,0 +1,422 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "directory_mappings_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_base": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exists_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.json",
+          "line": 10,
+          "message": "tsconfig.json: @agents/jobs/* targets backend/agents/jobs/*.ts, which does not exist on disk",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 13,
+          "message": "tsconfig.json: @agents/file targets backend/agents/file, which does not exist on disk",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 4,
+          "message": "tsconfig.json: @agents/missing targets backend/agents/missing.ts, which does not exist on disk",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 7,
+          "message": "tsconfig.json: @agents/directory targets backend/agents/directory.ts, which does not exist on disk",
+          "rule": "tsconfig-alias-folder-mapping"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exists_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exists_shape_without_check": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.json",
+          "line": 1,
+          "message": "tsconfig.json: @agents/email must target backend/agents/email, not backend/modules/email",
+          "rule": "tsconfig-alias-folder-mapping"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "locations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "config/policy.base.json",
+          "line": 10,
+          "message": "config/policy.base.json: @agents/email must target backend/agents/email, not backend/wrong/email",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "config/policy.base.json",
+          "line": 11,
+          "message": "config/policy.base.json: @agents/sms must target backend/agents/sms, not backend/wrong/sms",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "config/policy.base.json",
+          "line": 12,
+          "message": "config/policy.base.json: @wrong/task must use prefix @agents, not target backend/agents/task.ts directly",
+          "rule": "tsconfig-alias-folder-mapping"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "locations_array_empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "locations_child": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "child.json",
+          "line": 5,
+          "message": "child.json: @agents/child must target backend/agents/child, not backend/wrong/child",
+          "rule": "tsconfig-alias-folder-mapping"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "locations_empty_paths": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "locations_exclude_tsconfig": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "locations_include_config": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "locations_include_tsconfig": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "config/policy.base.json",
+          "line": 10,
+          "message": "config/policy.base.json: @agents/email must target backend/agents/email, not backend/wrong/email",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "config/policy.base.json",
+          "line": 11,
+          "message": "config/policy.base.json: @agents/sms must target backend/agents/sms, not backend/wrong/sms",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "config/policy.base.json",
+          "line": 12,
+          "message": "config/policy.base.json: @wrong/task must use prefix @agents, not target backend/agents/task.ts directly",
+          "rule": "tsconfig-alias-folder-mapping"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiple_targets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.json",
+          "line": 4,
+          "message": "tsconfig.json: @agents/email must target backend/agents/email, not backend/modules/email",
+          "rule": "tsconfig-alias-folder-mapping"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_options": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_paths": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shared_root": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "two_mappings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.json",
+          "line": 4,
+          "message": "tsconfig.json: @agents/email must target backend/agents/email, not backend/workers/email",
+          "rule": "tsconfig-alias-folder-mapping"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "valid_files": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "valid_files_second_mapping": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wrong_files": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.json",
+          "line": 10,
+          "message": "tsconfig.json: @agents/nested must target backend/agents/nested, not backend/agents/nested/other.ts",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 13,
+          "message": "tsconfig.json: @agents/empty must target backend/agents/empty, not backend/agents/empty.",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 16,
+          "message": "tsconfig.json: @agents/jobs/* must target backend/agents/jobs/*, not backend/agents/jobs/*.ts/child",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 16,
+          "message": "tsconfig.json: @agents/jobs/* must target backend/agents/jobs/*, not backend/agents/jobs/*/index.ts",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 16,
+          "message": "tsconfig.json: @agents/jobs/* must target backend/agents/jobs/*, not backend/agents/jobs/index.ts",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 21,
+          "message": "tsconfig.json: @wrong/item must use prefix @agents, not target backend/agents/item.ts directly",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 24,
+          "message": "tsconfig.json: @agents/slash must target backend/agents/slash, not backend/agents/slash.//ts",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 4,
+          "message": "tsconfig.json: @agents/email must target backend/agents/email, not backend/modules/email/index.ts",
+          "rule": "tsconfig-alias-folder-mapping"
+        },
+        {
+          "file": "tsconfig.json",
+          "line": 7,
+          "message": "tsconfig.json: @agents/sms must target backend/agents/sms, not backend/agents/sms-other.ts",
+          "rule": "tsconfig-alias-folder-mapping"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "wrong_prefix": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.json",
+          "line": 4,
+          "message": "tsconfig.json: @wrong/email must use prefix @agents, not target backend/agents/email directly",
+          "rule": "tsconfig-alias-folder-mapping"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

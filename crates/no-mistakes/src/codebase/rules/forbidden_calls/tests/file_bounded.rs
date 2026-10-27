@@ -61,14 +61,6 @@ fn file_traversal_filters_each_root_file_once_before_scanning_calls() {
 }
 
 #[test]
-fn file_traversal_keeps_function_roots_scoped_within_a_selected_file() {
-    use super::*;
-    let findings = coverage_findings("file-traversal-function-root").unwrap();
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].import.as_deref(), Some("page.waitForTimeout"));
-}
-
-#[test]
 fn transitive_rule_uses_one_source_union_for_overlapping_roots() {
     use super::*;
     let root = crate::codebase::ts_resolver::normalize_path(

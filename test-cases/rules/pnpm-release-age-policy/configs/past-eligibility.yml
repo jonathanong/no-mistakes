@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      permanentPackages:
+        - name: acme-lib
+          reason: first-party
+        - name: '@acme/core'
+          reason: first-party
+      temporaryGroups:
+        - selectors:
+            - demo-temporary-package@9.9.9
+          reason: expired audit entry
+          eligibleForRemovalAt: '2000-02-29T00:00:00Z'

@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
+    options:
+      allowProjects:
+        tooling/tsconfig.tools.json: Used only by a static analysis tool.

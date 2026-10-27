@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: package-json-required-fields
+    scope: repository
+    options:
+      mainWhenFileExists: src/index.js

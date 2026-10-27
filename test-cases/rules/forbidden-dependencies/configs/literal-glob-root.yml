@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [src/**/*.mts]
+      forbiddenFiles: [tests/**]
+      relationships: [import]

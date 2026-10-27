@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: config-path-references
+    scope: repository
+    options:
+      files:
+        - config
+        - config/invalid.yml
+      keys:
+        - paths.required

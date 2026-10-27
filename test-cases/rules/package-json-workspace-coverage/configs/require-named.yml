@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: package-json-workspace-coverage
+    scope: repository
+    options:
+      packageRoots: [packages]
+      requireNamedPackage: true

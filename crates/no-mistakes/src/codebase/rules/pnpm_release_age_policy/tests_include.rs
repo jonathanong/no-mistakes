@@ -1,12 +1,10 @@
 use super::included_exclude::included_exclude;
 use super::policy::{check_with_complete_names as policy_check, ExcludeEntry, Snapshot};
 use super::*;
-use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
-    NoMistakesConfig,
-};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+
+// Output cases moved to the cli_pkgcfg_snapshot modules.
 
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -14,93 +12,6 @@ fn fixture(name: &str) -> PathBuf {
             .join("../../test-cases/rules/pnpm-release-age-policy/fixture")
             .join(name),
     )
-}
-
-fn config() -> NoMistakesConfig {
-    NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(
-                r#"
-permanentPackages:
-  - name: acme-lib
-    reason: first-party
-  - name: '@acme/core'
-    reason: first-party
-temporarySelectors:
-  - demo-temporary-package@9.9.9
-scopedPrefixes:
-  - '@acme/'
-"#,
-            )
-            .unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    }
-}
-
-fn files(root: &Path) -> Vec<PathBuf> {
-    let mut files = vec![
-        root.join("pnpm-workspace.yaml"),
-        root.join(".github/dependabot.yml"),
-        root.join("package.json"),
-        root.join("pnpm-lock.yaml"),
-    ];
-    let included = root.join("pnpm/age.yaml");
-    if included.is_file() {
-        files.push(included);
-    }
-    files
-}
-
-fn run(name: &str) -> Vec<RuleFinding> {
-    let root = fixture(name);
-    check_with_files(&root, &config(), &files(&root)).unwrap()
-}
-
-#[test]
-fn included_exclude_list_matches_the_root_list() {
-    let findings = run("included-exclude");
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn duplicate_exclude_does_not_guess_a_list() {
-    let findings = run("duplicate-exclude");
-    let body = findings
-        .iter()
-        .map(|finding| finding.message.as_str())
-        .collect::<Vec<_>>()
-        .join("\n");
-    assert!(
-        body.contains(
-            "setting \"minimumReleaseAgeExclude\" is claimed by more than one pnpm source"
-        ),
-        "{body}"
-    );
-    assert!(
-        !body.contains("missing from minimumReleaseAgeExclude"),
-        "{body}"
-    );
-    assert!(!body.contains("other-pkg"), "{body}");
-}
-
-#[test]
-fn unreadable_exclude_reports_the_load_error_and_the_missing_entries() {
-    let findings = run("unreadable-exclude");
-    let body = format!("{findings:?}");
-    assert!(body.contains("could not be read"), "{body}");
-    assert!(body.contains("acme-lib"), "{body}");
-    assert!(
-        body.contains("missing from minimumReleaseAgeExclude"),
-        "{body}"
-    );
-    assert!(
-        !body.contains("claimed by more than one pnpm source"),
-        "{body}"
-    );
 }
 
 #[test]

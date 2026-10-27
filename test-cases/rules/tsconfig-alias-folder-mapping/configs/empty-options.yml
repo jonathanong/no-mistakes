@@ -1,0 +1,4 @@
+version: 2
+rules:
+  - rule: tsconfig-alias-folder-mapping
+    scope: repository

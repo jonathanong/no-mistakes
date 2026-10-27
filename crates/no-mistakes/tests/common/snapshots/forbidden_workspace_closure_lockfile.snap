@@ -1,0 +1,518 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "dependency_type_fields": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/domain/package.json",
+          "import": "@acme/app -> @acme/domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "digit_closure": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/domain/package.json",
+          "import": "@acme/app -> 3d-domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> 3d-domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "digit_direct": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/package.json",
+          "import": "@acme/app -> 7zip-bin",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '7zip-bin' through package.json dependency chain: @acme/app -> 7zip-bin. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "7zip-bin"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exact_range": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/domain/package.json",
+          "import": "@acme/app -> @acme/domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_1035_is_even": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "issue_1035_is_odd": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/shared/package.json",
+          "import": "@fixture/api -> @fixture/shared -> is-odd",
+          "line": 1,
+          "message": "@fixture/api reaches forbidden package 'is-odd' through package.json dependency chain: @fixture/api -> @fixture/shared -> is-odd. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "is-odd"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_1035_malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "snapshot-config.yml",
+          "line": 9,
+          "message": "forbidden-workspace-closure: forbidden-workspace-closure: lockfile pnpm-lock.yaml could not be parsed",
+          "rule": "forbidden-workspace-closure"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_1035_non_env": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "snapshot-config.yml",
+          "line": 9,
+          "message": "forbidden-workspace-closure: forbidden-workspace-closure: lockfile pnpm-lock.yaml has a non-env document before the project lockfile",
+          "rule": "forbidden-workspace-closure"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "issue_1035_single_doc": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/shared/package.json",
+          "import": "@fixture/api -> @fixture/shared -> is-odd",
+          "line": 1,
+          "message": "@fixture/api reaches forbidden package 'is-odd' through package.json dependency chain: @fixture/api -> @fixture/shared -> is-odd. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "is-odd"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "lockfile_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/package.json",
+          "import": "@acme/app -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_lockfile": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "frontend/packages/app/package.json",
+          "import": "@acme/app -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "optional_dependencies": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/package.json",
+          "import": "@acme/app -> @acme/secret-optional",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret-optional' through package.json dependency chain: @acme/app -> @acme/secret-optional. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret-optional"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "partial_workspace": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/domain/package.json",
+          "import": "@acme/app -> @acme/domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "path_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/domain/package.json",
+          "import": "@acme/app -> @acme/domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "peer_dependencies": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/package.json",
+          "import": "@acme/app -> @acme/secret-peer",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret-peer' through package.json dependency chain: @acme/app -> @acme/secret-peer. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret-peer"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "peer_not_dependency": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pnpm12_env_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "snapshot-config.yml",
+          "line": 8,
+          "message": "forbidden-workspace-closure: forbidden-workspace-closure: lockfile pnpm-lock.yaml has a non-env document before the project lockfile",
+          "rule": "forbidden-workspace-closure"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pnpm12_project": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/package.json",
+          "import": "@acme/app -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "prerelease_range": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/domain/package.json",
+          "import": "@acme/app -> @acme/domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registry_same_name": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root_importer": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "import": "@acme/root -> @acme/secret",
+          "line": 1,
+          "message": "@acme/root reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/root -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root_link_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/domain/package.json",
+          "import": "@acme/app -> @acme/domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root_path_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "frontend/packages/app/domain/package.json",
+          "import": "@acme/app -> @acme/domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scalar_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/package.json",
+          "import": "@acme/app -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workspace_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/domain/package.json",
+          "import": "@acme/app -> @acme/domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "x_range": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/domain/package.json",
+          "import": "@acme/app -> @acme/domain -> @acme/secret",
+          "line": 1,
+          "message": "@acme/app reaches forbidden package '@acme/secret' through package.json dependency chain: @acme/app -> @acme/domain -> @acme/secret. Remove the dependency or move it outside this workspace closure.",
+          "rule": "forbidden-workspace-closure",
+          "target": "@acme/secret"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

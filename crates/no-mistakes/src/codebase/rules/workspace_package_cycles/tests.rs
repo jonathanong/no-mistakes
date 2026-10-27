@@ -5,6 +5,8 @@ use crate::config::v2::{
 };
 use std::path::Path;
 
+// Output cases moved to the cli_pkgcfg_snapshot modules.
+
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -15,68 +17,6 @@ fn fixture_root(name: &str) -> PathBuf {
 
 fn package_dependencies(path: &Path, dependency_types: &[&str]) -> BTreeSet<String> {
     crate::codebase::package_deps::dependency_names(path, dependency_types)
-}
-
-fn config(yaml: &str) -> NoMistakesConfig {
-    let mut config = NoMistakesConfig::default();
-    config.rules.push(RuleDef {
-        rule: RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        options: serde_yaml::from_str(yaml).unwrap(),
-        ..Default::default()
-    });
-    config
-}
-
-#[test]
-fn reports_workspace_dependency_cycles() {
-    let root = fixture_root("cycle");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/api/package.json"),
-        root.join("packages/domain/package.json"),
-        root.join("packages/ui/package.json"),
-    ];
-    let findings = check_with_files(&root, &config("{}"), &files).unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "packages/api/package.json");
-    assert!(findings[0]
-        .message
-        .contains("@x/api -> @x/domain -> @x/api"));
-}
-
-#[test]
-fn allowlist_suppresses_known_cycle() {
-    let root = fixture_root("cycle");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/api/package.json"),
-        root.join("packages/domain/package.json"),
-        root.join("packages/ui/package.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config("allowlist: [\"@x/domain -> @x/api -> @x/domain\"]\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
-fn dependency_type_filter_can_ignore_dev_dependency_cycles() {
-    let root = fixture_root("dev-cycle");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/api/package.json"),
-        root.join("packages/domain/package.json"),
-    ];
-    let findings =
-        check_with_files(&root, &config("dependencyTypes: [dependencies]\n"), &files).unwrap();
-
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
 #[test]
@@ -175,10 +115,6 @@ fn package_dependency_helpers_tolerate_missing_and_invalid_files() {
 fn empty_workspace_and_wrapped_cycle_helpers() {
     let root = fixture_root("invalid-package-json");
     let files = vec![root.join("packages/api/package.json")];
-    let sources = super::super::source_store_for_files(&files);
-    let findings =
-        check_with_files_and_sources(&root, &config("{}"), &files, sources.as_ref()).unwrap();
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 
     assert_eq!(scc::canonical_cycle("b -> a -> b"), "a -> b");
     assert_eq!(scc::canonical_cycle("a -> "), "");
@@ -191,97 +127,6 @@ fn empty_workspace_and_wrapped_cycle_helpers() {
         ..Default::default()
     });
     assert!(check_with_files(&root, &invalid, &files).is_err());
-}
-
-// `catalog:`, a registry range the workspace version does not satisfy, and a
-// `file:` path into `node_modules` share a workspace package's name without
-// resolving to it. See issue 2761.
-#[test]
-fn external_same_name_dependencies_are_not_workspace_edges() {
-    let root = fixture_root("external-name-collision");
-    let files = vec![
-        root.join("pnpm-workspace.yaml"),
-        root.join("package.json"),
-        root.join("apps/storybook/package.json"),
-        root.join("packages/react/package.json"),
-        root.join("packages/left-pad/package.json"),
-        root.join("packages/alias/package.json"),
-    ];
-    let findings = check_with_files(&root, &config("{}"), &files).unwrap();
-
-    assert!(
-        findings.is_empty(),
-        "external same-name dependencies are not workspace edges: {findings:?}"
-    );
-}
-
-#[test]
-fn workspace_protocol_self_dependency_still_reports() {
-    let root = fixture_root("workspace-self-cycle");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/storybook/package.json"),
-    ];
-    let findings = check_with_files(&root, &config("{}"), &files).unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "packages/storybook/package.json");
-    assert!(findings[0].message.contains("storybook -> storybook"));
-}
-
-fn npm_workspace_files(root: &std::path::Path) -> Vec<PathBuf> {
-    vec![
-        root.join("package.json"),
-        root.join("packages/a/package.json"),
-        root.join("packages/b/package.json"),
-    ]
-}
-
-fn assert_workspace_cycle(name: &str, cycle: &str) {
-    let root = fixture_root(name);
-    let findings = check_with_files(&root, &config("{}"), &npm_workspace_files(&root)).unwrap();
-    assert_eq!(findings.len(), 1, "{name}: {findings:?}");
-    assert!(
-        findings[0].message.contains(cycle),
-        "{name}: {}",
-        findings[0].message
-    );
-}
-
-fn assert_no_workspace_cycle(name: &str) {
-    let root = fixture_root(name);
-    let findings = check_with_files(&root, &config("{}"), &npm_workspace_files(&root)).unwrap();
-    assert!(findings.is_empty(), "{name}: {findings:?}");
-}
-
-#[test]
-fn star_specifier_cycle_between_workspace_packages_reports() {
-    assert_workspace_cycle("star-cycle", "a -> b -> a");
-}
-
-#[test]
-fn caret_range_cycle_between_workspace_packages_reports() {
-    assert_workspace_cycle("range-cycle", "a -> b -> a");
-}
-
-#[test]
-fn file_path_cycle_between_workspace_packages_reports() {
-    assert_workspace_cycle("file-cycle", "a -> b -> a");
-}
-
-#[test]
-fn link_path_cycle_between_workspace_packages_reports() {
-    assert_workspace_cycle("link-cycle", "a -> b -> a");
-}
-
-#[test]
-fn portal_path_cycle_between_workspace_packages_reports() {
-    assert_workspace_cycle("portal-cycle", "a -> b -> a");
-}
-
-#[test]
-fn unsatisfied_range_is_not_a_workspace_edge() {
-    assert_no_workspace_cycle("unsatisfied-range");
 }
 
 #[test]
@@ -334,15 +179,14 @@ fn version_range_match_follows_workspace_linking_rules() {
 }
 
 #[test]
-fn workspace_protocol_path_cycle_between_workspace_packages_reports() {
-    assert_workspace_cycle("workspace-path-cycle", "a -> b -> a");
-}
-
-#[test]
 fn non_string_versions_are_not_workspace_edges() {
     let root = fixture_root("non-string-version");
-    assert_no_workspace_cycle("non-string-version");
-    let sources = super::super::source_store_for_files(&npm_workspace_files(&root));
+    let files = [
+        root.join("package.json"),
+        root.join("packages/a/package.json"),
+        root.join("packages/b/package.json"),
+    ];
+    let sources = super::super::source_store_for_files(&files);
     assert!(super::edges::package_version(&root.join("packages/missing"), &sources).is_none());
 }
 

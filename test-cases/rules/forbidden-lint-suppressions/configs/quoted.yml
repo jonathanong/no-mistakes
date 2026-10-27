@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: ['src/quoted.ts']
+      ruleIds: ['react/purity', 'custom/no--bad']
+      rulePrefixes: ['react-hooks-js/']

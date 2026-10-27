@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    options:
+      allow:
+        - path: 'C:\repo\scripts\generate.ts'
+          reason: must not rewrite a Windows absolute path

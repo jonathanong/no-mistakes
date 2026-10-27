@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: ['src/html.cjs']
+      ruleIds: ['react/purity']
+      directives: ['eslint-disable-next-line', 'oxlint-disable-next-line', '@ts-ignore', '@ts-expect-error']

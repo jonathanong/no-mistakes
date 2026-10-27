@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    include: ["web/app/page.ts", "web/app/nested/**"]
+    exclude: ["web/app/nested/excluded.ts"]
+    options:
+      # Overlapping roots must report each source/target pair only once.
+      roots: ["web/app", "web/app/.", "web/app/page.ts", "missing"]
+      forbiddenModules: ["fs", "node:*"]
+      relationships: [import]

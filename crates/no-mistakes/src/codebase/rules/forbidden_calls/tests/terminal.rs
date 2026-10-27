@@ -3,18 +3,6 @@ use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{ResolvedCallSite, ResolvedCallTarget};
 
 #[test]
-fn terminal_selectors_match_typed_parameter_member_calls() {
-    let findings = coverage_findings("terminal-wait-for-timeout").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert!(
-        findings[0].message.contains("terminal `waitForTimeout`"),
-        "{findings:#?}"
-    );
-    assert_eq!(findings[0].import.as_deref(), Some("page.waitForTimeout"));
-}
-
-#[test]
 fn terminal_selectors_use_unresolved_member_source_spelling() {
     let root = coverage_root();
     let app = application(
