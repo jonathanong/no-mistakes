@@ -155,7 +155,7 @@ pub(super) fn check_reads<F: Fn(&str, &Path) -> Option<PathBuf>>(
         .is_none());
 }
 
-fn assert_read<F: Fn(&str, &Path) -> Option<PathBuf>>(
+pub(super) fn assert_read<F: Fn(&str, &Path) -> Option<PathBuf>>(
     evaluator: &mut Evaluator<'_, F>,
     path: &Path,
     root: Environment,
@@ -163,12 +163,47 @@ fn assert_read<F: Fn(&str, &Path) -> Option<PathBuf>>(
     expected: Value,
     precise: bool,
 ) {
+    let expected =
+        crate::codebase::postgres::query_annotation::evaluate::concat::alternative_result(
+            vec![expected],
+            precise,
+        );
+    assert_arms(evaluator, path, root, &[expression], expected, 16);
+}
+
+pub(super) fn assert_arms<F: Fn(&str, &Path) -> Option<PathBuf>>(
+    evaluator: &mut Evaluator<'_, F>,
+    path: &Path,
+    root: Environment,
+    arms: &[Expr],
+    expected: Value,
+    depth: u8,
+) {
+    assert_outcome(evaluator, path, root, arms, Some(expected), depth);
+}
+
+pub(super) fn assert_rejected<F: Fn(&str, &Path) -> Option<PathBuf>>(
+    evaluator: &mut Evaluator<'_, F>,
+    path: &Path,
+    root: Environment,
+    arms: &[Expr],
+) {
+    assert_outcome(evaluator, path, root, arms, None, 16);
+}
+
+fn assert_outcome<F: Fn(&str, &Path) -> Option<PathBuf>>(
+    evaluator: &mut Evaluator<'_, F>,
+    path: &Path,
+    root: Environment,
+    arms: &[Expr],
+    expected: Option<Value>,
+    depth: u8,
+) {
     macro_rules! unchanged {
         ($($field:ident),+ $(,)?) => {{
             $(let $field = evaluator.$field.clone();)+
-            let result = evaluator.readonly_alternatives(&[expression], path, &root, 16, true);
-            let expected = crate::codebase::postgres::query_annotation::evaluate::concat::alternative_result(vec![expected], precise);
-            assert!(result == Some(expected));
+            let result = evaluator.readonly_alternatives(arms, path, &root, depth, true);
+            assert!(result == expected);
             $(assert!(evaluator.$field == $field, "{} changed during a read", stringify!($field));)+
         }};
     }

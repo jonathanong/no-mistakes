@@ -100,7 +100,7 @@ fn check_scalar_mode(precise: bool, fixture: &str) {
     };
     assert!(evaluator.scopes[root]["selected"] == expected);
     let work = observer.snapshot().work;
-    assert_eq!(work["postgres.annotation.readonly_alternatives"], 4);
+    assert_eq!(work["postgres.annotation.readonly_alternatives"], 6);
     assert!(!work.contains_key("postgres.annotation.prefix_compare_arm"));
     // Missing local names can resolve a module; calls, module loads and
     // mutation always keep the full fallback, even beside an admissible arm.
@@ -115,10 +115,7 @@ fn check_scalar_mode(precise: bool, fixture: &str) {
             Expr::ModuleLoad("./other.mts".into()),
         ],
         vec![Expr::Opaque(vec![])],
-        vec![Expr::Children(vec![Expr::Name("left".into())])],
-        vec![Expr::Container(vec![])],
         vec![Expr::Array(vec![])],
-        vec![Expr::Record(vec![], vec![])],
         vec![Expr::Call {
             callee: Box::new(Expr::Unknown),
             args: vec![],
@@ -136,6 +133,7 @@ fn check_scalar_mode(precise: bool, fixture: &str) {
             .is_none());
     }
     check_reads(&mut evaluator, &path, root, precise);
+    terminal::check_terminal(&mut evaluator, &path, root, precise);
 }
 
 #[test]
@@ -169,3 +167,5 @@ fn check_public_fixture(fixture: &str) {
 }
 
 mod references;
+
+mod terminal;

@@ -75,6 +75,9 @@ const exactArray = [left, right]
 const args = { field: true, count: 4 }
 const nullish = args.field ?? false
 const logical = args.count || 7
+// Constructor arms must preserve concrete values without snapshotting unrelated heap state.
+const chosenRecord = unknownCondition ? { exact: left } : { exact: right }
+const chosenEmpty = unknownCondition ? { enabled: true } : {}
 export const selected = unknownCondition ? left : right
 const literal = unknownCondition ? 'literal left' : 'literal right'
 function callback() { return left }
