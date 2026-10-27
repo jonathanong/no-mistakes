@@ -42,16 +42,16 @@ pub(crate) fn run_included_postgres_rule<C>(
                     })
                     .collect();
                 let view = facts.for_sql_application_with_advice(index, rule.name.as_deref());
-                let view = if matches!(
-                    rule_id,
-                    "postgres-explicit-columns" | "postgres-required-predicates"
-                ) && config.effective_rule_analysis(rule)?.effort
-                    == crate::config::v2::Effort::Low
-                {
-                    view.with_low_sql(rule_id)
-                } else {
-                    view
-                };
+                let view =
+                    if crate::codebase::postgres::sql_identifier_syntax::statement_policy::supports(
+                        rule_id,
+                    ) && config.effective_rule_analysis(rule)?.effort
+                        == crate::config::v2::Effort::Low
+                    {
+                        view.with_low_sql(rule_id)
+                    } else {
+                        view
+                    };
                 scan(
                     root,
                     &compiled,

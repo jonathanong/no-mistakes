@@ -17,6 +17,7 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&dyn SqlFactContext>,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    // Every entrypoint prepares request-owned SQL facts before reaching this scan.
     let prepared =
         prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
     let inputs = crate::codebase::rules::collect_prepared_sql_inputs(

@@ -125,6 +125,7 @@ fn parse_failure_locations_public_check_preserves_parse_findings_and_independent
             if effort == "low" {
                 // Compare the public API with registry-backed Rust policy metadata,
                 // so new low adopters do not require another warning-count edit.
+                assert!(!warnings.is_empty(), "{report}");
                 assert_eq!(
                     report["warnings"],
                     json!(rust_analysis_warnings(&root, config)),
