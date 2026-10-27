@@ -90,6 +90,27 @@ still propagates. `expect(locator).toBeVisible()` is an assertion, not a
 state method. Other `!` expressions, including `!locator` and `!""`, are not
 booleans.
 
+## Known unreported shapes
+
+The rule does not follow these shapes:
+
+- Named catch handlers, even a same-file function that returns a boolean.
+- Aliases of the state method or its promise, and intervening promise chains
+  such as `locator.isVisible().then(transform).catch(() => false)`.
+- Computed method names such as `locator[name]()`, unless the member name is
+  a literal matching a configured method.
+- A `try` that discards the awaited state result, returns a different value,
+  or returns the promise without awaiting it.
+- A state result returned through a destructured or reassigned binding, or
+  through another function call.
+- A state check inside a nested `try` with its own `catch`, even if that
+  inner handler rethrows to an outer catch that returns a boolean.
+- Catch results other than a boolean literal or a negated numeric literal,
+  such as `null`, `0`, `!locator`, or a name bound to `false`.
+
+Review these shapes manually and replace swallowed failures with the assertion
+shown below.
+
 ## Options
 
 The rule is opt-in. It is not part of `configs.recommended` or
