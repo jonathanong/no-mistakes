@@ -55,7 +55,7 @@ fn sequence(cursor: &mut Cursor<'_>, nested: bool) -> Result<Option<Span>, ()> {
 fn namespace(cursor: &mut Cursor<'_>) -> Result<Option<Span>, ()> {
     loop {
         match cursor.next() {
-            Some(Token::Word(word)) if binding_word(word) => {}
+            Some(Token::Word(word)) if namespace_word(word) => {}
             _ => return Err(()),
         }
         match cursor.next() {
@@ -64,6 +64,27 @@ fn namespace(cursor: &mut Cursor<'_>) -> Result<Option<Span>, ()> {
             _ => return Err(()),
         }
     }
+}
+
+// Namespace names follow Oxc's `is_binding_identifier`, which includes
+// contextual/strict-mode keywords plus await/yield. Specifier aliases retain
+// their separate conservative predicate because their grammar is contextual.
+fn namespace_word(word: &str) -> bool {
+    binding_word(word)
+        || matches!(
+            word,
+            "await"
+                | "yield"
+                | "implements"
+                | "interface"
+                | "let"
+                | "package"
+                | "private"
+                | "protected"
+                | "public"
+                | "static"
+                | "type"
+        )
 }
 
 fn binding_word(word: &str) -> bool {

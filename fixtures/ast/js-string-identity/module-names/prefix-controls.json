@@ -319,5 +319,35 @@
     "source": "export declare namespace class {}",
     "span": null,
     "limit": 33
+  },
+  {
+    "source": "namespace class { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": null,
+    "limit": 59
+  },
+  {
+    "source": "namespace break { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": null,
+    "limit": 59
+  },
+  {
+    "source": "namespace default { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": null,
+    "limit": 61
+  },
+  {
+    "source": "namespace const { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": null,
+    "limit": 59
+  },
+  {
+    "source": "namespace function { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": null,
+    "limit": 62
+  },
+  {
+    "source": "namespace null { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": null,
+    "limit": 58
   }
 ]

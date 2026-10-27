@@ -1,0 +1,1063 @@
+{
+  "scopes.cjs": {
+    "imports": [],
+    "exports": [],
+    "bindings": [
+      {
+        "id": 0,
+        "name": "arguments",
+        "scopeId": 0,
+        "span": {
+          "start": 97,
+          "end": 106
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": [
+          {
+            "span": {
+              "start": 389,
+              "end": 398
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 480,
+              "end": 489
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 573,
+              "end": 582
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 654,
+              "end": 663
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 980,
+              "end": 989
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 1021,
+              "end": 1030
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 1041,
+              "end": 1050
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "name": "named",
+        "scopeId": 0,
+        "span": {
+          "start": 124,
+          "end": 129
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 2,
+        "name": "arguments",
+        "scopeId": 1,
+        "span": {
+          "start": 141,
+          "end": 150
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": [
+          {
+            "span": {
+              "start": 158,
+              "end": 167
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 173,
+              "end": 182
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 193,
+              "end": 202
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 236,
+              "end": 245
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "seed",
+        "scopeId": 1,
+        "span": {
+          "start": 151,
+          "end": 155
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 4,
+        "name": "nested",
+        "scopeId": 1,
+        "span": {
+          "start": 218,
+          "end": 224
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": [
+          {
+            "span": {
+              "start": 345,
+              "end": 351
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "name": "arguments",
+        "scopeId": 4,
+        "span": {
+          "start": 257,
+          "end": 266
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 2,
+        "references": [
+          {
+            "span": {
+              "start": 278,
+              "end": 287
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 321,
+              "end": 330
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "name": "blockNested",
+        "scopeId": 1,
+        "span": {
+          "start": 298,
+          "end": 309
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 7,
+        "name": "outerCapture",
+        "scopeId": 0,
+        "span": {
+          "start": 365,
+          "end": 377
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 8,
+        "name": "parameter",
+        "scopeId": 0,
+        "span": {
+          "start": 411,
+          "end": 420
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 9,
+        "name": "arguments",
+        "scopeId": 7,
+        "span": {
+          "start": 421,
+          "end": 430
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": [
+          {
+            "span": {
+              "start": 441,
+              "end": 450
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "name": "laterBody",
+        "scopeId": 0,
+        "span": {
+          "start": 463,
+          "end": 472
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 11,
+        "name": "seed",
+        "scopeId": 8,
+        "span": {
+          "start": 473,
+          "end": 477
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 12,
+        "name": "arguments",
+        "scopeId": 8,
+        "span": {
+          "start": 497,
+          "end": 506
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": [
+          {
+            "span": {
+              "start": 524,
+              "end": 533
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "name": "nestedDefault",
+        "scopeId": 0,
+        "span": {
+          "start": 546,
+          "end": 559
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 14,
+        "name": "seed",
+        "scopeId": 9,
+        "span": {
+          "start": 560,
+          "end": 564
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 15,
+        "name": "arguments",
+        "scopeId": 9,
+        "span": {
+          "start": 590,
+          "end": 599
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": [
+          {
+            "span": {
+              "start": 617,
+              "end": 626
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "name": "destructured",
+        "scopeId": 0,
+        "span": {
+          "start": 639,
+          "end": 651
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 17,
+        "name": "value",
+        "scopeId": 11,
+        "span": {
+          "start": 666,
+          "end": 671
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": [
+          {
+            "span": {
+              "start": 712,
+              "end": 717
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "name": "arguments",
+        "scopeId": 11,
+        "span": {
+          "start": 685,
+          "end": 694
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": []
+      },
+      {
+        "id": 19,
+        "name": "redeclared",
+        "scopeId": 0,
+        "span": {
+          "start": 727,
+          "end": 737
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 20,
+        "name": "arguments",
+        "scopeId": 12,
+        "span": {
+          "start": 749,
+          "end": 758
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": []
+      },
+      {
+        "id": 21,
+        "name": "arguments",
+        "scopeId": 12,
+        "span": {
+          "start": 767,
+          "end": 776
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": [
+          {
+            "span": {
+              "start": 778,
+              "end": 787
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 806,
+              "end": 815
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "name": "arguments",
+        "scopeId": 15,
+        "span": {
+          "start": 845,
+          "end": 854
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": [
+          {
+            "span": {
+              "start": 860,
+              "end": 869
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 900,
+              "end": 909
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 23,
+        "name": "caught",
+        "scopeId": 0,
+        "span": {
+          "start": 882,
+          "end": 888
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 24,
+        "name": "arrow",
+        "scopeId": 0,
+        "span": {
+          "start": 921,
+          "end": 926
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 25,
+        "name": "arguments",
+        "scopeId": 17,
+        "span": {
+          "start": 930,
+          "end": 939
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": [
+          {
+            "span": {
+              "start": 944,
+              "end": 953
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 26,
+        "name": "outerArrow",
+        "scopeId": 0,
+        "span": {
+          "start": 961,
+          "end": 971
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 27,
+        "name": "Methods",
+        "scopeId": 0,
+        "span": {
+          "start": 997,
+          "end": 1004
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 28,
+        "name": "seed",
+        "scopeId": 20,
+        "span": {
+          "start": 1014,
+          "end": 1018
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 29,
+        "name": "arrowOwner",
+        "scopeId": 0,
+        "span": {
+          "start": 1145,
+          "end": 1155
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 30,
+        "name": "arguments",
+        "scopeId": 21,
+        "span": {
+          "start": 1159,
+          "end": 1168
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": 0,
+        "references": [
+          {
+            "span": {
+              "start": 1177,
+              "end": 1186
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 1212,
+              "end": 1221
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 1232,
+              "end": 1241
+            },
+            "runtime": true,
+            "typeOnly": false
+          },
+          {
+            "span": {
+              "start": 1254,
+              "end": 1263
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 31,
+        "name": "inner",
+        "scopeId": 21,
+        "span": {
+          "start": 1199,
+          "end": 1204
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 32,
+        "name": "seed",
+        "scopeId": 22,
+        "span": {
+          "start": 1205,
+          "end": 1209
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      }
+    ],
+    "scopes": [
+      {
+        "id": 0,
+        "parentId": null
+      },
+      {
+        "id": 1,
+        "parentId": 0
+      },
+      {
+        "id": 2,
+        "parentId": 1
+      },
+      {
+        "id": 3,
+        "parentId": 1
+      },
+      {
+        "id": 4,
+        "parentId": 1
+      },
+      {
+        "id": 5,
+        "parentId": 4
+      },
+      {
+        "id": 6,
+        "parentId": 0
+      },
+      {
+        "id": 7,
+        "parentId": 0
+      },
+      {
+        "id": 8,
+        "parentId": 0
+      },
+      {
+        "id": 9,
+        "parentId": 0
+      },
+      {
+        "id": 10,
+        "parentId": 9
+      },
+      {
+        "id": 11,
+        "parentId": 0
+      },
+      {
+        "id": 12,
+        "parentId": 0
+      },
+      {
+        "id": 13,
+        "parentId": 0
+      },
+      {
+        "id": 14,
+        "parentId": 0
+      },
+      {
+        "id": 15,
+        "parentId": 14
+      },
+      {
+        "id": 16,
+        "parentId": 15
+      },
+      {
+        "id": 17,
+        "parentId": 0
+      },
+      {
+        "id": 18,
+        "parentId": 0
+      },
+      {
+        "id": 19,
+        "parentId": 0
+      },
+      {
+        "id": 20,
+        "parentId": 19
+      },
+      {
+        "id": 21,
+        "parentId": 0
+      },
+      {
+        "id": 22,
+        "parentId": 21
+      }
+    ],
+    "loads": [],
+    "diagnostics": []
+  },
+  "no-binding.cjs": {
+    "imports": [],
+    "exports": [],
+    "bindings": [
+      {
+        "id": 0,
+        "name": "ordinary",
+        "scopeId": 0,
+        "span": {
+          "start": 93,
+          "end": 101
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 1,
+        "name": "seed",
+        "scopeId": 1,
+        "span": {
+          "start": 102,
+          "end": 106
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 2,
+        "name": "arrow",
+        "scopeId": 0,
+        "span": {
+          "start": 148,
+          "end": 153
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 3,
+        "name": "arrowBody",
+        "scopeId": 0,
+        "span": {
+          "start": 179,
+          "end": 188
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 4,
+        "name": "seed",
+        "scopeId": 3,
+        "span": {
+          "start": 192,
+          "end": 196
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 5,
+        "name": "arguments",
+        "scopeId": 3,
+        "span": {
+          "start": 219,
+          "end": 228
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": [
+          {
+            "span": {
+              "start": 246,
+              "end": 255
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      }
+    ],
+    "scopes": [
+      {
+        "id": 0,
+        "parentId": null
+      },
+      {
+        "id": 1,
+        "parentId": 0
+      },
+      {
+        "id": 2,
+        "parentId": 0
+      },
+      {
+        "id": 3,
+        "parentId": 0
+      }
+    ],
+    "loads": [],
+    "diagnostics": []
+  },
+  "types.ts": {
+    "imports": [],
+    "exports": [],
+    "bindings": [
+      {
+        "id": 0,
+        "name": "arguments",
+        "scopeId": 0,
+        "span": {
+          "start": 98,
+          "end": 107
+        },
+        "imported": false,
+        "runtime": false,
+        "typeOnly": false,
+        "shadows": null,
+        "references": [
+          {
+            "span": {
+              "start": 159,
+              "end": 168
+            },
+            "runtime": false,
+            "typeOnly": true
+          },
+          {
+            "span": {
+              "start": 177,
+              "end": 186
+            },
+            "runtime": true,
+            "typeOnly": false
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "name": "query",
+        "scopeId": 0,
+        "span": {
+          "start": 127,
+          "end": 132
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 2,
+        "name": "Capture",
+        "scopeId": 1,
+        "span": {
+          "start": 142,
+          "end": 149
+        },
+        "imported": false,
+        "runtime": false,
+        "typeOnly": true,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 3,
+        "name": "Missing",
+        "scopeId": 0,
+        "span": {
+          "start": 195,
+          "end": 202
+        },
+        "imported": false,
+        "runtime": false,
+        "typeOnly": true,
+        "shadows": null,
+        "references": []
+      },
+      {
+        "id": 4,
+        "name": "Legacy",
+        "scopeId": 0,
+        "span": {
+          "start": 223,
+          "end": 229
+        },
+        "imported": true,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      }
+    ],
+    "scopes": [
+      {
+        "id": 0,
+        "parentId": null
+      },
+      {
+        "id": 1,
+        "parentId": 0
+      },
+      {
+        "id": 2,
+        "parentId": 1
+      },
+      {
+        "id": 3,
+        "parentId": 0
+      }
+    ],
+    "loads": [],
+    "diagnostics": [
+      {
+        "kind": "unsupported",
+        "message": "Unsupported module or dynamic binding form",
+        "span": {
+          "start": 216,
+          "end": 248
+        }
+      }
+    ]
+  },
+  "ordinary.cjs": {
+    "imports": [],
+    "exports": [],
+    "bindings": [
+      {
+        "id": 0,
+        "name": "value",
+        "scopeId": 0,
+        "span": {
+          "start": 81,
+          "end": 86
+        },
+        "imported": false,
+        "runtime": true,
+        "typeOnly": false,
+        "shadows": null,
+        "references": []
+      }
+    ],
+    "scopes": [
+      {
+        "id": 0,
+        "parentId": null
+      }
+    ],
+    "loads": [],
+    "diagnostics": []
+  }
+}

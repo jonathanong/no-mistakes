@@ -41,6 +41,18 @@ fn source_sensitive_module_names_keep_legacy_fatal_diagnostic_and_empty_program(
         "fatal-prefix/nested-all.ts",
         "fatal-prefix/prefix-clauses.ts",
         "fatal-prefix/comments.ts",
+        "fatal-prefix/contextual-type.ts",
+        "fatal-prefix/contextual-let.ts",
+        "fatal-prefix/contextual-await.ts",
+        "fatal-prefix/contextual-yield.ts",
+        "fatal-prefix/contextual-interface.ts",
+        "fatal-prefix/contextual-implements.ts",
+        "fatal-prefix/contextual-package.ts",
+        "fatal-prefix/contextual-private.ts",
+        "fatal-prefix/contextual-protected.ts",
+        "fatal-prefix/contextual-public.ts",
+        "fatal-prefix/contextual-static.ts",
+        "fatal-prefix/contextual-dotted.ts",
     ] {
         let source = std::fs::read_to_string(fixture.path().join(name)).unwrap();
         let allocator = Allocator::default();

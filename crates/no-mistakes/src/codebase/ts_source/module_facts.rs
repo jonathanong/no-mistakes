@@ -3,6 +3,7 @@ use oxc_semantic::SemanticBuilder;
 use oxc_span::GetSpan;
 
 pub(crate) mod arguments;
+mod legacy_references;
 mod modules;
 mod report;
 pub use report::*;
@@ -27,6 +28,7 @@ pub(crate) fn extract_from_semantic(
 ) -> TypeScriptModuleFacts {
     let scoping = semantic.scoping();
     let mut facts = TypeScriptModuleFacts::default();
+    let mut legacy_references = legacy_references::collect(semantic);
     for diagnostic in diagnostics {
         facts.diagnostics.push(ModuleDiagnostic {
             kind: "semanticError".into(),
@@ -49,7 +51,7 @@ pub(crate) fn extract_from_semantic(
             .scope_parent_id(scope)
             .and_then(|parent| scoping.find_binding(parent, scoping.symbol_ident(id)))
             .map(|parent| parent.index());
-        let references = scoping
+        let mut references = scoping
             .get_resolved_references(id)
             .map(|reference| {
                 let flags = reference.flags();
@@ -61,6 +63,9 @@ pub(crate) fn extract_from_semantic(
                 }
             })
             .collect();
+        if let Some(extra) = legacy_references.remove(&id) {
+            legacy_references::merge(semantic, id, &mut references, extra);
+        }
         facts.bindings.push(ModuleBinding {
             id: id.index(),
             name: name.into(),

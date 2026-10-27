@@ -5,7 +5,6 @@ use oxc_ast::ast::{
     Declaration, ImportDeclarationSpecifier, ModuleExportName, Program, Statement,
     TSNamespaceDeclarationBody,
 };
-use oxc_diagnostics::OxcDiagnostic;
 use oxc_span::Span;
 
 pub(super) fn enforce<'a>(
@@ -33,16 +32,6 @@ pub(super) fn enforce<'a>(
     let Some(span) = span else {
         return parsed;
     };
-    parsed.diagnostics.retain(|diagnostic| {
-        diagnostic
-            .labels
-            .iter()
-            .all(|label| label.offset() < span.start && label.offset() + label.len() <= span.start)
-    });
-    parsed.diagnostics.push(
-        OxcDiagnostic::error("An export name cannot include a unicode lone surrogate")
-            .with_label(span),
-    );
     // The old lexer had already read the next token, including its trivia.
     let mut trivia_end = span.end as usize;
     for comment in parsed
@@ -68,6 +57,7 @@ pub(super) fn enforce<'a>(
         .program
         .comments
         .retain(|comment| comment.span.start < trivia_end as u32);
+    finalization::diagnostics(&mut parsed, span, trivia_end);
     let mut empty = Program::dummy(allocator);
     empty.source_type = parsed.program.source_type;
     empty.source_text = parsed.program.source_text;
@@ -154,8 +144,12 @@ fn namespace_name(body: &TSNamespaceDeclarationBody<'_>) -> Option<Span> {
     }
 }
 
+mod finalization;
 mod prefix_names;
 mod record_names;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod finalization_tests;
