@@ -72,13 +72,16 @@ function testModulesFor(context) {
 // `moduleReference.expression`. A direct query uses the local name
 // (`import test = require("vitest")`); a namespace query sees `name.test`.
 function externalImportEquals(parent) {
-  if (parent?.type !== "TSImportEqualsDeclaration" || parent.importKind === "type") return null;
-  if (parent.id?.type !== "Identifier") return null;
-  const reference = parent.moduleReference;
-  if (reference?.type !== "TSExternalModuleReference") return null;
-  const expression = reference.expression;
-  if (expression?.type !== "Literal" || typeof expression.value !== "string") return null;
-  return { source: expression.value, name: parent.id.name };
+  // Type-only and entity-name aliases (`import alias = Foo.Bar`) are not modules.
+  // An external `require("literal")` always has an Identifier id and a string.
+  if (
+    parent?.type !== "TSImportEqualsDeclaration" ||
+    parent.importKind === "type" ||
+    parent.moduleReference?.type !== "TSExternalModuleReference"
+  ) {
+    return null;
+  }
+  return { source: parent.moduleReference.expression.value, name: parent.id.name };
 }
 
 function imported(node, context, namespace = false, seen = new Set()) {

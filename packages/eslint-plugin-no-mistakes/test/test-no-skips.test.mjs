@@ -308,6 +308,10 @@ describe("test-no-skips suppression and binding edges", () => {
   });
   it("reads a TypeScript import-equals require without dropping a named test binding", () => {
     assert.deepEqual(messages(code("import-equals-non-test"), rule, undefined, "service.ts"), []);
+    assert.deepEqual(
+      messages(code("import-equals-unsupported"), rule, undefined, "service.ts"),
+      [],
+    );
     const findings = lint(
       code("import-equals-skip"),
       { [`no-mistakes/${rule}`]: "error" },
@@ -374,6 +378,14 @@ it("loads test-no-skips in Oxlint with the same import and suppression semantics
   assert.deepEqual(nonTestReport, report(nonTest[1]));
   assert.ok(!nonTest[0].stderr.includes("TypeError"));
   assert.deepEqual(ruleLines(nonTestReport), []);
+  const unsupported = [run("import-equals-unsupported"), run("import-equals-unsupported")];
+  assert.deepEqual(
+    unsupported.map((item) => item.status),
+    [0, 0],
+  );
+  assert.deepEqual(report(unsupported[0]), report(unsupported[1]));
+  assert.ok(!unsupported[0].stderr.includes("TypeError"));
+  assert.deepEqual(ruleLines(report(unsupported[0])), []);
   const skip = [run("import-equals-skip"), run("import-equals-skip")];
   assert.ok(skip.every((item) => item.status !== 0));
   const skipReport = report(skip[0]);

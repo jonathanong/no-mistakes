@@ -91,9 +91,11 @@ nested.fixme("nested default", () => {});
 ```
 
 A TypeScript `import name = require("...")` binding is that same static
-`require()` form. The local name is the runner when it is `it`, `test`, or
-`describe`. Any other name is the module object, so `playwright.test` is the
-runner and a call through an unrelated binding is not.
+`require()` form. A direct use of the local name is matched like any other
+named binding, so only `it`, `test`, and `describe` from `vitest` or
+`@playwright/test` are runners. A member such as `playwright.test` sees the
+module object. `import type name = require("...")` and
+`import name = Some.Namespace` are ignored.
 
 ```ts
 import test = require("vitest");
