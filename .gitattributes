@@ -1,5 +1,6 @@
 *.snap text eol=lf
 fixtures/rules/disable-directive-audit/boundaries-crlf.rs -text -whitespace
+fixtures/rules/disable-directive-audit/rust-block-docs-crlf.rs -text -whitespace
 fixtures/rules/markdown-structure-budget/exact-crlf.md -text -whitespace
 fixtures/postgres-facts/source/operator-line-comment-boundaries.sql -text -whitespace
 test-cases/rules/doc-consistency/fixture/patterns/docs/crlf.md -text -whitespace
