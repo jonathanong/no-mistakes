@@ -28,6 +28,12 @@ pub(crate) trait ImportResolverFacade: Sync {
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
         visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification;
+
+    /// True when a tsconfig `paths` pattern matches `specifier`.
+    /// A `baseUrl` join is not a paths alias.
+    fn matches_paths_alias(&self, _specifier: &str, _importing_file: &Path) -> bool {
+        false
+    }
 }
 
 // Existing graph and runner-config call sites use this shorter name. New
@@ -56,6 +62,10 @@ impl<'a> ImportResolverFacade for ImportResolver<'a> {
         visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         ImportResolver::classify_import(self, specifier, importing_file, workspace, visible_files)
+    }
+
+    fn matches_paths_alias(&self, specifier: &str, _importing_file: &Path) -> bool {
+        self.matches_alias(specifier)
     }
 }
 
@@ -86,6 +96,10 @@ impl ImportResolverFacade for ScopedImportResolver<'_> {
             workspace,
             visible_files,
         )
+    }
+
+    fn matches_paths_alias(&self, specifier: &str, importing_file: &Path) -> bool {
+        ScopedImportResolver::matches_paths_alias(self, specifier, importing_file)
     }
 }
 
@@ -152,5 +166,9 @@ impl ImportResolverFacade for WorkspaceFallbackResolver<'_> {
     ) -> ImportClassification {
         self.inner
             .classify_import(specifier, importing_file, workspace, visible_files)
+    }
+
+    fn matches_paths_alias(&self, specifier: &str, importing_file: &Path) -> bool {
+        self.inner.matches_paths_alias(specifier, importing_file)
     }
 }

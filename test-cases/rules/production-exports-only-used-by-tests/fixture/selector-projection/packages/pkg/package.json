@@ -1,0 +1,9 @@
+{
+  "name": "@scope/pkg",
+  "exports": {
+    ".": "./src/index.mts"
+  },
+  "imports": {
+    "#internal": "./src/internal.mts"
+  }
+}

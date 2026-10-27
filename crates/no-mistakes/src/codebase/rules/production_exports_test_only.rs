@@ -1,5 +1,6 @@
 //! Production exports whose syntactic consumers all belong to configured tests.
 mod config;
+mod nextjs;
 mod traversal;
 
 use super::analysis_policy::AnalysisDiagnostics;
@@ -37,6 +38,7 @@ pub(crate) fn check_with_graph(
         let filter = RulePathFilter::new(&root, config, application)?;
         let policy = config.effective_rule_analysis(application)?.unanalyzable;
         let files = facts.graph_file_universe();
+        let nextjs_roots = nextjs::project_roots(&root, config);
         for (file, line, reason) in &incomplete {
             diagnostics.unanalyzable(policy, uncertain(&root, application, file, *line, reason));
         }
@@ -68,6 +70,10 @@ pub(crate) fn check_with_graph(
                     } else {
                         &export.name
                     };
+                    // Next.js reads these names. Other exports on the same file stay in scope.
+                    if nextjs::consumed_export(file, &nextjs_roots, name) {
+                        continue;
+                    }
                     let consumers = traversal::consumers(graph, file, name);
                     if !consumers.unknown.is_empty() {
                         chunk.unanalyzable(
@@ -152,6 +158,10 @@ fn uncertain(
 }
 
 #[cfg(test)]
+mod nextjs_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod work_tests;
+#[cfg(test)]
+mod workspace_exports_tests;

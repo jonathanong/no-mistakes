@@ -1,0 +1,5 @@
+{
+  "name": "selector-projection-fixture",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

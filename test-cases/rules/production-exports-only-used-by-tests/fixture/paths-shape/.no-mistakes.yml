@@ -1,0 +1,6 @@
+rules:
+  - rule: production-exports-only-used-by-tests
+    scope: repository
+    options:
+      productionRoots: [app, packages]
+      testGlobs: ["app/tests/**/*.test.mts"]

@@ -1,0 +1,6 @@
+{
+  "name": "marker",
+  "exports": {
+    ".": "./src/index.mts"
+  }
+}

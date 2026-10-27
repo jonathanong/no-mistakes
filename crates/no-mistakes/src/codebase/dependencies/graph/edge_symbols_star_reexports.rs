@@ -25,16 +25,8 @@ fn collect_star_reexport_edges(inputs: &ExportEdgeInputs<'_>, edges: &mut Vec<Ed
             &mut visited,
         );
     }
-    let mut export_counts: HashMap<StarExportKey, usize> = HashMap::new();
-    for candidate in &candidates {
-        *export_counts
-            .entry(candidate.export_key.clone())
-            .or_default() += 1;
-    }
-    for candidate in candidates {
-        if export_counts.get(&candidate.export_key) == Some(&1) {
-            push_star_reexport_candidate_edges(inputs, candidate, edges);
-        }
+    for candidate in agreed_star_reexport_candidates(inputs, candidates) {
+        push_star_reexport_candidate_edges(inputs, candidate, edges);
     }
 }
 

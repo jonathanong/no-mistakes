@@ -89,6 +89,14 @@ fn scoped_import_resolver_facade_classifies_workspace_aliases() {
 
     assert_eq!(classification.resolver_path(), Some(target.as_path()));
     assert!(classification.workspace_path().is_none());
+    assert!(ImportResolverFacade::matches_paths_alias(
+        &resolver,
+        "@runtime/value",
+        &importer,
+    ));
+    assert!(!ImportResolverFacade::matches_paths_alias(
+        &resolver, "react", &importer,
+    ));
 }
 
 #[test]
@@ -152,6 +160,8 @@ fn project_resolver_legacy_path_retains_the_explicit_shared_cache() {
         first.resolve("@runtime/value", &importer),
         Some(target.clone())
     );
+    assert!(first.matches_paths_alias("@runtime/value", &importer));
+    assert!(!first.matches_paths_alias("react", &importer));
     let first_work = observer.snapshot().work;
 
     let second = ProjectImportResolver::new(&tsconfig, None, &visible, Some(&cache), &session);

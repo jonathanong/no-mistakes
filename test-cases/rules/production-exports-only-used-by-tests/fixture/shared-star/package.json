@@ -1,0 +1,5 @@
+{
+  "name": "shared-star-fixture",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

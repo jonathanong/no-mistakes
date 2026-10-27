@@ -79,11 +79,63 @@ Classify every relevant test/helper explicitly to avoid treating it as productio
 The check uses prepared TS/JS facts and the shared graph within the ordinary
 `check` request; it does not launch a test runner or infer runtime coverage.
 
+## Next.js entrypoints
+
+A configured project with `type: nextjs` treats framework-consumed exports as
+production consumers. Next.js reads those names, so a test import of that name is
+not test-only. Other exports in the same file are still reported when only tests
+import them.
+
+The inventory is shared with [`unique-exports`](unique-exports.md). Only code
+extensions count. A `next` package dependency does not qualify — the project
+`type` must be `nextjs`, and the file must sit under that project's effective
+root. A `nextjs` project that omits `root`, when no Next.js root can be inferred,
+contributes no entrypoints. The same filenames outside that project are still
+reported. Entrypoint files are not reclassified as tests, so symbols they import
+remain production consumers.
+
+`next.config` at the project root, and `middleware` and `instrumentation` at the
+project root or `src/`, are whole-file: the framework loads the module, so every
+export is exempt. Every other convention exempts only the names that convention
+reads:
+
+- App Router files under `app/` or `src/app/` (`page`, `layout`, `loading`,
+  `error`, `global-error`, `not-found`, `template`, `default`, `manifest`,
+  `robots`, `sitemap`, `icon`, `apple-icon`, `opengraph-image`,
+  `twitter-image`): `default`, plus metadata and segment config (`metadata`,
+  `generateMetadata`, `generateStaticParams`, `viewport`, `generateViewport`,
+  `dynamic`, `dynamicParams`, `revalidate`, `fetchCache`, `runtime`,
+  `preferredRegion`, `maxDuration`, `experimental_ppr`). Image conventions also
+  exempt `alt`, `size`, and `contentType`.
+- `route` handlers exempt the HTTP methods `GET`, `POST`, `PUT`, `PATCH`,
+  `DELETE`, `HEAD`, and `OPTIONS`, plus the same segment config. A `default`
+  export from `route` is still reported.
+- Pages Router files under `pages/` or `src/pages/`: `default`, `getStaticProps`,
+  `getStaticPaths`, `getServerSideProps`, `getInitialProps`, `config`, and
+  `reportWebVitals`. Files whose stem starts with `_`, other than `_app`,
+  `_document`, and `_error`, are not routes.
+- `proxy` at the project root or `src/` (Next.js 16): `default`, `proxy`, and
+  `config`.
+- `instrumentation-client` at the project root or `src/`: `onRouterTransitionStart`.
+
 ## Incomplete analysis
 
 Dynamic or unresolved module/symbol relationships cannot prove exclusive test
 consumption. Uncertain analysis follows `unanalyzable`: `report` creates a failing
 finding, `advise` creates a non-failing advisory, and `ignore` omits uncertainty.
+Unresolved module advisories name the specifier and the import line. Unknown-symbol
+uncertainty names the specifier, the symbol, and that import line. Workspace
+package `exports` and package `imports` (`#name`) use the shared prepared
+resolver, the same projection as resolve-check. A visible workspace source is
+selected when the TypeScript resolver has no paths target.
+A tsconfig `paths` pattern that matches the specifier and does not resolve stays
+unresolved. The match is the pattern, not text inside a candidate path, so a
+replacement such as `./lib/marker/missing.ts` still owns the specifier `marker`.
+A `baseUrl` join is not a paths pattern, and a workspace package of the same name
+is not substituted for a paths match.
+Two `export *` paths that reach the same export are one symbol, including a
+direct star and a named re-export of that star. Distinct definitions of the same
+name stay unresolved.
 Fix unresolved imports and replace dynamic module selection with static imports
 so the consumer relationship can be established. Definite violations remain
 findings under every policy.

@@ -1,0 +1,13 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+  other:
+    type: library
+    root: other
+rules:
+  - rule: production-exports-only-used-by-tests
+    scope: repository
+    options:
+      productionRoots: [web, other]
+      testGlobs: ["tests/**/*.test.ts"]

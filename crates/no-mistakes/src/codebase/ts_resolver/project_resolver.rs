@@ -72,4 +72,11 @@ impl ImportResolution for ProjectImportResolver<'_> {
             }
         }
     }
+
+    fn matches_paths_alias(&self, specifier: &str, importing_file: &Path) -> bool {
+        match self {
+            Self::Scoped(resolver) => resolver.matches_paths_alias(specifier, importing_file),
+            Self::Legacy(resolver) => resolver.matches_paths_alias(specifier, importing_file),
+        }
+    }
 }

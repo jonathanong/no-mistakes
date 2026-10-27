@@ -69,12 +69,37 @@ fn collect_symbol_import_selectors(
 }
 
 fn selector_target(inputs: &ExportEdgeInputs<'_>, source: &str) -> Option<PathBuf> {
-    inputs
-        .resolver
-        .classify_import(source, inputs.path, inputs.workspace, inputs.graph_files)
-        .preferred_path()
-        .and_then(|path| inputs.graph_files.visible_path(path))
+    let classification =
+        inputs
+            .resolver
+            .classify_import(source, inputs.path, inputs.workspace, inputs.graph_files);
+    // A visible resolver path wins. Otherwise use the prepared workspace
+    // source, unless a tsconfig paths pattern owns the specifier.
+    if let Some(path) = visible_selector_path(inputs, classification.resolver_path()) {
+        return Some(path);
+    }
+    let workspace = visible_selector_path(inputs, classification.workspace_path());
+    if workspace.is_some()
+        && classification.resolver_path().is_none()
+        && paths_alias_owns(inputs, source)
+    {
+        return None;
+    }
+    workspace
+}
+
+fn visible_selector_path(inputs: &ExportEdgeInputs<'_>, path: Option<&Path>) -> Option<PathBuf> {
+    path.and_then(|path| inputs.graph_files.visible_path(path))
         .map(Path::to_path_buf)
+}
+
+/// A tsconfig `paths` pattern owns the specifier. A `baseUrl` join does not,
+/// even when a candidate path happens to contain the specifier text.
+fn paths_alias_owns(inputs: &ExportEdgeInputs<'_>, source: &str) -> bool {
+    if source.starts_with(['.', '/', '#']) {
+        return false;
+    }
+    inputs.resolver.matches_paths_alias(source, inputs.path)
 }
 
 fn selector_unknown(inputs: &ExportEdgeInputs<'_>, source: &str, edges: &mut Vec<Edge>) {
