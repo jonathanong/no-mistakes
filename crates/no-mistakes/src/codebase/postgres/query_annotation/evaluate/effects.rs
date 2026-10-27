@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod borrowed_tests;
+#[cfg(test)]
+mod builder_free_tests;
 mod builder_ids;
 #[cfg(not(test))]
 mod hooks;

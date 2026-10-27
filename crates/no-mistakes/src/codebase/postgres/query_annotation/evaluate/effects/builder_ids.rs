@@ -44,9 +44,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             | Value::Record(values, _)
             | Value::Joined(values)
             | Value::Possible(values) => {
+                // Scalar/callback-only trees cannot contribute builder IDs.
                 // Values are immutable for this read-only collection. Mutable
                 // argument/array slots retain their independent identity rules.
-                if visited.insert(values.identity()) {
+                if values.contains_reference() && visited.insert(values.identity()) {
                     visit(());
                     for value in values {
                         self.collect_builder_value(value, ids, visited, visit);
