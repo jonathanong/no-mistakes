@@ -102,12 +102,6 @@ fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<P
     super::unique_exports_project_roots_with_inferred(root, config, &mut inferred_roots)
 }
 
-fn write(dir: &Path, path: &str, content: &str) {
-    let full = dir.join(path);
-    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
-    std::fs::write(full, content).unwrap();
-}
-
 #[test]
 fn unique_exports_project_roots_cover_target_variants() {
     let root = fixture("check-discovery/unique-exports-target-roots");
@@ -205,13 +199,10 @@ fn automatic_check_views_exclude_a_tracked_broken_symlink() {
 
 #[test]
 fn automatic_check_views_keep_a_file_deleted_after_the_snapshot() {
-    let dir = TempDir::new().unwrap();
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check-discovery/frozen-deleted-snapshot");
+    let dir = crate::test_support::materialize_saved_fixture(&source);
     let file = dir.path().join("src/frozen.mts");
-    write(
-        dir.path(),
-        "src/frozen.mts",
-        "export const frozen = true;\n",
-    );
     let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
     let sources = snapshot.source_store_for(dir.path());
     std::fs::remove_file(&file).unwrap();
@@ -443,20 +434,16 @@ fn nextjs_project_without_single_config_root_is_ignored() {
 /// rather than a full filesystem walk of the ignored directory.
 #[test]
 fn discover_check_files_preserves_roots_without_descending_into_gitignored_directory() {
-    let dir = TempDir::new().unwrap();
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check-discovery/preserved-roots-gitignored");
+    let dir = crate::test_support::materialize_saved_fixture(&source);
+    // Saved as .gitignore.fixture so this repository still tracks the trap file.
+    std::fs::rename(
+        dir.path().join(".gitignore.fixture"),
+        dir.path().join(".gitignore"),
+    )
+    .unwrap();
     crate::test_support::git_init(dir.path());
-    write(dir.path(), ".gitignore", "dependency-store/\n");
-    write(dir.path(), "web/fixtures/tracked.json", "{}");
-    write(
-        dir.path(),
-        "dependency-store/nested/fixtures/trap.json",
-        "{}",
-    );
-    write(
-        dir.path(),
-        ".no-mistakes.yml",
-        "rules:\n  - rule: test-email-domain-policy\n    scope: repository\n    include:\n      - \"**/fixtures/**\"\n    options:\n      bannedDomains:\n        - example.com\n",
-    );
     crate::test_support::git_add_all(dir.path());
 
     let config = load_config(dir.path());

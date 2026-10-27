@@ -35,10 +35,21 @@ fn git_add_all(dir: &Path) {
     );
 }
 
-fn write(dir: &Path, path: &str, content: &str) {
-    let full = dir.join(path);
-    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
-    std::fs::write(full, content).unwrap();
+fn glob_source(name: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/react-traits-glob")
+        .join(name)
+        .join("fixture")
+}
+
+fn materialized_glob(name: &str) -> TempDir {
+    let dir = crate::test_support::materialize_saved_fixture(&glob_source(name));
+    let gitignore = dir.path().join(".gitignore.fixture");
+    if gitignore.is_file() {
+        // `.gitignore.fixture` keeps ignored fixture files committable here.
+        std::fs::rename(gitignore, dir.path().join(".gitignore")).unwrap();
+    }
+    dir
 }
 
 #[test]
@@ -93,19 +104,8 @@ fn dot_directories_excluded_from_glob_expansion() {
 /// appear in `git ls-files` output.
 #[test]
 fn expand_globs_prefers_git_visible_files_over_gitignored_directory() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_glob("gitignored-vendor");
     git_init(dir.path());
-    write(dir.path(), ".gitignore", "vendor/\n");
-    write(
-        dir.path(),
-        "src/App.tsx",
-        "export default function App() {}\n",
-    );
-    write(
-        dir.path(),
-        "vendor/nested/Trap.tsx",
-        "export default function Trap() {}\n",
-    );
     git_add_all(dir.path());
 
     let files =
@@ -123,18 +123,8 @@ fn expand_globs_prefers_git_visible_files_over_gitignored_directory() {
 /// not merely relying on `.gitignore` to prune it).
 #[test]
 fn expand_globs_still_skips_hardcoded_dirs_when_git_tracked() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_glob("tracked-node-modules");
     git_init(dir.path());
-    write(
-        dir.path(),
-        "src/App.tsx",
-        "export default function App() {}\n",
-    );
-    write(
-        dir.path(),
-        "node_modules/pkg/Index.tsx",
-        "export default function Index() {}\n",
-    );
     git_add_all(dir.path());
 
     let files =
@@ -151,17 +141,10 @@ fn expand_globs_still_skips_hardcoded_dirs_when_git_tracked() {
 /// applies to the shared ignore-aware candidate list.
 #[test]
 fn expand_globs_applies_skip_dirs_outside_git_repositories() {
-    let dir = TempDir::new().unwrap();
-    let root = dir.path().join("project");
-    write(&root, "src/App.tsx", "export default function App() {}\n");
-    write(
-        &root,
-        "node_modules/pkg/Index.tsx",
-        "export default function Index() {}\n",
-    );
+    let dir = materialized_glob("tracked-node-modules");
 
     let files =
-        expand_globs(&root, &["**/*.tsx".to_string()]).expect("glob expansion should succeed");
+        expand_globs(dir.path(), &["**/*.tsx".to_string()]).expect("glob expansion should succeed");
     let names: Vec<&str> = files
         .iter()
         .filter_map(|p| p.file_name()?.to_str())

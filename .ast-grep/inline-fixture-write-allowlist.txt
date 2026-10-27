@@ -7,6 +7,7 @@
 crates/no-mistakes/src/codebase/rules/filesystem_dispatch/tests/fixture_config.rs	runtime	Renders the dispatch config from the filesystem rule registry into a temp copy so a new rule stays covered.
 crates/no-mistakes/src/invocation/lock/tests.rs	runtime	Creates the lock path at runtime to prove a file path is not a lock directory.
 crates/no-mistakes/src/napi_api/filesystem/tests.rs	runtime	Creates files, hard links, and symlinks at runtime to prove planning-lock identity checks.
+crates/no-mistakes/src/postgres_catalog/tests.rs	runtime	Serializes the catalog this test just generated so the reader loads that contract.
 crates/no-mistakes/tests/cli_invocation/fsmonitor.rs	runtime	Creates the live helper stderr file while two processes contend for the invocation lock.
 crates/no-mistakes/tests/cli_tests_plan_from_git_diff.rs	copy	Copies saved tests-plan fixtures into a tempdir.
 crates/no-mistakes/tests/cli_tests_plan_lockfile2.rs	copy	Copies saved lockfile fixtures into a tempdir.

@@ -3,7 +3,6 @@ use super::*;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope, RuleTestTargets, StringOrList};
 use crate::playwright::test_support::fixture_path;
-use std::fs;
 
 mod multi_frontend_apps;
 
@@ -376,18 +375,14 @@ fn check_with_facts_unique_rules_do_not_require_nextjs_routes() {
 
 #[test]
 fn check_with_facts_unique_rules_propagate_analysis_errors() {
-    let temp = tempfile::tempdir().unwrap();
-    let root = temp.path();
-    let config_path = root.join(".no-mistakes.yml");
-    fs::write(
-        &config_path,
-        "tests:\n  playwright:\n    configs: missing.config.ts\n",
+    let root = fixture_path(&["playwright", "missing-config"]);
+    let error = check_with_facts(
+        &root,
+        Some(&root.join(".no-mistakes.yml")),
+        &config_with_rule(PLAYWRIGHT_UNIQUE_TEST_IDS),
+        &CheckFactMap::default(),
     )
-    .unwrap();
-    let config = config_with_rule(PLAYWRIGHT_UNIQUE_TEST_IDS);
-    let facts = CheckFactMap::default();
-
-    let error = check_with_facts(root, Some(&config_path), &config, &facts).unwrap_err();
+    .unwrap_err();
 
     assert!(error
         .to_string()

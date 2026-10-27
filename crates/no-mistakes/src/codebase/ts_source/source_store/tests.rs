@@ -313,9 +313,8 @@ fn optional_json_parses_use_a_one_file_store_when_no_session_is_prepared() {
 
 #[test]
 fn invalid_utf8_source_reads_are_cached_as_invalid_data() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("invalid.ts");
-    std::fs::write(&path, [0xff, 0xfe, b'x']).unwrap();
+    // 0xFF 0xFE is not UTF-8. Checked in as bytes so the cache records InvalidData.
+    let path = fixture("invalid-utf8.ts");
     let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
     let store = SourceStore::new(inventory);
     let first = store.read_path(&path).unwrap_err();

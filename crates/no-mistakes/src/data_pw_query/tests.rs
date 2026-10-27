@@ -39,10 +39,21 @@ fn git_add_all(dir: &Path) {
     );
 }
 
-fn write(dir: &Path, path: &str, content: &str) {
-    let full = dir.join(path);
-    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
-    std::fs::write(full, content).unwrap();
+fn discovery_source(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis")
+        .join(name)
+        .join("fixture")
+}
+
+fn materialized_discovery(name: &str) -> TempDir {
+    let dir = crate::test_support::materialize_saved_fixture(&discovery_source(name));
+    let gitignore = dir.path().join(".gitignore.fixture");
+    if gitignore.is_file() {
+        // `.gitignore.fixture` keeps ignored fixture files committable here.
+        std::fs::rename(gitignore, dir.path().join(".gitignore")).unwrap();
+    }
+    dir
 }
 
 fn discover_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
@@ -372,11 +383,8 @@ fn errors_without_configured_attributes() {
 /// returned.
 #[test]
 fn discover_files_does_not_walk_gitignored_directory() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_discovery("data-pw-gitignored-directory");
     git_init(dir.path());
-    write(dir.path(), ".gitignore", "dependency-store/\n");
-    write(dir.path(), "app/search.tsx", "<div />");
-    write(dir.path(), "dependency-store/nested/trap.tsx", "<div />");
     git_add_all(dir.path());
 
     let files = discover_files(dir.path(), &[]);
@@ -392,10 +400,8 @@ fn discover_files_does_not_walk_gitignored_directory() {
 /// during a live filesystem walk.
 #[test]
 fn discover_files_excludes_git_tracked_skip_dir() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_discovery("data-pw-tracked-skip-dir");
     git_init(dir.path());
-    write(dir.path(), "app/search.tsx", "<div />");
-    write(dir.path(), "coverage/report.tsx", "<div />");
     git_add_all(dir.path());
 
     let files = discover_files(dir.path(), &[]);
@@ -410,10 +416,8 @@ fn discover_files_excludes_git_tracked_skip_dir() {
 /// to the git-derived candidate list.
 #[test]
 fn discover_files_honors_extra_skip_directories() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_discovery("data-pw-extra-skip");
     git_init(dir.path());
-    write(dir.path(), "app/search.tsx", "<div />");
-    write(dir.path(), "generated/ignored.tsx", "<div />");
     git_add_all(dir.path());
 
     let files = discover_files(dir.path(), &["generated".to_string()]);
@@ -429,9 +433,8 @@ fn discover_files_honors_extra_skip_directories() {
 /// path that cannot actually be read.
 #[test]
 fn discover_files_skips_missing_git_tracked_file() {
-    let dir = TempDir::new().unwrap();
+    let dir = materialized_discovery("data-pw-missing-tracked");
     git_init(dir.path());
-    write(dir.path(), "app/search.tsx", "<div />");
     git_add_all(dir.path());
     std::fs::remove_file(dir.path().join("app/search.tsx")).unwrap();
 
@@ -450,10 +453,8 @@ fn discover_files_skips_missing_git_tracked_file() {
 /// descended into — unrelated to the behavior under test here.
 #[test]
 fn discover_files_applies_skip_dirs_outside_git_repositories() {
-    let temp = TempDir::new().unwrap();
+    let temp = materialized_discovery("data-pw-outside-git-skip");
     let dir = temp.path().join("root");
-    write(&dir, "app/search.tsx", "<div />");
-    write(&dir, "dist/ignored.tsx", "<div />");
 
     let files = discover_files(&dir, &[]);
 

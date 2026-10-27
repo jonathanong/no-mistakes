@@ -1,8 +1,8 @@
 #[test]
 fn tests_plan_json_returns_complete_deterministic_changed_file_inventory_when_no_tests_match() {
     let root = fixture_root("test-plan-config");
-    let output = tests_plan_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "changedFiles": ["unchanged-order.ts", "deleted.ts", "unchanged-order.ts"],
             "diff": "\
@@ -21,8 +21,8 @@ diff --git a/日本語.ts b/日本語.ts
 diff --git a/-leading.ts b/-leading.ts
 "
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
 
@@ -45,13 +45,13 @@ diff --git a/-leading.ts b/-leading.ts
 
 #[test]
 fn tests_plan_json_rejects_a_malformed_quoted_path_in_an_explicit_diff() {
-    let error = tests_plan_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let error = tests_plan_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": fixture_root("test-plan-config"),
             "diff": "diff --git \"a/unsupported\\q.ts\" \"b/unsupported\\q.ts\"\n"
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap_err();
 
     assert!(error
@@ -61,56 +61,57 @@ fn tests_plan_json_rejects_a_malformed_quoted_path_in_an_explicit_diff() {
 
 #[test]
 fn tests_plan_json_base_head_preserves_tabs_and_newlines_in_changed_file_inventory() {
+    let bytes = saved_fixture("test-plan", "napi-changed-file-bytes");
     let fixture = tempfile::tempdir().unwrap();
     let root = fixture.path();
     crate::test_support::git_init(root);
+    // Tab and newline filenames cannot live in the fixture tree; copy the
+    // saved before/after bytes onto those paths. value-2.ts is longer than
+    // value-1.ts so a same-mtime copy still shows up as a git change.
     let paths = ["tab\tname.ts", "line\nbreak.ts"];
     for path in paths {
-        std::fs::write(root.join(path), "export const value = 1;\n").unwrap();
+        std::fs::copy(bytes.path().join("value-1.ts"), root.join(path)).unwrap();
     }
     crate::test_support::git_commit_all(root, "base");
     for path in paths {
-        std::fs::write(root.join(path), "export const value = 2;\n").unwrap();
+        std::fs::copy(bytes.path().join("value-2.ts"), root.join(path)).unwrap();
     }
     crate::test_support::git_commit_all(root, "head");
 
-    let output = tests_plan_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "base": "HEAD~1",
             "head": "HEAD"
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
 
-    assert_eq!(plan["changed_files"], json!(["line\nbreak.ts", "tab\tname.ts"]));
+    assert_eq!(
+        plan["changed_files"],
+        json!(["line\nbreak.ts", "tab\tname.ts"])
+    );
     assert!(plan["selected_tests"].as_array().unwrap().is_empty());
 }
 
 #[cfg(unix)]
 #[test]
 fn tests_plan_json_preserves_manual_symlink_identity_while_analyzing_its_target() {
-    let fixture = tempfile::tempdir().unwrap();
+    let fixture = saved_fixture("test-plan", "napi-changed-file-symlink");
     let root = fixture.path();
     crate::test_support::git_init(root);
-    std::fs::write(root.join("real.ts"), "export const value = 1;\n").unwrap();
-    std::fs::write(
-        root.join("real.test.ts"),
-        "import { value } from './real';\ntest('value', () => value);\n",
-    )
-    .unwrap();
     std::os::unix::fs::symlink("real.ts", root.join("alias.ts")).unwrap();
     crate::test_support::git_commit_all(root, "fixture");
 
-    let output = tests_plan_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "changedFiles": ["alias.ts"]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
 

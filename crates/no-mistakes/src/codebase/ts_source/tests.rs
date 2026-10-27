@@ -11,7 +11,6 @@ use oxc_ast::ast::{Expression, ObjectPropertyKind, Statement};
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use tempfile::TempDir;
 
 mod discovery_preserve;
@@ -170,35 +169,11 @@ fn parse_diagnostic_formatter_preserves_diagnostic_and_panic_messages() {
 }
 
 fn git_init(dir: &Path) {
-    let output = Command::new("git")
-        .args(["init", "-q", "--initial-branch=main"])
-        .current_dir(dir)
-        .env_remove("GIT_DIR")
-        .env_remove("GIT_WORK_TREE")
-        .env_remove("GIT_INDEX_FILE")
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "git init failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
+    crate::test_support::git_init(dir);
 }
 
 fn git_add_all(dir: &Path) {
-    let output = Command::new("git")
-        .args(["add", "."])
-        .current_dir(dir)
-        .env_remove("GIT_DIR")
-        .env_remove("GIT_WORK_TREE")
-        .env_remove("GIT_INDEX_FILE")
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "git add failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
+    crate::test_support::git_add_all(dir);
 }
 
 fn write(dir: &Path, path: &str, content: &str) {

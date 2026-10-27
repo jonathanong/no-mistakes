@@ -55,6 +55,13 @@ mod pnpm_include;
 mod resolution;
 mod visibility;
 
+fn workspace_case(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis")
+        .join(name)
+        .join("fixture")
+}
+
 fn write(path: &Path, content: &str) {
     if let Some(p) = path.parent() {
         std::fs::create_dir_all(p).unwrap();
@@ -77,10 +84,7 @@ fn no_package_json_returns_empty() {
 
 #[test]
 fn invalid_workspace_glob_returns_no_dirs() {
-    let dir = TempDir::new().unwrap();
-    write(&dir.path().join("package.json"), r#"{"workspaces": ["["]}"#);
-
-    let map = load(dir.path()).unwrap();
+    let map = load(&workspace_case("workspaces-invalid-glob")).unwrap();
 
     assert!(map.packages.is_empty());
 }
@@ -89,20 +93,9 @@ fn invalid_workspace_glob_returns_no_dirs() {
 
 #[test]
 fn loads_workspace_array() {
-    let dir = TempDir::new().unwrap();
-    let root = dir.path();
+    let root = workspace_case("workspaces-array");
 
-    write(
-        &root.join("package.json"),
-        r#"{"workspaces": ["packages/*"]}"#,
-    );
-    write(
-        &root.join("packages/api/package.json"),
-        r#"{"name": "@x/api", "main": "src/index.mts"}"#,
-    );
-    write(&root.join("packages/api/src/index.mts"), "export {};");
-
-    let map = load(root).unwrap();
+    let map = load(&root).unwrap();
     assert_eq!(map.packages.len(), 1);
     assert_eq!(map.packages[0].name, "@x/api");
     assert!(map.packages[0].entry.is_some());
@@ -112,108 +105,45 @@ fn loads_workspace_array() {
 
 #[test]
 fn loads_workspace_object_form() {
-    let dir = TempDir::new().unwrap();
-    let root = dir.path();
+    let root = workspace_case("workspaces-object-form");
 
-    write(
-        &root.join("package.json"),
-        r#"{"workspaces": {"packages": ["packages/*"]}}"#,
-    );
-    write(
-        &root.join("packages/web/package.json"),
-        r#"{"name": "@x/web", "main": "src/index.tsx"}"#,
-    );
-    write(&root.join("packages/web/src/index.tsx"), "export {};");
-
-    let map = load(root).unwrap();
+    let map = load(&root).unwrap();
     assert_eq!(map.packages.len(), 1);
     assert_eq!(map.packages[0].name, "@x/web");
 }
 
 #[test]
 fn loads_pnpm_workspace_yaml_when_package_json_has_no_workspaces() {
-    let dir = TempDir::new().unwrap();
-    let root = dir.path();
+    let root = workspace_case("workspaces-pnpm-yaml");
 
-    write(&root.join("package.json"), r#"{"name": "root"}"#);
-    write(
-        &root.join("pnpm-workspace.yaml"),
-        "packages:\n  - packages/*\n",
-    );
-    write(
-        &root.join("packages/api/package.json"),
-        r#"{"name": "@x/api", "main": "src/index.mts"}"#,
-    );
-    write(&root.join("packages/api/src/index.mts"), "export {};");
-
-    let map = load(root).unwrap();
+    let map = load(&root).unwrap();
     assert_eq!(map.packages.len(), 1);
     assert_eq!(map.packages[0].name, "@x/api");
 }
 
 #[test]
 fn pnpm_workspace_yaml_takes_precedence_over_package_json_workspaces() {
-    let dir = TempDir::new().unwrap();
-    let root = dir.path();
+    let root = workspace_case("workspaces-pnpm-precedence");
 
-    write(
-        &root.join("package.json"),
-        r#"{"workspaces": ["npm-packages/*"]}"#,
-    );
-    write(
-        &root.join("pnpm-workspace.yaml"),
-        "packages:\n  - pnpm-packages/*\n",
-    );
-    write(
-        &root.join("npm-packages/api/package.json"),
-        r#"{"name": "@x/npm"}"#,
-    );
-    write(
-        &root.join("pnpm-packages/api/package.json"),
-        r#"{"name": "@x/pnpm"}"#,
-    );
-
-    let map = load(root).unwrap();
+    let map = load(&root).unwrap();
     assert_eq!(map.packages.len(), 1);
     assert_eq!(map.packages[0].name, "@x/pnpm");
 }
 
 #[test]
 fn pnpm_workspace_without_packages_includes_direct_subdirectories() {
-    let dir = TempDir::new().unwrap();
-    let root = dir.path();
+    let root = workspace_case("workspaces-pnpm-direct-subdirs");
 
-    write(&root.join("pnpm-workspace.yaml"), "{}\n");
-    write(&root.join("api/package.json"), r#"{"name": "@x/api"}"#);
-    write(
-        &root.join("api/fixtures/nested/package.json"),
-        r#"{"name": "@x/nested"}"#,
-    );
-
-    let map = load(root).unwrap();
+    let map = load(&root).unwrap();
     assert_eq!(map.packages.len(), 1);
     assert_eq!(map.packages[0].name, "@x/api");
 }
 
 #[test]
 fn pnpm_workspace_exclusion_globs_remove_loaded_packages() {
-    let dir = TempDir::new().unwrap();
-    let root = dir.path();
+    let root = workspace_case("workspaces-pnpm-exclusion");
 
-    write(
-        &root.join("pnpm-workspace.yaml"),
-        "packages:\n  - packages/**\n  - '!packages/**/fixtures/**'\n",
-    );
-    write(
-        &root.join("packages/group/foo/package.json"),
-        r#"{"name": "@x/foo"}"#,
-    );
-    write(
-        &root.join("packages/group/foo/fixtures/bar/package.json"),
-        r#"{"name": "@x/bar"}"#,
-    );
-
-    let map = load(root).unwrap();
+    let map = load(&root).unwrap();
     assert_eq!(map.packages.len(), 1);
     assert_eq!(map.packages[0].name, "@x/foo");
 }
@@ -222,12 +152,11 @@ fn pnpm_workspace_exclusion_globs_remove_loaded_packages() {
 
 #[test]
 fn resolve_package_finds_by_name() {
-    let dir = TempDir::new().unwrap();
-    let entry = dir.path().join("src/index.mts");
-    write(&entry, "");
+    let dir = workspace_case("workspaces-resolve-package-by-name");
+    let entry = dir.join("src/index.mts");
     let map = WorkspaceMap::from_packages(vec![WorkspacePackage {
         name: "@x/api".to_string(),
-        dir: dir.path().to_path_buf(),
+        dir,
         entry: Some(entry.clone()),
         exports: None,
         imports: None,

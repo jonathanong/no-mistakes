@@ -5,19 +5,13 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::fs;
 use std::path::PathBuf;
-use tempfile::TempDir;
 
-fn make_root(files: &[&str]) -> TempDir {
-    make_root_in(TempDir::new().unwrap(), files)
-}
-
-fn make_root_in(dir: TempDir, files: &[&str]) -> TempDir {
-    for f in files {
-        let path = dir.path().join(f);
-        fs::create_dir_all(path.parent().unwrap()).unwrap();
-        fs::write(&path, "").unwrap();
-    }
-    dir
+fn spawn_case(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/ast-snippets/ts-process-spawn")
+            .join(name),
+    )
 }
 
 fn fixture_source(name: &str) -> (PathBuf, String) {
@@ -126,9 +120,8 @@ fn helper_branches_visit_present_optional_values() {
 
 #[test]
 fn playwright_webserver_string_literal() {
-    let root = make_root(&["backend/server/serve.mts"]);
-    let config_path = root.path().join("playwright.config.mts");
-    fs::write(&config_path, "").unwrap();
+    let root = spawn_case("playwright-webserver-string-literal");
+    let config_path = root.join("playwright.config.mts");
 
     let src = r#"
 export default defineConfig({
@@ -141,17 +134,16 @@ export default defineConfig({
 })
 "#;
 
-    let edges = extract_spawn_edges(src, &config_path, root.path());
+    let edges = extract_spawn_edges(src, &config_path, &root);
     assert_eq!(edges.len(), 1);
-    assert_eq!(edges[0].entry, root.path().join("backend/server/serve.mts"));
+    assert_eq!(edges[0].entry, root.join("backend/server/serve.mts"));
     assert_eq!(edges[0].spawner, config_path);
 }
 
 #[test]
 fn playwright_webserver_string_literal_env_prefix() {
-    let root = make_root(&["lambdas/dev-server.mts"]);
-    let config_path = root.path().join("playwright.config.mts");
-    fs::write(&config_path, "").unwrap();
+    let root = spawn_case("playwright-webserver-string-literal-env-prefix");
+    let config_path = root.join("playwright.config.mts");
 
     let src = r#"
 export default defineConfig({
@@ -163,9 +155,9 @@ export default defineConfig({
 })
 "#;
 
-    let edges = extract_spawn_edges(src, &config_path, root.path());
+    let edges = extract_spawn_edges(src, &config_path, &root);
     assert_eq!(edges.len(), 1);
-    assert_eq!(edges[0].entry, root.path().join("lambdas/dev-server.mts"));
+    assert_eq!(edges[0].entry, root.join("lambdas/dev-server.mts"));
 }
 
 #[test]
@@ -174,9 +166,8 @@ fn playwright_webserver_template_literal_with_interpolation() {
     // `IMAGE_LAMBDA_PORT=${process.env.PORT} node lambdas/dev-server.mts`
     // → quasis joined: "IMAGE_LAMBDA_PORT=" + " node lambdas/dev-server.mts"
     // → tokenized: skip "IMAGE_LAMBDA_PORT=", skip "node", resolve "lambdas/dev-server.mts"
-    let root = make_root(&["lambdas/dev-server.mts"]);
-    let config_path = root.path().join("playwright.config.mts");
-    fs::write(&config_path, "").unwrap();
+    let root = spawn_case("playwright-webserver-template-literal-with-interpolation");
+    let config_path = root.join("playwright.config.mts");
 
     let src = r#"
 export default defineConfig({
@@ -188,19 +179,15 @@ export default defineConfig({
 })
 "#;
 
-    let edges = extract_spawn_edges(src, &config_path, root.path());
+    let edges = extract_spawn_edges(src, &config_path, &root);
     assert_eq!(edges.len(), 1);
-    assert_eq!(edges[0].entry, root.path().join("lambdas/dev-server.mts"));
+    assert_eq!(edges[0].entry, root.join("lambdas/dev-server.mts"));
 }
 
 #[test]
 fn playwright_webserver_multiple_entries() {
-    let root = make_root(&[
-        "backend/server/serve.mts",
-        "cloudflare-worker/scripts/start-wrangler.mts",
-    ]);
-    let config_path = root.path().join("playwright.config.mts");
-    fs::write(&config_path, "").unwrap();
+    let root = spawn_case("playwright-webserver-multiple-entries");
+    let config_path = root.join("playwright.config.mts");
 
     let src = r#"
 export default defineConfig({
@@ -211,26 +198,20 @@ export default defineConfig({
 })
 "#;
 
-    let edges = extract_spawn_edges(src, &config_path, root.path());
+    let edges = extract_spawn_edges(src, &config_path, &root);
     assert_eq!(edges.len(), 2);
     let entries: Vec<_> = edges.iter().map(|e| e.entry.clone()).collect();
-    assert!(entries.contains(&root.path().join("backend/server/serve.mts")));
-    assert!(entries.contains(
-        &root
-            .path()
-            .join("cloudflare-worker/scripts/start-wrangler.mts")
-    ));
+    assert!(entries.contains(&root.join("backend/server/serve.mts")));
+    assert!(entries.contains(&root.join("cloudflare-worker/scripts/start-wrangler.mts")));
 }
 
 #[test]
 fn spawn_call_with_literal_cmd() {
-    let root = make_root(&["scripts/runner.mts"]);
-    let caller = root.path().join("test/setup.mts");
-    fs::create_dir_all(caller.parent().unwrap()).unwrap();
-    fs::write(&caller, "").unwrap();
+    let root = spawn_case("spawn-call-with-literal-cmd");
+    let caller = root.join("test/setup.mts");
 
     let src = r#"spawn('node', ['scripts/runner.mts'], { cwd: undefined })"#;
-    let edges = extract_spawn_edges(src, &caller, root.path());
+    let edges = extract_spawn_edges(src, &caller, &root);
     // The cmd is 'node' which is a runtime prefix, not a file path.
     // The spawn call resolves the first arg, which is 'node' — not a file path.
     // So no edges (the file is in args[1], which is an array, not directly supported).
@@ -243,32 +224,29 @@ fn spawn_call_with_literal_cmd() {
 
 #[test]
 fn exec_call_resolves_shell_entry() {
-    let root = make_root(&["scripts/migrate.mts"]);
-    let caller = root.path().join("setup.mts");
-    fs::write(&caller, "").unwrap();
+    let root = spawn_case("exec-call-resolves-shell-entry");
+    let caller = root.join("setup.mts");
 
     let src = r#"exec('NODE_ENV=test tsx scripts/migrate.mts')"#;
-    let edges = extract_spawn_edges(src, &caller, root.path());
+    let edges = extract_spawn_edges(src, &caller, &root);
     assert_eq!(edges.len(), 1);
-    assert_eq!(edges[0].entry, root.path().join("scripts/migrate.mts"));
+    assert_eq!(edges[0].entry, root.join("scripts/migrate.mts"));
 }
 
 #[test]
 fn skips_nonexistent_files() {
-    let root = TempDir::new().unwrap();
-    let caller = root.path().join("setup.mts");
-    fs::write(&caller, "").unwrap();
+    let root = spawn_case("skips-nonexistent-files");
+    let caller = root.join("setup.mts");
 
     let src = r#"exec('node scripts/does-not-exist.mts')"#;
-    let edges = extract_spawn_edges(src, &caller, root.path());
+    let edges = extract_spawn_edges(src, &caller, &root);
     assert!(edges.is_empty(), "nonexistent file must produce no edge");
 }
 
 #[test]
 fn skips_ternary_command() {
-    let root = make_root(&["server.js"]);
-    let config_path = root.path().join("playwright.config.mts");
-    fs::write(&config_path, "").unwrap();
+    let root = spawn_case("skips-ternary-command");
+    let config_path = root.join("playwright.config.mts");
 
     // Ternary: CI ? 'node server.js' : 'npm run dev' — not a literal, must be skipped
     let src = r#"
@@ -279,15 +257,14 @@ export default defineConfig({
 })
 "#;
 
-    let edges = extract_spawn_edges(src, &config_path, root.path());
+    let edges = extract_spawn_edges(src, &config_path, &root);
     assert!(edges.is_empty(), "conditional command must be skipped");
 }
 
 #[test]
 fn ignores_unresolved_and_nonliteral_spawn_shapes() {
-    let root = make_root(&["scripts/existing.mts"]);
-    let caller = root.path().join("setup.mts");
-    fs::write(&caller, "").unwrap();
+    let root = spawn_case("ignores-unresolved-and-nonliteral-spawn-shapes");
+    let caller = root.join("setup.mts");
 
     let src = r#"
 function emptyBody();
@@ -298,18 +275,17 @@ defineConfig({ webServer: [{ command: dynamic }, "node scripts/existing.mts", { 
 exec("node scripts/missing.mts", { env: {} });
 exec("node http://example.com/script.mts");
 "#;
-    let edges = extract_spawn_edges(src, &caller, root.path());
+    let edges = extract_spawn_edges(src, &caller, &root);
     assert!(edges.is_empty());
 }
 
 #[test]
 fn absolute_cwd_resolves_spawn_entry() {
-    let root = make_root_in(
-        crate::test_support::quote_containing_tempdir(),
-        &["apps/site/scripts/from-abs.mts"],
-    );
+    // The temp path contains an apostrophe, which the JS literal must encode.
+    let root = crate::test_support::materialize_quote_containing_fixture(&spawn_case(
+        "absolute-cwd-resolves-spawn-entry",
+    ));
     let caller = root.path().join("setup.mts");
-    fs::write(&caller, "").unwrap();
     let cwd = root.path().join("apps/site");
     let src = format!(
         "spawn('scripts/from-abs.mts', [], {{ cwd: {} }})",

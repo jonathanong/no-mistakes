@@ -83,32 +83,33 @@ fn collect_entries_with_prepared_facts_reports_missing_symbols() {
     assert!(format!("{err:#}").contains("missing symbols"));
 }
 
+fn pipeline_error_fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase/symbols-pipeline-errors")
+        .join(name)
+}
+
 #[test]
 fn collect_entries_reports_an_explicit_missing_tsconfig() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::write(tmp.path().join("src.ts"), "export const value = 1;\n").unwrap();
-    let mut args = args_for(tmp.path(), vec!["src.ts"], Format::Json);
-    args.tsconfig = Some(tmp.path().join("missing-tsconfig.json"));
+    let root = pipeline_error_fixture("explicit-missing-tsconfig");
+    let mut args = args_for(&root, vec!["src.ts"], Format::Json);
+    args.tsconfig = Some(root.join("missing-tsconfig.json"));
     let err = collect_entries(&args).unwrap_err();
     assert!(!format!("{err:#}").is_empty());
 }
 
 #[test]
 fn collect_entries_falls_back_when_the_default_tsconfig_is_invalid() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::write(tmp.path().join("tsconfig.json"), "not json").unwrap();
-    std::fs::write(tmp.path().join("src.ts"), "export const value = 1;\n").unwrap();
-    let args = args_for(tmp.path(), vec!["src.ts"], Format::Json);
+    let root = pipeline_error_fixture("invalid-default-tsconfig");
+    let args = args_for(&root, vec!["src.ts"], Format::Json);
     let (entries, _) = collect_entries(&args).expect("invalid default tsconfig falls back");
     assert_eq!(entries.len(), 1);
 }
 
 #[test]
 fn collect_entries_accepts_a_relative_tsconfig_path() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::write(tmp.path().join("tsconfig.json"), "{\"include\":[\"*.ts\"]}\n").unwrap();
-    std::fs::write(tmp.path().join("src.ts"), "export const value = 1;\n").unwrap();
-    let mut args = args_for(tmp.path(), vec!["src.ts"], Format::Json);
+    let root = pipeline_error_fixture("relative-tsconfig");
+    let mut args = args_for(&root, vec!["src.ts"], Format::Json);
     args.tsconfig = Some(PathBuf::from("tsconfig.json"));
     let (entries, _) = collect_entries(&args).expect("relative tsconfig is joined to root");
     assert_eq!(entries.len(), 1);

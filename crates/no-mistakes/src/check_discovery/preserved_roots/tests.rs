@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Mutex};
-use tempfile::TempDir;
 
 type GitFilesCache = HashMap<PathBuf, Option<Vec<String>>>;
 
@@ -167,12 +166,6 @@ fn git_add_all(dir: &Path) {
     );
 }
 
-fn write(dir: &Path, path: &str, content: &str) {
-    let full = dir.join(path);
-    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
-    std::fs::write(full, content).unwrap();
-}
-
 fn root_fixture(path: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-discovery")
@@ -274,15 +267,15 @@ fn descendant_dirs_matching_suffix_from_files_finds_nested_match_past_non_skip_d
 /// appear in the final discovered-file list.
 #[test]
 fn descendant_dirs_matching_suffix_does_not_walk_gitignored_directory() {
-    let dir = TempDir::new().unwrap();
+    let source = root_fixture("preserved-roots-gitignored-walk");
+    let dir = crate::test_support::materialize_saved_fixture(&source);
+    // Saved as .gitignore.fixture so this repository still tracks the trap file.
+    std::fs::rename(
+        dir.path().join(".gitignore.fixture"),
+        dir.path().join(".gitignore"),
+    )
+    .unwrap();
     git_init(dir.path());
-    write(dir.path(), ".gitignore", "dependency-store/\n");
-    write(dir.path(), "web/fixtures/tracked.json", "{}");
-    write(
-        dir.path(),
-        "dependency-store/nested/fixtures/trap.json",
-        "{}",
-    );
     git_add_all(dir.path());
 
     let mut cache = GitFilesCache::new();
@@ -302,10 +295,11 @@ fn descendant_dirs_matching_suffix_does_not_walk_gitignored_directory() {
 /// executed when git is available, since the raw walk would find this directory too.
 #[test]
 fn descendant_dirs_matching_suffix_ignores_disk_only_empty_directory() {
-    let dir = TempDir::new().unwrap();
+    let source = root_fixture("preserved-roots-empty-directory");
+    let dir = crate::test_support::materialize_saved_fixture(&source);
+    // The placeholder is removed because git cannot store an empty directory and a remaining file would make the directory git-visible.
+    std::fs::remove_file(dir.path().join("empty-branch/fixtures/.gitkeep")).unwrap();
     git_init(dir.path());
-    write(dir.path(), "web/fixtures/tracked.json", "{}");
-    std::fs::create_dir_all(dir.path().join("empty-branch/fixtures")).unwrap();
     git_add_all(dir.path());
 
     let mut cache = GitFilesCache::new();
@@ -320,13 +314,11 @@ fn descendant_dirs_matching_suffix_ignores_disk_only_empty_directory() {
 /// ignore-aware walk since there is no git-visible file list to derive candidates.
 #[test]
 fn descendant_dirs_matching_suffix_falls_back_to_walk_outside_git_repositories() {
-    let dir = TempDir::new().unwrap();
-    // A plain file alongside the walked directories exercises the raw walk's
-    // "skip non-directory entries" branch, since "fixtures" itself is a hardcoded
-    // skip dir and would otherwise prune descent before any file is ever seen.
-    write(dir.path(), "README.md", "");
-    write(dir.path(), "backend/components/button.tsx", "");
-    write(dir.path(), "generated/components/ignored.tsx", "");
+    let source = root_fixture("preserved-roots-disk-fallback");
+    // Saved README.md is an intentional plain file so the raw walk hits the
+    // skip-non-directory branch. "fixtures" itself is a hardcoded skip dir and
+    // would otherwise prune descent before any file is seen.
+    let dir = crate::test_support::materialize_saved_fixture(&source);
 
     let mut cache = GitFilesCache::new();
     let roots = descendant_dirs_matching_suffix(
