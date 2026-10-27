@@ -36,14 +36,6 @@ fn ordinary(items: Vec<NamedDisableDirective>) -> Vec<(NamedDisableDirective, bo
     items.into_iter().map(|item| (item, false)).collect()
 }
 
-#[cfg(test)]
-pub(crate) fn disable_directives_for_path(source: &str, path: &Path) -> Vec<NamedDisableDirective> {
-    audit_directives_for_path(source, path)
-        .into_iter()
-        .filter_map(|(item, ineffective)| (!ineffective).then_some(item))
-        .collect()
-}
-
 fn mask(bytes: &mut [u8]) {
     // The directive grammar treats a leading BOM as an invisible header prefix.
     let start = if bytes.starts_with(b"\xef\xbb\xbf") {

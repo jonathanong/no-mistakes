@@ -1,5 +1,12 @@
 use super::*;
-use crate::codebase::ts_source::{disable_directives, disable_directives_for_path};
+use crate::codebase::ts_source::{disable_directives, NamedDisableDirective};
+
+fn disable_directives_for_path(source: &str, path: &Path) -> Vec<NamedDisableDirective> {
+    audit_directives_for_path(source, path)
+        .into_iter()
+        .filter_map(|(item, ineffective)| (!ineffective).then_some(item))
+        .collect()
+}
 
 pub(super) fn root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
