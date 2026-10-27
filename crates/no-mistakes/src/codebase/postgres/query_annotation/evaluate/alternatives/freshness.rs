@@ -11,9 +11,17 @@ pub(super) fn restore(proofs: &mut Proofs, count: usize, original: &Proofs) {
 
 pub(super) fn unchanged(proofs: &mut Proofs, current: &Proofs, before: &[Scope], after: &[Scope]) {
     for (env, names) in proofs {
+        let fresh = current.get(env);
+        // Empty/nonfresh sets never indexed the scope slices. Keep that proof
+        // lazy, while reusing it for every eligible name in this environment.
+        let mut shared = None;
         names.retain(|name| {
-            current.get(env).is_some_and(|fresh| fresh.contains(name))
-                && before[*env].get(name) == after[*env].get(name)
+            fresh.is_some_and(|fresh| fresh.contains(name))
+                && (*shared.get_or_insert_with(|| before[*env].same_bindings(&after[*env])) || {
+                    #[cfg(test)]
+                    tests::record_binding_reads();
+                    before[*env].get(name) == after[*env].get(name)
+                })
         });
     }
 }
@@ -34,3 +42,6 @@ pub(super) fn remap(
         })
         .collect();
 }
+
+#[cfg(test)]
+mod tests;
