@@ -59,33 +59,6 @@ impl CapturedOrigins {
             .max_origin
             .get_or_init(|| self.0.bindings.values().copied().max())
     }
-
-    #[cfg(test)]
-    pub(in crate::codebase::postgres::query_annotation::evaluate) fn strong_count_probe(
-        &self,
-    ) -> impl Fn() -> usize {
-        let weak = Arc::downgrade(&self.0);
-        move || weak.strong_count()
-    }
-
-    #[cfg(test)]
-    pub(in crate::codebase::postgres::query_annotation::evaluate) fn insert_origin(
-        &mut self,
-        name: String,
-        origin: Environment,
-    ) {
-        let origins = Arc::make_mut(&mut self.0);
-        origins.bindings.insert(name, origin);
-        origins.max_origin.take();
-    }
-
-    #[cfg(test)]
-    pub(in crate::codebase::postgres::query_annotation::evaluate) fn reserve_origins(
-        &mut self,
-        capacity: usize,
-    ) {
-        Arc::make_mut(&mut self.0).bindings.reserve(capacity);
-    }
 }
 
 impl From<FxHashMap<String, Environment>> for CapturedOrigins {

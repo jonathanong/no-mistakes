@@ -1,4 +1,31 @@
 use super::*;
+
+impl CapturedOrigins {
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn strong_count_probe(
+        &self,
+    ) -> impl Fn() -> usize {
+        let weak = Arc::downgrade(&self.0);
+        move || weak.strong_count()
+    }
+
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn insert_origin(
+        &mut self,
+        name: String,
+        origin: Environment,
+    ) {
+        let origins = Arc::make_mut(&mut self.0);
+        origins.bindings.insert(name, origin);
+        origins.max_origin.take();
+    }
+
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn reserve_origins(
+        &mut self,
+        capacity: usize,
+    ) {
+        Arc::make_mut(&mut self.0).bindings.reserve(capacity);
+    }
+}
+
 fn fixture() -> CapturedBindings {
     let path = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
         .join("capture-snapshot-sharing.json");
