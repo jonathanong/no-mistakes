@@ -1,4 +1,4 @@
-use super::{read, repo_root, rule_ids_from_source};
+use super::{read, repo_root, rule_ids_from_source, rule_inventory};
 
 #[test]
 fn no_mistakes_rules_have_docs() {
