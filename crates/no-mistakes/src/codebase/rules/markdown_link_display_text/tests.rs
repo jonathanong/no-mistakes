@@ -24,6 +24,16 @@ fn fixture(name: &str) -> PathBuf {
 }
 
 #[test]
+fn crlf_raw_html_tag_still_hides_the_following_link() {
+    // A Windows checkout can rewrite the saved fixture's LF as CRLF. The tag
+    // still opens the raw block, matching the LF snapshot.
+    let style = "<style\r\n>[OLD3.md](new3.md)</style>\r\n";
+    let script = "<script\r\n[OLD2.md](docs/news-story-clusters.md)\r\n</script>\r\n";
+    assert!(parser::markdown_links_outside_code(style).is_empty());
+    assert!(parser::markdown_links_outside_code(script).is_empty());
+}
+
+#[test]
 fn reference_style_edge_hrefs_keep_angle_and_unclosed_destinations() {
     let links = parser::markdown_links_outside_code(
         "[OLD.md][]\n[OLD2.md][missing]\n[OLD3.md][story]\n\n[]: docs/empty.md\n[story]: <docs/new.md>",

@@ -40,14 +40,41 @@ pub(crate) fn escape_finding(rule: &str, configured: &Path, config_file: &str) -
 }
 
 /// The config file the loader read, so `no-mistakes-disable-file` applies to it.
+///
+/// `check` canonicalizes the repository root. On Windows that adds a `\\?\`
+/// prefix, so a lexical config path would otherwise stay absolute.
 pub(crate) fn config_file_for_finding(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
 ) -> String {
-    config
-        .loaded_config_path
-        .relative_to(root)
-        .unwrap_or_else(|| ".no-mistakes.yml".to_string())
+    let Some(path) = config.loaded_config_path.0.as_deref() else {
+        return ".no-mistakes.yml".to_string();
+    };
+    repository_relative(root, path)
+}
+
+fn repository_relative(root: &Path, path: &Path) -> String {
+    if let Some(relative) = slash_relative(root, path) {
+        return relative;
+    }
+    let root_text = without_verbatim_prefix(&slash(root));
+    let path_text = without_verbatim_prefix(&slash(path));
+    slash_relative(Path::new(&root_text), Path::new(&path_text)).unwrap_or_else(|| slash(path))
+}
+
+fn slash_relative(root: &Path, path: &Path) -> Option<String> {
+    path.strip_prefix(root).ok().map(slash)
+}
+
+fn slash(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
+}
+
+fn without_verbatim_prefix(path: &str) -> String {
+    let Some(rest) = path.strip_prefix("//?/") else {
+        return path.to_string();
+    };
+    rest.strip_prefix("UNC/").unwrap_or(rest).to_string()
 }
 
 #[cfg(test)]
