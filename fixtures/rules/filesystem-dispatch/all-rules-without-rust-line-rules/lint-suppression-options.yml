@@ -1,2 +1,0 @@
-      files: ['**/*.{js,jsx,ts,tsx}']
-      ruleIds: [react/purity]
