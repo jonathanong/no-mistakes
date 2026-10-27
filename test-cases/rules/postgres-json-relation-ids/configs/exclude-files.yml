@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-json-relation-ids
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      idKeyPattern: '(^id$|Id$|_id$)'
+      keyColumnMap: {accountId: account_id}
+      sqlInclude: ["db/fail.sql"]
+      include: ["src/query.ts"]
+      exclude: ["db/fail.sql", "src/query.ts"]

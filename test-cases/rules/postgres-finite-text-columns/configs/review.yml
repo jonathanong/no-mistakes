@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-finite-text-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      columnTypes: [text, "character varying"]
+      namePatterns: ['(^|_)(status|state|kind)$']
+      skipGeneratedColumns: true

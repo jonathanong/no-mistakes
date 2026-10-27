@@ -1,0 +1,10 @@
+# AuditDB must not fold onto Audit.Database
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/current-db-audit-db.json
+      executorNames: []
+      sqlInclude: [copied/temporary-current-database-views.sql]
+      include: [copied/temporary-current-database-views.sql]

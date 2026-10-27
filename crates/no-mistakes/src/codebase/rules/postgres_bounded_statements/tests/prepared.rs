@@ -1,14 +1,3 @@
-use super::names;
-
-#[test]
-fn prepared_select_into_shadows_only_after_execute() {
-    let sql = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-prepared-into.sql"
-    ));
-    assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
-}
-
 #[test]
 fn rejected_prepared_transitions_keep_catalog_reads_visible() {
     let sql = include_str!(concat!(
@@ -20,27 +9,5 @@ fn rejected_prepared_transitions_keep_catalog_reads_visible() {
             .unwrap()
             .len(),
         27
-    );
-    assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
-}
-
-#[test]
-fn partial_prepared_types_keep_wrong_arity_catalog_reads_visible() {
-    let sql = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-prepared-partial-types.sql"
-    ));
-    assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
-}
-
-#[test]
-fn prepared_name_truncation_limits_catalog_reads_to_nonmatching_executions() {
-    let sql = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-prepared-name-truncation.sql"
-    ));
-    assert_eq!(
-        names(sql),
-        ["accounts", "accounts", "accounts", "accounts", "accounts"]
     );
 }

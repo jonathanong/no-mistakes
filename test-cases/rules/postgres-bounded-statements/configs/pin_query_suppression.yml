@@ -1,0 +1,11 @@
+# line 17 must be absent after suppression; line 3 must remain
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [sql/pin-query-read-preservation.sql]
+      include: [sql/pin-query-read-preservation.sql]
+      exclude: ["src/**"]

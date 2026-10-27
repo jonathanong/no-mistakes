@@ -1,0 +1,10 @@
+# tables that must remain: partial_expr_nullguard
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/unique_index_shapes-schema.json
+      executorNames: []
+      sqlInclude: [split/index_guards-4.sql]
+      include: [split/index_guards-4.sql]

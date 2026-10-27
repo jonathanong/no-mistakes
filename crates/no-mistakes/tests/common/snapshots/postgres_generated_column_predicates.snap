@@ -1,0 +1,1056 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/alias.sql",
+          "line": 3,
+          "message": "sql/alias.sql:3: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "alter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/alter.sql",
+          "line": 1,
+          "message": "sql/alter.sql:1: WHERE filters orders.alt_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "alt_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "arbitrary_generation_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/custom-query.sql",
+          "line": 1,
+          "message": "sql/custom-query.sql:1: ORDER BY custom_events.derived sorts by a column generated from slug, which is generated from other_fn(slug); consider using slug directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "derived"
+        },
+        {
+          "file": "sql/custom-query.sql",
+          "line": 1,
+          "message": "sql/custom-query.sql:1: WHERE filters custom_events.derived, which is generated from other_fn(slug); consider using slug directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "derived"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clauses_without_join": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lines.sql",
+          "line": 3,
+          "message": "sql/lines.sql:3: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/lines.sql",
+          "line": 4,
+          "message": "sql/lines.sql:4: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_call": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/dynamic.ts",
+          "line": 2,
+          "message": "src/dynamic.ts:2: executed SQL is not statically recoverable for generated column predicates",
+          "rule": "postgres-generated-column-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_cjs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.cjs",
+          "line": 2,
+          "message": "src/query.cjs:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_cjs_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.cjs",
+          "line": 2,
+          "message": "src/query.cjs:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_cts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.cts",
+          "line": 2,
+          "message": "src/query.cts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_cts_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.cts",
+          "line": 2,
+          "message": "src/query.cts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_jsx": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.jsx",
+          "line": 2,
+          "message": "src/query.jsx:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_jsx_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.jsx",
+          "line": 2,
+          "message": "src/query.jsx:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_mjs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.mjs",
+          "line": 2,
+          "message": "src/query.mjs:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_mjs_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.mjs",
+          "line": 2,
+          "message": "src/query.mjs:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_ts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ext_ts_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "extra_column_absent_from_schema": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/invoices.sql",
+          "line": 1,
+          "message": "sql/invoices.sql:1: ORDER BY invoices.created_at sorts by a column generated from id, which is generated from a configured expression using id; consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "extra_column_without_schema": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/extra.sql",
+          "line": 1,
+          "message": "sql/extra.sql:1: WHERE filters events.created_at, which is generated from a configured expression using id; consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "history_alter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/query.sql",
+          "line": 1,
+          "message": "sql/query.sql:1: WHERE filters orders.alt_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "alt_at"
+        },
+        {
+          "file": "sql/query.sql",
+          "line": 1,
+          "message": "sql/query.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "history_drop": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "history_recreate": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "history_same_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_skips_order": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/where.sql",
+          "line": 1,
+          "message": "sql/where.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "inequality": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/inequality.sql",
+          "line": 1,
+          "message": "sql/inequality.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_examples": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/between.sql",
+          "line": 1,
+          "message": "sql/between.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/order.sql",
+          "line": 1,
+          "message": "sql/order.sql:1: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/where.sql",
+          "line": 1,
+          "message": "sql/where.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "join_clause_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/join.sql",
+          "line": 1,
+          "message": "sql/join.sql:1: JOIN ON compares orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/schema.sql",
+          "line": 1,
+          "message": "sql/schema.sql:1: SQL could not be analyzed for generated column predicates",
+          "rule": "postgres-generated-column-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "join_scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/join-scope.sql",
+          "line": 2,
+          "message": "sql/join-scope.sql:2: JOIN ON compares orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lines.sql",
+          "line": 3,
+          "message": "sql/lines.sql:3: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/lines.sql",
+          "line": 4,
+          "message": "sql/lines.sql:4: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mutations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/mutations.sql",
+          "line": 2,
+          "message": "sql/mutations.sql:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/mutations.sql",
+          "line": 4,
+          "message": "sql/mutations.sql:4: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/mutations.sql",
+          "line": 5,
+          "message": "sql/mutations.sql:5: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_tracked_columns": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "non_primary_key_argument": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/join.sql",
+          "line": 1,
+          "message": "sql/join.sql:1: JOIN ON compares orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/note.sql",
+          "line": 1,
+          "message": "sql/note.sql:1: WHERE filters orders.note_at, which is generated from uuid_extract_timestamp(note_id); consider using note_id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "note_at"
+        },
+        {
+          "file": "sql/schema.sql",
+          "line": 1,
+          "message": "sql/schema.sql:1: SQL could not be analyzed for generated column predicates",
+          "rule": "postgres-generated-column-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "sql/stored.sql",
+          "line": 1,
+          "message": "sql/stored.sql:1: WHERE filters orders.stored_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "stored_at"
+        },
+        {
+          "file": "sql/unique.sql",
+          "line": 1,
+          "message": "sql/unique.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/virtual.sql",
+          "line": 1,
+          "message": "sql/virtual.sql:1: WHERE filters orders.virtual_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "virtual_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "order_clause_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/order.sql",
+          "line": 1,
+          "message": "sql/order.sql:1: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parse_error_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/parse.ts",
+          "line": 4,
+          "message": "src/parse.ts:4: SQL could not be analyzed for generated column predicates",
+          "rule": "postgres-generated-column-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "prepared_reuse": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "qualified": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/qualified.sql",
+          "line": 1,
+          "message": "sql/qualified.sql:1: WHERE filters public.history.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_names": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/quoted.sql",
+          "line": 1,
+          "message": "sql/quoted.sql:1: WHERE filters Orders.CreatedAt, which is generated from uuid_extract_timestamp(ID); consider using ID directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "CreatedAt"
+        },
+        {
+          "file": "sql/quoted.sql",
+          "line": 2,
+          "message": "sql/quoted.sql:2: JOIN ON compares Orders.CreatedAt, which is generated from uuid_extract_timestamp(ID); consider using ID directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "CreatedAt"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_suppress_sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/suppress.sql",
+          "line": 3,
+          "message": "sql/suppress.sql:3: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 5,
+          "message": "sql/suppress.sql:5: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_suppress_sql_hidden": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "review_suppress_ts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/suppress.ts",
+          "line": 4,
+          "message": "src/suppress.ts:4: SQL could not be analyzed for generated column predicates",
+          "rule": "postgres-generated-column-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_suppress_ts_hidden": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_extra_column": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "<temp>",
+          "import": "orders.created_at",
+          "line": 9,
+          "message": "stale postgres-generated-column-predicates extraGeneratedColumns entry: orders.created_at",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/between.sql",
+          "line": 1,
+          "message": "sql/between.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/order.sql",
+          "line": 1,
+          "message": "sql/order.sql:1: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/where.sql",
+          "line": 1,
+          "message": "sql/where.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "standalone_table": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/standalone-table.sql",
+          "line": 2,
+          "message": "sql/standalone-table.sql:2: ORDER BY orders.created_at sorts by a column generated from id, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stored_and_virtual": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/join.sql",
+          "line": 1,
+          "message": "sql/join.sql:1: JOIN ON compares orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/schema.sql",
+          "line": 1,
+          "message": "sql/schema.sql:1: SQL could not be analyzed for generated column predicates",
+          "rule": "postgres-generated-column-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "sql/stored.sql",
+          "line": 1,
+          "message": "sql/stored.sql:1: WHERE filters orders.stored_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "stored_at"
+        },
+        {
+          "file": "sql/unique.sql",
+          "line": 1,
+          "message": "sql/unique.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/virtual.sql",
+          "line": 1,
+          "message": "sql/virtual.sql:1: WHERE filters orders.virtual_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "virtual_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressed_predicates": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unknown_relation": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unsuppressed_predicates": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/file.sql",
+          "line": 2,
+          "message": "sql/file.sql:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/line.sql",
+          "line": 1,
+          "message": "sql/line.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/next-line.sql",
+          "line": 2,
+          "message": "sql/next-line.sql:2: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "valid_examples": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "where_clause_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/between.sql",
+          "line": 1,
+          "message": "sql/between.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        },
+        {
+          "file": "sql/where.sql",
+          "line": 1,
+          "message": "sql/where.sql:1: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

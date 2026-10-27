@@ -12,21 +12,7 @@ fn literal_null_arguments_preserve_known_fallback_caps() {
         .limit_uses
         .iter()
         .all(|fact| matches!(fact.value, crate::codebase::postgres::SqlLimitValue::Other)));
-    let catalog = super::catalog();
     for (index, fact) in facts.bounds.iter().enumerate() {
         assert_eq!(fact.query.capped, index < 10, "statement {index}");
-        let names: Vec<String> = super::offenders(fact, &catalog)
-            .into_iter()
-            .map(|offender| offender.table)
-            .collect();
-        assert_eq!(
-            names,
-            if index < 10 {
-                vec![]
-            } else {
-                vec!["accounts".to_string()]
-            },
-            "statement {index}"
-        );
     }
 }

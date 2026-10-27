@@ -1,0 +1,539 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "declaration_locations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "declaration-locations.sql",
+          "line": 10,
+          "message": "declaration-locations.sql:10: identifier \"temporary_table\" is 15 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "temporary_table"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 11,
+          "message": "declaration-locations.sql:11: identifier \"unlogged_table\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "unlogged_table"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 12,
+          "message": "declaration-locations.sql:12: SQL statement `CREATE TABLE invalid_table AS SELECT FROM` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-identifier-length",
+          "target": "CREATE TABLE invalid_table AS SELECT FROM"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 13,
+          "message": "declaration-locations.sql:13: identifier \"after_invalid\" is 13 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "after_invalid"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 14,
+          "message": "declaration-locations.sql:14: identifier \"explicit_column\" is 15 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "explicit_column"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 14,
+          "message": "declaration-locations.sql:14: identifier \"replaced_view\" is 13 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "replaced_view"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 15,
+          "message": "declaration-locations.sql:15: identifier \"temporary_view\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "temporary_view"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 16,
+          "message": "declaration-locations.sql:16: identifier \"replaced_trigger\" is 16 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "replaced_trigger"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 18,
+          "message": "declaration-locations.sql:18: identifier \"constraint_trigger\" is 18 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "constraint_trigger"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 4,
+          "message": "declaration-locations.sql:4: identifier \"repeated_table\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "repeated_table"
+        },
+        {
+          "file": "declaration-locations.sql",
+          "line": 7,
+          "message": "declaration-locations.sql:7: identifier \"repeated_table\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "repeated_table"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared_names": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/long.sql",
+          "line": 10,
+          "message": "migrations/long.sql:10: identifier \"table_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"table_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "table_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 15,
+          "message": "migrations/long.sql:15: identifier \"idx_invoice_line_items_account_id_created_at_status_currency_code\" is 65 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"idx_invoice_line_items_account_id_created_at_status_currency_co\"",
+          "rule": "postgres-identifier-length",
+          "target": "idx_invoice_line_items_account_id_created_at_status_currency_code"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 16,
+          "message": "migrations/long.sql:16: identifier \"unique_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"unique_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "unique_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 18,
+          "message": "migrations/long.sql:18: identifier \"trigger_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"trigger_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "trigger_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 22,
+          "message": "migrations/long.sql:22: identifier \"function_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"function_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "function_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 28,
+          "message": "migrations/long.sql:28: identifier \"replaced_functionxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"replaced_functionxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "replaced_functionxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 3,
+          "message": "migrations/long.sql:3: identifier \"column_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"column_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "column_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 3,
+          "message": "migrations/long.sql:3: identifier \"inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 3,
+          "message": "migrations/long.sql:3: identifier \"table_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"table_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "table_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 34,
+          "message": "migrations/long.sql:34: identifier \"procedure_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"procedure_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "procedure_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 40,
+          "message": "migrations/long.sql:40: identifier \"replaced_procedurexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"replaced_procedurexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "replaced_procedurexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 46,
+          "message": "migrations/long.sql:46: identifier \"view_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"view_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "view_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 47,
+          "message": "migrations/long.sql:47: identifier \"matview_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"matview_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "matview_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 48,
+          "message": "migrations/long.sql:48: identifier \"enum_typexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"enum_typexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "enum_typexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 50,
+          "message": "migrations/long.sql:50: identifier \"added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "added_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 51,
+          "message": "migrations/long.sql:51: identifier \"added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "added_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 51,
+          "message": "migrations/long.sql:51: identifier \"added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "added_inline_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 52,
+          "message": "migrations/long.sql:52: identifier \"renamed_tablexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"renamed_tablexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "renamed_tablexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 53,
+          "message": "migrations/long.sql:53: identifier \"renamed_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"renamed_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "renamed_columnxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 54,
+          "message": "migrations/long.sql:54: identifier \"renamed_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"renamed_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "renamed_constraintxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 56,
+          "message": "migrations/long.sql:56: identifier \"renamed_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"renamed_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "renamed_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "migrations/long.sql",
+          "line": 61,
+          "message": "migrations/long.sql:61: identifier \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "do_block_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "do-block.sql",
+          "line": 4,
+          "message": "do-block.sql:4: identifier \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate_name": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "duplicate.sql",
+          "line": 1,
+          "message": "duplicate.sql:1: identifier \"duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+          "file": "duplicate.sql",
+          "line": 2,
+          "message": "duplicate.sql:2: identifier \"duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "function_body_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "function-body.sql",
+          "line": 3,
+          "message": "function-body.sql:3: identifier \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max_bytes_10": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "max-bytes.sql",
+          "line": 1,
+          "message": "max-bytes.sql:1: identifier \"abcdefghijk\" is 11 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "abcdefghijk"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max_bytes_11": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "multibyte_cut": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "multibyte.sql",
+          "line": 1,
+          "message": "multibyte.sql:1: identifier \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa€\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+          "rule": "postgres-identifier-length",
+          "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa€"
+        },
+        {
+          "file": "multibyte.sql",
+          "line": 2,
+          "message": "multibyte.sql:2: identifier \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbé\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"",
+          "rule": "postgres-identifier-length",
+          "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbé"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass_63": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "procedure_tokens": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "procedure-tokens.sql",
+          "line": 2,
+          "message": "procedure-tokens.sql:2: identifier \"commented_procedure\" is 19 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "commented_procedure"
+        },
+        {
+          "file": "procedure-tokens.sql",
+          "line": 3,
+          "message": "procedure-tokens.sql:3: SQL statement `CREATE PROCEDURE app.U&\"escaped_/0070rocedure\"(` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-identifier-length",
+          "target": "CREATE PROCEDURE app.U&\"escaped_/0070rocedure\"("
+        },
+        {
+          "file": "procedure-tokens.sql",
+          "line": 3,
+          "message": "procedure-tokens.sql:3: identifier \"escaped_procedure\" is 17 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "escaped_procedure"
+        },
+        {
+          "file": "procedure-tokens.sql",
+          "line": 4,
+          "message": "procedure-tokens.sql:4: SQL statement `CREATE PROCEDURE U&\"custom_!0070rocedure\" UESCAPE '!'(` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-identifier-length",
+          "target": "CREATE PROCEDURE U&\"custom_!0070rocedure\" UESCAPE '!'("
+        },
+        {
+          "file": "procedure-tokens.sql",
+          "line": 4,
+          "message": "procedure-tokens.sql:4: identifier \"custom_procedure\" is 16 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "custom_procedure"
+        },
+        {
+          "file": "procedure-tokens.sql",
+          "line": 7,
+          "message": "procedure-tokens.sql:7: identifier \"dynamic_procedure\" is 17 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
+          "rule": "postgres-identifier-length",
+          "target": "dynamic_procedure"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_unescape": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "quotes.sql",
+          "line": 1,
+          "message": "quotes.sql:1: identifier \"order\"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"order\"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\"",
+          "rule": "postgres-identifier-length",
+          "target": "order\"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "references_ignored": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "reference.sql",
+          "line": 3,
+          "message": "reference.sql:3: SQL statement `ALTER PROCEDURE referenced_onlyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx() OWNER TO app` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-identifier-length",
+          "target": "ALTER PROCEDURE referenced_onlyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx() OWNER TO app"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "schema_qualifier": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema-qualified.sql",
+          "line": 1,
+          "message": "schema-qualified.sql:1: identifier \"qualified_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"qualified_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+          "rule": "postgres-identifier-length",
+          "target": "qualified_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sql_include_skips": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "typescript_out_of_scope": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

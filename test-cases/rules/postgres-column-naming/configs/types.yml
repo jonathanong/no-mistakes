@@ -1,0 +1,23 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      typeRules:
+        - types: ['timestamp with time zone', 'timestamp without time zone']
+          namePattern: '_at$'
+          hint: 'end timestamp columns in _at'
+        - types: ['date']
+          namePattern: '(^day|_on)$'
+          hint: 'name date columns day or end them in _on'
+        - types: ['boolean']
+          namePattern: '(^|_)(is|has|can|should)_'
+          hint: 'name boolean columns as a predicate: is_, has_, can_ or should_'
+      nameTypeRules:
+        - namePattern: '_at$'
+          types: ['timestamp with time zone']
+          hint: 'a column ending in _at holds a timestamp with time zone'
+        - namePattern: '^cursor_.*_id$'
+          types: [uuid]
+          hint: "a keyset cursor holds the swept table's uuid primary key"

@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      include: ["src/**/*.ts"]
+      sqlInclude: ["queries/**/*.sql"]
+      exclude: ["queries/**/*.sql"]

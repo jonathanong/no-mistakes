@@ -103,10 +103,6 @@ pub(crate) fn check_with_files_sources_and_facts(
 #[cfg(test)]
 mod embedded_tests;
 #[cfg(test)]
-mod fingerprint_expression_tests;
-#[cfg(test)]
 mod options_tests;
-#[cfg(test)]
-mod recall_tests;
 #[cfg(test)]
 mod tests;

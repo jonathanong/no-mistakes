@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json

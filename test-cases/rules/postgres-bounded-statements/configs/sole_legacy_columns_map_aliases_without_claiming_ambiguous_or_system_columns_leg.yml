@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-legacy-single-column.json
+      executorNames: []
+      sqlInclude: [sql/legacy-single-column-alias.sql]
+      include: [sql/legacy-single-column-alias.sql]

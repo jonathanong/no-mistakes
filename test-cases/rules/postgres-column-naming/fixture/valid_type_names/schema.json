@@ -1,0 +1,58 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "invoices": {
+      "columns": {
+        "due_at": {
+          "dataType": "timestamp with time zone"
+        },
+        "issued_on": {
+          "dataType": "date"
+        }
+      }
+    },
+    "accounts": {
+      "columns": {
+        "is_active": {
+          "dataType": "boolean"
+        }
+      }
+    },
+    "votes": {
+      "columns": {
+        "score_is_neutral": {
+          "dataType": "boolean"
+        }
+      }
+    },
+    "daily_totals": {
+      "columns": {
+        "day": {
+          "dataType": "date"
+        }
+      }
+    },
+    "sync_jobs": {
+      "columns": {
+        "cursor_order_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "flags": {
+      "columns": {
+        "active": {
+          "dataType": "boolean[]"
+        }
+      }
+    },
+    "ids": {
+      "columns": {
+        "thing_id": {
+          "dataType": "uuid[]"
+        }
+      }
+    }
+  }
+}

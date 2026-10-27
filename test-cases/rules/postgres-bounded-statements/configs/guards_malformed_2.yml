@@ -1,0 +1,10 @@
+# tables that must remain: broken_expression
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/guards-schema.json
+      executorNames: []
+      sqlInclude: [split/guards_malformed-2.sql]
+      include: [split/guards_malformed-2.sql]

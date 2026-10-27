@@ -1,0 +1,12 @@
+# unanalyzableSql ignore must stay empty
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorNames: [query, read, write]
+      sqlInclude: [sql/broken.sql]
+      include: [sql/broken.sql, src/dynamic.ts]
+      unanalyzableSql: ignore

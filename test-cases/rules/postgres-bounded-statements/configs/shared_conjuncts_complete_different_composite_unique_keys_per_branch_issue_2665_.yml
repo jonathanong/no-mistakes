@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-issue-2665-or.json
+      executorNames: []
+      sqlInclude: [sql/issue-2665-composite-or.sql]
+      include: [sql/issue-2665-composite-or.sql]

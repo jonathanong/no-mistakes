@@ -173,8 +173,6 @@ fn allowed(root: &Path, path: &Path, include: &GlobMatcher, exclude: &GlobMatche
 }
 
 #[cfg(test)]
-mod followup_tests;
-#[cfg(test)]
 mod history_tests;
 #[cfg(test)]
 mod options_tests;

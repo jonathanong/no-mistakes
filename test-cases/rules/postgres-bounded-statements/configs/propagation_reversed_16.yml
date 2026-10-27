@@ -1,0 +1,10 @@
+# reversed chain must stay bounded
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalog-16.json
+      executorNames: []
+      sqlInclude: [reversed-16.sql]
+      include: [reversed-16.sql]

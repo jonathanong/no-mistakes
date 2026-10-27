@@ -1,36 +1,4 @@
 use super::*;
-use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
-    NoMistakesConfig,
-};
-use std::path::{Path, PathBuf};
-
-fn fixture_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/postgres/conflict-ordering")
-}
-
-fn fixture(scenario: &str) -> PathBuf {
-    fixture_root().join("cases").join(scenario)
-}
-
-fn config() -> NoMistakesConfig {
-    config_with_options("schemaCatalogPath: schema.json")
-}
-
-fn config_with_options(options: &str) -> NoMistakesConfig {
-    let mut config = NoMistakesConfig::default();
-    config.rules.push(RuleDef {
-        rule: RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        options: crate::codebase::postgres::tests::fixture_rule_options(options),
-        ..Default::default()
-    });
-    config
-}
-
-fn files(root: &Path) -> Vec<PathBuf> {
-    vec![root.join("src/insert.ts"), root.join("schema.json")]
-}
 
 #[test]
 fn compile_options_reject_invalid_include_glob_and_unanalyzable_sql() {
@@ -78,42 +46,4 @@ fn compile_options_cover_include_exclude_sql_sources_and_safe_directive() {
     assert_eq!(compiled.safe_directive, "SAFE");
     assert!(compiled.sql_sources.is_some());
     assert!(compiled.fail_unanalyzable);
-}
-
-#[test]
-fn check_with_files_and_sources_matches_check_with_files() {
-    let root = fixture("pass-canonical-order");
-    let files = files(&root);
-    let sources = crate::codebase::rules::source_store_for_files(&files);
-    let via_sources = check_with_files_and_sources(&root, &config(), &files, &sources).unwrap();
-    assert_eq!(
-        via_sources,
-        check_with_files(&root, &config(), &files).unwrap()
-    );
-}
-
-#[test]
-fn include_and_sql_exclude_filters_skip_non_matching_paths() {
-    let missing = fixture("fail-missing-order");
-    let skipped = check_with_files(
-        &missing,
-        &config_with_options("schemaCatalogPath: schema.json\ninclude: ['src/missing.ts']"),
-        &files(&missing),
-    )
-    .unwrap();
-    assert!(skipped.is_empty(), "{skipped:#?}");
-
-    let sql_root = fixture("pass-sql-include");
-    let excluded = check_with_files(
-        &sql_root,
-        &config_with_options(
-            "schemaCatalogPath: schema.json\ninclude: ['src/**/*.ts']\nsqlInclude: ['queries/**/*.sql']\nexclude: ['queries/**/*.sql']",
-        ),
-        &[
-            sql_root.join("queries/insert.sql"),
-            sql_root.join("schema.json"),
-        ],
-    )
-    .unwrap();
-    assert!(excluded.is_empty(), "{excluded:#?}");
 }

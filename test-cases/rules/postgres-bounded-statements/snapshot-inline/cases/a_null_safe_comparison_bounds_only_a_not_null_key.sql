@@ -1,0 +1,1 @@
+DELETE FROM contacts WHERE email IS NOT DISTINCT FROM $1;

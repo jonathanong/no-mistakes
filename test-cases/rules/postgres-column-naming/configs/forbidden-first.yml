@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      forbiddenColumnNames:
+        - pattern: table
+          hint: first
+        - pattern: '_table$'
+          hint: second

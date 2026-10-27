@@ -1,0 +1,10 @@
+# tables that must remain: events
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/ctid_is_not_a_key_of_a_partitioned_table_3.sql]
+      include: [cases/ctid_is_not_a_key_of_a_partitioned_table_3.sql]

@@ -1,7 +1,3 @@
-mod behavior;
-mod false_positives;
-mod join_pinning;
-mod multi_target;
 mod options;
 mod patch_coverage;
 mod pinned_prefix;
@@ -10,9 +6,6 @@ mod variants;
 use super::directive::{
     call_offset, comment_contains_directive, contains_for_update, floor_char_boundary,
     has_safe_directive, line_start_offset, DEFAULT_SAFE_DIRECTIVE,
-};
-use super::scan::{
-    LOCK_ORDERING_TARGET, UNANALYZABLE_TARGET, UNPARSEABLE_TARGET, UNRESOLVED_RELATION_TARGET,
 };
 use super::*;
 use crate::config::v2::{
@@ -36,24 +29,6 @@ fn fixture_root() -> PathBuf {
 }
 
 fn fixture(scenario: &str) -> PathBuf {
-    // New catalog fixtures live under the canonical repository fixture root;
-    // retain legacy locations for pre-existing lock-ordering scenarios.
-    if matches!(
-        scenario,
-        "fail-catalog-join"
-            | "fail-catalog-order"
-            | "fail-catalog-qualified-other"
-            | "fail-catalog-schema-qualified"
-            | "fail-pinned-key-prefix"
-            | "pass-catalog"
-            | "pass-catalog-of-alias"
-            | "pass-catalog-unqualified"
-            | "pass-pinned-key-prefix"
-    ) {
-        return PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/postgres/lock-ordering")
-            .join(scenario);
-    }
     fixture_root().join("fixture").join(scenario)
 }
 
@@ -74,21 +49,4 @@ fn default_config() -> NoMistakesConfig {
 
 fn ts_file(root: &Path) -> PathBuf {
     root.join("src/lock.ts")
-}
-
-fn findings_for(scenario: &str) -> Vec<RuleFinding> {
-    let root = fixture(scenario);
-    let file = ts_file(&root);
-    check_with_files(&root, &default_config(), &[file]).unwrap()
-}
-
-fn findings_with_catalog(scenario: &str) -> Vec<RuleFinding> {
-    let root = fixture(scenario);
-    let files = vec![ts_file(&root), root.join("schema.json")];
-    check_with_files(
-        &root,
-        &config_with_options("schemaCatalogPath: schema.json"),
-        &files,
-    )
-    .unwrap()
 }

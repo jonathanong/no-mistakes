@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [sql/select-list-srf.sql]
+      include: [sql/select-list-srf.sql]

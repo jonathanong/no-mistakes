@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-json-relation-ids
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json

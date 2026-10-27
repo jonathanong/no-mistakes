@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "bookmarks": {
+      "columns": {
+        "page_url_id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}

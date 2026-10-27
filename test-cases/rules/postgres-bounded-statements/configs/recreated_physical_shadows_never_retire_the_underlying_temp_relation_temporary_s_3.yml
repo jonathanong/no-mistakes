@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-shadow-recreate.json
+      executorNames: []
+      sqlInclude: [sql/temporary-shadow-recreate-materialized.sql]
+      include: [sql/temporary-shadow-recreate-materialized.sql]

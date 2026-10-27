@@ -1,0 +1,10 @@
+# must stay bounded
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/quoted-order-id.json
+      executorNames: []
+      sqlInclude: [cases/quoted_order_id_bounded.sql]
+      include: [cases/quoted_order_id_bounded.sql]

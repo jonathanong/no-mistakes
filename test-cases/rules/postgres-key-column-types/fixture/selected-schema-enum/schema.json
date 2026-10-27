@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "app",
+  "enums": {
+    "app.priority": {"values": ["local"]},
+    "shared.priority": {"values": ["foreign"]}
+  },
+  "tables": {
+    "local_priority_keys": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "priority"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"local_priority_keys_pkey": {"primary": true}}
+    }
+  }
+}

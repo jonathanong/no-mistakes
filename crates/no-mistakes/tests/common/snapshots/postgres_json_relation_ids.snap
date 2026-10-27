@@ -1,0 +1,1262 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow_baseline": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/allow.sql",
+          "line": 1,
+          "message": "db/allow.sql:1: key \"accountId\" written into invoice_revisions.changes has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoice_revisions.changes"
+        },
+        {
+          "file": "db/allow.sql",
+          "line": 2,
+          "message": "db/allow.sql:2: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/allow.sql",
+          "line": 3,
+          "message": "db/allow.sql:3: key \"accountId\" written into orders.extra has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.extra"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow_column": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/allow.sql",
+          "line": 1,
+          "message": "db/allow.sql:1: key \"accountId\" written into invoice_revisions.changes has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoice_revisions.changes"
+        },
+        {
+          "file": "db/allow.sql",
+          "line": 3,
+          "message": "db/allow.sql:3: key \"accountId\" written into orders.extra has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.extra"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow_table": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/allow.sql",
+          "line": 2,
+          "message": "db/allow.sql:2: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/allow.sql",
+          "line": 3,
+          "message": "db/allow.sql:3: key \"accountId\" written into orders.extra has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.extra"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "catalog_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppress/imports/file-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/line-helper.mts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/next-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/file.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/next-line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/file.ts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/next-line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "conflict_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/recall-conflict-fail.sql",
+          "line": 4,
+          "message": "db/recall-conflict-fail.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "conflict_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "constructor_text": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/recall-constructor-text.sql",
+          "line": 2,
+          "message": "db/recall-constructor-text.sql:2: key \"accountId\" written into orders.note has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.note"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "defaults_scan_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/fail.sql",
+          "line": 3,
+          "message": "db/fail.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/fail.sql",
+          "line": 4,
+          "message": "db/fail.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "edges": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/edges.sql",
+          "line": 10,
+          "message": "db/edges.sql:10: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/edges.sql",
+          "line": 3,
+          "message": "db/edges.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/edges.sql",
+          "line": 6,
+          "message": "db/edges.sql:6: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/edges.sql",
+          "line": 9,
+          "message": "db/edges.sql:9: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_map": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_files": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppress/imports/file-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/line-helper.mts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/next-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/file.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/next-line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/file.ts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/next-line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "expression_index": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema-expression-index.json",
+          "line": 8,
+          "message": "schema-expression-index.json:8: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_lower_hash_key; confirm a relational key exists, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoices.document_sha256"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail_guidance": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/fail.sql",
+          "line": 3,
+          "message": "db/fail.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/fail.sql",
+          "line": 4,
+          "message": "db/fail.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fingerprint_allow_column": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json:85: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_document_key; confirm a relational key exists, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoices.document_sha256"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fingerprint_allow_table": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fingerprint_empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 79,
+          "message": "schema.json:79: column invoices.number matches fingerprintNamePattern and is part of UNIQUE key invoices_account_number_key; confirm a relational key exists, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoices.number"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json:82: column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_account_fingerprint_key; confirm a relational key exists, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoices.fingerprint_sha256"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json:82: column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_fingerprint_key; confirm a relational key exists, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoices.fingerprint_sha256"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json:85: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_document_key; confirm a relational key exists, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoices.document_sha256"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fingerprint_keys": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json:82: column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_account_fingerprint_key; confirm a relational key exists, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoices.fingerprint_sha256"
+        },
+        {
+          "file": "schema.json",
+          "line": 82,
+          "message": "schema.json:82: column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_fingerprint_key; confirm a relational key exists, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoices.fingerprint_sha256"
+        },
+        {
+          "file": "schema.json",
+          "line": 85,
+          "message": "schema.json:85: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_document_key; confirm a relational key exists, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:invoices.document_sha256"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "id_pattern_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_missing": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppress/imports/file-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/line-helper.mts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/next-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/file.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/next-line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/file.ts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/next-line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "literal_keys": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/literal-key-forms.sql",
+          "line": 2,
+          "message": "db/literal-key-forms.sql:2: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/literal-key-forms.sql",
+          "line": 3,
+          "message": "db/literal-key-forms.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/literal-key-forms.sql",
+          "line": 4,
+          "message": "db/literal-key-forms.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "map_without_pattern": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppress/imports/file-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/line-helper.mts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/next-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/file.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/next-line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/file.ts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/next-line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mapped_fk": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing_ordinals": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/positional-missing-ordinals.sql",
+          "line": 2,
+          "message": "db/positional-missing-ordinals.sql:2: key \"accountId\" written into positional column 1 of orders has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "table:orders"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_options": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppress/imports/file-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/line-helper.mts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/next-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/file.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/next-line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/file.ts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/next-line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "opaque_keys": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "opaque_tail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppress/imports/file-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/line-helper.mts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/next-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/file.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/next-line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/file.ts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/next-line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "positional": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/positional.sql",
+          "line": 2,
+          "message": "db/positional.sql:2: key \"accountId\" written into positional column 1 of events has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "table:events"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sql_not_selected": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "suppress/imports/file-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/line-helper.mts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/imports/next-helper.mts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/file.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/sql/next-line.sql",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/file.ts",
+          "line": 1,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        },
+        {
+          "file": "suppress/ts/next-line.ts",
+          "line": 2,
+          "message": "directive for `postgres-json-relation-ids` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-json-relation-ids"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "syntax_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/syntax-fail.sql",
+          "line": 1,
+          "message": "db/syntax-fail.sql:1: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/syntax-fail.sql",
+          "line": 3,
+          "message": "db/syntax-fail.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/syntax-fail.sql",
+          "line": 4,
+          "message": "db/syntax-fail.sql:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/syntax-fail.sql",
+          "line": 5,
+          "message": "db/syntax-fail.sql:5: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/syntax-fail.sql",
+          "line": 6,
+          "message": "db/syntax-fail.sql:6: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/syntax-fail.sql",
+          "line": 7,
+          "message": "db/syntax-fail.sql:7: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/syntax-fail.sql",
+          "line": 7,
+          "message": "db/syntax-fail.sql:7: key \"orderId\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/syntax-fail.sql",
+          "line": 8,
+          "message": "db/syntax-fail.sql:8: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/syntax-fail.sql",
+          "line": 9,
+          "message": "db/syntax-fail.sql:9: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "syntax_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unmapped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/unmapped.sql",
+          "line": 1,
+          "message": "db/unmapped.sql:1: key \"id\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/unmapped.sql",
+          "line": 1,
+          "message": "db/unmapped.sql:1: key \"orderId\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/unmapped.sql",
+          "line": 1,
+          "message": "db/unmapped.sql:1: key \"parent_id\" written into orders.details has no same-row foreign key column; write a mapped column with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wildcards": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/recall-wildcards.sql",
+          "line": 3,
+          "message": "db/recall-wildcards.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/recall-wildcards.sql",
+          "line": 5,
+          "message": "db/recall-wildcards.sql:5: key \"accountId\" written into an unresolved column of orders has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "table:orders"
+        },
+        {
+          "file": "db/recall-wildcards.sql",
+          "line": 8,
+          "message": "db/recall-wildcards.sql:8: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wrappers_fail": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/recall-wrappers-fail.sql",
+          "line": 2,
+          "message": "db/recall-wrappers-fail.sql:2: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/recall-wrappers-fail.sql",
+          "line": 3,
+          "message": "db/recall-wrappers-fail.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wrappers_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wrong_fk": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "db/wrong-fk.sql",
+          "line": 2,
+          "message": "db/wrong-fk.sql:2: key \"accountId\" written into loose_orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:loose_orders.details"
+        },
+        {
+          "file": "db/wrong-fk.sql",
+          "line": 3,
+          "message": "db/wrong-fk.sql:3: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        },
+        {
+          "file": "db/wrong-fk.sql",
+          "line": 4,
+          "message": "db/wrong-fk.sql:4: key \"accountId\" written into loose_orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:loose_orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

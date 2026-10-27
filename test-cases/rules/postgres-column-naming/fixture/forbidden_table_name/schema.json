@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "comments": {
+      "columns": {
+        "table_name": {
+          "dataType": "target_kind"
+        }
+      }
+    }
+  }
+}

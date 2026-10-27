@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "products": {
+      "columns": {
+        "title_name": {
+          "dataType": "character varying(2048)"
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-use super::{fixture_root, offenders, SchemaCatalog};
+use super::{fixture_root, SchemaCatalog};
 use crate::codebase::postgres::extract_sql_statement_facts;
 
 #[test]
@@ -27,12 +27,4 @@ fn referential_actions_do_not_expand_the_direct_statement_scope() {
     // Parent pins stay bounded even with CASCADE, SET NULL, NO ACTION, RESTRICT and a
     // two-level cascade in the catalog. This deliberately judges explicit rows.
     assert_eq!(facts.bounds.len(), 4);
-    for fact in &facts.bounds[..3] {
-        assert!(offenders(fact, &catalog).is_empty());
-    }
-    let names: Vec<_> = offenders(&facts.bounds[3], &catalog)
-        .into_iter()
-        .map(|offender| offender.table)
-        .collect();
-    assert_eq!(names, ["accounts"]);
 }

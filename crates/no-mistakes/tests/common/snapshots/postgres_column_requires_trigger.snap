@@ -1,0 +1,790 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "after_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:both_cols: table has column updated_at but no AFTER INSERT FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:both_cols"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no AFTER INSERT FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has column updated_at but no AFTER INSERT FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ghosts: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no updated_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:ghosts"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no AFTER INSERT FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:invoices: table has column updated_at but no AFTER INSERT FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:invoices"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no AFTER INSERT FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: table has column updated_at but no AFTER INSERT FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: table has column updated_at but no AFTER INSERT FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no AFTER INSERT FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "after_truncate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:both_cols: table has column updated_at but no AFTER TRUNCATE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:both_cols"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no AFTER TRUNCATE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has column updated_at but no AFTER TRUNCATE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ghosts: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no updated_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:ghosts"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no AFTER TRUNCATE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:invoices: table has column updated_at but no AFTER TRUNCATE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:invoices"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no AFTER TRUNCATE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: table has column updated_at but no AFTER TRUNCATE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: table has column updated_at but no AFTER TRUNCATE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no AFTER TRUNCATE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_column_list": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ghosts: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no updated_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:ghosts"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-column-requires-trigger allow entry: table:order_events",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:order_events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ghosts: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no updated_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:ghosts"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: trigger trigger_orders_touch executes fn_touch_updated_at() only for UPDATE OF status; it must fire on every UPDATE",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_requirements": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "folded_function_names": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:both_cols: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing Touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:both_cols"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:both_cols: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:both_cols"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:both_cols: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing touch.updated()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:both_cols"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing Touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing touch.updated()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing Touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing touch.updated()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing Touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing touch.updated()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:invoices: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing Touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:invoices"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:invoices: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:invoices"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:invoices: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing touch.updated()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:invoices"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing Touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing touch.updated()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing Touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing touch.updated()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing Touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing touch.updated()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing Touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing touch.updated()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_misses_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "instead_of_statement": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:both_cols: table has column updated_at but no INSTEAD OF UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:both_cols"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no INSTEAD OF UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: table has column updated_at but no INSTEAD OF UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ghosts: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no updated_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:ghosts"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no INSTEAD OF UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:invoices: table has column updated_at but no INSTEAD OF UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:invoices"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no INSTEAD OF UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: table has column updated_at but no INSTEAD OF UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: table has column updated_at but no INSTEAD OF UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no INSTEAD OF UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shared_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: trigger trigger_conditional_touch executes fn_touch_updated_at() but the table has no deleted_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ghosts: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no deleted_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:ghosts"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ghosts: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no updated_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:ghosts"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: trigger trigger_late_touch executes fn_touch_updated_at() but the table has no deleted_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no deleted_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: trigger trigger_orders_touch executes fn_touch_updated_at() only for UPDATE OF status; it must fire on every UPDATE",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: trigger trigger_statement_touch executes fn_touch_updated_at() but the table has no deleted_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "touch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ghosts: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no updated_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:ghosts"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: trigger trigger_orders_touch executes fn_touch_updated_at() only for UPDATE OF status; it must fire on every UPDATE",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "two_requirements": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:both_cols: table has column deleted_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_deleted_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:both_cols"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:conditional_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:conditional_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ghosts: trigger trigger_orders_touch executes fn_touch_updated_at() but the table has no updated_at column",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:ghosts"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:import_rows: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:import_rows"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:late_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:late_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:partial_orders: trigger trigger_orders_touch executes fn_touch_updated_at() only for UPDATE OF status; it must fire on every UPDATE",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:partial_orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:statement_orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

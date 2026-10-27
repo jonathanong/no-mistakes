@@ -22,12 +22,46 @@ mod cli_mrf_snapshot_rust_max_lines;
 mod cli_mrf_snapshot_rust_no_inline_allows;
 #[path = "cli_mrf_snapshot_rust_no_inline_tests.rs"]
 mod cli_mrf_snapshot_rust_no_inline_tests;
+#[path = "cli_postgres_snapshot_array_columns.rs"]
+mod cli_postgres_snapshot_array_columns;
+#[path = "cli_postgres_snapshot_bounded_statements.rs"]
+mod cli_postgres_snapshot_bounded_statements;
+#[path = "cli_postgres_snapshot_bounded_statements_more.rs"]
+mod cli_postgres_snapshot_bounded_statements_more;
+#[path = "cli_postgres_snapshot_column_naming.rs"]
+mod cli_postgres_snapshot_column_naming;
+#[path = "cli_postgres_snapshot_column_naming_more.rs"]
+mod cli_postgres_snapshot_column_naming_more;
+#[path = "cli_postgres_snapshot_column_requires_trigger.rs"]
+mod cli_postgres_snapshot_column_requires_trigger;
+#[path = "cli_postgres_snapshot_conflict_ordering.rs"]
+mod cli_postgres_snapshot_conflict_ordering;
 #[path = "cli_postgres_snapshot_constraint_validate.rs"]
 mod cli_postgres_snapshot_constraint_validate;
+#[path = "cli_postgres_snapshot_duplicate_function_body.rs"]
+mod cli_postgres_snapshot_duplicate_function_body;
+#[path = "cli_postgres_snapshot_explicit_columns.rs"]
+mod cli_postgres_snapshot_explicit_columns;
+#[path = "cli_postgres_snapshot_finite_text_columns.rs"]
+mod cli_postgres_snapshot_finite_text_columns;
+#[path = "cli_postgres_snapshot_fk_index.rs"]
+mod cli_postgres_snapshot_fk_index;
 #[path = "cli_postgres_snapshot_fk_on_delete.rs"]
 mod cli_postgres_snapshot_fk_on_delete;
+#[path = "cli_postgres_snapshot_generated_column_predicates.rs"]
+mod cli_postgres_snapshot_generated_column_predicates;
 #[path = "cli_postgres_snapshot_generated_column_writes.rs"]
 mod cli_postgres_snapshot_generated_column_writes;
+#[path = "cli_postgres_snapshot_idempotent_insert.rs"]
+mod cli_postgres_snapshot_idempotent_insert;
+#[path = "cli_postgres_snapshot_identifier_length.rs"]
+mod cli_postgres_snapshot_identifier_length;
+#[path = "cli_postgres_snapshot_json_relation_ids.rs"]
+mod cli_postgres_snapshot_json_relation_ids;
+#[path = "cli_postgres_snapshot_key_column_types.rs"]
+mod cli_postgres_snapshot_key_column_types;
+#[path = "cli_postgres_snapshot_lock_ordering.rs"]
+mod cli_postgres_snapshot_lock_ordering;
 #[path = "cli_postgres_snapshot_named_constraints.rs"]
 mod cli_postgres_snapshot_named_constraints;
 #[path = "cli_postgres_snapshot_no_add_column.rs"]

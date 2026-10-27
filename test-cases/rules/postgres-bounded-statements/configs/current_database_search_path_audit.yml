@@ -1,0 +1,10 @@
+# searchPathEvidence public accounts; statements 1 and 3 unbounded
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/current-db-search-path.json
+      executorNames: []
+      sqlInclude: [copied/temporary-current-database-search-path.sql]
+      include: [copied/temporary-current-database-search-path.sql]

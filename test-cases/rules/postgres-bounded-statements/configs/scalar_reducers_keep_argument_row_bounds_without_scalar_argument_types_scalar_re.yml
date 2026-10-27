@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-finite-array.json
+      executorNames: []
+      sqlInclude: [sql/scalar-reducer-arrays.sql]
+      include: [sql/scalar-reducer-arrays.sql]

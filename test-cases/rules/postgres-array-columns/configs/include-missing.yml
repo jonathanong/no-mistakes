@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-array-columns
+    scope: repository
+    include:
+      - missing.json
+    options:
+      schemaCatalogPath: schema.json

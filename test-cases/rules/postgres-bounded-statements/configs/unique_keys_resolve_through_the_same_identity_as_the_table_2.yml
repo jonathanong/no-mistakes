@@ -1,0 +1,10 @@
+# this statement must report a finding
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/schema-qualified.json
+      executorNames: []
+      sqlInclude: [cases/unique_keys_resolve_through_the_same_identity_as_the_table.sql]
+      include: [cases/unique_keys_resolve_through_the_same_identity_as_the_table.sql]

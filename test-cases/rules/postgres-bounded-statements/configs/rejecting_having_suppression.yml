@@ -1,0 +1,11 @@
+# line 16 must be absent after suppression; line 4 must remain; lines 2 3 7 8 9 10 14 17 must be absent
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [sql/rejecting-having-projection.sql]
+      include: [sql/rejecting-having-projection.sql]
+      exclude: ["src/**"]

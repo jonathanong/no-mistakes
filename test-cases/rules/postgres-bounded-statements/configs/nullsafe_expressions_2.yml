@@ -1,0 +1,10 @@
+# tables that must remain: normalized_emails
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/unique_index_shapes-schema.json
+      executorNames: []
+      sqlInclude: [split/nullsafe_expressions-2.sql]
+      include: [split/nullsafe_expressions-2.sql]

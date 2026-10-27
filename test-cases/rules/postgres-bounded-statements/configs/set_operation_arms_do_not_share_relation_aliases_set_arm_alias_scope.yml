@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [sql/set-arm-alias-scope.sql]
+      include: [sql/set-arm-alias-scope.sql]

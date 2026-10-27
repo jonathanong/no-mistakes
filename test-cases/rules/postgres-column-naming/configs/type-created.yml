@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    message: rename the column
+    options:
+      schemaCatalogPath: schema.json
+      typeRules:
+        - types: ['timestamp with time zone']
+          namePattern: '^created'

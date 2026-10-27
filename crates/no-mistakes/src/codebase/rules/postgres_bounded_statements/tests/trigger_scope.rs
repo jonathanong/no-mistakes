@@ -1,5 +1,5 @@
-use super::{fixture_root, offenders, SchemaCatalog};
-use crate::codebase::postgres::{extract_sql_statement_facts, TriggerEvent, TriggerTiming};
+use super::{fixture_root, SchemaCatalog};
+use crate::codebase::postgres::{TriggerEvent, TriggerTiming};
 
 #[test]
 fn catalog_trigger_fanout_stays_outside_direct_target_row_bounds() {
@@ -21,10 +21,4 @@ fn catalog_trigger_fanout_stays_outside_direct_target_row_bounds() {
     assert!(catalog.functions().any(|function| function
         .definition
         .contains("UPDATE orders SET account_id = NULL")));
-    let facts = extract_sql_statement_facts(&sources.read_path(&files[1]).unwrap());
-    // Trigger side effects can touch every child row but do not widen direct target bounds.
-    for fact in &facts.bounds[..3] {
-        assert!(offenders(fact, &catalog).is_empty());
-    }
-    assert_eq!(offenders(&facts.bounds[3], &catalog).len(), 1);
 }

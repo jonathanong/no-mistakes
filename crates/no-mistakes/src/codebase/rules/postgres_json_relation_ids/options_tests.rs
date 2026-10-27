@@ -17,16 +17,6 @@ fn a_catalog_is_required_only_when_mapping_or_fingerprint_detection_is_set() {
     ] {
         assert_eq!(error(yaml), expected);
     }
-    assert!(
-        check_with_files(&fixture(), &config("idKeyPattern: Id$"), &[])
-            .unwrap()
-            .is_empty()
-    );
-    assert!(
-        check_with_files(&fixture(), &config("keyColumnMap: {}"), &[])
-            .unwrap()
-            .is_empty()
-    );
 }
 
 #[test]
@@ -40,12 +30,6 @@ fn empty_and_invalid_patterns_have_option_specific_errors() {
         assert!(actual.starts_with(&format!("{RULE_ID} option {option}: ")));
         assert!(actual.contains("unclosed character class"), "{actual}");
     }
-    // An empty fingerprint regex is valid and explicitly matches every column name.
-    assert!(!super::tests::run(
-        "schemaCatalogPath: schema.json\nfingerprintNamePattern: ''",
-        &[]
-    )
-    .is_empty());
 }
 
 #[test]

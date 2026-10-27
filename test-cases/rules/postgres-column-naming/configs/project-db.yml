@@ -1,0 +1,13 @@
+version: 2
+projects:
+  database:
+    root: db
+rules:
+  - rule: postgres-column-naming
+    projects:
+      - database
+    options:
+      schemaCatalogPath: db/schema.json
+      typeRules:
+        - types: ['timestamp with time zone']
+          namePattern: '_at$'

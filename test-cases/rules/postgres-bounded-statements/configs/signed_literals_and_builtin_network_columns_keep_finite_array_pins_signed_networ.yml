@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-signed-network-array.json
+      executorNames: []
+      sqlInclude: [sql/signed-network-array.sql]
+      include: [sql/signed-network-array.sql]

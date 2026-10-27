@@ -1,0 +1,293 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowed_column": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allowed_table": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "btree_index": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "case_insensitive_column": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom_directive": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "directive_mismatch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 3,
+          "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "target": "comments.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_directive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 2,
+          "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "target": "comments.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "gin_index": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 3,
+          "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "target": "comments.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "hash_index": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "leading_column_mismatch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 2,
+          "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "target": "comments.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_index": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 3,
+          "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "target": "comments.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "partial_not_null": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "partial_other_column": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 2,
+          "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "target": "comments.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated_inline": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 4,
+          "message": "first_comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "target": "first_comments.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_directive": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema_qualified_index": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_allowed_column": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "comments.missing_id",
+          "line": 1,
+          "message": "stale postgres-fk-index allowedColumns entry: comments.missing_id",
+          "rule": "postgres-fk-index",
+          "target": "comments.missing_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stale_allowed_table": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "missing",
+          "line": 1,
+          "message": "stale postgres-fk-index allowedTables entry: missing",
+          "rule": "postgres-fk-index",
+          "target": "missing"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -129,6 +129,4 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
 #[cfg(test)]
 mod compile_coverage_tests;
 #[cfg(test)]
-mod order_resolution_tests;
-#[cfg(test)]
 mod tests;

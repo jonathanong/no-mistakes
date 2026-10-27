@@ -1,0 +1,10 @@
+# tables that must remain: accounts
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/a_function_that_differs_per_row_is_not_a_fixed_value_4.sql]
+      include: [cases/a_function_that_differs_per_row_is_not_a_fixed_value_4.sql]

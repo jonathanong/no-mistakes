@@ -1,0 +1,10 @@
+# tables that must remain: orders
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/a_limit_a_pure_aggregate_or_an_unknown_relation_needs_no_key.sql]
+      include: [cases/a_limit_a_pure_aggregate_or_an_unknown_relation_needs_no_key.sql]

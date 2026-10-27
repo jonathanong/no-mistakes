@@ -1,0 +1,10 @@
+# cycle must report one finding per step (64)
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalog-64.json
+      executorNames: []
+      sqlInclude: [cycle-64.sql]
+      include: [cycle-64.sql]

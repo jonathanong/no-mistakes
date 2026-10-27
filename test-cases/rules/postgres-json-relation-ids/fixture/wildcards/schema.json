@@ -1,0 +1,180 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "ordinalPosition": 1
+        },
+        "account_id": {
+          "dataType": "uuid",
+          "ordinalPosition": 2
+        },
+        "alternate_id": {
+          "dataType": "uuid",
+          "ordinalPosition": 3
+        },
+        "details": {
+          "dataType": "jsonb",
+          "ordinalPosition": 4
+        },
+        "extra": {
+          "dataType": "jsonb",
+          "ordinalPosition": 5
+        },
+        "note": {
+          "dataType": "text",
+          "ordinalPosition": 6
+        }
+      },
+      "foreignKeys": {
+        "orders_account_fkey": {
+          "columns": [
+            "account_id"
+          ],
+          "referencedTable": "accounts",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    },
+    "loose_orders": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "details": {
+          "dataType": "jsonb"
+        }
+      }
+    },
+    "invoice_revisions": {
+      "columns": {
+        "invoice_id": {
+          "dataType": "uuid"
+        },
+        "changes": {
+          "dataType": "jsonb"
+        }
+      }
+    },
+    "invoices": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "number": {
+          "dataType": "text"
+        },
+        "fingerprint_sha256": {
+          "dataType": "bytea"
+        },
+        "document_sha256": {
+          "dataType": "text"
+        },
+        "count_sha256": {
+          "dataType": "integer"
+        },
+        "unused_sha256": {
+          "dataType": "text"
+        }
+      },
+      "foreignKeys": {
+        "orders_account_fkey": {
+          "columns": [
+            "account_id"
+          ],
+          "referencedTable": "accounts",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "invoices_fingerprint_key": {
+          "columns": [
+            "fingerprint_sha256"
+          ]
+        },
+        "invoices_account_fingerprint_key": {
+          "columns": [
+            "account_id",
+            "fingerprint_sha256"
+          ]
+        },
+        "invoices_account_number_key": {
+          "columns": [
+            "account_id",
+            "number"
+          ]
+        },
+        "invoices_count_key": {
+          "columns": [
+            "count_sha256"
+          ]
+        }
+      },
+      "indexes": {
+        "invoices_document_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "column": "document_sha256"
+            }
+          ]
+        },
+        "invoices_document_nonunique": {
+          "unique": false,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "column": "document_sha256"
+            }
+          ]
+        }
+      }
+    },
+    "composite_orders": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "tenant_id": {
+          "dataType": "uuid"
+        },
+        "details": {
+          "dataType": "jsonb"
+        }
+      },
+      "foreignKeys": {
+        "composite_orders_account_fkey": {
+          "columns": [
+            "tenant_id",
+            "account_id"
+          ],
+          "referencedTable": "tenant_accounts",
+          "referencedColumns": [
+            "tenant_id",
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

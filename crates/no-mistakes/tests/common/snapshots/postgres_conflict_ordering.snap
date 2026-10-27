@@ -1,0 +1,841 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "append_conditional_insert": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "canonical_alias": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "canonical_dynamic": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/dynamic.ts",
+          "line": 6,
+          "message": "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "canonical_dynamic_comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "canonical_dynamic_fragment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/dynamic-insert-fragment.ts",
+          "line": 5,
+          "message": "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "canonical_dynamic_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "canonical_dynamic_safe": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "canonical_dynamic_select": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "canonical_insert": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "canonical_transaction": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "constant_all_keys": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "constant_desc": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter input.user_id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "noncanonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "constant_missing_order": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.user_id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "constant_uncast": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail_ambiguous": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "ON CONFLICT infers multiple catalog arbiters with incompatible key orders; use ON CONSTRAINT or remove the incompatible index",
+          "rule": "postgres-conflict-ordering",
+          "target": "ambiguous-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_append_missing_order": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 11,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_append_opaque_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 13,
+          "message": "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "src/insert.ts",
+          "line": 17,
+          "message": "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_bare_order_by": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 21,
+          "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter ids.order_id ASC NULLS LAST, nums.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "noncanonical-order"
+        },
+        {
+          "file": "src/insert.ts",
+          "line": 36,
+          "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter input.order_id ASC NULLS LAST, input.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "noncanonical-order"
+        },
+        {
+          "file": "src/insert.ts",
+          "line": 6,
+          "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter ids.order_id ASC NULLS LAST, nums.line_no ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "noncanonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_default_arbiter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 19,
+          "message": "multi-row INSERT source must be a direct SELECT with explicit target columns so arbiter expressions can be mapped to ORDER BY",
+          "rule": "postgres-conflict-ordering",
+          "target": "unresolved-source-order"
+        },
+        {
+          "file": "src/insert.ts",
+          "line": 6,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.scope_id ASC NULLS LAST, input.user_key ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_helper_insert_missing_order": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 17,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_incomplete_with_append": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 7,
+          "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_missing_order": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_noncanonical_order": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "multi-row ON CONFLICT ORDER BY must begin with catalog arbiter tenant_id ASC NULLS LAST, id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "noncanonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_opaque_executor": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 5,
+          "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "src/insert.ts",
+          "line": 6,
+          "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "src/insert.ts",
+          "line": 7,
+          "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_opaque_member_query": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 5,
+          "message": "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_partial_predicate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "ON CONFLICT target does not resolve to one valid, ready btree unique index in schemaCatalogPath",
+          "rule": "postgres-conflict-ordering",
+          "target": "unresolved-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_reversed_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "ON CONFLICT target keys must use the resolved catalog index order",
+          "rule": "postgres-conflict-ordering",
+          "target": "noncanonical-target"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_targetless": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_template_constant_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 18,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter sql_placeholder_1 ASC NULLS LAST, input.product_id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "src/insert.ts",
+          "line": 31,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter sql_placeholder_1 ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "src/insert.ts",
+          "line": 7,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.product_id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_unresolved_source_order": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 5,
+          "message": "multi-row INSERT source must be a direct SELECT with explicit target columns so arbiter expressions can be mapped to ORDER BY",
+          "rule": "postgres-conflict-ordering",
+          "target": "unresolved-source-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_missing": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "malformed_conflict": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+          "rule": "postgres-conflict-ordering",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "malformed_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "not_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "one_bad": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter input.id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "opaque_executor_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_append_mutations": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_bare_order_by": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_constraint": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_default_arbiter": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_expression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_order_by_forms": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_partial": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_sql_include": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_template_constant_key": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "single_row_lookalike": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 4,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter o.id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "single_row_pinned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sql_excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sql_statement_directive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/inserts.sql",
+          "line": 5,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "target": "missing-canonical-order"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

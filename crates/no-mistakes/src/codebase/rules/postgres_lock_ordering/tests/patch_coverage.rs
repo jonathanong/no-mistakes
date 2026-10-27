@@ -17,35 +17,6 @@ fn call(sql: &str) -> EmbeddedSqlCall {
     }
 }
 
-#[test]
-fn prepared_metadata_falls_back_to_parsing_the_recovered_text() {
-    let valid = super::findings_for_call(
-        "lock.ts",
-        "",
-        &call("SELECT id FROM items WHERE id = 1 FOR UPDATE"),
-        &compiled(),
-        None,
-    );
-    assert!(
-        valid
-            .iter()
-            .all(|finding| finding.target.as_deref() != Some(super::UNPARSEABLE_TARGET)),
-        "{valid:#?}"
-    );
-    let invalid = super::findings_for_call(
-        "lock.ts",
-        "",
-        &call("SELECT FROM items FOR UPDATE ("),
-        &compiled(),
-        None,
-    );
-    assert_eq!(invalid.len(), 1, "{invalid:#?}");
-    assert_eq!(
-        invalid[0].target.as_deref(),
-        Some(super::UNPARSEABLE_TARGET)
-    );
-}
-
 fn facts(path: &Path, profile: &EmbeddedSqlOptions, calls: Vec<EmbeddedSqlCall>) -> CheckFactMap {
     let mut facts = CheckFactMap::default();
     let mut file = CheckFileFacts::default();

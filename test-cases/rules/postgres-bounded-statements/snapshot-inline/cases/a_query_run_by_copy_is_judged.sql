@@ -1,0 +1,1 @@
+COPY (SELECT * FROM orders) TO STDOUT;

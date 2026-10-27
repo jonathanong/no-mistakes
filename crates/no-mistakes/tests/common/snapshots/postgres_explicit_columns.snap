@@ -1,0 +1,1049 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "cte_alias_and_json_upper": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cte_names": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/ctes.sql",
+          "line": 2,
+          "message": "sql/ctes.sql:2: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_sql_include": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dml_cte_returning": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/dml-ctes.sql",
+          "line": 1,
+          "message": "sql/dml-ctes.sql:1: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/dml-ctes.sql",
+          "line": 2,
+          "message": "sql/dml-ctes.sql:2: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/dml-ctes.sql",
+          "line": 3,
+          "message": "sql/dml-ctes.sql:3: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/dml-ctes.sql",
+          "line": 4,
+          "message": "sql/dml-ctes.sql:4: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/dml-ctes.sql",
+          "line": 5,
+          "message": "sql/dml-ctes.sql:5: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dml_cte_returning_disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_and_parse_failures": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries.ts",
+          "line": 10,
+          "message": "queries.ts:10: executed SQL is not statically recoverable for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "queries.ts",
+          "line": 3,
+          "message": "queries.ts:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "queries.ts",
+          "line": 5,
+          "message": "queries.ts:5: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "queries.ts",
+          "line": 7,
+          "message": "queries.ts:7: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_failures_ignored": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries.ts",
+          "line": 3,
+          "message": "queries.ts:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "function_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/function-lines.sql",
+          "line": 3,
+          "message": "sql/function-lines.sql:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "function_lines_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "helper_literals": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/composed.mts",
+          "line": 16,
+          "message": "src/composed.mts:16: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/composed.mts",
+          "line": 7,
+          "message": "src/composed.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/helper.mts",
+          "line": 12,
+          "message": "src/helper.mts:12: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/imported-other.mts",
+          "line": 4,
+          "message": "src/imported-other.mts:4: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/imported-source.mts",
+          "line": 11,
+          "message": "src/imported-source.mts:11: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/imported-source.mts",
+          "line": 20,
+          "message": "src/imported-source.mts:20: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/imported-source.mts",
+          "line": 32,
+          "message": "src/imported-source.mts:32: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/imported-source.mts",
+          "line": 6,
+          "message": "src/imported-source.mts:6: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/single.mts",
+          "line": 7,
+          "message": "src/single.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper_literals_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/composed.mts",
+          "line": 16,
+          "message": "src/composed.mts:16: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/composed.mts",
+          "line": 7,
+          "message": "src/composed.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/helper.mts",
+          "line": 12,
+          "message": "src/helper.mts:12: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/imported-other.mts",
+          "line": 4,
+          "message": "src/imported-other.mts:4: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/imported-source.mts",
+          "line": 11,
+          "message": "src/imported-source.mts:11: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/imported-source.mts",
+          "line": 20,
+          "message": "src/imported-source.mts:20: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/imported-source.mts",
+          "line": 6,
+          "message": "src/imported-source.mts:6: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/single.mts",
+          "line": 7,
+          "message": "src/single.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper_without_caller": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/imported-source.mts",
+          "line": 31,
+          "message": "directive for `postgres-explicit-columns` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-explicit-columns"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/composed.mts",
+          "line": 16,
+          "message": "src/composed.mts:16: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/composed.mts",
+          "line": 7,
+          "message": "src/composed.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/helper.mts",
+          "line": 12,
+          "message": "src/helper.mts:12: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "src/single.mts",
+          "line": 7,
+          "message": "src/single.mts:7: SELECT * reads every column of accounts, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "insert_aliases": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/insert-alias.sql",
+          "line": 1,
+          "message": "sql/insert-alias.sql:1: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/insert-alias.sql",
+          "line": 2,
+          "message": "sql/insert-alias.sql:2: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/insert-alias.sql",
+          "line": 3,
+          "message": "sql/insert-alias.sql:3: SELECT * reads all 40 columns of public.orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "public.orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/invalid.sql",
+          "line": 1,
+          "message": "sql/invalid.sql:1: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_sql_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "joins_and_qualified": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/join-wide.sql",
+          "line": 1,
+          "message": "sql/join-wide.sql:1: SELECT * reads all 20 columns of shipments (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "shipments"
+        },
+        {
+          "file": "sql/join-wide.sql",
+          "line": 1,
+          "message": "sql/join-wide.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/qualified.sql",
+          "line": 1,
+          "message": "sql/qualified.sql:1: SELECT * reads all 40 columns of public.orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "public.orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "known_view_listed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/view.sql",
+          "line": 1,
+          "message": "sql/view.sql:1: SELECT * reads all columns of view_public_tags, which is configured in relations; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "view_public_tags"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "known_view_unlisted": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lenient_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lenient-lines.sql",
+          "line": 4,
+          "message": "sql/lenient-lines.sql:4: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "lenient_lines_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lenient_returning_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lenient-returning.sql",
+          "line": 13,
+          "message": "sql/lenient-returning.sql:13: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/lenient-returning.sql",
+          "line": 5,
+          "message": "sql/lenient-returning.sql:5: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/lenient-returning.sql",
+          "line": 9,
+          "message": "sql/lenient-returning.sql:9: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "lenient_returning_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "max_columns_zero": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/tags.sql",
+          "line": 1,
+          "message": "sql/tags.sql:1: SELECT * reads every column of tags, including columns added later; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "tags"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "projection_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lines.sql",
+          "line": 3,
+          "message": "sql/lines.sql:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/lines.sql",
+          "line": 6,
+          "message": "sql/lines.sql:6: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "qualified_relation_list": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/qualified.sql",
+          "line": 1,
+          "message": "sql/qualified.sql:1: SELECT * reads all columns of public.orders, which is configured in relations; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "public.orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "qualified_targets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/qualified.sql",
+          "line": 1,
+          "message": "sql/qualified.sql:1: SELECT * reads all 40 columns of public.orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "public.orders"
+        },
+        {
+          "file": "sql/qualified.sql",
+          "line": 2,
+          "message": "sql/qualified.sql:2: SELECT * reads all 40 columns of archive.orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "archive.orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/accounts.sql",
+          "line": 1,
+          "message": "sql/accounts.sql:1: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "sql/cte.sql",
+          "line": 1,
+          "message": "sql/cte.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/join.sql",
+          "line": 1,
+          "message": "sql/join.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/returning.sql",
+          "line": 1,
+          "message": "sql/returning.sql:1: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/star.sql",
+          "line": 1,
+          "message": "sql/star.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "returning_disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "returning_peers": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/peers.sql",
+          "line": 1,
+          "message": "sql/peers.sql:1: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/peers.sql",
+          "line": 2,
+          "message": "sql/peers.sql:2: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/peers.sql",
+          "line": 4,
+          "message": "sql/peers.sql:4: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "span_suppress_sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/suppress.sql",
+          "line": 4,
+          "message": "sql/suppress.sql:4: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 8,
+          "message": "sql/suppress.sql:8: RETURNING * returns all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "span_suppress_sql_hidden": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "span_suppress_ts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "suppressed.ts",
+          "line": 4,
+          "message": "suppressed.ts:4: SQL could not be analyzed for explicit columns",
+          "rule": "postgres-explicit-columns",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "span_suppress_ts_hidden": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "standalone_table": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/standalone-table.sql",
+          "line": 2,
+          "message": "sql/standalone-table.sql:2: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressed_stars": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "table_set_arms": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/table-left-arm.sql",
+          "line": 1,
+          "message": "sql/table-left-arm.sql:1: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        },
+        {
+          "file": "sql/table-right-arm.sql",
+          "line": 1,
+          "message": "sql/table-right-arm.sql:1: SELECT * reads all columns of accounts, which is configured in relations; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unsuppressed_stars": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/file.sql",
+          "line": 2,
+          "message": "sql/file.sql:2: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/line.sql",
+          "line": 1,
+          "message": "sql/line.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/next-line.sql",
+          "line": 2,
+          "message": "sql/next-line.sql:2: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "valid_examples": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "values_read": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/values.sql",
+          "line": 1,
+          "message": "sql/values.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "whole_row_expressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/functions.sql",
+          "line": 2,
+          "message": "sql/functions.sql:2: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        },
+        {
+          "file": "sql/functions.sql",
+          "line": 3,
+          "message": "sql/functions.sql:3: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "whole_row_functions_allowed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "whole_row_functions_cleared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/json-upper.sql",
+          "line": 1,
+          "message": "sql/json-upper.sql:1: SELECT * reads all 40 columns of orders (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

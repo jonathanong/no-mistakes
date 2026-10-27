@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-column-requires-trigger
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      requirements:
+        - column: updated_at
+          function: fn_touch_updated_at
+        - column: deleted_at
+          function: fn_touch_deleted_at

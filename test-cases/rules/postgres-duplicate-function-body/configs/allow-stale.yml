@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-duplicate-function-body
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - object: function:fn_reject_orders_update
+          reason: Kept separate on purpose
+        - object: function:fn_orders_audit
+          reason: not a finding

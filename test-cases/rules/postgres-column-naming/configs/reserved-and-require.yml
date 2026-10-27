@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      foreignKeys:
+        reservedSuffixes:
+          - suffix: '_user_id'
+            types: [uuid]
+            tables: [users]
+        requireForeignKey:
+          types: [uuid]
+          namePattern: _id$

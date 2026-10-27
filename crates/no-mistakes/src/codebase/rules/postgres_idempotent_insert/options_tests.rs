@@ -29,30 +29,6 @@ fn config_yaml(yaml: &str) -> NoMistakesConfig {
 fn include_exclude_and_option_overrides() {
     let root = fixture("fail");
     let sql = root.join("sql/001.sql");
-    assert!(check_with_files(
-        &root,
-        &config_yaml("sqlInclude: [\"sql/**/*.sql\"]\nexclude: ['sql/001.sql']"),
-        std::slice::from_ref(&sql),
-    )
-    .unwrap()
-    .is_empty());
-    assert_eq!(
-        check_with_files(
-            &root,
-            &config_yaml("sqlInclude: [\"sql/**/*.sql\"]\ninclude: ['sql/001.sql']"),
-            std::slice::from_ref(&sql),
-        )
-        .unwrap()
-        .len(),
-        1
-    );
-    assert!(check_with_files(
-        &root,
-        &config_yaml("sqlInclude: [\"sql/**/*.sql\"]\ninclude: ['sql/missing.sql']"),
-        std::slice::from_ref(&sql),
-    )
-    .unwrap()
-    .is_empty());
     let error = check_with_files(&root, &config_yaml("exclude: ['[']"), &[sql]).expect_err("glob");
     assert!(error.to_string().contains("invalid glob"), "{error}");
     let compiled = compile_options(&Options {
@@ -103,50 +79,5 @@ fn include_exclude_and_option_overrides() {
         })
         .unwrap()
         .fail_unanalyzable
-    );
-}
-
-#[test]
-fn dynamic_unparseable_and_non_sql_scan_paths() {
-    let dynamic = fixture("fail-dynamic");
-    let ts = dynamic.join("src/query.ts");
-    let flagged =
-        check_with_files(&dynamic, &config_yaml("{}"), std::slice::from_ref(&ts)).unwrap();
-    assert!(
-        flagged
-            .iter()
-            .any(|finding| finding.message.contains("not statically recoverable")),
-        "{flagged:?}"
-    );
-    let ignored =
-        check_with_files(&dynamic, &config_yaml("unanalyzableSql: ignore"), &[ts]).unwrap();
-    assert!(ignored.is_empty(), "{ignored:?}");
-    let embedded = fixture("fail-embedded");
-    let insert = embedded.join("src/query.ts");
-    let recovered =
-        check_with_files(&embedded, &config_yaml("{}"), std::slice::from_ref(&insert)).unwrap();
-    assert!(
-        recovered
-            .iter()
-            .any(|finding| finding.message.contains("ON CONFLICT")
-                || finding.message.contains("NOT EXISTS")),
-        "{recovered:?}"
-    );
-    let skipped =
-        check_with_files(&embedded, &config_yaml("scanEmbedded: false"), &[insert]).unwrap();
-    assert!(skipped.is_empty(), "{skipped:?}");
-    let root = fixture("fail");
-    let unparseable = check_with_files(
-        &root,
-        &config_yaml("sqlInclude: [\"sql/**/*.sql\"]"),
-        &[root.join("sql/unparseable.sql")],
-    )
-    .unwrap();
-    assert!(
-        unparseable
-            .iter()
-            .any(|finding| finding.message.contains("replay-safe")
-                || finding.message.contains("could not be proven")),
-        "{unparseable:?}"
     );
 }

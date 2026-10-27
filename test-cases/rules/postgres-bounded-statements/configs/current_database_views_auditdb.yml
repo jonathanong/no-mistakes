@@ -1,0 +1,10 @@
+# folded name auditdb
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/current-db-auditdb.json
+      executorNames: []
+      sqlInclude: [copied/temporary-current-database-views.sql]
+      include: [copied/temporary-current-database-views.sql]

@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      include: ["src/lock.ts"]

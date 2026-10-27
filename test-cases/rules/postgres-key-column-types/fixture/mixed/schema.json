@@ -1,0 +1,72 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "enums": {"order_flag_kinds": {"values": ["active", "paused"]}},
+  "tables": {
+    "currencies": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid"}, "code": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id"]},
+      "uniqueConstraints": {"currencies_code_key": {"columns": ["code"]}},
+      "indexes": {"currencies_pkey": {"primary": true}}
+    },
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "code": {"dataType": "text"},
+        "locale": {"dataType": "character varying(32)"},
+        "currency_code": {"dataType": "text"},
+        "parent_id": {"dataType": "uuid"},
+        "domain_id": {"dataType": "order_id_domain"}
+      },
+      "primaryKey": {"columns": ["code"]},
+      "indexes": {"orders_natural_pkey": {"primary": true}},
+      "foreignKeys": {
+        "orders_currency_code_fkey": {"columns": ["currency_code"], "referencedTable": "currencies", "referencedColumns": ["code"]},
+        "orders_parent_fkey": {"columns": ["parent_id"], "referencedTable": "currencies", "referencedColumns": ["id"]}
+      }
+    },
+    "order_notes": {
+      "relationKind": "table",
+      "columns": {"order_id": {"dataType": "uuid"}, "author_email": {"dataType": "text"}},
+      "primaryKey": {"columns": ["order_id", "author_email"]},
+      "indexes": {"order_notes_pkey": {"primary": true}}
+    },
+    "locale_keys": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid"}, "locale": {"dataType": "character varying(32)"}},
+      "primaryKey": {"columns": ["id", "locale"]},
+      "indexes": {"locale_keys_pkey": {"primary": true}}
+    },
+    "domain_keys": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "order_id_domain"}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {"domain_keys_pkey": {"primary": true}}
+    },
+    "order_flags": {
+      "relationKind": "table",
+      "columns": {"order_id": {"dataType": "uuid"}, "flag": {"dataType": "order_flag_kinds"}},
+      "primaryKey": {"columns": ["order_id", "flag"]},
+      "indexes": {"order_flags_pkey": {"primary": true}}
+    },
+    "partitioned_orders": {
+      "relationKind": "partitioned table",
+      "columns": {"id": {"dataType": "uuid"}, "code": {"dataType": "text"}},
+      "primaryKey": {"columns": ["id", "code"]},
+      "indexes": {"partitioned_orders_pkey": {"primary": true}}
+    },
+    "audit_log": {
+      "relationKind": "table",
+      "columns": {"message": {"dataType": "text"}},
+      "indexes": {}
+    },
+    "missing_key_column": {
+      "relationKind": "table",
+      "columns": {},
+      "primaryKey": {"columns": ["missing_id"]},
+      "indexes": {"missing_key_column_pkey": {"primary": true}}
+    }
+  }
+}

@@ -1,0 +1,10 @@
+# these DELETE statements must stay bounded
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [split/join_on_scope-bounded.sql]
+      include: [split/join_on_scope-bounded.sql]

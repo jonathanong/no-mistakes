@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "members": {
+      "indexes": {
+        "members_account_user_key": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": false, "valid": true, "ready": true,
+          "keys": [
+            { "expression": "account_id", "descending": false, "nullsFirst": false },
+            { "expression": "user_id", "descending": false, "nullsFirst": false }
+          ],
+          "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": null
+    }
+  }, "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

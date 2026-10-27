@@ -2,70 +2,54 @@ mod blocking_query_wrappers;
 mod caller_array_provenance;
 mod cardinality_basics;
 mod catalog_identity_edges;
+mod catalog_keys;
 mod catalog_resolution;
+mod conditional_table_function_inputs;
+mod copy_quoted_table;
 mod current_database;
 mod ddl_compat_lifecycle;
 mod ddl_search_path;
+mod explicit_self_alias;
 mod fetch_expressions;
-mod fixed_catalog_functions;
 mod fixture_configs;
 mod json_function_outputs;
-mod key_propagation;
 mod legacy_single_column;
+mod multi_table_arms;
 mod nested_positive_order;
 mod nested_zero_order;
 mod nonrecursive_ctes;
 mod nullable_fixed_limit;
+mod partitions;
 mod pin_query_reads;
+mod prepared;
+mod prepared_inputs;
 mod recovered_table;
+mod recursive_forward;
+mod referential;
 mod rejecting_having_projection;
+mod review_table;
+mod scalar_call_array;
 mod scalar_case_projection;
-mod scalar_reducer_arrays;
+mod schema_correlation;
+mod search_path;
+mod set_operation_limits;
+mod shadow_drop;
 mod standalone_table;
-mod stored_array;
-mod table_derived_limit;
+mod suppression;
 mod table_only;
+mod table_source_association;
 mod temporary_bare_ownership;
-use super::evaluate::offenders;
-use super::{check_with_files, check_with_files_and_sources, RULE_ID};
+mod trigger_scope;
+mod wrapped_suppression;
+
+use super::check_with_files;
+use super::RULE_ID;
 use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog};
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
 use std::path::PathBuf;
-
-mod array_review;
-mod compact_aliases;
-mod compact_caller_arrays;
-mod copy_quoted_table;
-mod explicit_self_alias;
-mod materialized_drop;
-mod materialized_namesake;
-mod multi_table_arms;
-mod partitions;
-mod permanent_view_chain;
-mod physical_cascade;
-mod prepared;
-mod prepared_inputs;
-mod propagation;
-mod recursive_forward;
-mod referential;
-mod repeated_begin;
-mod review;
-mod review_table;
-mod scalar_call_array;
-mod schema_drop;
-mod schema_rename;
-mod search_path;
-mod shadow_drop;
-mod suppression;
-mod trigger_scope;
-mod unique_index_joins;
-mod unique_index_shapes;
-mod view_dependencies;
-mod wrapped_suppression;
-mod xml_array;
 
 fn catalog() -> SchemaCatalog {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -76,246 +60,6 @@ fn catalog() -> SchemaCatalog {
     SchemaCatalog::load(&root, "schema.json", &sources).unwrap()
 }
 
-/// (table, line) for every relation that makes any statement in `sql` unbounded.
-fn unbounded(sql: &str) -> Vec<(String, usize)> {
-    let catalog = catalog();
-    extract_sql_statement_facts(sql)
-        .bounds
-        .iter()
-        .flat_map(|fact| offenders(fact, &catalog))
-        .map(|offender| (offender.table, offender.line))
-        .collect()
-}
-
-pub(super) fn names(sql: &str) -> Vec<String> {
-    unbounded(sql).into_iter().map(|(table, _)| table).collect()
-}
-
-#[test]
-fn bounded_items_bound_the_relations_pinned_to_them() {
-    // A chain: o is pinned by value, a by o, and nothing else is needed.
-    assert!(
-        names("SELECT 1 FROM orders o, accounts a WHERE o.id = $1 AND a.id = o.account_id")
-            .is_empty()
-    );
-    // Equality between two unbounded relations bounds neither.
-    assert_eq!(
-        names("SELECT 1 FROM orders o, accounts a WHERE a.id = o.id AND o.id = a.id"),
-        ["orders", "accounts"]
-    );
-    // A relation joined to a capped CTE by key is bounded by the CTE's limit.
-    assert!(names(
-        "WITH c AS (SELECT id FROM orders ORDER BY id LIMIT $1) \
-         SELECT 1 FROM c JOIN accounts a ON a.id = c.id"
-    )
-    .is_empty());
-    // An uncapped CTE reports its own tables and bounds nothing joined to it.
-    assert_eq!(
-        names("WITH c AS (SELECT id FROM orders) SELECT 1 FROM c JOIN accounts a ON a.id = c.id"),
-        ["orders", "accounts"]
-    );
-}
-
-#[test]
-fn set_operations_need_every_arm_bounded() {
-    assert!(names(
-        "SELECT id FROM accounts WHERE id = $1 UNION ALL SELECT id FROM orders WHERE id = $1"
-    )
-    .is_empty());
-    assert_eq!(
-        names("SELECT id FROM accounts WHERE id = $1 UNION ALL SELECT id FROM orders"),
-        ["orders"]
-    );
-    assert!(names("SELECT id FROM accounts UNION ALL SELECT id FROM orders LIMIT 5").is_empty());
-}
-
-#[test]
-fn a_derived_table_is_bounded_when_its_query_is() {
-    assert!(names("SELECT * FROM (SELECT id FROM orders ORDER BY id LIMIT 3) d").is_empty());
-    assert_eq!(names("SELECT * FROM (SELECT id FROM orders) d"), ["orders"]);
-}
-
-#[test]
-fn updates_and_deletes_need_only_their_target_bounded() {
-    assert!(names("UPDATE orders SET status = 'x' WHERE id = $1").is_empty());
-    assert_eq!(
-        names("UPDATE orders SET status = 'x' WHERE account_id = $1"),
-        ["orders"]
-    );
-    // The USING relation may be unbounded: each target row changes once.
-    assert!(
-        names("DELETE FROM orders o USING accounts a WHERE o.id = $1 AND a.name = o.status")
-            .is_empty()
-    );
-    assert_eq!(
-        names("DELETE FROM orders WHERE id IN (SELECT id FROM orders)"),
-        ["orders"]
-    );
-    assert!(names("DELETE FROM orders WHERE id IN (SELECT id FROM orders LIMIT 4)").is_empty());
-    // `ctid` identifies one row of any table.
-    assert!(names("DELETE FROM mystery WHERE ctid = $1").is_empty());
-    assert!(names("DELETE FROM sessions WHERE ctid = ANY($1)").is_empty());
-    assert!(names("DELETE FROM sessions WHERE expires_at < now() LIMIT 5").is_empty());
-}
-
-#[test]
-fn a_relation_the_catalog_names_in_another_form_is_found() {
-    assert_eq!(names("SELECT 1 FROM public.orders"), ["orders"]);
-    assert_eq!(
-        names("SELECT 1 FROM \"orders\" AS o WHERE o.status = $1"),
-        ["orders"]
-    );
-}
-
-#[test]
-fn offenders_carry_the_line_of_each_relation() {
-    assert_eq!(
-        unbounded("SELECT 1\n  FROM orders o\n  JOIN accounts a ON a.name = o.status"),
-        [("orders".to_string(), 2), ("accounts".to_string(), 3)]
-    );
-}
-
-mod catalog_keys;
-
-#[test]
-fn an_unknown_relation_is_not_judged_and_bounds_nothing() {
-    // Nothing says how many accounts an unknown relation names.
-    assert_eq!(
-        names(
-            "UPDATE accounts a SET name = 'x' FROM external_accounts e WHERE a.id = e.account_id"
-        ),
-        ["accounts"]
-    );
-    assert_eq!(
-        names("SELECT 1 FROM accounts a JOIN external e ON a.id = e.account_id WHERE e.id = $1"),
-        ["accounts"]
-    );
-    assert_eq!(
-        names("DELETE FROM accounts WHERE id IN (SELECT account_id FROM external_accounts)"),
-        ["accounts"]
-    );
-    // It is never reported itself, and a limit on the subquery still bounds the key.
-    assert!(names("SELECT 1 FROM external e WHERE e.id = $1").is_empty());
-    assert!(names(
-        "DELETE FROM accounts WHERE id IN (SELECT account_id FROM external_accounts LIMIT 5)"
-    )
-    .is_empty());
-}
-
-#[test]
-fn a_subquery_that_reads_the_row_is_not_a_key_pin() {
-    // The subquery yields each row's own id, so it matches every row whatever its bound.
-    for sql in [
-        "DELETE FROM accounts a WHERE a.id IN (SELECT a.id)",
-        "DELETE FROM accounts WHERE id IN (SELECT id)",
-        "DELETE FROM accounts a WHERE a.id = (SELECT a.id)",
-        "DELETE FROM accounts a WHERE a.id = ANY (SELECT a.id)",
-        "DELETE FROM accounts a WHERE a.id IN (SELECT o.account_id FROM orders o WHERE o.account_id = a.id LIMIT 5)",
-    ] {
-        assert_eq!(names(sql), ["accounts"], "{sql}");
-    }
-    // An independent subquery still sizes the key, and an inner relation shadows an outer name.
-    for sql in [
-        "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions ORDER BY id LIMIT $1)",
-        "DELETE FROM sessions s WHERE s.id IN (SELECT s.id FROM sessions s ORDER BY s.id LIMIT $1)",
-        "DELETE FROM accounts WHERE id = (SELECT max(id) FROM accounts)",
-    ] {
-        assert!(names(sql).is_empty(), "{sql}");
-    }
-}
-
-#[test]
-fn a_function_that_differs_per_row_is_not_a_fixed_value() {
-    for sql in [
-        "DELETE FROM accounts WHERE id = nextval('account_ids')",
-        "DELETE FROM accounts WHERE id = gen_random_uuid()",
-        "DELETE FROM accounts WHERE id = pg_catalog.random()::text::uuid",
-        "DELETE FROM accounts WHERE id = ANY(ARRAY[gen_random_uuid()])",
-    ] {
-        assert_eq!(names(sql), ["accounts"], "{sql}");
-    }
-    // Functions of a bind, and per-statement constants, are values.
-    assert!(names("DELETE FROM accounts WHERE email = lower($1)").is_empty());
-    assert!(names("DELETE FROM sessions WHERE id = now()::text::uuid").is_empty());
-}
-
-#[test]
-fn table_returns_every_row_of_its_relation() {
-    // The parser accepts TABLE only as an arm of a set operation.
-    assert_eq!(
-        names("SELECT id FROM accounts WHERE id = $1 UNION TABLE orders"),
-        ["orders"]
-    );
-    assert_eq!(
-        names("SELECT id FROM accounts WHERE id = $1 UNION TABLE public.accounts"),
-        ["accounts"]
-    );
-    assert_eq!(
-        names("SELECT id FROM accounts WHERE id = $1 UNION ALL TABLE public.orders LIMIT 5"),
-        Vec::<String>::new()
-    );
-    assert!(names("SELECT id FROM accounts WHERE id = $1 UNION TABLE mystery").is_empty());
-}
-
-#[test]
-fn a_dml_target_is_a_physical_relation_even_when_a_cte_shares_its_name() {
-    assert_eq!(
-        names("WITH accounts AS (SELECT 1) DELETE FROM accounts"),
-        ["accounts"]
-    );
-    assert_eq!(
-        names("WITH orders AS (SELECT 1 AS id) UPDATE orders SET status = 'x'"),
-        ["orders"]
-    );
-    // A source item of the statement still resolves to the CTE.
-    assert!(names(
-        "WITH c AS (SELECT id FROM exports ORDER BY id LIMIT $1) \
-         UPDATE exports SET s3_key = NULL FROM c WHERE exports.id = c.id"
-    )
-    .is_empty());
-}
-
-#[test]
-fn a_relation_reached_by_several_arms_is_reported_once() {
-    assert_eq!(
-        names(
-            "SELECT * FROM orders UNION ALL SELECT * FROM accounts UNION ALL SELECT * FROM orders"
-        ),
-        ["orders", "accounts"]
-    );
-}
-
-#[test]
-fn ctid_is_not_a_key_of_a_partitioned_table() {
-    // The leaves of a partitioned table repeat ctid values.
-    assert_eq!(names("DELETE FROM events WHERE ctid = $1"), ["events"]);
-    assert_eq!(
-        names(
-            "UPDATE events SET id = id WHERE ctid IN (SELECT ctid FROM events ORDER BY id LIMIT 5)"
-        ),
-        ["events"]
-    );
-    assert!(names("DELETE FROM events WHERE id = $1 AND created_at = $2").is_empty());
-    assert!(names("DELETE FROM sessions WHERE ctid = $1").is_empty());
-}
-
-#[test]
-fn join_using_bounds_like_on() {
-    assert!(names("SELECT 1 FROM accounts a JOIN orders o USING (id) WHERE a.id = $1").is_empty());
-    assert!(
-        names("SELECT 1 FROM accounts a LEFT JOIN orders o USING (id) WHERE a.id = $1").is_empty()
-    );
-    // The preserved side is not pinned by the join, and a longer left side is ambiguous.
-    assert_eq!(
-        names("SELECT 1 FROM accounts a LEFT JOIN orders o USING (id) WHERE o.status = $1"),
-        ["accounts", "orders"]
-    );
-    assert_eq!(
-        names("SELECT 1 FROM accounts a JOIN profiles p ON p.account_id = a.id JOIN orders o USING (id) WHERE a.id = $1"),
-        ["orders"]
-    );
-}
-
 #[test]
 fn unique_keys_resolve_through_the_same_identity_as_the_table() {
     let root = fixture_root();
@@ -324,62 +68,6 @@ fn unique_keys_resolve_through_the_same_identity_as_the_table() {
     ));
     let catalog = SchemaCatalog::load(&root, "schema-qualified.json", &sources).unwrap();
     assert_eq!(catalog.unique_keys("widgets"), [vec!["id".to_string()]]);
-    let judged = |sql: &str| {
-        extract_sql_statement_facts(sql)
-            .bounds
-            .iter()
-            .map(|fact| offenders(fact, &catalog).len())
-            .sum::<usize>()
-    };
-    assert_eq!(judged("SELECT * FROM widgets WHERE id = $1"), 0);
-    assert_eq!(judged("SELECT * FROM widgets"), 1);
-}
-
-#[test]
-fn a_null_safe_comparison_bounds_only_a_not_null_key() {
-    // contacts.email is a nullable unique column: `$1` = NULL matches every row without one.
-    assert_eq!(
-        names("DELETE FROM contacts WHERE email IS NOT DISTINCT FROM $1"),
-        ["contacts"]
-    );
-    assert!(names("DELETE FROM contacts WHERE email = $1").is_empty());
-    // The primary key and ctid cannot be NULL.
-    assert!(names("DELETE FROM contacts WHERE id IS NOT DISTINCT FROM $1").is_empty());
-    assert!(names("DELETE FROM contacts WHERE $1 IS NOT DISTINCT FROM ctid").is_empty());
-}
-
-#[test]
-fn outer_joins_bound_only_the_side_they_cannot_null_extend() {
-    // The right side of a LEFT JOIN hangs off the left row by its key, so it is bounded with it.
-    assert!(names(
-        "SELECT 1 FROM accounts a LEFT JOIN profiles p ON p.account_id = a.id WHERE a.id = $1"
-    )
-    .is_empty());
-    assert!(names(
-        "SELECT 1 FROM profiles p RIGHT JOIN accounts a ON p.account_id = a.id WHERE a.id = $1"
-    )
-    .is_empty());
-    // ON never restricts the preserved side: every account survives the join.
-    assert_eq!(
-        names("SELECT 1 FROM accounts a LEFT JOIN profiles p ON a.id = p.account_id AND p.account_id = $1"),
-        ["accounts"]
-    );
-    // A WHERE on the null-extended side would make the join inner; that is not assumed.
-    assert_eq!(
-        names("SELECT 1 FROM accounts a LEFT JOIN profiles p ON p.account_id = a.id WHERE p.account_id = $1"),
-        ["accounts"]
-    );
-}
-
-#[test]
-fn fetch_with_ties_and_foreign_aggregates_do_not_cap() {
-    assert!(names("SELECT 1 FROM orders ORDER BY id FETCH FIRST 10 ROWS ONLY").is_empty());
-    assert_eq!(
-        names("SELECT 1 FROM orders ORDER BY status FETCH FIRST 10 ROWS WITH TIES"),
-        ["orders"]
-    );
-    assert!(names("SELECT pg_catalog.count(*) FROM orders").is_empty());
-    assert_eq!(names("SELECT app.count(id) FROM orders"), ["orders"]);
 }
 
 pub(super) fn fixture_root() -> PathBuf {
@@ -397,39 +85,3 @@ fn config(yaml: &str) -> NoMistakesConfig {
         ..Default::default()
     }
 }
-
-mod entrypoints;
-
-mod set_operation_limits;
-
-mod nested_pins;
-
-mod pin_subqueries;
-
-mod schema_correlation;
-
-mod function_scope;
-
-mod false_predicates;
-mod having_only;
-
-mod function_inputs;
-
-mod aliased_nested_joins;
-mod nested_cte_scope;
-mod qualified_limit_functions;
-mod quoted_qualifier_paths;
-
-mod caller_projection_keys;
-mod select_list_srf;
-mod server_state_projection;
-mod set_arm_alias_scope;
-mod unknown_projection_cardinality;
-mod versioned_scalar_projection;
-
-mod conditional_table_function_inputs;
-mod wrapped_scalar_reducer_arrays;
-
-mod table_source_association;
-
-mod issue_2665;

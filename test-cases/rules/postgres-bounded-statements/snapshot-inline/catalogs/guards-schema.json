@@ -1,0 +1,69 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "broken_predicate": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "partial_logins_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "email IS NOT",
+          "definition": "CREATE UNIQUE INDEX partial_logins_email_key",
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    },
+    "broken_expression": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "normalized_emails_lower_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX normalized_emails_lower_key",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower("
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,48 +1,6 @@
 use super::*;
 
 #[test]
-fn custom_executor_and_specifier_are_required_to_match() {
-    let root = fixture("fail");
-    let files = vec![ts_file(&root)];
-    let other = check_with_files(
-        &root,
-        &config_with_options("importSpecifier: '@other/db'\nexecutorNames: [run]"),
-        &files,
-    )
-    .unwrap();
-    assert!(other.is_empty(), "{other:#?}");
-}
-
-#[test]
-fn custom_safe_directive_is_honored() {
-    let root = fixture("custom-directive");
-    let file = ts_file(&root);
-    let findings = check_with_files(
-        &root,
-        &config_with_options("safeDirective: ordered-locks"),
-        &[file],
-    )
-    .unwrap();
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
-fn sql_comment_directive_suppresses() {
-    assert!(findings_for("pass-sql-comment").is_empty());
-}
-
-#[test]
-fn distant_directive_does_not_suppress() {
-    let findings = findings_for("too-far");
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-}
-
-#[test]
-fn non_locking_sql_is_ignored() {
-    assert!(findings_for("no-lock").is_empty());
-}
-
-#[test]
 fn invalid_include_glob_errors() {
     let root = fixture("fail");
     let error = check_with_files(

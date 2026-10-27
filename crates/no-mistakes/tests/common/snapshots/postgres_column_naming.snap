@@ -1,0 +1,1425 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "account_github_user_id_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow_suppresses_column": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow_suppresses_real_finding": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "archived_order_id_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "archived_snapshot_id": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:snapshot_notes.snapshot_id: foreign key to archived_order_snapshots must end in order_id (for example snapshot_order_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:snapshot_notes.snapshot_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "article_id_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "boolean_type_keeps_stored_case": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:accounts.loud: BOOLEAN column name does not match ^is_",
+          "rule": "postgres-column-naming",
+          "target": "column:accounts.loud"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "check_generated_columns": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: column:entities.created_at: column name matches _at$ but its type is date; use timestamp with time zone (time)",
+          "rule": "postgres-column-naming",
+          "target": "column:entities.created_at"
+        },
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: column:entities.created_at: date column name does not match _on$ (day)",
+          "rule": "postgres-column-naming",
+          "target": "column:entities.created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "currency_code_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:invoices.due_at: rename the column",
+          "rule": "postgres-column-naming",
+          "target": "column:invoices.due_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "descriptive_github_user_id": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:linked_accounts.github_user_id: foreign key to github_accounts must end in account_github_user_id (for example github_user_id_account_github_user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:linked_accounts.github_user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "every_name_rule_reports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:sync.cursor_order_id: column name matches ^cursor_ but its type is integer; use text (two)",
+          "rule": "postgres-column-naming",
+          "target": "column:sync.cursor_order_id"
+        },
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:sync.cursor_order_id: column name matches _id$ but its type is integer; use uuid (one)",
+          "rule": "postgres-column-naming",
+          "target": "column:sync.cursor_order_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "every_type_rule_reports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:accounts.flag: boolean column name does not match ^is_ (one)",
+          "rule": "postgres-column-naming",
+          "target": "column:accounts.flag"
+        },
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:accounts.flag: boolean column name does not match _active$ (two)",
+          "rule": "postgres-column-naming",
+          "target": "column:accounts.flag"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude_skips_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "external_id_last_word": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:payments.external_id: foreign key to orders must end in order_external_id (for example external_id_order_external_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:payments.external_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "file_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "forbidden_first_pattern_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:comments.target_table: column name matches forbidden pattern table; first",
+          "rule": "postgres-column-naming",
+          "target": "column:comments.target_table"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "forbidden_table_name": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:comments.table_name: column name matches forbidden pattern (^|_)table(_name)?$; a column must not name a table; use one table per target, or an enum",
+          "rule": "postgres-column-naming",
+          "target": "column:comments.table_name"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "forbidden_target_table_integer": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:comments.target_table: column name matches forbidden pattern (^|_)table(_name)?$; a column must not name a table; use one table per target, or an enum",
+          "rule": "postgres-column-naming",
+          "target": "column:comments.target_table"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "forbidden_target_table_text": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:comments.target_table: column name matches forbidden pattern (^|_)table(_name)?$; a column must not name a table; use one table per target, or an enum",
+          "rule": "postgres-column-naming",
+          "target": "column:comments.target_table"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "forbidden_timetable_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "foreign_zero_referenced_columns": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "full_name_batch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:import_rows.batch_id: foreign key to import_batches must end in import_batch_id (for example import_batch_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:import_rows.batch_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "full_name_import_batch_id": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "full_name_item": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:bookmarks.item_id: foreign key to articles must end in article_id (for example item_article_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:bookmarks.item_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "full_name_natural_import_batch": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "github_account_id_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_skips_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "label_text_fails_name_rule": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:products.title_label: column name matches _label$ but its type is text; use character varying",
+          "rule": "postgres-column-naming",
+          "target": "column:products.title_label"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "last_word_batch_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "last_word_item": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:bookmarks.item_id: foreign key to articles must end in article_id (for example item_article_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:bookmarks.item_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "leading_underscore_id": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:odd._id: foreign key to articles must end in article_id (for example article_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:odd._id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_disable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 9,
+          "message": "schema.json: column:invoices.expires: timestamp with time zone column name does not match _at$",
+          "rule": "postgres-column-naming",
+          "target": "column:invoices.expires"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_hint_omitted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:invoices.due: timestamp with time zone column name does not match _at$",
+          "rule": "postgres-column-naming",
+          "target": "column:invoices.due"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "name_rule_missing_hint": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:invoices.paid_at: column name matches _at$ but its type is date; use timestamp with time zone",
+          "rule": "postgres-column-naming",
+          "target": "column:invoices.paid_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next_line_disable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 10,
+          "message": "schema.json: column:invoices.expires: timestamp with time zone column name does not match _at$",
+          "rule": "postgres-column-naming",
+          "target": "column:invoices.expires"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "numeric_negative_scale": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "only_catalog_path": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "order_line_item_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "prepared_catalog_empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "primary_key_id_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "project_scoped_catalog": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/schema.json",
+          "line": 6,
+          "message": "db/schema.json: column:invoices.due: timestamp with time zone column name does not match _at$",
+          "rule": "postgres-column-naming",
+          "target": "column:invoices.due"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "proposed_stale_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/schema.json",
+          "line": 1,
+          "message": "db/schema.json: stale postgres-column-naming allow entry: column:export_jobs.runner_job_id",
+          "rule": "postgres-column-naming",
+          "target": "column:export_jobs.runner_job_id"
+        },
+        {
+          "file": "db/schema.json",
+          "line": 1,
+          "message": "db/schema.json: stale postgres-column-naming allow entry: column:links.url",
+          "rule": "postgres-column-naming",
+          "target": "column:links.url"
+        },
+        {
+          "file": "db/schema.json",
+          "line": 1,
+          "message": "db/schema.json: stale postgres-column-naming allow entry: column:sessions.expires",
+          "rule": "postgres-column-naming",
+          "target": "column:sessions.expires"
+        },
+        {
+          "file": "db/schema.json",
+          "line": 1,
+          "message": "db/schema.json: stale postgres-column-naming requireForeignKey exempt entry: (^|_)(device|session)_id$",
+          "rule": "postgres-column-naming",
+          "target": "(^|_)(device|session)_id$"
+        },
+        {
+          "file": "db/schema.json",
+          "line": 1,
+          "message": "db/schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^cursor_",
+          "rule": "postgres-column-naming",
+          "target": "^cursor_"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "qualified_composite_natural_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 38,
+          "message": "schema.json: column:payments.external_id: foreign key to orders must end in order_external_id (for example external_id_order_external_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:payments.external_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_lowercase_users": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_schema_users_target": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_suffix_created_by": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_suffix_lowercase_not_listed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_suffix_schema_created_by": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_suffix_schema_users": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:lines.user_id: foreign key to other.\"Users\" must end in _by_id (for example user_by_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:lines.user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_suffix_users": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:lines.user_id: foreign key to \"Users\" must end in _by_id (for example user_by_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:lines.user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_users_target": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "repeated_natural_key": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "self_reference_checked": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:categories.parent_id: foreign key to categories must end in category_id (for example parent_category_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:categories.parent_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "self_reference_off_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "singular_person": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:friends.friend_id: foreign key to people must end in person_id (for example friend_person_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:friends.friend_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "singular_staff": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:members.member_id: foreign key to staff must end in staff_id (for example member_staff_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:members.member_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "singular_status": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:rows.row_id: foreign key to statuses must end in status_id (for example row_status_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:rows.row_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "skip_generated_columns": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suffix_created_by_id": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suffix_exact_user_id": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suffix_owner_id": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:projects.owner_id: foreign key to users must end in _user_id or _by_id (for example owner_user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:projects.owner_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suffix_owner_user_id": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suffix_revoked_by_id": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suggest_currency": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:orders.currency: foreign key to currencies must end in currency_code (for example currency_code)",
+          "rule": "postgres-column-naming",
+          "target": "column:orders.currency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suggest_order_currency": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:orders.order_currency: foreign key to currencies must end in currency_code (for example order_currency_code)",
+          "rule": "postgres-column-naming",
+          "target": "column:orders.order_currency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "target_name_first_pattern": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:notes.snapshot_id: foreign key to archived_order_snapshots must end in early_id (for example snapshot_early_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:notes.snapshot_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "target_name_literal_dollar": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:notes.note_id: foreign key to t_order must end in item$0_id (for example note_item$0_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:notes.note_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "target_name_unmatched_orders": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:notes.note_id: foreign key to orders must end in orders_id (for example note_orders_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:notes.note_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "target_off_batch": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "target_off_github_user_id": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "target_off_item": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "timestamp_typmod_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "types_active_boolean": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:accounts.active: boolean column name does not match (^|_)(is|has|can|should)_ (name boolean columns as a predicate: is_, has_, can_ or should_)",
+          "rule": "postgres-column-naming",
+          "target": "column:accounts.active"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "types_cursor_text": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:sync_jobs.cursor_order_id: column name matches ^cursor_.*_id$ but its type is text; use uuid (a keyset cursor holds the swept table's uuid primary key)",
+          "rule": "postgres-column-naming",
+          "target": "column:sync_jobs.cursor_order_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "types_due_timestamp": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:invoices.due: timestamp with time zone column name does not match _at$ (end timestamp columns in _at)",
+          "rule": "postgres-column-naming",
+          "target": "column:invoices.due"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "types_paid_at_without_time_zone": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:invoices.paid_at: column name matches _at$ but its type is timestamp without time zone; use timestamp with time zone (a column ending in _at holds a timestamp with time zone)",
+          "rule": "postgres-column-naming",
+          "target": "column:invoices.paid_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "types_shipped_at_two_findings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:orders.shipped_at: column name matches _at$ but its type is date; use timestamp with time zone (a column ending in _at holds a timestamp with time zone)",
+          "rule": "postgres-column-naming",
+          "target": "column:orders.shipped_at"
+        },
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:orders.shipped_at: date column name does not match (^day|_on)$ (name date columns day or end them in _on)",
+          "rule": "postgres-column-naming",
+          "target": "column:orders.shipped_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "types_since_date": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:subscriptions.since: date column name does not match (^day|_on)$ (name date columns day or end them in _on)",
+          "rule": "postgres-column-naming",
+          "target": "column:subscriptions.since"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "typmod_title_fails": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:products.title: character varying(2048) column name does not match (_name|_label)$",
+          "rule": "postgres-column-naming",
+          "target": "column:products.title"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "typmod_title_label_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "typmod_title_name_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unclosed_typmod_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "valid_type_names": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "weird_parenthetical_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

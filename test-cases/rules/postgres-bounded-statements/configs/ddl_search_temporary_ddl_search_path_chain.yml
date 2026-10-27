@@ -1,0 +1,10 @@
+# unbounded statement indexes 2 and 3 must remain findings
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-search-path-evidence.json
+      executorNames: []
+      sqlInclude: [sql/temporary-ddl-search-path-chain.sql]
+      include: [sql/temporary-ddl-search-path-chain.sql]

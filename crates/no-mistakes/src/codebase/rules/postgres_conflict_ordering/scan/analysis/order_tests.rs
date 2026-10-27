@@ -9,13 +9,6 @@ fn catalog(scenario: &str) -> SchemaCatalog {
     SchemaCatalog::from_json(&std::fs::read_to_string(path).unwrap()).unwrap()
 }
 
-fn targets(scenario: &str, sql: &str) -> Vec<String> {
-    findings_for_sql("query.ts", 1, sql, &catalog(scenario), true)
-        .into_iter()
-        .filter_map(|finding| finding.target)
-        .collect()
-}
-
 fn key(expression: &str) -> CanonicalOrderKey {
     CanonicalOrderKey {
         expression: expression.to_string(),
@@ -37,53 +30,6 @@ fn catalog_unique_keys_decide_whether_equalities_pin_one_row() {
     assert!(!catalog.columns_pin_one_row("drafts", &columns(&["id"])));
     assert!(!catalog.columns_pin_one_row("missing", &columns(&["id"])));
     assert!(!catalog.columns_pin_one_row("orders", &[]));
-}
-
-#[test]
-fn single_row_sources_need_no_canonical_order() {
-    let scenario = "fail-single-row-lookalikes";
-    let pinned = "INSERT INTO order_archive (order_id, total) SELECT o.id, o.total FROM orders o WHERE o.id = $1 ON CONFLICT (order_id) DO NOTHING";
-    assert!(targets(scenario, pinned).is_empty());
-    let lookalike = pinned.replace("o.id = $1", "o.total = $1");
-    assert_eq!(targets(scenario, &lookalike), ["missing-canonical-order"]);
-}
-
-#[test]
-fn constant_keys_neither_require_nor_break_the_order() {
-    let scenario = "pass-order-by-forms";
-    let insert = |select: &str| {
-        format!("INSERT INTO members (account_id, user_id) {select} ON CONFLICT (account_id, user_id) DO NOTHING")
-    };
-    let source = "FROM unnest($2::uuid[]) AS input(user_id)";
-    for order in [
-        "ORDER BY input.user_id",
-        "ORDER BY $1::uuid, input.user_id",
-        "ORDER BY 2",
-    ] {
-        let sql = insert(&format!(
-            "SELECT $1::uuid AS account_id, input.user_id {source} {order}"
-        ));
-        assert!(targets(scenario, &sql).is_empty(), "{order}");
-    }
-    // A parameter without a cast is still constant, whichever way ORDER BY spells it.
-    let sql = insert(&format!(
-        "SELECT $1, input.user_id {source} ORDER BY $1::uuid, 2"
-    ));
-    assert!(targets(scenario, &sql).is_empty());
-    // Only the varying key is required, and it is reported without the constant.
-    let sql = insert(&format!("SELECT $1::uuid, input.user_id {source}"));
-    let findings = findings_for_sql("query.ts", 1, &sql, &catalog(scenario), true);
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0]
-        .message
-        .ends_with("input.user_id ASC NULLS LAST"));
-    let sql = insert(&format!(
-        "SELECT $1::uuid, input.user_id {source} ORDER BY input.user_id DESC"
-    ));
-    assert_eq!(targets(scenario, &sql), ["noncanonical-order"]);
-    // Every arbiter key constant: all rows share one key, so no order exists to require.
-    let sql = "INSERT INTO members (account_id, user_id) SELECT $1::uuid, $2::uuid FROM generate_series(1, 3) ON CONFLICT (account_id, user_id) DO NOTHING";
-    assert!(targets(scenario, sql).is_empty());
 }
 
 #[test]

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-boolean-keys.json
+      executorNames: []
+      sqlInclude: [sql/boolean-keys.sql]
+      include: [sql/boolean-keys.sql]

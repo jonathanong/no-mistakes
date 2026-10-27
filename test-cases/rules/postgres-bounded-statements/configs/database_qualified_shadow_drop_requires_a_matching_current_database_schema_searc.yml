@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-search-path-current-database.json
+      executorNames: []
+      sqlInclude: [sql/temporary-shadow-drop-database.sql]
+      include: [sql/temporary-shadow-drop-database.sql]

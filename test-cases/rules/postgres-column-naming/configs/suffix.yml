@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      foreignKeys:
+        targetSuffixes:
+          - tables: [users, deleted_user_identities]
+            suffixes: ['_user_id', '_by_id']
+        targetMatch: last-word
+        singular: { people: person, aliases: alias, statuses: status }

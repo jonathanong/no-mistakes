@@ -1,0 +1,10 @@
+# embedded directives; survivors are the calls without a matching directive (lines 9 and 11)
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      include: [src/wrapped-statement-suppression.mts]
+      sqlInclude: []
