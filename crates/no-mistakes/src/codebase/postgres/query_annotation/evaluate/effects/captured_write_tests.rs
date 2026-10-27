@@ -60,7 +60,11 @@ fn legacy(evaluator: &mut TestEvaluator<'_>, function: &Function) {
 
 #[test]
 fn nested_captured_values_keep_warm_scope_identity_and_match_original_full_state() {
-    let callback = Value::Function(Arc::new(function(true)), "callback.mts".into(), 0);
+    let callback = Value::Function(
+        Arc::new(function(true)),
+        std::path::PathBuf::from("callback.mts").into(),
+        0,
+    );
     let scope = FxHashMap::from_iter([
         (
             "nested".into(),
