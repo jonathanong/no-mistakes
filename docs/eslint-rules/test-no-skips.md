@@ -12,7 +12,8 @@ and unrelated fixtures are unaffected.
 By default, the rule reports Vitest and Playwright test modifiers `skip`,
 `skipIf`, `runIf`, `only`, `todo`, and `fixme`. It recognizes named, aliased,
 and namespace imports from `vitest` and `@playwright/test`, statically named
-`const` bindings from CommonJS `require()` and awaited dynamic `import()` calls,
+`const` bindings from CommonJS `require()`, TypeScript `import name = require("...")`,
+and awaited dynamic `import()` calls,
 including defaults and nested object patterns, plus the unbound `it`, `test`,
 and `describe` globals in files selected by ESLint. Member chains
 such as `test.skip.each(cases)(...)`, `test.concurrent.only(...)`, and
@@ -87,6 +88,23 @@ const { runner: { test: nested } = fallback } = require("@playwright/test");
 
 t.skip("defaulted rename", () => {});
 nested.fixme("nested default", () => {});
+```
+
+A TypeScript `import name = require("...")` binding is that same static
+`require()` form. A direct use of the local name is matched like any other
+named binding, so only `it`, `test`, and `describe` from `vitest` or
+`@playwright/test` are runners. A member such as `playwright.test` sees the
+module object. `import type name = require("...")` and
+`import name = Some.Namespace` are ignored.
+
+```ts
+import test = require("vitest");
+import playwright = require("@playwright/test");
+import stringify = require("left-pad");
+
+test.skip("import-equals local name", () => {});
+playwright.test.fixme("import-equals namespace", () => {});
+stringify({ a: 1 });
 ```
 
 A rest element, an array element, a `let` binding, and a computed key that is

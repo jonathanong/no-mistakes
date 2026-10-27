@@ -306,6 +306,25 @@ describe("test-no-skips suppression and binding edges", () => {
       "modifier",
     ]);
   });
+  it("reads a TypeScript import-equals require without dropping a named test binding", () => {
+    assert.deepEqual(messages(code("import-equals-non-test"), rule, undefined, "service.ts"), []);
+    assert.deepEqual(
+      messages(code("import-equals-unsupported"), rule, undefined, "service.ts"),
+      [],
+    );
+    const findings = lint(
+      code("import-equals-skip"),
+      { [`no-mistakes/${rule}`]: "error" },
+      "suite.test.ts",
+    );
+    assert.deepEqual(
+      findings.map(({ line, messageId }) => [line, messageId]),
+      [
+        [4, "modifier"],
+        [5, "modifier"],
+      ],
+    );
+  });
 });
 
 it("loads test-no-skips in Oxlint with the same import and suppression semantics", () => {
@@ -341,4 +360,36 @@ it("loads test-no-skips in Oxlint with the same import and suppression semantics
       .map((item) => item.labels[0].span.line),
     [4, 5, 6, 7, 10, 15, 19, 21, 24],
   );
+  const report = (result) => {
+    const parsed = JSON.parse(result.stdout);
+    delete parsed.start_time;
+    return parsed;
+  };
+  const ruleLines = (parsed) =>
+    parsed.diagnostics
+      .filter((item) => item.code?.includes("test-no-skips"))
+      .map((item) => item.labels[0].span.line);
+  const nonTest = [run("import-equals-non-test"), run("import-equals-non-test")];
+  assert.deepEqual(
+    nonTest.map((item) => item.status),
+    [0, 0],
+  );
+  const nonTestReport = report(nonTest[0]);
+  assert.deepEqual(nonTestReport, report(nonTest[1]));
+  assert.ok(!nonTest[0].stderr.includes("TypeError"));
+  assert.deepEqual(ruleLines(nonTestReport), []);
+  const unsupported = [run("import-equals-unsupported"), run("import-equals-unsupported")];
+  assert.deepEqual(
+    unsupported.map((item) => item.status),
+    [0, 0],
+  );
+  assert.deepEqual(report(unsupported[0]), report(unsupported[1]));
+  assert.ok(!unsupported[0].stderr.includes("TypeError"));
+  assert.deepEqual(ruleLines(report(unsupported[0])), []);
+  const skip = [run("import-equals-skip"), run("import-equals-skip")];
+  assert.ok(skip.every((item) => item.status !== 0));
+  const skipReport = report(skip[0]);
+  assert.deepEqual(skipReport, report(skip[1]));
+  assert.ok(!skip[0].stderr.includes("TypeError"));
+  assert.deepEqual(ruleLines(skipReport), [4, 5]);
 });

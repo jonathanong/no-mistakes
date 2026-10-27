@@ -68,6 +68,22 @@ function testModulesFor(context) {
   return modules;
 }
 
+// `import name = require("literal")` has no `source`. The module is
+// `moduleReference.expression`. A direct query uses the local name
+// (`import test = require("vitest")`); a namespace query sees `name.test`.
+function externalImportEquals(parent) {
+  // Type-only and entity-name aliases (`import alias = Foo.Bar`) are not modules.
+  // An external `require("literal")` always has an Identifier id and a string.
+  if (
+    parent?.type !== "TSImportEqualsDeclaration" ||
+    parent.importKind === "type" ||
+    parent.moduleReference?.type !== "TSExternalModuleReference"
+  ) {
+    return null;
+  }
+  return { source: parent.moduleReference.expression.value, name: parent.id.name };
+}
+
 function imported(node, context, namespace = false, seen = new Set()) {
   if (!node || seen.has(node)) return null;
   seen.add(node);
@@ -77,11 +93,18 @@ function imported(node, context, namespace = false, seen = new Set()) {
     let source = null;
     let importedName = null;
     if (def.type === "ImportBinding") {
-      source = def.parent.source.value;
-      if (def.node.type === "ImportNamespaceSpecifier") importedName = "*";
-      else if (def.node.type === "ImportDefaultSpecifier")
-        importedName = source === "@playwright/test" ? "test" : null;
-      else importedName = importSpecifierName(def.node);
+      const equals = externalImportEquals(def.parent);
+      if (def.parent?.type === "TSImportEqualsDeclaration") {
+        if (!equals) continue;
+        source = equals.source;
+        importedName = namespace ? "*" : equals.name;
+      } else if (def.parent?.source) {
+        source = def.parent.source.value;
+        if (def.node.type === "ImportNamespaceSpecifier") importedName = "*";
+        else if (def.node.type === "ImportDefaultSpecifier")
+          importedName = source === "@playwright/test" ? "test" : null;
+        else importedName = importSpecifierName(def.node);
+      }
     } else if (def.type === "Variable") {
       const declaration = def.node;
       if (declaration.parent.kind !== "const") continue;
