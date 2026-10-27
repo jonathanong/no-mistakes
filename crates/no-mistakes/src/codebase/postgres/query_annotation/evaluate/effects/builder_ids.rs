@@ -9,10 +9,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for scope in &self.scopes {
             if let Some(edges) = scope
                 .cached_references()
-                .filter(|edges| edges.arguments.is_empty())
+                .filter(|edges| edges.arguments.iter().all(|id| ids.contains(id)))
             {
-                // No mutable recursion occurs in this scope, so prefix-only
-                // inserts commute while the order between scopes stays intact.
+                // Prior scopes have completed. Already-seen argument IDs
+                // suppress every mutable descent, leaving commuting prefixes.
                 ids.extend(edges.identities.iter().copied());
             } else if let Some(values) = scope.cached_reference_bindings() {
                 for value in values {
