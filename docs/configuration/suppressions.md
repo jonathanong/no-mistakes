@@ -64,6 +64,18 @@ comma is not a valid separator between the rule ID and an optional reason.
 
 The result describes this invocation. It does not establish whether an
 exception would be needed under a different configuration.
+
+Markdown and MDX code fences, indented code, and inline code are examples rather
+than live comments. Only HTML comments outside those code regions participate
+in their audit. Rust strings, raw strings, and block-comment contents likewise
+do not create audit directives; genuine supported line comments still do.
+
+Exclude test data with the rule application's top-level `exclude`, for example
+`exclude: ["fixtures/**", "test-cases/**"]`. Apply those exclusions to every
+rule application whose declared scope includes the test data: the audit uses
+the union of their scopes. Rule-specific input options do not exclude files
+from that union.
+
 These diagnostics are added after suppression filtering; another disable
 comment cannot hide them. Configure `ignore` to turn the audit off.
 

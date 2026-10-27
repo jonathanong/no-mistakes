@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::ts_source::disable_directives;
 
 pub(super) fn root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -176,4 +177,110 @@ fn ignored_audit_preparation_does_not_read_sources() {
     assert_eq!(sources.physical_read_count(), 0);
     assert!(prepared.findings(&[]).is_empty());
     assert_eq!(sources.physical_read_count(), 0);
+}
+
+#[test]
+fn audit_host_language_boundaries_keep_only_real_comments_and_line_numbers() {
+    let rust =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/boundaries.rs");
+    let directives = disable_directives_for_path(rust, Path::new("example.rs"));
+    assert_eq!(
+        directives
+            .iter()
+            .map(|item| (item.rule.as_str(), item.directive))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                "rust-max-lines-per-file",
+                DisableDirective::File { line: 1 }
+            ),
+            ("real-rust", DisableDirective::Line { line: 9 }),
+            ("real-next", DisableDirective::NextLine { line: 14 }),
+            ("real-unicode-lifetime", DisableDirective::Line { line: 17 }),
+            ("real-raw-identifier", DisableDirective::Line { line: 22 }),
+        ]
+    );
+    let markdown =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/boundaries.mdx");
+    for extension in ["md", "markdown", "mdx"] {
+        let directives =
+            disable_directives_for_path(markdown, Path::new(&format!("example.{extension}")));
+        assert_eq!(
+            directives
+                .iter()
+                .map(|item| (item.rule.as_str(), item.directive))
+                .collect::<Vec<_>>(),
+            vec![
+                ("markdown-child-links", DisableDirective::File { line: 1 }),
+                ("real-markdown", DisableDirective::Line { line: 10 }),
+                (
+                    "real-markdown-next",
+                    DisableDirective::NextLine { line: 12 }
+                ),
+            ]
+        );
+    }
+}
+
+#[test]
+fn rust_inventory_handles_unterminated_literals_comments_and_crlf() {
+    for source in [
+        include_str!(
+            "../../../../../../fixtures/rules/disable-directive-audit/unterminated-string.rs"
+        ),
+        include_str!(
+            "../../../../../../fixtures/rules/disable-directive-audit/unterminated-raw.rs"
+        ),
+        include_str!(
+            "../../../../../../fixtures/rules/disable-directive-audit/unterminated-block.rs"
+        ),
+    ] {
+        assert!(disable_directives_for_path(source, Path::new("example.rs")).is_empty());
+    }
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/boundaries-crlf.rs");
+    let directives = disable_directives_for_path(source, Path::new("example.rs"));
+    assert_eq!(directives.len(), 1);
+    assert_eq!(directives[0].rule, "real-crlf");
+    assert_eq!(directives[0].directive, DisableDirective::Line { line: 2 });
+}
+
+#[test]
+fn host_inventory_preserves_bom_headers_and_skips_plain_sources() {
+    let rust = include_str!("../../../../../../fixtures/rules/disable-directive-audit/bom.rs");
+    let markdown = include_str!("../../../../../../fixtures/rules/disable-directive-audit/bom.md");
+    for (source, file, rule) in [
+        (rust, "example.rs", "rust-max-lines-per-file"),
+        (markdown, "example.md", "markdown-child-links"),
+    ] {
+        let directives = disable_directives_for_path(source, Path::new(file));
+        assert_eq!(directives.len(), 1);
+        assert_eq!(directives[0].rule, rule);
+        assert_eq!(directives[0].directive, DisableDirective::File { line: 1 });
+    }
+    let plain = include_str!("../../../../../../fixtures/rules/disable-directive-audit/plain.rs");
+    assert!(disable_directives_for_path(plain, Path::new("plain.rs")).is_empty());
+}
+
+#[test]
+fn rust_inventory_preserves_nested_license_header_before_file_directive() {
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/nested-license.rs");
+    let directives = disable_directives_for_path(source, Path::new("nested-license.rs"));
+    assert_eq!(directives.len(), 1);
+    assert_eq!(directives[0].rule, "rust-max-lines-per-file");
+    assert_eq!(directives[0].directive, DisableDirective::File { line: 7 });
+}
+
+#[test]
+fn rust_inventory_preserves_script_preamble_but_not_inner_attributes() {
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/bom-shebang.rs");
+    let directives = disable_directives_for_path(source, Path::new("script.rs"));
+    assert_eq!(directives.len(), 1);
+    assert_eq!(directives[0].rule, "rust-max-lines-per-file");
+    assert_eq!(directives[0].directive, DisableDirective::File { line: 2 });
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/inner-attribute.rs");
+    assert!(disable_directives_for_path(source, Path::new("attribute.rs")).is_empty());
 }

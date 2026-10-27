@@ -5,6 +5,38 @@ const test = globalThis.test || require("node:test").test;
 const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const compiled = addon?.endsWith(".node");
 
+test(
+  "host-language comments and fixture exclusions preserve CLI and async parity",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(__dirname, "../../../fixtures/check/suppression-comment-boundaries");
+    const report = await cjs.check({ root });
+    assert.deepEqual(report.rules, []);
+    assert.deepEqual(
+      report.advisories.map(({ file, line, rule }) => [file, line, rule]),
+      [
+        ["README.md", 9, "unused-disable-directive"],
+        ["source.rs", 1, "unused-disable-directive"],
+      ],
+    );
+    for (const api of [cjs, esm]) {
+      assert.deepEqual(await api.check({ root }), report);
+      const batch = await api.analyzeProject({ root, reports: [{ type: "check" }] });
+      assert.deepEqual(batch.reports[0].result, report);
+    }
+    const cli =
+      process.env.NO_MISTAKES_TEST_CLI_PATH ||
+      join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
+    const child = spawnSync(cli, ["check", "--root", root, "--format", "json"], {
+      encoding: "utf8",
+    });
+    assert.equal(child.status, 0, child.stderr);
+    assert.deepEqual(JSON.parse(child.stdout), report);
+  },
+);
+
 for (const [config, failures, advice] of [
   [".no-mistakes.yml", 0, 6],
   ["report.yml", 6, 0],
