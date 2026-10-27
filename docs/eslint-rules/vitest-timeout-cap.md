@@ -35,7 +35,8 @@ Vitest APIs, `defineConfig`,
 project entries, and `vi.setConfig` updates to `testTimeout` or `hookTimeout`.
 The default caps are 5,000 ms for configuration `testTimeout` and `hookTimeout`,
 and 30,000 ms for individual test, suite, hook, and runtime overrides.
-An override above `defaultMax` also requires an explicit, non-placeholder reason.
+An override above `defaultMax` also requires an explicit, non-placeholder reason
+unless `requireReason` is `false`.
 The reason never permits an invalid value, a higher project default, or a value
 above `overrideMax`.
 
@@ -53,8 +54,8 @@ beforeEach(async () => {}, 45_000);
 
 ## Allowed
 
-Positive overrides at or below `defaultMax` need no reason. Above that threshold,
-add an adjacent comment and stay within `overrideMax`. The rule evaluates same-module
+Positive overrides at or below `defaultMax` need no reason. With the default
+`requireReason: true`, above that threshold add an adjacent comment and stay within `overrideMax`. The rule evaluates same-module
 constants, object and array literals, known spreads, and config callbacks with
 expression bodies or a single return statement. It applies deep object merges
 and concatenates merged arrays, so only effective config/project timeout
@@ -237,8 +238,12 @@ it("runs", () => {}, budget);
   It defaults to `5000`.
 - `overrideMax` sets the maximum timeout for test, suite, hook, and
   `vi.setConfig` overrides. It defaults to `30000`.
-  A reason is still required above `defaultMax`; raising this hard cap does not
-  justify an override.
+  With `requireReason: true`, a reason is still required above `defaultMax`;
+  raising this hard cap does not justify an override.
+- `requireReason` is `true` by default. Set it to `false` to disable only the
+  justification requirement, restoring the cap-only behavior from before #2791.
+  Positive values, configuration caps, override caps, and `unknownValues` still
+  follow their normal checks. This option must be a boolean.
 - `unknownValues` is `"ignore"` by default. Set it to `"finding"` to report
   unresolved timeout expressions.
 
@@ -287,6 +292,34 @@ These file-local findings do not claim cross-file helper/project closure.
 The rule does not discover tests or inspect files outside the configured
 globs. Include project configuration files and any Vitest project files that
 should be checked.
+
+## Staged rollout
+
+1. Keep the rule enabled as an error, with the existing caps and
+   `requireReason: false`. ESLint/Oxlint still rejects invalid and oversized
+   timeouts, including under `oxlint --deny-warnings`:
+
+   ```json
+   {
+     "rules": {
+       "no-mistakes/vitest-timeout-cap": ["error", {
+         "defaultMax": 5000,
+         "overrideMax": 30000,
+         "requireReason": false
+       }]
+     }
+   }
+   ```
+
+2. Audit a separate lint run with `requireReason: true`. Its `reason` messageId
+   identifies missing justifications; use this audit outside the blocking CI
+   command while adding specific adjacent comments to existing long overrides.
+3. Enable `requireReason: true` in selected file overrides as those files are
+   migrated. Finally remove `requireReason: false` (or set it to `true`) from
+   the main configuration. The default then enforces reasons everywhere.
+
+Turning the whole rule down to a warning would also weaken cap enforcement;
+use the option to keep those checks blocking during the rollout.
 
 ## Fix
 

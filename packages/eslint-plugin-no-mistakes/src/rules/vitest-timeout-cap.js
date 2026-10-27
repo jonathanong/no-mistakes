@@ -31,6 +31,7 @@ module.exports = rule(
           unknownValues: { enum: ["ignore", "finding"] },
           configUnknownValues: { enum: ["inherit", "defer-to-runner"] },
           configRoot: { type: "boolean" },
+          requireReason: { type: "boolean" },
         },
         additionalProperties: false,
       },
@@ -86,6 +87,7 @@ module.exports = rule(
           context.report({ node, messageId: "timeout", data: { name, max } });
         else if (
           registration &&
+          option.requireReason !== false &&
           entry.value.value > (option.defaultMax ?? 5000) &&
           !timeoutJustified(context.sourceCode, entry, node, registration)
         )
