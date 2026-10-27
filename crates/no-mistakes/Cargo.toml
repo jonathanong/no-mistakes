@@ -128,6 +128,10 @@ name = "suite_cli_postgres"
 path = "tests/suite_cli_postgres.rs"
 
 [[test]]
+name = "suite_cli_package_config"
+path = "tests/suite_cli_package_config.rs"
+
+[[test]]
 name = "suite_cli_test_plans"
 path = "tests/suite_cli_test_plans.rs"
 

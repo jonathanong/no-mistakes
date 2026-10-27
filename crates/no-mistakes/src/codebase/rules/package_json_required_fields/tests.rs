@@ -3,7 +3,7 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -36,81 +36,7 @@ fn config() -> NoMistakesConfig {
     }
 }
 
-fn run(root: &Path) -> Vec<RuleFinding> {
-    let files = vec![
-        root.join("packages/foo/package.json"),
-        root.join("packages/foo/index.mts"),
-    ];
-    check_with_files(root, &config(), &files).unwrap()
-}
-
-#[test]
-fn flags_shape_violations() {
-    let findings = run(&fixture("fail"));
-    let targets: Vec<_> = findings
-        .iter()
-        .filter_map(|finding| finding.target.as_deref())
-        .collect();
-    assert!(targets.contains(&"name"), "{findings:?}");
-    assert!(targets.contains(&"private"), "{findings:?}");
-    assert!(targets.contains(&"type"), "{findings:?}");
-    assert!(targets.contains(&"license"), "{findings:?}");
-    assert!(targets.contains(&"main"), "{findings:?}");
-}
-
-#[test]
-fn pass_fixture_is_clean() {
-    assert!(run(&fixture("pass")).is_empty());
-}
-
-#[test]
-fn unscoped_exception_skips_name_check() {
-    let root = fixture("exception");
-    let files = vec![root.join("packages/web/package.json")];
-    let findings = check_with_files(&root, &config(), &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn empty_options_report_nothing() {
-    let root = fixture("fail");
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    let files = vec![root.join("packages/foo/package.json")];
-    assert!(check_with_files(&root, &config, &files).unwrap().is_empty());
-}
-
-#[test]
-fn include_filter_still_sees_companion_files() {
-    let root = fixture("fail");
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            include: vec!["**/package.json".to_string()],
-            options: serde_yaml::from_str("mainWhenFileExists: index.mts\n").unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    let files = vec![
-        root.join("packages/foo/package.json"),
-        root.join("packages/foo/index.mts"),
-    ];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.target.as_deref() == Some("main")),
-        "{findings:?}"
-    );
-}
+// Finding cases moved to cli_pkgcfg_snapshot_package_json_required_fields.
 
 #[test]
 fn malformed_and_unreadable_manifests_are_reported() {
@@ -126,57 +52,6 @@ fn malformed_and_unreadable_manifests_are_reported() {
         findings
             .iter()
             .all(|finding| finding.target.as_deref() == Some("unanalyzable")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn empty_options_do_not_request_manifest_analysis() {
-    let root = fixture("unanalyzable");
-    let mut config = config();
-    config.rules[0].options = serde_yaml::Value::Null;
-    let files = [root.join("packages/broken/package.json")];
-    assert!(check_with_files(&root, &config, &files).unwrap().is_empty());
-}
-
-#[test]
-fn include_excludes_unselected_unanalyzable_manifests() {
-    let root = fixture("unanalyzable");
-    let mut config = config();
-    config.rules[0].include = vec!["packages/valid/package.json".into()];
-    let files = [
-        root.join("packages/broken/package.json"),
-        root.join("packages/valid/package.json"),
-    ];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-    assert!(!findings.is_empty(), "{findings:?}");
-    assert!(
-        findings
-            .iter()
-            .all(|finding| finding.target.as_deref() != Some("unanalyzable")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn nested_companion_path_is_resolved_from_manifest() {
-    let root = fixture("nested-companion");
-    let pkg = root.join("package.json");
-    let companion = root.join("src/index.js");
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str("mainWhenFileExists: src/index.js\n").unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    let findings = check_with_files(&root, &config, &[pkg, companion]).unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.target.as_deref() == Some("main")),
         "{findings:?}"
     );
 }

@@ -210,47 +210,8 @@ fn vitest_roots_require_a_catalog_and_absolute_function_roots_resolve() {
         .expect("absolute function roots resolve from the configured file");
     assert!(!nodes.is_empty());
 }
-
 #[test]
-fn aggregate_runner_keeps_distinct_same_line_occurrences() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/forbidden-calls/same-line-occurrences/fixture");
-    let findings = run_check(&root, None, None).unwrap();
-    let timer_findings = findings
-        .iter()
-        .filter(|finding| {
-            finding.rule == RULE_ID
-                && finding.file == "src/timers.mts"
-                && finding.target.as_deref() == Some("global `setTimeout`")
-        })
-        .collect::<Vec<_>>();
-
-    assert_eq!(timer_findings.len(), 2, "{findings:#?}");
-    assert_eq!(timer_findings[0].line, timer_findings[1].line);
-}
-
-#[test]
-fn traversal_limits_and_cycles_are_deterministic() {
-    let direct = coverage_findings("traversal-direct").unwrap();
-    let transitive = coverage_findings("traversal-transitive").unwrap();
-    let capped = coverage_findings("traversal-max-depth-1").unwrap();
-
-    assert_eq!(direct.len(), 1, "{direct:#?}");
-    assert_eq!(capped.len(), direct.len(), "{capped:#?}");
-    assert_eq!(transitive.len(), 3, "{transitive:#?}");
-}
-
-#[test]
-fn file_and_module_roots_select_their_callable_sources() {
-    let findings = coverage_findings("file-and-module-roots").unwrap();
-
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file == "src/entry.mts"));
-    assert!(findings
-        .iter()
-        .all(|finding| finding.file != "src/selectors.mts"));
-
+fn module_root_without_callable_source_is_rejected() {
     let error = coverage_findings("module-without-callable-source")
         .expect_err("a module without callable sources must be rejected");
     assert!(
@@ -259,77 +220,6 @@ fn file_and_module_roots_select_their_callable_sources() {
             .contains("configured root resolves to no callable source"),
         "{error:#}"
     );
-}
-
-#[test]
-fn binding_aware_targets_distinguish_global_module_and_repository_calls() {
-    for (case, target, expected) in [
-        ("selectors-global-set-timeout", "{ global: setTimeout }", 0),
-        (
-            "selectors-exact-timers-set-timeout",
-            "{ exact: timers.setTimeout }",
-            1,
-        ),
-        (
-            "selectors-terminal-set-timeout",
-            "{ terminal: setTimeout }",
-            2,
-        ),
-        (
-            "selectors-module-export-set-timeout",
-            "{ moduleExport: { module: node:timers, export: setTimeout } }",
-            2,
-        ),
-        (
-            "selectors-function-repository-target",
-            "{ function: { file: src/targets.mts, symbol: repositoryTarget } }",
-            2,
-        ),
-    ] {
-        let findings = coverage_findings(case).unwrap();
-        assert_eq!(findings.len(), expected, "{target}: {findings:#?}");
-    }
-}
-
-#[test]
-fn construct_and_unknown_call_policies_are_explicit() {
-    let call = coverage_findings("invocations-call-date").unwrap();
-    let construct = coverage_findings("invocations-construct-date").unwrap();
-    let ignored = coverage_findings("unknown-calls-ignore").unwrap();
-    let reported = coverage_findings("unknown-calls-finding").unwrap();
-
-    assert_eq!(call.len(), 1, "{call:#?}");
-    assert_eq!(construct.len(), 1, "{construct:#?}");
-    assert!(ignored.is_empty(), "{ignored:#?}");
-    assert_eq!(reported.len(), 1, "{reported:#?}");
-}
-
-#[test]
-fn exact_selectors_match_unknown_member_calls_before_ignore() {
-    let findings = coverage_findings("exact-page-wait-for-timeout").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert!(
-        findings[0].message.contains("exact `page.waitForTimeout`"),
-        "{findings:#?}"
-    );
-}
-
-#[test]
-fn named_vitest_roots_use_the_prepared_catalog() {
-    let findings = coverage_findings("vitest-named-unit").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "src/unit/timer.test.mts");
-}
-
-#[test]
-fn all_vitest_roots_and_default_call_invocations_are_inclusive() {
-    let vitest = coverage_findings("vitest-all-roots").unwrap();
-    let default_calls = coverage_findings("default-date-calls").unwrap();
-
-    assert_eq!(vitest.len(), 2, "{vitest:#?}");
-    assert_eq!(default_calls.len(), 1, "{default_calls:#?}");
 }
 
 #[test]
@@ -378,38 +268,23 @@ fn malformed_selector_configuration_fails_through_the_public_runner() {
 }
 
 #[test]
-fn application_path_filters_restrict_transitive_call_findings() {
-    let findings = coverage_findings("include-restricts-transitive").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "src/entry.mts");
-}
-
-#[test]
 fn ambiguous_selector_maps_are_rejected() {
     let error = coverage_findings("ambiguous-selector-map").unwrap_err();
 
     assert!(error.to_string().contains("invalid options"), "{error:#}");
 }
-
 #[test]
-fn repeated_applications_and_invalid_roots_stay_separate() {
-    let findings = coverage_findings("repeated-applications").unwrap();
+fn missing_file_root_is_rejected() {
     let error = coverage_findings("missing-file-root").unwrap_err();
 
-    assert_eq!(findings.len(), 2, "{findings:#?}");
-    assert_ne!(findings[0].message, findings[1].message);
     assert!(error
         .to_string()
         .contains("file root `missing.mts` is not a file"));
 }
-
 #[test]
-fn source_suppression_filters_call_findings_without_hiding_configuration_errors() {
-    let suppressed = coverage_findings("suppressed-source").unwrap();
+fn invalid_configuration_is_not_suppressed() {
     let invalid = coverage_findings("missing-roots");
 
-    assert!(suppressed.is_empty(), "{suppressed:#?}");
     assert!(
         invalid.is_err(),
         "invalid configuration must not be suppressed"

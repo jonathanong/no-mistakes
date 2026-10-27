@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: workspace-package-cycles
+    scope: repository
+    options:
+      allowlist:
+        - '@x/domain -> @x/api -> @x/domain'

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: package-json-workspace-coverage
+    scope: repository
+    include:
+      - "packages/**"
+      - pnpm-workspace.yaml
+    options:
+      packageRoots: [packages]

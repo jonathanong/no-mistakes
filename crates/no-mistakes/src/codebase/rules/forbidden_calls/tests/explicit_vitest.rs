@@ -18,22 +18,6 @@ fn fixture_findings(case: &str) -> anyhow::Result<Vec<crate::codebase::rules::Ru
 }
 
 #[test]
-fn named_vitest_roots_include_explicit_projects() {
-    let findings = fixture_findings("explicit-vitest-named-custom").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "src/custom.spec.mts");
-}
-
-#[test]
-fn all_vitest_roots_include_explicit_projects() {
-    let findings = fixture_findings("explicit-vitest-all").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "src/custom.spec.mts");
-}
-
-#[test]
 fn explicit_vitest_roots_still_reject_unknown_names() {
     let error = fixture_findings("explicit-vitest-unknown").unwrap_err();
 

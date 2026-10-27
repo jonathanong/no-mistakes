@@ -30,13 +30,16 @@ reports with the sibling compiled CLI, including SQL advisory aggregation.
 The Linux JavaScript job builds the CLI before the addon so both artifacts are
 available to these parity tests, as in the native platform matrix.
 
+<!-- cspell:ignore pkgcfg -->
+
 The native macOS and Windows jobs also run `suite_cli_postgres` tests matching
-`cli_postgres_snapshot_` and `cli_mrf_snapshot_`. These replay the committed
-PostgreSQL, markdown, Rust, and file-rule JSON snapshots without updating them;
-each case compares normalized output at `--jobs 1` and `--jobs 2`. The
-markdown, Rust, and file-rule modules are registered in this suite so those
-jobs do not also compile `suite_cli_rules` inside the ten-minute step. Linux
-runs the same cases in the full Rust coverage suite.
+`cli_postgres_snapshot_` and `cli_mrf_snapshot_`, and `suite_cli_package_config`
+tests matching `cli_pkgcfg_snapshot_`. These replay the committed PostgreSQL,
+markdown, Rust, file-rule, and package-config JSON snapshots without updating
+them; each case compares normalized output at `--jobs 1` and `--jobs 2`. The
+markdown, Rust, and file-rule modules are registered in the postgres suite so
+those jobs do not also compile `suite_cli_rules` inside the ten-minute step.
+Linux runs the same cases in the full Rust coverage suite.
 
 Compiled Vitest workers use independent invocation locks. Linux keeps a private
 `XDG_RUNTIME_DIR`; macOS and Windows use the existing Cargo test marker

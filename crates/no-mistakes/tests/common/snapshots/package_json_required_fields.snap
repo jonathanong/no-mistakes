@@ -1,0 +1,190 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "empty_options": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_options_unanalyzable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/suppressed/package.json",
+          "line": 1,
+          "message": "directive for `package-json-required-fields` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "package-json-required-fields"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_valid_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/valid/package.json",
+          "line": 1,
+          "message": "packages/valid/package.json: must declare \"license\": \"UNLICENSED\".",
+          "rule": "package-json-required-fields",
+          "target": "license"
+        },
+        {
+          "file": "packages/valid/package.json",
+          "line": 1,
+          "message": "packages/valid/package.json: must declare \"private\": true.",
+          "rule": "package-json-required-fields",
+          "target": "private"
+        },
+        {
+          "file": "packages/valid/package.json",
+          "line": 1,
+          "message": "packages/valid/package.json: must declare \"type\": \"module\".",
+          "rule": "package-json-required-fields",
+          "target": "type"
+        },
+        {
+          "file": "packages/valid/package.json",
+          "line": 1,
+          "message": "packages/valid/package.json: package name \"foo\" must be scoped (start with @).",
+          "rule": "package-json-required-fields",
+          "target": "name"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "main_companion_included": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/foo/package.json",
+          "line": 1,
+          "message": "packages/foo/package.json: must declare \"main\": \"index.mts\" because index.mts exists in the package directory.",
+          "rule": "package-json-required-fields",
+          "target": "main"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_companion": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: must declare \"main\": \"src/index.js\" because src/index.js exists in the package directory.",
+          "rule": "package-json-required-fields",
+          "target": "main"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shape": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/foo/package.json",
+          "line": 1,
+          "message": "packages/foo/package.json: must declare \"license\": \"UNLICENSED\".",
+          "rule": "package-json-required-fields",
+          "target": "license"
+        },
+        {
+          "file": "packages/foo/package.json",
+          "line": 1,
+          "message": "packages/foo/package.json: must declare \"main\": \"index.mts\" because index.mts exists in the package directory.",
+          "rule": "package-json-required-fields",
+          "target": "main"
+        },
+        {
+          "file": "packages/foo/package.json",
+          "line": 1,
+          "message": "packages/foo/package.json: must declare \"private\": true.",
+          "rule": "package-json-required-fields",
+          "target": "private"
+        },
+        {
+          "file": "packages/foo/package.json",
+          "line": 1,
+          "message": "packages/foo/package.json: must declare \"type\": \"module\".",
+          "rule": "package-json-required-fields",
+          "target": "type"
+        },
+        {
+          "file": "packages/foo/package.json",
+          "line": 1,
+          "message": "packages/foo/package.json: package name \"foo\" must be scoped (start with @).",
+          "rule": "package-json-required-fields",
+          "target": "name"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unscoped_exception": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,4 @@
+version: 2
+rules:
+  - rule: package-json-required-fields
+    scope: repository

@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: version-pin-consistency
+    scope: repository
+    include:
+      - invalid-utf8.toml
+    options:
+      unanalyzable: report
+      sourceFile: invalid-utf8.toml
+      sourceKey: tools.pin
+      anchors:
+        - file: README.md
+          pattern: 'tool@([0-9.]+)'

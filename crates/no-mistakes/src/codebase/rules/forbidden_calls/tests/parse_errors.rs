@@ -1,6 +1,4 @@
 use super::*;
-use crate::napi_api::options::test_json_arg;
-use serde_json::json;
 use std::path::PathBuf;
 
 fn malformed_root() -> PathBuf {
@@ -77,13 +75,6 @@ fn malformed_file_root_fails_closed_with_a_parse_diagnostic() {
 }
 
 #[test]
-fn unrelated_malformed_files_do_not_fail_a_valid_root() {
-    let found = findings("valid-entry-root").unwrap();
-    assert_eq!(found.len(), 1, "{found:#?}");
-    assert_eq!(found[0].file, "src/entry.mts");
-}
-
-#[test]
 fn malformed_function_root_fails_closed_before_empty_expansion() {
     let error = findings("malformed-function-root").unwrap_err();
     assert!(error.to_string().contains("failed to parse"), "{error:#}");
@@ -95,28 +86,4 @@ fn malformed_vitest_root_file_fails_closed() {
     let message = error.to_string();
     assert!(message.contains("src/unit/broken.test.mts"), "{message}");
     assert!(message.contains("failed to parse"), "{message}");
-}
-
-#[test]
-fn check_json_surfaces_a_malformed_configured_root() {
-    let root = malformed_root();
-    let config = super::forbidden_calls_case("malformed-file-root");
-    let output = crate::napi_api::check_json_impl(test_json_arg(
-        json!({
-            "root": root,
-            "config": config
-        })
-        .to_string(),
-    ))
-    .expect("aggregate check reports parse errors as warnings");
-    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
-    assert!(
-        value["warnings"].as_array().unwrap().iter().any(|warning| {
-            warning.as_str().is_some_and(|warning| {
-                warning.contains("failed to parse") && warning.contains("src/broken.mts")
-            })
-        }),
-        "{value}"
-    );
-    assert_eq!(value["rules"].as_array().map(Vec::len), Some(0));
 }

@@ -2,6 +2,8 @@ use super::*;
 use crate::codebase::rules::source_store_for_files;
 use std::path::{Path, PathBuf};
 
+// Output cases moved to the cli_pkgcfg_snapshot modules.
+
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -33,24 +35,8 @@ fn scan_fixture(name: &str, files: &[PathBuf]) -> Vec<RuleFinding> {
 }
 
 #[test]
-fn scan_returns_empty_without_workspace_or_for_non_mapping_yaml() {
+fn scan_returns_empty_without_a_workspace_file() {
     assert!(scan_dir(&[]).is_empty());
-    let root = fixture("non-mapping-scan");
-    let files = [root.join("pnpm-workspace.yaml")];
-    assert!(scan_fixture("non-mapping-scan", &files).is_empty());
-}
-
-#[test]
-fn scan_reports_invalid_workspace_yaml() {
-    let root = fixture("invalid-workspace-yaml");
-    let files = [root.join("pnpm-workspace.yaml")];
-    let findings = scan_fixture("invalid-workspace-yaml", &files);
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("failed to parse YAML")),
-        "{findings:?}"
-    );
 }
 
 #[test]

@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      packages: ['@acme/app']
+      forbidden: ['7zip-bin']
+      lockfile: pnpm-lock.yaml

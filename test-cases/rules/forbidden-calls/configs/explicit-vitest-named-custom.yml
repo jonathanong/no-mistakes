@@ -1,0 +1,12 @@
+version: 2
+tests:
+  vitest:
+    projects:
+      custom:
+        include: [src/custom.spec.mts]
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ vitest: [custom] }]
+      targets: [{ global: setTimeout }]

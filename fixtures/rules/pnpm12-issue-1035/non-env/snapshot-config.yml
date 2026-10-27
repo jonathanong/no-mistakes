@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      packages: ['@fixture/api']
+      forbidden: ['is-odd']
+      dependencyTypes: [dependencies]
+      lockfile: pnpm-lock.yaml

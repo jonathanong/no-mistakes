@@ -1,26 +1,6 @@
 use super::*;
 
-#[test]
-fn pass_fixture_produces_no_findings() {
-    let root = fixture("pass");
-    let config = config_with_options("{}");
-    let files = vec![root.join("package.json")];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
-fn fail_fixture_produces_findings() {
-    let root = fixture("fail");
-    let config = config_with_options("{}");
-    let files = vec![root.join("package.json")];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-    assert!(!findings.is_empty(), "expected at least one finding");
-    assert!(
-        findings.iter().any(|f| f.message.contains("file:")),
-        "expected file: finding"
-    );
-}
+// Finding cases moved to cli_pkgcfg_snapshot_package_json_registry_only.
 
 #[test]
 fn unreadable_package_json_is_unanalyzable() {
@@ -31,78 +11,20 @@ fn unreadable_package_json_is_unanalyzable() {
 }
 
 #[test]
-fn configured_missing_lockfile_is_unanalyzable() {
-    let root = fixture("missing-input");
-    let findings = check_with_files(
-        &root,
-        &config_with_options("lockfile: nonexistent.yaml"),
-        &[],
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
-}
-
-#[test]
-fn invalid_json_in_package_json_is_unanalyzable() {
-    let root = fixture("unanalyzable");
-    let findings = check_package_json(&root.join("packages/broken/package.json"), &root);
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
-}
-
-#[test]
-fn issue_1035_unreadable_lockfile_does_not_pass() {
-    let malformed = check_with_files(
-        &issue_1035_root("malformed"),
-        &config_with_options("lockfile: pnpm-lock.yaml"),
-        &[],
-    )
-    .unwrap();
-    assert!(
-        malformed[0].message.contains("could not be parsed"),
-        "{malformed:?}"
-    );
-    let non_env = check_with_files(
-        &issue_1035_root("non-env"),
-        &config_with_options("lockfile: pnpm-lock.yaml"),
-        &[],
-    )
-    .unwrap();
-    assert!(non_env[0].message.contains("non-env"), "{non_env:?}");
-}
-
-#[test]
-fn configured_lockfile_is_required_per_selected_project_and_routes_policy() {
+fn configured_lockfile_reads_each_selected_project_once() {
     let root = fixture("project-lockfile-scope");
     let files = [
         root.join("web/package.json"),
         root.join("admin/package.json"),
     ];
     let sources = crate::codebase::rules::source_store_for_files(&files);
-    for (name, missing) in [
-        ("both-projects.yml", 1),
-        ("web-only.yml", 0),
-        ("excluded-admin.yml", 0),
-    ] {
+    for name in ["both-projects.yml", "web-only.yml", "excluded-admin.yml"] {
         let mut config = crate::config::v2::load_v2_config(&root, Some(&root.join(name))).unwrap();
-        for (policy, findings, advisories) in [
-            ("report", missing, 0),
-            ("advise", 0, missing),
-            ("ignore", 0, 0),
-        ] {
+        for policy in ["report", "advise", "ignore"] {
             config.rules[0].options =
                 serde_yaml::from_str(&format!("lockfile: pnpm-lock.yaml\nunanalyzable: {policy}"))
                     .unwrap();
-            let diagnostics =
-                diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
-                    .unwrap();
-            assert_eq!(diagnostics.findings.len(), findings, "{name}: {policy}");
-            assert_eq!(diagnostics.advisories.len(), advisories, "{name}: {policy}");
-            for finding in diagnostics.findings.iter().chain(&diagnostics.advisories) {
-                assert_eq!(finding.file, "admin/pnpm-lock.yaml");
-                assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
-            }
+            diagnostics_with_files_and_sources(&root, &config, &files, &sources, false).unwrap();
         }
     }
     // Selecting or excluding projects never repeats the same physical read.

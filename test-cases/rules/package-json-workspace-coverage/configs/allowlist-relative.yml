@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: package-json-workspace-coverage
+    scope: repository
+    include:
+      - package.json
+      - packages/api/package.json
+      - packages/web/package.json
+    options:
+      packageRoots: [packages]
+      allowlist: [./packages/web/package.json]
+      requireNamedPackage: true

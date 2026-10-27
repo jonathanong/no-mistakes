@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/selectors.mts }]
+      traversal: file
+      invocations: [call]
+      unknownCalls: ignore
+      targets: [{ global: Date }]

@@ -1,0 +1,358 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "basic": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entrypoints/api.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "target": "sharp"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bracket_globs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/suppressed.mts",
+          "line": 1,
+          "message": "directive for `forbidden-dependencies` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-dependencies"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/services/service.mts",
+          "import": "import",
+          "line": 1,
+          "message": "backend/[as]*/**/*.mts reaches forbidden file 'shared/testing/helper.mts' via import. Reproduce: no-mistakes dependencies 'backend/services/service.mts' --filter 'shared/testing/helper.mts' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "target": "shared/testing/helper.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "directory_root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entrypoints/api.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "target": "sharp"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "directory_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/nested/page.ts",
+          "import": "import",
+          "line": 1,
+          "message": "web/app reaches forbidden module 'fs' via import. Reproduce: no-mistakes dependencies 'web/app/nested/page.ts' --target-module 'fs' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "target": "fs"
+        },
+        {
+          "file": "web/app/page.ts",
+          "import": "import",
+          "line": 1,
+          "message": "web/app reaches forbidden module 'fs' via import. Reproduce: no-mistakes dependencies 'web/app/page.ts' --target-module 'fs' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "target": "fs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exceptions_union": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/suppressed.mts",
+          "line": 1,
+          "message": "directive for `forbidden-dependencies` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-dependencies"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "ci/check-coverage.mts",
+          "import": "import",
+          "line": 1,
+          "message": "ci/check-coverage.mts reaches forbidden file 'tests/other.mts' via import. Reproduce: no-mistakes dependencies 'ci/check-coverage.mts' --filter 'tests/other.mts' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "target": "tests/other.mts"
+        },
+        {
+          "file": "ci/check-health.mts",
+          "import": "import",
+          "line": 1,
+          "message": "ci/check-health.mts reaches forbidden file 'shared/testing/coverage.mts' via import. Reproduce: no-mistakes dependencies 'ci/check-health.mts' --filter 'shared/testing/coverage.mts' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "target": "shared/testing/coverage.mts"
+        },
+        {
+          "file": "ci/check-health.mts",
+          "import": "import",
+          "line": 1,
+          "message": "ci/check-health.mts reaches forbidden file 'tests/other.mts' via import. Reproduce: no-mistakes dependencies 'ci/check-health.mts' --filter 'tests/other.mts' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "target": "tests/other.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude_root": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file_exceptions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entrypoints/api.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "target": "sharp"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "forbidden_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entrypoints/api.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints/api.mts reaches forbidden file 'entrypoints/worker.mts' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --filter 'entrypoints/worker.mts' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "target": "entrypoints/worker.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "glob_module": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entrypoints/api.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints/api.mts reaches forbidden module '@scope/heavy' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module '@scope/heavy' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "target": "@scope/heavy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "import_type": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entrypoints/api.mts",
+          "import": "type-import",
+          "line": 1,
+          "message": "entrypoints/api.mts reaches forbidden module 'sharp' via type-import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship import-type --format json",
+          "rule": "forbidden-dependencies",
+          "target": "sharp"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "import_workspace": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entrypoints/api.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints/api.mts reaches forbidden file 'packages/local/src/worker.mts' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --filter 'packages/local/src/worker.mts' --relationship import --relationship workspace --format json",
+          "rule": "forbidden-dependencies",
+          "target": "packages/local/src/worker.mts"
+        },
+        {
+          "file": "entrypoints/api.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship import --relationship workspace --format json",
+          "rule": "forbidden-dependencies",
+          "target": "sharp"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_directory_glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "import",
+          "line": 1,
+          "message": "src/**/*.mts reaches forbidden file 'tests/helper.mts' via import. Reproduce: no-mistakes dependencies 'src/entry.mts' --filter 'tests/helper.mts' --relationship import --format json",
+          "rule": "forbidden-dependencies",
+          "target": "tests/helper.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiple_applications": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entrypoints/api.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "target": "sharp"
+        },
+        {
+          "file": "entrypoints/worker.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints/worker.mts reaches forbidden module 'canvas' via import. Reproduce: no-mistakes dependencies 'entrypoints/worker.mts' --target-module 'canvas' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "target": "canvas"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "relationships_all": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "entrypoints/api.mts",
+          "import": "import",
+          "line": 1,
+          "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship all --format json",
+          "rule": "forbidden-dependencies",
+          "target": "sharp"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -24,15 +24,3 @@ pub(super) fn config_with_options(yaml: &str) -> NoMistakesConfig {
     });
     config
 }
-
-pub(super) fn pnpm12_rule_root(name: &str) -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/package-json-registry-only")
-        .join(name)
-}
-
-pub(super) fn issue_1035_root(name: &str) -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/pnpm12-issue-1035")
-        .join(name)
-}

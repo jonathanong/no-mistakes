@@ -11,7 +11,6 @@ use crate::config::v2::{
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
-mod fixture_policy;
 mod literal_braces;
 mod no_check;
 mod runner_tests;
@@ -62,10 +61,6 @@ fn fixture_root(name: &str) -> PathBuf {
 
 fn config(root: &Path) -> NoMistakesConfig {
     crate::config::v2::load_v2_config(root, Some(&root.join(".no-mistakes.yml"))).unwrap()
-}
-
-fn findings(root: &Path, config: &NoMistakesConfig) -> Vec<RuleFinding> {
-    check(root, config).unwrap()
 }
 
 fn add_static_runners(workflow: &mut Value) {
@@ -174,125 +169,9 @@ fn directory_project_arguments_resolve_only_against_tracked_tsconfigs() {
     );
 }
 
-#[test]
-fn reports_each_missing_gate_on_the_uncovered_project() {
-    let root = fixture_root("missing-ci");
-    let report = findings(&root, &config(&root));
-    assert_eq!(report.len(), 1, "{report:#?}");
-    assert_eq!(report[0].file, "tools/tsconfig.tools.json");
-    assert_eq!(report[0].line, 1);
-    assert!(report[0].message.contains("no CI typecheck registration"));
-}
-
-#[test]
-fn append_style_or_non_always_commands_do_not_count_as_local_gates() {
-    let root = fixture_root("missing-local");
-    let report = findings(&root, &config(&root));
-    assert_eq!(report.len(), 1, "{report:#?}");
-    assert_eq!(report[0].file, "app/tsconfig.json");
-    assert!(report[0]
-        .message
-        .contains("no local typecheck registration"));
-}
-
-#[test]
-fn workflow_defaults_step_directories_and_shell_cwds_are_resolved() {
-    let root = fixture_root("working-directories");
-    let report = findings(&root, &config(&root));
-    assert!(report.is_empty(), "unexpected findings: {report:#?}");
-}
-
-#[test]
-fn non_enforcing_or_non_runnable_workflow_commands_do_not_cover_projects() {
-    let root = fixture_root("non-enforcing-workflow");
-    let report = findings(&root, &config(&root));
-    assert_eq!(report.len(), 11, "{report:#?}");
-    for project in [
-        "disabled-job/tsconfig.json",
-        "disabled-step/tsconfig.json",
-        "nonblocking-job/tsconfig.json",
-        "nonblocking-step/tsconfig.json",
-        "expression/tsconfig.json",
-        "constant-nonblocking-step/tsconfig.json",
-        "failure-mode-mutated/tsconfig.json",
-        "non-posix-shell/tsconfig.json",
-        "missing-runner/tsconfig.json",
-        "dynamic-runner/tsconfig.json",
-        "implicit-windows-shell/tsconfig.json",
-    ] {
-        assert!(report.iter().any(|finding| {
-            finding.file == project && finding.message.contains("no CI typecheck registration")
-        }));
-    }
-    // Unresolved expressions fail open as enforcing; the rule does not guess
-    // whether a dynamic condition will disable the gate at runtime.
-    assert!(report
-        .iter()
-        .all(|finding| finding.file != "dynamic-expression/tsconfig.json"));
-}
-
-#[test]
-fn validates_allowlist_reasons_staleness_and_normalized_collisions() {
-    let root = fixture_root("allowlist-errors");
-    let report = findings(&root, &config(&root));
-    assert!(report.iter().any(|finding| {
-        finding.file == ".no-mistakes.yml" && finding.message.contains("non-empty reason")
-    }));
-    assert!(report
-        .iter()
-        .any(|finding| finding.message.contains("stale allowProjects entry")));
-    assert!(report
-        .iter()
-        .any(|finding| finding.message.contains("static repository-relative")));
-    assert!(report
-        .iter()
-        .any(|finding| finding.message.contains("is not a tsconfig path")));
-    assert!(report
-        .iter()
-        .any(|finding| finding.message.contains("normalize to the same path")));
-    assert!(report.iter().any(|finding| {
-        finding.file == "allowed/tsconfig.json"
-            && finding.message.contains("no CI typecheck registration")
-    }));
-}
-
-#[test]
-fn reasoned_allowlist_entry_exempts_an_auxiliary_project_from_both_gates() {
-    let root = fixture_root("allowlist-pass");
-    let report = findings(&root, &config(&root));
-    assert!(report.is_empty(), "unexpected findings: {report:#?}");
-}
-
-#[test]
-fn ignores_node_modules_and_reports_malformed_workflows_once() {
-    let root = fixture_root("malformed-workflow");
-    let report = findings(&root, &config(&root));
-    assert_eq!(
-        report
-            .iter()
-            .filter(|finding| finding.file == ".github/workflows/bad.yml")
-            .count(),
-        1,
-        "{report:#?}"
-    );
-    assert!(report
-        .iter()
-        .all(|finding| !finding.file.contains("node_modules")));
-}
-
-#[test]
-fn normal_rule_filtering_keeps_the_prepared_api_scope_aware() {
-    let root = fixture_root("missing-ci");
-    let mut config = config(&root);
-    config.rules = vec![RuleDef {
-        rule: RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        include: vec!["app/**".to_string()],
-        ..Default::default()
-    }];
-    let report = findings(&root, &config);
-    assert!(report.is_empty(), "unexpected findings: {report:#?}");
-}
+// Saved-fixture finding cases moved to cli_pkgcfg_snapshot_tsconfig_gate_coverage.
+// Invalid filters, read counts, and scanner helpers stay here because check JSON
+// does not show those results.
 
 #[test]
 fn invalid_rule_filter_is_returned_without_partial_coverage_findings() {

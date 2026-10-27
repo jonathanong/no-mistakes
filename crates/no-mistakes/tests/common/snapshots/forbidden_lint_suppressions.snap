@@ -1,0 +1,928 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "blanket": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/directives.tsx",
+          "line": 1,
+          "message": "src/directives.tsx:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 2,
+          "message": "src/directives.tsx:2: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 20,
+          "message": "src/directives.tsx:20: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 3,
+          "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 3,
+          "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 4,
+          "message": "src/directives.tsx:4: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 5,
+          "message": "src/directives.tsx:5: `oxlint-disable-line` disables forbidden rule `react-hooks-js/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 6,
+          "message": "src/directives.tsx:6: `oxlint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 7,
+          "message": "src/directives.tsx:7: `eslint-disable` disables forbidden rule `*`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "*"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 8,
+          "message": "src/directives.tsx:8: `oxlint-disable-next-line` disables forbidden rule `*`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "*"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 1,
+          "message": "src/line-endings.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 3,
+          "message": "src/line-endings.ts:3: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 5,
+          "message": "src/line-endings.ts:5: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/multiline.ts",
+          "line": 2,
+          "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/multiline.ts",
+          "line": 2,
+          "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 5,
+          "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 6,
+          "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/recovered.ts",
+          "line": 1,
+          "message": "src/recovered.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/directives.tsx",
+          "line": 1,
+          "message": "src/directives.tsx:1: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 2,
+          "message": "src/directives.tsx:2: `eslint-disable-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 20,
+          "message": "src/directives.tsx:20: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 3,
+          "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 3,
+          "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 4,
+          "message": "src/directives.tsx:4: `oxlint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 5,
+          "message": "src/directives.tsx:5: `oxlint-disable-line` disables forbidden rule `react-hooks-js/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 6,
+          "message": "src/directives.tsx:6: `oxlint-disable-next-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 1,
+          "message": "src/line-endings.ts:1: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 3,
+          "message": "src/line-endings.ts:3: `oxlint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 5,
+          "message": "src/line-endings.ts:5: `eslint-disable-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/multiline.ts",
+          "line": 2,
+          "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/multiline.ts",
+          "line": 2,
+          "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 5,
+          "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 6,
+          "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/recovered.ts",
+          "line": 1,
+          "message": "src/recovered.ts:1: `eslint-disable` disables forbidden rule `react/purity`. Keep compiler checks enabled.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/directives.tsx",
+          "line": 1,
+          "message": "src/directives.tsx:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 2,
+          "message": "src/directives.tsx:2: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 20,
+          "message": "src/directives.tsx:20: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 3,
+          "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 3,
+          "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 4,
+          "message": "src/directives.tsx:4: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 5,
+          "message": "src/directives.tsx:5: `oxlint-disable-line` disables forbidden rule `react-hooks-js/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 6,
+          "message": "src/directives.tsx:6: `oxlint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 1,
+          "message": "src/line-endings.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 3,
+          "message": "src/line-endings.ts:3: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 5,
+          "message": "src/line-endings.ts:5: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/multiline.ts",
+          "line": 2,
+          "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/multiline.ts",
+          "line": 2,
+          "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 5,
+          "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 6,
+          "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/recovered.ts",
+          "line": 1,
+          "message": "src/recovered.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "explicit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/directives.tsx",
+          "line": 1,
+          "message": "src/directives.tsx:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 2,
+          "message": "src/directives.tsx:2: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 20,
+          "message": "src/directives.tsx:20: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 3,
+          "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 3,
+          "message": "src/directives.tsx:3: `eslint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 4,
+          "message": "src/directives.tsx:4: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 5,
+          "message": "src/directives.tsx:5: `oxlint-disable-line` disables forbidden rule `react-hooks-js/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/purity"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 6,
+          "message": "src/directives.tsx:6: `oxlint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 1,
+          "message": "src/line-endings.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 3,
+          "message": "src/line-endings.ts:3: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/line-endings.ts",
+          "line": 5,
+          "message": "src/line-endings.ts:5: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/multiline.ts",
+          "line": 2,
+          "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/multiline.ts",
+          "line": 2,
+          "message": "src/multiline.ts:2: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 5,
+          "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 6,
+          "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/recovered.ts",
+          "line": 1,
+          "message": "src/recovered.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "html_comments": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 3,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/html.cjs",
+          "line": 1,
+          "message": "src/html.cjs:1: `eslint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/html.cjs",
+          "line": 3,
+          "message": "src/html.cjs:3: `oxlint-disable-next-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_directives": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 3,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_matches": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 3,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 3,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 1,
+          "message": "src/quoted.ts:1: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react-hooks-js/refs`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react-hooks-js/refs"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 2,
+          "message": "src/quoted.ts:2: `oxlint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 4,
+          "message": "src/quoted.ts:4: `eslint-disable` disables forbidden rule `custom/no--bad`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "custom/no--bad"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 5,
+          "message": "src/quoted.ts:5: `eslint-disable` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        },
+        {
+          "file": "src/quoted.ts",
+          "line": 6,
+          "message": "src/quoted.ts:6: `eslint-disable-line` disables forbidden rule `react/purity`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "react/purity"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "typescript": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/file-suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 1,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        },
+        {
+          "file": "src/suppressed.ts",
+          "line": 3,
+          "message": "directive for `forbidden-lint-suppressions` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-lint-suppressions"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/directives.tsx",
+          "line": 11,
+          "message": "src/directives.tsx:11: `@ts-expect-error` disables forbidden rule `@ts-expect-error`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "@ts-expect-error"
+        },
+        {
+          "file": "src/directives.tsx",
+          "line": 9,
+          "message": "src/directives.tsx:9: `@ts-ignore` disables forbidden rule `@ts-ignore`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "@ts-ignore"
+        },
+        {
+          "file": "src/ts-blocks.ts",
+          "line": 1,
+          "message": "src/ts-blocks.ts:1: `@ts-ignore` disables forbidden rule `@ts-ignore`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "@ts-ignore"
+        },
+        {
+          "file": "src/ts-blocks.ts",
+          "line": 13,
+          "message": "src/ts-blocks.ts:13: `@ts-expect-error` disables forbidden rule `@ts-expect-error`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "@ts-expect-error"
+        },
+        {
+          "file": "src/ts-blocks.ts",
+          "line": 4,
+          "message": "src/ts-blocks.ts:4: `@ts-ignore` disables forbidden rule `@ts-ignore`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "@ts-ignore"
+        },
+        {
+          "file": "src/ts-blocks.ts",
+          "line": 7,
+          "message": "src/ts-blocks.ts:7: `@ts-expect-error` disables forbidden rule `@ts-expect-error`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "@ts-expect-error"
+        },
+        {
+          "file": "src/ts-prefix.ts",
+          "line": 1,
+          "message": "src/ts-prefix.ts:1: `@ts-ignore` disables forbidden rule `@ts-ignore`. These lint rules must remain enforced; remove the suppression and fix the underlying code.",
+          "rule": "forbidden-lint-suppressions",
+          "target": "@ts-ignore"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

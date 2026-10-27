@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: package-json-workspace-coverage
+    scope: repository
+    include:
+      - package.json
+      - packages/api/package.json
+      - packages/unnamed/package.json
+      - packages/unnamed/index.ts
+    options:
+      packageRoots: [packages]
+      requireNamedPackage: true

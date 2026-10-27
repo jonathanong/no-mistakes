@@ -1,0 +1,357 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowlist": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allowlist_relative": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "delegated_omitted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/api/package.json",
+          "line": 1,
+          "message": "packages/api/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/api"
+        },
+        {
+          "file": "services/package.json",
+          "line": 1,
+          "message": "services/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "services"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate_narrowed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "duplicate_packages": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: setting \"packages\" is claimed by more than one pnpm source",
+          "rule": "package-json-workspace-coverage"
+        },
+        {
+          "file": "services/package.json",
+          "line": 1,
+          "message": "services/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "services"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "included_package_globs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/group/app/package.json",
+          "line": 1,
+          "message": "packages/group/app/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/group/app"
+        },
+        {
+          "file": "services/package.json",
+          "line": 1,
+          "message": "services/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "services"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "malformed_named": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: workspace pattern \"packages/api\" does not correspond to a package directory",
+          "rule": "package-json-workspace-coverage"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/admin/package.json",
+          "line": 1,
+          "message": "packages/admin/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/admin"
+        },
+        {
+          "file": "packages/web/package.json",
+          "line": 1,
+          "message": "packages/web/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/web"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "names_not_required": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/group/app/package.json",
+          "line": 1,
+          "message": "packages/group/app/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/group/app"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scoped_packages_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "scoped_present": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "star_does_not_cross": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/group/app/package.json",
+          "line": 1,
+          "message": "packages/group/app/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/group/app"
+        },
+        {
+          "file": "packages/unnamed/package.json",
+          "line": 1,
+          "message": "packages/unnamed/package.json: package.json must declare a name",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/unnamed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unmatched_package_json": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "package.json",
+          "line": 1,
+          "message": "package.json: workspace pattern \"apps/*\" does not correspond to a package directory",
+          "rule": "package-json-workspace-coverage"
+        },
+        {
+          "file": "packages/hidden/package.json",
+          "line": 1,
+          "message": "packages/hidden/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/hidden"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unmatched_pattern": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/group/app/package.json",
+          "line": 1,
+          "message": "packages/group/app/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/group/app"
+        },
+        {
+          "file": "packages/hidden/package.json",
+          "line": 1,
+          "message": "packages/hidden/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/hidden"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: workspace pattern \"apps/*\" does not correspond to a package directory",
+          "rule": "package-json-workspace-coverage"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unnamed_selected": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/unnamed/package.json",
+          "line": 1,
+          "message": "packages/unnamed/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/unnamed"
+        },
+        {
+          "file": "packages/unnamed/package.json",
+          "line": 1,
+          "message": "packages/unnamed/package.json: package.json must declare a name",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/unnamed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unreadable_packages": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/api/package.json",
+          "line": 1,
+          "message": "packages/api/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "packages/api"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: included file \"./pnpm/missing.yaml\" could not be read",
+          "rule": "package-json-workspace-coverage"
+        },
+        {
+          "file": "services/package.json",
+          "line": 1,
+          "message": "services/package.json: package directory is not covered by the workspace config",
+          "rule": "package-json-workspace-coverage",
+          "target": "services"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

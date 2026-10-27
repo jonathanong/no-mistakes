@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      permanentPackages:
+        - name: is-odd
+          reason: direct dependency of @fixture/shared
+        - name: kind-of
+          reason: transitive-only dependency
+      lockfilePath: missing-lock.yaml

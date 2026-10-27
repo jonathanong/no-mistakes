@@ -25,30 +25,7 @@ fn config(yaml: &str) -> NoMistakesConfig {
     config
 }
 
-#[test]
-fn reports_missing_config_path_references() {
-    let root = fixture_root("fixture");
-    let files = vec![
-        root.join("config/app.yml"),
-        root.join("config/existing.json"),
-        root.join("src/a.test.ts"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-files: [config/app.yml]
-keys: [paths.required, paths.glob]
-allowGlobs: true
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0].message.contains("missing.json"));
-}
+// Saved-fixture output cases moved to cli_pkgcfg_snapshot_config_path_references.
 
 #[test]
 fn glob_references_default_to_config_file_directory() {
@@ -67,26 +44,6 @@ fn glob_references_default_to_config_file_directory() {
         &rel_files
     )
     .unwrap());
-}
-
-#[test]
-fn glob_references_match_targets_outside_rule_include_filter() {
-    let root = fixture_root("fixture");
-    let mut config = config(
-        r#"
-files: [config/app.yml]
-keys: [paths.glob]
-allowGlobs: true
-"#,
-    );
-    config.rules[0].include = vec!["config/app.yml".to_string()];
-    let files = vec![
-        root.join("config/app.yml"),
-        root.join("config/existing.json"),
-    ];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
 #[test]
@@ -267,29 +224,6 @@ fn literal_references_ignore_untracked_files_and_directories() {
 }
 
 #[test]
-fn ignores_unreadable_or_invalid_config_files() {
-    let root = fixture_root("fixture");
-    let files = vec![root.join("config"), root.join("config/invalid.yml")];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-files: [config, config/invalid.yml]
-keys: [paths.required]
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("failed to parse YAML"),
-        "{findings:?}"
-    );
-}
-
-#[test]
 fn extracts_only_string_or_sequence_values_at_config_keys() {
     let value: serde_yaml::Value = serde_yaml::from_str(
         r#"
@@ -333,129 +267,6 @@ fn preset_config(root: &Path) -> NoMistakesConfig {
 
 fn listed(root: &Path, rels: &[&str]) -> Vec<PathBuf> {
     rels.iter().map(|rel| root.join(rel)).collect()
-}
-
-#[test]
-fn presets_report_missing_required_paths() {
-    let root = fixture_root("presets-fail");
-    let files = listed(
-        &root,
-        &[
-            ".oxlintrc.json",
-            "packages/app/.oxlintrc.json",
-            "knip.jsonc",
-            ".github/dependabot.yml",
-            "sgconfig.yml",
-            ".syncpackrc.json",
-            ".coverage-rules.yml",
-            ".github/workflows/pnpm-filters.yml",
-            ".no-mistakes.yml",
-        ],
-    );
-    let findings = check_with_files(&root, &preset_config(&root), &files).unwrap();
-    let messages: Vec<_> = findings
-        .iter()
-        .map(|finding| finding.message.clone())
-        .collect();
-    assert!(
-        messages.iter().any(|m| m.contains("plugins/missing.js")),
-        "{messages:?}"
-    );
-    assert!(
-        messages
-            .iter()
-            .any(|m| m.contains("packages/app/.oxlintrc.json") && m.contains("nested-missing.js")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|m| m.contains("src/missing.ts")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|m| m.contains("src/root-missing.ts")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|m| m.contains("missing-app")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|m| m.contains("missing-rules")),
-        "{messages:?}"
-    );
-    assert!(
-        messages
-            .iter()
-            .any(|m| m.contains("missing/*/package.json")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|m| m.contains("missing/**/*.rs")),
-        "{messages:?}"
-    );
-    assert!(
-        messages
-            .iter()
-            .any(|m| m.contains("projects.app.root") && m.contains("missing-project")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|m| {
-            m.contains("tests.playwright.configs") && m.contains("missing-playwright.config.ts")
-        }),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|m| {
-            m.contains("testPlan.vitest.fullSuiteTriggers.projects.app")
-                && m.contains("missing-project/src/missing.ts")
-        }),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|m| {
-            m.contains("testPlan.vitest.fullSuiteTriggers.triggers")
-                && m.contains("missing-trigger.ts")
-        }),
-        "{messages:?}"
-    );
-    assert!(
-        !messages.iter().any(|m| {
-            m.contains("generated")
-                || m.contains("node_modules")
-                || m.contains("optional")
-                || m.contains("missing-until-created")
-        }),
-        "{messages:?}"
-    );
-}
-
-#[test]
-fn presets_pass_when_required_paths_exist() {
-    let root = fixture_root("presets-pass");
-    let files = listed(
-        &root,
-        &[
-            ".oxlintrc.json",
-            "plugins/local.js",
-            "src/app.ts",
-            "packages/app/.oxlintrc.json",
-            "packages/app/plugin.js",
-            "packages/app/src/index.ts",
-            "packages/app/package.json",
-            "knip.jsonc",
-            ".github/dependabot.yml",
-            "sgconfig.yml",
-            "rules/keep.yml",
-            ".syncpackrc.json",
-            ".coverage-rules.yml",
-            ".github/workflows/pnpm-filters.yml",
-            ".no-mistakes.yml",
-            "playwright.config.ts",
-        ],
-    );
-    let findings = check_with_files(&root, &preset_config(&root), &files).unwrap();
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
 mod knip_fixtures;

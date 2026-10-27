@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: tsconfig-alias-folder-mapping
+    scope: repository
+    options:
+      tsconfig: tsconfig.json
+      baseDir: backend
+      mappings:
+        - prefix: "@a"
+          root: shared
+        - prefix: "@b"
+          root: shared

@@ -1,0 +1,16 @@
+version: 2
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      temporarySelectors:
+        - demo-temporary-package@9.9.9
+      temporaryGroups:
+        - selectors:
+            - demo-temporary-package@9.9.9
+          reason: duplicate
+          eligibleForRemovalAt: '2027-01-02T03:04:05Z'
+        - selectors:
+            - demo-temporary-package@9.9.9
+          reason: duplicate across groups
+          eligibleForRemovalAt: '2027-01-03T03:04:05Z'

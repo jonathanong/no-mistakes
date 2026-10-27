@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - name: same
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/entry.mts }]
+      targets: [{ global: setTimeout }]
+  - name: same
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/entry.mts }]
+      targets: [{ global: setTimeout }]

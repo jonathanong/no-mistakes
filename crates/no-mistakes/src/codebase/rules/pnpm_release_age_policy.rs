@@ -80,5 +80,3 @@ mod scan_edges;
 mod tests;
 #[cfg(test)]
 mod tests_include;
-#[cfg(test)]
-mod tests_pnpm12;

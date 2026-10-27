@@ -1,6 +1,10 @@
 use super::*;
 use crate::codebase::rules::run_filesystem_rules;
 
+// Paths under a directory named `fixtures` are dropped by check discovery, and
+// the git cases depend on a fresh index. check --format json on the saved tree
+// does not see the same inventory.
+
 fn knip_fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))

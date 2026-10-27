@@ -1,0 +1,191 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "brace_glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "apps/package.json",
+          "line": 1,
+          "message": "apps/package.json: workspace entry `../packages/{utils,signing}` uses a wildcard for a configured dependency package; use its explicit relative path",
+          "rule": "package-json-nested-workspace-coverage"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_prefixes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_roots": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "extra": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "apps/package.json",
+          "line": 1,
+          "message": "apps/package.json: unused nested workspace entries: ../packages/unused",
+          "rule": "package-json-nested-workspace-coverage"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "apps/package.json",
+          "line": 1,
+          "message": "apps/package.json: workspace entry `../packages/*` uses a wildcard for a configured dependency package; use its explicit relative path",
+          "rule": "package-json-nested-workspace-coverage"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "lambda": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "lambdas/image/package.json",
+          "line": 1,
+          "message": "lambdas/image/package.json: missing nested workspace entries: ../../packages/signing",
+          "rule": "package-json-nested-workspace-coverage"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "apps/package.json",
+          "line": 1,
+          "message": "apps/package.json: missing nested workspace entries: ../packages/utils",
+          "rule": "package-json-nested-workspace-coverage"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parent_path": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "partial": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sibling_prefix": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unresolved": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "apps/package.json",
+          "line": 1,
+          "message": "apps/package.json: dependency `@shared/missing` matches a configured prefix but has no unique visible package.json target",
+          "rule": "package-json-nested-workspace-coverage"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "valid": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

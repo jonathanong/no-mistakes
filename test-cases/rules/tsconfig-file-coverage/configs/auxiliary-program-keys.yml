@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    options:
+      auxiliaryConfigs:
+        - path: tsconfig.json
+          reason: misclassified compiler config
+          requiredBasename: tsconfig.json

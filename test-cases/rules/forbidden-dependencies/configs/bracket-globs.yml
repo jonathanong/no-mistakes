@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: ["backend/[as]*/**/*.mts"]
+      excludeRoots: [backend/api]
+      forbiddenFiles: [shared/testing/**]
+      relationships: [import]

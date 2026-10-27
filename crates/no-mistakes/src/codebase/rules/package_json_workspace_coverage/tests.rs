@@ -30,91 +30,11 @@ fn config(yaml: &str) -> NoMistakesConfig {
     config
 }
 
-#[test]
-fn reports_package_json_under_configured_roots_missing_from_workspaces() {
-    let root = fixture_root("missing");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/admin/package.json"),
-        root.join("packages/api/package.json"),
-        root.join("packages/web/package.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config("packageRoots: [./packages]\nrequireNamedPackage: true\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 2);
-    assert_eq!(findings[0].file, "packages/admin/package.json");
-    assert_eq!(findings[1].file, "packages/web/package.json");
-    assert!(findings[0].message.contains("not covered"));
-}
+// Finding cases moved to cli_pkgcfg_snapshot_package_json_workspace_coverage.
 
 #[test]
-fn allowlist_suppresses_known_non_workspace_packages() {
+fn unnamed_manifest_package_name_is_absent() {
     let root = fixture_root("missing");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/api/package.json"),
-        root.join("packages/web/package.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config(
-            "packageRoots: [packages]\nallowlist: [packages/web/package.json]\nrequireNamedPackage: true\n",
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
-fn allowlist_normalizes_relative_package_json_paths() {
-    let root = fixture_root("missing");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/api/package.json"),
-        root.join("packages/web/package.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config(
-            "packageRoots: [packages]\nallowlist: [./packages/web/package.json]\nrequireNamedPackage: true\n",
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
-fn require_named_package_reports_unnamed_manifests() {
-    let root = fixture_root("missing");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/api/package.json"),
-        root.join("packages/unnamed/package.json"),
-        root.join("packages/unnamed/index.ts"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config("packageRoots: [packages]\nrequireNamedPackage: true\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert!(
-        findings.iter().any(|finding| {
-            finding.file == "packages/unnamed/package.json"
-                && finding.message.contains("must declare a name")
-        }),
-        "{findings:?}"
-    );
     assert_eq!(
         package_name(&root.join("packages/unnamed/package.json")),
         None
@@ -122,89 +42,9 @@ fn require_named_package_reports_unnamed_manifests() {
 }
 
 #[test]
-fn require_named_package_does_not_report_malformed_json_as_unnamed() {
+fn malformed_json_package_name_is_absent() {
     let root = fixture_root("invalid-package-json");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/bad/package.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config("packageRoots: [packages]\nrequireNamedPackage: true\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.message.contains("must declare a name")),
-        "{findings:?}"
-    );
     assert_eq!(package_name(&root.join("packages/bad/package.json")), None);
-}
-
-#[test]
-fn require_named_package_does_not_treat_star_as_crossing_directories() {
-    let root = fixture_root("unnamed-covered");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/unnamed/package.json"),
-        root.join("packages/group/app/package.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config("packageRoots: [packages]\nrequireNamedPackage: true\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert!(
-        findings.iter().any(|finding| {
-            finding.file == "packages/group/app/package.json"
-                && finding.message.contains("not covered")
-        }),
-        "{findings:?}"
-    );
-    assert!(
-        findings.iter().any(|finding| {
-            finding.file == "packages/unnamed/package.json"
-                && finding.message.contains("must declare a name")
-        }),
-        "{findings:?}"
-    );
-    assert!(
-        findings.iter().all(|finding| {
-            finding.file != "packages/unnamed/package.json"
-                || !finding.message.contains("not covered")
-        }),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn nested_package_is_uncovered_when_names_are_not_required() {
-    let root = fixture_root("unnamed-covered");
-    let files = vec![
-        root.join("package.json"),
-        root.join("packages/unnamed/package.json"),
-        root.join("packages/group/app/package.json"),
-    ];
-    let findings = check_with_files(&root, &config("packageRoots: [packages]\n"), &files).unwrap();
-
-    assert!(
-        findings.iter().any(|finding| {
-            finding.file == "packages/group/app/package.json"
-                && finding.message.contains("not covered")
-        }),
-        "{findings:?}"
-    );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| finding.file != "packages/unnamed/package.json"),
-        "{findings:?}"
-    );
 }
 
 #[test]

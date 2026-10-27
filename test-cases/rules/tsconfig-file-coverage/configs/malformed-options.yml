@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    options:
+      allow:
+        - path: /index.ts
+          reason: must not rewrite
+        - path: index.ts
+          reason: ""
+      auxiliaryConfigs:
+        - path: helper.json
+          reason: misnamed helper

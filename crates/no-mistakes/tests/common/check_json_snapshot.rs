@@ -1,9 +1,13 @@
 //! Normalized `check --format json` snapshots.
 //!
-//! Absolute paths, temp directories, process ids, timings, and CR line endings
-//! are rewritten before the snapshot is stored. Arrays are sorted so `--jobs`
-//! cannot change the committed file. The redaction tokens are part of the
-//! contract: dropping them would make Linux, macOS, and Windows snapshots diverge.
+//! Absolute paths, temp directories, process ids, timings, OS not-found text,
+//! and CR line endings are rewritten before the snapshot is stored. A path the
+//! CLI already made relative stays relative; an absolute path under the same
+//! root loses its `<root>/` prefix so Windows matches that form. Paths outside
+//! the fixture root and inside the checkout become `<repo>`. Arrays are sorted
+//! so `--jobs` cannot change the committed file. The redaction tokens are part
+//! of the contract: dropping them would make Linux, macOS, and Windows
+//! snapshots diverge.
 
 use serde_json::Value;
 use std::path::{Path, PathBuf};
@@ -158,6 +162,12 @@ fn normalize_text(text: &str, roots: &[String]) -> String {
     for root in repo_roots() {
         text = replace_path_prefix(&text, root, "<repo>");
     }
+    // Windows `strip_prefix` can miss when the loaded path and the canonical
+    // root use different prefixes, so the CLI emits an absolute path. Root
+    // replacement then leaves `<root>/...` where other platforms already
+    // emitted the repository-relative path.
+    let text = text.replace("<root>/", "");
+    let text = io_errors().replace_all(&text, "<io-error>");
     let text = redact_temp(&text);
     let text = pids().replace_all(&text, "$1 <pid>");
     timings().replace_all(&text, "<timing>").into_owned()
@@ -190,6 +200,19 @@ fn replace_path_prefix(text: &str, root: &str, token: &str) -> String {
     }
     out.push_str(rest);
     out
+}
+
+fn io_errors() -> &'static regex::Regex {
+    static PATTERN: OnceLock<regex::Regex> = OnceLock::new();
+    PATTERN.get_or_init(|| {
+        regex::Regex::new(concat!(
+            r"(?i)(?:no such file or directory",
+            r"|the system cannot find the file specified\.",
+            r"|the system cannot find the path specified\.)",
+            r" \(os error \d+\)",
+        ))
+        .expect("io error pattern")
+    })
 }
 
 fn redact_temp(text: &str) -> String {
@@ -315,7 +338,7 @@ fn normalization_collapses_machine_specific_json() {
         "posix and windows temp paths must normalize together"
     );
     let value: Value = serde_json::from_str(&first).unwrap();
-    assert_eq!(value["rules"][0]["file"], "<root>/CLAUDE.md");
+    assert_eq!(value["rules"][0]["file"], "CLAUDE.md");
     assert_eq!(value["timings"][0]["elapsedMs"], "<timing>");
     assert_eq!(value["timings"][0]["pid"], "<pid>");
     assert!(first.contains("pid <pid> took <timing>"));
@@ -326,14 +349,44 @@ fn normalization_collapses_machine_specific_json() {
     assert!(!second.contains("AppData"));
     assert!(!second.contains("var/folders"));
     assert!(second.contains("<temp>"));
-    assert!(second.contains("<root>/CLAUDE.md"));
+    assert!(second.contains("CLAUDE.md"));
+    assert!(!second.contains("<root>/"));
     let kept = normalize_report(
         r#"{"file":"/repo/tmp/keep.yml","other":"/tmp/real/file.yml"}"#,
         &["/repo".to_string()],
     );
-    assert!(kept.contains("<root>/tmp/keep.yml"), "{kept}");
+    assert!(kept.contains("tmp/keep.yml"), "{kept}");
     assert!(kept.contains("<temp>"), "{kept}");
     assert!(!kept.contains("/tmp/real"), "{kept}");
+    assert!(!kept.contains("<root>/"), "{kept}");
+    let windows_config = normalize_report(
+        r#"{"file":"D:\\repo\\fixture\\snapshot-config.yml"}"#,
+        &["D:/repo/fixture".to_string()],
+    );
+    let linux_config = normalize_report(
+        r#"{"file":"snapshot-config.yml"}"#,
+        &["/repo/fixture".to_string()],
+    );
+    assert_eq!(windows_config, linux_config, "{windows_config}");
+    let missing = normalize_report(
+        r#"{"message":"No such file or directory (os error 2)"}"#,
+        &[],
+    );
+    let missing_file = normalize_report(
+        r#"{"message":"The system cannot find the file specified. (os error 2)"}"#,
+        &[],
+    );
+    let missing_path = normalize_report(
+        r#"{"message":"The system cannot find the path specified. (os error 3)"}"#,
+        &[],
+    );
+    assert_eq!(missing, missing_file);
+    assert_eq!(missing, missing_path);
+    assert!(missing.contains("<io-error>"));
+    assert!(!missing.contains("os error"));
+    let quoted = normalize_report(r#"{"message":"[tools\r\n"}"#, &[]);
+    assert!(quoted.contains("[tools\\n"), "{quoted}");
+    assert!(!quoted.contains("\\r"), "{quoted}");
 }
 
 #[test]

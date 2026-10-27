@@ -71,43 +71,6 @@ fn selected_glob_roots_intersect_the_prepared_file_universe() {
 }
 
 #[test]
-fn exceptions_union_targets_only_for_their_matching_roots() {
-    let (root, config, graph) = setup();
-    let opts = serde_yaml::from_str::<Options>(
-        r#"
-roots: [ci/check-coverage.mts, ci/check-health.mts]
-forbiddenFiles: [shared/testing/**, tests/**]
-relationships: [import]
-exceptions:
-  - roots: [ci/check-*.mts]
-    allowedFiles: [shared/testing/helper.mts]
-  - roots: [ci/check-coverage.mts]
-    allowedFiles: [shared/testing/coverage.mts]
-"#,
-    )
-    .unwrap();
-    let findings = check_rule_application(
-        &root,
-        &config,
-        &config.rules[0],
-        &opts,
-        &graph,
-        application_scope(None, None, None),
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 3);
-    assert!(findings.iter().any(|f| f.file == "ci/check-health.mts"
-        && f.target.as_deref() == Some("shared/testing/coverage.mts")));
-    assert_eq!(
-        findings
-            .iter()
-            .filter(|f| f.target.as_deref() == Some("tests/other.mts"))
-            .count(),
-        2
-    );
-}
-
-#[test]
 fn a_clean_exception_root_still_has_a_real_forbidden_import_edge() {
     let (root, config, graph) = setup();
     let source = "ci/check-coverage-scope.mts";
@@ -125,23 +88,6 @@ fn a_clean_exception_root_still_has_a_real_forbidden_import_edge() {
     assert!(forbidden
         .iter()
         .any(|finding| { finding.file == source && finding.target.as_deref() == Some(target) }));
-}
-
-#[test]
-fn bracket_globs_select_roots_and_literal_directory_exclusions_still_apply() {
-    let (root, _, graph) = setup();
-    let opts = serde_yaml::from_str::<Options>(
-        r#"
-roots: ["backend/[as]*/**/*.mts"]
-excludeRoots: [backend/api]
-forbiddenFiles: [shared/testing/**]
-relationships: [import]
-"#,
-    )
-    .unwrap();
-    let findings = check_application(&root, &opts, &graph).unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "backend/services/service.mts");
 }
 
 #[test]
@@ -181,31 +127,6 @@ fn invalid_selection_and_exception_globs_have_authored_config_locations() {
 }
 
 #[test]
-fn file_exceptions_do_not_allow_forbidden_modules() {
-    let root = fixture("forbidden-dependencies-basic");
-    let opts = serde_yaml::from_str::<Options>(
-        r#"
-roots: [entrypoints/api.mts]
-forbiddenModules: [sharp]
-relationships: [import]
-exceptions:
-  - roots: [entrypoints/**]
-    allowedFiles: ["**"]
-"#,
-    )
-    .unwrap();
-    let graph = DepGraph::build_with_plan(
-        &root,
-        &resolve_tsconfig(&root, None).unwrap(),
-        GraphBuildPlan::imports_and_workspace(),
-    )
-    .unwrap();
-    let findings = check_application(&root, &opts, &graph).unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].target.as_deref(), Some("sharp"));
-}
-
-#[test]
 fn existing_file_and_directory_roots_containing_glob_syntax_remain_literal() {
     let (root, _, graph) = setup();
     for path in ["literal[entry.mts", "literal[dir"] {
@@ -226,16 +147,6 @@ fn existing_file_and_directory_roots_containing_glob_syntax_remain_literal() {
             );
         }
     }
-}
-
-#[test]
-fn glob_roots_do_not_parse_the_invocation_directory_as_glob_syntax() {
-    let root = fixture("forbidden-dependencies-globs").join("[literal");
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let findings = check(&root, &config, None).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].file, "src/entry.mts");
-    assert_eq!(findings[0].target.as_deref(), Some("tests/helper.mts"));
 }
 
 #[test]

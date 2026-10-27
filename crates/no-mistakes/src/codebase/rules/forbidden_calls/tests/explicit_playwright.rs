@@ -18,22 +18,6 @@ fn fixture_findings(case: &str) -> anyhow::Result<Vec<crate::codebase::rules::Ru
 }
 
 #[test]
-fn named_playwright_roots_include_explicit_projects() {
-    let findings = fixture_findings("explicit-playwright-named-custom").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "src/custom.spec.ts");
-}
-
-#[test]
-fn all_playwright_roots_include_explicit_projects() {
-    let findings = fixture_findings("explicit-playwright-all").unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "src/custom.spec.ts");
-}
-
-#[test]
 fn explicit_playwright_roots_still_reject_unknown_names() {
     let error = fixture_findings("explicit-playwright-unknown").unwrap_err();
 

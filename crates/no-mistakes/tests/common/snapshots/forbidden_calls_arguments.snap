@@ -1,0 +1,285 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "binding_aware_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repro.mjs",
+          "import": "processes.execFile",
+          "line": 15,
+          "message": "forbidden call (no-live-analyzer-from-tests, application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        },
+        {
+          "file": "repro.mjs",
+          "import": "run",
+          "line": 14,
+          "message": "forbidden call (no-live-analyzer-from-tests, application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "destructuring_finding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "destructuring.mjs",
+          "import": "execute",
+          "line": 4,
+          "message": "forbidden call (destructuring-policy, application #1): unknown arguments for exact `execute`",
+          "rule": "forbidden-calls",
+          "target": "unknown arguments for exact `execute`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "destructuring_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "documented": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repro.mjs",
+          "import": "processes.execFile",
+          "line": 15,
+          "message": "forbidden call (documented-argument-policy, application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        },
+        {
+          "file": "repro.mjs",
+          "import": "run",
+          "line": 14,
+          "message": "forbidden call (documented-argument-policy, application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escape_finding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "escape.mjs",
+          "import": "execute",
+          "line": 5,
+          "message": "forbidden call (escape-policy, application #1): unknown arguments for exact `execute`",
+          "rule": "forbidden-calls",
+          "target": "unknown arguments for exact `execute`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escape_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "null_arguments": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repro.mjs",
+          "import": "processes.execFile",
+          "line": 15,
+          "message": "forbidden call (application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        },
+        {
+          "file": "repro.mjs",
+          "import": "run",
+          "line": 13,
+          "message": "forbidden call (application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        },
+        {
+          "file": "repro.mjs",
+          "import": "run",
+          "line": 14,
+          "message": "forbidden call (application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        },
+        {
+          "file": "repro.mjs",
+          "import": "run",
+          "line": 16,
+          "message": "forbidden call (application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated_finding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated.mjs",
+          "import": "execute",
+          "line": 4,
+          "message": "forbidden call (repeated-policy, application #1): unknown arguments for exact `execute`",
+          "rule": "forbidden-calls",
+          "target": "unknown arguments for exact `execute`"
+        },
+        {
+          "file": "repeated.mjs",
+          "import": "execute",
+          "line": 6,
+          "message": "forbidden call (repeated-policy, application #1): unknown arguments for exact `execute`",
+          "rule": "forbidden-calls",
+          "target": "unknown arguments for exact `execute`"
+        },
+        {
+          "file": "repeated.mjs",
+          "import": "execute",
+          "line": 7,
+          "message": "forbidden call (repeated-policy, application #1): exact `execute`",
+          "rule": "forbidden-calls",
+          "target": "exact `execute`"
+        },
+        {
+          "file": "repeated.mjs",
+          "import": "execute",
+          "line": 8,
+          "message": "forbidden call (repeated-policy, application #1): unknown arguments for exact `execute`",
+          "rule": "forbidden-calls",
+          "target": "unknown arguments for exact `execute`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repeated.mjs",
+          "import": "execute",
+          "line": 7,
+          "message": "forbidden call (repeated-policy, application #1): exact `execute`",
+          "rule": "forbidden-calls",
+          "target": "exact `execute`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "target_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "repro.mjs",
+          "import": "processes.execFile",
+          "line": 15,
+          "message": "forbidden call (application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        },
+        {
+          "file": "repro.mjs",
+          "import": "run",
+          "line": 13,
+          "message": "forbidden call (application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        },
+        {
+          "file": "repro.mjs",
+          "import": "run",
+          "line": 14,
+          "message": "forbidden call (application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        },
+        {
+          "file": "repro.mjs",
+          "import": "run",
+          "line": 16,
+          "message": "forbidden call (application #1): module export `node:child_process#execFile`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:child_process#execFile`"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

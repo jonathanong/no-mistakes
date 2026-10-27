@@ -1,0 +1,994 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default_date_calls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "Date",
+          "line": 11,
+          "message": "forbidden call (application #1): global `Date`",
+          "rule": "forbidden-calls",
+          "target": "global `Date`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exact_page_wait_for_timeout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "page.waitForTimeout",
+          "line": 24,
+          "message": "forbidden call (application #1): exact `page.waitForTimeout`",
+          "rule": "forbidden-calls",
+          "target": "exact `page.waitForTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exact_timers_set_timeout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "timers.setTimeout",
+          "line": 8,
+          "message": "forbidden call (application #1): exact `timers.setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "exact `timers.setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_playwright_all": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/custom.spec.ts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_playwright_named": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/custom.spec.ts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_vitest_all": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/custom.spec.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_vitest_named": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/custom.spec.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "file_and_module_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "file_traversal_function_root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "page.waitForTimeout",
+          "line": 24,
+          "message": "forbidden call (application #1): terminal `waitForTimeout`",
+          "rule": "forbidden-calls",
+          "target": "terminal `waitForTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "function_repository_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "reexportedTarget",
+          "line": 10,
+          "message": "forbidden call (application #1): repository function `src/targets.mts#repositoryTarget`",
+          "rule": "forbidden-calls",
+          "target": "repository function `src/targets.mts#repositoryTarget`"
+        },
+        {
+          "file": "src/selectors.mts",
+          "import": "repositoryTarget",
+          "line": 9,
+          "message": "forbidden call (application #1): repository function `src/targets.mts#repositoryTarget`",
+          "rule": "forbidden-calls",
+          "target": "repository function `src/targets.mts#repositoryTarget`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "glob_exclude_integration": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/unit/timer.test.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "glob_unit_and_integration": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/integration/timer.test.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        },
+        {
+          "file": "src/unit/timer.test.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "glob_unit_tests": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/unit/timer.test.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "global_set_timeout": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_restricts_transitive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invocations_call": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "Date",
+          "line": 11,
+          "message": "forbidden call (application #1): global `Date`",
+          "rule": "forbidden-calls",
+          "target": "global `Date`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invocations_construct": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "Date",
+          "line": 12,
+          "message": "forbidden call (application #1): global `Date`",
+          "rule": "forbidden-calls",
+          "target": "global `Date`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "malformed_file_root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "warning: rules check skipped: forbidden-calls: configured root `src/broken.mts` failed to parse: parsing src/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `)` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`)` expected\"), span: Span { start: 100, end: 100 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+      ]
+    }
+  },
+  "module_export_set_timeout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "importedTimeout",
+          "line": 7,
+          "message": "forbidden call (application #1): module export `node:timers#setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:timers#setTimeout`"
+        },
+        {
+          "file": "src/selectors.mts",
+          "import": "timers.setTimeout",
+          "line": 8,
+          "message": "forbidden call (application #1): module export `node:timers#setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:timers#setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "playwright_named_chromium": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "e2e/sleep.spec.ts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "playwright_terminal": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "e2e/sleep.spec.ts",
+          "import": "page.waitForTimeout",
+          "line": 15,
+          "message": "forbidden call (application #1): terminal `waitForTimeout`",
+          "rule": "forbidden-calls",
+          "target": "terminal `waitForTimeout`"
+        },
+        {
+          "file": "e2e/sleep.spec.ts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        },
+        {
+          "file": "e2e/sleep.spec.ts",
+          "import": "wait",
+          "line": 5,
+          "message": "forbidden call (application #1): module export `node:timers#setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:timers#setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "playwright_true": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "e2e/sleep.spec.ts",
+          "import": "page.waitForTimeout",
+          "line": 15,
+          "message": "forbidden call (application #1): exact `page.waitForTimeout`",
+          "rule": "forbidden-calls",
+          "target": "exact `page.waitForTimeout`"
+        },
+        {
+          "file": "e2e/sleep.spec.ts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        },
+        {
+          "file": "e2e/sleep.spec.ts",
+          "import": "wait",
+          "line": 5,
+          "message": "forbidden call (application #1): module export `node:timers#setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "module export `node:timers#setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repeated_applications": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (same, application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        },
+        {
+          "file": "src/entry.mts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (same, application #2): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_occurrences": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/timers.mts",
+          "import": "setTimeout",
+          "line": 1,
+          "message": "forbidden call (no-real-timers, application #1): global `setTimeout` (occurrence 1)",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        },
+        {
+          "file": "src/timers.mts",
+          "import": "setTimeout",
+          "line": 1,
+          "message": "forbidden call (no-real-timers, application #1): global `setTimeout` (occurrence 2)",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressed_source": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "terminal_set_timeout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "importedTimeout",
+          "line": 7,
+          "message": "forbidden call (application #1): terminal `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "terminal `setTimeout`"
+        },
+        {
+          "file": "src/selectors.mts",
+          "import": "timers.setTimeout",
+          "line": 8,
+          "message": "forbidden call (application #1): terminal `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "terminal `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "terminal_wait_for_timeout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "page.waitForTimeout",
+          "line": 24,
+          "message": "forbidden call (application #1): terminal `waitForTimeout`",
+          "rule": "forbidden-calls",
+          "target": "terminal `waitForTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "traversal_direct": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "traversal_max_depth_1": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "traversal_transitive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        },
+        {
+          "file": "src/first.mts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        },
+        {
+          "file": "src/second.mts",
+          "import": "setTimeout",
+          "line": 4,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_calls_finding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/selectors.mts",
+          "import": "<unknown>",
+          "line": 20,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "target": "unknown call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_calls_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "valid_entry_root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "vitest_all": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/integration/timer.test.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        },
+        {
+          "file": "src/unit/timer.test.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "vitest_named_unit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/suppressed.mts",
+          "line": 2,
+          "message": "directive for `forbidden-calls` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "forbidden-calls"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/unit/timer.test.mts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

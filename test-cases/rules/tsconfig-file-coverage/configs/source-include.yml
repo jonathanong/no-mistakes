@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    include:
+      - "src/**/*.ts"

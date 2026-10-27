@@ -1,0 +1,1405 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_matching_captures": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "anchor_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup-lychee/action.yml",
+          "line": 8,
+          "message": ".github/actions/setup-lychee/action.yml: lychee version mismatch — .github/actions/setup-lychee/action.yml says \"0.24.1\" but .mise.toml pins \"0.24.2\". Update both in the same commit.",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "anchor_only_missing_key": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "anchor_only_non_string": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "anchor_utf8_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "invalid-utf8.md",
+          "line": 1,
+          "message": "invalid-utf8.md: version comparison is incomplete because the selected anchor could not be analyzed (cannot read invalid-utf8.md: invalid utf-8 sequence of 1 bytes from index 0). Restore the anchor as readable UTF-8 text so its pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "anchor_utf8_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "anchor_utf8_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid-utf8.md",
+          "line": 1,
+          "message": "invalid-utf8.md: version comparison is incomplete because the selected anchor could not be analyzed (cannot read invalid-utf8.md: invalid utf-8 sequence of 1 bytes from index 0). Restore the anchor as readable UTF-8 text so its pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disable_dotted_key": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_mapping_key": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dot_slash": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup-lychee/action.yml",
+          "line": 8,
+          "message": ".github/actions/setup-lychee/action.yml: lychee version mismatch — .github/actions/setup-lychee/action.yml says \"0.24.1\" but .mise.toml pins \"0.24.2\". Update both in the same commit.",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_anchor": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_label": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup-lychee/action.yml",
+          "line": 1,
+          "message": ".github/actions/setup-lychee/action.yml: .github/actions/setup-lychee/action.yml version mismatch — .github/actions/setup-lychee/action.yml says \"0.24.1\" but .mise.toml pins \"0.24.2\". Update both in the same commit.",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_options": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_source_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_toml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 1,
+          "message": ".mise.toml: expected key \"tools.aqua:lycheeverse/lychee\" for lychee not found",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude_anchor": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_anchor_missing_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 1,
+          "message": ".mise.toml: expected key \"tools.aqua:lycheeverse/lychee\" for .mise.toml not found",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "failed_dependency": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: version comparison is incomplete because source versions.toml could not be analyzed (failed to parse TOML (TOML parse error at line 1, column 7\n  |\n1 | [tools\n  |       ^\nunclosed table, expected `]`\n)). Restore the declared source file and correct its syntax so the anchor pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_miss": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_pattern": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 1,
+          "message": ".mise.toml: lychee pattern is invalid (regex parse error:\n    LYCHEE_VERSION:(\n                   ^\nerror: unclosed group)",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_pattern_anchor_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_toml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 1,
+          "message": ".mise.toml: failed to parse TOML (TOML parse error at line 2, column 8\n  |\n2 | \"broken\n  |        ^\nkey with no value, expected `=`\n)",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.yml",
+          "line": 1,
+          "message": "versions.yml: failed to parse YAML (did not find expected key, while parsing a block mapping)",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "json_source": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "jsonc_source": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "later_stale_capture": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup-lychee/action.yml",
+          "line": 2,
+          "message": ".github/actions/setup-lychee/action.yml: lychee version mismatch — .github/actions/setup-lychee/action.yml says \"0.24.1\" but .mise.toml pins \"0.24.2\". Update both in the same commit.",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_dotted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.yml",
+          "line": 2,
+          "message": "versions.yml: expected key \"tools.foo.bar\" for tool to be a string pin, got 8 — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mapping_key_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.yml",
+          "line": 4,
+          "message": "versions.yml: expected key \"package.engines.node\" for node to be a string pin, got 20 — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mismatch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup-lychee/action.yml",
+          "line": 8,
+          "message": ".github/actions/setup-lychee/action.yml: lychee version mismatch — .github/actions/setup-lychee/action.yml says \"0.24.1\" but .mise.toml pins \"0.24.2\". Update both in the same commit.",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_capture": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup-lychee/action.yml",
+          "line": 1,
+          "message": ".github/actions/setup-lychee/action.yml: could not find lychee version reference matching expected pattern",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_key_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 1,
+          "message": ".mise.toml: expected key \"tools.aqua:lycheeverse/lychee\" for lychee not found",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_source_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 1,
+          "message": ".mise.toml: expected key \"tools.aqua:lycheeverse/lychee\" for lychee not found",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multibyte_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.yml",
+          "line": 4,
+          "message": "versions.yml: expected key \"package.engines.node\" for node to be a string pin, got 20 — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_dotted_key": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "non_string_pin": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 2,
+          "message": ".mise.toml: expected key \"tools.aqua:lycheeverse/lychee\" for lychee to be a string pin, got 8 — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "one_capture_required": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 1,
+          "message": ".mise.toml: lychee pattern must have exactly one capturing group",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "optional_capture": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup-lychee/action.yml",
+          "line": 1,
+          "message": ".github/actions/setup-lychee/action.yml: lychee version mismatch — .github/actions/setup-lychee/action.yml says \"\" but .mise.toml pins \"0.24.2\". Update both in the same commit.",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parent_escape": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/setup-lychee/action.yml",
+          "line": 1,
+          "message": ".github/actions/setup-lychee/action.yml: version comparison is incomplete because source ../outside.toml could not be analyzed (../outside.toml is missing or is not a readable repository file). Restore the declared source file and correct its syntax so the anchor pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pin_kind_array": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.yml",
+          "line": 2,
+          "message": "versions.yml: expected key \"tools.aqua:lycheeverse/lychee\" for lychee to be a string pin, got array — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pin_kind_null": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.yml",
+          "line": 2,
+          "message": "versions.yml: expected key \"tools.aqua:lycheeverse/lychee\" for lychee to be a string pin, got null — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pin_kind_object": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.yml",
+          "line": 2,
+          "message": "versions.yml: expected key \"tools.aqua:lycheeverse/lychee\" for lychee to be a string pin, got object — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pin_kind_true": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 2,
+          "message": ".mise.toml: expected key \"tools.aqua:lycheeverse/lychee\" for lychee to be a string pin, got true — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_empty_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "disabled.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        },
+        {
+          "file": "line.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "empty.toml",
+          "line": 1,
+          "message": "empty.toml: expected key \"tools.pin\" for README.md not found",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_empty_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "disabled.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        },
+        {
+          "file": "line.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "empty.toml",
+          "line": 1,
+          "message": "empty.toml: expected key \"tools.pin\" for README.md not found",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_empty_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "disabled.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        },
+        {
+          "file": "line.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "empty.toml",
+          "line": 1,
+          "message": "empty.toml: expected key \"tools.pin\" for README.md not found",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_versions_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "disabled.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        },
+        {
+          "file": "line.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.toml",
+          "line": 1,
+          "message": "versions.toml: failed to parse TOML (TOML parse error at line 1, column 7\n  |\n1 | [tools\n  |       ^\nunclosed table, expected `]`\n)",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_versions_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "disabled.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        },
+        {
+          "file": "line.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.toml",
+          "line": 1,
+          "message": "versions.toml: failed to parse TOML (TOML parse error at line 1, column 7\n  |\n1 | [tools\n  |       ^\nunclosed table, expected `]`\n)",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_versions_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "disabled.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        },
+        {
+          "file": "line.md",
+          "line": 1,
+          "message": "directive for `version-pin-consistency` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "version-pin-consistency"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.toml",
+          "line": 1,
+          "message": "versions.toml: failed to parse TOML (TOML parse error at line 1, column 7\n  |\n1 | [tools\n  |       ^\nunclosed table, expected `]`\n)",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "skip_absent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "source_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "source_only_missing_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 1,
+          "message": ".mise.toml: expected key \"tools.aqua:lycheeverse/lychee\" for .mise.toml not found",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "source_only_non_string": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 2,
+          "message": ".mise.toml: expected key \"tools.aqua:lycheeverse/lychee\" for .mise.toml to be a string pin, got 8 — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "source_utf8_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid-utf8.toml",
+          "line": 1,
+          "message": "invalid-utf8.toml: cannot read invalid-utf8.toml: invalid utf-8 sequence of 1 bytes from index 0; restore the declared source as readable UTF-8 text",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "source_utf8_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid-utf8.toml",
+          "line": 1,
+          "message": "invalid-utf8.toml: cannot read invalid-utf8.toml: invalid utf-8 sequence of 1 bytes from index 0; restore the declared source as readable UTF-8 text",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "source_utf8_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid-utf8.toml",
+          "line": 1,
+          "message": "invalid-utf8.toml: cannot read invalid-utf8.toml: invalid utf-8 sequence of 1 bytes from index 0; restore the declared source as readable UTF-8 text",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppress_disabled_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppress_disabled_report": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppress_line_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppress_line_report": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "tagged_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.yml",
+          "line": 2,
+          "message": "versions.yml: expected key \"tools.aqua:lycheeverse/lychee\" for lychee to be a string pin, got \"hello\" — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "two_groups": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".mise.toml",
+          "line": 1,
+          "message": ".mise.toml: lychee pattern must have exactly one capturing group",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: version comparison is incomplete because source versions.toml could not be analyzed (failed to parse TOML (TOML parse error at line 1, column 7\n  |\n1 | [tools\n  |       ^\nunclosed table, expected `]`\n)). Restore the declared source file and correct its syntax so the anchor pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unavailable_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unavailable_missing_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: version comparison is incomplete because source missing.toml could not be analyzed (missing.toml is missing or is not a readable repository file). Restore the declared source file and correct its syntax so the anchor pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unavailable_missing_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unavailable_missing_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: version comparison is incomplete because source missing.toml could not be analyzed (missing.toml is missing or is not a readable repository file). Restore the declared source file and correct its syntax so the anchor pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_mixed_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: version comparison is incomplete because source versions.toml could not be analyzed (failed to parse TOML (TOML parse error at line 1, column 7\n  |\n1 | [tools\n  |       ^\nunclosed table, expected `]`\n)). Restore the declared source file and correct its syntax so the anchor pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: README.md version mismatch — README.md says \"1.2.3\" but valid.toml pins \"2.0.0\". Update both in the same commit.",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_mixed_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: README.md version mismatch — README.md says \"1.2.3\" but valid.toml pins \"2.0.0\". Update both in the same commit.",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_mixed_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: README.md version mismatch — README.md says \"1.2.3\" but valid.toml pins \"2.0.0\". Update both in the same commit.",
+          "rule": "version-pin-consistency"
+        },
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: version comparison is incomplete because source versions.toml could not be analyzed (failed to parse TOML (TOML parse error at line 1, column 7\n  |\n1 | [tools\n  |       ^\nunclosed table, expected `]`\n)). Restore the declared source file and correct its syntax so the anchor pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: version comparison is incomplete because source versions.toml could not be analyzed (failed to parse TOML (TOML parse error at line 1, column 7\n  |\n1 | [tools\n  |       ^\nunclosed table, expected `]`\n)). Restore the declared source file and correct its syntax so the anchor pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unavailable_unselected": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "undotted_mapping": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "undotted_scalar": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "version.yml",
+          "line": 1,
+          "message": "version.yml: expected key \"ignored\" for tool not found",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unicode_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "versions.yml",
+          "line": 3,
+          "message": "versions.yml: expected key \"版本\" for tool to be a string pin, got 123 — invalid pin",
+          "rule": "version-pin-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unreadable_source_for_anchor": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "README.md",
+          "line": 1,
+          "message": "README.md: version comparison is incomplete because source invalid-utf8.toml could not be analyzed (cannot read invalid-utf8.toml: invalid utf-8 sequence of 1 bytes from index 0). Restore the declared source file and correct its syntax so the anchor pin can be compared.",
+          "rule": "version-pin-consistency",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "yaml_source": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
