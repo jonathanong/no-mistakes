@@ -24,7 +24,7 @@ macro_rules! root_values {
 }
 pub(super) use root_values;
 thread_local! { static LIVE_BINDINGS: Cell<usize> = const { Cell::new(0) }; }
-pub(super) fn record_live_binding() {
+pub(super) fn live_binding_read() {
     LIVE_BINDINGS.set(LIVE_BINDINGS.get() + 1);
 }
 pub(super) fn measure_live_bindings<T>(run: impl FnOnce() -> T) -> (T, usize) {
@@ -40,8 +40,7 @@ pub(super) fn measure_live_bindings<T>(run: impl FnOnce() -> T) -> (T, usize) {
 }
 macro_rules! record_live_binding {
     () => {
-        $crate::codebase::postgres::query_annotation::evaluate::effects::hooks::record_live_binding(
-        );
+        $crate::codebase::postgres::query_annotation::evaluate::effects::hooks::live_binding_read();
     };
 }
 pub(super) use record_live_binding;
