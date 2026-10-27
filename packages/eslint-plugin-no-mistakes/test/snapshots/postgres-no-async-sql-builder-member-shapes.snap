@@ -1,0 +1,451 @@
+[
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "names": [
+              "build"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

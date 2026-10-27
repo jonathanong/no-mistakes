@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { runInNewContext } from "node:vm";
 import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { fixture, lint, require } from "./helpers.mjs";
 
 const id = "ts-no-function-aliases";
@@ -28,7 +29,43 @@ const shape = (items) =>
 
 // Saved independently of the implementation: identifier binding origin must
 // never affect the released syntactic contract, including its historical quirks.
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const corpus = JSON.parse(fixture(`${id}/identifier-release-corpus.json`));
+
+function corpusCase(code) {
+  return {
+    code,
+    filename: "fixture.ts",
+    languageOptions: { parser: tsParser },
+  };
+}
+
+const suite = {
+  valid: corpus.filter((item) => item.expected === 0).map((item) => corpusCase(item.code)),
+  invalid: [
+    // 34 alias.
+    corpusCase(fixture(`${id}/release-controls.ts`)),
+    // 2 alias.
+    corpusCase(fixture(`${id}/private-recall.ts`)),
+    // 366 alias, one per remaining corpus source.
+    ...corpus.filter((item) => item.expected !== 0).map((item) => corpusCase(item.code)),
+  ],
+};
+
 describe("identifier compatibility corpus from v0.95.0", () => {
+  it("snapshots ts-no-function-aliases-identifier-corpus diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [id]: snapshotSuite(id, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/ts-no-function-aliases-identifier-corpus.snap");
+  }, 30_000);
+
   for (const [name, expected] of [
     ["release-controls.ts", 34],
     ["private-recall.ts", 2],

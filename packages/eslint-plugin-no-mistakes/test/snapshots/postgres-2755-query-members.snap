@@ -1,0 +1,235 @@
+{
+  "postgres-no-manual-transaction": [
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 30,
+          "endLine": 6,
+          "file": "app.ts",
+          "line": 6,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 7,
+          "file": "app.ts",
+          "line": 7,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 15,
+          "endLine": 9,
+          "file": "app.ts",
+          "line": 9,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 24,
+          "endLine": 18,
+          "file": "app.ts",
+          "line": 18,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "pg"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 32,
+          "endLine": 7,
+          "file": "app.ts",
+          "line": 7,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 12,
+          "file": "app.ts",
+          "line": 12,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "pg"
+        }
+      ]
+    }
+  ],
+  "postgres-no-nonliteral-sql-registry-key": [
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 43,
+          "endLine": 14,
+          "file": "app.ts",
+          "line": 14,
+          "message": "registry[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"users\": return \"users\"; case \"teams\": return \"teams\"; default: throw new Error(\"unknown\"); } })((tableName))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "pg"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 48,
+          "endLine": 9,
+          "file": "app.ts",
+          "line": 9,
+          "message": "registry[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"users\": return \"users\"; case \"teams\": return \"teams\"; default: throw new Error(\"unknown\"); } })((tableName))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 48,
+          "endLine": 14,
+          "file": "app.ts",
+          "line": 14,
+          "message": "registry[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"users\": return \"users\"; case \"teams\": return \"teams\"; default: throw new Error(\"unknown\"); } })((tableName))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "pg"
+        }
+      ]
+    }
+  ],
+  "postgres-no-unbounded-query-fanout": [
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 57,
+          "endLine": 11,
+          "file": "app.ts",
+          "line": 11,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 54,
+          "endLine": 12,
+          "file": "app.ts",
+          "line": 12,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "pg"
+        }
+      ]
+    },
+    {
+      "file": "app.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 57,
+          "endLine": 8,
+          "file": "app.ts",
+          "line": 8,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 57,
+          "endLine": 13,
+          "file": "app.ts",
+          "line": 13,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "openTransaction"
+          ],
+          "executorTypeNames": [
+            "TxExecutor"
+          ],
+          "importSpecifier": "pg"
+        }
+      ]
+    }
+  ]
+}

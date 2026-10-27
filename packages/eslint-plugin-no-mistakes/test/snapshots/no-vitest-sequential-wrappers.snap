@@ -1,0 +1,382 @@
+{
+  "no-vitest-sequential": [
+    {
+      "file": "typed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "typed-wrappers-valid.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "typed.test.ts",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 32,
+          "endLine": 4,
+          "file": "typed.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 39,
+          "endLine": 5,
+          "file": "typed.test.ts",
+          "line": 5,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "typed.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 30,
+          "endLine": 7,
+          "file": "typed.test.ts",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 21,
+          "endLine": 8,
+          "file": "typed.test.ts",
+          "line": 8,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 9,
+          "file": "typed.test.ts",
+          "line": 9,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 10,
+          "file": "typed.test.ts",
+          "line": 10,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 11,
+          "file": "typed.test.ts",
+          "line": 11,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 59,
+          "endLine": 12,
+          "file": "typed.test.ts",
+          "line": 12,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 7,
+          "endLine": 14,
+          "file": "typed.test.ts",
+          "line": 14,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 15,
+          "file": "typed.test.ts",
+          "line": 15,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 16,
+          "file": "typed.test.ts",
+          "line": 16,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 17,
+          "file": "typed.test.ts",
+          "line": 17,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 18,
+          "file": "typed.test.ts",
+          "line": 18,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 38,
+          "endLine": 19,
+          "file": "typed.test.ts",
+          "line": 19,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 22,
+          "endLine": 21,
+          "file": "typed.test.ts",
+          "line": 21,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "typed-wrappers.test.ts",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 32,
+          "endLine": 4,
+          "file": "typed-wrappers.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 39,
+          "endLine": 5,
+          "file": "typed-wrappers.test.ts",
+          "line": 5,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "typed-wrappers.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 30,
+          "endLine": 7,
+          "file": "typed-wrappers.test.ts",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 21,
+          "endLine": 8,
+          "file": "typed-wrappers.test.ts",
+          "line": 8,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 9,
+          "file": "typed-wrappers.test.ts",
+          "line": 9,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 10,
+          "file": "typed-wrappers.test.ts",
+          "line": 10,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 11,
+          "file": "typed-wrappers.test.ts",
+          "line": 11,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 59,
+          "endLine": 12,
+          "file": "typed-wrappers.test.ts",
+          "line": 12,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 7,
+          "endLine": 14,
+          "file": "typed-wrappers.test.ts",
+          "line": 14,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 15,
+          "file": "typed-wrappers.test.ts",
+          "line": 15,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 16,
+          "file": "typed-wrappers.test.ts",
+          "line": 16,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 17,
+          "file": "typed-wrappers.test.ts",
+          "line": 17,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 18,
+          "file": "typed-wrappers.test.ts",
+          "line": 18,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 38,
+          "endLine": 19,
+          "file": "typed-wrappers.test.ts",
+          "line": 19,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 22,
+          "endLine": 21,
+          "file": "typed-wrappers.test.ts",
+          "line": 21,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

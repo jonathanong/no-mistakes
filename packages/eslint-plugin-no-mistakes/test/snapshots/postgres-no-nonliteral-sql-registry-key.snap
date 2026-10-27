@@ -1,0 +1,284 @@
+[
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/finite-key.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/bound-silent.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/silent.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": []
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts",
+    "findings": [
+      {
+        "column": 26,
+        "endColumn": 38,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts",
+        "line": 7,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; case \"accounts\": return \"accounts\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 22,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts",
+        "line": 8,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; case \"accounts\": return \"accounts\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      },
+      {
+        "column": 29,
+        "endColumn": 67,
+        "endLine": 9,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/dynamic.ts",
+        "line": 9,
+        "message": "QUOTED[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"order items\": return \"order items\"; default: throw new Error(\"unknown\"); } })((flag ? \"order items\" : \"other\"))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/other-key.ts",
+    "findings": [
+      {
+        "column": 18,
+        "endColumn": 52,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/other-key.ts",
+        "line": 5,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind as keyof typeof OTHER))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      },
+      {
+        "column": 18,
+        "endColumn": 40,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/other-key.ts",
+        "line": 6,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind as string))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      },
+      {
+        "column": 18,
+        "endColumn": 45,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/other-key.ts",
+        "line": 7,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind as keyof Other))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      },
+      {
+        "column": 18,
+        "endColumn": 47,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/other-key.ts",
+        "line": 8,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind as typeof TABLES))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/bound-sql.ts",
+    "findings": [
+      {
+        "column": 27,
+        "endColumn": 39,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/bound-sql.ts",
+        "line": 4,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; case \"accounts\": return \"accounts\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      },
+      {
+        "column": 31,
+        "endColumn": 43,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/bound-sql.ts",
+        "line": 8,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; case \"accounts\": return \"accounts\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/bound-suppression.ts",
+    "findings": [
+      {
+        "column": 31,
+        "endColumn": 43,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/bound-suppression.ts",
+        "line": 15,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/duplicate-keys.ts",
+    "findings": [
+      {
+        "column": 18,
+        "endColumn": 30,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/duplicate-keys.ts",
+        "line": 5,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"order /\"items/\"\"; case \"accounts\": return \"{{accounts}}\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/selector-contexts.ts",
+    "findings": [
+      {
+        "column": 18,
+        "endColumn": 40,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/selector-contexts.ts",
+        "line": 6,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; case \"accounts\": return \"accounts\"; default: throw new Error(\"unknown\"); } })((await choose()))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      },
+      {
+        "column": 18,
+        "endColumn": 37,
+        "endLine": 9,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/selector-contexts.ts",
+        "line": 9,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; case \"accounts\": return \"accounts\"; default: throw new Error(\"unknown\"); } })((yield \"key\"))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      },
+      {
+        "column": 18,
+        "endColumn": 46,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/selector-contexts.ts",
+        "line": 14,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; case \"accounts\": return \"accounts\"; default: throw new Error(\"unknown\"); } })((chooseSync(), kind))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/suppression.ts",
+    "findings": [
+      {
+        "column": 18,
+        "endColumn": 30,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-nonliteral-sql-registry-key/suppression.ts",
+        "line": 8,
+        "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+        "messageId": "dynamicKey",
+        "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  }
+]

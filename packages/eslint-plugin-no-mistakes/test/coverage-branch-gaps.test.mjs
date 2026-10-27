@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
+import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
-
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { messages, require } from "./helpers.mjs";
+
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const typescript = { parser: tsParser, sourceType: "module", globals: {} };
 
 const { isFetchCall } = require("../src/helpers.js");
 const {
@@ -596,19 +605,6 @@ describe("preserve-null, react-node, and helper remaining arms", () => {
         property: { type: "Identifier", name: "value" },
       },
     });
-    assert.deepEqual(
-      messages(
-        `interface Options { value?: string | null }
-       export function copy(options: Options) {
-         copied = options.value;
-         return copied;
-       }`,
-        "ts-preserve-null-option-defaults",
-        undefined,
-        "a.ts",
-      ),
-      [],
-    );
     visitors["Program:exit"]();
     messages(
       `interface Options { value?: string | null }
@@ -1578,3 +1574,27 @@ describe("null and visitor remaining arms", () => {
     caughtThrowCanContinue(tryThrow, node("CallExpression", { range: [90, 95] }));
   });
 });
+
+it("snapshots remaining diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      "ts-preserve-null-option-defaults": snapshotSuite(
+        "ts-preserve-null-option-defaults",
+        languageOptions,
+        {
+          valid: [
+            {
+              code: `interface Options { value?: string | null }
+       export function copy(options: Options) {
+         copied = options.value;
+         return copied;
+       }`,
+              filename: "a.ts",
+              languageOptions: typescript,
+            },
+          ],
+        },
+      ),
+    }),
+  ).toMatchFileSnapshot("snapshots/coverage-branch-gaps-remaining.snap");
+}, 30_000);

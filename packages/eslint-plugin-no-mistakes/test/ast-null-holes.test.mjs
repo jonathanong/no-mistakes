@@ -1,25 +1,51 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { __dirname, fixture, lint, messages, plugin } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { __dirname, fixture, lint, plugin } from "./helpers.mjs";
 
 const rule = "postgres-no-async-sql-builder";
 const options = { builders: [{ names: ["build"] }] };
 const holes = () => fixture(`${rule}/ast-holes.ts`);
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+const suite = {
+  valid: [
+    // does not crash or report on sparse patterns, arrays, and optional children.
+    // Zero findings.
+    {
+      code: holes(),
+      filename: "holes.ts",
+      options: [options],
+      languageOptions: { parser: tsParser },
+    },
+  ],
+  invalid: [
+    // continues collecting types and checking builders after a hole.
+    // One removeAsync finding.
+    {
+      code: fixture(`${rule}/ast-holes-builder.ts`),
+      filename: "builder.ts",
+      options: [options],
+      languageOptions: { parser: tsParser },
+    },
+  ],
+};
+
+it("snapshots postgres-no-async-sql-builder diagnostics", async () => {
+  await expect(snapshotDocument(snapshotSuite(rule, languageOptions, suite))).toMatchFileSnapshot(
+    "snapshots/ast-null-holes.snap",
+  );
+}, 30_000);
 
 describe("plugin AST null holes", () => {
-  it("does not crash or report on sparse patterns, arrays, and optional children", () => {
-    assert.deepEqual(messages(holes(), rule, options, "holes.ts"), []);
-  });
-
-  it("continues collecting types and checking builders after a hole", () => {
-    assert.deepEqual(
-      messages(fixture(`${rule}/ast-holes-builder.ts`), rule, options, "builder.ts"),
-      ["removeAsync"],
-    );
-  });
-
   it("exercises the sparse fixture with every plugin rule", () => {
     for (const name of Object.keys(plugin.rules)) {
       // Default options exercise general walkers; SQL type collection needs a builder scope.

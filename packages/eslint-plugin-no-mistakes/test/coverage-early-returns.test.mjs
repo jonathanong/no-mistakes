@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { messages, require } from "./helpers.mjs";
+
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 
 const { createTargetMatcher } = require("../src/rules/async-targets.js");
 const { matchDirectMockCallApply } = require("../src/rules/module-mock-call-apply.js");
@@ -318,7 +325,6 @@ describe("lint edges that hit remaining guards", () => {
       "a.test.ts",
     );
     messages("describe.sequential('s', () => {});", "no-vitest-sequential", undefined, "a.test.js");
-    expect(messages("it(() => {});", "no-vitest-sequential", undefined, "a.test.js")).toEqual([]);
   });
 
   it("covers metadata rest, empty test files, and export renaming literals", () => {
@@ -333,9 +339,6 @@ describe("lint edges that hit remaining guards", () => {
       "nextjs-metadata-exports-location",
       undefined,
       "app/lib.ts",
-    );
-    expect(messages('"use strict";', "no-import-only-test-files", undefined, "a.test.js")).toEqual(
-      [],
     );
     messages(
       'export { value as "alias" }; const value = 1;',
@@ -371,9 +374,6 @@ describe("lint edges that hit remaining guards", () => {
       { checkedPathPatterns: ["**"] },
       "a.ts",
     );
-    expect(
-      messages("const n = (() => 1)(); const el = <div>{n}</div>;", "react-no-iife-in-jsx"),
-    ).toEqual([]);
   });
 
   it("fires rule visitors with incomplete nodes", () => {
@@ -424,3 +424,24 @@ describe("lint edges that hit remaining guards", () => {
     }
   });
 });
+
+it("snapshots remaining diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      "no-import-only-test-files": snapshotSuite("no-import-only-test-files", languageOptions, {
+        valid: [{ code: '"use strict";', filename: "a.test.js" }],
+      }),
+      "no-vitest-sequential": snapshotSuite("no-vitest-sequential", languageOptions, {
+        valid: [{ code: "it(() => {});", filename: "a.test.js" }],
+      }),
+      "react-no-iife-in-jsx": snapshotSuite("react-no-iife-in-jsx", languageOptions, {
+        valid: [
+          {
+            code: "const n = (() => 1)(); const el = <div>{n}</div>;",
+            filename: "fixture.jsx",
+          },
+        ],
+      }),
+    }),
+  ).toMatchFileSnapshot("snapshots/coverage-early-returns-remaining.snap");
+}, 30_000);

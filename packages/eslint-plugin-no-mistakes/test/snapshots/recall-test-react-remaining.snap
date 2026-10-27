@@ -1,0 +1,419 @@
+{
+  "no-import-only-test-files": [
+    {
+      "file": "dynamic.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "dynamic-forward.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "recall.test.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 7,
+          "file": "recall.test.js",
+          "line": 1,
+          "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
+          "messageId": "aggregate",
+          "ruleId": "no-mistakes/no-import-only-test-files",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "forwarded.test.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "forwarded.test.js",
+          "line": 1,
+          "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
+          "messageId": "aggregate",
+          "ruleId": "no-mistakes/no-import-only-test-files",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-vitest-sequential": [
+    {
+      "file": "recall.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "recall.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "recall.test.ts",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 8,
+          "file": "recall.test.ts",
+          "line": 8,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 9,
+          "file": "recall.test.ts",
+          "line": 9,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 24,
+          "endLine": 10,
+          "file": "recall.test.ts",
+          "line": 10,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 11,
+          "endLine": 12,
+          "file": "recall.test.ts",
+          "line": 12,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 26,
+          "endLine": 13,
+          "file": "recall.test.ts",
+          "line": 13,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 14,
+          "file": "recall.test.ts",
+          "line": 14,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 16,
+          "file": "recall.test.ts",
+          "line": 16,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 21,
+          "file": "recall.test.ts",
+          "line": 21,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 22,
+          "file": "recall.test.ts",
+          "line": 22,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 23,
+          "file": "recall.test.ts",
+          "line": 23,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 31,
+          "file": "recall.test.ts",
+          "line": 31,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 33,
+          "file": "recall.test.ts",
+          "line": 33,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 34,
+          "file": "recall.test.ts",
+          "line": 34,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "created-runner.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 4,
+          "file": "created-runner.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "renamed-fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "renamed-fixture.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default-import.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "default-import.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "module-function.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "module-function.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "module-let.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "module-let.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "module-var.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "module-var.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "const-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 7,
+          "file": "const-alias.test.ts",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 8,
+          "file": "const-alias.test.ts",
+          "line": 8,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "vitest-mock-test-file-naming": [
+    {
+      "file": "suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "recall.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 23,
+          "file": "recall.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default.mock.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 6,
+          "file": "default.mock.test.ts",
+          "line": 1,
+          "message": "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
+          "messageId": "unnecessaryMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

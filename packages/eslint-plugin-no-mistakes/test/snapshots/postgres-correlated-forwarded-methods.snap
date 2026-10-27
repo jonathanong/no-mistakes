@@ -1,0 +1,217 @@
+[
+  {
+    "file": "fixture.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 46,
+        "endLine": 3,
+        "file": "fixture.ts",
+        "line": 3,
+        "message": "Independent appends on q can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 40,
+        "endLine": 9,
+        "file": "fixture.ts",
+        "line": 9,
+        "message": "Independent appends on q can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 13,
+        "file": "fixture.ts",
+        "line": 13,
+        "message": "Independent appends on q can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 58,
+        "endLine": 17,
+        "file": "fixture.ts",
+        "line": 17,
+        "message": "Independent appends on q can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 50,
+        "endLine": 21,
+        "file": "fixture.ts",
+        "line": 21,
+        "message": "Independent appends on other can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 3,
+        "file": "fixture.ts",
+        "line": 3,
+        "message": "Independent appends on q can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 11,
+        "file": "fixture.ts",
+        "line": 11,
+        "message": "Independent appends on q can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 4,
+        "endLine": 21,
+        "file": "fixture.ts",
+        "line": 18,
+        "message": "Independent appends on other can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 4,
+        "endLine": 21,
+        "file": "fixture.ts",
+        "line": 18,
+        "message": "Independent appends on q can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "fixture.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 34,
+        "endLine": 2,
+        "file": "fixture.ts",
+        "line": 2,
+        "message": "Independent appends on q can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 33,
+        "endLine": 6,
+        "file": "fixture.ts",
+        "line": 6,
+        "message": "Independent appends on q can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builderMethods": [
+          "apply",
+          "call"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,478 @@
+[
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/silent.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/complete-guards.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-call-limits.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {}
+    ]
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "fixture.jsx",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/repeated.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 66,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/repeated.ts",
+        "line": 6,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\": case \"all\": case \"literal\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 66,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/repeated.ts",
+        "line": 15,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 71,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/repeated.ts",
+        "line": 20,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 66,
+        "endLine": 26,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/repeated.ts",
+        "line": 26,
+        "message": "Independent appends on query can leave an unknown or empty path for flag. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/suppression.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 66,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/suppression.ts",
+        "line": 12,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 21,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 4,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 66,
+        "endLine": 9,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 9,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 66,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 14,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 63,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 20,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 68,
+        "endLine": 27,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 27,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 37,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 34,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 37,
+        "endLine": 44,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 42,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 52,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 50,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 74,
+        "endLine": 56,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 56,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 37,
+        "endLine": 65,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 63,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 73,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 71,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 80,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 78,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 86,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 84,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 93,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+        "line": 91,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 69,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+        "line": 8,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 69,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+        "line": 13,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 69,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+        "line": 18,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 72,
+        "endLine": 23,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+        "line": 23,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 72,
+        "endLine": 28,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+        "line": 28,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 78,
+        "endLine": 33,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+        "line": 33,
+        "message": "Independent appends on other can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 78,
+        "endLine": 38,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+        "line": 38,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 57,
+        "endLine": 44,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+        "line": 44,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 57,
+        "endLine": 52,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+        "line": 52,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/call-method.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 64,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/call-method.ts",
+        "line": 7,
+        "message": "Independent appends on query can leave an unknown or empty path for access. Return a complete statement from one switch (case \"owned\": case \"member\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builderMethods": [
+          "call"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
+  }
+]

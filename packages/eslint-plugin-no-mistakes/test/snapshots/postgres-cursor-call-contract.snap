@@ -1,0 +1,1494 @@
+[
+  {
+    "file": "src/annotated.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/sql-tag.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/appended-sql-tag.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/chained-append.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/namespace-const-binding.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/namespace-annotated.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/namespace-computed-literal.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/reused-const-binding.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/lookalike.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/unrelated-tag.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/namespace-other-member.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/reexport-other.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/type-only.mts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/type-only-reexport.mts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/type-only-local-reexport.mts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/typescript-wrapper.mts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/namespace-typescript-wrapper.mts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/namespace-type-query.mts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/service.test.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "exclude": [
+          "**/*.test.js",
+          "**/test-helpers/**"
+        ],
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "includeFiles": [
+          "lib/test-helpers/seed.js"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/a.js",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "src/a.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor"
+        ],
+        "modules": []
+      }
+    ]
+  },
+  {
+    "file": "src/a.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "modules": [
+          "@db/cursors"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/custom-sql-tag.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "sqlTagModules": [
+          "@db/sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/custom.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "annotation": "^--",
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/service.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "include": [
+          "**/*.mjs"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/annotated-sql-tag.js",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/raw-string.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 21,
+        "endLine": 2,
+        "file": "src/raw-string.js",
+        "line": 2,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/renamed-subpath.js",
+    "findings": [
+      {
+        "column": 8,
+        "endColumn": 21,
+        "endLine": 3,
+        "file": "src/renamed-subpath.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/namespace.js",
+    "findings": [
+      {
+        "column": 21,
+        "endColumn": 31,
+        "endLine": 2,
+        "file": "src/namespace.js",
+        "line": 2,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/const-binding.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 20,
+        "endLine": 3,
+        "file": "src/const-binding.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/unresolved.js",
+    "findings": [
+      {
+        "column": 52,
+        "endColumn": 61,
+        "endLine": 2,
+        "file": "src/unresolved.js",
+        "line": 2,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/alias.js",
+    "findings": [
+      {
+        "column": 16,
+        "endColumn": 25,
+        "endLine": 2,
+        "file": "src/alias.js",
+        "line": 2,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/container.js",
+    "findings": [
+      {
+        "column": 24,
+        "endColumn": 33,
+        "endLine": 2,
+        "file": "src/container.js",
+        "line": 2,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/namespace-alias.js",
+    "findings": [
+      {
+        "column": 18,
+        "endColumn": 20,
+        "endLine": 2,
+        "file": "src/namespace-alias.js",
+        "line": 2,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/call.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 10,
+        "endLine": 2,
+        "file": "src/call.js",
+        "line": 2,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/empty-label.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 28,
+        "endLine": 2,
+        "file": "src/empty-label.js",
+        "line": 2,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/interpolated-label.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 39,
+        "endLine": 2,
+        "file": "src/interpolated-label.js",
+        "line": 2,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/mutable-statement.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 20,
+        "endLine": 4,
+        "file": "src/mutable-statement.js",
+        "line": 4,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/mutable-sql-statement.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 20,
+        "endLine": 5,
+        "file": "src/mutable-sql-statement.js",
+        "line": 5,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/aliased-mutable-sql-statement.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 20,
+        "endLine": 6,
+        "file": "src/aliased-mutable-sql-statement.js",
+        "line": 6,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/aliased-appended-sql-statement.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 20,
+        "endLine": 4,
+        "file": "src/aliased-appended-sql-statement.js",
+        "line": 4,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/computed-namespace-member.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 11,
+        "endLine": 3,
+        "file": "src/computed-namespace-member.js",
+        "line": 3,
+        "message": "PostgreSQL namespace members must use a static property name so cursor use can be verified.",
+        "messageId": "staticNamespaceMember",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/invalid-cooked-template.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 38,
+        "endLine": 3,
+        "file": "src/invalid-cooked-template.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/reexport.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 50,
+        "endLine": 1,
+        "file": "src/reexport.js",
+        "line": 1,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/reexport-all.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 1,
+        "file": "src/reexport-all.js",
+        "line": 1,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/namespace-member.js",
+    "findings": [
+      {
+        "column": 12,
+        "endColumn": 24,
+        "endLine": 2,
+        "file": "src/namespace-member.js",
+        "line": 2,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/local-reexport.js",
+    "findings": [
+      {
+        "column": 10,
+        "endColumn": 19,
+        "endLine": 2,
+        "file": "src/local-reexport.js",
+        "line": 2,
+        "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified.",
+        "messageId": "directUse",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/missing-call-argument.js",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 12,
+        "endLine": 2,
+        "file": "src/missing-call-argument.js",
+        "line": 2,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "lib/test-helpers/seed.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 21,
+        "endLine": 2,
+        "file": "lib/test-helpers/seed.js",
+        "line": 2,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "exclude": [
+          "**/*.test.js",
+          "**/test-helpers/**"
+        ],
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "includeFiles": [
+          "lib/test-helpers/seed.js"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/default-sql-tag-disabled.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 35,
+        "endLine": 3,
+        "file": "src/default-sql-tag-disabled.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "sqlTagModules": [
+          "@db/sql"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/trusted-sql-tag.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 24,
+        "endLine": 3,
+        "file": "src/trusted-sql-tag.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/untrusted-sql-tag.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 24,
+        "endLine": 3,
+        "file": "src/untrusted-sql-tag.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/other-module-sql-tag.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 24,
+        "endLine": 3,
+        "file": "src/other-module-sql-tag.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/subpath-sql-tag.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 26,
+        "endLine": 3,
+        "file": "src/subpath-sql-tag.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation.",
+        "messageId": "annotation",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/sibling-sql-tag.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 24,
+        "endLine": 3,
+        "file": "src/sibling-sql-tag.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/default-sql-tag.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 24,
+        "endLine": 3,
+        "file": "src/default-sql-tag.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/shadowed-sql-tag.js",
+    "findings": [
+      {
+        "column": 20,
+        "endColumn": 35,
+        "endLine": 5,
+        "file": "src/shadowed-sql-tag.js",
+        "line": 5,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/type-sql-tag.ts",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 26,
+        "endLine": 3,
+        "file": "src/type-sql-tag.ts",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/empty-module-sql-tag.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 24,
+        "endLine": 3,
+        "file": "src/empty-module-sql-tag.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "src/empty-name-sql-tag.js",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 24,
+        "endLine": 3,
+        "file": "src/empty-name-sql-tag.js",
+        "line": 3,
+        "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding.",
+        "messageId": "staticQuery",
+        "ruleId": "no-mistakes/postgres-cursor-call-contract",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executors": [
+          "runCursor",
+          "runCursorBatches"
+        ],
+        "modules": [
+          "@db/cursors",
+          "@db/cursors/batches"
+        ],
+        "trustedSqlTags": [
+          {
+            "module": "@example/db",
+            "name": ""
+          }
+        ]
+      }
+    ]
+  }
+]

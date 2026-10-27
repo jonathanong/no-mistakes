@@ -1,0 +1,92 @@
+{
+  "vitest-timeout-cap": [
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 26,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 22,
+          "endColumn": 28,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Vitest timeout exceeds 3000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "overrideMax": 3000
+        }
+      ]
+    }
+  ]
+}

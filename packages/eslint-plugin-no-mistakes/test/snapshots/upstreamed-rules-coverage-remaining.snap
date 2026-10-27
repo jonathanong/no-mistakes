@@ -1,0 +1,181 @@
+{
+  "await-array-methods": [
+    {
+      "file": "coverage.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 11,
+          "file": "coverage.tsx",
+          "line": 11,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 31,
+          "endLine": 12,
+          "file": "coverage.tsx",
+          "line": 12,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "nextjs-metadata-exports-location": [
+    {
+      "file": "app/components/meta.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 22,
+          "file": "app/components/meta.tsx",
+          "line": 22,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 23,
+          "file": "app/components/meta.tsx",
+          "line": 23,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 34,
+          "endLine": 24,
+          "file": "app/components/meta.tsx",
+          "line": 24,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-delete-property": [
+    {
+      "file": "coverage.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 34,
+          "endLine": 19,
+          "file": "coverage.tsx",
+          "line": 19,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 15,
+          "endLine": 21,
+          "file": "coverage.tsx",
+          "line": 21,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-vitest-sequential": [
+    {
+      "file": "coverage.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 110,
+          "file": "coverage.tsx",
+          "line": 110,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 112,
+          "file": "coverage.tsx",
+          "line": 112,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 34,
+          "endLine": 113,
+          "file": "coverage.tsx",
+          "line": 113,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 114,
+          "file": "coverage.tsx",
+          "line": 114,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 115,
+          "file": "coverage.tsx",
+          "line": 115,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 9,
+          "endLine": 116,
+          "file": "coverage.tsx",
+          "line": 116,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

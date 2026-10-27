@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
-import { fixture, lint, __dirname, require } from "./helpers.mjs";
+import { Linter } from "eslint";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture, __dirname, require } from "./helpers.mjs";
 
 const RULE = "postgres-no-executor-adapter";
 const id = RULE;
@@ -16,247 +17,62 @@ const SCOPED = {
 };
 const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
 const rules = resolve(__dirname, "../src/rules");
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 
-function check(name, option = DB) {
-  return lint(
-    fixture(`${id}/${name}`),
-    { [`no-mistakes/${RULE}`]: ["error", option] },
-    resolve(root, name),
+function shapeCase(name, option = DB) {
+  return {
+    code: fixture(`${id}/${name}`),
+    filename: resolve(root, name),
+    options: [option],
+    ...(/\.[cm]?tsx?$/.test(name) ? { languageOptions: { parser: tsParser } } : {}),
+  };
+}
+
+const suite = {
+  valid: [
+    // leaves non-static executor aliases silent.
+    // Zero findings.
+    shapeCase("static-recall-limits.ts", SCOPED),
+    // leaves unjudged shapes silent, including an untyped client.query.
+    // Zero findings.
+    shapeCase("silent.ts"),
+    // Zero findings.
+    shapeCase("names.ts", { importSpecifier: "@example/db", executorNames: ["read"] }),
+  ],
+  invalid: [
+    // reports the shapes whose rewrite is the executor call.
+    // Eight findings.
+    shapeCase("shapes.ts"),
+    // names only the executor that the expression can pass.
+    shapeCase("edges.ts"),
+    // reports namespace members, query destructures, and static call or apply.
+    shapeCase("static-recall.ts", SCOPED),
+    // Two findings.
+    shapeCase("call-method.ts", { importSpecifier: "@example/db", executorNames: ["call"] }),
+    // follows a proven query member through bind and new, and a broad query name.
+    // Two passed findings.
+    shapeCase("scoped.ts", SCOPED),
+    // Four findings. broad.mjs is not parsed as TypeScript.
+    shapeCase("broad.mjs", { executorNames: ["query"] }),
+    // keeps the existing suppression.
+    // One finding.
+    shapeCase("suppression.ts"),
+  ],
+};
+
+it("snapshots postgres-no-executor-adapter diagnostics", async () => {
+  await expect(snapshotDocument(snapshotSuite(RULE, languageOptions, suite))).toMatchFileSnapshot(
+    "snapshots/postgres-no-executor-adapter-shapes.snap",
   );
-}
-
-function onLine(name, snippet, option = DB) {
-  const line =
-    fixture(`${id}/${name}`)
-      .split("\n")
-      .findIndex((row) => row.includes(snippet)) + 1;
-  return check(name, option).filter((message) => message.line === line);
-}
+}, 30_000);
 
 describe("postgres-no-executor-adapter shapes", () => {
-  it("reports the shapes whose rewrite is the executor call", () => {
-    assert.equal(check("shapes.ts").length, 8);
-
-    const adapter = onLine("shapes.ts", "run(adapter, account)");
-    assert.equal(adapter[0].messageId, "forward");
-    assert.match(adapter[0].message, /read\(sql\)/);
-    assert.match(adapter[0].message, /const exec = read; exec\(sql\)/);
-    assert.match(adapter[0].message, /run\(read, account\)/);
-    assert.doesNotMatch(adapter[0].message, /run\(adapter, account\)/);
-
-    const value = onLine("shapes.ts", "new Runner(read)");
-    assert.equal(value[0].messageId, "passed");
-    assert.match(value[0].message, /read\(sql`…`\)/);
-
-    const arrow = onLine("shapes.ts", "new Runner((statement");
-    assert.equal(arrow[0].messageId, "forward");
-    assert.match(arrow[0].message, /new Runner\(read\)/);
-    assert.match(arrow[0].message, /read\(sql\)/);
-
-    for (const snippet of ["run({ exec: read }", "run([read]", "run(read.bind(null), account)"]) {
-      const reported = onLine("shapes.ts", snippet);
-      assert.equal(reported.length, 1, snippet);
-      assert.equal(reported[0].messageId, "passed");
-      assert.match(reported[0].message, /read\(sql`…`\)/);
-    }
-
-    const nullish = onLine("shapes.ts", "run(read ?? write, account)");
-    assert.equal(nullish[0].messageId, "passed");
-    assert.match(nullish[0].message, /read\(sql`…`\)/);
-    assert.doesNotMatch(nullish[0].message, /\bwrite\b/);
-    assert.doesNotMatch(nullish[0].message, /\?\?/);
-
-    const and = onLine("shapes.ts", "run(flag && read, account)");
-    assert.equal(and[0].messageId, "passed");
-    assert.match(and[0].message, /read\(sql`…`\)/);
-    assert.doesNotMatch(and[0].message, /flag/);
-    assert.doesNotMatch(and[0].message, /&&/);
-  });
-
-  it("names only the executor that the expression can pass", () => {
-    const both = onLine("edges.ts", "run((flag ? read : write).bind(null), account)");
-    assert.match(
-      both[0].message,
-      /read\(sql`…`\) or write\(sql`…`\) or \(flag \? read : write\)\(sql`…`\)/,
-    );
-
-    const partial = onLine("edges.ts", "run((flag ? read : other).bind(null), account)");
-    assert.match(partial[0].message, /read\(sql`…`\)/);
-    assert.doesNotMatch(partial[0].message, /other/);
-    assert.doesNotMatch(partial[0].message, /flag \?/);
-
-    const andWrite = onLine("edges.ts", "run(read && write, account)");
-    assert.match(andWrite[0].message, /write\(sql`…`\)/);
-    assert.doesNotMatch(andWrite[0].message, /\bread\b/);
-
-    const orRead = onLine("edges.ts", "run(read || write, account)");
-    assert.match(orRead[0].message, /read\(sql`…`\)/);
-    assert.doesNotMatch(orRead[0].message, /\bwrite\b/);
-
-    const query = onLine("edges.ts", "run(client.query ?? read, account)");
-    assert.match(query[0].message, /read\(sql`…`\)/);
-    assert.doesNotMatch(query[0].message, /client\.query/);
-
-    const kept = onLine("edges.ts", "run(read ?? client.query, account)");
-    assert.match(kept[0].message, /read\(sql`…`\)/);
-    assert.doesNotMatch(kept[0].message, /client\.query/);
-
-    const mixed = onLine("edges.ts", "run((flag ? read : other) ?? write, account)");
-    assert.match(mixed[0].message, /read\(sql`…`\) or write\(sql`…`\)/);
-    assert.doesNotMatch(mixed[0].message, /other/);
-    assert.doesNotMatch(mixed[0].message, /\?\?/);
-
-    const constructed = onLine("edges.ts", "new Runner(read, (statement");
-    assert.deepEqual(
-      constructed.map((message) => message.messageId),
-      ["passed", "forward"],
-    );
-    assert.match(constructed[1].message, /new Runner\(read, write\)/);
-
-    for (const snippet of [
-      "run(!flag && read, account)",
-      "run(typeof flag && read, account)",
-      "run(new Runner() && read, account)",
-      "run(flag === cond && read, account)",
-      "run(flag === cond || read, account)",
-      "run(+account.length && read, account)",
-      "run((account, flag) && read, account)",
-      "run(void 0 ?? read, account)",
-      "run(tag`q` ?? read, account)",
-      "run(this ?? read, account)",
-      "run(new.target ?? read, account)",
-      "run(client.flag ?? read, account)",
-      "run((flag as unknown) ?? read, account)",
-    ]) {
-      const reported = onLine("edges.ts", snippet);
-      assert.equal(reported.length, 1, snippet);
-      assert.equal(reported[0].messageId, "passed", snippet);
-      assert.match(reported[0].message, /read\(sql`…`\)/);
-      assert.doesNotMatch(reported[0].message, /&&|\|\|/);
-    }
-
-    const method = onLine("edges.ts", "exec(statement: string)");
-    assert.equal(method.length, 1);
-    assert.match(method[0].message, /run\(\{ exec: read \}, account\)/);
-
-    const computed = onLine("edges.ts", "[account](statement: string)");
-    assert.equal(computed.length, 1);
-    assert.match(computed[0].message, /run\(\{ \[account\]: read \}, account\)/);
-
-    const overload = onLine("edges.ts", "run(overload, account)");
-    assert.equal(overload.length, 1);
-    assert.equal(overload[0].messageId, "forward");
-
-    for (const snippet of ["run(read.bind(read), account)", "new Runner(read.bind(read))"]) {
-      const reported = onLine("edges.ts", snippet);
-      assert.equal(reported.length, 1, snippet);
-      assert.equal(reported[0].messageId, "passed", snippet);
-      assert.match(reported[0].message, /read\(sql`…`\)/);
-    }
-  });
-
-  it("reports namespace members, query destructures, and static call or apply", () => {
-    const snippets = [
-      "db.read(statement)",
-      'db["read"](statement)',
-      "db[`read`](statement)",
-      "db?.read(statement)",
-      "(db as object).read(statement)",
-      "run(db.read, account)",
-      "run(db?.read, account)",
-      "query(statement)",
-      "renamed(statement)",
-      "bracket(statement)",
-      "template(statement)",
-      "quoted(statement)",
-      "asserted(statement)",
-      "fromNamespace(statement)",
-      "tx?.query(statement)",
-      "flag && read?.bind(null)",
-      "read?.(statement)",
-      'read["call"](null, statement)',
-      'read["apply"](null, [statement])',
-      "read[`call`](null, statement)",
-      "read[`apply`](null, [statement])",
-      "read?.call(null, statement)",
-      'read?.["apply"](null, [statement])',
-      "run(read?.bind(null), account)",
-      "read.bind?.(null)",
-      'read["bind"](null)',
-      "read[`bind`](null)",
-    ];
-    for (const snippet of snippets) {
-      assert.equal(onLine("static-recall.ts", snippet, SCOPED).length, 1, snippet);
-    }
-
-    const member = onLine("static-recall.ts", "db.read(statement)", SCOPED);
-    assert.equal(member[0].messageId, "blocked");
-    assert.match(member[0].message, /db\.read\(sql\)/);
-    assert.match(member[0].message, /receiver or this/);
-
-    const query = onLine("static-recall.ts", "query(statement)", SCOPED);
-    assert.equal(query[0].messageId, "forward");
-    assert.match(query[0].message, /query\(sql\)/);
-    assert.doesNotMatch(query[0].message, /const exec = query/);
-
-    const renamed = onLine("static-recall.ts", "fromNamespace(statement)", SCOPED);
-    assert.equal(renamed[0].messageId, "forward");
-    assert.match(renamed[0].message, /const exec = fromNamespace/);
-
-    const optional = onLine("static-recall.ts", "read?.(statement)", SCOPED);
-    assert.equal(optional[0].messageId, "forward");
-    assert.match(optional[0].message, /read\(sql\)/);
-
-    const called = onLine("static-recall.ts", 'read["call"](null, statement)', SCOPED);
-    assert.equal(called[0].messageId, "blocked");
-    assert.match(called[0].message, /receiver or this/);
-
-    const bound = onLine("static-recall.ts", "run(read?.bind(null), account)", SCOPED);
-    assert.equal(bound[0].messageId, "passed");
-    assert.match(bound[0].message, /read\(sql`…`\)/);
-
-    const method = check("call-method.ts", {
-      importSpecifier: "@example/db",
-      executorNames: ["call"],
-    });
-    assert.equal(method.length, 2);
-    assert.match(method[0].message, /db\.call\(sql\)/);
-    assert.match(method[1].message, /db\["call"\]\(sql\)/);
-    assert.ok(method.every((message) => message.message.includes("receiver or this")));
-  });
-
-  it("leaves non-static executor aliases silent", () => {
-    assert.deepEqual(check("static-recall-limits.ts", SCOPED), []);
-  });
-
-  it("leaves unjudged shapes silent, including an untyped client.query", () => {
-    assert.deepEqual(check("silent.ts"), []);
-    assert.deepEqual(
-      check("names.ts", { importSpecifier: "@example/db", executorNames: ["read"] }),
-      [],
-    );
-  });
-
-  it("follows a proven query member through bind and new, and a broad query name", () => {
-    const scoped = check("scoped.ts", SCOPED);
-    assert.deepEqual(
-      scoped.map((message) => message.messageId),
-      ["passed", "passed"],
-    );
-    assert.match(scoped[0].message, /tx\.query\(sql`…`\)/);
-    assert.doesNotMatch(scoped[0].message, /const exec = tx\.query/);
-    assert.match(scoped[1].message, /alias\.query\(sql`…`\)/);
-    assert.doesNotMatch(scoped.map((message) => message.message).join("\n"), /openTx\(\)/);
-
-    const broad = check("broad.mjs", { executorNames: ["query"] });
-    assert.equal(broad.length, 4);
-    assert.ok(broad.every((message) => message.message.includes("client.query")));
-  });
-
-  it("keeps the existing suppression and does not autofix", () => {
-    assert.equal(check("suppression.ts").length, 1);
-    assert.match(check("suppression.ts")[0].message, /passes read/);
-
+  it("does not autofix", () => {
     const linter = new Linter({ configType: "flat", cwd: root });
     const code = fixture(`${id}/shapes.ts`);
     const fixed = linter.verifyAndFix(

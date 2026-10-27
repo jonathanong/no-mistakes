@@ -1,63 +1,82 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { __dirname, fixture, lint } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { __dirname, fixture } from "./helpers.mjs";
 
 const options = { importSpecifier: "pg" };
-function findings(name, rule, option = options, filename = "app.ts") {
-  return lint(
-    fixture(`postgres-2755/${name}`),
-    {
-      [`no-mistakes/${rule}`]: ["error", option],
-    },
-    filename,
-  ).map(({ line, messageId, ruleId }) => [line, messageId, ruleId]);
+const scoped = {
+  importSpecifier: "pg",
+  executorFactoryNames: ["openTransaction"],
+  executorTypeNames: ["TxExecutor"],
+};
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function memberCase(name, option) {
+  return {
+    code: fixture(`postgres-2755/${name}`),
+    filename: "app.ts",
+    options: [option],
+    languageOptions: { parser: tsParser },
+  };
 }
 
-describe("PostgreSQL query member receiver proof", () => {
-  it("reports unproven manual transactions while other rules retain receiver proof", () => {
-    assert.deepEqual(findings("query-members.ts", "postgres-no-manual-transaction"), [
-      [6, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
-      [7, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
-      [9, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
-      [18, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
-    ]);
-    assert.deepEqual(findings("query-members.ts", "postgres-no-unbounded-query-fanout"), [
-      [11, "unboundedFanout", "no-mistakes/postgres-no-unbounded-query-fanout"],
-      [12, "unboundedFanout", "no-mistakes/postgres-no-unbounded-query-fanout"],
-    ]);
-    assert.deepEqual(findings("query-members.ts", "postgres-no-nonliteral-sql-registry-key"), [
-      [14, "dynamicKey", "no-mistakes/postgres-no-nonliteral-sql-registry-key"],
-    ]);
-    const scoped = {
-      importSpecifier: "pg",
-      executorFactoryNames: ["openTransaction"],
-      executorTypeNames: ["TxExecutor"],
-    };
-    assert.deepEqual(
-      findings("scoped-query-members.ts", "postgres-no-manual-transaction", scoped),
-      [
-        [7, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
-        [12, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
-      ],
-    );
-    assert.deepEqual(
-      findings("scoped-query-members.ts", "postgres-no-unbounded-query-fanout", scoped),
-      [
-        [8, "unboundedFanout", "no-mistakes/postgres-no-unbounded-query-fanout"],
-        [13, "unboundedFanout", "no-mistakes/postgres-no-unbounded-query-fanout"],
-      ],
-    );
-    assert.deepEqual(
-      findings("scoped-query-members.ts", "postgres-no-nonliteral-sql-registry-key", scoped),
-      [
-        [9, "dynamicKey", "no-mistakes/postgres-no-nonliteral-sql-registry-key"],
-        [14, "dynamicKey", "no-mistakes/postgres-no-nonliteral-sql-registry-key"],
-      ],
-    );
-  });
+// reports unproven manual transactions while other rules retain receiver proof.
+const manual = {
+  invalid: [
+    // Four manualTransaction findings.
+    memberCase("query-members.ts", options),
+    // Two manualTransaction findings.
+    memberCase("scoped-query-members.ts", scoped),
+  ],
+};
+const fanout = {
+  invalid: [
+    // Two unboundedFanout findings.
+    memberCase("query-members.ts", options),
+    // Two unboundedFanout findings.
+    memberCase("scoped-query-members.ts", scoped),
+  ],
+};
+const registry = {
+  invalid: [
+    // One dynamicKey finding.
+    memberCase("query-members.ts", options),
+    // Two dynamicKey findings.
+    memberCase("scoped-query-members.ts", scoped),
+  ],
+};
 
+it("snapshots postgres query member diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      "postgres-no-manual-transaction": snapshotSuite(
+        "postgres-no-manual-transaction",
+        languageOptions,
+        manual,
+      ),
+      "postgres-no-unbounded-query-fanout": snapshotSuite(
+        "postgres-no-unbounded-query-fanout",
+        languageOptions,
+        fanout,
+      ),
+      "postgres-no-nonliteral-sql-registry-key": snapshotSuite(
+        "postgres-no-nonliteral-sql-registry-key",
+        languageOptions,
+        registry,
+      ),
+    }),
+  ).toMatchFileSnapshot("snapshots/postgres-2755-query-members.snap");
+}, 30_000);
+
+describe("PostgreSQL query member receiver proof", () => {
   it("matches typed and untyped fixtures in actual type-aware Oxlint", () => {
     const root = resolve(__dirname, "../../..");
     const fixtureDir = resolve(root, "test-cases/eslint-snippets/fixture/postgres-2755");

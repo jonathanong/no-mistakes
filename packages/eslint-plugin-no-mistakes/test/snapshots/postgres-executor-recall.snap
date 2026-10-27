@@ -1,0 +1,735 @@
+{
+  "postgres-no-manual-transaction": [
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorNames": []
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 8,
+          "file": "fixture.ts",
+          "line": 8,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 9,
+          "file": "fixture.ts",
+          "line": 9,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 10,
+          "file": "fixture.ts",
+          "line": 10,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 11,
+          "file": "fixture.ts",
+          "line": 11,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 12,
+          "file": "fixture.ts",
+          "line": 12,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 13,
+          "file": "fixture.ts",
+          "line": 13,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 14,
+          "file": "fixture.ts",
+          "line": 14,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 34,
+          "endColumn": 48,
+          "endLine": 15,
+          "file": "fixture.ts",
+          "line": 15,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 3,
+          "file": "fixture.ts",
+          "line": 3,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorNames": [
+            "call",
+            "apply"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 15,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorFactoryNames": [
+            "makeExecutor"
+          ],
+          "executorTypeNames": [
+            "Executor"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 15,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 8,
+          "file": "fixture.ts",
+          "line": 8,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 11,
+          "file": "fixture.ts",
+          "line": 11,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 12,
+          "file": "fixture.ts",
+          "line": 12,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 15,
+          "file": "fixture.ts",
+          "line": 15,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 15,
+          "endLine": 16,
+          "file": "fixture.ts",
+          "line": 16,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 17,
+          "file": "fixture.ts",
+          "line": 17,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 18,
+          "file": "fixture.ts",
+          "line": 18,
+          "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "messageId": "manualTransaction",
+          "ruleId": "no-mistakes/postgres-no-manual-transaction",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ],
+  "postgres-no-nonliteral-sql-registry-key": [
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorNames": []
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 36,
+          "endLine": 9,
+          "file": "fixture.ts",
+          "line": 9,
+          "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 31,
+          "endLine": 10,
+          "file": "fixture.ts",
+          "line": 10,
+          "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 40,
+          "endLine": 11,
+          "file": "fixture.ts",
+          "line": 11,
+          "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 33,
+          "endColumn": 45,
+          "endLine": 12,
+          "file": "fixture.ts",
+          "line": 12,
+          "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 31,
+          "endLine": 13,
+          "file": "fixture.ts",
+          "line": 13,
+          "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 32,
+          "endLine": 14,
+          "file": "fixture.ts",
+          "line": 14,
+          "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 35,
+          "endLine": 15,
+          "file": "fixture.ts",
+          "line": 15,
+          "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 34,
+          "endLine": 16,
+          "file": "fixture.ts",
+          "line": 16,
+          "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        },
+        {
+          "column": 50,
+          "endColumn": 62,
+          "endLine": 17,
+          "file": "fixture.ts",
+          "line": 17,
+          "message": "TABLES[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default (((key) => { switch (key) { case \"orders\": return \"orders\"; default: throw new Error(\"unknown\"); } })((kind))). A runtime own-key check is not judged.",
+          "messageId": "dynamicKey",
+          "ruleId": "no-mistakes/postgres-no-nonliteral-sql-registry-key",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ],
+  "postgres-no-unbounded-query-fanout": [
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "executorNames": []
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 55,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 50,
+          "endLine": 8,
+          "file": "fixture.ts",
+          "line": 8,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 59,
+          "endLine": 9,
+          "file": "fixture.ts",
+          "line": 9,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 65,
+          "endLine": 10,
+          "file": "fixture.ts",
+          "line": 10,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 50,
+          "endLine": 11,
+          "file": "fixture.ts",
+          "line": 11,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 51,
+          "endLine": 12,
+          "file": "fixture.ts",
+          "line": 12,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 54,
+          "endLine": 13,
+          "file": "fixture.ts",
+          "line": 13,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 53,
+          "endLine": 14,
+          "file": "fixture.ts",
+          "line": 14,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 30,
+          "endLine": 15,
+          "file": "fixture.ts",
+          "line": 15,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 16,
+          "file": "fixture.ts",
+          "line": 16,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 18,
+          "file": "fixture.ts",
+          "line": 18,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 19,
+          "file": "fixture.ts",
+          "line": 19,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "importSpecifier": "@example/db"
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 8,
+          "file": "fixture.ts",
+          "line": 8,
+          "message": "Do not fan out unbounded mapped executor calls through Promise.all(). Use a static array, a SCREAMING_CASE constant, or a configured chunk helper first.",
+          "messageId": "unboundedFanout",
+          "ruleId": "no-mistakes/postgres-no-unbounded-query-fanout",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorNames": [
+            "call",
+            "apply"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ]
+}

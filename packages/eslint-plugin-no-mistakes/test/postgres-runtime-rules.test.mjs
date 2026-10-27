@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { fixture, lint, messages, plugin, require } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture, messages, plugin, require } from "./helpers.mjs";
 
 const helpers = require("../src/rules/postgres-runtime-helpers");
 
@@ -34,6 +36,32 @@ const {
   unwrapTs,
 } = helpers;
 
+const recorded = [];
+function recordIds(code, rule, option, filename, expected) {
+  recorded.push({
+    rule,
+    code,
+    option: { importSpecifier: "@example/db", ...option },
+    filename,
+    empty: expected.length === 0,
+  });
+}
+function recordMessages(code, rule, option, filename, expected) {
+  recorded.push({
+    rule,
+    code,
+    option,
+    filename,
+    empty: expected.length === 0,
+  });
+}
+
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 const IMPORT = `import { query, read, write } from "@example/db";\n`;
 
 function ids(code, rule, option, filename = "app.ts") {
@@ -86,7 +114,7 @@ describe("postgres runtime helpers", () => {
         plugin.rules[name].meta.schema?.[0]?.properties?.executorNames,
     )) {
       assert.throws(() => messages(IMPORT + 'query("BEGIN");', rule), /set importSpecifier/);
-      assert.deepEqual(messages(IMPORT + 'query("BEGIN");', rule, { executorNames: [] }), []);
+      recordMessages(IMPORT + 'query("BEGIN");', rule, { executorNames: [] }, "fixture.jsx", []);
     }
   });
   it("exposes the documented defaults and transaction contract", () => {
@@ -123,10 +151,13 @@ describe("postgres runtime helpers", () => {
       }).trustedSqlTags,
       [{ module: "@example/db", name: "sql" }],
     );
-    assert.deepEqual(
-      ids(IMPORT + "query(sql`BEGIN`);", "postgres-no-manual-transaction", {
+    recordIds(
+      IMPORT + "query(sql`BEGIN`);",
+      "postgres-no-manual-transaction",
+      {
         trustedSqlTags: [{ module: "@example/db", name: "sql" }],
-      }),
+      },
+      "app.ts",
       ["manualTransaction"],
     );
   });
@@ -1024,7 +1055,7 @@ describe("postgres-no-manual-transaction", () => {
       query("ROLLBACK WORK TO SAVEPOINT owned");
       query("RELEASE SAVEPOINT owned");
     `;
-    assert.deepEqual(ids(recovery, "postgres-no-manual-transaction"), []);
+    recordIds(recovery, "postgres-no-manual-transaction", undefined, "app.ts", []);
     const lifecycle = `${IMPORT}
       query("SELECT $1 AS value", [1]);
       query("BEGIN");
@@ -1033,18 +1064,18 @@ describe("postgres-no-manual-transaction", () => {
       query("SELECT $1 AS value", [1]);
       query("ROLLBACK TRANSACTION AND NO CHAIN");
     `;
-    assert.deepEqual(ids(lifecycle, "postgres-no-manual-transaction"), [
+    recordIds(lifecycle, "postgres-no-manual-transaction", undefined, "app.ts", [
       "manualTransaction",
       "manualTransaction",
       "manualTransaction",
     ]);
     // Analyze mixed SQL as source text; this is not a PostgreSQL extended-query
     // execution claim. A positional token must not hide later lifecycle control.
-    assert.deepEqual(
-      ids(
-        `${IMPORT} query("SELECT $1 AS value; ROLLBACK", [1]);`,
-        "postgres-no-manual-transaction",
-      ),
+    recordIds(
+      `${IMPORT} query("SELECT $1 AS value; ROLLBACK", [1]);`,
+      "postgres-no-manual-transaction",
+      undefined,
+      "app.ts",
       ["manualTransaction"],
     );
   });
@@ -1067,18 +1098,22 @@ describe("postgres-no-manual-transaction", () => {
     ];
     for (const sql of allowed) {
       assert.equal(isManualTransactionText(sql), false, sql);
-      assert.deepEqual(
-        ids(`${IMPORT} query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+      recordIds(
+        `${IMPORT} query(${JSON.stringify(sql)});`,
+        "postgres-no-manual-transaction",
+        undefined,
+        "app.ts",
         [],
-        sql,
       );
     }
     for (const sql of rejected) {
       assert.equal(isManualTransactionText(sql), true, sql);
-      assert.deepEqual(
-        ids(`${IMPORT} query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+      recordIds(
+        `${IMPORT} query(${JSON.stringify(sql)});`,
+        "postgres-no-manual-transaction",
+        undefined,
+        "app.ts",
         ["manualTransaction"],
-        sql,
       );
     }
   });
@@ -1110,18 +1145,22 @@ describe("postgres-no-manual-transaction", () => {
     ];
     for (const sql of allowed) {
       assert.equal(isManualTransactionText(sql), false, sql);
-      assert.deepEqual(
-        ids(`${IMPORT} query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+      recordIds(
+        `${IMPORT} query(${JSON.stringify(sql)});`,
+        "postgres-no-manual-transaction",
+        undefined,
+        "app.ts",
         [],
-        sql,
       );
     }
     for (const sql of rejected) {
       assert.equal(isManualTransactionText(sql), true, sql);
-      assert.deepEqual(
-        ids(`${IMPORT} query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+      recordIds(
+        `${IMPORT} query(${JSON.stringify(sql)});`,
+        "postgres-no-manual-transaction",
+        undefined,
+        "app.ts",
         ["manualTransaction"],
-        sql,
       );
     }
   });
@@ -1141,10 +1180,12 @@ describe("postgres-no-manual-transaction", () => {
     ];
     for (const sql of allowed) {
       assert.equal(isManualTransactionText(sql), false, sql);
-      assert.deepEqual(
-        ids(`${IMPORT} query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+      recordIds(
+        `${IMPORT} query(${JSON.stringify(sql)});`,
+        "postgres-no-manual-transaction",
+        undefined,
+        "app.ts",
         [],
-        sql,
       );
     }
     const rejected = [
@@ -1165,10 +1206,12 @@ describe("postgres-no-manual-transaction", () => {
     ];
     for (const sql of rejected) {
       assert.equal(isManualTransactionText(sql), true, sql);
-      assert.deepEqual(
-        ids(`${IMPORT} query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
+      recordIds(
+        `${IMPORT} query(${JSON.stringify(sql)});`,
+        "postgres-no-manual-transaction",
+        undefined,
+        "app.ts",
         ["manualTransaction"],
-        sql,
       );
     }
   });
@@ -1184,7 +1227,7 @@ describe("postgres-no-manual-transaction", () => {
       query("SELECT 1");
       query("BEGINNING");
     `;
-    assert.deepEqual(ids(code, "postgres-no-manual-transaction"), [
+    recordIds(code, "postgres-no-manual-transaction", undefined, "app.ts", [
       "manualTransaction",
       "manualTransaction",
       "manualTransaction",
@@ -1206,7 +1249,7 @@ describe("postgres-no-manual-transaction", () => {
       query(...sql);
       foo.bar("BEGIN");
     `;
-    assert.deepEqual(ids(code, "postgres-no-manual-transaction"), [
+    recordIds(code, "postgres-no-manual-transaction", undefined, "app.ts", [
       "manualTransaction",
       "manualTransaction",
       "manualTransaction",
@@ -1220,50 +1263,50 @@ describe("postgres-no-manual-transaction", () => {
       import { withTransaction } from "@example/db";
       query("BEGIN");
     `;
-    assert.deepEqual(ids(code, "postgres-no-manual-transaction"), ["manualTransaction"]);
-    assert.deepEqual(
-      ids(
-        `
+    recordIds(code, "postgres-no-manual-transaction", undefined, "app.ts", ["manualTransaction"]);
+    recordIds(
+      `
           import { withTransactionOptions as txn } from "@example/db";
           query("ROLLBACK");
         `,
-        "postgres-no-manual-transaction",
-      ),
+      "postgres-no-manual-transaction",
+      undefined,
+      "app.ts",
       ["manualTransaction"],
     );
   });
 
   it("ignores missing specifiers, type imports, and shadowed parameters", () => {
-    assert.deepEqual(
-      ids(
-        `
+    recordIds(
+      `
           import { query } from "@other/db";
           query("BEGIN");
         `,
-        "postgres-no-manual-transaction",
-      ),
+      "postgres-no-manual-transaction",
+      undefined,
+      "app.ts",
       [],
     );
-    assert.deepEqual(
-      ids(
-        `
+    recordIds(
+      `
           import type { query } from "@example/db";
           query("BEGIN");
         `,
-        "postgres-no-manual-transaction",
-      ),
+      "postgres-no-manual-transaction",
+      undefined,
+      "app.ts",
       [],
     );
-    assert.deepEqual(
-      ids(
-        `
+    recordIds(
+      `
           ${IMPORT}
           function run(q: string) {
             return query(q);
           }
         `,
-        "postgres-no-manual-transaction",
-      ),
+      "postgres-no-manual-transaction",
+      undefined,
+      "app.ts",
       [],
     );
   });
@@ -1273,42 +1316,39 @@ describe("postgres-no-manual-transaction", () => {
       ${IMPORT}
       query("BEGIN");
     `;
-    assert.deepEqual(
-      ids(code, "postgres-no-manual-transaction", { owners: ["src/db/tx.ts"] }, "src/db/tx.ts"),
+    recordIds(
+      code,
+      "postgres-no-manual-transaction",
+      { owners: ["src/db/tx.ts"] },
+      "src/db/tx.ts",
       [],
     );
-    assert.deepEqual(
-      ids(
-        code,
-        "postgres-no-manual-transaction",
-        { owners: ["src/db/tx.ts"] },
-        resolve("src/db/tx.ts"),
-      ),
+    recordIds(
+      code,
+      "postgres-no-manual-transaction",
+      { owners: ["src/db/tx.ts"] },
+      resolve("src/db/tx.ts"),
       [],
     );
-    assert.deepEqual(
-      ids(
-        code,
-        "postgres-no-manual-transaction",
-        { owners: [resolve("src/db/tx.ts")] },
-        resolve("src/db/tx.ts"),
-      ),
+    recordIds(
+      code,
+      "postgres-no-manual-transaction",
+      { owners: [resolve("src/db/tx.ts")] },
+      resolve("src/db/tx.ts"),
       [],
     );
-    assert.deepEqual(
-      ids(code, "postgres-no-manual-transaction", { owners: ["src/db/tx.ts"] }, "src/app.ts"),
-      ["manualTransaction"],
-    );
-    assert.deepEqual(
-      ids(
-        `
+    recordIds(code, "postgres-no-manual-transaction", { owners: ["src/db/tx.ts"] }, "src/app.ts", [
+      "manualTransaction",
+    ]);
+    recordIds(
+      `
           import { run as r } from "@app/db";
           r("BEGIN");
           query("BEGIN");
         `,
-        "postgres-no-manual-transaction",
-        { importSpecifier: "@app/db", executorNames: ["run"] },
-      ),
+      "postgres-no-manual-transaction",
+      { importSpecifier: "@app/db", executorNames: ["run"] },
+      "app.ts",
       ["manualTransaction"],
     );
   });
@@ -1320,7 +1360,7 @@ describe("postgres-no-manual-transaction", () => {
       query(("COMMIT") as const);
       query(("ROLLBACK")!);
     `;
-    assert.deepEqual(ids(code, "postgres-no-manual-transaction"), [
+    recordIds(code, "postgres-no-manual-transaction", undefined, "app.ts", [
       "manualTransaction",
       "manualTransaction",
       "manualTransaction",
@@ -1336,7 +1376,7 @@ describe("postgres-no-unbounded-query-fanout", () => {
       Promise.all(ids.map(async (id) => read(\`SELECT \${id}\`)));
       Promise.all(ids.map((id) => client.query("SELECT 1")));
     `;
-    assert.deepEqual(ids(code, "postgres-no-unbounded-query-fanout"), [
+    recordIds(code, "postgres-no-unbounded-query-fanout", undefined, "app.ts", [
       "unboundedFanout",
       "unboundedFanout",
     ]);
@@ -1354,43 +1394,43 @@ describe("postgres-no-unbounded-query-fanout", () => {
       const chunks = chunkArray(ids);
       Promise.all(chunks.map((id) => query("SELECT 1")));
     `;
-    assert.deepEqual(ids(code, "postgres-no-unbounded-query-fanout"), []);
-    assert.deepEqual(
-      ids(
-        fixture("postgres-no-unbounded-query-fanout/for-of-chunk.ts"),
-        "postgres-no-unbounded-query-fanout",
-      ),
+    recordIds(code, "postgres-no-unbounded-query-fanout", undefined, "app.ts", []);
+    recordIds(
+      fixture("postgres-no-unbounded-query-fanout/for-of-chunk.ts"),
+      "postgres-no-unbounded-query-fanout",
+      undefined,
+      "app.ts",
       [],
     );
   });
 
   it("reports body-declared and reassigned for-of bindings", () => {
-    assert.deepEqual(
-      ids(
-        fixture("postgres-no-unbounded-query-fanout/for-of-body-let.ts"),
-        "postgres-no-unbounded-query-fanout",
-      ),
+    recordIds(
+      fixture("postgres-no-unbounded-query-fanout/for-of-body-let.ts"),
+      "postgres-no-unbounded-query-fanout",
+      undefined,
+      "app.ts",
       ["unboundedFanout"],
     );
-    assert.deepEqual(
-      ids(
-        fixture("postgres-no-unbounded-query-fanout/for-of-body-var.ts"),
-        "postgres-no-unbounded-query-fanout",
-      ),
+    recordIds(
+      fixture("postgres-no-unbounded-query-fanout/for-of-body-var.ts"),
+      "postgres-no-unbounded-query-fanout",
+      undefined,
+      "app.ts",
       ["unboundedFanout"],
     );
-    assert.deepEqual(
-      ids(
-        fixture("postgres-no-unbounded-query-fanout/for-of-reassigned.ts"),
-        "postgres-no-unbounded-query-fanout",
-      ),
+    recordIds(
+      fixture("postgres-no-unbounded-query-fanout/for-of-reassigned.ts"),
+      "postgres-no-unbounded-query-fanout",
+      undefined,
+      "app.ts",
       ["unboundedFanout"],
     );
-    assert.deepEqual(
-      ids(
-        fixture("postgres-no-unbounded-query-fanout/for-of-array-of-ids.ts"),
-        "postgres-no-unbounded-query-fanout",
-      ),
+    recordIds(
+      fixture("postgres-no-unbounded-query-fanout/for-of-array-of-ids.ts"),
+      "postgres-no-unbounded-query-fanout",
+      undefined,
+      "app.ts",
       ["unboundedFanout"],
     );
   });
@@ -1404,7 +1444,7 @@ describe("postgres-no-unbounded-query-fanout", () => {
       Promise.all();
       ids.map((id) => query("SELECT 1"));
     `;
-    assert.deepEqual(ids(code, "postgres-no-unbounded-query-fanout"), []);
+    recordIds(code, "postgres-no-unbounded-query-fanout", undefined, "app.ts", []);
   });
 
   it("follows identifier callbacks and custom chunk names", () => {
@@ -1417,63 +1457,60 @@ describe("postgres-no-unbounded-query-fanout", () => {
       Promise.all(ids.map(query));
       Promise.all(chunk(ids).map((id) => query("SELECT 1")));
     `;
-    assert.deepEqual(ids(code, "postgres-no-unbounded-query-fanout"), [
+    recordIds(code, "postgres-no-unbounded-query-fanout", undefined, "app.ts", [
       "unboundedFanout",
       "unboundedFanout",
       "unboundedFanout",
       "unboundedFanout",
     ]);
-    assert.deepEqual(
-      ids(
-        `
+    recordIds(
+      `
           ${IMPORT}
           Promise.all(chunk(ids).map((id) => query("SELECT 1")));
         `,
-        "postgres-no-unbounded-query-fanout",
-        { chunkFunctionNames: ["chunk"] },
-      ),
+      "postgres-no-unbounded-query-fanout",
+      { chunkFunctionNames: ["chunk"] },
+      "app.ts",
       [],
     );
   });
 
   it("uses custom executor imports and withTransaction query binding", () => {
-    assert.deepEqual(
-      ids(
-        `
+    recordIds(
+      `
           import { withTransaction } from "@example/db";
           Promise.all(ids.map((id) => query("SELECT 1")));
         `,
-        "postgres-no-unbounded-query-fanout",
-      ),
+      "postgres-no-unbounded-query-fanout",
+      undefined,
+      "app.ts",
       ["unboundedFanout"],
     );
-    assert.deepEqual(
-      ids(
-        `
+    recordIds(
+      `
           import { run as r } from "@app/db";
           Promise.all(ids.map((id) => r("SELECT 1")));
         `,
-        "postgres-no-unbounded-query-fanout",
-        { importSpecifier: "@app/db", executorNames: ["run"] },
-      ),
+      "postgres-no-unbounded-query-fanout",
+      { importSpecifier: "@app/db", executorNames: ["run"] },
+      "app.ts",
       ["unboundedFanout"],
     );
-    assert.deepEqual(
-      ids(
-        `
+    recordIds(
+      `
           import { query } from "@other";
           Promise.all(ids.map((id) => query("SELECT 1")));
         `,
-        "postgres-no-unbounded-query-fanout",
-      ),
+      "postgres-no-unbounded-query-fanout",
+      undefined,
+      "app.ts",
       [],
     );
   });
 
   it("reports static Promise.all keys and ignores a computed identifier", () => {
-    assert.deepEqual(
-      ids(
-        `${IMPORT}Promise["all"](ids.map((id) => query("SELECT 1")));
+    recordIds(
+      `${IMPORT}Promise["all"](ids.map((id) => query("SELECT 1")));
          Promise[\`all\`](ids.map((id) => query("SELECT 1")));
          const name = "all";
          Promise[name](ids.map((id) => query("SELECT 1")));
@@ -1481,50 +1518,79 @@ describe("postgres-no-unbounded-query-fanout", () => {
            return text;
          }
          Promise[chooseMethod\`all\`](ids.map((id) => query("SELECT 1")));`,
-        "postgres-no-unbounded-query-fanout",
-      ),
+      "postgres-no-unbounded-query-fanout",
+      undefined,
+      "app.ts",
       ["unboundedFanout", "unboundedFanout"],
     );
   });
 
   it("reports a lint message for the Promise.all call", () => {
-    const [message] = lint(
+    // One unboundedFanout finding.
+    recordIds(
       `${IMPORT}Promise.all(ids.map((id) => query("SELECT 1")));`,
-      {
-        "no-mistakes/postgres-no-unbounded-query-fanout": [
-          "error",
-          { importSpecifier: "@example/db" },
-        ],
-      },
+      "postgres-no-unbounded-query-fanout",
+      undefined,
       "app.ts",
+      ["unboundedFanout"],
     );
-    assert.equal(message.messageId, "unboundedFanout");
-    assert.equal(message.ruleId, "no-mistakes/postgres-no-unbounded-query-fanout");
   });
 });
 
 describe("explicit PostgreSQL executor selection", () => {
   it("does not infer a database module", () => {
-    assert.deepEqual(
-      messages(IMPORT + "query('BEGIN')", "postgres-no-manual-transaction", { executorNames: [] }),
+    recordMessages(
+      IMPORT + "query('BEGIN')",
+      "postgres-no-manual-transaction",
+      { executorNames: [] },
+      "fixture.jsx",
       [],
     );
-    assert.deepEqual(
-      messages("client.query('BEGIN')", "postgres-no-manual-transaction", { executorNames: [] }),
+    recordMessages(
+      "client.query('BEGIN')",
+      "postgres-no-manual-transaction",
+      { executorNames: [] },
+      "fixture.jsx",
       [],
     );
-    assert.deepEqual(
-      messages("client.query('BEGIN')", "postgres-no-manual-transaction", {
+    recordMessages(
+      "client.query('BEGIN')",
+      "postgres-no-manual-transaction",
+      {
         importSpecifier: "@example/db",
         executorNames: ["run"],
-      }),
+      },
+      "fixture.jsx",
       [],
     );
-    assert.deepEqual(
-      messages(IMPORT + "query('BEGIN')", "postgres-no-manual-transaction", {
+    recordMessages(
+      IMPORT + "query('BEGIN')",
+      "postgres-no-manual-transaction",
+      {
         executorNames: ["query"],
-      }),
+      },
+      "fixture.jsx",
       ["manualTransaction"],
     );
   });
 });
+
+it("snapshots postgres runtime rule diagnostics", async () => {
+  if (recorded.length < 30) throw new Error(`recorded ${recorded.length} runtime diagnostics`);
+  const byRule = new Map();
+  for (const item of recorded) {
+    if (!byRule.has(item.rule)) byRule.set(item.rule, { valid: [], invalid: [] });
+    const entry = {
+      code: item.code,
+      filename: item.filename,
+      ...(item.option === undefined ? {} : { options: [item.option] }),
+      ...(/\.[cm]?tsx?$/.test(item.filename) ? { languageOptions: { parser: tsParser } } : {}),
+    };
+    byRule.get(item.rule)[item.empty ? "valid" : "invalid"].push(entry);
+  }
+  const doc = {};
+  for (const [rule, suite] of byRule) {
+    doc[rule] = snapshotSuite(rule, languageOptions, suite);
+  }
+  await expect(snapshotDocument(doc)).toMatchFileSnapshot("snapshots/postgres-runtime-rules.snap");
+}, 30_000);

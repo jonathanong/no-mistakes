@@ -1,104 +1,138 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
-import { fixture, lint, require } from "./helpers.mjs";
-const findings = (name, options = {}) =>
-  lint(
-    fixture(`vitest-timeout-cap/${name}.ts`),
-    { "no-mistakes/vitest-timeout-cap": ["error", options] },
-    "fixture.test.ts",
-  );
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture, require } from "./helpers.mjs";
+
+const rule = "vitest-timeout-cap";
+const finding = { unknownValues: "finding" };
+const strict = { unknownValues: "finding", defaultMax: 30000 };
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const tsLanguage = { parser: tsParser };
+
+function capCase(name, options = {}) {
+  return {
+    code: fixture(`vitest-timeout-cap/${name}.ts`),
+    filename: "fixture.test.ts",
+    languageOptions: tsLanguage,
+    options: [options],
+  };
+}
+
+const suite = {
+  valid: [
+    // Callback merge operands are explicit runtime-rejection controls, not findings.
+    capCase("unsupported-merge-callbacks", finding),
+    // Callback consumers or effects that are unproved do not report without the finding policy.
+    capCase("config-return-escapes"),
+    // Own data writes and deletion do not invoke accessor descriptors.
+    capCase("shallow-copy-accessor-writes"),
+    capCase("shallow-copy-data-writes", finding),
+    // Deleted own-descriptor invalidation through asserted container aliases.
+    capCase("asserted-deletion-alias"),
+    // Non-enumerable array length is outside object-copy descriptor proofs.
+    capCase("copy-property-enumerability"),
+    // Wrapped shared children and uncertain indices, iterables and aliases.
+    capCase("wrapped-shallow-copy-mutations"),
+    // Shared nested mutations and conservative unknown copy identities.
+    capCase("shallow-copy-alias-mutations"),
+    // Member writes, aliases, deletion and helper escape are silent without the finding policy.
+    capCase("mutable-values"),
+    // Immutable aliases, scalar budgets and explicit restoration.
+    capCase("immutable-value-controls", strict),
+  ],
+  invalid: [
+    // 1 timeout, 1 invalid, 1 unknown. Runtime-valid object merges, without captured callback effects.
+    capCase("merge-object-controls", finding),
+    // 1 timeout, 1 invalid.
+    capCase("merge-object-controls"),
+    // 1 timeout, 6 unknown. Erased type queries stay ignored. Real callback consumers remain.
+    capCase("config-type-only-references", finding),
+    // 1 timeout.
+    capCase("config-type-only-references"),
+    // 24 unknown, 1 timeout. Identity-preserving config results that escape.
+    capCase("config-result-escapes", finding),
+    // 1 timeout.
+    capCase("config-result-escapes"),
+    // 1 timeout, 1 invalid. Returned config bindings through known consumers.
+    capCase("config-return-values", finding),
+    // 45 unknown.
+    capCase("config-return-escapes", finding),
+    // 3 unknown. Concise __proto__ methods stay proved. Prototype uncertainty remains.
+    capCase("copy-proto-methods", finding),
+    // 32 unknown. Own, inherited, computed and aliased setters on shallow copies.
+    capCase("shallow-copy-accessor-writes", finding),
+    // 1 timeout, 2 unknown. Transparent assertions around copies and wrappers.
+    capCase("transparent-copy-wrappers", finding),
+    // 1 timeout.
+    capCase("transparent-copy-wrappers"),
+    // 9 unknown.
+    capCase("asserted-deletion-alias", finding),
+    // 3 unknown.
+    capCase("copy-property-enumerability", finding),
+    // 1 timeout, 3 unknown. Wrapper paths and independent cached proofs.
+    capCase("wrapped-shallow-copy-writes", finding),
+    // 1 timeout.
+    capCase("wrapped-shallow-copy-writes"),
+    // 22 unknown.
+    capCase("wrapped-shallow-copy-mutations", finding),
+    // 1 timeout, 14 unknown. Known array prefix lengths. Uncertain iterator identities stay unknown.
+    capCase("known-array-spread-offsets", finding),
+    // 1 timeout.
+    capCase("known-array-spread-offsets"),
+    // 2 unknown, 1 timeout. Each copy's own stability.
+    capCase("shallow-copy-writes", finding),
+    // 1 timeout.
+    capCase("shallow-copy-writes"),
+    // 9 unknown. Known null copy spreads stay skipped.
+    capCase("null-spreads", finding),
+    // 19 unknown. Line 21 names the projects carrier.
+    capCase("shallow-copy-alias-mutations", finding),
+    // 3 timeout, 26 unknown. Independent copy deletions stay separate from shared receivers.
+    capCase("independent-copy-deletions", finding),
+    // 3 timeout.
+    capCase("independent-copy-deletions"),
+    // 9 unknown. Deadlines after member writes, aliases, deletion and helper escape.
+    capCase("mutable-values", strict),
+    // 2 timeout, 2 invalid. Registrars built through supported Vitest fixture APIs.
+    capCase("supported-fixture-builders", finding),
+    // 3 unknown. Declaration, named alias and default object exports.
+    capCase("exported-object-values", finding),
+    // 1 timeout. Exported scalar budgets still show an oversized scalar.
+    capCase("exported-scalar-controls", finding),
+    // 4 unknown. Unproved yield, await, tagged-template and computed-key consumers.
+    capCase("unproved-value-escapes", finding),
+  ],
+};
+
 describe("vitest-timeout-cap value stability", () => {
+  it("snapshots vitest-timeout-value-stability diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/vitest-timeout-value-stability.snap");
+  }, 30_000);
+
   it("uses runtime-valid object merges without admitting captured callback effects", async () => {
-    assert.deepEqual(
-      findings("merge-object-controls", { unknownValues: "finding" }).map(({ line, messageId }) => [
-        line,
-        messageId,
-      ]),
-      [
-        [5, "timeout"],
-        [6, "invalid"],
-        [11, "unknown"],
-      ],
-    );
-    assert.deepEqual(
-      findings("merge-object-controls").map(({ line, messageId }) => [line, messageId]),
-      [
-        [5, "timeout"],
-        [6, "invalid"],
-      ],
-    );
     await assert.doesNotReject(
       import("../../../test-cases/eslint-snippets/fixture/vitest-timeout-cap/merge-object-controls.ts"),
     );
   });
+
   it("keeps callback merge operands only as explicit runtime-rejection controls", async () => {
-    assert.deepEqual(findings("unsupported-merge-callbacks", { unknownValues: "finding" }), []);
     await assert.rejects(
       import("../../../test-cases/eslint-snippets/fixture/vitest-timeout-cap/unsupported-merge-callbacks.ts"),
       /Cannot merge config in form of callback/,
     );
   });
-  it("ignores erased type queries while retaining real callback consumers", () => {
-    assert.deepEqual(
-      findings("config-type-only-references", { unknownValues: "finding" }).map(
-        ({ line, messageId }) => [line, messageId],
-      ),
-      [
-        [9, "timeout"],
-        [21, "unknown"],
-        [21, "unknown"],
-        [21, "unknown"],
-        [32, "unknown"],
-        [32, "unknown"],
-        [32, "unknown"],
-      ],
-    );
-    assert.deepEqual(
-      findings("config-type-only-references").map(({ line, messageId }) => [line, messageId]),
-      [[9, "timeout"]],
-    );
-  });
-  it("retains unknown returned objects when identity-preserving config results escape", () => {
-    const actual = findings("config-result-escapes", { unknownValues: "finding" });
-    assert.deepEqual(
-      [...new Set(actual.map(({ line }) => line))],
-      [5, 9, 13, 19, 23, 27, 31, 35, 44],
-    );
-    assert.equal(actual.filter(({ messageId }) => messageId === "unknown").length, 24);
-    assert.deepEqual(
-      actual
-        .filter(({ messageId }) => messageId !== "unknown")
-        .map(({ line, messageId }) => [line, messageId]),
-      [[44, "timeout"]],
-    );
-    assert.deepEqual(
-      findings("config-result-escapes").map(({ line, messageId }) => [line, messageId]),
-      [[44, "timeout"]],
-    );
-  });
-  it("preserves returned config bindings through known consumers and immutable callback aliases", () => {
-    assert.deepEqual(
-      findings("config-return-values", { unknownValues: "finding" }).map(({ line, messageId }) => [
-        line,
-        messageId,
-      ]),
-      [
-        [9, "timeout"],
-        [13, "invalid"],
-      ],
-    );
-  });
-  it("retains unknown returned objects when callback consumers or effects are unproved", () => {
-    const actual = findings("config-return-escapes", { unknownValues: "finding" });
-    assert.deepEqual(
-      [...new Set(actual.map(({ line }) => line))],
-      [5, 10, 14, 19, 24, 28, 32, 36, 40, 45, 51, 56, 61, 65],
-    );
-    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
-    assert.deepEqual(findings("config-return-escapes"), []);
-  });
+
   it("proves own data descriptors conservatively across syntax and alias shapes", () => {
     const { createOwnDataProperty } = require("../src/rules/vitest-timeout-copy-properties");
     const linter = new Linter({ configType: "flat" });
@@ -126,6 +160,7 @@ describe("vitest-timeout-cap value stability", () => {
       [],
     );
   });
+
   it("distinguishes concise __proto__ methods from prototype setters and accessors", () => {
     const { createOwnDataProperty } = require("../src/rules/vitest-timeout-copy-properties");
     const linter = new Linter({ configType: "flat" });
@@ -159,17 +194,7 @@ describe("vitest-timeout-cap value stability", () => {
       [],
     );
   });
-  it("proves concise __proto__ methods through asserted aliases and retains prototype uncertainty", () => {
-    const actual = findings("copy-proto-methods", { unknownValues: "finding" });
-    assert.deepEqual(
-      [
-        ...new Set(
-          actual.filter(({ messageId }) => messageId === "unknown").map(({ line }) => line),
-        ),
-      ],
-      [15],
-    );
-  });
+
   it("retains known array prefix descriptors before opaque trailing spreads", () => {
     const { createOwnDataProperty } = require("../src/rules/vitest-timeout-copy-properties");
     const linter = new Linter({ configType: "flat" });
@@ -196,211 +221,5 @@ describe("vitest-timeout-cap value stability", () => {
       }),
       [],
     );
-  });
-  it("rejects own, inherited, computed and aliased setters on shallow copies", () => {
-    const actual = findings("shallow-copy-accessor-writes", { unknownValues: "finding" });
-    assert.deepEqual(
-      [...new Set(actual.map(({ line }) => line))],
-      [4, 9, 17, 26, 32, 41, 43, 49, 59, 70, 78, 90],
-    );
-    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
-    assert.deepEqual(findings("shallow-copy-accessor-writes"), []);
-  });
-  it("preserves own data writes and deletion without invoking accessor descriptors", () => {
-    assert.deepEqual(findings("shallow-copy-data-writes", { unknownValues: "finding" }), []);
-  });
-  it("preserves copy paths through transparent assertions around copies and wrappers", () => {
-    assert.deepEqual(
-      findings("transparent-copy-wrappers", { unknownValues: "finding" }).map(
-        ({ line, messageId }) => [line, messageId],
-      ),
-      [
-        [31, "timeout"],
-        [36, "unknown"],
-        [40, "unknown"],
-      ],
-    );
-    assert.deepEqual(
-      findings("transparent-copy-wrappers").map(({ line, messageId }) => [line, messageId]),
-      [[31, "timeout"]],
-    );
-  });
-  it("retains deleted own-descriptor invalidation through asserted container aliases", () => {
-    assert.deepEqual(
-      findings("asserted-deletion-alias", { unknownValues: "finding" }).map(
-        ({ line, messageId }) => [line, messageId],
-      ),
-      [4, 14, 24].flatMap((line) => Array(3).fill([line, "unknown"])),
-    );
-    assert.deepEqual(findings("asserted-deletion-alias"), []);
-  });
-  it("excludes non-enumerable array length from object-copy descriptor proofs", () => {
-    assert.deepEqual(
-      findings("copy-property-enumerability", { unknownValues: "finding" }).map(
-        ({ line, messageId }) => [line, messageId],
-      ),
-      [10, 18, 26].map((line) => [line, "unknown"]),
-    );
-    assert.deepEqual(findings("copy-property-enumerability"), []);
-  });
-  it("preserves copied values through wrapper paths and independent cached proofs", () => {
-    assert.deepEqual(
-      findings("wrapped-shallow-copy-writes", { unknownValues: "finding" }).map(
-        ({ line, messageId }) => [line, messageId],
-      ),
-      [
-        [55, "timeout"],
-        [64, "unknown"],
-        [64, "unknown"],
-        [64, "unknown"],
-      ],
-    );
-    assert.deepEqual(
-      findings("wrapped-shallow-copy-writes").map(({ line, messageId }) => [line, messageId]),
-      [[55, "timeout"]],
-    );
-  });
-  it("keeps wrapped shared children and uncertain indices, iterables and aliases unknown", () => {
-    const actual = findings("wrapped-shallow-copy-mutations", { unknownValues: "finding" });
-    assert.deepEqual(
-      [...new Set(actual.map(({ line }) => line))],
-      [3, 7, 12, 19, 23, 27, 32, 39, 44, 46, 54, 67],
-    );
-    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
-    assert.deepEqual(findings("wrapped-shallow-copy-mutations"), []);
-  });
-  it("uses known array prefix lengths while rejecting uncertain iterator identities", () => {
-    const actual = findings("known-array-spread-offsets", { unknownValues: "finding" });
-    assert.deepEqual(
-      actual.map(({ line, messageId }) => [line, messageId]),
-      [
-        [28, "timeout"],
-        ...[33, 37, 43, 49, 55, 60, 65, 70, 76, 81, 86, 92, 99, 104].map((line) => [
-          line,
-          "unknown",
-        ]),
-      ],
-    );
-    assert.deepEqual(
-      findings("known-array-spread-offsets").map(({ line, messageId }) => [line, messageId]),
-      [[28, "timeout"]],
-    );
-  });
-  it("keeps shallow copy writes independent while checking each copy's own stability", () => {
-    assert.deepEqual(
-      findings("shallow-copy-writes", { unknownValues: "finding" }).map(({ line, messageId }) => [
-        line,
-        messageId,
-      ]),
-      [
-        [8, "unknown"],
-        [12, "timeout"],
-        [42, "unknown"],
-      ],
-    );
-    assert.deepEqual(
-      findings("shallow-copy-writes").map(({ line, messageId }) => [line, messageId]),
-      [[12, "timeout"]],
-    );
-  });
-  it("skips known null copy spreads while preserving unknown and overwritten-property controls", () => {
-    const actual = findings("null-spreads", { unknownValues: "finding" });
-    assert.deepEqual(
-      [
-        ...new Set(
-          actual.filter(({ messageId }) => messageId === "unknown").map(({ line }) => line),
-        ),
-      ],
-      [25, 32, 37],
-    );
-  });
-  it("retains shared nested mutations and conservative unknown copy identities", () => {
-    const actual = findings("shallow-copy-alias-mutations", { unknownValues: "finding" });
-    assert.deepEqual(
-      [...new Set(actual.map(({ line }) => line))],
-      [4, 8, 13, 18, 21, 26, 30, 35, 36, 40, 47, 52, 57],
-    );
-    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
-    assert.ok(actual.some((item) => item.line === 21 && item.message.includes("projects carrier")));
-    assert.deepEqual(findings("shallow-copy-alias-mutations"), []);
-  });
-  it("keeps independent copy deletions separate from shared receiver deletions", () => {
-    const actual = findings("independent-copy-deletions", { unknownValues: "finding" });
-    assert.deepEqual(
-      actual
-        .filter(({ messageId }) => messageId !== "unknown")
-        .map(({ line, messageId }) => [line, messageId]),
-      [
-        [9, "timeout"],
-        [24, "timeout"],
-        [70, "timeout"],
-      ],
-    );
-    assert.deepEqual(
-      [
-        ...new Set(
-          actual.filter(({ messageId }) => messageId === "unknown").map(({ line }) => line),
-        ),
-      ],
-      [26, 34, 42, 50, 62, 77, 79, 87, 95, 103],
-    );
-    assert.equal(actual.filter(({ messageId }) => messageId === "unknown").length, 26);
-    assert.deepEqual(
-      findings("independent-copy-deletions").map(({ line, messageId }) => [line, messageId]),
-      [
-        [9, "timeout"],
-        [24, "timeout"],
-        [70, "timeout"],
-      ],
-    );
-  });
-  it("retains unknown deadlines after member writes, aliases, deletion and helper escape", () => {
-    const strict = { unknownValues: "finding", defaultMax: 30000 };
-    const actual = findings("mutable-values", strict);
-    assert.deepEqual([...new Set(actual.map(({ line }) => line))], [5, 9, 12, 15, 16, 22]);
-    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
-    assert.ok(actual.some(({ line, message }) => line === 16 && message.includes("testTimeout")));
-    assert.ok(actual.some(({ line, message }) => line === 22 && message.includes("testTimeout")));
-    assert.deepEqual(findings("mutable-values"), []);
-  });
-  it("preserves immutable aliases, scalar budgets and explicit restoration", () => {
-    assert.deepEqual(
-      findings("immutable-value-controls", {
-        unknownValues: "finding",
-        defaultMax: 30000,
-      }),
-      [],
-    );
-  });
-  it("caps test and hook overrides on registrars built through supported Vitest fixture APIs", () => {
-    assert.deepEqual(
-      findings("supported-fixture-builders", {
-        unknownValues: "finding",
-      }).map(({ line, messageId }) => [line, messageId]),
-      [
-        [3, "timeout"],
-        [4, "invalid"],
-        [6, "timeout"],
-        [8, "invalid"],
-      ],
-    );
-  });
-  it("retains unknown object exports including declaration, named alias and default", () => {
-    const actual = findings("exported-object-values", { unknownValues: "finding" });
-    assert.deepEqual([...new Set(actual.map(({ line }) => line))], [3, 7, 10]);
-    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
-  });
-  it("preserves exported scalar budgets without hiding an oversized scalar", () => {
-    assert.deepEqual(
-      findings("exported-scalar-controls", {
-        unknownValues: "finding",
-      }).map(({ line, messageId }) => [line, messageId]),
-      [[10, "timeout"]],
-    );
-  });
-  it("rejects unproved yield, await, tagged-template and computed-key consumers", () => {
-    const actual = findings("unproved-value-escapes", { unknownValues: "finding" });
-    assert.deepEqual([...new Set(actual.map(({ line }) => line))], [4, 7, 10, 13]);
-    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
   });
 });

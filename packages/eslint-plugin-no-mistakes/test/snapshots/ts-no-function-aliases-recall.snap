@@ -1,0 +1,63 @@
+{
+  "ts-no-function-aliases": [
+    {
+      "file": "ts-no-function-aliases/suppress-line.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "ts-no-function-aliases/suppress-file.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "ts-no-function-aliases/private-recall.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 46,
+          "endLine": 97,
+          "file": "ts-no-function-aliases/private-recall.ts",
+          "line": 97,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 46,
+          "endLine": 98,
+          "file": "ts-no-function-aliases/private-recall.ts",
+          "line": 98,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "ts-no-function-aliases/suppress-next-line.ts",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 49,
+          "endLine": 2,
+          "file": "ts-no-function-aliases/suppress-next-line.ts",
+          "line": 2,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

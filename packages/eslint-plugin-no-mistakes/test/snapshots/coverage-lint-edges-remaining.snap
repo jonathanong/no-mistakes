@@ -1,0 +1,91 @@
+{
+  "nextjs-metadata-exports-location": [
+    {
+      "file": "lib/meta.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    }
+  ],
+  "nextjs-no-manual-script-tags": [
+    {
+      "file": "components/x.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/page.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/page.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowInlineScriptIdPatterns": [
+            "("
+          ],
+          "allowInlineScriptIds": [
+            "allowed"
+          ]
+        }
+      ]
+    }
+  ],
+  "no-delete-property": [
+    {
+      "file": "fixture.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "a.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 1,
+          "file": "a.tsx",
+          "line": 1,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-placeholder-never-type-exports": [
+    {
+      "file": "a.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "a.ts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 66,
+          "endLine": 1,
+          "file": "a.ts",
+          "line": 1,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

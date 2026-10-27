@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { lint, plugin } from "./helpers.mjs";
 import {
   headingSection,
@@ -79,29 +81,43 @@ describe("eslint rule docs are executable", () => {
     const [snippet] = sourceFences(headingSection(page.body, "Suppression"));
     assert.ok(snippet, "await-array-methods needs a Suppression source fence");
 
-    const ruleId = "no-mistakes/await-array-methods";
-    const filename = snippetFilename(snippet.code, snippet.lang);
-    const config = { [ruleId]: "error" };
-    const suppressed = lint(snippet.code, config, filename);
-    assert.deepEqual(
-      suppressed.filter((message) => message.ruleId === ruleId),
-      [],
-    );
-
     const directive =
       /^\s*\/\/ eslint-disable-next-line no-mistakes\/await-array-methods --[^\n]*\r?\n/m;
     const unsuppressedCode = snippet.code.replace(directive, "");
     assert.notEqual(unsuppressedCode, snippet.code, "the snippet needs its rule directive");
     assert.match(unsuppressedCode, /await values\.sort\(\);/);
-
-    const findings = lint(unsuppressedCode, config, filename).filter(
-      (message) => message.ruleId === ruleId,
-    );
-    assert.deepEqual(
-      findings.map((message) => message.messageId),
-      ["awaited"],
-    );
   });
+
+  it("snapshots await-array-methods suppression diagnostics", async () => {
+    const page = rulePages().find((candidate) => candidate.ruleId === "await-array-methods");
+    const [snippet] = sourceFences(headingSection(page.body, "Suppression"));
+    const filename = snippetFilename(snippet.code, snippet.lang);
+    const directive =
+      /^\s*\/\/ eslint-disable-next-line no-mistakes\/await-array-methods --[^\n]*\r?\n/m;
+    const unsuppressedCode = snippet.code.replace(directive, "");
+    const typescript = {
+      parser: tsParser,
+      sourceType: "module",
+      globals: {},
+    };
+    const languageOptions = {
+      ecmaVersion: 2024,
+      sourceType: "module",
+      globals: {},
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    };
+    await expect(
+      snapshotDocument({
+        "await-array-methods": snapshotSuite("await-array-methods", languageOptions, {
+          valid: [{ code: snippet.code, filename, languageOptions: typescript }],
+          invalid: [
+            // 1 awaited diagnostic remains after the suppression directive is removed.
+            { code: unsuppressedCode, filename, languageOptions: typescript },
+          ],
+        }),
+      }),
+    ).toMatchFileSnapshot("snapshots/docs-snippets-remaining.snap");
+  }, 30_000);
 });
 
 function runSnippet(ruleId, snippet, option) {

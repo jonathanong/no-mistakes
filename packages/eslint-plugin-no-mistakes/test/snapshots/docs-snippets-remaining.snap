@@ -1,0 +1,28 @@
+{
+  "await-array-methods": [
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 2,
+          "file": "fixture.ts",
+          "line": 2,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

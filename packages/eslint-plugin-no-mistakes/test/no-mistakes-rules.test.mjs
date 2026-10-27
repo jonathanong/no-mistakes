@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
-import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
+import {
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+  snapshotSuite,
+} from "./diagnostic-snapshot.mjs";
 import { __dirname, lint, messages, require } from "./helpers.mjs";
 
 function ruleFixture(rule, name) {
@@ -29,6 +35,21 @@ const rateLimitTargetOptions = {
     },
   ],
 };
+
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const typescript = { parser: tsParser, sourceType: "module", globals: {} };
+
+function lintCase(code, filename, option) {
+  const item = { code, filename };
+  if (/\.[cm]?tsx?$/.test(filename)) item.languageOptions = typescript;
+  if (option !== undefined) item.options = [option];
+  return item;
+}
 
 describe("async-call-disposition", () => {
   it("allows explicit enqueue promise disposition", () => {
@@ -328,50 +349,6 @@ describe("test-no-delayed-rejects", () => {
 });
 
 describe("async-try-catch-return-await", () => {
-  it("allows awaited returns in configured try/catch handlers", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-try-catch-return-await", "valid.ts"),
-        "async-try-catch-return-await",
-        rateLimitTargetOptions,
-        "valid.ts",
-      ),
-      [],
-    );
-  });
-
-  it("reports unawaited returns in configured try/catch handlers", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-try-catch-return-await", "invalid.ts"),
-        "async-try-catch-return-await",
-        rateLimitTargetOptions,
-        "invalid.ts",
-      ),
-      [
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
-      ],
-    );
-  });
-
   it("offers return-await suggestions inside async functions", () => {
     const [message] = lint(
       `import { handleRateLimit } from "@app/rate-limit";\nasync function run() { try { return request(); } catch (error) { handleRateLimit(error); } }`,
@@ -408,328 +385,9 @@ describe("async-try-catch-return-await", () => {
     assert.equal(logical.messageId, "awaitReturn");
     assert.equal(logical.suggestions[0].fix.text, "await (cached ?? request())");
   });
-
-  it("is a no-op without targets and ignores invalid regexes", () => {
-    const code = ruleFixture("async-try-catch-return-await", "invalid.ts");
-    assert.deepEqual(messages(code, "async-try-catch-return-await", undefined, "invalid.ts"), []);
-    assert.deepEqual(
-      messages(
-        code,
-        "async-try-catch-return-await",
-        { handlers: [{ sourceSpecifierPatterns: ["@app/**"], calleeNamePatterns: ["/[/"] }] },
-        "invalid.ts",
-      ),
-      [],
-    );
-  });
-});
-
-describe("ts-no-export-renaming", () => {
-  it("allows direct value exports and type-only aliases", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-export-renaming", "valid.ts"),
-        "ts-no-export-renaming",
-        undefined,
-        "valid.ts",
-      ),
-      [],
-    );
-  });
-
-  it("reports value export aliases", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-export-renaming", "invalid.ts"),
-        "ts-no-export-renaming",
-        undefined,
-        "invalid.ts",
-      ),
-      ["renamed", "renamed", "renamed"],
-    );
-  });
-
-  it("covers direct exports, string-literal export names, and empty export lists", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-export-renaming", "coverage.ts"),
-        "ts-no-export-renaming",
-        undefined,
-        "coverage.ts",
-      ),
-      ["renamed", "renamed"],
-    );
-  });
-
-  it("supports default re-export and path scoping options", () => {
-    const code = ruleFixture("ts-no-export-renaming", "options.ts");
-    assert.deepEqual(messages(code, "ts-no-export-renaming", undefined, "web/app/index.ts"), [
-      "renamed",
-      "renamed",
-    ]);
-    assert.deepEqual(
-      messages(code, "ts-no-export-renaming", { allowDefaultReExports: true }, "web/app/index.ts"),
-      ["renamed"],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "ts-no-export-renaming",
-        { includePathPatterns: ["^backend/"] },
-        "backend/index.ts",
-      ),
-      ["renamed", "renamed"],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "ts-no-export-renaming",
-        { includePathPatterns: ["^backend/"] },
-        resolve(process.cwd(), "web/app/index.ts"),
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "ts-no-export-renaming",
-        { includePathPatterns: ["^backend/", "["] },
-        resolve(process.cwd(), "backend/index.ts"),
-      ),
-      ["renamed", "renamed"],
-    );
-    assert.deepEqual(
-      messages(code, "ts-no-export-renaming", { includePathPatterns: ["["] }, "backend/index.ts"),
-      [],
-    );
-  });
-});
-
-describe("ts-no-function-aliases", () => {
-  it("allows wrappers with behavior beyond direct forwarding", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-function-aliases", "valid.ts"),
-        "ts-no-function-aliases",
-        undefined,
-        "valid.ts",
-      ),
-      [],
-    );
-  });
-
-  it("reports simple wrappers that only forward to another function", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-function-aliases", "invalid.ts"),
-        "ts-no-function-aliases",
-        undefined,
-        "invalid.ts",
-      ),
-      Array.from({ length: 7 }, () => "alias"),
-    );
-  });
-
-  it("keeps released private identifier findings and silent self/default wrappers", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-function-aliases", "coverage.ts"),
-        "ts-no-function-aliases",
-        undefined,
-        "coverage.ts",
-      ),
-      Array.from({ length: 3 }, () => "alias"),
-    );
-  });
-});
-
-describe("ts-no-const-aliases", () => {
-  it("allows same-name declarations and values that are not direct aliases", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-const-aliases", "valid.ts"),
-        "ts-no-const-aliases",
-        undefined,
-        "valid.ts",
-      ),
-      [],
-    );
-  });
-
-  it("reports local and exported differently named const aliases", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-const-aliases", "invalid.ts"),
-        "ts-no-const-aliases",
-        undefined,
-        "invalid.ts",
-      ),
-      Array(6).fill("alias"),
-    );
-  });
-
-  it("reports non-null and instantiated aliases while preserving explicit type intent", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-const-aliases", "coverage.ts"),
-        "ts-no-const-aliases",
-        undefined,
-        "coverage.ts",
-      ),
-      ["alias", "alias"],
-    );
-  });
-
-  it("allows typed declarations through nested non-null and parenthesized wrappers", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-no-const-aliases", "typed.ts"),
-        "ts-no-const-aliases",
-        undefined,
-        "typed.ts",
-      ),
-      [],
-    );
-  });
-});
-
-describe("react-no-nullish-react-node", () => {
-  it("allows explicit undefined checks and non-ReactNode nullish expressions", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("react-no-nullish-react-node", "valid.tsx"),
-        "react-no-nullish-react-node",
-        undefined,
-        "valid.tsx",
-      ),
-      [],
-    );
-  });
-
-  it("reports nullish coalescing on explicitly typed ReactNode values", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("react-no-nullish-react-node", "invalid.tsx"),
-        "react-no-nullish-react-node",
-        undefined,
-        "invalid.tsx",
-      ),
-      ["nullish", "nullish", "nullish"],
-    );
-  });
-
-  it("covers ReactNode aliases, typed variables, function expressions, and type literal props", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("react-no-nullish-react-node", "coverage.tsx"),
-        "react-no-nullish-react-node",
-        undefined,
-        "coverage.tsx",
-      ),
-      [
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-        "nullish",
-      ],
-    );
-  });
 });
 
 describe("ts-preserve-null-option-defaults", () => {
-  it("allows explicit undefined checks and non-nullable defaults", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-preserve-null-option-defaults", "valid.ts"),
-        "ts-preserve-null-option-defaults",
-        undefined,
-        "valid.ts",
-      ),
-      [],
-    );
-  });
-
-  it("reports defaults that collapse nullable option members", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-preserve-null-option-defaults", "invalid.ts"),
-        "ts-preserve-null-option-defaults",
-        undefined,
-        "invalid.ts",
-      ),
-      Array(4).fill("default"),
-    );
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-preserve-null-option-defaults", "static-keys.ts"),
-        "ts-preserve-null-option-defaults",
-        undefined,
-        "static-keys.ts",
-      ),
-      ["default", "default", "default"],
-    );
-  });
-
-  it("supports type-name and path scoping options", () => {
-    const code = ruleFixture("ts-preserve-null-option-defaults", "options.ts");
-    assert.deepEqual(
-      messages(
-        code,
-        "ts-preserve-null-option-defaults",
-        { optionObjectNames: ["Options"] },
-        "backend/options.ts",
-      ),
-      ["default", "default"],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "ts-preserve-null-option-defaults",
-        { optionObjectNamePatterns: ["Options$"] },
-        "backend/options.ts",
-      ),
-      ["default", "default", "default"],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "ts-preserve-null-option-defaults",
-        { optionObjectNames: ["PublicOptions"] },
-        "backend/options.ts",
-      ),
-      ["default"],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "ts-preserve-null-option-defaults",
-        { includePathPatterns: ["backend/**"] },
-        "web/options.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "ts-preserve-null-option-defaults",
-        { excludePathPatterns: ["web/**"] },
-        "web/options.ts",
-      ),
-      [],
-    );
-  });
-
   it("covers optional type and member helper branches", () => {
     const { __test } = require("../src/rules/ts-preserve-null-option-defaults");
     assert.equal(__test.compilePatterns(["^Options$", "["]).length, 1);
@@ -989,107 +647,9 @@ describe("ts-preserve-null-option-defaults", () => {
       null,
     );
   });
-
-  it("covers function forms and member shapes", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("ts-preserve-null-option-defaults", "coverage.ts"),
-        "ts-preserve-null-option-defaults",
-        undefined,
-        "coverage.ts",
-      ),
-      Array(38).fill("default"),
-    );
-  });
 });
 
 describe("server-require-nullable-fetch-wrapper", () => {
-  const option = {
-    getterCalleePatterns: ["^serverApi\\.get$"],
-    requiredWrapperCallee: "nullableEntity",
-    nullableReturnTypeNames: ["MaybeUser"],
-  };
-
-  it("allows wrapped calls and helpers that are not checked", () => {
-    assert.deepEqual(
-      messages("serverApi.get('/users/1')", "server-require-nullable-fetch-wrapper"),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        ruleFixture("server-require-nullable-fetch-wrapper", "valid.ts"),
-        "server-require-nullable-fetch-wrapper",
-        option,
-        "backend/users.ts",
-      ),
-      [],
-    );
-  });
-
-  it("reports nullable exported helpers with unwrapped getter calls", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("server-require-nullable-fetch-wrapper", "invalid.ts"),
-        "server-require-nullable-fetch-wrapper",
-        option,
-        "backend/users.ts",
-      ),
-      Array(13).fill("wrapper"),
-    );
-  });
-
-  it("supports getter, wrapper, nullable type, and path options", () => {
-    const code = ruleFixture("server-require-nullable-fetch-wrapper", "options.ts");
-    const base = {
-      getterCalleePatterns: ["^client\\.fetchEntity$"],
-      requiredWrapperCallee: "asNullable",
-    };
-    assert.deepEqual(
-      messages(
-        code,
-        "server-require-nullable-fetch-wrapper",
-        { ...base, nullableReturnTypeNames: ["EntityResult"] },
-        "backend/users.ts",
-      ),
-      ["wrapper", "wrapper"],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "server-require-nullable-fetch-wrapper",
-        {
-          ...base,
-          inferNullableFromTopLevelEntityPath: true,
-          topLevelEntityPathPatterns: ["backend/entities/**"],
-        },
-        "backend/entities/users.ts",
-      ),
-      ["wrapper", "wrapper"],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "server-require-nullable-fetch-wrapper",
-        {
-          ...base,
-          inferNullableFromTopLevelEntityPath: true,
-          topLevelEntityPathPatterns: ["backend/entities/**"],
-        },
-        "backend/services/users.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "server-require-nullable-fetch-wrapper",
-        { ...base, includePathPatterns: ["backend/**"] },
-        "web/users.ts",
-      ),
-      [],
-    );
-  });
-
   it("covers nullable wrapper helper branches", () => {
     const { __test } = require("../src/rules/server-require-nullable-fetch-wrapper");
     assert.equal(__test.compilePatterns(["^serverApi\\.get$", "["]).length, 1);
@@ -1333,74 +893,210 @@ describe("server-require-nullable-fetch-wrapper", () => {
 });
 
 describe("no-global-fetch-outside-helper", () => {
-  const option = {
-    checkedPathPatterns: ["web/**"],
-    allowedPathPatterns: ["web/lib/api/**", "web/lib/client/**"],
-  };
-
-  it("is opt-in without checked paths", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('/api/users')",
-        "no-global-fetch-outside-helper",
-        undefined,
-        "web/app/page.ts",
+  it("covers helper fallback branches", () => {
+    const { __test } = require("../src/rules/no-global-fetch-outside-helper");
+    const aliasVariable = { name: "request", defs: [{ type: "Variable" }] };
+    const aliasContext = {
+      sourceCode: {
+        getScope: () => ({
+          set: new Map([
+            ["request", aliasVariable],
+            ["window", { name: "window", defs: [{ type: "Variable" }] }],
+          ]),
+          upper: null,
+        }),
+      },
+    };
+    assert.equal(__test.isGlobalFetchExpression(null, aliasContext, new Set()), false);
+    assert.equal(
+      __test.isGlobalFetchExpression(
+        {
+          type: "ChainExpression",
+          expression: {
+            type: "MemberExpression",
+            computed: false,
+            object: { type: "Identifier", name: "self" },
+            property: { type: "Identifier", name: "fetch" },
+          },
+        },
+        { sourceCode: { getScope: () => ({ set: new Map(), upper: null }) } },
+        new Set(),
       ),
-      [],
+      true,
     );
-  });
-
-  it("reports global fetch calls in checked non-helper files", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("no-global-fetch-outside-helper", "invalid.ts"),
-        "no-global-fetch-outside-helper",
-        option,
-        "web/app/users.ts",
+    assert.equal(
+      __test.unwrapTSAndChain({
+        type: "TSTypeAssertion",
+        expression: {
+          type: "TSNonNullExpression",
+          expression: {
+            type: "TSSatisfiesExpression",
+            expression: {
+              type: "TSInstantiationExpression",
+              expression: { type: "Identifier", name: "fetch" },
+            },
+          },
+        },
+      }).name,
+      "fetch",
+    );
+    assert.equal(
+      __test.isGlobalFetchExpression(
+        { type: "Identifier", name: "request" },
+        aliasContext,
+        new Set([aliasVariable]),
       ),
-      Array(20).fill("globalFetch"),
+      true,
     );
-  });
-
-  it("allows configured helper paths and unchecked paths", () => {
-    const code = ruleFixture("no-global-fetch-outside-helper", "invalid.ts");
-    assert.deepEqual(
-      messages(code, "no-global-fetch-outside-helper", option, "web/lib/api/users.ts"),
-      [],
-    );
-    assert.deepEqual(
-      messages(code, "no-global-fetch-outside-helper", option, "backend/jobs/users.ts"),
-      [],
-    );
-  });
-
-  it("ignores local fetch bindings, global-root shadows, and unsupported dynamic aliases", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("no-global-fetch-outside-helper", "valid.ts"),
-        "no-global-fetch-outside-helper",
-        option,
-        "web/app/users.ts",
+    assert.equal(
+      __test.isGlobalFetchExpression(
+        { type: "Identifier", name: "request" },
+        aliasContext,
+        new Set(),
       ),
-      [],
+      false,
     );
+    assert.equal(
+      __test.isGlobalFetchMember(
+        {
+          type: "MemberExpression",
+          computed: false,
+          object: { type: "Identifier", name: "window" },
+          property: { type: "Identifier", name: "fetch" },
+        },
+        aliasContext,
+      ),
+      false,
+    );
+    assert.equal(
+      __test.isGlobalFetchMember(
+        {
+          type: "MemberExpression",
+          computed: false,
+          object: { type: "Identifier", name: "self" },
+          property: { type: "Identifier", name: "postMessage" },
+        },
+        aliasContext,
+      ),
+      false,
+    );
+    assert.equal(
+      __test.hasLocalBinding(
+        { type: "Identifier", name: "fetch" },
+        {
+          sourceCode: {
+            getScope: () => ({
+              variables: [{ name: "fetch", defs: [{ type: "Variable" }] }],
+              upper: null,
+            }),
+          },
+        },
+      ),
+      true,
+    );
+    assert.equal(
+      __test.hasLocalBinding(null, { sourceCode: { getScope: () => ({ upper: null }) } }),
+      false,
+    );
+    assert.equal(__test.isRuntimeBinding({ type: "Type" }), false);
+    assert.equal(
+      __test.isAmbientDeclaration({ type: "Variable", parent: { declare: true } }),
+      true,
+    );
+    assert.doesNotThrow(() =>
+      __test.setObjectPatternFetchAliases(
+        { type: "Identifier", name: "request" },
+        true,
+        aliasContext,
+        new Set(),
+      ),
+    );
+    assert.equal(
+      __test.hasLocalBinding(
+        { type: "Identifier", name: "missing" },
+        {
+          sourceCode: {
+            getScope: () => ({
+              variables: [{ name: "other", defs: [{ type: "Variable" }] }],
+              upper: null,
+            }),
+          },
+        },
+      ),
+      false,
+    );
+    assert.deepEqual(
+      __test.bindingIdentifier({
+        type: "AssignmentPattern",
+        left: { type: "Identifier", name: "fetchAlias" },
+      }),
+      { type: "Identifier", name: "fetchAlias" },
+    );
+    assert.equal(__test.bindingIdentifier({ type: "RestElement" }), null);
+    assert.equal(
+      __test.shouldCheckFile("web/app/users.ts", {
+        checkedPathPatterns: ["web/**"],
+        allowedPathPatterns: ["web/app/**"],
+      }),
+      false,
+    );
+    assert.equal(
+      __test.isAlwaysExecutedChild(
+        { type: "IfStatement", test: { type: "Identifier", name: "check" } },
+        { type: "Identifier", name: "other" },
+      ),
+      false,
+    );
+    const logicalLeft = { type: "Identifier", name: "left" };
+    assert.equal(
+      __test.isAlwaysExecutedChild({ type: "LogicalExpression", left: logicalLeft }, logicalLeft),
+      true,
+    );
+    const conditionalTest = { type: "Identifier", name: "test" };
+    assert.equal(
+      __test.isAlwaysExecutedChild(
+        { type: "ConditionalExpression", test: conditionalTest },
+        conditionalTest,
+      ),
+      true,
+    );
+    assert.equal(__test.isMaybeExecuted({ parent: { type: "FunctionDeclaration" } }), true);
   });
+});
 
-  it("does not report shadowed aliases", () => {
-    const code = `
+const fetchPathOption = {
+  checkedPathPatterns: ["web/**"],
+  allowedPathPatterns: ["web/lib/api/**", "web/lib/client/**"],
+};
+
+const serverWrapperOption = {
+  getterCalleePatterns: ["^serverApi\\.get$"],
+  requiredWrapperCallee: "nullableEntity",
+  nullableReturnTypeNames: ["MaybeUser"],
+};
+
+const serverBase = {
+  getterCalleePatterns: ["^client\\.fetchEntity$"],
+  requiredWrapperCallee: "asNullable",
+};
+
+const bannedOption = {
+  checkedPathPatterns: ["src/**"],
+  allowedPathPatterns: ["src/internal/**"],
+  bannedImports: [
+    { module: "typescript", names: ["createProgram", "createWatchProgram"] },
+    { module: "@acme/rate-limit", names: ["default", "invalidateAll"] },
+  ],
+};
+
+const shadowFetchCode = `
       const request = fetch;
       function run(request) {
         request("/api/shadowed");
       }
       request("/api/global");
     `;
-    assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
-      "globalFetch",
-    ]);
-  });
-
-  it("tracks assignment aliases and reassignment clearing", () => {
-    const code = `
+const aliasFetchCode = `
       let assigned;
       assigned = self.fetch;
       assigned("/api/assigned");
@@ -1652,418 +1348,253 @@ describe("no-global-fetch-outside-helper", () => {
       staticFieldAlias("/api/static-field-alias");
       assigned ||= self.fetch;
     `;
-    assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-      "globalFetch",
-    ]);
-  });
-
-  it("ignores type-only imports when checking global fetch shadows", () => {
-    const typeOnlyCode = `
+const typeOnlyFetchCode = `
       import type { fetch, window } from "./types";
       fetch("/api/type-only-fetch");
       window.fetch("/api/type-only-window");
     `;
-    assert.deepEqual(
-      messages(typeOnlyCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
-      ["globalFetch", "globalFetch"],
-    );
-
-    const valueImportCode = `
+const valueImportFetchCode = `
       import { fetch } from "./runtime";
       fetch("/api/value-import");
     `;
-    assert.deepEqual(
-      messages(valueImportCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
-      [],
-    );
-
-    const ambientCode = `
+const ambientFetchCode = `
       declare const fetch: typeof globalThis.fetch;
       declare const window: Window;
       fetch("/api/ambient-fetch");
       window.fetch("/api/ambient-window");
     `;
-    assert.deepEqual(
-      messages(ambientCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
-      ["globalFetch", "globalFetch"],
-    );
-  });
-
-  it("covers helper fallback branches", () => {
-    const { __test } = require("../src/rules/no-global-fetch-outside-helper");
-    const aliasVariable = { name: "request", defs: [{ type: "Variable" }] };
-    const aliasContext = {
-      sourceCode: {
-        getScope: () => ({
-          set: new Map([
-            ["request", aliasVariable],
-            ["window", { name: "window", defs: [{ type: "Variable" }] }],
-          ]),
-          upper: null,
-        }),
-      },
-    };
-    assert.equal(__test.isGlobalFetchExpression(null, aliasContext, new Set()), false);
-    assert.equal(
-      __test.isGlobalFetchExpression(
-        {
-          type: "ChainExpression",
-          expression: {
-            type: "MemberExpression",
-            computed: false,
-            object: { type: "Identifier", name: "self" },
-            property: { type: "Identifier", name: "fetch" },
-          },
-        },
-        { sourceCode: { getScope: () => ({ set: new Map(), upper: null }) } },
-        new Set(),
-      ),
-      true,
-    );
-    assert.equal(
-      __test.unwrapTSAndChain({
-        type: "TSTypeAssertion",
-        expression: {
-          type: "TSNonNullExpression",
-          expression: {
-            type: "TSSatisfiesExpression",
-            expression: {
-              type: "TSInstantiationExpression",
-              expression: { type: "Identifier", name: "fetch" },
-            },
-          },
-        },
-      }).name,
-      "fetch",
-    );
-    assert.equal(
-      __test.isGlobalFetchExpression(
-        { type: "Identifier", name: "request" },
-        aliasContext,
-        new Set([aliasVariable]),
-      ),
-      true,
-    );
-    assert.equal(
-      __test.isGlobalFetchExpression(
-        { type: "Identifier", name: "request" },
-        aliasContext,
-        new Set(),
-      ),
-      false,
-    );
-    assert.equal(
-      __test.isGlobalFetchMember(
-        {
-          type: "MemberExpression",
-          computed: false,
-          object: { type: "Identifier", name: "window" },
-          property: { type: "Identifier", name: "fetch" },
-        },
-        aliasContext,
-      ),
-      false,
-    );
-    assert.equal(
-      __test.isGlobalFetchMember(
-        {
-          type: "MemberExpression",
-          computed: false,
-          object: { type: "Identifier", name: "self" },
-          property: { type: "Identifier", name: "postMessage" },
-        },
-        aliasContext,
-      ),
-      false,
-    );
-    assert.equal(
-      __test.hasLocalBinding(
-        { type: "Identifier", name: "fetch" },
-        {
-          sourceCode: {
-            getScope: () => ({
-              variables: [{ name: "fetch", defs: [{ type: "Variable" }] }],
-              upper: null,
-            }),
-          },
-        },
-      ),
-      true,
-    );
-    assert.equal(
-      __test.hasLocalBinding(null, { sourceCode: { getScope: () => ({ upper: null }) } }),
-      false,
-    );
-    assert.equal(__test.isRuntimeBinding({ type: "Type" }), false);
-    assert.equal(
-      __test.isAmbientDeclaration({ type: "Variable", parent: { declare: true } }),
-      true,
-    );
-    assert.doesNotThrow(() =>
-      __test.setObjectPatternFetchAliases(
-        { type: "Identifier", name: "request" },
-        true,
-        aliasContext,
-        new Set(),
-      ),
-    );
-    assert.equal(
-      __test.hasLocalBinding(
-        { type: "Identifier", name: "missing" },
-        {
-          sourceCode: {
-            getScope: () => ({
-              variables: [{ name: "other", defs: [{ type: "Variable" }] }],
-              upper: null,
-            }),
-          },
-        },
-      ),
-      false,
-    );
-    assert.deepEqual(
-      __test.bindingIdentifier({
-        type: "AssignmentPattern",
-        left: { type: "Identifier", name: "fetchAlias" },
-      }),
-      { type: "Identifier", name: "fetchAlias" },
-    );
-    assert.equal(__test.bindingIdentifier({ type: "RestElement" }), null);
-    assert.equal(
-      __test.shouldCheckFile("web/app/users.ts", {
-        checkedPathPatterns: ["web/**"],
-        allowedPathPatterns: ["web/app/**"],
-      }),
-      false,
-    );
-    assert.equal(
-      __test.isAlwaysExecutedChild(
-        { type: "IfStatement", test: { type: "Identifier", name: "check" } },
-        { type: "Identifier", name: "other" },
-      ),
-      false,
-    );
-    const logicalLeft = { type: "Identifier", name: "left" };
-    assert.equal(
-      __test.isAlwaysExecutedChild({ type: "LogicalExpression", left: logicalLeft }, logicalLeft),
-      true,
-    );
-    const conditionalTest = { type: "Identifier", name: "test" };
-    assert.equal(
-      __test.isAlwaysExecutedChild(
-        { type: "ConditionalExpression", test: conditionalTest },
-        conditionalTest,
-      ),
-      true,
-    );
-    assert.equal(__test.isMaybeExecuted({ parent: { type: "FunctionDeclaration" } }), true);
-  });
-});
-
-describe("no-banned-import-outside-allowed-paths", () => {
-  const option = {
-    checkedPathPatterns: ["src/**"],
-    allowedPathPatterns: ["src/internal/**"],
-    bannedImports: [
-      { module: "typescript", names: ["createProgram", "createWatchProgram"] },
-      { module: "@acme/rate-limit", names: ["default", "invalidateAll"] },
-    ],
-  };
-
-  it("is opt-in without checked paths", () => {
-    assert.deepEqual(
-      messages(
-        'import { createProgram } from "typescript"; createProgram();',
-        "no-banned-import-outside-allowed-paths",
-        { bannedImports: option.bannedImports },
-        "src/app/build.ts",
-      ),
-      [],
-    );
-  });
-
-  it("is a no-op with no options at all", () => {
-    assert.deepEqual(
-      messages(
-        'import { createProgram } from "typescript"; createProgram();',
-        "no-banned-import-outside-allowed-paths",
-        undefined,
-        "src/app/build.ts",
-      ),
-      [],
-    );
-  });
-
-  it("is a no-op without bannedImports", () => {
-    assert.deepEqual(
-      messages(
-        'import { createProgram } from "typescript"; createProgram();',
-        "no-banned-import-outside-allowed-paths",
-        { checkedPathPatterns: ["src/**"] },
-        "src/app/build.ts",
-      ),
-      [],
-    );
-  });
-
-  it("reports banned imports across every tracked binding path in checked files", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("no-banned-import-outside-allowed-paths", "invalid.ts"),
-        "no-banned-import-outside-allowed-paths",
-        option,
-        "src/app/build.ts",
-      ),
-      [
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedReExport",
-        "bannedReExport",
-        "bannedReExport",
-        "bannedReExport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedImport",
-        "bannedReExport",
-        "bannedImport",
-      ],
-    );
-  });
-
-  it("allows the configured allowed path and unchecked paths", () => {
-    const code = ruleFixture("no-banned-import-outside-allowed-paths", "invalid.ts");
-    assert.deepEqual(
-      messages(code, "no-banned-import-outside-allowed-paths", option, "src/internal/build.ts"),
-      [],
-    );
-    assert.deepEqual(
-      messages(code, "no-banned-import-outside-allowed-paths", option, "backend/jobs/build.ts"),
-      [],
-    );
-  });
-
-  it("ignores unrelated modules, names, and unsupported binding paths", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("no-banned-import-outside-allowed-paths", "valid.ts"),
-        "no-banned-import-outside-allowed-paths",
-        option,
-        "src/app/build.ts",
-      ),
-      [],
-    );
-  });
-
-  it("supports multiple allowed-path exceptions", () => {
-    const twoExceptionsOption = {
-      ...option,
-      allowedPathPatterns: ["src/internal/**", "src/legacy/rate-limit-shim.ts"],
-    };
-    const code = `
+const limiterCode = `
       import limiter from "@acme/rate-limit";
       limiter.invalidateAll();
     `;
-    assert.deepEqual(
-      messages(
-        code,
-        "no-banned-import-outside-allowed-paths",
-        twoExceptionsOption,
-        "src/legacy/rate-limit-shim.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "no-banned-import-outside-allowed-paths",
-        twoExceptionsOption,
-        "src/app/other.ts",
-      ),
-      ["bannedImport"],
-    );
-  });
-
-  it("does not report an unaliased export-star from a module banned only on default", () => {
-    const defaultOnlyOption = {
-      ...option,
-      bannedImports: [{ module: "@acme/rate-limit", names: ["default"] }],
-    };
-    assert.deepEqual(
-      messages(
-        'export * from "@acme/rate-limit";',
-        "no-banned-import-outside-allowed-paths",
-        defaultOnlyOption,
-        "src/app/build.ts",
-      ),
-      [],
-    );
-  });
-
-  it("reports a non-identifier default export resolved through the expression tagger", () => {
-    assert.deepEqual(
-      messages(
-        `
+const reexportCode = `
           import * as ts from "typescript";
           export default ts.createProgram;
-        `,
-        "no-banned-import-outside-allowed-paths",
-        option,
-        "src/app/build.ts",
+        `;
+const typescriptImportCode = 'import { createProgram } from "typescript"; createProgram();';
+
+it("snapshots remaining diagnostics", async () => {
+  const exportRenaming = ruleFixture("ts-no-export-renaming", "options.ts");
+  const preserveOptions = ruleFixture("ts-preserve-null-option-defaults", "options.ts");
+  const serverOptions = ruleFixture("server-require-nullable-fetch-wrapper", "options.ts");
+  const fetchInvalid = ruleFixture("no-global-fetch-outside-helper", "invalid.ts");
+  const bannedInvalid = ruleFixture("no-banned-import-outside-allowed-paths", "invalid.ts");
+  const tryInvalid = ruleFixture("async-try-catch-return-await", "invalid.ts");
+  await expect(
+    snapshotDocument({
+      "async-try-catch-return-await": snapshotSuite(
+        "async-try-catch-return-await",
+        languageOptions,
+        {
+          valid: [
+            lintCase(
+              ruleFixture("async-try-catch-return-await", "valid.ts"),
+              "valid.ts",
+              rateLimitTargetOptions,
+            ),
+            // A missing target list and an invalid callee regex are no-ops.
+            lintCase(tryInvalid, "invalid.ts"),
+            lintCase(tryInvalid, "invalid.ts", {
+              handlers: [{ sourceSpecifierPatterns: ["@app/**"], calleeNamePatterns: ["/[/"] }],
+            }),
+          ],
+          invalid: [
+            // 19 awaitReturn diagnostics.
+            lintCase(tryInvalid, "invalid.ts", rateLimitTargetOptions),
+          ],
+        },
       ),
-      ["bannedReExport"],
-    );
-  });
-});
+      "no-banned-import-outside-allowed-paths": snapshotSuite(
+        "no-banned-import-outside-allowed-paths",
+        languageOptions,
+        {
+          valid: [
+            // Opt-in: banned imports alone do not select files.
+            lintCase(typescriptImportCode, "src/app/build.ts", {
+              bannedImports: bannedOption.bannedImports,
+            }),
+            // No options at all is a no-op.
+            lintCase(typescriptImportCode, "src/app/build.ts"),
+            // Checked paths without bannedImports are a no-op.
+            lintCase(typescriptImportCode, "src/app/build.ts", {
+              checkedPathPatterns: ["src/**"],
+            }),
+            lintCase(bannedInvalid, "src/internal/build.ts", bannedOption),
+            lintCase(bannedInvalid, "backend/jobs/build.ts", bannedOption),
+            lintCase(
+              ruleFixture("no-banned-import-outside-allowed-paths", "valid.ts"),
+              "src/app/build.ts",
+              bannedOption,
+            ),
+            lintCase(limiterCode, "src/legacy/rate-limit-shim.ts", {
+              ...bannedOption,
+              allowedPathPatterns: ["src/internal/**", "src/legacy/rate-limit-shim.ts"],
+            }),
+            // An unaliased export-star from a default-only ban stays silent.
+            lintCase('export * from "@acme/rate-limit";', "src/app/build.ts", {
+              ...bannedOption,
+              bannedImports: [{ module: "@acme/rate-limit", names: ["default"] }],
+            }),
+          ],
+          invalid: [
+            lintCase(bannedInvalid, "src/app/build.ts", bannedOption),
+            lintCase(limiterCode, "src/app/other.ts", {
+              ...bannedOption,
+              allowedPathPatterns: ["src/internal/**", "src/legacy/rate-limit-shim.ts"],
+            }),
+            // A non-identifier default export is resolved through the expression tagger.
+            lintCase(reexportCode, "src/app/build.ts", bannedOption),
+          ],
+        },
+      ),
+      "no-global-fetch-outside-helper": snapshotSuite(
+        "no-global-fetch-outside-helper",
+        languageOptions,
+        {
+          valid: [
+            // Opt-in without checked paths.
+            lintCase("fetch('/api/users')", "web/app/page.ts"),
+            lintCase(fetchInvalid, "web/lib/api/users.ts", fetchPathOption),
+            lintCase(fetchInvalid, "backend/jobs/users.ts", fetchPathOption),
+            lintCase(
+              ruleFixture("no-global-fetch-outside-helper", "valid.ts"),
+              "web/app/users.ts",
+              fetchPathOption,
+            ),
+            // A value import shadows the global fetch binding.
+            lintCase(valueImportFetchCode, "web/app/users.ts", fetchPathOption),
+          ],
+          invalid: [
+            // 20 globalFetch diagnostics.
+            lintCase(fetchInvalid, "web/app/users.ts", fetchPathOption),
+            lintCase(shadowFetchCode, "web/app/users.ts", fetchPathOption),
+            lintCase(aliasFetchCode, "web/app/users.ts", fetchPathOption),
+            // Type-only imports do not shadow global fetch.
+            lintCase(typeOnlyFetchCode, "web/app/users.ts", fetchPathOption),
+            lintCase(ambientFetchCode, "web/app/users.ts", fetchPathOption),
+          ],
+        },
+      ),
+      "react-no-nullish-react-node": snapshotSuite("react-no-nullish-react-node", languageOptions, {
+        valid: [lintCase(ruleFixture("react-no-nullish-react-node", "valid.tsx"), "valid.tsx")],
+        invalid: [
+          lintCase(ruleFixture("react-no-nullish-react-node", "invalid.tsx"), "invalid.tsx"),
+          lintCase(ruleFixture("react-no-nullish-react-node", "coverage.tsx"), "coverage.tsx"),
+        ],
+      }),
+      "server-require-nullable-fetch-wrapper": snapshotSuite(
+        "server-require-nullable-fetch-wrapper",
+        languageOptions,
+        {
+          valid: [
+            lintCase("serverApi.get('/users/1')", "fixture.jsx"),
+            lintCase(
+              ruleFixture("server-require-nullable-fetch-wrapper", "valid.ts"),
+              "backend/users.ts",
+              serverWrapperOption,
+            ),
+            lintCase(serverOptions, "backend/services/users.ts", {
+              ...serverBase,
+              inferNullableFromTopLevelEntityPath: true,
+              topLevelEntityPathPatterns: ["backend/entities/**"],
+            }),
+            lintCase(serverOptions, "web/users.ts", {
+              ...serverBase,
+              includePathPatterns: ["backend/**"],
+            }),
+          ],
+          invalid: [
+            // 13 wrapper diagnostics.
+            lintCase(
+              ruleFixture("server-require-nullable-fetch-wrapper", "invalid.ts"),
+              "backend/users.ts",
+              serverWrapperOption,
+            ),
+            lintCase(serverOptions, "backend/users.ts", {
+              ...serverBase,
+              nullableReturnTypeNames: ["EntityResult"],
+            }),
+            lintCase(serverOptions, "backend/entities/users.ts", {
+              ...serverBase,
+              inferNullableFromTopLevelEntityPath: true,
+              topLevelEntityPathPatterns: ["backend/entities/**"],
+            }),
+          ],
+        },
+      ),
+      "ts-no-const-aliases": snapshotSuite("ts-no-const-aliases", languageOptions, {
+        valid: [
+          lintCase(ruleFixture("ts-no-const-aliases", "valid.ts"), "valid.ts"),
+          lintCase(ruleFixture("ts-no-const-aliases", "typed.ts"), "typed.ts"),
+        ],
+        invalid: [
+          // 6 alias diagnostics.
+          lintCase(ruleFixture("ts-no-const-aliases", "invalid.ts"), "invalid.ts"),
+          lintCase(ruleFixture("ts-no-const-aliases", "coverage.ts"), "coverage.ts"),
+        ],
+      }),
+      "ts-no-export-renaming": snapshotSuite("ts-no-export-renaming", languageOptions, {
+        valid: [
+          lintCase(ruleFixture("ts-no-export-renaming", "valid.ts"), "valid.ts"),
+          {
+            code: exportRenaming,
+            filename: resolve(process.cwd(), "web/app/index.ts"),
+            languageOptions: typescript,
+            options: [{ includePathPatterns: ["^backend/"] }],
+          },
+          lintCase(exportRenaming, "backend/index.ts", { includePathPatterns: ["["] }),
+        ],
+        invalid: [
+          lintCase(ruleFixture("ts-no-export-renaming", "invalid.ts"), "invalid.ts"),
+          lintCase(ruleFixture("ts-no-export-renaming", "coverage.ts"), "coverage.ts"),
+          lintCase(exportRenaming, "web/app/index.ts"),
+          lintCase(exportRenaming, "web/app/index.ts", { allowDefaultReExports: true }),
+          lintCase(exportRenaming, "backend/index.ts", { includePathPatterns: ["^backend/"] }),
+          {
+            code: exportRenaming,
+            filename: resolve(process.cwd(), "backend/index.ts"),
+            languageOptions: typescript,
+            options: [{ includePathPatterns: ["^backend/", "["] }],
+          },
+        ],
+      }),
+      "ts-no-function-aliases": snapshotSuite("ts-no-function-aliases", languageOptions, {
+        valid: [lintCase(ruleFixture("ts-no-function-aliases", "valid.ts"), "valid.ts")],
+        invalid: [
+          // 7 alias diagnostics.
+          lintCase(ruleFixture("ts-no-function-aliases", "invalid.ts"), "invalid.ts"),
+          // 3 alias diagnostics.
+          lintCase(ruleFixture("ts-no-function-aliases", "coverage.ts"), "coverage.ts"),
+        ],
+      }),
+      "ts-preserve-null-option-defaults": snapshotSuite(
+        "ts-preserve-null-option-defaults",
+        languageOptions,
+        {
+          valid: [
+            lintCase(ruleFixture("ts-preserve-null-option-defaults", "valid.ts"), "valid.ts"),
+            lintCase(preserveOptions, "web/options.ts", { includePathPatterns: ["backend/**"] }),
+            lintCase(preserveOptions, "web/options.ts", { excludePathPatterns: ["web/**"] }),
+          ],
+          invalid: [
+            // 4 default diagnostics.
+            lintCase(ruleFixture("ts-preserve-null-option-defaults", "invalid.ts"), "invalid.ts"),
+            lintCase(
+              ruleFixture("ts-preserve-null-option-defaults", "static-keys.ts"),
+              "static-keys.ts",
+            ),
+            lintCase(preserveOptions, "backend/options.ts", { optionObjectNames: ["Options"] }),
+            lintCase(preserveOptions, "backend/options.ts", {
+              optionObjectNamePatterns: ["Options$"],
+            }),
+            lintCase(preserveOptions, "backend/options.ts", {
+              optionObjectNames: ["PublicOptions"],
+            }),
+            // 38 default diagnostics.
+            lintCase(ruleFixture("ts-preserve-null-option-defaults", "coverage.ts"), "coverage.ts"),
+          ],
+        },
+      ),
+    }),
+  ).toMatchFileSnapshot("snapshots/no-mistakes-rules-remaining.snap");
+}, 30_000);

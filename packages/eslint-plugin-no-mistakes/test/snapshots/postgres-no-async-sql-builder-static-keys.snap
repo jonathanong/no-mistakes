@@ -1,0 +1,103 @@
+[
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 2,
+        "endLine": 11,
+        "file": "app.ts",
+        "line": 9,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 2,
+        "endLine": 14,
+        "file": "app.ts",
+        "line": 12,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 2,
+        "endLine": 17,
+        "file": "app.ts",
+        "line": 15,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 2,
+        "endLine": 20,
+        "file": "app.ts",
+        "line": 18,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 2,
+        "endLine": 23,
+        "file": "app.ts",
+        "line": 21,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 2,
+        "endLine": 26,
+        "file": "app.ts",
+        "line": 24,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  }
+]

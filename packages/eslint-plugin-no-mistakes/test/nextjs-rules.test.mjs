@@ -1,10 +1,49 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
 import { createRequire } from "node:module";
-import { lint, messages, plugin } from "./helpers.mjs";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { lint, plugin } from "./helpers.mjs";
 
 const require = createRequire(import.meta.url);
 const { isFetchCall } = require("../src/helpers");
+const rule = "nextjs-static-fetch-url";
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function urlCase(code, filename = "fixture.jsx", globals) {
+  const item = { code, filename };
+  if (globals) item.languageOptions = { globals };
+  return item;
+}
+
+const suite = {
+  valid: [
+    urlCase("fetch('https://api.example.com/users');"),
+    urlCase('fetch("https://api.example.com/users");'),
+    urlCase("fetch(`https://api.example.com/users`);"),
+    urlCase("fetch('https://api.example.com/users', { cache: 'force-cache' });"),
+    urlCase("function f(fetch) { fetch(url); }"),
+    urlCase("const fetch = mockFetch; fetch(url);"),
+    urlCase("request('https://api.example.com/users');"),
+    urlCase("client.fetch('https://api.example.com/users');"),
+    urlCase("import { fetch } from 'undici'; fetch(url);"),
+    urlCase("class fetch {} fetch(url);"),
+  ],
+  invalid: [
+    // 1 dynamic.
+    urlCase("fetch(url);"),
+    urlCase("fetch(`https://api.example.com/${id}`);"),
+    urlCase("fetch(getUrl());"),
+    urlCase("fetch(base + path);"),
+    urlCase("fetch();"),
+    // 1 dynamic. A configured fetch global is not a shadow.
+    urlCase("fetch(url);", "fixture.js", { fetch: "readonly" }),
+  ],
+};
 
 describe("plugin exports", () => {
   it("exposes rules and flat configs", () => {
@@ -20,101 +59,13 @@ describe("plugin exports", () => {
 });
 
 describe("nextjs-static-fetch-url", () => {
-  it("accepts string literal URLs", () => {
-    assert.deepEqual(
-      messages("fetch('https://api.example.com/users');", "nextjs-static-fetch-url"),
-      [],
-    );
-    assert.deepEqual(
-      messages('fetch("https://api.example.com/users");', "nextjs-static-fetch-url"),
-      [],
-    );
-  });
-
-  it("accepts expression-free template literals", () => {
-    assert.deepEqual(
-      messages("fetch(`https://api.example.com/users`);", "nextjs-static-fetch-url"),
-      [],
-    );
-  });
-
-  it("accepts fetch with static URL and options", () => {
-    assert.deepEqual(
-      messages(
-        "fetch('https://api.example.com/users', { cache: 'force-cache' });",
-        "nextjs-static-fetch-url",
-      ),
-      [],
-    );
-  });
-
-  it("reports identifier URLs", () => {
-    assert.deepEqual(messages("fetch(url);", "nextjs-static-fetch-url"), ["dynamic"]);
-  });
-
-  it("reports template literal URLs with expressions", () => {
-    assert.deepEqual(
-      messages("fetch(`https://api.example.com/${id}`);", "nextjs-static-fetch-url"),
-      ["dynamic"],
-    );
-  });
-
-  it("reports call expression URLs", () => {
-    assert.deepEqual(messages("fetch(getUrl());", "nextjs-static-fetch-url"), ["dynamic"]);
-  });
-
-  it("reports binary expression URLs", () => {
-    assert.deepEqual(messages("fetch(base + path);", "nextjs-static-fetch-url"), ["dynamic"]);
-  });
-
-  it("reports missing URL argument", () => {
-    assert.deepEqual(messages("fetch();", "nextjs-static-fetch-url"), ["dynamic"]);
-  });
-
-  it("does not report when fetch is shadowed by a parameter", () => {
-    assert.deepEqual(messages("function f(fetch) { fetch(url); }", "nextjs-static-fetch-url"), []);
-  });
-
-  it("does not report when fetch is shadowed by a local variable", () => {
-    assert.deepEqual(
-      messages("const fetch = mockFetch; fetch(url);", "nextjs-static-fetch-url"),
-      [],
-    );
-  });
-
-  it("does not report on non-fetch call expressions", () => {
-    assert.deepEqual(
-      messages("request('https://api.example.com/users');", "nextjs-static-fetch-url"),
-      [],
-    );
-  });
-
-  it("does not report on method calls named fetch", () => {
-    assert.deepEqual(
-      messages("client.fetch('https://api.example.com/users');", "nextjs-static-fetch-url"),
-      [],
-    );
-  });
-
-  it("does not treat fetch configured as a global as shadowed", () => {
-    assert.deepEqual(
-      messages("fetch(url);", "nextjs-static-fetch-url", undefined, "fixture.js", {
-        fetch: "readonly",
+  it("snapshots nextjs-rules diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
       }),
-      ["dynamic"],
-    );
-  });
-
-  it("treats imported fetch as shadowed", () => {
-    assert.deepEqual(
-      messages("import { fetch } from 'undici'; fetch(url);", "nextjs-static-fetch-url"),
-      [],
-    );
-  });
-
-  it("treats class fetch as shadowed", () => {
-    assert.deepEqual(messages("class fetch {} fetch(url);", "nextjs-static-fetch-url"), []);
-  });
+    ).toMatchFileSnapshot("snapshots/nextjs-rules.snap");
+  }, 30_000);
 
   it("supports fallback shadow checks when scope.set.get is not a function", () => {
     const fakeScope = {

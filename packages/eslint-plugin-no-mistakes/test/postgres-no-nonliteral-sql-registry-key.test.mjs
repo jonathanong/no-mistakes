@@ -1,14 +1,21 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
+import { Linter } from "eslint";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { fixture, lint, plugin, __dirname, require } from "./helpers.mjs";
 
 const RULE = "postgres-no-nonliteral-sql-registry-key";
 const id = RULE;
 const DB = { importSpecifier: "@example/db" };
 const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 
 function check(name, option = DB) {
   return lint(
@@ -18,6 +25,57 @@ function check(name, option = DB) {
   );
 }
 
+function registryCase(name, option = DB) {
+  return {
+    code: fixture(`${id}/${name}`),
+    filename: resolve(root, name),
+    options: [option],
+    languageOptions: { parser: tsParser },
+  };
+}
+
+const suite = {
+  valid: [
+    // recognizes a finite-key cast only for the same registry.
+    // Zero findings.
+    registryCase("finite-key.ts"),
+    // follows one const SQL argument without duplicate reports.
+    // Zero findings.
+    registryCase("bound-silent.ts"),
+    // ignores literal keys, mutated registries, and lookups outside the executor.
+    // Zero findings.
+    registryCase("silent.ts"),
+    // Zero findings.
+    registryCase("dynamic.ts", { executorNames: [] }),
+  ],
+  invalid: [
+    // names each registry entry in a throwing switch.
+    // Three dynamicKey findings.
+    registryCase("dynamic.ts"),
+    // Four findings.
+    registryCase("other-key.ts"),
+    // Two findings.
+    registryCase("bound-sql.ts"),
+    // suppresses a call or lookup without hiding another use of a shared initializer.
+    // One dynamicKey finding.
+    registryCase("bound-suppression.ts"),
+    // emits a complete switch expression with deduplicated final values.
+    registryCase("duplicate-keys.ts"),
+    // keeps await and yield selectors in their original evaluation context.
+    // Three findings.
+    registryCase("selector-contexts.ts"),
+    // keeps a disable comment.
+    // One finding.
+    registryCase("suppression.ts"),
+  ],
+};
+
+it("snapshots postgres-no-nonliteral-sql-registry-key diagnostics", async () => {
+  await expect(snapshotDocument(snapshotSuite(RULE, languageOptions, suite))).toMatchFileSnapshot(
+    "snapshots/postgres-no-nonliteral-sql-registry-key.snap",
+  );
+}, 30_000);
+
 describe("postgres-no-nonliteral-sql-registry-key", () => {
   it("stays out of the presets and does not autofix", () => {
     assert.equal(plugin.rules[RULE].meta.docs.recommended, false);
@@ -25,35 +83,6 @@ describe("postgres-no-nonliteral-sql-registry-key", () => {
     assert.equal(plugin.rules[RULE].meta.hasSuggestions, undefined);
     assert.equal(plugin.configs.recommended.rules[`no-mistakes/${RULE}`], undefined);
     assert.equal(plugin.configs.strict.rules[`no-mistakes/${RULE}`], undefined);
-  });
-
-  it("names each registry entry in a throwing switch", () => {
-    const messages = check("dynamic.ts");
-    assert.equal(messages.length, 3);
-    assert.ok(messages.every((message) => message.messageId === "dynamicKey"));
-    assert.match(messages[0].message, /TABLES\[key\]/);
-    assert.match(messages[0].message, /case "orders": return "orders";/);
-    assert.match(messages[0].message, /case "accounts": return "accounts";/);
-    assert.match(messages[0].message, /default: throw new Error\("unknown"\)/);
-    assert.match(messages[0].message, /own-key check is not judged/);
-    assert.match(messages[2].message, /case "order items": return "order items";/);
-  });
-
-  it("recognizes a finite-key cast only for the same registry", () => {
-    assert.equal(check("finite-key.ts").length, 0);
-    assert.equal(check("other-key.ts").length, 4);
-  });
-
-  it("follows one const SQL argument without duplicate reports", () => {
-    assert.equal(check("bound-sql.ts").length, 2);
-    assert.equal(check("bound-silent.ts").length, 0);
-  });
-
-  it("suppresses a call or lookup without hiding another use of a shared initializer", () => {
-    const messages = check("bound-suppression.ts");
-    assert.equal(messages.length, 1);
-    assert.equal(messages[0].line, 15);
-    assert.equal(messages[0].messageId, "dynamicKey");
   });
 
   it("emits a complete switch expression with deduplicated final values", () => {
@@ -94,13 +123,7 @@ describe("postgres-no-nonliteral-sql-registry-key", () => {
     assert.equal(calls, 1);
   });
 
-  it("ignores literal keys, mutated registries, and lookups outside the executor", () => {
-    assert.equal(check("silent.ts").length, 0);
-    assert.equal(check("dynamic.ts", { executorNames: [] }).length, 0);
-  });
-
-  it("keeps a disable comment and does not rewrite the file", () => {
-    assert.equal(check("suppression.ts").length, 1);
+  it("does not rewrite the file", () => {
     const linter = new Linter({ configType: "flat", cwd: root });
     const code = fixture(`${id}/dynamic.ts`);
     const fixed = linter.verifyAndFix(

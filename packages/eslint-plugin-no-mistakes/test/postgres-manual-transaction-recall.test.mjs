@@ -3,55 +3,64 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import tsParser from "@typescript-eslint/parser";
-import { Linter } from "eslint";
-import { it } from "vitest";
-import { __dirname, plugin } from "./helpers.mjs";
+import { expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { __dirname } from "./helpers.mjs";
 
 const root = resolve(
   __dirname,
   "../../../test-cases/eslint-plugin/postgres-manual-transaction-recall/fixture",
 );
-const rule = "no-mistakes/postgres-no-manual-transaction";
-const cases = [
+const recallCases = [
   ["pg", "pg", [4, 5, 8, 10, 12, 15, 18]],
   ["configured", "@data-stores/psql", [3, 4, 7, 9, 11, 14, 17]],
 ];
-function lint(name, typed, options) {
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function recallCase(name, typed, option) {
   const filename = resolve(root, `${name}.ts`);
-  return new Linter({ cwd: root })
-    .verify(
-      readFileSync(filename, "utf8"),
-      {
-        files: ["**/*.ts"],
-        languageOptions: {
-          parser: tsParser,
-          parserOptions: typed
-            ? { project: resolve(root, "tsconfig.json"), disallowAutomaticSingleRunInference: true }
-            : {},
-        },
-        plugins: { "no-mistakes": plugin },
-        rules: { [rule]: ["error", options] },
-      },
-      { filename },
-    )
-    .map(({ line, messageId }) => [line, messageId]);
+  return {
+    code: readFileSync(filename, "utf8"),
+    filename,
+    options: [option],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: typed
+        ? { project: resolve(root, "tsconfig.json"), disallowAutomaticSingleRunInference: true }
+        : {},
+    },
+  };
 }
-it.each([false, true])(
-  "retains manual transaction recall through connect wrappers (typed=%s)",
-  (typed) => {
-    for (const [name, importSpecifier, lines] of cases) {
-      assert.deepEqual(
-        lint(name, typed, { importSpecifier }),
-        lines.map((line) => [line, "manualTransaction"]),
-      );
-      assert.deepEqual(lint(name, typed, { importSpecifier, executorNames: [] }), []);
-      assert.deepEqual(lint(name, typed, { importSpecifier, executorNames: ["execute"] }), []);
-    }
-    assert.deepEqual(lint("controls", typed, { importSpecifier: "@data-stores/psql" }), []);
-  },
-);
+
+const valid = [];
+const invalid = [];
+for (const typed of [false, true]) {
+  for (const [name, importSpecifier] of recallCases) {
+    // retains manual transaction recall through connect wrappers.
+    // Seven manualTransaction findings.
+    invalid.push(recallCase(name, typed, { importSpecifier }));
+    // Zero findings.
+    valid.push(recallCase(name, typed, { importSpecifier, executorNames: [] }));
+    valid.push(recallCase(name, typed, { importSpecifier, executorNames: ["execute"] }));
+  }
+  // Zero findings.
+  valid.push(recallCase("controls", typed, { importSpecifier: "@data-stores/psql" }));
+}
+
+it("snapshots postgres-no-manual-transaction diagnostics", async () => {
+  await expect(
+    snapshotDocument(
+      snapshotSuite("postgres-no-manual-transaction", languageOptions, { valid, invalid }),
+    ),
+  ).toMatchFileSnapshot("snapshots/postgres-manual-transaction-recall.snap");
+}, 30_000);
 it("matches recall and suppression in real type-aware Oxlint", () => {
-  for (const [name, , lines] of cases) {
+  for (const [name, , lines] of recallCases) {
     const result = spawnSync(
       process.execPath,
       [

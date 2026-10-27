@@ -1,0 +1,2529 @@
+[
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [
+          "read"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [
+          "read"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [
+          "read"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorNames": [
+          "read"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 35,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 53,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 41,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`items.map(read)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 51,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 24,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `run(read, account) or run(write, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 41,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : (other ? write : read))(sql)`). `run(read, account) or run(write, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 52,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `run(read, account) or run(write, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 63,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql)`). `run(read, account) or run(write, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 31,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 36,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This adapter hides tx.query or read from SQL analysis (conditional selection). Call the executor on the SQL text (`tx.query(sql) or read(sql)`). `run(tx.query, account) or run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 24,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 44,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This call passes read or write into a helper. Name the executor inside the helper (`read(sql`…`) or write(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 67,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 96,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql)`). `run(read, account) or run(write, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 52,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql)`). `run(read, account) or run(write, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 52,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 80,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql)`). `run(read, account) or run(write, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 48,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This adapter hides tx.query from SQL analysis (receiver or this). Call the executor on the SQL text (`tx.query(sql)`). `run(tx.query, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 51,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This adapter hides tx[\"query\"] from SQL analysis (receiver or this). Call the executor on the SQL text (`tx[\"query\"](sql)`). `run(tx[\"query\"], account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 51,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This adapter hides tx[`query`] from SQL analysis (receiver or this). Call the executor on the SQL text (`tx[`query`](sql)`). `run(tx[`query`], account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 50,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (receiver or this). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 53,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (receiver or this). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 49,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (receiver or this). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 62,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (receiver or this). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 51,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (receiver or this). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 63,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read or write from SQL analysis (receiver or this). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `run(read, account) or run(write, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 42,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 43,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 51,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 31,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 42,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 38,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 54,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (side effects). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 40,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (side effects). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 44,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (side effects). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 40,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (side effects). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 41,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (async). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 47,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (async). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 54,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (async). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 45,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (type assertion). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 45,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (type assertion). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 49,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (type assertion). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 38,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `run(read, account) or run(write, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 59,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (type assertion). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 4,
+        "endLine": 5,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This adapter hides read from SQL analysis (receiver or this). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 2,
+        "endLine": 5,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (side effects). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 2,
+        "endLine": 5,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (side effects). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 2,
+        "endLine": 5,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides read from SQL analysis (side effects). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 38,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This adapter hides db.read from SQL analysis (receiver or this). Call the executor on the SQL text (`db.read(sql)`). `run(db.read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 37,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 46,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 9,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 22,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This call passes tx.query into a helper. Name the executor inside the helper (`tx.query(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 35,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This call passes (flag ? tx : u).query into a helper. Name the executor inside the helper (`(flag ? tx : u).query(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 25,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This call passes tx[\"query\"] into a helper. Name the executor inside the helper (`tx[\"query\"](sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 9,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 18,
+        "endLine": 4,
+        "file": "app.ts",
+        "line": 4,
+        "message": "This call passes tx.query or read into a helper. Name the executor inside the helper (`tx.query(sql`…`) or read(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 9,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This call passes read or write into a helper. Name the executor inside the helper (`read(sql`…`) or write(sql`…`) or (flag ? read : write)(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 9,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 9,
+        "endLine": 4,
+        "file": "app.ts",
+        "line": 4,
+        "message": "This call passes read or write into a helper. Name the executor inside the helper (`read(sql`…`) or write(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 21,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 12,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 12,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 21,
+        "endLine": 4,
+        "file": "app.ts",
+        "line": 4,
+        "message": "This adapter hides tx.query from SQL analysis (receiver or this). Call the executor on the SQL text (`tx.query(sql)`). `run(tx.query, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 24,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This adapter hides read from SQL analysis (async). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 24,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This adapter hides read from SQL analysis (type assertion). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 9,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 9,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This call passes save into a helper. Name the executor inside the helper (`save(sql`…`)`, or `const exec = save; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 9,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorNames": [
+          "read"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 17,
+        "endLine": 1,
+        "file": "app.ts",
+        "line": 1,
+        "message": "This call passes client.query into a helper. Name the executor inside the helper (`client.query(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorNames": [
+          "query"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 35,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This callback only forwards to save. Call that executor on the SQL text (`save(sql)`, or `const exec = save; exec(sql)`). Passing the function into a helper (`run(save, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 35,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorNames": [
+          "read"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 48,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This adapter hides tx.query from SQL analysis (receiver or this). Call the executor on the SQL text (`tx.query(sql)`). `run(tx.query, account)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorNames": [
+          "read"
+        ],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 16,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This call passes tx into a helper. Name the executor inside the helper (`tx(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 42,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This callback only forwards to tx. Call that executor on the SQL text (`tx(sql)`). Passing the function into a helper (`run(tx, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 4,
+        "file": "app.ts",
+        "line": 4,
+        "message": "This call passes tx into a helper. Name the executor inside the helper (`tx(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 18,
+        "endLine": 5,
+        "file": "app.ts",
+        "line": 5,
+        "message": "This call passes alias.query into a helper. Name the executor inside the helper (`alias.query(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 12,
+        "endLine": 5,
+        "file": "app.ts",
+        "line": 5,
+        "message": "This call passes tx into a helper. Name the executor inside the helper (`tx(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 35,
+        "endLine": 4,
+        "file": "app.ts",
+        "line": 4,
+        "message": "This callback only forwards to tx. Call that executor on the SQL text (`tx(sql)`). Passing the function into a helper (`run(tx, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 42,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This callback only forwards to tx. Call that executor on the SQL text (`tx(sql)`). Passing the function into a helper (`run(tx, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 33,
+        "endLine": 4,
+        "file": "app.ts",
+        "line": 4,
+        "message": "This callback only forwards to tx. Call that executor on the SQL text (`tx(sql)`). Passing the function into a helper (`run(tx, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "openTx"
+        ],
+        "executorNames": [],
+        "executorTypeNames": [
+          "Tx"
+        ],
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 35,
+        "endLine": 2,
+        "file": "app.ts",
+        "line": 2,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 35,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 35,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read, account)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "importSpecifier": "@example/db"
+      }
+    ]
+  }
+]

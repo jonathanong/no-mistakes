@@ -1,33 +1,49 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
-import { __dirname, fixture, lint, messages } from "./helpers.mjs";
+import { describe, expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { __dirname, fixture, lint } from "./helpers.mjs";
+
+const rule = "no-vitest-sequential";
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function wrapperCase(name, filename) {
+  return {
+    code: fixture(`no-vitest-sequential/${name}`),
+    filename,
+    languageOptions: { parser: tsParser },
+  };
+}
+
+const suite = {
+  valid: [
+    // Dynamic, non-sequential, shadowed and suppressed wrappers.
+    wrapperCase("typed-wrappers-valid.test.ts", "typed.test.ts"),
+    wrapperCase("typed-wrappers-valid.test.ts", "typed-wrappers-valid.test.ts"),
+  ],
+  invalid: [
+    // 14 sequential, one per wrapped serial call.
+    wrapperCase("typed-wrappers.test.ts", "typed.test.ts"),
+    // Same fixture under the filename Oxlint compares.
+    wrapperCase("typed-wrappers.test.ts", "typed-wrappers.test.ts"),
+  ],
+};
 
 describe("no-vitest-sequential typed wrappers", () => {
-  it("reports every wrapped serial call once at its source line", () => {
-    const code = fixture("no-vitest-sequential/typed-wrappers.test.ts");
-    const findings = lint(code, { "no-mistakes/no-vitest-sequential": "error" }, "typed.test.ts");
-    assert.deepEqual(
-      findings.map(({ messageId, line }) => [messageId, line]),
-      [4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 21].map((line) => [
-        "sequential",
-        line,
-      ]),
-    );
-  });
-
-  it("preserves dynamic, non-sequential, shadowed and suppressed cases", () => {
-    assert.deepEqual(
-      messages(
-        fixture("no-vitest-sequential/typed-wrappers-valid.test.ts"),
-        "no-vitest-sequential",
-        undefined,
-        "typed.test.ts",
-      ),
-      [],
-    );
-  });
+  it("snapshots no-vitest-sequential-wrappers diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/no-vitest-sequential-wrappers.snap");
+  }, 30_000);
 
   it("matches real Oxlint findings for the saved fixtures", () => {
     const root = resolve(
@@ -49,9 +65,7 @@ describe("no-vitest-sequential typed wrappers", () => {
       );
       const expected = lint(
         fixture(`no-vitest-sequential/${name}`),
-        {
-          "no-mistakes/no-vitest-sequential": "error",
-        },
+        { "no-mistakes/no-vitest-sequential": "error" },
         name,
       );
       assert.equal(result.status, expected.length ? 1 : 0, result.stderr);

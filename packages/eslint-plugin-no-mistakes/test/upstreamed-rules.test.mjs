@@ -1,9 +1,14 @@
-import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
-import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
-import { __dirname, messages } from "./helpers.mjs";
+import {
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+  snapshotSuite,
+} from "./diagnostic-snapshot.mjs";
+import { __dirname } from "./helpers.mjs";
 
 function fixture(name) {
   return readFileSync(
@@ -12,192 +17,142 @@ function fixture(name) {
   );
 }
 
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const typescript = { parser: tsParser, sourceType: "module", globals: {} };
+
+function lintCase(code, filename) {
+  const item = { code, filename };
+  if (/\.[cm]?tsx?$/.test(filename)) item.languageOptions = typescript;
+  return item;
+}
+
 describe("upstreamed generic rules", () => {
-  it("passes clean generic examples", () => {
-    const code = fixture("valid.tsx");
-    const checks = [
-      ["await-array-methods", "valid.tsx"],
-      ["no-delete-property", "valid.tsx"],
-      ["no-placeholder-never-type-exports", "valid.tsx"],
-      ["no-vitest-sequential", "valid.tsx"],
-      ["react-no-use-promise-resolve", "valid.tsx"],
-      ["react-no-iife-in-jsx", "valid.tsx"],
-      ["nextjs-no-manual-script-tags", "valid.tsx"],
-      ["nextjs-metadata-exports-location", "app/page.tsx"],
-    ];
-
-    for (const [rule, filename] of checks) {
-      assert.deepEqual(messages(code, rule, undefined, filename), [], rule);
-    }
-  });
-
-  it("reports generic invalid examples", () => {
-    const code = fixture("invalid.tsx");
-    const expected = [
-      ["await-array-methods", ["awaited", "awaited", "awaited"]],
-      ["no-delete-property", ["delete"]],
-      ["no-placeholder-never-type-exports", ["placeholder", "placeholder", "placeholder"]],
-      ["no-vitest-sequential", ["sequential"]],
-      ["react-no-use-promise-resolve", ["resolve", "resolve", "resolve", "resolve", "resolve"]],
-      ["react-no-iife-in-jsx", ["iife", "iife"]],
-    ];
-
-    for (const [rule, ids] of expected) {
-      assert.deepEqual(messages(code, rule, undefined, "invalid.tsx"), ids, rule);
-    }
-    assert.deepEqual(messages(code, "nextjs-no-manual-script-tags", undefined, "app/page.tsx"), [
-      "script",
-    ]);
-    assert.deepEqual(
-      messages(code, "nextjs-no-manual-script-tags", undefined, "components/widget.tsx"),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("next-script-import.tsx"),
-        "nextjs-no-manual-script-tags",
-        undefined,
-        "components/widget.tsx",
-      ),
-      ["script"],
-    );
-  });
-
-  it("reports import-only test aggregators", () => {
-    assert.deepEqual(
-      messages(
-        fixture("import-only.invalid.test.ts"),
-        "no-import-only-test-files",
-        undefined,
-        "import-only.invalid.test.ts",
-      ),
-      ["aggregate"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("import-only.valid.test.ts"),
-        "no-import-only-test-files",
-        undefined,
-        "import-only.valid.test.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("import-only.invalid.test.cjs"),
-        "no-import-only-test-files",
-        undefined,
-        "import-only.invalid.test.cjs",
-      ),
-      ["aggregate"],
-    );
-  });
-
-  it("tracks JSX IIFE invocations inside expression arrays", () => {
-    const code = `
+  it("snapshots remaining diagnostics", async () => {
+    const validCode = fixture("valid.tsx");
+    const invalidCode = fixture("invalid.tsx");
+    await expect(
+      snapshotDocument({
+        "await-array-methods": snapshotSuite("await-array-methods", languageOptions, {
+          valid: [lintCase(validCode, "valid.tsx")],
+          invalid: [lintCase(invalidCode, "invalid.tsx")],
+        }),
+        "nextjs-metadata-exports-location": snapshotSuite(
+          "nextjs-metadata-exports-location",
+          languageOptions,
+          {
+            valid: [lintCase(validCode, "app/page.tsx")],
+          },
+        ),
+        "nextjs-no-manual-script-tags": snapshotSuite(
+          "nextjs-no-manual-script-tags",
+          languageOptions,
+          {
+            valid: [
+              lintCase(validCode, "valid.tsx"),
+              lintCase(invalidCode, "components/widget.tsx"),
+            ],
+            invalid: [
+              lintCase(invalidCode, "app/page.tsx"),
+              lintCase(fixture("next-script-import.tsx"), "components/widget.tsx"),
+            ],
+          },
+        ),
+        "no-delete-property": snapshotSuite("no-delete-property", languageOptions, {
+          valid: [lintCase(validCode, "valid.tsx")],
+          invalid: [lintCase(invalidCode, "invalid.tsx")],
+        }),
+        "no-import-only-test-files": snapshotSuite("no-import-only-test-files", languageOptions, {
+          valid: [lintCase(fixture("import-only.valid.test.ts"), "import-only.valid.test.ts")],
+          invalid: [
+            lintCase(fixture("import-only.invalid.test.ts"), "import-only.invalid.test.ts"),
+            lintCase(fixture("import-only.invalid.test.cjs"), "import-only.invalid.test.cjs"),
+          ],
+        }),
+        "no-placeholder-never-type-exports": snapshotSuite(
+          "no-placeholder-never-type-exports",
+          languageOptions,
+          {
+            valid: [lintCase(validCode, "valid.tsx")],
+            invalid: [lintCase(invalidCode, "invalid.tsx")],
+          },
+        ),
+        "no-vitest-sequential": snapshotSuite("no-vitest-sequential", languageOptions, {
+          valid: [lintCase(validCode, "valid.tsx")],
+          invalid: [lintCase(invalidCode, "invalid.tsx")],
+        }),
+        "react-no-iife-in-jsx": snapshotSuite("react-no-iife-in-jsx", languageOptions, {
+          valid: [lintCase(validCode, "valid.tsx")],
+          invalid: [
+            lintCase(invalidCode, "invalid.tsx"),
+            // JSX IIFE invocations inside expression arrays.
+            {
+              code: `
       export default function Component() {
         return <>{[ (function renderTag() { return "tag"; })() ]}</>;
       }
-    `;
-    assert.deepEqual(messages(code, "react-no-iife-in-jsx"), ["iife"]);
-  });
-
-  it("reports mock test filename mismatches", () => {
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.invalid.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.invalid.test.ts",
-      ),
-      ["needsMock"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.invalid.mock.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.invalid.mock.test.ts",
-      ),
-      ["unnecessaryMock"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.valid.mock.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.valid.mock.test.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.valid.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.valid.test.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.global.invalid.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.global.invalid.test.ts",
-      ),
-      ["needsMock"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.cjs.invalid.test.cjs"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.cjs.invalid.test.cjs",
-      ),
-      ["needsMock"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.jest-import.mock.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.jest-import.mock.test.ts",
-      ),
-      [],
-      "jest.mock via @jest/globals import should satisfy .mock.test naming",
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.jest-require.mock.test.cjs"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.jest-require.mock.test.cjs",
-      ),
-      [],
-      "jest.mock via require('@jest/globals') should satisfy .mock.test naming",
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.fn-stub.valid.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.fn-stub.valid.test.ts",
-      ),
-      [],
-      "typed vi.fn<T>() callback stub with no module mocking should not require .mock.test (#388)",
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.fn-stub.invalid.mock.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.fn-stub.invalid.mock.test.ts",
-      ),
-      ["unnecessaryMock"],
-      "vi.fn() alone does not justify a .mock.test filename (#388)",
-    );
-  });
+    `,
+              filename: "fixture.jsx",
+            },
+          ],
+        }),
+        "react-no-use-promise-resolve": snapshotSuite(
+          "react-no-use-promise-resolve",
+          languageOptions,
+          {
+            valid: [lintCase(validCode, "valid.tsx")],
+            invalid: [lintCase(invalidCode, "invalid.tsx")],
+          },
+        ),
+        "vitest-mock-test-file-naming": snapshotSuite(
+          "vitest-mock-test-file-naming",
+          languageOptions,
+          {
+            valid: [
+              lintCase(fixture("mock-name.valid.mock.test.ts"), "mock-name.valid.mock.test.ts"),
+              lintCase(fixture("mock-name.valid.test.ts"), "mock-name.valid.test.ts"),
+              // jest.mock via @jest/globals import should satisfy .mock.test naming.
+              lintCase(
+                fixture("mock-name.jest-import.mock.test.ts"),
+                "mock-name.jest-import.mock.test.ts",
+              ),
+              // jest.mock via require('@jest/globals') should satisfy .mock.test naming.
+              {
+                code: fixture("mock-name.jest-require.mock.test.cjs"),
+                filename: "mock-name.jest-require.mock.test.cjs",
+              },
+              // typed vi.fn<T>() callback stub with no module mocking should not require .mock.test (#388).
+              lintCase(
+                fixture("mock-name.fn-stub.valid.test.ts"),
+                "mock-name.fn-stub.valid.test.ts",
+              ),
+            ],
+            invalid: [
+              lintCase(fixture("mock-name.invalid.test.ts"), "mock-name.invalid.test.ts"),
+              lintCase(fixture("mock-name.invalid.mock.test.ts"), "mock-name.invalid.mock.test.ts"),
+              lintCase(
+                fixture("mock-name.global.invalid.test.ts"),
+                "mock-name.global.invalid.test.ts",
+              ),
+              {
+                code: fixture("mock-name.cjs.invalid.test.cjs"),
+                filename: "mock-name.cjs.invalid.test.cjs",
+              },
+              // vi.fn() alone does not justify a .mock.test filename (#388).
+              lintCase(
+                fixture("mock-name.fn-stub.invalid.mock.test.ts"),
+                "mock-name.fn-stub.invalid.mock.test.ts",
+              ),
+            ],
+          },
+        ),
+      }),
+    ).toMatchFileSnapshot("snapshots/upstreamed-rules-remaining.snap");
+  }, 30_000);
 
   it("snapshots test and playwright diagnostics", async () => {
     const valid = fixture("valid.tsx");

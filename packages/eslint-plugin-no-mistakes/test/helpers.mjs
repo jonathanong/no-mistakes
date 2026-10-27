@@ -20,7 +20,7 @@ export function fixture(name) {
 // this package, so those anchor cwd at the file. An absolute path inside the
 // package keeps the package cwd: path-scoped rules match that relative path
 // (`backend/index.ts`), and the file directory would collapse it to the basename.
-function linterCwd(filename) {
+export function linterCwd(filename) {
   if (!isAbsolute(filename)) return process.cwd();
   const fromPackage = relative(process.cwd(), filename);
   if (fromPackage === "" || fromPackage.startsWith("..") || isAbsolute(fromPackage)) {

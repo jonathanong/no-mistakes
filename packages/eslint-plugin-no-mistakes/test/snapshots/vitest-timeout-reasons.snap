@@ -1,0 +1,909 @@
+{
+  "vitest-timeout-cap": [
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 31,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 27,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 25,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 26,
+          "endLine": 10,
+          "file": "fixture.test.ts",
+          "line": 10,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 25,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 12,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 25,
+          "endLine": 14,
+          "file": "fixture.test.ts",
+          "line": 14,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 33,
+          "endLine": 16,
+          "file": "fixture.test.ts",
+          "line": 16,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 54,
+          "endLine": 24,
+          "file": "fixture.test.ts",
+          "line": 24,
+          "message": "Vitest hookTimeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 54,
+          "endLine": 24,
+          "file": "fixture.test.ts",
+          "line": 24,
+          "message": "Vitest testTimeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 36,
+          "endLine": 26,
+          "file": "fixture.test.ts",
+          "line": 26,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 30,
+          "endLine": 28,
+          "file": "fixture.test.ts",
+          "line": 28,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 40,
+          "endLine": 31,
+          "file": "fixture.test.ts",
+          "line": 31,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 33,
+          "endLine": 35,
+          "file": "fixture.test.ts",
+          "line": 35,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 29,
+          "endLine": 37,
+          "file": "fixture.test.ts",
+          "line": 37,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 33,
+          "endLine": 40,
+          "file": "fixture.test.ts",
+          "line": 40,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 34,
+          "endLine": 42,
+          "file": "fixture.test.ts",
+          "line": 42,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 29,
+          "endLine": 44,
+          "file": "fixture.test.ts",
+          "line": 44,
+          "message": "Vitest timeout must be positive; zero disables the timeout and negative values are invalid.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 30,
+          "endColumn": 37,
+          "endLine": 55,
+          "file": "fixture.test.ts",
+          "line": 55,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 51,
+          "endColumn": 55,
+          "endLine": 69,
+          "file": "fixture.test.ts",
+          "line": 69,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 31,
+          "endLine": 2,
+          "file": "fixture.test.ts",
+          "line": 2,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 27,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 25,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 26,
+          "endLine": 10,
+          "file": "fixture.test.ts",
+          "line": 10,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 25,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 12,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 25,
+          "endLine": 14,
+          "file": "fixture.test.ts",
+          "line": 14,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 33,
+          "endLine": 16,
+          "file": "fixture.test.ts",
+          "line": 16,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 54,
+          "endLine": 24,
+          "file": "fixture.test.ts",
+          "line": 24,
+          "message": "Vitest hookTimeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 54,
+          "endLine": 24,
+          "file": "fixture.test.ts",
+          "line": 24,
+          "message": "Vitest testTimeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 36,
+          "endLine": 26,
+          "file": "fixture.test.ts",
+          "line": 26,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 30,
+          "endLine": 28,
+          "file": "fixture.test.ts",
+          "line": 28,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 40,
+          "endLine": 31,
+          "file": "fixture.test.ts",
+          "line": 31,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 33,
+          "endLine": 35,
+          "file": "fixture.test.ts",
+          "line": 35,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 29,
+          "endLine": 37,
+          "file": "fixture.test.ts",
+          "line": 37,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 33,
+          "endLine": 40,
+          "file": "fixture.test.ts",
+          "line": 40,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 34,
+          "endLine": 42,
+          "file": "fixture.test.ts",
+          "line": 42,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 29,
+          "endLine": 44,
+          "file": "fixture.test.ts",
+          "line": 44,
+          "message": "Vitest timeout must be positive; zero disables the timeout and negative values are invalid.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 46,
+          "endLine": 47,
+          "file": "fixture.test.ts",
+          "line": 47,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 30,
+          "endColumn": 37,
+          "endLine": 55,
+          "file": "fixture.test.ts",
+          "line": 55,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 51,
+          "endColumn": 55,
+          "endLine": 69,
+          "file": "fixture.test.ts",
+          "line": 69,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 34,
+          "endLine": 42,
+          "file": "fixture.test.ts",
+          "line": 42,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 29,
+          "endLine": 44,
+          "file": "fixture.test.ts",
+          "line": 44,
+          "message": "Vitest timeout must be positive; zero disables the timeout and negative values are invalid.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "defaultMax": 6000
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 31,
+          "endColumn": 35,
+          "endLine": 3,
+          "file": "fixture.test.ts",
+          "line": 3,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 36,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 30,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 28,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 41,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 43,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 36,
+          "endColumn": 40,
+          "endLine": 22,
+          "file": "fixture.test.ts",
+          "line": 22,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 34,
+          "endColumn": 38,
+          "endLine": 23,
+          "file": "fixture.test.ts",
+          "line": 23,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 32,
+          "file": "fixture.test.ts",
+          "line": 32,
+          "message": "Vitest testTimeout exceeds 5000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 34,
+          "file": "fixture.test.ts",
+          "line": 34,
+          "message": "Vitest hookTimeout exceeds 5000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 2,
+          "endLine": 40,
+          "file": "fixture.test.ts",
+          "line": 36,
+          "message": "Vitest hookTimeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 50,
+          "endLine": 43,
+          "file": "fixture.test.ts",
+          "line": 43,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 32,
+          "endLine": 47,
+          "file": "fixture.test.ts",
+          "line": 47,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 31,
+          "endColumn": 35,
+          "endLine": 58,
+          "file": "fixture.test.ts",
+          "line": 58,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 41,
+          "endLine": 60,
+          "file": "fixture.test.ts",
+          "line": 60,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 42,
+          "endLine": 62,
+          "file": "fixture.test.ts",
+          "line": 62,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 36,
+          "endLine": 64,
+          "file": "fixture.test.ts",
+          "line": 64,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 34,
+          "endColumn": 38,
+          "endLine": 66,
+          "file": "fixture.test.ts",
+          "line": 66,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 28,
+          "endLine": 68,
+          "file": "fixture.test.ts",
+          "line": 68,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 47,
+          "endColumn": 51,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 7,
+          "endLine": 19,
+          "file": "fixture.test.ts",
+          "line": 19,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 90,
+          "endColumn": 94,
+          "endLine": 21,
+          "file": "fixture.test.ts",
+          "line": 21,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 47,
+          "endLine": 23,
+          "file": "fixture.test.ts",
+          "line": 23,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 47,
+          "endColumn": 51,
+          "endLine": 26,
+          "file": "fixture.test.ts",
+          "line": 26,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 48,
+          "endLine": 30,
+          "file": "fixture.test.ts",
+          "line": 30,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 51,
+          "endColumn": 55,
+          "endLine": 47,
+          "file": "fixture.test.ts",
+          "line": 47,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 55,
+          "endColumn": 59,
+          "endLine": 50,
+          "file": "fixture.test.ts",
+          "line": 50,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 51,
+          "endColumn": 55,
+          "endLine": 53,
+          "file": "fixture.test.ts",
+          "line": 53,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 37,
+          "endColumn": 41,
+          "endLine": 4,
+          "file": "fixture.test.ts",
+          "line": 4,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 43,
+          "endColumn": 47,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 45,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 51,
+          "endColumn": 55,
+          "endLine": 10,
+          "file": "fixture.test.ts",
+          "line": 10,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 45,
+          "endLine": 12,
+          "file": "fixture.test.ts",
+          "line": 12,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 47,
+          "endColumn": 51,
+          "endLine": 14,
+          "file": "fixture.test.ts",
+          "line": 14,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 45,
+          "endColumn": 49,
+          "endLine": 16,
+          "file": "fixture.test.ts",
+          "line": 16,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 57,
+          "endColumn": 61,
+          "endLine": 18,
+          "file": "fixture.test.ts",
+          "line": 18,
+          "message": "Vitest timeout exceeds 5000 ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
+          "messageId": "reason",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {}
+      ]
+    }
+  ]
+}

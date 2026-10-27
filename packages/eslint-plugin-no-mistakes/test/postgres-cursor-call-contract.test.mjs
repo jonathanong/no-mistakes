@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { lint, messages, plugin } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { describe, expect, it } from "vitest";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { plugin } from "./helpers.mjs";
 
 const RULE = "postgres-cursor-call-contract";
 const OPTIONS = {
@@ -261,191 +263,136 @@ describe("plugin exports", () => {
   });
 });
 
-describe("postgres-cursor-call-contract", () => {
-  it.each(invalid)("reports $messageId for $file", ({ file, code, messageId }) => {
-    assert.ok(messages(code, RULE, OPTIONS, file).includes(messageId));
-    assert.ok(lint(code, { [`no-mistakes/${RULE}`]: ["error", OPTIONS] }, file).length > 0);
-  });
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
 
-  it.each(valid)("accepts $file", ({ file, code }) => {
-    assert.deepEqual(messages(code, RULE, OPTIONS, file), []);
-  });
+function cursorCase(code, filename, option = OPTIONS) {
+  return {
+    code,
+    filename,
+    ...(option === undefined ? {} : { options: [option] }),
+    ...(/\.[cm]?tsx?$/.test(filename) ? { languageOptions: { parser: tsParser } } : {}),
+  };
+}
 
-  it("reports staticQuery when the cursor call has no SQL argument", () => {
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nrunCursor()`,
-        RULE,
-        OPTIONS,
-        "src/missing-call-argument.js",
-      ),
-      ["staticQuery"],
-    );
-  });
+const excludeOptions = {
+  ...OPTIONS,
+  exclude: ["**/*.test.js", "**/test-helpers/**"],
+  includeFiles: ["lib/test-helpers/seed.js"],
+};
+const trusted = {
+  ...OPTIONS,
+  trustedSqlTags: [{ module: "@example/db", name: "sql" }],
+};
+const named = `import { runCursor } from '@db/cursors'\nimport { sql } from '@example/db'\nrunCursor(sql\`SELECT 1\`)`;
+const select = `import { runCursor } from '@db/cursors'\nrunCursor('SELECT 1')`;
 
-  it("skips excluded test files and still lints includeFiles", () => {
-    const options = {
+const suite = {
+  valid: [
+    // accepts configured cursor calls.
+    ...valid.map(({ file, code }) => cursorCase(code, file)),
+    // skips excluded test files and still lints includeFiles.
+    // Zero findings.
+    cursorCase(select, "src/service.test.js", excludeOptions),
+    // reports nothing when modules or executors are missing.
+    // Zero findings.
+    { code: select, filename: "src/a.js" },
+    cursorCase(select, "src/a.js", { modules: [], executors: ["runCursor"] }),
+    cursorCase(select, "src/a.js", { modules: ["@db/cursors"] }),
+    // honors a custom annotation and ignores files outside include.
+    // Zero findings.
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nimport sql from '@db/sql'\nrunCursor(sql\`/* rows */ SELECT 1\`)`,
+      "src/custom-sql-tag.js",
+      { ...OPTIONS, sqlTagModules: ["@db/sql"] },
+    ),
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nrunCursor('-- name SELECT 1')`,
+      "src/custom.js",
+      { ...OPTIONS, annotation: "^--" },
+    ),
+    cursorCase(select, "src/service.js", { ...OPTIONS, include: ["**/*.mjs"] }),
+    // trusts configured named sql tags and leaves the others untrusted.
+    // Zero findings.
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nimport { sql } from '@example/db'\nrunCursor(sql\`/* rows */ SELECT 1\`)`,
+      "src/annotated-sql-tag.js",
+      trusted,
+    ),
+  ],
+  invalid: [
+    // reports the configured cursor contract.
+    ...invalid.map(({ file, code }) => cursorCase(code, file)),
+    // reports staticQuery when the cursor call has no SQL argument.
+    // One staticQuery finding.
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nrunCursor()`,
+      "src/missing-call-argument.js",
+    ),
+    // skips excluded test files and still lints includeFiles.
+    // One annotation finding.
+    cursorCase(select, "lib/test-helpers/seed.js", excludeOptions),
+    // honors a custom annotation and ignores files outside include.
+    // One staticQuery finding.
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nimport sql from 'sql-template-strings'\nrunCursor(sql\`/* rows */ SELECT 1\`)`,
+      "src/default-sql-tag-disabled.js",
+      { ...OPTIONS, sqlTagModules: ["@db/sql"] },
+    ),
+    // trusts configured named sql tags and leaves the others untrusted.
+    // One annotation finding.
+    cursorCase(named, "src/trusted-sql-tag.js", trusted),
+    // One staticQuery finding.
+    cursorCase(named, "src/untrusted-sql-tag.js"),
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nimport { sql } from '@other/db'\nrunCursor(sql\`SELECT 1\`)`,
+      "src/other-module-sql-tag.js",
+      trusted,
+    ),
+    // One annotation finding.
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nimport { sql as dbSql } from '@example/db/sql'\nrunCursor(dbSql\`SELECT 1\`)`,
+      "src/subpath-sql-tag.js",
+      trusted,
+    ),
+    // One staticQuery finding.
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nimport { sql } from '@example/dbx'\nrunCursor(sql\`SELECT 1\`)`,
+      "src/sibling-sql-tag.js",
+      trusted,
+    ),
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nimport sql from '@example/db'\nrunCursor(sql\`SELECT 1\`)`,
+      "src/default-sql-tag.js",
+      trusted,
+    ),
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nimport { sql as dbSql } from '@example/db'\nexport function load() {\n  const dbSql = (strings) => strings\n  return runCursor(dbSql\`SELECT 1\`)\n}`,
+      "src/shadowed-sql-tag.js",
+      trusted,
+    ),
+    cursorCase(
+      `import { runCursor } from '@db/cursors'\nimport { type sql as dbSql } from '@example/db'\nrunCursor(dbSql\`SELECT 1\`)`,
+      "src/type-sql-tag.ts",
+      trusted,
+    ),
+    cursorCase(named, "src/empty-module-sql-tag.js", {
       ...OPTIONS,
-      exclude: ["**/*.test.js", "**/test-helpers/**"],
-      includeFiles: ["lib/test-helpers/seed.js"],
-    };
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nrunCursor('SELECT 1')`,
-        RULE,
-        options,
-        "src/service.test.js",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nrunCursor('SELECT 1')`,
-        RULE,
-        options,
-        "lib/test-helpers/seed.js",
-      ),
-      ["annotation"],
-    );
-  });
-
-  it("reports nothing when modules or executors are missing", () => {
-    const code = `import { runCursor } from '@db/cursors'\nrunCursor('SELECT 1')`;
-    assert.deepEqual(messages(code, RULE, undefined, "src/a.js"), []);
-    assert.deepEqual(
-      messages(code, RULE, { modules: [], executors: ["runCursor"] }, "src/a.js"),
-      [],
-    );
-    assert.deepEqual(messages(code, RULE, { modules: ["@db/cursors"] }, "src/a.js"), []);
-  });
-
-  it("honors a custom annotation and ignores files outside include", () => {
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nimport sql from '@db/sql'\nrunCursor(sql\`/* rows */ SELECT 1\`)`,
-        RULE,
-        { ...OPTIONS, sqlTagModules: ["@db/sql"] },
-        "src/custom-sql-tag.js",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nimport sql from 'sql-template-strings'\nrunCursor(sql\`/* rows */ SELECT 1\`)`,
-        RULE,
-        { ...OPTIONS, sqlTagModules: ["@db/sql"] },
-        "src/default-sql-tag-disabled.js",
-      ),
-      ["staticQuery"],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nrunCursor('-- name SELECT 1')`,
-        RULE,
-        { ...OPTIONS, annotation: "^--" },
-        "src/custom.js",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nrunCursor('SELECT 1')`,
-        RULE,
-        { ...OPTIONS, include: ["**/*.mjs"] },
-        "src/service.js",
-      ),
-      [],
-    );
-  });
-
-  it("trusts configured named sql tags and leaves the others untrusted", () => {
-    const trusted = {
+      trustedSqlTags: [{ module: "", name: "sql" }],
+    }),
+    cursorCase(named, "src/empty-name-sql-tag.js", {
       ...OPTIONS,
-      trustedSqlTags: [{ module: "@example/db", name: "sql" }],
-    };
-    const named = `import { runCursor } from '@db/cursors'\nimport { sql } from '@example/db'\nrunCursor(sql\`SELECT 1\`)`;
-    assert.deepEqual(messages(named, RULE, trusted, "src/trusted-sql-tag.js"), ["annotation"]);
-    assert.deepEqual(messages(named, RULE, OPTIONS, "src/untrusted-sql-tag.js"), ["staticQuery"]);
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nimport { sql } from '@other/db'\nrunCursor(sql\`SELECT 1\`)`,
-        RULE,
-        trusted,
-        "src/other-module-sql-tag.js",
-      ),
-      ["staticQuery"],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nimport { sql as dbSql } from '@example/db/sql'\nrunCursor(dbSql\`SELECT 1\`)`,
-        RULE,
-        trusted,
-        "src/subpath-sql-tag.js",
-      ),
-      ["annotation"],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nimport { sql } from '@example/dbx'\nrunCursor(sql\`SELECT 1\`)`,
-        RULE,
-        trusted,
-        "src/sibling-sql-tag.js",
-      ),
-      ["staticQuery"],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nimport sql from '@example/db'\nrunCursor(sql\`SELECT 1\`)`,
-        RULE,
-        trusted,
-        "src/default-sql-tag.js",
-      ),
-      ["staticQuery"],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nimport { sql as dbSql } from '@example/db'\nexport function load() {\n  const dbSql = (strings) => strings\n  return runCursor(dbSql\`SELECT 1\`)\n}`,
-        RULE,
-        trusted,
-        "src/shadowed-sql-tag.js",
-      ),
-      ["staticQuery"],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nimport { type sql as dbSql } from '@example/db'\nrunCursor(dbSql\`SELECT 1\`)`,
-        RULE,
-        trusted,
-        "src/type-sql-tag.ts",
-      ),
-      ["staticQuery"],
-    );
-    assert.deepEqual(
-      messages(
-        named,
-        RULE,
-        { ...OPTIONS, trustedSqlTags: [{ module: "", name: "sql" }] },
-        "src/empty-module-sql-tag.js",
-      ),
-      ["staticQuery"],
-    );
-    assert.deepEqual(
-      messages(
-        named,
-        RULE,
-        { ...OPTIONS, trustedSqlTags: [{ module: "@example/db", name: "" }] },
-        "src/empty-name-sql-tag.js",
-      ),
-      ["staticQuery"],
-    );
-    assert.deepEqual(
-      messages(
-        `import { runCursor } from '@db/cursors'\nimport { sql } from '@example/db'\nrunCursor(sql\`/* rows */ SELECT 1\`)`,
-        RULE,
-        trusted,
-        "src/annotated-sql-tag.js",
-      ),
-      [],
-    );
-  });
-});
+      trustedSqlTags: [{ module: "@example/db", name: "" }],
+    }),
+  ],
+};
+
+it("snapshots postgres-cursor-call-contract diagnostics", async () => {
+  await expect(snapshotDocument(snapshotSuite(RULE, languageOptions, suite))).toMatchFileSnapshot(
+    "snapshots/postgres-cursor-call-contract.snap",
+  );
+}, 30_000);

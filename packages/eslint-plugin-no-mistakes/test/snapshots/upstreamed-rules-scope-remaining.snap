@@ -1,0 +1,223 @@
+{
+  "nextjs-metadata-exports-location": [
+    {
+      "file": "lib/metadata.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/page.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/page.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/lib/metadata.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 1,
+          "file": "app/lib/metadata.ts",
+          "line": 1,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 4,
+          "file": "app/lib/metadata.ts",
+          "line": 2,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 54,
+          "endLine": 7,
+          "file": "app/lib/metadata.ts",
+          "line": 7,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "pages/page.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 1,
+          "file": "pages/page.tsx",
+          "line": 1,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 4,
+          "file": "pages/page.tsx",
+          "line": 2,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/template.tsx",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 1,
+          "file": "app/template.tsx",
+          "line": 1,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 4,
+          "file": "app/template.tsx",
+          "line": 2,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "nextjs-no-manual-script-tags": [
+    {
+      "file": "app/page.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/layout.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowInlineScriptIds": [
+            "theme-init"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/layout.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowInlineScriptIdPatterns": [
+            "^theme-"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/layout.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "allowInlineScriptIdPatterns": [
+            "[",
+            "^theme-"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/layout.tsx",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 11,
+          "endLine": 12,
+          "file": "app/layout.tsx",
+          "line": 7,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "app/layout.tsx",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 11,
+          "endLine": 12,
+          "file": "app/layout.tsx",
+          "line": 7,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "allowInlineScriptIdPatterns": [
+            "["
+          ]
+        }
+      ]
+    }
+  ],
+  "no-placeholder-never-type-exports": [
+    {
+      "file": "shadow.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    }
+  ],
+  "react-no-use-promise-resolve": [
+    {
+      "file": "shadow.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    }
+  ]
+}

@@ -1,14 +1,50 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Linter } from "eslint";
-import { fixture, lint, require } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture, require } from "./helpers.mjs";
+
 const { laterTopLevelDeletion } = require("../src/rules/vitest-timeout-descriptor-order");
-const findings = (name, options = {}) =>
-  lint(
-    fixture(`vitest-timeout-cap/${name}.ts`),
-    { "no-mistakes/vitest-timeout-cap": ["error", options] },
-    "fixture.test.ts",
-  ).map(({ line, messageId }) => [line, messageId]);
+const rule = "vitest-timeout-cap";
+const finding = { unknownValues: "finding" };
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function capCase(name, options = {}) {
+  return {
+    code: fixture(`vitest-timeout-cap/${name}.ts`),
+    filename: "fixture.test.ts",
+    languageOptions: { parser: tsParser },
+    options: [options],
+  };
+}
+
+const suite = {
+  valid: [
+    // Receivers without an initializer, including parsable repeated bindings.
+    capCase("descriptor-delete-declared"),
+    capCase("descriptor-delete-declared-copy"),
+    // An earlier own assignment bypasses the setter until a prior delete exposes it.
+    capCase("descriptor-delete-setter-exposure"),
+  ],
+  invalid: [
+    // 2 timeout. A later delete does not retroactively invalidate an earlier direct assignment.
+    capCase("descriptor-delete-order"),
+    // 2 timeout, 36 unknown.
+    capCase("descriptor-delete-order", finding),
+    // 1 unknown.
+    capCase("descriptor-delete-declared", finding),
+    // 3 unknown.
+    capCase("descriptor-delete-declared-copy", finding),
+    // 3 unknown.
+    capCase("descriptor-delete-setter-exposure", finding),
+  ],
+};
 
 describe("vitest-timeout-cap descriptor deletion ordering", () => {
   it("requires direct operations and a literal identifier receiver independently of descriptor lookup", () => {
@@ -50,38 +86,16 @@ describe("vitest-timeout-cap descriptor deletion ordering", () => {
       ...[6, 9, 11, 13, 16, 19, 22, 25, 27, 30].map((line) => [line, false]),
     ]);
   });
-  it("does not retroactively invalidate earlier direct assignments but retains uncertain order", () => {
-    assert.deepEqual(findings("descriptor-delete-order"), [
-      [9, "timeout"],
-      [95, "timeout"],
-    ]);
-    assert.deepEqual(findings("descriptor-delete-order", { unknownValues: "finding" }), [
-      [9, "timeout"],
-      ...[15, 21, 28, 35, 40, 46, 53, 60, 66, 74, 81, 88].flatMap((line) =>
-        Array(3).fill([line, "unknown"]),
-      ),
-      [95, "timeout"],
-    ]);
-  });
 
-  it("keeps receivers without an initializer unknown, including parsable repeated bindings", () => {
-    assert.deepEqual(findings("descriptor-delete-declared"), []);
-    assert.deepEqual(findings("descriptor-delete-declared", { unknownValues: "finding" }), [
-      [6, "unknown"],
-    ]);
-    assert.deepEqual(findings("descriptor-delete-declared-copy"), []);
-    assert.deepEqual(
-      findings("descriptor-delete-declared-copy", { unknownValues: "finding" }),
-      Array(3).fill([6, "unknown"]),
-    );
-  });
+  it("snapshots vitest-timeout-descriptor-order diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/vitest-timeout-descriptor-order.snap");
+  }, 30_000);
 
   it("verifies an earlier own assignment bypasses the setter and a prior delete exposes it", async () => {
-    assert.deepEqual(findings("descriptor-delete-setter-exposure"), []);
-    assert.deepEqual(
-      findings("descriptor-delete-setter-exposure", { unknownValues: "finding" }),
-      Array(3).fill([12, "unknown"]),
-    );
     const { observed } =
       await import("../../../test-cases/eslint-snippets/fixture/vitest-timeout-cap/descriptor-delete-setter-exposure.ts");
     assert.deepEqual(observed, [0, 1, 60_000]);

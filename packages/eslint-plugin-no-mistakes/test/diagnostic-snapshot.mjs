@@ -1,7 +1,7 @@
 import { tmpdir } from "node:os";
 import { isAbsolute, relative, resolve } from "node:path";
 import { Linter } from "eslint";
-import { __dirname, lint, plugin } from "./helpers.mjs";
+import { __dirname, lint, linterCwd, plugin } from "./helpers.mjs";
 
 const repoRoot = resolve(__dirname, "../../..").replaceAll("\\", "/");
 const tempRoots = [tmpdir(), process.env.TEMP, process.env.TMP, process.env.TMPDIR]
@@ -36,9 +36,9 @@ export function relativeDiagnosticFile(filename, fallback = "") {
   const fallbackSlash = String(fallback).replaceAll("\\", "/");
   if (!filename) return fallbackSlash;
   const slash = String(filename).replaceAll("\\", "/");
-  if (fallbackSlash && (slash === fallbackSlash || slash.endsWith(`/${fallbackSlash}`))) {
-    return fallbackSlash;
-  }
+  // Keep the relative case name. An absolute fallback is a resolved path.
+  const sameName = slash === fallbackSlash || slash.endsWith(`/${fallbackSlash}`);
+  if (fallbackSlash && !isAbsolute(fallbackSlash) && sameName) return fallbackSlash;
   if (!isAbsolute(slash)) return slash;
   const fromRepo = relative(repoRoot, slash).replaceAll("\\", "/");
   if (fromRepo !== "" && !fromRepo.startsWith("..") && !isAbsolute(fromRepo)) return fromRepo;
@@ -147,7 +147,10 @@ export function configuredFindings(
 // RuleTester cases carry their own languageOptions. helpers.lint would switch
 // TypeScript files onto the TS parser and change which branches run.
 export function languageOptionsFindings({ code, rule, options, filename, languageOptions }) {
-  const linter = new Linter({ configType: "flat", cwd: process.cwd() });
+  const linter = new Linter({
+    configType: "flat",
+    cwd: filename ? linterCwd(filename) : process.cwd(),
+  });
   return eslintFindings(
     linter.verify(
       code,
@@ -201,20 +204,22 @@ export function snapshotSuite(rule, languageOptions, suite) {
         options: options ?? undefined,
         rule,
       });
-      // RuleTester required invalid cases to report and valid cases to be clean.
+      // RuleTester required this rule to report on invalid cases and stay
+      // silent on valid ones. Parse errors have no ruleId, so they do not count.
+      const reported = findings.filter((item) => item.ruleId === `no-mistakes/${rule}`);
       if (
-        (kind === "invalid" && findings.length === 0) ||
-        (kind === "valid" && findings.length > 0)
+        (kind === "invalid" && reported.length === 0) ||
+        (kind === "valid" && reported.length > 0)
       ) {
         throw new Error(
-          `${kind} ${rule} case ${filename ?? "<input>"} produced ${findings.length} diagnostics`,
+          `${kind} ${rule} case ${filename ?? "<input>"} produced ${reported.length} diagnostics`,
         );
       }
       rows.push({
         file: filename ? relativeDiagnosticFile(filename, filename) : "<input>",
         findings,
         kind,
-        options,
+        options: JSON.parse(normalizeDiagnosticText(JSON.stringify(options))),
       });
     }
   }

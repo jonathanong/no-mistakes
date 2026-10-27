@@ -1,0 +1,260 @@
+{
+  "react-no-iife-in-jsx": [
+    {
+      "file": "fixture.jsx",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 19,
+          "endLine": 8,
+          "file": "fixture.jsx",
+          "line": 6,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 24,
+          "endLine": 11,
+          "file": "fixture.jsx",
+          "line": 9,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 11,
+          "endLine": 15,
+          "file": "fixture.jsx",
+          "line": 12,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 21,
+          "endLine": 16,
+          "file": "fixture.jsx",
+          "line": 16,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 22,
+          "endLine": 22,
+          "file": "fixture.jsx",
+          "line": 20,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "react-no-nullish-react-node": [
+    {
+      "file": "recall.tsx",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 38,
+          "endLine": 20,
+          "file": "recall.tsx",
+          "line": 20,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 36,
+          "endLine": 21,
+          "file": "recall.tsx",
+          "line": 21,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 25,
+          "endLine": 22,
+          "file": "recall.tsx",
+          "line": 22,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 25,
+          "endLine": 23,
+          "file": "recall.tsx",
+          "line": 23,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "react-no-use-promise-resolve": [
+    {
+      "file": "recall.tsx",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 34,
+          "endLine": 11,
+          "file": "recall.tsx",
+          "line": 11,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 31,
+          "endLine": 12,
+          "file": "recall.tsx",
+          "line": 12,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 29,
+          "endLine": 13,
+          "file": "recall.tsx",
+          "line": 13,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 35,
+          "endLine": 14,
+          "file": "recall.tsx",
+          "line": 14,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 37,
+          "endLine": 15,
+          "file": "recall.tsx",
+          "line": 15,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 37,
+          "endLine": 16,
+          "file": "recall.tsx",
+          "line": 16,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 46,
+          "endLine": 17,
+          "file": "recall.tsx",
+          "line": 17,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 28,
+          "endLine": 18,
+          "file": "recall.tsx",
+          "line": 18,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 44,
+          "endLine": 19,
+          "file": "recall.tsx",
+          "line": 19,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 47,
+          "endLine": 20,
+          "file": "recall.tsx",
+          "line": 20,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 47,
+          "endLine": 21,
+          "file": "recall.tsx",
+          "line": 21,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 50,
+          "endLine": 22,
+          "file": "recall.tsx",
+          "line": 22,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

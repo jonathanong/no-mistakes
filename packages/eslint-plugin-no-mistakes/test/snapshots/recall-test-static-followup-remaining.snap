@@ -1,0 +1,1335 @@
+{
+  "no-import-only-test-files": [
+    {
+      "file": "require-alias-controls.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-shadow.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-mutable.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-suppressed.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-opaque.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-cycle.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-redeclared.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-dynamic.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-extra.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-file.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias-line.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-import-only-test-files/dynamic-forward.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-import-only-test-files/dynamic.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-import-only-test-files/next-line.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-import-only-test-files/suppressed.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "require-alias.test.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 6,
+          "file": "require-alias.test.js",
+          "line": 1,
+          "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
+          "messageId": "aggregate",
+          "ruleId": "no-mistakes/no-import-only-test-files",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-import-only-test-files/forwarded.test.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/no-import-only-test-files/forwarded.test.js",
+          "line": 1,
+          "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
+          "messageId": "aggregate",
+          "ruleId": "no-mistakes/no-import-only-test-files",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-import-only-test-files/recall.test.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/no-import-only-test-files/recall.test.js",
+          "line": 1,
+          "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
+          "messageId": "aggregate",
+          "ruleId": "no-mistakes/no-import-only-test-files",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-vitest-sequential": [
+    {
+      "file": "static-apply-controls.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers-valid.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "static-apply.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 11,
+          "endLine": 4,
+          "file": "static-apply.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 5,
+          "file": "static-apply.test.ts",
+          "line": 5,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 6,
+          "file": "static-apply.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 8,
+          "file": "static-apply.test.ts",
+          "line": 8,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/const-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/const-alias.test.ts",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/const-alias.test.ts",
+          "line": 8,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/created-runner.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/created-runner.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/default-import.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/default-import.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/module-function.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/module-function.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/module-let.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/module-let.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/module-var.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/module-var.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 8,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 9,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 24,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 10,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 11,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 12,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 26,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 13,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 14,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 14,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 16,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 21,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 21,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 22,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 22,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 23,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 31,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 31,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 33,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 33,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 34,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/recall.test.ts",
+          "line": 34,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/renamed-fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/renamed-fixture.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+      "findings": [
+        {
+          "column": 2,
+          "endColumn": 32,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 39,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 5,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 30,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 21,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 8,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 9,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 10,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 11,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 11,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 59,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 12,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 7,
+          "endLine": 14,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 14,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 15,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 16,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 17,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 5,
+          "endLine": 18,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 18,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 38,
+          "endLine": 19,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 19,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 22,
+          "endLine": 21,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+          "line": 21,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/visible-forwarded-options.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/visible-forwarded-options.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/visible-forwarded-options.test.ts",
+          "line": 5,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 11,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/no-vitest-sequential/visible-forwarded-options.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "postgres-no-correlated-sql-builder": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/call-method.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/complete-guards.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/forwarded-method-controls.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/forwarded-method-file-suppression.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/forwarded-method-multiple-builders.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/forwarded-method-priority.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/forwarded-method-suppression.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/forwarded-methods.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/incomplete-guards.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/repeated.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/silent.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-call-limits.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/static-calls.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/suppression.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    }
+  ],
+  "react-no-nullish-react-node": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-file-suppressed.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-rewrite.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-suppressed.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-controls.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-controls.tsx",
+          "line": 7,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-loop-bindings.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-loop-bindings.tsx",
+          "line": 15,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 27,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-loop-bindings.tsx",
+          "line": 27,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 39,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-loop-bindings.tsx",
+          "line": 39,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
+          "line": 13,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
+          "line": 23,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 38,
+          "endLine": 29,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
+          "line": 29,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 42,
+          "endLine": 31,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
+          "line": 31,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 33,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
+          "line": 33,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 43,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
+          "line": 43,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 29,
+          "endLine": 50,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
+          "line": 50,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 31,
+          "endColumn": 47,
+          "endLine": 50,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
+          "line": 50,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-aliases.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-aliases.tsx",
+          "line": 7,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-aliases.tsx",
+          "line": 12,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 36,
+          "endLine": 18,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-aliases.tsx",
+          "line": 18,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 24,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-aliases.tsx",
+          "line": 24,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 30,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-aliases.tsx",
+          "line": 30,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/recall.tsx",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 38,
+          "endLine": 20,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/recall.tsx",
+          "line": 20,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 36,
+          "endLine": 21,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/recall.tsx",
+          "line": 21,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 25,
+          "endLine": 22,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/recall.tsx",
+          "line": 22,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 25,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/recall.tsx",
+          "line": 23,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "vitest-mock-test-file-naming": [
+    {
+      "file": "static-aliases-controls.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "static-alias-cycle.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/vitest-mock-test-file-naming/suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "static-aliases.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 13,
+          "file": "static-aliases.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-alias-const.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "static-alias-const.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-alias-call.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "static-alias-call.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-alias-apply.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "static-alias-apply.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-alias-destructure.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "static-alias-destructure.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-alias-namespace.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "static-alias-namespace.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-alias-template.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "static-alias-template.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-alias-member.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "static-alias-member.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-alias-method.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "static-alias-method.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/vitest-mock-test-file-naming/default.mock.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/vitest-mock-test-file-naming/default.mock.test.ts",
+          "line": 1,
+          "message": "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
+          "messageId": "unnecessaryMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/vitest-mock-test-file-naming/recall.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/vitest-mock-test-file-naming/recall.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

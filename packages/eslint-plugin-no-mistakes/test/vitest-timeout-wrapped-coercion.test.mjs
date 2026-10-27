@@ -1,43 +1,48 @@
-import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { fixture, lint } from "./helpers.mjs";
-const findings = (name, options = {}) =>
-  lint(
-    fixture(`vitest-timeout-cap/${name}.ts`),
-    { "no-mistakes/vitest-timeout-cap": ["error", options] },
-    "fixture.test.ts",
-  );
+import { describe, expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture } from "./helpers.mjs";
+
+const rule = "vitest-timeout-cap";
+const finding = { unknownValues: "finding" };
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function capCase(name, options = {}) {
+  return {
+    code: fixture(`vitest-timeout-cap/${name}.ts`),
+    filename: "fixture.test.ts",
+    languageOptions: { parser: tsParser },
+    options: [options],
+  };
+}
+
+const suite = {
+  valid: [
+    // Overwritten, shared, callable, getter, cyclic and unproved paths are silent
+    // until the finding policy asks for them.
+    capCase("wrapped-copy-coercion-unsafe"),
+  ],
+  invalid: [
+    // 1 timeout, 1 invalid. Literal object and array wrappers keep numeric and null updates.
+    capCase("wrapped-copy-coercion", finding),
+    // 1 timeout, 1 invalid.
+    capCase("wrapped-copy-coercion"),
+    // 39 unknown.
+    capCase("wrapped-copy-coercion-unsafe", finding),
+  ],
+};
+
 describe("wrapped copied scalar coercion", () => {
-  it("preserves numeric and null updates through literal object and array wrappers", () => {
-    assert.deepEqual(
-      findings("wrapped-copy-coercion", { unknownValues: "finding" }).map(({ line, messageId }) => [
-        line,
-        messageId,
-      ]),
-      [
-        [35, "timeout"],
-        [40, "invalid"],
-      ],
-    );
-    assert.deepEqual(
-      findings("wrapped-copy-coercion").map(({ line, messageId }) => [line, messageId]),
-      [
-        [35, "timeout"],
-        [40, "invalid"],
-      ],
-    );
-  });
-  it("rejects overwritten, shared, callable, getter, cyclic and unproved alias paths", () => {
-    const actual = findings("wrapped-copy-coercion-unsafe", { unknownValues: "finding" });
-    assert.deepEqual(
-      [...new Set(actual.map(({ line }) => line))],
-      [
-        9, 15, 22, 29, 37, 39, 44, 52, 57, 63, 68, 73, 78, 83, 85, 89, 91, 98, 104, 111, 116, 121,
-        126, 131, 136, 141, 146, 153, 159, 164, 168, 172, 177, 183, 190,
-      ],
-    );
-    assert.equal(actual.length, 39);
-    assert.ok(actual.every(({ messageId }) => messageId === "unknown"));
-    assert.deepEqual(findings("wrapped-copy-coercion-unsafe"), []);
-  });
+  it("snapshots vitest-timeout-wrapped-coercion diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/vitest-timeout-wrapped-coercion.snap");
+  }, 30_000);
 });

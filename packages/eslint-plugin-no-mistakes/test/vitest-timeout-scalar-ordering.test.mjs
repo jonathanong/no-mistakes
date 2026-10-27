@@ -1,18 +1,39 @@
-import assert from "node:assert/strict";
-import { it } from "vitest";
-import { fixture, lint } from "./helpers.mjs";
+import { expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture } from "./helpers.mjs";
 
-it("preserves earlier scalar coercion without admitting uncertain write ordering", () => {
-  const findings = (options) =>
-    lint(
-      fixture("vitest-timeout-cap/copy-scalar-ordering.ts"),
-      { "no-mistakes/vitest-timeout-cap": ["error", options] },
-      "fixture.test.ts",
-    ).map(({ line, messageId }) => [line, messageId]);
-  assert.deepEqual(findings({ unknownValues: "finding" }), [
-    [8, "timeout"],
-    ...[19, 24, 30, 35, 39, 45, 49, 54, 59, 65].flatMap((line) => Array(3).fill([line, "unknown"])),
-    [76, "unknown"],
-  ]);
-  assert.deepEqual(findings({}), [[8, "timeout"]]);
-});
+const rule = "vitest-timeout-cap";
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function capCase(options) {
+  return {
+    code: fixture("vitest-timeout-cap/copy-scalar-ordering.ts"),
+    filename: "fixture.test.ts",
+    languageOptions: { parser: tsParser },
+    options: [options],
+  };
+}
+
+// Earlier scalar coercion stays visible. Uncertain write ordering stays unknown.
+const suite = {
+  invalid: [
+    // 1 timeout, 31 unknown.
+    capCase({ unknownValues: "finding" }),
+    // 1 timeout.
+    capCase({}),
+  ],
+};
+
+it("snapshots vitest-timeout-scalar-ordering diagnostics", async () => {
+  await expect(
+    snapshotDocument({
+      [rule]: snapshotSuite(rule, languageOptions, suite),
+    }),
+  ).toMatchFileSnapshot("snapshots/vitest-timeout-scalar-ordering.snap");
+}, 30_000);

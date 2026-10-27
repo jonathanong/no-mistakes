@@ -1,16 +1,49 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Linter } from "eslint";
-import { fixture, lint, require } from "./helpers.mjs";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture, require } from "./helpers.mjs";
+
 const { createOwnDataProperty } = require("../src/rules/vitest-timeout-copy-properties");
 const { createCopySlotWrite } = require("../src/rules/vitest-timeout-copy-slots");
 
-const findings = (name, options = {}) =>
-  lint(
-    fixture(`vitest-timeout-cap/${name}.ts`),
-    { "no-mistakes/vitest-timeout-cap": ["error", options] },
-    "fixture.test.ts",
-  ).map(({ line, messageId }) => [line, messageId]);
+const rule = "vitest-timeout-cap";
+const finding = { unknownValues: "finding" };
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function capCase(name, options = {}) {
+  return {
+    code: fixture(`vitest-timeout-cap/${name}.ts`),
+    filename: "fixture.test.ts",
+    languageOptions: { parser: tsParser },
+    options: [options],
+  };
+}
+
+const suite = {
+  valid: [
+    // Unknown accessor receivers, inherited descriptors, aliases, escapes and uncertain paths.
+    capCase("copy-slot-unsafe-receivers"),
+    // A receiver whose first const definition has no initializer.
+    capCase("copy-slot-declared-receiver"),
+  ],
+  invalid: [
+    // 10 timeout. Source budgets survive guarded replacement and deletion.
+    capCase("copy-slot-replacement"),
+    // 10 timeout, 12 unknown.
+    capCase("copy-slot-replacement", finding),
+    // 12 unknown.
+    capCase("copy-slot-unsafe-receivers", finding),
+    // 3 unknown.
+    capCase("copy-slot-declared-receiver", finding),
+  ],
+};
 
 describe("vitest-timeout-cap copy slot replacement", () => {
   it("requires a literal receiver and immutable acyclic bindings independently of value stability", () => {
@@ -49,29 +82,12 @@ describe("vitest-timeout-cap copy slot replacement", () => {
       ...[4, 7, 9, 11, 13, 16, 18].map((line) => [line, false]),
     ]);
   });
-  it("preserves source budgets across guarded replacement and deletion of copy slots and ancestors", () => {
-    const known = [12, 17, 19, 24, 39, 45, 50, 55, 60, 66].map((line) => [line, "timeout"]);
-    assert.deepEqual(findings("copy-slot-replacement"), known);
-    assert.deepEqual(findings("copy-slot-replacement", { unknownValues: "finding" }), [
-      ...known,
-      ...[68, 68, 68, 77, 83, 88, 93, 95, 95, 95, 103, 108].map((line) => [line, "unknown"]),
-    ]);
-  });
 
-  it("retains unknown accessor receivers, inherited descriptors, aliases, escapes and uncertain paths", () => {
-    assert.deepEqual(findings("copy-slot-unsafe-receivers"), []);
-    assert.deepEqual(
-      findings("copy-slot-unsafe-receivers", { unknownValues: "finding" }),
-      [9, 17, 26, 31, 39, 46, 53, 60, 66, 72, 77, 82].map((line) => [line, "unknown"]),
-    );
-  });
-
-  it("rejects a receiver whose first const definition has no initializer", () => {
-    assert.deepEqual(findings("copy-slot-declared-receiver"), []);
-    assert.deepEqual(findings("copy-slot-declared-receiver", { unknownValues: "finding" }), [
-      [5, "unknown"],
-      [8, "unknown"],
-      [8, "unknown"],
-    ]);
-  });
+  it("snapshots vitest-timeout-copy-slots diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/vitest-timeout-copy-slots.snap");
+  }, 30_000);
 });

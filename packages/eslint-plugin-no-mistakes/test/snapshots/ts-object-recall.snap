@@ -1,0 +1,349 @@
+{
+  "no-delete-property": [
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "fixture.ts",
+          "line": 3,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 23,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 23,
+          "endLine": 5,
+          "file": "fixture.ts",
+          "line": 5,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 33,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 8,
+          "file": "fixture.ts",
+          "line": 8,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-object-mutation": [
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 15,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+          "messageId": "mutation",
+          "ruleId": "no-mistakes/no-object-mutation",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 29,
+          "endLine": 5,
+          "file": "fixture.ts",
+          "line": 5,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+          "messageId": "mutation",
+          "ruleId": "no-mistakes/no-object-mutation",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 32,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+          "messageId": "mutation",
+          "ruleId": "no-mistakes/no-object-mutation",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 8,
+          "file": "fixture.ts",
+          "line": 8,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+          "messageId": "mutation",
+          "ruleId": "no-mistakes/no-object-mutation",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-placeholder-never-type-exports": [
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 47,
+          "endLine": 3,
+          "file": "fixture.ts",
+          "line": 3,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "ts-no-const-aliases": [
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 25,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "ts-no-export-renaming": [
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 27,
+          "endLine": 2,
+          "file": "fixture.ts",
+          "line": 2,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "ts-no-function-aliases": [
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 68,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 76,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 64,
+          "endLine": 11,
+          "file": "fixture.ts",
+          "line": 11,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 59,
+          "endLine": 12,
+          "file": "fixture.ts",
+          "line": 12,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "ts-preserve-null-option-defaults": [
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 28,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Do not default nullable option 'label' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 30,
+          "endLine": 5,
+          "file": "fixture.ts",
+          "line": 5,
+          "message": "Do not default nullable option 'label' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Do not default nullable option 'text' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "vitest-timeout-cap": [
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 26,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    }
+  ]
+}

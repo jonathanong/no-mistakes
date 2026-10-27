@@ -1,8 +1,21 @@
 import assert from "node:assert/strict";
+import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
-
-import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
+import {
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+  snapshotSuite,
+} from "./diagnostic-snapshot.mjs";
 import { messages, require } from "./helpers.mjs";
+
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+const typescript = { parser: tsParser, sourceType: "module", globals: {} };
 
 const {
   createAliasScopeTracker,
@@ -14,72 +27,84 @@ const {
 const { matchDirectMockCallApply } = require("../src/rules/module-mock-call-apply.js");
 
 describe("lint early-return edges", () => {
-  it("covers no-delete-property non-delete unary and typed member delete", () => {
-    assert.deepEqual(messages("const ok = !value;", "no-delete-property"), []);
-    assert.deepEqual(
-      messages("delete (value as Thing).prop;", "no-delete-property", undefined, "a.tsx"),
-      ["delete"],
-    );
-  });
-
-  it("covers placeholder never specifier fallbacks", () => {
-    assert.deepEqual(
-      messages(
-        "type Keep = string; export type { Keep };",
-        "no-placeholder-never-type-exports",
-        undefined,
-        "a.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        'type Placeholder = never; export type { Placeholder as "alias" };',
-        "no-placeholder-never-type-exports",
-        undefined,
-        "a.ts",
-      ),
-      ["placeholder"],
-    );
-  });
+  it("snapshots remaining diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        "nextjs-metadata-exports-location": snapshotSuite(
+          "nextjs-metadata-exports-location",
+          languageOptions,
+          {
+            valid: [
+              {
+                code: "export const metadata = {};",
+                filename: "lib/meta.ts",
+                languageOptions: typescript,
+              },
+            ],
+          },
+        ),
+        "nextjs-no-manual-script-tags": snapshotSuite(
+          "nextjs-no-manual-script-tags",
+          languageOptions,
+          {
+            valid: [
+              { code: "<div />;", filename: "components/x.jsx" },
+              {
+                code: '<script type="application/ld+json"></script>;',
+                filename: "app/page.tsx",
+                languageOptions: typescript,
+              },
+              {
+                code: '<script id="allowed" dangerouslySetInnerHTML={{ __html: "" }}></script>;',
+                filename: "app/page.tsx",
+                languageOptions: typescript,
+                options: [
+                  { allowInlineScriptIds: ["allowed"], allowInlineScriptIdPatterns: ["("] },
+                ],
+              },
+            ],
+          },
+        ),
+        "no-delete-property": snapshotSuite("no-delete-property", languageOptions, {
+          valid: [{ code: "const ok = !value;", filename: "fixture.jsx" }],
+          invalid: [
+            {
+              code: "delete (value as Thing).prop;",
+              filename: "a.tsx",
+              languageOptions: typescript,
+            },
+          ],
+        }),
+        "no-placeholder-never-type-exports": snapshotSuite(
+          "no-placeholder-never-type-exports",
+          languageOptions,
+          {
+            valid: [
+              {
+                code: "type Keep = string; export type { Keep };",
+                filename: "a.ts",
+                languageOptions: typescript,
+              },
+            ],
+            invalid: [
+              {
+                code: 'type Placeholder = never; export type { Placeholder as "alias" };',
+                filename: "a.ts",
+                languageOptions: typescript,
+              },
+            ],
+          },
+        ),
+      }),
+    ).toMatchFileSnapshot("snapshots/coverage-lint-edges-remaining.snap");
+  }, 30_000);
 
   it("covers next metadata and script guard paths", () => {
-    assert.deepEqual(
-      messages(
-        "export const metadata = {};",
-        "nextjs-metadata-exports-location",
-        undefined,
-        "lib/meta.ts",
-      ),
-      [],
-    );
     messages(
       'export { metadata as "meta" };',
       "nextjs-metadata-exports-location",
       undefined,
       "app/page.tsx",
-    );
-    assert.deepEqual(
-      messages("<div />;", "nextjs-no-manual-script-tags", undefined, "components/x.jsx"),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        '<script type="application/ld+json"></script>;',
-        "nextjs-no-manual-script-tags",
-        undefined,
-        "app/page.tsx",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        '<script id="allowed" dangerouslySetInnerHTML={{ __html: "" }}></script>;',
-        "nextjs-no-manual-script-tags",
-        { allowInlineScriptIds: ["allowed"], allowInlineScriptIdPatterns: ["("] },
-        "app/page.tsx",
-      ),
-      [],
     );
     messages(
       'type Placeholder = never; export type { Placeholder as "alias" };',

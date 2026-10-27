@@ -1,49 +1,60 @@
 import assert from "node:assert/strict";
-import { describe, it } from "vitest";
-import { fixture, lint } from "./helpers.mjs";
+import { describe, expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import { fixture } from "./helpers.mjs";
 
-const findings = (name, options = {}) =>
-  lint(
-    fixture(`vitest-timeout-cap/${name}.ts`),
-    { "no-mistakes/vitest-timeout-cap": ["error", options] },
-    "fixture.test.ts",
-  ).map(({ line, messageId }) => [line, messageId]);
+const rule = "vitest-timeout-cap";
+const finding = { unknownValues: "finding" };
+const languageOptions = {
+  ecmaVersion: 2024,
+  sourceType: "module",
+  globals: {},
+  parserOptions: { ecmaFeatures: { jsx: true } },
+};
+
+function capCase(name, options = {}) {
+  return {
+    code: fixture(`vitest-timeout-cap/${name}.ts`),
+    filename: "fixture.test.ts",
+    languageOptions: { parser: tsParser },
+    options: [options],
+  };
+}
+
+const suite = {
+  valid: [
+    // Scalar controls stay in effect when unknown values are ignored.
+    capCase("copy-reverse-alias-overwrites"),
+    capCase("copy-reverse-alias-source-mutation"),
+    capCase("copy-alias-guard-composition"),
+    // An absent first alias initializer does not invent a finding by itself.
+    capCase("copy-alias-ambient"),
+  ],
+  invalid: [
+    // 36 unknown. Original, forward, sibling and chained writes.
+    capCase("copy-reverse-alias-overwrites", finding),
+    // 6 unknown. Shared coercion stays unknown.
+    capCase("copy-reverse-alias-source-mutation", finding),
+    // 10 unknown. Consumer and ordering guards survive every alias direction.
+    capCase("copy-alias-guard-composition", finding),
+    // 2 unknown.
+    capCase("copy-alias-ambient", finding),
+  ],
+};
 
 describe("vitest-timeout-cap reverse copied aliases", () => {
-  it("checks original, forward, sibling and chained writes without losing scalar controls", () => {
-    assert.deepEqual(
-      findings("copy-reverse-alias-overwrites", { unknownValues: "finding" }),
-      [4, 12, 19, 28, 58, 65, 73, 80, 87, 93, 100, 107].flatMap((line) =>
-        Array(3).fill([line, "unknown"]),
-      ),
-    );
-    assert.deepEqual(findings("copy-reverse-alias-overwrites"), []);
-  });
+  it("snapshots vitest-timeout-reverse-alias diagnostics", async () => {
+    await expect(
+      snapshotDocument({
+        [rule]: snapshotSuite(rule, languageOptions, suite),
+      }),
+    ).toMatchFileSnapshot("snapshots/vitest-timeout-reverse-alias.snap");
+  }, 30_000);
 
   it("retains unknown shared coercion and verifies its actual mutation of both sources", async () => {
-    assert.deepEqual(
-      findings("copy-reverse-alias-source-mutation", { unknownValues: "finding" }),
-      [4, 10, 10, 17, 23, 23].map((line) => [line, "unknown"]),
-    );
-    assert.deepEqual(findings("copy-reverse-alias-source-mutation"), []);
     const { observedTimeouts } =
       await import("../../../test-cases/eslint-snippets/fixture/vitest-timeout-cap/copy-reverse-alias-source-mutation.ts");
     assert.deepEqual(observedTimeouts, [30_001, 60_000]);
-  });
-
-  it("preserves consumer and ordering guards through every alias direction", () => {
-    assert.deepEqual(
-      findings("copy-alias-guard-composition", { unknownValues: "finding" }),
-      [10, 17, 24, 24, 28, 28, 28, 28, 29, 29].map((line) => [line, "unknown"]),
-    );
-    assert.deepEqual(findings("copy-alias-guard-composition"), []);
-  });
-
-  it("rejects an absent first alias initializer without losing the ordinary alias proof", () => {
-    assert.deepEqual(
-      findings("copy-alias-ambient", { unknownValues: "finding" }),
-      [8, 17].map((line) => [line, "unknown"]),
-    );
-    assert.deepEqual(findings("copy-alias-ambient"), []);
   });
 });
