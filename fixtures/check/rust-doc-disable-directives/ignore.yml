@@ -1,0 +1,5 @@
+reportUnusedDisableDirectives: ignore
+rules:
+  - rule: rust-no-inline-tests
+    scope: repository
+    include: ["*.rs"]
