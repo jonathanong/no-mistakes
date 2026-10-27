@@ -358,3 +358,39 @@ fn rust_doc_directives_are_invalid_without_suppressing_findings_or_fenced_exampl
         .all(|item| item.message.contains("plain `//`")));
     assert_eq!(sources.physical_read_count(), 1);
 }
+
+#[test]
+fn rust_doc_fences_join_attributes_across_gaps_and_keep_trailing_doc_directives() {
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/rust-doc-gaps.rs");
+    let directives =
+        crate::codebase::ts_source::audit_directives_for_path(source, Path::new("example.rs"));
+    assert_eq!(
+        directives
+            .into_iter()
+            .map(|(item, ineffective)| (item.rule, item.directive, ineffective))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                "ordinary-comment-still-audited".into(),
+                DisableDirective::Line { line: 6 },
+                false
+            ),
+            (
+                "trailing-doc".into(),
+                DisableDirective::NextLine { line: 8 },
+                true
+            ),
+            (
+                "whitespace-rule".into(),
+                DisableDirective::Line { line: 10 },
+                true
+            ),
+            (
+                "spaced-rule".into(),
+                DisableDirective::NextLine { line: 12 },
+                true
+            ),
+        ]
+    );
+}
