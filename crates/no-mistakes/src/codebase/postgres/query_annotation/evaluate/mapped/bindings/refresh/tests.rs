@@ -72,3 +72,36 @@ fn invalid_nonempty_ownership_keeps_the_original_bounds_failure() {
         assert!(result.is_err());
     }
 }
+
+#[test]
+fn scalar_capture_invalidation_preserves_the_warm_refresh_epoch() {
+    let files = FxHashMap::default();
+    let (mut old, mut new) = (evaluator(&files), evaluator(&files));
+    for evaluator in [&mut old, &mut new] {
+        evaluator.scopes = vec![scope(&[("x", Value::Number(7))]), Scope::default()];
+        capture(evaluator, 1, &[("x", 0)]);
+    }
+    assert_eq!(compare(&mut old, &mut new), 1);
+    assert_eq!(compare(&mut old, &mut new), 0);
+    let origin = new.scopes[0].clone();
+    let function = crate::codebase::postgres::query_annotation::Function {
+        start: 0,
+        params: vec![],
+        body: vec![],
+        supported: true,
+        asynchronous: false,
+        arrow: true,
+        self_name: None,
+    };
+    // The original capture loop took this mutable view even though no scalar
+    // binding could be rewritten. Its logical state is the refresh oracle.
+    for value in old.scopes[0].values_mut() {
+        if matches!(value, Value::Prefix(_, _, _)) {
+            *value = Value::Unknown;
+        }
+    }
+    new.invalidate_captured(0, &function);
+    assert!(new.scopes[0].same_bindings(&origin));
+    assert_eq!(compare(&mut old, &mut new), 0);
+    assert!(new.scopes[1]["x"] == Value::Number(7));
+}
