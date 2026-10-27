@@ -177,6 +177,18 @@ fn json_walk_never_guesses_in_malformed_text() {
 }
 
 #[test]
+fn json_and_yaml_walks_handle_missing_keys_blank_lines_and_bare_markers() {
+    // A key absent from the top-level object ends the walk at line 1.
+    assert_eq!(yaml("zz", JSON_ARRAYS), 1);
+    // Blank lines carry no entries.
+    assert_eq!(yaml("b", "a: 1\n\n\nb:\n  - x\n"), 4);
+    // A bare `-` puts the item's mapping on the following lines.
+    let bare = "l:\n  -\n    k: 1\n  -\n    k: 2\n";
+    assert_eq!(yaml("l.1.k", bare), 5);
+    assert_eq!(yaml("l.0.k", bare), 3);
+}
+
+#[test]
 fn yaml_block_scalar_header_may_carry_a_comment() {
     let source = "run: | # note\n  a: not a key\nb: >- # c\n  c: nope\na:\n  - 1\n";
     assert_eq!(yaml("a", source), 5);
