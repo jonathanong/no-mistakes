@@ -8,7 +8,7 @@ use fixture_config::prepared_rules;
 /// they just enter their dispatch branch and return Ok(empty).
 #[test]
 fn dispatch_with_files_covers_all_rule_branches() {
-    let (fixture, config_path) = prepared_rules("all-rules", FILESYSTEM_RULE_IDS);
+    let (fixture, config_path) = prepared_rules(FILESYSTEM_RULE_IDS);
     let findings =
         run_filesystem_rules_with_files(fixture.path(), Some(&config_path), &[]).unwrap();
     // Empty file list → no findings; but all dispatch branches have been entered.
@@ -23,7 +23,7 @@ fn dispatch_with_files_covers_all_rule_branches() {
 /// discover_files returns nothing, so no findings are emitted.
 #[test]
 fn dispatch_standalone_covers_all_rule_branches() {
-    let (fixture, config_path) = prepared_rules("all-rules", FILESYSTEM_RULE_IDS);
+    let (fixture, config_path) = prepared_rules(FILESYSTEM_RULE_IDS);
     let findings = run_filesystem_rules(fixture.path(), Some(&config_path)).unwrap();
     assert!(
         findings.is_empty(),

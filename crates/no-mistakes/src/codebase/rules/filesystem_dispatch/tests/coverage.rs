@@ -11,10 +11,7 @@ fn dispatch_with_files_skips_disabled_rules() {
         .copied()
         .filter(|&rule| rule != RUST_MAX_LINES_PER_FILE && rule != RUST_NO_INLINE_TESTS)
         .collect();
-    let (fixture, config_path) = super::fixture_config::prepared_rules(
-        "all-rules-without-rust-line-rules",
-        &rules_without_rust,
-    );
+    let (fixture, config_path) = super::fixture_config::prepared_rules(&rules_without_rust);
     let findings =
         run_filesystem_rules_with_files(fixture.path(), Some(&config_path), &[]).unwrap();
     assert!(findings.is_empty());
