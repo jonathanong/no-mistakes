@@ -1,15 +1,17 @@
 //! Invocation deduplication belongs to one execution path, not its siblings.
-use super::super::{callbacks::CallbackIdentity, Environment};
-use crate::fx::{FxHashMap, FxHashSet};
+use super::super::{callbacks::CallbackSet, Environment};
+use crate::fx::FxHashMap;
 
-type Seen = Option<FxHashSet<CallbackIdentity>>;
+type Seen = Option<CallbackSet>;
 
 pub(super) fn accumulate(joined: &mut Seen, current: &Seen, first: bool) {
     if first {
         joined.clone_from(current);
     } else if let (Some(joined), Some(current)) = (joined, current) {
         // Only callbacks consumed on every possible path may suppress a later call.
-        joined.retain(|key| current.contains(key));
+        if !joined.shares(current) {
+            joined.retain(|key| current.contains(key));
+        }
     }
 }
 
@@ -21,6 +23,13 @@ pub(super) fn remap(
     indices: &FxHashMap<Environment, Environment>,
 ) {
     if let Some(seen) = seen {
+        if seen.below(preserved)
+            || seen
+                .iter()
+                .all(|key| key.2 < preserved || indices.get(&key.2) == Some(&key.2))
+        {
+            return;
+        }
         *seen = std::mem::take(seen)
             .into_iter()
             .filter_map(|mut key| {
@@ -46,3 +55,6 @@ impl<F: Fn(&str, &std::path::Path) -> Option<std::path::PathBuf>> super::super::
         remap(&mut self.active_callback_executions, preserved, indices);
     }
 }
+
+#[cfg(test)]
+mod tests;
