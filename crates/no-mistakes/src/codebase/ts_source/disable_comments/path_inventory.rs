@@ -1,8 +1,14 @@
 use super::{disable_directives, NamedDisableDirective};
 use std::path::Path;
 
+#[path = "rust_docs.rs"]
+mod rust_docs;
+
 /// Audit only comments in the host language, never documentation examples or literals.
-pub(crate) fn disable_directives_for_path(source: &str, path: &Path) -> Vec<NamedDisableDirective> {
+pub(crate) fn audit_directives_for_path(
+    source: &str,
+    path: &Path,
+) -> Vec<(NamedDisableDirective, bool)> {
     if !source.contains("no-mistakes-disable-") {
         return Vec::new();
     }
@@ -11,12 +17,23 @@ pub(crate) fn disable_directives_for_path(source: &str, path: &Path) -> Vec<Name
         .iter()
         .any(|ext| extension.eq_ignore_ascii_case(ext))
     {
-        return disable_directives(&markdown_comments(source), false);
+        return ordinary(disable_directives(&markdown_comments(source), false));
     }
     if extension.eq_ignore_ascii_case("rs") {
-        return disable_directives(&rust_comments(source), false);
+        let comments = rust_comments(source);
+        let mut found = ordinary(disable_directives(&comments, false));
+        found.extend(
+            rust_docs::directives(&comments)
+                .into_iter()
+                .map(|item| (item, true)),
+        );
+        return found;
     }
-    disable_directives(source, true)
+    ordinary(disable_directives(source, true))
+}
+
+fn ordinary(items: Vec<NamedDisableDirective>) -> Vec<(NamedDisableDirective, bool)> {
+    items.into_iter().map(|item| (item, false)).collect()
 }
 
 fn mask(bytes: &mut [u8]) {

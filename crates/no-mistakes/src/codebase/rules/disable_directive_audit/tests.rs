@@ -1,5 +1,12 @@
 use super::*;
-use crate::codebase::ts_source::disable_directives;
+use crate::codebase::ts_source::{disable_directives, NamedDisableDirective};
+
+fn disable_directives_for_path(source: &str, path: &Path) -> Vec<NamedDisableDirective> {
+    audit_directives_for_path(source, path)
+        .into_iter()
+        .filter_map(|(item, ineffective)| (!ineffective).then_some(item))
+        .collect()
+}
 
 pub(super) fn root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -283,4 +290,120 @@ fn rust_inventory_preserves_script_preamble_but_not_inner_attributes() {
     let source =
         include_str!("../../../../../../fixtures/rules/disable-directive-audit/inner-attribute.rs");
     assert!(disable_directives_for_path(source, Path::new("attribute.rs")).is_empty());
+}
+
+#[test]
+fn rust_doc_directives_are_invalid_without_suppressing_findings_or_fenced_examples() {
+    let root = root();
+    let file = root.join("rust-docs.rs");
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/rust-docs.rs");
+    let mut config: NoMistakesConfig = serde_yaml::from_str(include_str!(
+        "../../../../../../fixtures/rules/disable-directive-audit/disabled.yml"
+    ))
+    .unwrap();
+    config.rules[0].rule = "rust-max-lines-per-file".into();
+    config.rules[0].include = vec!["rust-docs.rs".into()];
+    config.rules[0].enabled = true;
+    config.rules[0].options = serde_yaml::Value::Null;
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&file));
+    let prepared =
+        PreparedDisableDirectives::prepare(&root, &config, std::slice::from_ref(&file), &sources)
+            .unwrap();
+    let findings = prepared.findings(&[]);
+    let invalid: Vec<_> = findings
+        .iter()
+        .filter(|item| item.rule == "invalid-disable-directive")
+        .collect();
+    assert_eq!(
+        invalid.iter().map(|item| item.line).collect::<Vec<_>>(),
+        vec![1, 7, 9, 10, 11, 20, 28, 30, 38]
+    );
+    assert!(invalid
+        .iter()
+        .all(|item| item.message.contains("plain `//`")));
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|item| item.rule == "unused-disable-directive")
+            .map(|item| item.line)
+            .collect::<Vec<_>>(),
+        vec![23]
+    );
+    // Documentation stays ineffective even when it is directly before a real finding.
+    for line in [1, 8, 9, 10, 12, 21, 28, 30, 31] {
+        assert!(crate::codebase::ts_source::matching_disable_directive(
+            source,
+            Some(line),
+            "rust-max-lines-per-file"
+        )
+        .is_none());
+    }
+    let directive = crate::codebase::ts_source::matching_disable_directive(
+        source,
+        Some(24),
+        "rust-max-lines-per-file",
+    )
+    .unwrap();
+    assert_eq!(directive, DisableDirective::NextLine { line: 23 });
+    let consumed = ConsumedDisableDirective {
+        source_file: root.join("rust-docs.rs").to_string_lossy().into_owned(),
+        rule: "rust-max-lines-per-file".into(),
+        directive: project(directive),
+    };
+    let findings = prepared.findings_from_consumed(&[consumed]);
+    assert_eq!(findings.len(), 9);
+    assert!(findings
+        .iter()
+        .all(|item| item.rule == "invalid-disable-directive"));
+    config.rules[0].enabled = false;
+    let disabled = PreparedDisableDirectives::prepare(&root, &config, &[file], &sources)
+        .unwrap()
+        .findings(&[]);
+    assert!(disabled
+        .iter()
+        .filter(|item| item.line != 23)
+        .all(|item| item.message.contains("plain `//`")));
+    assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
+fn rust_doc_fences_join_attributes_across_gaps_and_keep_trailing_doc_directives() {
+    let source =
+        include_str!("../../../../../../fixtures/rules/disable-directive-audit/rust-doc-gaps.rs");
+    let directives =
+        crate::codebase::ts_source::audit_directives_for_path(source, Path::new("example.rs"));
+    assert_eq!(
+        directives
+            .into_iter()
+            .map(|(item, ineffective)| (item.rule, item.directive, ineffective))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                "ordinary-comment-still-audited".into(),
+                DisableDirective::Line { line: 6 },
+                false
+            ),
+            (
+                "trailing-doc".into(),
+                DisableDirective::NextLine { line: 8 },
+                true
+            ),
+            (
+                "whitespace-rule".into(),
+                DisableDirective::Line { line: 10 },
+                true
+            ),
+            (
+                "spaced-rule".into(),
+                DisableDirective::NextLine { line: 12 },
+                true
+            ),
+            (
+                "indented-unfenced-doc".into(),
+                DisableDirective::Line { line: 15 },
+                true
+            ),
+        ]
+    );
 }

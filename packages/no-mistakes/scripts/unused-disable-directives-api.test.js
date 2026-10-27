@@ -97,6 +97,92 @@ for (const [config, failures, advice] of [
   );
 }
 
+for (const [config, auditChannel] of [
+  [".no-mistakes.yml", "advisories"],
+  ["report.yml", "rules"],
+  ["ignore.yml", null],
+]) {
+  test(
+    `Rust doc directives preserve CLI and async CJS/ESM parity: ${config}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(__dirname, "../../../fixtures/check/rust-doc-disable-directives");
+      const options = { root, config: join(root, config), includeSuppressed: true };
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const expected = await pending;
+      assert.deepEqual(
+        expected.rules
+          .filter(({ rule }) => rule === "rust-no-inline-tests")
+          .map(({ file, line }) => [file, line]),
+        [
+          ["inner.rs", 5],
+          ["outer.rs", 2],
+        ],
+      );
+      const audits = [...expected.rules, ...expected.advisories].filter(
+        ({ rule }) => rule === "invalid-disable-directive",
+      );
+      assert.equal(expected.rules.length, auditChannel === "rules" ? 5 : 2);
+      assert.equal(expected.advisories.length, auditChannel === "advisories" ? 3 : 0);
+      assert.deepEqual(
+        audits.map(({ file, line }) => [file, line]),
+        auditChannel
+          ? [
+              ["inner.rs", 1],
+              ["line.rs", 1],
+              ["outer.rs", 1],
+            ]
+          : [],
+      );
+      for (const finding of audits) {
+        assert.match(finding.message, /rust-no-inline-tests/);
+        assert.match(finding.message, /plain.*\/\//);
+        assert.ok(expected[auditChannel].includes(finding));
+      }
+      // Only the plain comment suppresses a finding; fenced documentation is inert.
+      assert.equal(expected.suppressed.length, 1);
+      assert.equal(expected.suppressed[0].file, "plain.rs");
+      assert.equal(expected.suppressed[0].line, 2);
+      assert.deepEqual(expected.suppressed[0].directive, { kind: "nextLine", line: 1 });
+      for (const api of [cjs, esm]) {
+        const checkPending = api.check(options);
+        assert.ok(checkPending instanceof Promise);
+        assert.deepEqual(await checkPending, expected);
+        const batchPending = api.analyzeProject({
+          root,
+          config: options.config,
+          reports: [{ type: "check", includeSuppressed: true }],
+        });
+        assert.ok(batchPending instanceof Promise);
+        assert.deepEqual((await batchPending).reports[0].result, expected);
+      }
+      const cli =
+        process.env.NO_MISTAKES_TEST_CLI_PATH ||
+        join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
+      const child = spawnSync(
+        cli,
+        [
+          "check",
+          "--root",
+          root,
+          "--config",
+          options.config,
+          "--include-suppressed",
+          "--format",
+          "json",
+        ],
+        { encoding: "utf8", env: process.env },
+      );
+      assert.equal(child.error, undefined);
+      assert.equal(child.status, 1, child.stderr);
+      assert.deepEqual(JSON.parse(child.stdout), expected);
+    },
+  );
+}
+
 for (const [fixture, file, sourceFile, kind, line] of [
   ["redirect-suppression-entry-disabled", "next-shared.ts", "next.config.ts", "file", 1],
   ["react-consumed-directives/all", "app/Fetcher.tsx", "app/Fetcher.tsx", "nextLine", 3],

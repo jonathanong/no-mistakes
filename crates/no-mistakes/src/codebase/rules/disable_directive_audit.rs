@@ -3,7 +3,7 @@ use super::suppression::{SuppressionDirective, SuppressionDirectiveKind};
 use super::{RuleFinding, SuppressedFinding};
 mod consumed;
 use crate::codebase::ts_source::{
-    disable_directives_for_path, relative_slash_path, DisableDirective, SourceStore,
+    audit_directives_for_path, relative_slash_path, DisableDirective, SourceStore,
 };
 use crate::config::v2::{DisableDirectivePolicy, NoMistakesConfig};
 use anyhow::Result;
@@ -44,6 +44,7 @@ enum DirectiveStatus {
     Enabled,
     Disabled,
     Unknown,
+    IneffectivePlacement,
 }
 
 impl PreparedDisableDirectives {
@@ -81,10 +82,12 @@ impl PreparedDisableDirectives {
                     return Vec::new();
                 };
                 let file = relative_slash_path(root, path);
-                disable_directives_for_path(&source, path)
+                audit_directives_for_path(&source, path)
                     .into_iter()
-                    .map(|named| {
-                        let status = if enabled.contains(named.rule.as_str()) {
+                    .map(|(named, ineffective)| {
+                        let status = if ineffective {
+                            DirectiveStatus::IneffectivePlacement
+                        } else if enabled.contains(named.rule.as_str()) {
                             DirectiveStatus::Enabled
                         } else if known_rule(&named.rule) {
                             DirectiveStatus::Disabled
@@ -146,10 +149,11 @@ impl PreparedDisableDirectives {
             })
             .collect();
         let mut findings = self.comments.iter().filter_map(|comment| {
-            if used.contains(&(comment.file.clone(), comment.rule.as_str(), comment.directive.clone())) { return None }
+            if !matches!(comment.status, DirectiveStatus::IneffectivePlacement) && used.contains(&(comment.file.clone(), comment.rule.as_str(), comment.directive.clone())) { return None }
             let (rule, detail) = match comment.status {
                 DirectiveStatus::Enabled => ("unused-disable-directive", format!("directive for `{}` suppressed no findings in this invocation", comment.rule)),
                 DirectiveStatus::Disabled => ("invalid-disable-directive", format!("directive names disabled or out-of-scope rule `{}`", comment.rule)),
+                DirectiveStatus::IneffectivePlacement => ("invalid-disable-directive", format!("directive for `{}` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead", comment.rule)),
                 DirectiveStatus::Unknown => ("invalid-disable-directive", format!("directive names unknown rule `{}`", comment.rule)),
             };
             Some(RuleFinding {

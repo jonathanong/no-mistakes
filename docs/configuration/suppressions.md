@@ -19,7 +19,8 @@ reportUnusedDisableDirectives: advise
 
 `unused-disable-directive` means the named check rule is enabled but the
 comment hid nothing. `invalid-disable-directive` separately identifies an
-unknown rule name or a known rule that is disabled. Use the canonical rule ID,
+unknown rule name, a known rule that is disabled, or an ineffective comment
+placement. Use the canonical rule ID,
 not a rule application's `name`. The structured finding's `target` contains
 that ID; its `rule` identifies the hygiene diagnostic.
 
@@ -69,6 +70,33 @@ Markdown and MDX code fences, indented code, and inline code are examples rather
 than live comments. Only HTML comments outside those code regions participate
 in their audit. Rust strings, raw strings, and block-comment contents likewise
 do not create audit directives; genuine supported line comments still do.
+
+Rust documentation comments (`///` and `//!`) are also documentation, not
+suppression comments. A directive written in one is reported as
+`invalid-disable-directive` because its placement is ineffective, even when the
+named rule ID is valid and enabled. Move a real exception to a plain `//`
+comment at the code location where it should apply:
+
+```rust
+/// no-mistakes-disable-next-line some-rule: this does not suppress the check
+fn example() {}
+
+// no-mistakes-disable-next-line some-rule: justified exception
+fn legacy_example() {}
+```
+
+Fenced examples inside Rust documentation comments remain documentation and
+are ignored by the audit. This lets docs show directive syntax without creating
+an ineffective-directive finding:
+
+```rust
+/// Example syntax:
+/// ```rust
+/// // no-mistakes-disable-next-line some-rule: example only
+/// fn example() {}
+/// ```
+fn documented_api() {}
+```
 
 Exclude test data with the rule application's top-level `exclude`, for example
 `exclude: ["fixtures/**", "test-cases/**"]`. Apply those exclusions to every

@@ -181,4 +181,4 @@ pub use directive_inventory::{disable_directives, NamedDisableDirective};
 
 #[path = "disable_comments/path_inventory.rs"]
 mod path_inventory;
-pub(crate) use path_inventory::disable_directives_for_path;
+pub(crate) use path_inventory::audit_directives_for_path;
