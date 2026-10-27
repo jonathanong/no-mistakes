@@ -94,3 +94,50 @@ fn postgres_require_named_constraints_filesystem_runner_discovers_files() {
         "{body}"
     );
 }
+
+#[test]
+fn postgres_require_named_constraints_accepts_supported_postgres_forms() {
+    let root = fixture("supported-forms");
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert!(out.status.success(), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]));
+    let advisories = report["advisories"].as_array().unwrap();
+    assert_eq!(advisories.len(), 2, "{report}");
+    assert!(advisories.iter().all(|finding| finding["rule"] == RULE));
+    assert!(advisories
+        .iter()
+        .all(|finding| !finding["message"].as_str().unwrap().contains("1. .")));
+}
+
+#[test]
+fn postgres_require_named_constraints_keeps_malformed_sql_as_a_finding() {
+    let root = fixture("malformed");
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert!(!out.status.success(), "{report}");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report}");
+    assert_eq!(findings[0]["rule"], RULE, "{report}");
+    assert!(
+        findings[0]["message"]
+            .as_str()
+            .unwrap()
+            .contains("could not be analyzed"),
+        "{report}"
+    );
+}

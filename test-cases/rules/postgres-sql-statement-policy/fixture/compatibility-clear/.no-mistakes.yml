@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-require-named-constraints
+    scope: repository
+    options:
+      sqlInclude: ['sql/**/*.sql']
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      sqlInclude: ['sql/**/*.sql']

@@ -194,6 +194,13 @@ Import-aware executed PostgreSQL extraction stringifies literal booleans in
 finite joins, plain templates, and string concatenation through Rust and async
 CJS/ESM APIs. Trusted-tag value binds and opaque coercion boundaries are preserved.
 
+PostgreSQL migration recovery recognizes complete extension creation options
+and boolean user-role attributes as unsupported-but-valid advisories by default.
+`CREATE SCHEMA` inside procedural bodies and integer `FOR` expression ranges
+are recovered, while malformed syntax stays visible. CLI and async Node check
+reports share these facts and original diagnostic spelling; see the
+[schema diagnostic policy](migrations/postgres-schema-unanalyzable.md).
+
 The pure PostgreSQL source API is available through the async native Node
 binding in CJS and ESM. Its typed CREATE INDEX facts preserve the `ON ONLY`
 relation modifier in the Rust facts and Node declarations.

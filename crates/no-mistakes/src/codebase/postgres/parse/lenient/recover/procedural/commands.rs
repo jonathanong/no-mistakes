@@ -64,7 +64,7 @@ fn dml_returning(statement: &Statement) -> bool {
 }
 
 fn parsed_statement(code: &[&Token]) -> Option<Statement> {
-    if code.is_empty() {
+    if code.is_empty() || code.iter().any(|token| super::ranges::marker(token)) {
         return None;
     }
     let tokens = super::super::query_locks::compatible_tokens(code);

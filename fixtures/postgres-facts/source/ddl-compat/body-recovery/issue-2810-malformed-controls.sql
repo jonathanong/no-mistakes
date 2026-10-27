@@ -1,0 +1,11 @@
+FOR i IN 1..array_length(parts,1)- LOOP RAISE NOTICE '%',i;
+FOR i IN ..2 LOOP RAISE NOTICE '%',i;
+FOR i IN 1.. LOOP RAISE NOTICE '%',i;
+FOR i IN 1. .2 LOOP RAISE NOTICE '%',i;
+FOR i IN 1 . . 2 LOOP RAISE NOTICE '%',i;
+FOR i IN 1./* not adjacent */.2 LOOP RAISE NOTICE '%',i;
+FOR i IN 1..2..3 LOOP RAISE NOTICE '%',i;
+FOR i IN 1..2.3.4 LOOP RAISE NOTICE '%',i;
+FOR i IN 1.5..2.5.6 LOOP RAISE NOTICE '%',i;
+FOR i IN 1.5..2 .5 LOOP RAISE NOTICE '%',i;
+FOR i IN 1..2 BY LOOP RAISE NOTICE '%',i;

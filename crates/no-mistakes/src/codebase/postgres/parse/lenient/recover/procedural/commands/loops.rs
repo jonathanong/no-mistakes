@@ -30,19 +30,13 @@ pub(in super::super) fn for_header(code: &[&Token]) -> bool {
         }
         source = &source[..at];
     }
-    // sqlparser lexes the compact PL/pgSQL range `1..0` as `1.` and `.0`.
-    if let [Token::Number(left, _), Token::Number(right, _)] = source {
-        if left.ends_with('.') && right.starts_with('.') {
-            return true;
-        }
-    }
     let Some(range) = source
-        .windows(2)
-        .position(|pair| *pair[0] == Token::Period && *pair[1] == Token::Period)
+        .iter()
+        .position(|token| super::super::ranges::marker(token))
     else {
         return false;
     };
-    assignment::expression(&source[..range]) && assignment::expression(&source[range + 2..])
+    assignment::expression(&source[..range]) && assignment::expression(&source[range + 1..])
 }
 
 pub(in super::super) fn foreach_header(code: &[&Token]) -> bool {

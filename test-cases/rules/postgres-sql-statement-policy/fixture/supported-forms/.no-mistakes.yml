@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      sqlInclude: ["sql/**/*.sql"]

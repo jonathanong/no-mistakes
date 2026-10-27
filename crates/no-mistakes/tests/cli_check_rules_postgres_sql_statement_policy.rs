@@ -192,3 +192,166 @@ fn typed_executor_parameters_require_configured_import_identity_at_low_effort() 
     let output = check_fixture_config(&fixture("typed-executor-negative"));
     assert!(output.status.success(), "{}", stdout(&output));
 }
+
+#[test]
+fn postgres_sql_statement_policy_accepts_supported_forms_but_still_bans_create_table() {
+    let root = fixture("supported-forms");
+    let output = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(output.status.code(), Some(1), "{report}");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report}");
+    assert_eq!(findings[0]["rule"], RULE, "{report}");
+    assert_eq!(findings[0]["target"], "CREATE TABLE", "{report}");
+    assert!(
+        findings[0]["message"]
+            .as_str()
+            .unwrap()
+            .contains("CREATE TABLE"),
+        "{report}"
+    );
+    let mut advisory_targets = report["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|advisory| advisory["target"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    advisory_targets.sort_unstable();
+    assert_eq!(
+        advisory_targets,
+        [
+            "CREATE EXTENSION IF NOT EXISTS vector SCHEMA public",
+            "CREATE USER supabase_auth_admin NOINHERIT CREATEROLE LOGIN NOREPLICATION",
+        ],
+        "{report}"
+    );
+}
+
+#[test]
+fn postgres_sql_statement_policy_keeps_malformed_sql_under_each_policy() {
+    for (scenario, expected_field) in [
+        ("parse-failure-report", "rules"),
+        ("parse-failure-advise", "advisories"),
+        ("parse-failure-ignore", "ignore"),
+    ] {
+        let root = fixture(scenario);
+        let output = Command::new(bin())
+            .args(["check", "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join(".no-mistakes.yml"))
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        if expected_field == "ignore" {
+            assert!(output.status.success(), "{scenario}: {report}");
+            assert_eq!(
+                report["rules"],
+                serde_json::json!([]),
+                "{scenario}: {report}"
+            );
+            assert_eq!(
+                report["advisories"],
+                serde_json::json!([]),
+                "{scenario}: {report}"
+            );
+            continue;
+        }
+        let other_field = if expected_field == "rules" {
+            "advisories"
+        } else {
+            "rules"
+        };
+        assert_eq!(
+            report[other_field],
+            serde_json::json!([]),
+            "{scenario}: {report}"
+        );
+        let findings = report[expected_field].as_array().unwrap();
+        assert_eq!(findings.len(), 1, "{scenario}: {report}");
+        assert_eq!(findings[0]["rule"], RULE, "{scenario}: {report}");
+        assert!(
+            findings[0]["target"]
+                .as_str()
+                .unwrap()
+                .starts_with("CREATE TABLE malformed"),
+            "{scenario}: {report}"
+        );
+        assert!(
+            findings[0]["message"]
+                .as_str()
+                .unwrap()
+                .contains("could not be analyzed"),
+            "{scenario}: {report}"
+        );
+        assert_eq!(
+            output.status.success(),
+            expected_field == "advisories",
+            "{scenario}: {report}"
+        );
+    }
+}
+
+#[test]
+fn malformed_for_header_preserves_its_original_range_text_in_the_diagnostic() {
+    let root = fixture("parse-failure-range-report");
+    let output = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(!output.status.success(), "{report}");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report}");
+    assert_eq!(findings[0]["rule"], RULE, "{report}");
+    let message = findings[0]["message"].as_str().unwrap();
+    assert!(message.contains("1..array_length"), "{report}");
+    assert!(!message.contains("1. ."), "{report}");
+}
+
+#[test]
+fn valid_schema_utility_compatibility_is_shared_by_both_rules() {
+    let root = fixture("compatibility-clear");
+    let output = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--effort", "max", "--format", "json"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(output.status.success(), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]));
+    let advisories = report["advisories"].as_array().unwrap();
+    assert_eq!(advisories.len(), 4, "{report}");
+    for rule in [RULE, "postgres-require-named-constraints"] {
+        let own: Vec<_> = advisories
+            .iter()
+            .filter(|finding| finding["rule"] == rule)
+            .collect();
+        assert_eq!(own.len(), 2, "{report}");
+        for kind in ["CREATE EXTENSION", "CREATE USER"] {
+            assert!(
+                own.iter()
+                    .any(|finding| finding["target"].as_str().unwrap().starts_with(kind)),
+                "{report}"
+            );
+        }
+    }
+    assert!(advisories
+        .iter()
+        .all(|finding| !finding["message"].as_str().unwrap().contains("1. .")));
+}
