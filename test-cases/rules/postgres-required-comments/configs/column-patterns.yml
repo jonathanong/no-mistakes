@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-required-comments
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      minLength: 10
+      objects: [column]
+      columnNamePatterns: [^note$, ^secret$, ^vendor_, ^code$, ^title$]
+      exemptColumnNamePatterns: [^vendor_]

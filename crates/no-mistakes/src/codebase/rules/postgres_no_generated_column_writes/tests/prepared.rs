@@ -1,5 +1,7 @@
 use super::*;
 
+// Output cases moved to cli_postgres_snapshot_generated_column_writes.
+
 #[test]
 fn do_writes_keep_physical_lines_and_suppressions() {
     let root = unit_fixture("do-write-lines");
@@ -145,17 +147,4 @@ fn omitted_prepared_write_demand_is_an_error() {
     assert!(error
         .to_string()
         .contains("prepared PostgreSQL facts are missing"));
-}
-
-#[test]
-fn explicit_empty_names_select_no_executor_profile() {
-    let root = unit_fixture("quoted-identity");
-    let paths = [root.join("schema.sql"), root.join("write.ts")];
-    let findings = check_with_files(
-        &root,
-        &config_with_options("importSpecifier: null\nexecutorNames: []"),
-        &paths,
-    )
-    .unwrap();
-    assert!(findings.is_empty());
 }

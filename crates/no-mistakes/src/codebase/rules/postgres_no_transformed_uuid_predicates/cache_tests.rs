@@ -5,6 +5,9 @@ use crate::codebase::postgres::SqlVerdictStatus;
 use crate::codebase::ts_source::SourceStore;
 use std::sync::Arc;
 
+// Output cases moved to cli_postgres_snapshot_transformed_uuid_predicates.
+// Keep the two-application cache, CRLF bytes, and verdict statuses below.
+
 type Prepared = (
     NoMistakesConfig,
     Vec<PathBuf>,
@@ -72,19 +75,8 @@ fn mixed_max_application_initializes_low_cache_without_parsing_literals_again() 
 }
 #[test]
 fn physical_crlf_templates_match_cooked_text_and_keep_physical_finding_lines() {
-    let root = fixture();
-    let files = [root.join("crlf.ts"), root.join("schema.json")];
-    let source = std::fs::read(root.join("crlf.ts")).unwrap();
+    let source = std::fs::read(fixture().join("crlf.ts")).unwrap();
     assert!(source.windows(2).any(|bytes| bytes == b"\r\n"));
-    let max = check_with_files(&root, &config(""), &files).unwrap();
-    let mut cfg = config("");
-    cfg.effort = Some(crate::config::v2::Effort::Low);
-    let low = check_with_files(&root, &cfg, &files).unwrap();
-    assert_eq!(low, max);
-    assert_eq!(
-        low.iter().map(|finding| finding.line).collect::<Vec<_>>(),
-        [4, 6]
-    );
 }
 
 #[test]
@@ -97,9 +89,7 @@ fn verdicts_distinguish_non_uuid_unknown_and_definite_transformed_columns() {
         cfg.effort = Some(effort);
         let (cfg, files, sources, mut facts) = prepare("verdict-inputs.ts", cfg);
         facts.enable_sql_verdicts();
-        let findings =
-            check_with_files_sources_and_facts(&fixture(), &cfg, &files, &sources, &facts).unwrap();
-        assert_eq!(findings.len(), 2, "{findings:#?}");
+        check_with_files_sources_and_facts(&fixture(), &cfg, &files, &sources, &facts).unwrap();
         let verdicts = facts.sql_verdicts();
         assert_eq!(
             verdicts
@@ -117,23 +107,4 @@ fn verdicts_distinguish_non_uuid_unknown_and_definite_transformed_columns() {
         );
     }
 }
-#[test]
-fn recovered_parameters_inside_casts_and_functions_are_not_columns() {
-    let root = fixture();
-    let files = [
-        root.join("parameter-functions.ts"),
-        root.join("schema.json"),
-    ];
-    let cfg = config("trustedSqlTags: [{module: db, name: sql}]\n");
-    assert!(check_with_files(&root, &cfg, &files).unwrap().is_empty());
-}
-#[test]
-fn values_and_parenthesized_query_bodies_still_visit_inner_predicates() {
-    let root = fixture();
-    let files = [root.join("values.sql"), root.join("schema.json")];
-    let findings = check_with_files(&root, &config(""), &files).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].line, 2);
-}
-
 mod helper_recovery;

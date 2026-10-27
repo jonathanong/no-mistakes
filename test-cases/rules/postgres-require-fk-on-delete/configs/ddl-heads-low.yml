@@ -1,0 +1,8 @@
+version: 2
+effort: low
+unanalyzable: report
+rules:
+  - rule: postgres-require-fk-on-delete
+    scope: repository
+    options:
+      sqlInclude: [migrations/branch-bodies.sql, migrations/copy-before-head.sql, migrations/group-rewrite-heads.sql, migrations/malformed-openers.sql, migrations/radix-heads.sql, migrations/rewrite-heads.sql]

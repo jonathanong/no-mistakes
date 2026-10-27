@@ -1,0 +1,7 @@
+version: 2
+effort: low
+rules:
+  - rule: postgres-identifier-length
+    scope: repository
+    options:
+      sqlInclude: [migrations/001.sql]

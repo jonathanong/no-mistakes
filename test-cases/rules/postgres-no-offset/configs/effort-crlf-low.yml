@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ['src/crlf.ts']
+      importSpecifier: '@example/db'
+      executorNames: [query]
+effort: low

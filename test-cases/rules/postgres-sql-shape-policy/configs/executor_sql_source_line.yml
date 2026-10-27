@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [src/jobs.ts]
+    options:
+      include: [src/jobs.ts]
+      bannedShapes: [literal-limit, keyset-only-sweep]
+      importSpecifier: "@example/db"

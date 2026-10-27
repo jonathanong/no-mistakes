@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [src/query.ts]
+    options:
+      bannedShapes: [count-for-existence]
+      importSpecifier: "@example/db"

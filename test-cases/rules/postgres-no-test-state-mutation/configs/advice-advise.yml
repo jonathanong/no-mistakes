@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    name: test-database
+    include:
+      - tests/variants.test.ts
+      - tests/dynamic.test.ts
+      - tests/malformed.test.ts
+    options:
+      testGlobs: ["tests/**/*.test.ts"]
+      importSpecifier: "@example/db"
+      unanalyzableSql: advise

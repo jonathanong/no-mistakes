@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [src/builders.ts]
+    options:
+      unanalyzableSql: ignore
+      importSpecifier: "@example/db"

@@ -1,4 +1,6 @@
-use super::{export_is_unbounded, identifier_finding, RULE_ID};
+use super::{export_is_unbounded, identifier_finding};
+
+// Output cases moved to cli_postgres_snapshot_no_unbounded_sql_identifier.
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::extract::{
     ExportedBinding, ImportedBinding, ImportedBindingKind,
@@ -10,69 +12,6 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-
-fn root(scenario: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture")
-        .join(scenario)
-}
-
-fn findings(scenario: &str) -> Vec<crate::codebase::rules::RuleFinding> {
-    let fixture = root(scenario);
-    let config = crate::config::v2::load_v2_config(&fixture, None).unwrap();
-    // A passing control must exercise an enabled application, not an empty run.
-    assert!(
-        config.rule_configured(RULE_ID),
-        "inactive fixture: {scenario}"
-    );
-    crate::codebase::rules::run_check(&fixture, None, None)
-        .unwrap()
-        .into_iter()
-        .filter(|finding| finding.rule == RULE_ID)
-        .collect()
-}
-
-#[test]
-fn env_imported_config_and_type_assertions_are_unbounded() {
-    for scenario in [
-        "fail-env",
-        "fail-imported-config",
-        "fail-type-assertion",
-        "fail-identity-wrapper",
-        "fail-to-lowercase",
-        "fail-bracket-env",
-        "fail-imported-env",
-        "fail-imported-process",
-        "fail-request-params",
-        "fail-db-rows",
-    ] {
-        let found = findings(scenario);
-        assert!(
-            found
-                .iter()
-                .any(|finding| finding.file.ends_with("query.ts")
-                    && finding.message.contains("finite-domain validator")),
-            "{scenario}: {found:#?}"
-        );
-    }
-}
-
-#[test]
-fn switch_bind_http_and_suppression_stay_silent() {
-    for scenario in [
-        "pass-switch",
-        "pass-bind-value",
-        "pass-http-query",
-        "pass-suppressed",
-        "pass-imported-literal",
-    ] {
-        assert!(
-            findings(scenario).is_empty(),
-            "{scenario}: {:#?}",
-            findings(scenario)
-        );
-    }
-}
 
 #[test]
 fn imported_config_without_prepared_producer_facts_is_not_unbounded() {
@@ -189,6 +128,3 @@ fn shadowed_process_and_unbounded_namespace_members_are_classified() {
     )
     .is_none());
 }
-
-#[path = "recall_shapes_tests.rs"]
-mod recall_shapes;

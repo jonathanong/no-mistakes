@@ -1,6 +1,10 @@
 use super::*;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 
+// Output cases also recorded in cli_postgres_snapshot_undeclared_executors.
+// These tests stay: verdict ledgers, isolated counts beside annotation
+// findings, null importSpecifier, empty facts, and invalid options.
+
 const RULE: &str = "postgres-require-query-annotation";
 
 fn inputs(policy: &str) -> (PathBuf, NoMistakesConfig, Vec<PathBuf>) {

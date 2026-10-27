@@ -1,3 +1,4 @@
+// Output cases moved to cli_postgres_snapshot_required_predicates.
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -5,8 +6,6 @@ use crate::config::v2::{
 };
 use std::path::PathBuf;
 
-// Each fixture isolates one trigger of the reported anchoring bug; the FROM
-// line is always later than the call and template start.
 fn run(file: &str, suppress: bool) -> Vec<RuleFinding> {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -31,32 +30,6 @@ fn run(file: &str, suppress: bool) -> Vec<RuleFinding> {
         super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
     }
     findings
-}
-
-fn assert_lines(file: &str, line: usize) {
-    let findings = run(file, false);
-    assert_eq!(findings.len(), 2, "{findings:?}");
-    assert!(findings.iter().all(|f| f.line == line), "{findings:?}");
-}
-
-#[test]
-fn generic_argument_only() {
-    assert_lines("src/generic-only.ts", 9);
-}
-
-#[test]
-fn leading_comment_only() {
-    assert_lines("src/comment-only.ts", 6);
-}
-
-#[test]
-fn typed_parameter_executor_only() {
-    assert_lines("src/typed-param-only.ts", 6);
-}
-
-#[test]
-fn all_triggers_combined() {
-    assert_lines("src/combined.ts", 9);
 }
 
 #[test]

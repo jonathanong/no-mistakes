@@ -1,0 +1,1890 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "abort_chain": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "bare_orders.computed",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `bare_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "transaction_orders.computed",
+          "line": 4,
+          "message": "writes.sql:4: do not write generated column `transaction_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "alter_added_generated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.new_gen",
+          "line": 2,
+          "message": "writes.sql:2: do not write generated column `orders.new_gen`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "new_gen"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.old_gen",
+          "line": 2,
+          "message": "writes.sql:2: do not write generated column `orders.old_gen`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "old_gen"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "alter_columns_not_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.created_at",
+          "line": 2,
+          "message": "writes.sql:2: do not write generated column `orders.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 1,
+          "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 2,
+          "message": "writes.sql:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "alter_external": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "external.sql",
+          "import": "external_orders.updated_at",
+          "line": 1,
+          "message": "external.sql:1: do not write trigger-maintained column `external_orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "both_column_kinds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "write.ts",
+          "import": "orders.created_at",
+          "line": 2,
+          "message": "write.ts:2: do not write generated column `orders.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "write.ts",
+          "import": "orders.updated_at",
+          "line": 2,
+          "message": "write.ts:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.created_at",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 1,
+          "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "chr_encoded_updates": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "write.ts",
+          "import": "items.created_at",
+          "line": 5,
+          "message": "write.ts:5: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "conditional_alter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "conditional_assignment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "configured_identities": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "\"public.orders\".computed",
+          "line": 10,
+          "message": "writes.sql:10: do not write generated column `\"public.orders\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "external_orders.computed",
+          "line": 9,
+          "message": "writes.sql:9: do not write generated column `external_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "outside.external_orders.computed",
+          "line": 11,
+          "message": "writes.sql:11: do not write generated column `outside.external_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "pg_temp.orders.computed",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `pg_temp.orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "pg_temp.orders.computed",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `pg_temp.orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "public.orders.computed",
+          "line": 2,
+          "message": "writes.sql:2: do not write generated column `public.orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "public.orders.id",
+          "line": 4,
+          "message": "writes.sql:4: do not write generated column `public.orders.id`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "id"
+        },
+        {
+          "file": "writes.sql",
+          "import": "unique_orders.computed",
+          "line": 7,
+          "message": "writes.sql:7: do not write generated column `unique_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "unique_orders.computed",
+          "line": 8,
+          "message": "writes.sql:8: do not write generated column `unique_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "create_if_not_exists": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.total",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.total`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "total"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ctas_order": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom_executor_bindings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "write.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "write.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "do_writes_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 7,
+          "message": "writes.sql:7: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 8,
+          "message": "writes.sql:8: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dollar_identifiers_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 2,
+          "message": "writes.sql:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 6,
+          "message": "writes.sql:6: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 7,
+          "message": "writes.sql:7: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 8,
+          "message": "writes.sql:8: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "line": 5,
+          "message": "writes.sql:5: SQL statement `SELECT café$tag$bar, foo$$bar, $1$not_a_quote FROM other_table` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "SELECT café$tag$bar, foo$$bar, $1$not_a_quote FROM other_table"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dormant_conditional_ddl": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "execution-writes.sql",
+          "import": "orders.computed",
+          "line": 1,
+          "message": "execution-writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dormant_only_events": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_empty_executors": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_recreation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 1,
+          "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "other_orders.updated_at",
+          "line": 2,
+          "message": "writes.sql:2: do not write trigger-maintained column `other_orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "each_dml_shape": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail-insert-cols.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "fail-insert-cols.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "fail-insert-columnless.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "fail-insert-columnless.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "fail-merge.sql",
+          "import": "items.created_at",
+          "line": 1,
+          "message": "fail-merge.sql:1: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "fail-update.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "fail-update.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "fail-upsert.ts",
+          "import": "items.created_at",
+          "line": 5,
+          "message": "fail-upsert.ts:5: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_executor_names": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exception_handlers": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "extra_generated_columns_absent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "write.ts",
+          "import": "votes.created_at",
+          "line": 4,
+          "message": "write.ts:4: do not write generated column `votes.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "format_identities": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "dynamic_identifier.computed",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `dynamic_identifier.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "dynamic_value.computed",
+          "line": 2,
+          "message": "writes.sql:2: do not write generated column `dynamic_value.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "literal_format.escaped_percent",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `literal_format.escaped_percent`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "escaped_percent"
+        },
+        {
+          "file": "writes.sql",
+          "import": "literal_format.literal_value",
+          "line": 4,
+          "message": "writes.sql:4: do not write generated column `literal_format.literal_value`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "literal_value"
+        },
+        {
+          "file": "writes.sql",
+          "import": "plain_format.generated",
+          "line": 5,
+          "message": "writes.sql:5: do not write generated column `plain_format.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "generated"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "global_and_local_temp": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "reverse_orders.computed",
+          "line": 2,
+          "message": "writes.sql:2: do not write generated column `reverse_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "if_not_exists": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "items.generated",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `items.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "generated"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.generated",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `items.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "generated"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.updated_at",
+          "line": 2,
+          "message": "writes.sql:2: do not write trigger-maintained column `items.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.updated_at",
+          "line": 3,
+          "message": "writes.sql:3: do not write trigger-maintained column `items.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "other.generated",
+          "line": 4,
+          "message": "writes.sql:4: do not write generated column `other.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "generated"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_schema_markers": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "broken.sql",
+          "line": 1,
+          "message": "broken.sql:1: SQL statement `CREATE TABLE broken (` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "CREATE TABLE broken ("
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "labeled_shadow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.total",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.total`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "total"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "merge_sql_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail-merge.sql",
+          "import": "items.created_at",
+          "line": 1,
+          "message": "fail-merge.sql:1: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "migration_numeric_order": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.generated",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "generated"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "migration_write_history": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "001_create.sql",
+          "import": "t.g",
+          "line": 2,
+          "message": "001_create.sql:2: do not write generated column `t.g`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "g"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_file_skipped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed_unparseable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "write.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "write.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_shadow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.total",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.total`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "total"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "only_fail_update": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail-update.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "fail-update.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "plain_schema": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "qualified_lifecycles": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "public.orders.generated",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `public.orders.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "generated"
+        },
+        {
+          "file": "writes.sql",
+          "import": "public.orders.generated",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `public.orders.generated`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "generated"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_column_alter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "items.Foo",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `items.Foo`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "Foo"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_control_keyword": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_embedded_identities": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "write.ts",
+          "import": "\"ORDERS\".computed",
+          "line": 3,
+          "message": "write.ts:3: do not write generated column `\"ORDERS\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "write.ts",
+          "import": "\"Orders\".computed",
+          "line": 3,
+          "message": "write.ts:3: do not write generated column `\"Orders\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_identity_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "\"Quoted.Name\".computed",
+          "line": 5,
+          "message": "writes.sql:5: do not write generated column `\"Quoted.Name\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "\"has.\"\"quote\".computed",
+          "line": 7,
+          "message": "writes.sql:7: do not write generated column `\"has.\"\"quote\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "raise_exception": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.total",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.total`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "total"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "recreated_generated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.updated_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "recreated_trigger": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 1,
+          "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 2,
+          "message": "writes.sql:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_regression_writes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "\"dotted.orders\".updated_at",
+          "line": 9,
+          "message": "writes.sql:9: do not write trigger-maintained column `\"dotted.orders\".updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "computed_orders.updated_at",
+          "line": 4,
+          "message": "writes.sql:4: do not write generated column `computed_orders.updated_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "computed_orders.updated_at",
+          "line": 5,
+          "message": "writes.sql:5: do not write generated column `computed_orders.updated_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 1,
+          "message": "writes.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 2,
+          "message": "writes.sql:2: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 3,
+          "message": "writes.sql:3: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 6,
+          "message": "writes.sql:6: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 7,
+          "message": "writes.sql:7: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_ddl": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "001_same_line.sql",
+          "import": "t.g",
+          "line": 2,
+          "message": "001_same_line.sql:2: do not write generated column `t.g`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "g"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "schema_without_dml": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_extra_generated_columns": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "<temp>",
+          "import": "items.created_at",
+          "line": 16,
+          "message": "stale extraGeneratedColumns entry: `items.created_at` is already a generated column in schema SQL",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "fail-insert-cols.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "fail-insert-cols.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "fail-insert-columnless.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "fail-insert-columnless.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "fail-merge.sql",
+          "import": "items.created_at",
+          "line": 1,
+          "message": "fail-merge.sql:1: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "fail-update.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "fail-update.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        },
+        {
+          "file": "fail-upsert.ts",
+          "import": "items.created_at",
+          "line": 5,
+          "message": "fail-upsert.ts:5: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "temp_if_not_exists": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "temporary_drop": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 2,
+          "message": "writes.sql:2: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "temporary_shadow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "pg_temp.reverse_orders.computed",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `pg_temp.reverse_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "pg_temp.reverse_orders.computed",
+          "line": 6,
+          "message": "writes.sql:6: do not write generated column `pg_temp.reverse_orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "public.orders.computed",
+          "line": 2,
+          "message": "writes.sql:2: do not write generated column `public.orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "transaction_rollback": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.committed",
+          "line": 4,
+          "message": "writes.sql:4: do not write generated column `orders.committed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "committed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_each_listed_column": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail-both.ts",
+          "import": "orders.modified_at",
+          "line": 4,
+          "message": "fail-both.ts:4: do not write trigger-maintained column `orders.modified_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "modified_at"
+        },
+        {
+          "file": "fail-both.ts",
+          "import": "orders.updated_at",
+          "line": 4,
+          "message": "fail-both.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_empty_list": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "trigger_generated_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail-generated.ts",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "fail-generated.ts:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_invalid_writes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail-clock.ts",
+          "import": "orders.updated_at",
+          "line": 4,
+          "message": "fail-clock.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "fail-insert.ts",
+          "import": "orders.updated_at",
+          "line": 4,
+          "message": "fail-insert.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "fail-merge.sql",
+          "import": "orders.updated_at",
+          "line": 1,
+          "message": "fail-merge.sql:1: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "fail-noop.ts",
+          "import": "orders.updated_at",
+          "line": 4,
+          "message": "fail-noop.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "fail-update.ts",
+          "import": "orders.updated_at",
+          "line": 4,
+          "message": "fail-update.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "fail-upsert.ts",
+          "import": "orders.updated_at",
+          "line": 4,
+          "message": "fail-upsert.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_reads_quiet": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "trigger_stale_entry": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "<temp>",
+          "import": "touched_at",
+          "line": 9,
+          "message": "stale triggerMaintainedColumns entry: `touched_at` matches no column in schema SQL",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "touched_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_suppressions": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "trigger_twice_one_finding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail-twice.ts",
+          "import": "orders.updated_at",
+          "line": 4,
+          "message": "fail-twice.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_upper_config": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail-update.ts",
+          "import": "orders.updated_at",
+          "line": 4,
+          "message": "fail-update.ts:4: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_upper_sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail-upper.sql",
+          "import": "orders.UPDATED_AT",
+          "line": 1,
+          "message": "fail-upper.sql:1: do not write trigger-maintained column `orders.UPDATED_AT`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "UPDATED_AT"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "write.ts",
+          "line": 10,
+          "message": "write.ts:10: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "write.ts",
+          "line": 15,
+          "message": "write.ts:15: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "write.ts",
+          "line": 20,
+          "message": "write.ts:20: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "write.ts",
+          "line": 39,
+          "message": "write.ts:39: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "write.ts",
+          "line": 42,
+          "message": "write.ts:42: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "write.ts",
+          "line": 5,
+          "message": "write.ts:5: executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "write.ts",
+          "line": 34,
+          "message": "directive for `postgres-no-generated-column-writes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-generated-column-writes"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable_ordinary": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "write.ts",
+          "line": 34,
+          "message": "directive for `postgres-no-generated-column-writes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-generated-column-writes"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable_write_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "write.ts",
+          "line": 34,
+          "message": "directive for `postgres-no-generated-column-writes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-generated-column-writes"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unqualified_alter_and_drop": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.computed",
+          "line": 1,
+          "message": "writes.sql:1: do not write generated column `orders.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "pg_temp.shadowed.computed",
+          "line": 7,
+          "message": "writes.sql:7: do not write generated column `pg_temp.shadowed.computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "public.\"odd.name\".computed",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `public.\"odd.name\".computed`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "computed"
+        },
+        {
+          "file": "writes.sql",
+          "import": "public.ambiguous.retained",
+          "line": 6,
+          "message": "writes.sql:6: do not write generated column `public.ambiguous.retained`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "retained"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "uppercase_generated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "upper.sql",
+          "import": "orders.CREATED_AT",
+          "line": 1,
+          "message": "upper.sql:1: do not write generated column `orders.CREATED_AT`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "CREATED_AT"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "write_occurrences_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 3,
+          "message": "writes.sql:3: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "orders.updated_at",
+          "line": 8,
+          "message": "writes.sql:8: do not write trigger-maintained column `orders.updated_at`; it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "updated_at"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

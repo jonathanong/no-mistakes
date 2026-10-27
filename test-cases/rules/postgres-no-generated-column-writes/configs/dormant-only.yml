@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - dormant-only.sql
+      - dormant-writes.sql
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["**/dormant-only.sql"]

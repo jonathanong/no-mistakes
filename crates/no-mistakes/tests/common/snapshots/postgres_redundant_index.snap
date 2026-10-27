@@ -1,0 +1,237 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowed_index": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "concurrent_drop": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom_allow_directive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 7,
+          "message": "events.idx_events__topic_id: redundant index — its columns are a strict prefix of idx_events__topic_id__created_at with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "target": "events.idx_events__topic_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "drop_index_other_schema": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "public.events.idx_events__topic_id: redundant index — its columns are a strict prefix of idx_events__topic_id__created_at with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "target": "public.events.idx_events__topic_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "drop_table": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "earlier_drop_keeps_later_create": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/0002.sql",
+          "line": 1,
+          "message": "events.idx_events__topic_id: redundant index — its columns are a strict prefix of idx_events__topic_id__created_at with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "target": "events.idx_events__topic_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flyway_version_prefix_drop": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "later_drop": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "multiline_create_index": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "numeric_later_drop": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "predicate_string_literals": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "same_line_directive": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema_qualified_tables": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_allowed_index": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "events.idx_never_matched",
+          "line": 1,
+          "message": "stale postgres-redundant-index allowedIndexes entry: events.idx_never_matched",
+          "rule": "postgres-redundant-index",
+          "target": "events.idx_never_matched"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "strict_prefix_btree": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 7,
+          "message": "events.idx_events__topic_id: redundant index — its columns are a strict prefix of idx_events__topic_id__created_at with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "target": "events.idx_events__topic_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unique_shorter_index": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -4,21 +4,7 @@ use crate::codebase::check_facts::{
 };
 use std::sync::Arc;
 
-#[test]
-fn prepared_custom_executor_profiles_canonicalize_order_and_duplicates() {
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-sql-shape-policy/fixture/prepared");
-    let config = config_yaml("importSpecifier: '@custom/database'\nexecutorNames: [last, first, last]\nbannedShapes: [not-in-subquery]");
-    let findings =
-        check_with_files(&root, &config, &[root.join("src/custom-executors.ts")]).unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.line)
-            .collect::<Vec<_>>(),
-        [2, 3]
-    );
-}
+// Output cases moved to cli_postgres_snapshot_sql_shape_policy.
 
 #[test]
 fn missing_prepared_projections_and_bad_sql_globs_report_errors() {

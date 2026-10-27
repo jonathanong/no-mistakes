@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [src/fragments.mts]
+    options:
+      include: [src/fragments.mts]
+      bannedShapes: [keyset-only-sweep]
+      importSpecifier: "@example/db"

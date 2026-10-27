@@ -1,0 +1,9 @@
+version: 2
+effort: low
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      sqlInclude: [migrations/001.sql]
+      executorNames: []
+      bannedStatements: []

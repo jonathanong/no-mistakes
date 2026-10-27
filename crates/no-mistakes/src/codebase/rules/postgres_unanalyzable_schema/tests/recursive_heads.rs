@@ -55,35 +55,12 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
             direct
         );
         let output = diagnostics(&root, &config, &files, &facts).unwrap();
-        for rule_id in RULE_IDS {
-            // Body failures, including rejected guarded actions, advise by default.
-            // Malformed top-level recursive heads still fail.
-            for (items, body) in [(&output.findings, false), (&output.advisories, true)] {
-                let findings = items
-                    .iter()
-                    .filter(|finding| finding.rule == *rule_id)
-                    .collect::<Vec<_>>();
-                let expected = expected
-                    .iter()
-                    .filter(|(line, _, _)| [9, 23, 25].contains(line) == body)
-                    .collect::<Vec<_>>();
-                assert_eq!(
-                    findings.len(),
-                    expected.len(),
-                    "{config_name} {rule_id}: {findings:?}"
-                );
-                for (finding, (line, _, head)) in findings.into_iter().zip(expected) {
-                    assert_eq!(finding.line, *line);
-                    assert_eq!(finding.target.as_deref(), Some(*head));
-                    assert!(
-                        finding
-                            .message
-                            .contains(&format!("SQL statement `{head}` could not be analyzed")),
-                        "{finding:?}"
-                    );
-                }
-            }
-        }
+        // Per-rule messages and lines are in the snapshot. Line 18 exists
+        // before suppression and is removed only for postgres-fk-index.
+        assert!(output
+            .findings
+            .iter()
+            .any(|finding| { finding.rule == "postgres-fk-index" && finding.line == 18 }));
         let mut findings = output.findings;
         suppress_rule_findings_with_sources(&root, &mut findings, &source_store_for_files(&files));
         assert_eq!(findings.len(), RULE_IDS.len() * (expected.len() - 3) - 1);

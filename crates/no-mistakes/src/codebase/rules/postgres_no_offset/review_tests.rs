@@ -1,36 +1,8 @@
 use super::tests::{config_with_options, fixture};
 use super::*;
 
-#[test]
-fn same_file_helper_alias_appends_report_original_clause_lines() {
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/postgres-facts/embedded");
-    let path = root.join("composed-helper-alias.ts");
-    let findings = check_with_files(&root, &config_with_options("{}"), &[path]).unwrap();
-    assert_eq!(
-        findings.iter().map(|f| f.line).collect::<Vec<_>>(),
-        [7, 14, 22, 36, 51, 53],
-        "{findings:#?}"
-    );
-    assert_eq!(
-        findings
-            .iter()
-            .map(|f| f.target.as_deref())
-            .collect::<Vec<_>>(),
-        [
-            Some("offset"),
-            Some("offset#2"),
-            Some("offset#3"),
-            // `branched(true)` decides the helper's `if`, so its OFFSET is real.
-            Some("offset#4"),
-            Some("unanalyzable"),
-            Some("unanalyzable"),
-        ]
-    );
-    assert!(findings
-        .iter()
-        .all(|f| f.file == "composed-helper-alias.ts"));
-}
+// Output cases moved to cli_postgres_snapshot_no_offset. Keep the private offset
+// classification and the pre-suppression lines below.
 
 #[test]
 fn non_analyzing_explain_does_not_execute_the_offset_query() {
@@ -45,36 +17,6 @@ fn non_analyzing_explain_does_not_execute_the_offset_query() {
             (5, crate::codebase::postgres::OffsetUse::Other),
             (7, crate::codebase::postgres::OffsetUse::Other),
         ]
-    );
-    let findings = check_with_files(
-        &root,
-        &config_with_options("sqlInclude: ['*.sql']"),
-        &[path],
-    )
-    .unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.line)
-            .collect::<Vec<_>>(),
-        [3, 4, 5, 7]
-    );
-}
-
-#[test]
-fn custom_executor_lookup_canonicalizes_duplicate_unsorted_names() {
-    let root = fixture("review-followups");
-    let config = config_with_options(
-        "importSpecifier: '@custom/database'\nexecutorNames: [last, first, last]",
-    );
-    let path = root.join("src/custom-executors.ts");
-    let findings = check_with_files(&root, &config, &[path]).unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.line)
-            .collect::<Vec<_>>(),
-        [2, 3]
     );
 }
 

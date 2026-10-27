@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-object-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      deniedTokens:
+        - token: ses
+          replacement: ses_amazon_ses

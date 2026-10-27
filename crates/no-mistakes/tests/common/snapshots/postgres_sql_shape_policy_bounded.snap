@@ -1,0 +1,1558 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "cast_context_keysets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 2,
+          "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 3,
+          "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 4,
+          "message": "sql/pages.sql:4: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 5,
+          "message": "sql/pages.sql:5: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 6,
+          "message": "sql/pages.sql:6: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 7,
+          "message": "sql/pages.sql:7: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 8,
+          "message": "sql/pages.sql:8: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 9,
+          "message": "sql/pages.sql:9: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "conflict_assignment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/conflict-assignment.sql",
+          "line": 3,
+          "message": "sql/conflict-assignment.sql:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/conflict-assignment.sql",
+          "line": 4,
+          "message": "sql/conflict-assignment.sql:4: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "conflict_update_where": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/on-conflict-where.sql",
+          "line": 3,
+          "message": "sql/on-conflict-where.sql:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/on-conflict-where.sql",
+          "line": 5,
+          "message": "sql/on-conflict-where.sql:5: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "count_for_existence_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/count.sql",
+          "line": 1,
+          "message": "sql/count.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "count_may_return_no_rows_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "default_shapes_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "directional_keysets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 10,
+          "message": "sql/pages.sql:10: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 11,
+          "message": "sql/pages.sql:11: walks every row of accounts in a order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 2,
+          "message": "sql/pages.sql:2: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 3,
+          "message": "sql/pages.sql:3: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 4,
+          "message": "sql/pages.sql:4: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 5,
+          "message": "sql/pages.sql:5: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 6,
+          "message": "sql/pages.sql:6: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 7,
+          "message": "sql/pages.sql:7: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 8,
+          "message": "sql/pages.sql:8: walks every row of accounts in a, b, c order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 9,
+          "message": "sql/pages.sql:9: walks every row of accounts in a, b order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "distinct_grouping_counts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/distinct-grouping.sql",
+          "line": 1,
+          "message": "sql/distinct-grouping.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/distinct-grouping.sql",
+          "line": 2,
+          "message": "sql/distinct-grouping.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/distinct-grouping.sql",
+          "line": 3,
+          "message": "sql/distinct-grouping.sql:3: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/distinct-grouping.sql",
+          "line": 5,
+          "message": "sql/distinct-grouping.sql:5: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_shape_locations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_grouping_sets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/empty-grouping.sql",
+          "line": 10,
+          "message": "sql/empty-grouping.sql:10: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/empty-grouping.sql",
+          "line": 2,
+          "message": "sql/empty-grouping.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/empty-grouping.sql",
+          "line": 3,
+          "message": "sql/empty-grouping.sql:3: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/empty-grouping.sql",
+          "line": 6,
+          "message": "sql/empty-grouping.sql:6: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exists_continuation_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/exists-continuation.ts",
+          "line": 4,
+          "message": "src/exists-continuation.ts:4: do not wrap a set operation in a correlated EXISTS",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exists_shape_disabled_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "identical_shapes_one_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/same-line.sql",
+          "line": 1,
+          "message": "sql/same-line.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "interpolation_start_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lenient_locations_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lenient-locations.sql",
+          "line": 4,
+          "message": "sql/lenient-locations.sql:4: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "merge_action": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/merge-action.sql",
+          "line": 10,
+          "message": "sql/merge-action.sql:10: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/merge-action.sql",
+          "line": 5,
+          "message": "sql/merge-action.sql:5: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "merge_shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/merge.sql",
+          "line": 2,
+          "message": "sql/merge.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/merge.sql",
+          "line": 3,
+          "message": "sql/merge.sql:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/merge.sql",
+          "line": 4,
+          "message": "sql/merge.sql:4: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/merge.sql",
+          "line": 5,
+          "message": "sql/merge.sql:5: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/merge.sql",
+          "line": 6,
+          "message": "sql/merge.sql:6: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/merge.sql",
+          "line": 8,
+          "message": "sql/merge.sql:8: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "merge_table_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/merge-table-function.sql",
+          "line": 2,
+          "message": "sql/merge-table-function.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/merge-table-function.sql",
+          "line": 7,
+          "message": "sql/merge-table-function.sql:7: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "merge_with_cte": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/merge-with.sql",
+          "line": 1,
+          "message": "sql/merge-with.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/merge-with.sql",
+          "line": 4,
+          "message": "sql/merge-with.sql:4: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "negated_count_existence": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/negated-count.sql",
+          "line": 1,
+          "message": "sql/negated-count.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/negated-count.sql",
+          "line": 2,
+          "message": "sql/negated-count.sql:2: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/negated-count.sql",
+          "line": 3,
+          "message": "sql/negated-count.sql:3: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/negated-count.sql",
+          "line": 5,
+          "message": "sql/negated-count.sql:5: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "negated_keyset_pages": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 2,
+          "message": "sql/pages.sql:2: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 3,
+          "message": "sql/pages.sql:3: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 4,
+          "message": "sql/pages.sql:4: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 5,
+          "message": "sql/pages.sql:5: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 6,
+          "message": "sql/pages.sql:6: walks every row of accounts in id, created_at order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "negated_keyset_parity": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/parity.sql",
+          "line": 2,
+          "message": "sql/parity.sql:2: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/parity.sql",
+          "line": 3,
+          "message": "sql/parity.sql:3: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/parity.sql",
+          "line": 5,
+          "message": "sql/parity.sql:5: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/parity.sql",
+          "line": 6,
+          "message": "sql/parity.sql:6: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "not_in_subquery_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/not-in.sql",
+          "line": 1,
+          "message": "sql/not-in.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nullable_count_clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "offset_fetch_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/offset-fetch.sql",
+          "line": 15,
+          "message": "sql/offset-fetch.sql:15: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/offset-fetch.sql",
+          "line": 20,
+          "message": "sql/offset-fetch.sql:20: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/offset-fetch.sql",
+          "line": 28,
+          "message": "sql/offset-fetch.sql:28: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/offset-fetch.sql",
+          "line": 30,
+          "message": "sql/offset-fetch.sql:30: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/offset-fetch.sql",
+          "line": 34,
+          "message": "sql/offset-fetch.sql:34: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/offset-fetch.sql",
+          "line": 5,
+          "message": "sql/offset-fetch.sql:5: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/offset-fetch.sql",
+          "line": 7,
+          "message": "sql/offset-fetch.sql:7: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass_shapes_base": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_shapes_having": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_shapes_list": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_shapes_plain_count": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_shapes_threshold": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "predicate_escaping": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 11,
+          "message": "sql/001.sql:11: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 5,
+          "message": "sql/001.sql:5: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 8,
+          "message": "sql/001.sql:8: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "predicate_normalization": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/002.sql",
+          "line": 10,
+          "message": "sql/002.sql:10: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/002.sql",
+          "line": 2,
+          "message": "sql/002.sql:2: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/002.sql",
+          "line": 4,
+          "message": "sql/002.sql:4: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/002.sql",
+          "line": 6,
+          "message": "sql/002.sql:6: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/002.sql",
+          "line": 8,
+          "message": "sql/002.sql:8: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_lowercase_count": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/quoted-count.sql",
+          "line": 1,
+          "message": "sql/quoted-count.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/quoted-count.sql",
+          "line": 2,
+          "message": "sql/quoted-count.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/quoted-count.sql",
+          "line": 3,
+          "message": "sql/quoted-count.sql:3: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_casts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/casts.sql",
+          "line": 1,
+          "message": "sql/casts.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/casts.sql",
+          "line": 2,
+          "message": "sql/casts.sql:2: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_comments": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/comments.sql",
+          "line": 2,
+          "message": "sql/comments.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_count_edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/count-edges.sql",
+          "line": 1,
+          "message": "sql/count-edges.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/count-edges.sql",
+          "line": 3,
+          "message": "sql/count-edges.sql:3: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "correlated-exists-set-operation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_cte": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/cte.sql",
+          "line": 1,
+          "message": "sql/cte.sql:1: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/cte.sql",
+          "line": 2,
+          "message": "sql/cte.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_filter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/filter.sql",
+          "line": 2,
+          "message": "sql/filter.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_having": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/having.sql",
+          "line": 3,
+          "message": "sql/having.sql:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/having.sql",
+          "line": 4,
+          "message": "sql/having.sql:4: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_mutations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/mutations.sql",
+          "line": 2,
+          "message": "sql/mutations.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/mutations.sql",
+          "line": 4,
+          "message": "sql/mutations.sql:4: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_not_count": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "review_operators": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/operators.sql",
+          "line": 2,
+          "message": "sql/operators.sql:2: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/operators.sql",
+          "line": 4,
+          "message": "sql/operators.sql:4: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_polarity": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/polarity.sql",
+          "line": 1,
+          "message": "sql/polarity.sql:1: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/polarity.sql",
+          "line": 2,
+          "message": "sql/polarity.sql:2: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/polarity.sql",
+          "line": 3,
+          "message": "sql/polarity.sql:3: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/polarity.sql",
+          "line": 4,
+          "message": "sql/polarity.sql:4: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/polarity.sql",
+          "line": 5,
+          "message": "sql/polarity.sql:5: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "sql/polarity.sql",
+          "line": 6,
+          "message": "sql/polarity.sql:6: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_repeated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/repeated.sql",
+          "line": 2,
+          "message": "sql/repeated.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/repeated.sql",
+          "line": 4,
+          "message": "sql/repeated.sql:4: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_suppress_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "review_unicode": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/unicode.sql",
+          "line": 2,
+          "message": "sql/unicode.sql:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "sql/unicode.sql",
+          "line": 3,
+          "message": "sql/unicode.sql:3: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "select_all_keyset_pages": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 2,
+          "message": "sql/pages.sql:2: walks every row of orders in account_id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 3,
+          "message": "sql/pages.sql:3: walks every row of orders in account_id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 6,
+          "message": "sql/pages.sql:6: walks every row of orders in account_id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 7,
+          "message": "sql/pages.sql:7: walks every row of orders in account_id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "semantic_zero_pages": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/pages.sql",
+          "line": 23,
+          "message": "sql/pages.sql:23: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 24,
+          "message": "sql/pages.sql:24: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 25,
+          "message": "sql/pages.sql:25: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 26,
+          "message": "sql/pages.sql:26: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 29,
+          "message": "sql/pages.sql:29: LIMIT 0 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 0 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 31,
+          "message": "sql/pages.sql:31: walks every row of accounts in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"accounts\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/pages.sql",
+          "line": 6,
+          "message": "sql/pages.sql:6: LIMIT 0 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 0 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "source_map_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/source-map.ts",
+          "line": 10,
+          "message": "src/source-map.ts:10: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "src/source-map.ts",
+          "line": 2,
+          "message": "src/source-map.ts:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "src/source-map.ts",
+          "line": 6,
+          "message": "src/source-map.ts:6: COUNT(*) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        },
+        {
+          "file": "src/source-map.ts",
+          "line": 8,
+          "message": "src/source-map.ts:8: COUNT(*) compared with 0/1 counts every matching row to test absence; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppress_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppress_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppress_next_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "table_fetch_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable_count_for_existence": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: executed SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "count-for-existence"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_not_in_subquery": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: executed SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

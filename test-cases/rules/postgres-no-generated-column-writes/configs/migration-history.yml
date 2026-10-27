@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - 001_create.sql
+      - 002_recreate.sql
+    options:
+      importSpecifier: "@example/db"

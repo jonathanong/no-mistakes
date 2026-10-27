@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [sql/unparseable.sql]
+    options:
+      sqlInclude: [sql/unparseable.sql]
+      executorNames: []

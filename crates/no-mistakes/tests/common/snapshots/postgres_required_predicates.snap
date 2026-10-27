@@ -1,0 +1,1719 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_triggers_combined": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/combined.ts",
+          "line": 9,
+          "message": "src/combined.ts:9: queries against documents must include `deleted_at IS NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        },
+        {
+          "file": "src/combined.ts",
+          "line": 9,
+          "message": "src/combined.ts:9: queries against documents must include `owner_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_reviewed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-required-predicates allow entry: table:missing",
+          "rule": "postgres-required-predicates",
+          "target": "table:missing"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: cannot derive a column from partition key expression date_trunc('day'::text, created_at); add a partitionKeyExemptions entry for events",
+          "rule": "postgres-required-predicates",
+          "target": "table:events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ambiguous_columns": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/fail-ambiguous.sql",
+          "import": "e.account_id",
+          "line": 1,
+          "message": "sql/fail-ambiguous.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "events"
+        },
+        {
+          "file": "sql/fail-ambiguous.sql",
+          "import": "o.account_id",
+          "line": 1,
+          "message": "sql/fail-ambiguous.sql:1: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "combined_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "cte_mutations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/cte-mutations.sql",
+          "import": "orders.account_id",
+          "line": 1,
+          "message": "sql/cte-mutations.sql:1: UPDATE on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "sql/cte-mutations.sql",
+          "import": "orders.account_id",
+          "line": 2,
+          "message": "sql/cte-mutations.sql:2: DELETE on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "sql/cte-mutations.sql",
+          "import": "orders.account_id",
+          "line": 3,
+          "message": "sql/cte-mutations.sql:3: UPDATE on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "sql/cte-mutations.sql",
+          "import": "orders.account_id",
+          "line": 4,
+          "message": "sql/cte-mutations.sql:4: DELETE on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "sql/cte-mutations.sql",
+          "import": "orders.account_id",
+          "line": 5,
+          "message": "sql/cte-mutations.sql:5: INSERT … SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "cte_scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/ctes.sql",
+          "import": "orders.account_id",
+          "line": 2,
+          "message": "sql/ctes.sql:2: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_unrecoverable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_query": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_relations": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "equality_is_null_hint": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/archived-by.sql",
+          "line": 3,
+          "message": "sql/archived-by.sql:3: queries against documents must include `archived_by_id IS NULL`; an equality on `archived_by_id` selects only rows where it is not NULL, which `archived_by_id is null` excludes. If this query intentionally reads those rows, add `requireColumns: [archived_by_id]` instead of `require`, or suppress with `no-mistakes-disable-next-line postgres-required-predicates` and a reason",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "equality_unrelated_no_hint": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/unrelated.sql",
+          "line": 2,
+          "message": "sql/unrelated.sql:2: queries against documents must include `archived_by_id IS NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude_selected_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "expression_exempt": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "expression_partition_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:events: cannot derive a column from partition key expression date_trunc('day'::text, created_at); add a partitionKeyExemptions entry for events",
+          "rule": "postgres-required-predicates",
+          "target": "table:events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_delete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/fail-delete.sql",
+          "import": "orders.account_id",
+          "line": 1,
+          "message": "sql/fail-delete.sql:1: DELETE on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/fail-insert.sql",
+          "import": "events.account_id",
+          "line": 1,
+          "message": "sql/fail-insert.sql:1: INSERT … SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_join": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/fail-join.sql",
+          "import": "e.account_id",
+          "line": 1,
+          "message": "sql/fail-join.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_kind": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/fail-kind.sql",
+          "import": "events.account_id",
+          "line": 1,
+          "message": "sql/fail-kind.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_null": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/fail-null.sql",
+          "import": "events.account_id",
+          "line": 1,
+          "message": "sql/fail-null.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_or": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/fail-or.sql",
+          "import": "events.account_id",
+          "line": 1,
+          "message": "sql/fail-or.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_self": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/fail-self.sql",
+          "import": "o.account_id",
+          "line": 1,
+          "message": "sql/fail-self.sql:1: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "generic_argument_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/generic-only.ts",
+          "line": 9,
+          "message": "src/generic-only.ts:9: queries against documents must include `deleted_at IS NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        },
+        {
+          "file": "src/generic-only.ts",
+          "line": 9,
+          "message": "src/generic-only.ts:9: queries against documents must include `owner_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported_tag_unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/imported-tag.ts",
+          "line": 8,
+          "message": "src/imported-tag.ts:8: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_selected_sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "inner_left_join_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "leading_comment_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/comment-only.ts",
+          "line": 6,
+          "message": "src/comment-only.ts:6: queries against documents must include `deleted_at IS NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        },
+        {
+          "file": "src/comment-only.ts",
+          "line": 6,
+          "message": "src/comment-only.ts:6: queries against documents must include `owner_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "left_join_missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/left-join.sql",
+          "line": 2,
+          "message": "sql/left-join.sql:2: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "left_join_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing_predicate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:missing: partitioned table is missing physicalPartition.key; refresh the schema catalog",
+          "rule": "postgres-required-predicates",
+          "target": "table:missing"
+        },
+        {
+          "file": "sql/mixed.sql",
+          "import": "mixed.account_id",
+          "line": 1,
+          "message": "sql/mixed.sql:1: SELECT reads partitioned table mixed without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "mixed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed_partition_keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:missing: partitioned table is missing physicalPartition.key; refresh the schema catalog",
+          "rule": "postgres-required-predicates",
+          "target": "table:missing"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:mixed: cannot derive a column from partition key expression lower(region), lower(kind); add a partitionKeyExemptions entry for mixed",
+          "rule": "postgres-required-predicates",
+          "target": "table:mixed"
+        },
+        {
+          "file": "sql/mixed.sql",
+          "import": "mixed.account_id",
+          "line": 1,
+          "message": "sql/mixed.sql:1: SELECT reads partitioned table mixed without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "mixed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed_stale_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-required-predicates allow entry: table:absent",
+          "rule": "postgres-required-predicates",
+          "target": "table:absent"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:absent: stale postgres-required-predicates partitionKeyExemptions entry: absent",
+          "rule": "postgres-required-predicates",
+          "target": "table:absent"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:missing: partitioned table is missing physicalPartition.key; refresh the schema catalog",
+          "rule": "postgres-required-predicates",
+          "target": "table:missing"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:mixed: cannot derive a column from partition key expression lower(region), lower(kind); add a partitionKeyExemptions entry for mixed",
+          "rule": "postgres-required-predicates",
+          "target": "table:mixed"
+        },
+        {
+          "file": "sql/mixed.sql",
+          "import": "mixed.account_id",
+          "line": 1,
+          "message": "sql/mixed.sql:1: SELECT reads partitioned table mixed without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "mixed"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "other_module_tag": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/imported-tag-other-module.ts",
+          "line": 7,
+          "message": "src/imported-tag-other-module.ts:7: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "outer_full_join": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/outer-full.sql",
+          "import": "e.account_id",
+          "line": 1,
+          "message": "sql/outer-full.sql:1: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "outer_right_join": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/outer-right.sql",
+          "import": "e.account_id",
+          "line": 1,
+          "message": "sql/outer-right.sql:1: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "partition_keys_off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_any": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_bare": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_between": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_cte": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_eq": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_in": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_join": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_or": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_qualified": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_unknown": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_unqualified": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_update": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "qualified_partitions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/qualified.sql",
+          "import": "archive.events.account_id",
+          "line": 2,
+          "message": "sql/qualified.sql:2: SELECT reads partitioned table archive.events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "archive.events"
+        },
+        {
+          "file": "sql/qualified.sql",
+          "import": "public.events.account_id",
+          "line": 1,
+          "message": "sql/qualified.sql:1: SELECT reads partitioned table public.events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "public.events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "query_expressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/query-expressions.sql",
+          "import": "orders.account_id",
+          "line": 1,
+          "message": "sql/query-expressions.sql:1: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "sql/query-expressions.sql",
+          "import": "orders.account_id",
+          "line": 2,
+          "message": "sql/query-expressions.sql:2: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "sql/query-expressions.sql",
+          "import": "orders.account_id",
+          "line": 3,
+          "message": "sql/query-expressions.sql:3: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "sql/query-expressions.sql",
+          "import": "orders.account_id",
+          "line": 4,
+          "message": "sql/query-expressions.sql:4: INSERT … SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_partition": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/quoted.sql",
+          "import": "quoted.TenantId",
+          "line": 1,
+          "message": "sql/quoted.sql:1: SELECT reads partitioned table quoted without constraining partition key column TenantId; add a predicate on TenantId or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "quoted"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "rebased_query_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries.ts",
+          "import": "orders.account_id",
+          "line": 5,
+          "message": "queries.ts:5: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "queries.ts",
+          "import": "orders.account_id",
+          "line": 7,
+          "message": "queries.ts:7: UPDATE on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "queries.ts",
+          "import": "orders.account_id",
+          "line": 9,
+          "message": "queries.ts:9: DELETE on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "relation_locations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/locations.sql",
+          "import": "orders.account_id",
+          "line": 3,
+          "message": "sql/locations.sql:3: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "required_predicate_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "returning_reads": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/returning.sql",
+          "import": "orders.account_id",
+          "line": 1,
+          "message": "sql/returning.sql:1: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "sql/returning.sql",
+          "import": "orders.account_id",
+          "line": 2,
+          "message": "sql/returning.sql:2: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "self_in_join": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/self-in.sql",
+          "import": "orders.account_id",
+          "line": 1,
+          "message": "sql/self-in.sql:1: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "self_unaliased_join_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_exemption": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:topics: stale postgres-required-predicates partitionKeyExemptions entry: topics",
+          "rule": "postgres-required-predicates",
+          "target": "table:topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "standalone_table_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/standalone-table.sql",
+          "line": 2,
+          "message": "sql/standalone-table.sql:2: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        },
+        {
+          "file": "sql/standalone-table.sql",
+          "line": 3,
+          "message": "sql/standalone-table.sql:3: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppress_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/line.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "sql/next-line.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppress_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/file.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "sql/next-line.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppress_next_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/file.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        },
+        {
+          "file": "sql/line.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "table_set_arms": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/table-left-arm.sql",
+          "line": 1,
+          "message": "sql/table-left-arm.sql:1: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        },
+        {
+          "file": "sql/table-right-arm.sql",
+          "line": 1,
+          "message": "sql/table-right-arm.sql:1: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tag_sibling": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/imported-tag-sibling.ts",
+          "line": 6,
+          "message": "src/imported-tag-sibling.ts:6: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tag_subpath": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/imported-tag-subpath.ts",
+          "line": 8,
+          "message": "src/imported-tag-subpath.ts:8: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tagged_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "tagged_template": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/tagged.ts",
+          "import": "orders.account_id",
+          "line": 17,
+          "message": "src/tagged.ts:17: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        },
+        {
+          "file": "src/tagged.ts",
+          "line": 9,
+          "message": "src/tagged.ts:9: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "textual_require": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "import": "topics.parent_id",
+          "line": 1,
+          "message": "sql/001.sql:1: SELECT on topics does not constrain required column parent_id",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trusted_named_tag": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/imported-tag.ts",
+          "line": 10,
+          "message": "src/imported-tag.ts:10: queries against topics must include `parent_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "topics"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trusted_suppressed_tag": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "typed_parameter_executor": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/typed-param-only.ts",
+          "line": 6,
+          "message": "src/typed-param-only.ts:6: queries against documents must include `deleted_at IS NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        },
+        {
+          "file": "src/typed-param-only.ts",
+          "line": 6,
+          "message": "src/typed-param-only.ts:6: queries against documents must include `owner_id IS NOT NULL`",
+          "rule": "postgres-required-predicates",
+          "target": "documents"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_peer": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/fail-unknown-peer.sql",
+          "import": "e.account_id",
+          "line": 1,
+          "message": "sql/fail-unknown-peer.sql:1: SELECT reads partitioned table events without constraining partition key column account_id; add a predicate on account_id or add a partitionKeyExemptions entry",
+          "rule": "postgres-required-predicates",
+          "target": "events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unparseable_sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-required-predicates` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-required-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/unparseable.sql",
+          "line": 1,
+          "message": "sql/unparseable.sql:1: SQL could not be analyzed for required predicates",
+          "rule": "postgres-required-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "untrusted_imported_tag": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/imported-tag.ts",
+          "line": 8,
+          "message": "src/imported-tag.ts:8: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "untrusted_suppressed_tag": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/imported-tag-suppressed.ts",
+          "line": 7,
+          "message": "src/imported-tag-suppressed.ts:7: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "variant_merged_suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/caller.ts",
+          "line": 5,
+          "message": "src/caller.ts:5: SELECT on accounts does not constrain required column region_id; SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "target": "accounts"
+        },
+        {
+          "file": "src/helper.ts",
+          "import": "accounts.region_id",
+          "line": 2,
+          "message": "src/helper.ts:2: SELECT on accounts does not constrain required column region_id",
+          "rule": "postgres-required-predicates",
+          "target": "accounts"
+        },
+        {
+          "file": "src/helper.ts",
+          "import": "accounts.tenant_id",
+          "line": 2,
+          "message": "src/helper.ts:2: SELECT on accounts does not constrain required column tenant_id",
+          "rule": "postgres-required-predicates",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

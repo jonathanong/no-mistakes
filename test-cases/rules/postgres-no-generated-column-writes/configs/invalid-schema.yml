@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - broken.sql
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["**/broken.sql"]

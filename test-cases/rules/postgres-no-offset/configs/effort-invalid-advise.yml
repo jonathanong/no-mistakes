@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ['src/invalid.ts']
+      sqlInclude: ['db/**/*.sql']
+      importSpecifier: '@example/db'
+      executorNames: [query]
+effort: low
+unanalyzable: advise

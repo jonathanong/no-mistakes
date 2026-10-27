@@ -1,0 +1,223 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "add_column_inside_do_block": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 2,
+          "message": "migrations/001.sql:2: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "target": "posts.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allowed_migration": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allowed_migration_do_block": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "alter_table_add_column": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-no-add-column` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-add-column"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "migrations/001.sql:1: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "target": "posts.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "create_table_and_add_constraint": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disabled_next_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "duplicate_allowed_migrations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "duplicate postgres-no-add-column allowedMigrations entry: migrations/001.sql:posts:status:TEXT:false:'draft'",
+          "rule": "postgres-no-add-column",
+          "target": "migrations/001.sql:posts:status:TEXT:false:'draft'"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_comment_before_add": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 3,
+          "message": "migrations/001.sql:3: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "target": "posts.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass_postgres_regress": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/001.sql",
+          "line": 6,
+          "message": "migrations/001.sql:6: SQL statement `ALTER GROUP regress_priv_group2 ADD USER regress_priv_user2` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-no-add-column",
+          "target": "ALTER GROUP regress_priv_group2 ADD USER regress_priv_user2"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 4,
+          "message": "migrations/001.sql:4: SQL statement `ALTER DOMAIN dcomptype ADD CONSTRAINT c1 CHECK (` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-no-add-column",
+          "target": "ALTER DOMAIN dcomptype ADD CONSTRAINT c1 CHECK ("
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "static_format_shape_and_stale_allowlist": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "stale postgres-no-add-column allowedMigrations entry: migrations/001.sql:posts:status:TEXT:false:'draft'",
+          "rule": "postgres-no-add-column",
+          "target": "migrations/001.sql:posts:status:TEXT:false:'draft'"
+        },
+        {
+          "file": "migrations/001.sql",
+          "line": 2,
+          "message": "migrations/001.sql:2: ALTER TABLE ADD COLUMN does not match an allowedMigrations entry; update the exact path, table, column, type, nullable, and default fields or fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "target": "dynamic_identifier.dynamic_identifier"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unexpected_and_stale_allowed_migrations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "migrations/001.sql:1: ALTER TABLE ADD COLUMN does not match an allowedMigrations entry; update the exact path, table, column, type, nullable, and default fields or fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "target": "posts.status"
+        },
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "stale postgres-no-add-column allowedMigrations entry: migrations/001.sql:posts:status:TEXT:false:'published'",
+          "rule": "postgres-no-add-column",
+          "target": "migrations/001.sql:posts:status:TEXT:false:'published'"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [sql/derived.sql]
+    options:
+      sqlInclude: [sql/derived.sql]
+      executorNames: []

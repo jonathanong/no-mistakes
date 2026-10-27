@@ -2,6 +2,9 @@ use super::tests::{config, fixture};
 use super::*;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::postgres::SqlVerdictStatus;
+
+// Output cases moved to cli_postgres_snapshot_transformed_uuid_predicates.
+// Finding counts are snapshotted; verdict status, spans, and residual reasons stay here.
 fn run(
     name: &str,
     effort: crate::config::v2::Effort,
@@ -47,13 +50,9 @@ fn raw_sql_parse_failures_and_ambiguous_owners_follow_all_policies_at_both_effor
             ("invalid.sql", "invalid-sql"),
             ("ambiguous.sql", "ambiguous-column-owner"),
         ] {
-            let (failures, _) = run(name, effort, "fail");
-            assert_eq!(failures.len(), 1, "{failures:#?}");
-            let (failures, facts) = run(name, effort, "ignore");
-            assert!(failures.is_empty());
+            let (_, facts) = run(name, effort, "ignore");
             assert!(facts.sql_verdicts().is_empty());
-            let (failures, facts) = run(name, effort, "advise");
-            assert!(failures.is_empty());
+            let (_, facts) = run(name, effort, "advise");
             let records = facts.sql_verdicts();
             assert_eq!(records.len(), 1, "{records:#?}");
             assert!(records[0].advisory && records[0].status == SqlVerdictStatus::Abstain);
@@ -69,10 +68,7 @@ fn invalid_embedded_literals_are_never_proven_clear_at_either_effort() {
         crate::config::v2::Effort::Low,
         crate::config::v2::Effort::Max,
     ] {
-        let (findings, _) = run("invalid.ts", effort, "fail");
-        assert!(!findings.is_empty());
-        let (findings, facts) = run("invalid.ts", effort, "advise");
-        assert!(findings.is_empty());
+        let (_, facts) = run("invalid.ts", effort, "advise");
         let verdicts = facts.sql_verdicts();
         assert_eq!(verdicts.len(), 1, "{verdicts:#?}");
         assert_eq!(verdicts[0].status, SqlVerdictStatus::Abstain);

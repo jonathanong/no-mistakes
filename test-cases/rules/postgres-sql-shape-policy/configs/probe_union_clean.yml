@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [sql/probe.sql]
+    options:
+      sqlInclude: [sql/probe.sql]
+      executorNames: []

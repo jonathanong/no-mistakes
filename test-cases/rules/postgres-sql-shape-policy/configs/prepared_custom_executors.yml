@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [src/custom-executors.ts]
+    options:
+      importSpecifier: "@custom/database"
+      executorNames: [last, first, last]
+      bannedShapes: [not-in-subquery]

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorNames: [read]
+      include: ["src/configured-tag.mts"]
+      unanalyzableSql: ignore

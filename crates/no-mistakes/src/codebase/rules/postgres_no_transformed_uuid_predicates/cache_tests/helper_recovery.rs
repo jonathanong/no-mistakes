@@ -1,17 +1,14 @@
 use super::*;
 
+// Output cases moved to cli_postgres_snapshot_transformed_uuid_predicates.
+
 #[test]
 fn escaped_interpolation_stays_unknown_while_literal_helper_sql_is_recovered() {
     let mut cfg = config("unanalyzableSql: advise\n");
     cfg.effort = Some(crate::config::v2::Effort::Low);
     let (cfg, files, sources, mut facts) = prepare("low-inputs.ts", cfg);
     facts.enable_sql_verdicts();
-    let findings =
-        check_with_files_sources_and_facts(&fixture(), &cfg, &files, &sources, &facts).unwrap();
-    // The local helper returns literal SQL, so its physical line is now provable.
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].line, 5, "{findings:#?}");
-    assert_eq!(findings[0].target.as_deref(), Some("accounts.id"));
+    check_with_files_sources_and_facts(&fixture(), &cfg, &files, &sources, &facts).unwrap();
     let verdicts = facts.sql_verdicts();
     assert_eq!(verdicts.len(), 4, "{verdicts:#?}");
     assert_eq!(
@@ -35,33 +32,6 @@ fn escaped_interpolation_stays_unknown_while_literal_helper_sql_is_recovered() {
             .count(),
         1
     );
-    let mut fail = cfg.clone();
-    fail.rules[0].resolved_analysis = None;
-    fail.rules[0]
-        .options
-        .as_mapping_mut()
-        .unwrap()
-        .insert("unanalyzableSql".into(), "fail".into());
-    let findings = check_with_files(&fixture(), &fail, &files).unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.line)
-            .collect::<Vec<_>>(),
-        [2, 4, 5],
-        "{findings:#?}"
-    );
-    assert_eq!(
-        findings
-            .iter()
-            .filter(|finding| finding.target.as_deref() == Some("unanalyzable"))
-            .count(),
-        2,
-        "{findings:#?}"
-    );
-    assert!(findings
-        .iter()
-        .any(|finding| { finding.line == 5 && finding.target.as_deref() == Some("accounts.id") }));
 }
 #[test]
 fn low_owner_uncertainty_produces_advice_without_enabling_all_verdicts() {

@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - schema.sql
+      - fail-update.ts
+      - fail-clock.ts
+      - fail-insert.ts
+      - fail-upsert.ts
+      - fail-noop.ts
+      - fail-merge.sql
+    options:
+      importSpecifier: "@example/db"
+      triggerMaintainedColumns: [updated_at]

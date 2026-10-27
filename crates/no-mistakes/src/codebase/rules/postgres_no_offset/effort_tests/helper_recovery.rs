@@ -1,22 +1,6 @@
 use super::*;
 
-#[test]
-fn saved_effort_configs_keep_max_default_and_definite_subset() {
-    let max = run(".no-mistakes.max.yml");
-    assert_eq!(max, run(".no-mistakes.yml"));
-    let low = run(".no-mistakes.low.yml");
-    let ignore = run(".no-mistakes.low-ignore.yml");
-    assert!(
-        ignore.iter().all(|finding| max.contains(finding)),
-        "low={ignore:#?}, max={max:#?}"
-    );
-    assert!(max.len() >= low.len(), "low={low:#?}, max={max:#?}");
-    // The same-file helper now has a complete literal SQL proof at low effort.
-    assert_eq!(ignore.len(), 6, "{ignore:#?}");
-    assert!(ignore
-        .iter()
-        .any(|finding| finding.file == "src/query.ts" && finding.line == 8));
-}
+// Output cases moved to cli_postgres_snapshot_no_offset.
 
 #[test]
 fn verdicts_and_advisories_preserve_low_demand_and_call_spans() {

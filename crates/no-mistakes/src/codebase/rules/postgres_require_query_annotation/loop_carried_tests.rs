@@ -1,3 +1,4 @@
+// Output cases moved to cli_postgres_snapshot_require_query_annotation.
 use super::*;
 use crate::codebase::postgres::SqlVerdictStatus;
 
@@ -53,15 +54,10 @@ fn loop_carried_literal_missing_heads_reach_both_efforts() {
                 Some(&1)
             );
             facts.enable_sql_verdicts();
-            let findings =
+            let _findings =
                 check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts)
                     .unwrap();
             for line in &expected {
-                assert!(
-                    findings.iter().any(|finding| finding.line == *line
-                        && finding.message.contains("query execution must start")),
-                    "{effort:?} {mode}: {findings:?}"
-                );
                 let verdicts = facts.sql_verdicts();
                 let verdict = verdicts
                     .iter()
@@ -75,18 +71,6 @@ fn loop_carried_literal_missing_heads_reach_both_efforts() {
                     .unwrap();
                 assert_eq!(verdict.status, SqlVerdictStatus::Violation);
                 assert!(!verdict.advisory);
-            }
-            // Low conservatively aggregates syntactic writes. Max's new witness
-            // must not turn reset/exit/shadow controls into definite violations.
-            if effort == crate::config::v2::Effort::Max {
-                assert_eq!(
-                    findings
-                        .iter()
-                        .filter(|finding| finding.message.contains("query execution must start"))
-                        .map(|finding| finding.line)
-                        .collect::<Vec<_>>(),
-                    expected
-                );
             }
         }
     }
@@ -140,25 +124,4 @@ fn loop_carried_findings_keep_executor_suppression_locations() {
     assert_eq!(findings.len(), 3, "{findings:?}");
     super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
     assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn loop_tag_trust_uses_the_selected_annotation_profile() {
-    let root = super::tests::fixture("loop-carried-reassignment");
-    for (file, extra, expected) in [
-        ("untrusted", "", 0),
-        ("configured-tag", "", 0),
-        (
-            "configured-tag",
-            "\ntrustedSqlTags: [{module: '@custom/sql', name: statement}]",
-            1,
-        ),
-    ] {
-        let files = [root.join(format!("src/{file}.mts"))];
-        let config = super::tests::config_with_options(&format!(
-            "importSpecifier: '@example/db'\nexecutorNames: [read]\nunanalyzableSql: ignore{extra}"
-        ));
-        let findings = check_with_files(&root, &config, &files).unwrap();
-        assert_eq!(findings.len(), expected, "{file} {extra}: {findings:?}");
-    }
 }

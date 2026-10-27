@@ -1,3 +1,4 @@
+// Output cases moved to cli_postgres_snapshot_required_predicates.
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -5,8 +6,6 @@ use crate::config::v2::{
 };
 use std::path::PathBuf;
 
-// Saved fixtures: multi-line `sql`-tagged templates whose FROM is on a later
-// line than the call and template start.
 fn run(file: &str, suppress: bool) -> Vec<RuleFinding> {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -34,32 +33,8 @@ fn run(file: &str, suppress: bool) -> Vec<RuleFinding> {
 }
 
 #[test]
-fn tagged_template_findings_anchor_at_the_relation_line() {
-    let findings = run("src/tagged.ts", false);
-    let lines: Vec<_> = findings
-        .iter()
-        .map(|f| (f.target.clone(), f.line))
-        .collect();
-    assert_eq!(
-        lines,
-        [(Some("topics".into()), 9), (Some("orders".into()), 17)],
-        "{findings:?}"
-    );
-}
-
-#[test]
 fn in_sql_directive_above_the_from_line_suppresses_tagged_findings() {
     assert_eq!(run("src/tagged-suppressed.ts", false).len(), 2);
     let findings = run("src/tagged-suppressed.ts", true);
     assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn imported_tag_is_unrecoverable_and_anchors_at_the_call() {
-    let findings = run("src/imported-tag.ts", false);
-    let lines: Vec<_> = findings
-        .iter()
-        .map(|f| (f.target.clone(), f.line))
-        .collect();
-    assert_eq!(lines, [(Some("unanalyzable".into()), 8)], "{findings:?}");
 }

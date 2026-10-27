@@ -1,0 +1,169 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:order_line_items: use the shared names",
+          "rule": "postgres-object-naming",
+          "target": "table:order_line_items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_misses_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "prepared_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "replacement_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:amazon__ses_events: name uses denied token \"ses\"; use \"amazon_ses\"",
+          "rule": "postgres-object-naming",
+          "target": "table:amazon__ses_events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:amazon_ses_ses_events: name uses denied token \"ses\"; use \"amazon_ses\"",
+          "rule": "postgres-object-naming",
+          "target": "table:amazon_ses_ses_events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:amazon_x_ses_events: name uses denied token \"ses\"; use \"amazon_ses\"",
+          "rule": "postgres-object-naming",
+          "target": "table:amazon_x_ses_events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:app_cfg_values: name uses denied token \"cfg\"; use \"configuration\"",
+          "rule": "postgres-object-naming",
+          "target": "table:app_cfg_values"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:bounce_ses_events: name uses denied token \"ses\"; use \"amazon_ses\"",
+          "rule": "postgres-object-naming",
+          "target": "table:bounce_ses_events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ses_bounce_events: name uses denied token \"ses\"; use \"amazon_ses\"",
+          "rule": "postgres-object-naming",
+          "target": "table:ses_bounce_events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:xamazon_ses_events: name uses denied token \"ses\"; use \"amazon_ses\"",
+          "rule": "postgres-object-naming",
+          "target": "table:xamazon_ses_events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "replacement_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "replacement_position_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:amazon_ses: name uses denied token \"ses\"; use \"ses_amazon_ses\"",
+          "rule": "postgres-object-naming",
+          "target": "table:amazon_ses"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ses_amazon_events: name uses denied token \"ses\"; use \"ses_amazon_ses\"",
+          "rule": "postgres-object-naming",
+          "target": "table:ses_amazon_events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ses_amazon_sesx: name uses denied token \"ses\"; use \"ses_amazon_ses\"",
+          "rule": "postgres-object-naming",
+          "target": "table:ses_amazon_sesx"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "replacement_position_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

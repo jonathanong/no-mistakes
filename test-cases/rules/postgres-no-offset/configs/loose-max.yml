@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    include:
+      - src/loose.ts
+    options:
+      include: [src/loose.ts]
+      importSpecifier: ""
+      executorNames: [query, globalQuery, read]
+effort: max

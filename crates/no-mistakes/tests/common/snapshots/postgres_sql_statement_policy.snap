@@ -1,0 +1,1430 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "all_contexts_reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "all-contexts.sql",
+          "line": 10,
+          "message": "all-contexts.sql:10: SQL files matching this rule must not use CREATE TRIGGER",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TRIGGER"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 11,
+          "message": "all-contexts.sql:11: SQL files matching this rule must not use DROP TRIGGER",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TRIGGER"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 12,
+          "message": "all-contexts.sql:12: SQL files matching this rule must not use CREATE FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE FUNCTION"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 13,
+          "message": "all-contexts.sql:13: SQL files matching this rule must not use CREATE PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE PROCEDURE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 13,
+          "message": "all-contexts.sql:13: SQL statement `CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 14,
+          "message": "all-contexts.sql:14: SQL files matching this rule must not use DROP FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP FUNCTION"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 15,
+          "message": "all-contexts.sql:15: SQL files matching this rule must not use DROP PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP PROCEDURE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 16,
+          "message": "all-contexts.sql:16: SQL files matching this rule must not use DROP TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 17,
+          "message": "all-contexts.sql:17: SQL files matching this rule must not use CREATE TYPE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TYPE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 18,
+          "message": "all-contexts.sql:18: SQL files matching this rule must not use DROP TYPE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TYPE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 20,
+          "message": "all-contexts.sql:20: SQL files matching this rule must not use CREATE FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE FUNCTION"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 21,
+          "message": "all-contexts.sql:21: SQL files matching this rule must not use CREATE DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 21,
+          "message": "all-contexts.sql:21: SQL statement `CREATE DATABASE scratch TEMPLATE template0` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE scratch TEMPLATE template0"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 22,
+          "message": "all-contexts.sql:22: SQL files matching this rule must not use DROP DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP DATABASE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 23,
+          "message": "all-contexts.sql:23: SQL files matching this rule must not use ALTER DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 23,
+          "message": "all-contexts.sql:23: SQL statement `ALTER DATABASE app SET statement_timeout = '1s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE app SET statement_timeout = '1s'"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 24,
+          "message": "all-contexts.sql:24: SQL files matching this rule must not use ALTER SYSTEM",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 24,
+          "message": "all-contexts.sql:24: SQL statement `ALTER SYSTEM SET statement_timeout = '2s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM SET statement_timeout = '2s'"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 25,
+          "message": "all-contexts.sql:25: SQL files matching this rule must not use CREATE SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE SCHEMA"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 26,
+          "message": "all-contexts.sql:26: SQL files matching this rule must not use ALTER SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SCHEMA"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 27,
+          "message": "all-contexts.sql:27: SQL files matching this rule must not use DROP SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP SCHEMA"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 28,
+          "message": "all-contexts.sql:28: SQL files matching this rule must not use CREATE TRIGGER",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TRIGGER"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 29,
+          "message": "all-contexts.sql:29: SQL files matching this rule must not use DROP TRIGGER",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TRIGGER"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 3,
+          "message": "all-contexts.sql:3: SQL files matching this rule must not use CREATE DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 3,
+          "message": "all-contexts.sql:3: SQL statement `CREATE DATABASE scratch TEMPLATE template0` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE scratch TEMPLATE template0"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 30,
+          "message": "all-contexts.sql:30: SQL files matching this rule must not use CREATE FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE FUNCTION"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 31,
+          "message": "all-contexts.sql:31: SQL files matching this rule must not use CREATE PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE PROCEDURE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 32,
+          "message": "all-contexts.sql:32: SQL files matching this rule must not use DROP FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP FUNCTION"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 33,
+          "message": "all-contexts.sql:33: SQL files matching this rule must not use DROP PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP PROCEDURE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 34,
+          "message": "all-contexts.sql:34: SQL files matching this rule must not use DROP TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 35,
+          "message": "all-contexts.sql:35: SQL files matching this rule must not use CREATE TYPE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TYPE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 36,
+          "message": "all-contexts.sql:36: SQL files matching this rule must not use DROP TYPE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TYPE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 39,
+          "message": "all-contexts.sql:39: SQL files matching this rule must not use CREATE DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 39,
+          "message": "all-contexts.sql:39: SQL statement `CREATE DATABASE scratch TEMPLATE template0` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE scratch TEMPLATE template0"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 4,
+          "message": "all-contexts.sql:4: SQL files matching this rule must not use DROP DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP DATABASE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 40,
+          "message": "all-contexts.sql:40: SQL files matching this rule must not use DROP DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP DATABASE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 41,
+          "message": "all-contexts.sql:41: SQL files matching this rule must not use ALTER DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 41,
+          "message": "all-contexts.sql:41: SQL statement `ALTER DATABASE app SET statement_timeout = '1s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE app SET statement_timeout = '1s'"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 42,
+          "message": "all-contexts.sql:42: SQL files matching this rule must not use ALTER SYSTEM",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 42,
+          "message": "all-contexts.sql:42: SQL statement `ALTER SYSTEM SET statement_timeout = '2s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM SET statement_timeout = '2s'"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 43,
+          "message": "all-contexts.sql:43: SQL files matching this rule must not use CREATE SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE SCHEMA"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 44,
+          "message": "all-contexts.sql:44: SQL files matching this rule must not use ALTER SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SCHEMA"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 45,
+          "message": "all-contexts.sql:45: SQL files matching this rule must not use DROP SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP SCHEMA"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 46,
+          "message": "all-contexts.sql:46: SQL files matching this rule must not use CREATE TRIGGER",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TRIGGER"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 47,
+          "message": "all-contexts.sql:47: SQL files matching this rule must not use DROP TRIGGER",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TRIGGER"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 48,
+          "message": "all-contexts.sql:48: SQL files matching this rule must not use CREATE FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE FUNCTION"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 49,
+          "message": "all-contexts.sql:49: SQL files matching this rule must not use CREATE PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE PROCEDURE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 5,
+          "message": "all-contexts.sql:5: SQL files matching this rule must not use ALTER DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 5,
+          "message": "all-contexts.sql:5: SQL statement `ALTER DATABASE app SET statement_timeout = '1s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE app SET statement_timeout = '1s'"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 50,
+          "message": "all-contexts.sql:50: SQL files matching this rule must not use DROP FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP FUNCTION"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 51,
+          "message": "all-contexts.sql:51: SQL files matching this rule must not use DROP PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP PROCEDURE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 52,
+          "message": "all-contexts.sql:52: SQL files matching this rule must not use DROP TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 53,
+          "message": "all-contexts.sql:53: SQL files matching this rule must not use CREATE TYPE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TYPE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 54,
+          "message": "all-contexts.sql:54: SQL files matching this rule must not use DROP TYPE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TYPE"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 6,
+          "message": "all-contexts.sql:6: SQL files matching this rule must not use ALTER SYSTEM",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 6,
+          "message": "all-contexts.sql:6: SQL statement `ALTER SYSTEM SET statement_timeout = '2s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM SET statement_timeout = '2s'"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 7,
+          "message": "all-contexts.sql:7: SQL files matching this rule must not use CREATE SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE SCHEMA"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 8,
+          "message": "all-contexts.sql:8: SQL files matching this rule must not use ALTER SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SCHEMA"
+        },
+        {
+          "file": "all-contexts.sql",
+          "line": 9,
+          "message": "all-contexts.sql:9: SQL files matching this rule must not use DROP SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP SCHEMA"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "comments_and_other_create_kinds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: SQL statement `CREATE ACCESS METHOD bogus TYPE INDEX HANDLER heap_tableam_handler` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE ACCESS METHOD bogus TYPE INDEX HANDLER heap_tableam_handler"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 5,
+          "message": "sql/001.sql:5: SQL files matching this rule must not use CREATE TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "create_table": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: SQL files matching this rule must not use CREATE TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "create_table_inside_do_block": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: SQL files matching this rule must not use CREATE TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_banned_truncate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 5,
+          "message": "sql/001.sql:5: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_banned_kinds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: SQL files matching this rule must not use CREATE TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TABLE"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: SQL files matching this rule must not use ALTER TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER TABLE"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: SQL files matching this rule must not use CREATE INDEX",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE INDEX"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 4,
+          "message": "sql/001.sql:4: SQL files matching this rule must not use CREATE VIEW",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE VIEW"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 5,
+          "message": "sql/001.sql:5: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 6,
+          "message": "sql/001.sql:6: SQL files matching this rule must not use DROP INDEX",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP INDEX"
+        },
+        {
+          "file": "sql/001.sql",
+          "line": 7,
+          "message": "sql/001.sql:7: SQL files matching this rule must not use DROP VIEW",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP VIEW"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disable_trigger_is_alter_table": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "disable-trigger.sql",
+          "line": 1,
+          "message": "disable-trigger.sql:1: SQL files matching this rule must not use ALTER TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled_next_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disabled_sql_settings": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_unparseable_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "dynamic.test.ts",
+          "line": 2,
+          "message": "dynamic.test.ts:2: executed SQL is not statically recoverable for statement policy",
+          "rule": "postgres-sql-statement-policy",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "dynamic.test.ts",
+          "line": 3,
+          "message": "dynamic.test.ts:3: executed SQL is not statically recoverable for statement policy",
+          "rule": "postgres-sql-statement-policy",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_unparseable_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded_custom_banned_truncate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "policy.test.ts",
+          "line": 6,
+          "message": "policy.test.ts:6: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_executor_scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "policy.test.ts",
+          "line": 2,
+          "message": "policy.test.ts:2: executed SQL must not use ALTER TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER TABLE"
+        },
+        {
+          "file": "policy.test.ts",
+          "line": 4,
+          "message": "policy.test.ts:4: executed SQL must not use CREATE VIEW",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE VIEW"
+        },
+        {
+          "file": "policy.test.ts",
+          "line": 6,
+          "message": "policy.test.ts:6: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_parse_failure_sites": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "failures.test.ts",
+          "line": 4,
+          "message": "failures.test.ts:4: executed SQL is not statically recoverable for statement policy",
+          "rule": "postgres-sql-statement-policy",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "failures.test.ts",
+          "line": 7,
+          "message": "failures.test.ts:7: executed SQL is not statically recoverable for statement policy",
+          "rule": "postgres-sql-statement-policy",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "one-suppressed.test.ts",
+          "line": 7,
+          "message": "one-suppressed.test.ts:7: executed SQL is not statically recoverable for statement policy",
+          "rule": "postgres-sql-statement-policy",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "second-suppressed.test.ts",
+          "line": 4,
+          "message": "second-suppressed.test.ts:4: executed SQL is not statically recoverable for statement policy",
+          "rule": "postgres-sql-statement-policy",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_static_routines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "routines.test.ts",
+          "line": 4,
+          "message": "routines.test.ts:4: executed SQL must not use CREATE TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TABLE"
+        },
+        {
+          "file": "routines.test.ts",
+          "line": 5,
+          "message": "routines.test.ts:5: executed SQL must not use ALTER TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_ts_suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded_utility_grammar": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.test.ts",
+          "line": 2,
+          "message": "embedded.test.ts:2: executed SQL must not use CREATE DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE"
+        },
+        {
+          "file": "embedded.test.ts",
+          "line": 3,
+          "message": "embedded.test.ts:3: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "embedded.test.ts",
+          "line": 4,
+          "message": "embedded.test.ts:4: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "embedded.test.ts",
+          "line": 5,
+          "message": "embedded.test.ts:5: executed SQL must not use ALTER SYSTEM",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM"
+        },
+        {
+          "file": "embedded.test.ts",
+          "line": 6,
+          "message": "embedded.test.ts:6: executed SQL must not use CREATE PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE PROCEDURE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "expanded_kinds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "kinds.sql",
+          "line": 1,
+          "message": "kinds.sql:1: SQL statement `CREATE DATABASE scratch OWNER postgres TEMPLATE template0 ENCODING` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE scratch OWNER postgres TEMPLATE template0 ENCODING"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 3,
+          "message": "kinds.sql:3: SQL statement `ALTER DATABASE app SET statement_timeout = '1s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE app SET statement_timeout = '1s'"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 4,
+          "message": "kinds.sql:4: SQL statement `ALTER SYSTEM SET statement_timeout = '2s'` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM SET statement_timeout = '2s'"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "kinds.sql",
+          "line": 1,
+          "message": "kinds.sql:1: SQL files matching this rule must not use CREATE DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 10,
+          "message": "kinds.sql:10: SQL files matching this rule must not use CREATE FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE FUNCTION"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 11,
+          "message": "kinds.sql:11: SQL files matching this rule must not use CREATE PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE PROCEDURE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 12,
+          "message": "kinds.sql:12: SQL files matching this rule must not use DROP FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP FUNCTION"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 13,
+          "message": "kinds.sql:13: SQL files matching this rule must not use DROP PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP PROCEDURE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 14,
+          "message": "kinds.sql:14: SQL files matching this rule must not use DROP TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 15,
+          "message": "kinds.sql:15: SQL files matching this rule must not use CREATE TYPE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TYPE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 16,
+          "message": "kinds.sql:16: SQL files matching this rule must not use DROP TYPE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TYPE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 17,
+          "message": "kinds.sql:17: SQL files matching this rule must not use CREATE TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TABLE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 18,
+          "message": "kinds.sql:18: SQL files matching this rule must not use ALTER TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER TABLE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 19,
+          "message": "kinds.sql:19: SQL files matching this rule must not use CREATE TRIGGER",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TRIGGER"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 2,
+          "message": "kinds.sql:2: SQL files matching this rule must not use DROP DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP DATABASE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 3,
+          "message": "kinds.sql:3: SQL files matching this rule must not use ALTER DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 4,
+          "message": "kinds.sql:4: SQL files matching this rule must not use ALTER SYSTEM",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 5,
+          "message": "kinds.sql:5: SQL files matching this rule must not use CREATE SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE SCHEMA"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 6,
+          "message": "kinds.sql:6: SQL files matching this rule must not use ALTER SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SCHEMA"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 7,
+          "message": "kinds.sql:7: SQL files matching this rule must not use DROP SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP SCHEMA"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 8,
+          "message": "kinds.sql:8: SQL files matching this rule must not use CREATE TRIGGER",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE TRIGGER"
+        },
+        {
+          "file": "kinds.sql",
+          "line": 9,
+          "message": "kinds.sql:9: SQL files matching this rule must not use DROP TRIGGER",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP TRIGGER"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "inserts_and_functions": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "legacy_sql_only_skips_ts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "procedural_prefixes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "prefixed.sql",
+          "line": 1,
+          "message": "prefixed.sql:1: SQL files matching this rule must not use CREATE FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE FUNCTION"
+        },
+        {
+          "file": "prefixed.sql",
+          "line": 12,
+          "message": "prefixed.sql:12: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "prefixed.sql",
+          "line": 2,
+          "message": "prefixed.sql:2: SQL files matching this rule must not use ALTER DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE"
+        },
+        {
+          "file": "prefixed.sql",
+          "line": 3,
+          "message": "prefixed.sql:3: SQL files matching this rule must not use ALTER SYSTEM",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM"
+        },
+        {
+          "file": "prefixed.sql",
+          "line": 5,
+          "message": "prefixed.sql:5: SQL files matching this rule must not use CREATE PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE PROCEDURE"
+        },
+        {
+          "file": "prefixed.sql",
+          "line": 6,
+          "message": "prefixed.sql:6: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "prefixed.sql",
+          "line": 9,
+          "message": "prefixed.sql:9: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "raw_parse_failure_sites": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "failures.sql",
+          "line": 3,
+          "message": "failures.sql:3: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "SELECT 1 FROM orders WHERE id::text"
+        },
+        {
+          "file": "failures.sql",
+          "line": 6,
+          "message": "failures.sql:6: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "SELECT 1 FROM orders WHERE id::text"
+        },
+        {
+          "file": "one-suppressed.sql",
+          "line": 6,
+          "message": "one-suppressed.sql:6: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "SELECT 1 FROM orders WHERE id::text"
+        },
+        {
+          "file": "second-suppressed.sql",
+          "line": 3,
+          "message": "second-suppressed.sql:3: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "target": "SELECT 1 FROM orders WHERE id::text"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "routine_and_execute_settings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "routines.sql",
+          "line": 10,
+          "message": "routines.sql:10: SQL files matching this rule must not use DROP SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP SCHEMA"
+        },
+        {
+          "file": "routines.sql",
+          "line": 12,
+          "message": "routines.sql:12: SQL files matching this rule must not use CREATE PROCEDURE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE PROCEDURE"
+        },
+        {
+          "file": "routines.sql",
+          "line": 13,
+          "message": "routines.sql:13: SQL files matching this rule must not use ALTER SYSTEM",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM"
+        },
+        {
+          "file": "routines.sql",
+          "line": 14,
+          "message": "routines.sql:14: SQL files matching this rule must not use DROP DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "DROP DATABASE"
+        },
+        {
+          "file": "routines.sql",
+          "line": 2,
+          "message": "routines.sql:2: SQL files matching this rule must not use ALTER DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE"
+        },
+        {
+          "file": "routines.sql",
+          "line": 3,
+          "message": "routines.sql:3: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "routines.sql",
+          "line": 4,
+          "message": "routines.sql:4: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "routines.sql",
+          "line": 5,
+          "message": "routines.sql:5: SQL files matching this rule must not use CREATE DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE DATABASE"
+        },
+        {
+          "file": "routines.sql",
+          "line": 7,
+          "message": "routines.sql:7: SQL files matching this rule must not use CREATE FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE FUNCTION"
+        },
+        {
+          "file": "routines.sql",
+          "line": 8,
+          "message": "routines.sql:8: SQL files matching this rule must not use CREATE SCHEMA",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE SCHEMA"
+        },
+        {
+          "file": "routines.sql",
+          "line": 9,
+          "message": "routines.sql:9: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "setting_commands": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "settings.sql",
+          "line": 1,
+          "message": "settings.sql:1: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "settings.sql",
+          "line": 2,
+          "message": "settings.sql:2: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "settings.sql",
+          "line": 3,
+          "message": "settings.sql:3: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "settings.sql",
+          "line": 4,
+          "message": "settings.sql:4: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "settings.sql",
+          "line": 5,
+          "message": "settings.sql:5: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "settings.sql",
+          "line": 6,
+          "message": "settings.sql:6: SQL files matching this rule must not use ALTER DATABASE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER DATABASE"
+        },
+        {
+          "file": "settings.sql",
+          "line": 6,
+          "message": "settings.sql:6: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "settings.sql",
+          "line": 7,
+          "message": "settings.sql:7: SQL files matching this rule must not use ALTER SYSTEM",
+          "rule": "postgres-sql-statement-policy",
+          "target": "ALTER SYSTEM"
+        },
+        {
+          "file": "settings.sql",
+          "line": 7,
+          "message": "settings.sql:7: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "settings.sql",
+          "line": 8,
+          "message": "settings.sql:8: SQL matching this rule must not change PostgreSQL setting `app.guard`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:app.guard"
+        },
+        {
+          "file": "settings.sql",
+          "line": 9,
+          "message": "settings.sql:9: SQL matching this rule must not change PostgreSQL setting `app.guard`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:app.guard"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "setting_contexts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "setting-contexts.sql",
+          "line": 2,
+          "message": "setting-contexts.sql:2: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "setting-contexts.sql",
+          "line": 3,
+          "message": "setting-contexts.sql:3: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "setting-contexts.sql",
+          "line": 5,
+          "message": "setting-contexts.sql:5: SQL files matching this rule must not use CREATE FUNCTION",
+          "rule": "postgres-sql-statement-policy",
+          "target": "CREATE FUNCTION"
+        },
+        {
+          "file": "setting-contexts.sql",
+          "line": 6,
+          "message": "setting-contexts.sql:6: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "setting_literals": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "setting-literals.sql",
+          "line": 1,
+          "message": "setting-literals.sql:1: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        },
+        {
+          "file": "setting-literals.sql",
+          "line": 2,
+          "message": "setting-literals.sql:2: SQL matching this rule must not change PostgreSQL setting `session_replication_role`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:session_replication_role"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "time_zone_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "timezone.sql",
+          "line": 1,
+          "message": "timezone.sql:1: SQL matching this rule must not change PostgreSQL setting `timezone`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:timezone"
+        },
+        {
+          "file": "timezone.sql",
+          "line": 2,
+          "message": "timezone.sql:2: SQL matching this rule must not change PostgreSQL setting `timezone`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:timezone"
+        },
+        {
+          "file": "timezone.sql",
+          "line": 3,
+          "message": "timezone.sql:3: SQL matching this rule must not change PostgreSQL setting `timezone`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:timezone"
+        },
+        {
+          "file": "timezone.sql",
+          "line": 4,
+          "message": "timezone.sql:4: SQL matching this rule must not change PostgreSQL setting `timezone`",
+          "rule": "postgres-sql-statement-policy",
+          "target": "setting:timezone"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

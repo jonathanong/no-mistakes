@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - 001_same_line.sql
+    options:
+      importSpecifier: "@example/db"

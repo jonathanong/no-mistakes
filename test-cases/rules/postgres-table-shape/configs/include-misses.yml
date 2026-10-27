@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    message: use a real key
+    include: [missing.json]
+    options:
+      schemaCatalogPath: edges.json
+      shapes:
+        - name: empty
+          tablePattern: ^empty_key$
+          primaryKeyTypes: [uuid]

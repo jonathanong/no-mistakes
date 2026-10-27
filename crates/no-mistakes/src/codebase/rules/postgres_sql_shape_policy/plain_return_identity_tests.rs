@@ -1,6 +1,7 @@
-use super::super::shape_tests::{config_yaml, fixture};
-use super::super::*;
+use super::super::shape_tests::fixture;
 use crate::codebase::postgres::embedded::{extract_embedded_sql_from_source, EmbeddedSqlOptions};
+
+// Output cases moved to cli_postgres_snapshot_sql_shape_policy.
 
 #[test]
 fn callable_binding_await_and_lexical_shadow_keep_only_reached_returns() {
@@ -28,43 +29,7 @@ fn callable_binding_await_and_lexical_shadow_keep_only_reached_returns() {
             [expected],
             "{name}: {facts:#?}"
         );
-        let findings = check_with_files(
-            &root,
-            &config_yaml("importSpecifier: '@example/db'\nunanalyzableSql: ignore\nbannedShapes: [literal-limit]"),
-            &[path],
-        ).unwrap();
-        assert_eq!(
-            findings
-                .iter()
-                .map(|finding| (finding.target.as_deref(), finding.line))
-                .collect::<Vec<_>>(),
-            [(Some("literal-limit"), expected as usize)],
-            "{name}: {findings:#?}"
-        );
     }
-}
-
-#[test]
-fn shadowed_call_never_reports_unused_outer_non_sql_return() {
-    let root = fixture("returned-call-identities");
-    let findings = check_with_files(
-        &root,
-        &config_yaml(
-            "importSpecifier: '@example/db'\nunanalyzableSql: fail\nbannedShapes: [literal-limit]",
-        ),
-        &[root.join("src/shadow.ts")],
-    )
-    .unwrap();
-    // The unresolved executor remains fail-closed, but the unused outer return
-    // must not add its own non-SQL finding at line 3.
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.line)
-            .collect::<Vec<_>>(),
-        [5, 6],
-        "{findings:#?}"
-    );
 }
 
 #[test]
@@ -96,23 +61,6 @@ fn unkeyable_member_returns_keep_conservative_recall() {
                 .collect::<Vec<_>>(),
             [4],
             "{name}: {facts:#?}",
-        );
-        let findings = check_with_files(
-            &root,
-            &serde_yaml::from_str(
-                &std::fs::read_to_string(root.join(format!("{name}.yml"))).unwrap(),
-            )
-            .unwrap(),
-            &[path],
-        )
-        .unwrap();
-        assert_eq!(
-            findings
-                .iter()
-                .map(|finding| (finding.target.as_deref(), finding.line))
-                .collect::<Vec<_>>(),
-            [(Some("literal-limit"), 4)],
-            "{name}: {findings:#?}",
         );
     }
 }

@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      shapes:
+        - name: job-cursor
+          tablePattern: ^sync_cursors$
+          primaryKeyTypes: []
+          requiredColumns:
+            - name: updated_at

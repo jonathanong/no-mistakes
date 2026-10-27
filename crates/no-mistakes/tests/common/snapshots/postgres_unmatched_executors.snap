@@ -1,0 +1,111 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "unmatched_empty_specifier": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "postgres-lock-ordering: executorFactoryNames entry `nope` was not imported from any module in any of the 1 file(s) this rule scanned, so queries run through it are not checked. Fix: correct the spelling to match the exported name; set `importSpecifier` to the module that exports it (a re-export from another path does not match; a relative import matches only when it resolves into that package); or remove the entry if it is unused. This check exists because a typo here silently disables the rule for that executor; set `reportUnmatchedExecutorNames: false` to turn it off.",
+          "rule": "postgres-lock-ordering",
+          "target": "unmatched-executor-name"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unmatched_excluded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "postgres-lock-ordering: executorFactoryNames entry `openTransaction` was not imported from `@example/db` or its subpaths in any of the 0 file(s) this rule scanned, so queries run through it are not checked. Fix: correct the spelling to match the exported name; set `importSpecifier` to the module that exports it (a re-export from another path does not match; a relative import matches only when it resolves into that package); or remove the entry if it is unused. This check exists because a typo here silently disables the rule for that executor; set `reportUnmatchedExecutorNames: false` to turn it off.",
+          "rule": "postgres-lock-ordering",
+          "target": "unmatched-executor-name"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "postgres-lock-ordering: executorTypeNames entry `TransactionQuery` was not imported from `@example/db` or its subpaths in any of the 0 file(s) this rule scanned, so queries run through it are not checked. Fix: correct the spelling to match the exported name; set `importSpecifier` to the module that exports it (a re-export from another path does not match; a relative import matches only when it resolves into that package); or remove the entry if it is unused. This check exists because a typo here silently disables the rule for that executor; set `reportUnmatchedExecutorNames: false` to turn it off.",
+          "rule": "postgres-lock-ordering",
+          "target": "unmatched-executor-name"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unmatched_not_requested": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unmatched_production_factory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "postgres-no-test-state-mutation: executorFactoryNames entry `openTransaction` was not imported from `@example/db` or its subpaths in any of the 1 file(s) this rule scanned, so queries run through it are not checked. Fix: correct the spelling to match the exported name; set `importSpecifier` to the module that exports it (a re-export from another path does not match; a relative import matches only when it resolves into that package); or remove the entry if it is unused. This check exists because a typo here silently disables the rule for that executor; set `reportUnmatchedExecutorNames: false` to turn it off.",
+          "rule": "postgres-no-test-state-mutation",
+          "target": "unmatched-executor-name"
+        },
+        {
+          "file": "tests/dynamic.test.ts",
+          "line": 4,
+          "message": "tests/dynamic.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unmatched_typo": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "postgres-lock-ordering: executorFactoryNames entry `openTransacton` was not imported from `@example/db` or its subpaths in any of the 1 file(s) this rule scanned, so queries run through it are not checked. Fix: correct the spelling to match the exported name; set `importSpecifier` to the module that exports it (a re-export from another path does not match; a relative import matches only when it resolves into that package); or remove the entry if it is unused. This check exists because a typo here silently disables the rule for that executor; set `reportUnmatchedExecutorNames: false` to turn it off.",
+          "rule": "postgres-lock-ordering",
+          "target": "unmatched-executor-name"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

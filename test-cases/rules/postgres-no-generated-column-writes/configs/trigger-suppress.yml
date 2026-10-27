@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - schema.sql
+      - suppress-next.ts
+      - suppress-line.ts
+      - suppress-file.ts
+    options:
+      importSpecifier: "@example/db"
+      triggerMaintainedColumns: [updated_at]

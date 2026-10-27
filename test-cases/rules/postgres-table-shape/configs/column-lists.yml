@@ -1,0 +1,39 @@
+version: 2
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    include: [edges.json]
+    options:
+      schemaCatalogPath: edges.json
+      shapes:
+        - name: enum_key
+          tablePattern: ^keyed$
+          primaryKeyTypes: [enum]
+        - name: empty
+          tablePattern: ^empty_key$
+          primaryKeyTypes: [uuid]
+        - name: triggers
+          tablePattern: ^partial$
+          requiredTriggers:
+            - function: fn_touch
+              events: [update]
+        - name: not_fk
+          tablePattern: ^partial$
+          requiredColumns:
+            - name: owner_id
+              foreignKey: false
+        - name: quoted
+          tablePattern: ^partial$
+          requiredColumns:
+            - name: owner_id
+              references: ["\"audit.events\""]
+        - name: other
+          tablePattern: ^partial$
+          requiredColumns:
+            - name: owner_id
+              references: ["\"other.events\""]
+        - name: pattern
+          tablePattern: ^partial$
+          requiredColumns:
+            - namePattern: ^absent$
+              nullable: true

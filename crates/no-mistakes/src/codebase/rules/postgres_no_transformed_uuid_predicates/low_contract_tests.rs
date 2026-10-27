@@ -1,5 +1,7 @@
 use super::*;
 
+// Output cases moved to cli_postgres_snapshot_transformed_uuid_predicates.
+
 #[test]
 fn low_preparation_does_not_parse_an_unrequested_offset_rule() {
     let root = super::tests::fixture();
@@ -10,23 +12,6 @@ fn low_preparation_does_not_parse_an_unrequested_offset_rule() {
     let findings = check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 3, "{findings:#?}");
     assert!(findings.iter().all(|row| row.rule == RULE_ID));
-}
-
-#[test]
-fn low_reports_each_unknown_owner_even_without_a_verdict_sink() {
-    let root = super::tests::fixture();
-    let mut config = super::tests::config("");
-    config.effort = Some(crate::config::v2::Effort::Low);
-    let files = [root.join("verdict-inputs.ts"), root.join("schema.json")];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(findings.len(), 6, "{findings:#?}");
-    assert_eq!(
-        findings
-            .iter()
-            .filter(|row| row.target.as_deref() == Some("unanalyzable"))
-            .count(),
-        4
-    );
 }
 
 #[test]

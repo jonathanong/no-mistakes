@@ -1,0 +1,2076 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "aggregate_pass_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "aggregate_pass_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "aggregate_positive_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 10,
+          "message": "aggregate-operands-positive.sql:10: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 11,
+          "message": "aggregate-operands-positive.sql:11: HAVING applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 14,
+          "message": "aggregate-operands-positive.sql:14: HAVING applies \"MIN\" to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 15,
+          "message": "aggregate-operands-positive.sql:15: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 16,
+          "message": "aggregate-operands-positive.sql:16: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 17,
+          "message": "aggregate-operands-positive.sql:17: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 2,
+          "message": "aggregate-operands-positive.sql:2: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 3,
+          "message": "aggregate-operands-positive.sql:3: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 4,
+          "message": "aggregate-operands-positive.sql:4: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 5,
+          "message": "aggregate-operands-positive.sql:5: HAVING applies app.count to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 6,
+          "message": "aggregate-operands-positive.sql:6: HAVING applies app.min to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 7,
+          "message": "aggregate-operands-positive.sql:7: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 8,
+          "message": "aggregate-operands-positive.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 9,
+          "message": "aggregate-operands-positive.sql:9: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "aggregate_positive_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 10,
+          "message": "aggregate-operands-positive.sql:10: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 11,
+          "message": "aggregate-operands-positive.sql:11: HAVING applies COALESCE to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 14,
+          "message": "aggregate-operands-positive.sql:14: HAVING applies \"MIN\" to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 15,
+          "message": "aggregate-operands-positive.sql:15: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 16,
+          "message": "aggregate-operands-positive.sql:16: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 17,
+          "message": "aggregate-operands-positive.sql:17: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 2,
+          "message": "aggregate-operands-positive.sql:2: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 3,
+          "message": "aggregate-operands-positive.sql:3: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 4,
+          "message": "aggregate-operands-positive.sql:4: HAVING applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 5,
+          "message": "aggregate-operands-positive.sql:5: HAVING applies app.count to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 6,
+          "message": "aggregate-operands-positive.sql:6: HAVING applies app.min to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 7,
+          "message": "aggregate-operands-positive.sql:7: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 8,
+          "message": "aggregate-operands-positive.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands-positive.sql",
+          "line": 9,
+          "message": "aggregate-operands-positive.sql:9: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "aggregate_ts_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "aggregate-operands.ts",
+          "line": 10,
+          "message": "aggregate-operands.ts:10: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 11,
+          "message": "aggregate-operands.ts:11: HAVING applies app.min to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 12,
+          "message": "aggregate-operands.ts:12: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 13,
+          "message": "aggregate-operands.ts:13: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 14,
+          "message": "aggregate-operands.ts:14: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 15,
+          "message": "aggregate-operands.ts:15: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "aggregate_ts_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "aggregate-operands.ts",
+          "line": 10,
+          "message": "aggregate-operands.ts:10: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 11,
+          "message": "aggregate-operands.ts:11: HAVING applies app.min to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 12,
+          "message": "aggregate-operands.ts:12: WHERE applies fn to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 13,
+          "message": "aggregate-operands.ts:13: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 14,
+          "message": "aggregate-operands.ts:14: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        },
+        {
+          "file": "aggregate-operands.ts",
+          "line": 15,
+          "message": "aggregate-operands.ts:15: WHERE applies fn to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bare_columns": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "catalog_resolution": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scope.sql",
+          "line": 1,
+          "message": "scope.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "scope.sql",
+          "line": 11,
+          "message": "scope.sql:11: WHERE applies cast to UUID column public.dupes.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "public.dupes.id"
+        },
+        {
+          "file": "scope.sql",
+          "line": 2,
+          "message": "scope.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "crlf_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "crlf.ts",
+          "line": 4,
+          "message": "crlf.ts:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "crlf.ts",
+          "line": 6,
+          "message": "crlf.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "crlf_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "crlf.ts",
+          "line": 4,
+          "message": "crlf.ts:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "crlf.ts",
+          "line": 6,
+          "message": "crlf.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ctes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "ctes.sql",
+          "line": 2,
+          "message": "ctes.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "ctes.sql",
+          "line": 5,
+          "message": "ctes.sql:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "ctes.sql",
+          "line": 6,
+          "message": "ctes.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "ctes.sql",
+          "line": 7,
+          "message": "ctes.sql:7: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "ctes.sql",
+          "line": 8,
+          "message": "ctes.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 2,
+          "message": "Keep identity lookups indexable: embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 3,
+          "message": "Keep identity lookups indexable: embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 5,
+          "message": "Keep identity lookups indexable: embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_message_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 2,
+          "message": "Keep identity lookups indexable: embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 3,
+          "message": "Keep identity lookups indexable: embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 5,
+          "message": "Keep identity lookups indexable: embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_literals": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 2,
+          "message": "embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 3,
+          "message": "embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 5,
+          "message": "embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_literals_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 2,
+          "message": "embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 3,
+          "message": "embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 5,
+          "message": "embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_ts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail_clauses": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "fail.sql",
+          "line": 1,
+          "message": "fail.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 2,
+          "message": "fail.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 3,
+          "message": "fail.sql:3: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 4,
+          "message": "fail.sql:4: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 4,
+          "message": "fail.sql:4: JOIN ON applies cast to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 5,
+          "message": "fail.sql:5: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 6,
+          "message": "fail.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 7,
+          "message": "fail.sql:7: WHERE applies uuid_extract_timestamp to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "orders.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 9,
+          "message": "fail.sql:9: WHERE applies cast to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "low_inputs_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "low-inputs.ts",
+          "line": 2,
+          "message": "low-inputs.ts:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "low-inputs.ts",
+          "line": 4,
+          "message": "low-inputs.ts:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "low-inputs.ts",
+          "line": 5,
+          "message": "low-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "low_inputs_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "low-inputs.ts",
+          "line": 2,
+          "message": "low-inputs.ts:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "low-inputs.ts",
+          "line": 4,
+          "message": "low-inputs.ts:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "low-inputs.ts",
+          "line": 5,
+          "message": "low-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_joins": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "nested-joins.sql",
+          "line": 1,
+          "message": "nested-joins.sql:1: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "nested-joins.sql",
+          "line": 2,
+          "message": "nested-joins.sql:2: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "nested-joins.sql",
+          "line": 2,
+          "message": "nested-joins.sql:2: JOIN ON applies cast to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "nested-joins.sql",
+          "line": 3,
+          "message": "nested-joins.sql:3: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "nested-joins.sql",
+          "line": 4,
+          "message": "nested-joins.sql:4: JOIN ON applies cast to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "orders.id"
+        },
+        {
+          "file": "nested-joins.sql",
+          "line": 4,
+          "message": "nested-joins.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "operand_pass_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "operand_pass_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "operand_positive_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 10,
+          "message": "operand-boundaries-positive.sql:10: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 11,
+          "message": "operand-boundaries-positive.sql:11: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 12,
+          "message": "operand-boundaries-positive.sql:12: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 13,
+          "message": "operand-boundaries-positive.sql:13: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 2,
+          "message": "operand-boundaries-positive.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 3,
+          "message": "operand-boundaries-positive.sql:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 4,
+          "message": "operand-boundaries-positive.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 5,
+          "message": "operand-boundaries-positive.sql:5: WHERE applies lower to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 6,
+          "message": "operand-boundaries-positive.sql:6: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 7,
+          "message": "operand-boundaries-positive.sql:7: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 8,
+          "message": "operand-boundaries-positive.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 9,
+          "message": "operand-boundaries-positive.sql:9: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "operand_positive_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 10,
+          "message": "operand-boundaries-positive.sql:10: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 11,
+          "message": "operand-boundaries-positive.sql:11: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 12,
+          "message": "operand-boundaries-positive.sql:12: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 13,
+          "message": "operand-boundaries-positive.sql:13: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 2,
+          "message": "operand-boundaries-positive.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 3,
+          "message": "operand-boundaries-positive.sql:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 4,
+          "message": "operand-boundaries-positive.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 5,
+          "message": "operand-boundaries-positive.sql:5: WHERE applies lower to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 6,
+          "message": "operand-boundaries-positive.sql:6: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 7,
+          "message": "operand-boundaries-positive.sql:7: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 8,
+          "message": "operand-boundaries-positive.sql:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries-positive.sql",
+          "line": 9,
+          "message": "operand-boundaries-positive.sql:9: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "operand_ts_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "operand-boundaries.ts",
+          "line": 10,
+          "message": "operand-boundaries.ts:10: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries.ts",
+          "line": 11,
+          "message": "operand-boundaries.ts:11: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries.ts",
+          "line": 8,
+          "message": "operand-boundaries.ts:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries.ts",
+          "line": 9,
+          "message": "operand-boundaries.ts:9: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "operand_ts_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "operand-boundaries.ts",
+          "line": 10,
+          "message": "operand-boundaries.ts:10: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries.ts",
+          "line": 11,
+          "message": "operand-boundaries.ts:11: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries.ts",
+          "line": 8,
+          "message": "operand-boundaries.ts:8: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "operand-boundaries.ts",
+          "line": 9,
+          "message": "operand-boundaries.ts:9: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "policy_ambiguous_advise_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "ambiguous.sql",
+          "line": 1,
+          "message": "ambiguous.sql:1: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: ambiguous-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_ambiguous_advise_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "ambiguous.sql",
+          "line": 1,
+          "message": "ambiguous.sql:1: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: ambiguous-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_ambiguous_fail_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "ambiguous.sql",
+          "line": 1,
+          "message": "ambiguous.sql:1: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "policy_ambiguous_fail_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "ambiguous.sql",
+          "line": 1,
+          "message": "ambiguous.sql:1: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "policy_ambiguous_ignore_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_ambiguous_ignore_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_invalid_advise_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "invalid.sql",
+          "line": 4,
+          "message": "invalid.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: invalid-sql",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_invalid_advise_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "invalid.sql",
+          "line": 4,
+          "message": "invalid.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: invalid-sql",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_invalid_fail_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid.sql",
+          "line": 4,
+          "message": "invalid.sql:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "policy_invalid_fail_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid.sql",
+          "line": 4,
+          "message": "invalid.sql:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "policy_invalid_ignore_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_invalid_ignore_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_invalid_ts_advise_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "invalid.ts",
+          "line": 2,
+          "message": "invalid.ts:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_invalid_ts_advise_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "invalid.ts",
+          "line": 2,
+          "message": "invalid.ts:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: invalid-sql",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy_invalid_ts_fail_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid.ts",
+          "line": 2,
+          "message": "invalid.ts:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "policy_invalid_ts_fail_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid.ts",
+          "line": 2,
+          "message": "invalid.ts:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "predicate_forms": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "predicate-forms.sql",
+          "line": 1,
+          "message": "predicate-forms.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "predicate-forms.sql",
+          "line": 2,
+          "message": "predicate-forms.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "predicate-forms.sql",
+          "line": 3,
+          "message": "predicate-forms.sql:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "predicate-forms.sql",
+          "line": 4,
+          "message": "predicate-forms.sql:4: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "predicate-forms.sql",
+          "line": 5,
+          "message": "predicate-forms.sql:5: WHERE applies f to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "predicate-forms.sql",
+          "line": 6,
+          "message": "predicate-forms.sql:6: WHERE applies cast to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "orders.id"
+        },
+        {
+          "file": "predicate-forms.sql",
+          "line": 7,
+          "message": "predicate-forms.sql:7: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "quoted.sql",
+          "line": 1,
+          "message": "quoted.sql:1: WHERE applies cast to UUID column \"Case\".ID; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "\"Case\".ID"
+        },
+        {
+          "file": "quoted.sql",
+          "line": 3,
+          "message": "quoted.sql:3: WHERE applies cast to UUID column \"Case\".ID; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "\"Case\".ID"
+        },
+        {
+          "file": "quoted.sql",
+          "line": 4,
+          "message": "quoted.sql:4: WHERE applies cast to UUID column \"Case\".ID; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "\"Case\".ID"
+        },
+        {
+          "file": "quoted.sql",
+          "line": 5,
+          "message": "quoted.sql:5: WHERE applies cast to UUID column \"dot.table\".id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "\"dot.table\".id"
+        },
+        {
+          "file": "quoted.sql",
+          "line": 6,
+          "message": "quoted.sql:6: WHERE applies cast to UUID column \"odd.schema\".\"Mixed\".ID; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "\"odd.schema\".\"Mixed\".ID"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "recovered_parameters": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sql_include_independent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.ts",
+          "line": 2,
+          "message": "embedded.ts:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 3,
+          "message": "embedded.ts:3: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "embedded.ts",
+          "line": 5,
+          "message": "embedded.ts:5: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 1,
+          "message": "fail.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 2,
+          "message": "fail.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 3,
+          "message": "fail.sql:3: WHERE applies uuid_extract_timestamp to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 4,
+          "message": "fail.sql:4: JOIN ON applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 4,
+          "message": "fail.sql:4: JOIN ON applies cast to UUID column orders.account_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "orders.account_id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 5,
+          "message": "fail.sql:5: HAVING applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 6,
+          "message": "fail.sql:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 7,
+          "message": "fail.sql:7: WHERE applies uuid_extract_timestamp to UUID column orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "orders.id"
+        },
+        {
+          "file": "fail.sql",
+          "line": 9,
+          "message": "fail.sql:9: WHERE applies cast to UUID column accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.token"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppressed_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unknown_owners": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scope.sql",
+          "line": 1,
+          "message": "scope.sql:1: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "scope.sql",
+          "line": 10,
+          "message": "scope.sql:10: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scope.sql",
+          "line": 11,
+          "message": "scope.sql:11: WHERE applies cast to UUID column public.dupes.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "public.dupes.id"
+        },
+        {
+          "file": "scope.sql",
+          "line": 12,
+          "message": "scope.sql:12: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scope.sql",
+          "line": 13,
+          "message": "scope.sql:13: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scope.sql",
+          "line": 2,
+          "message": "scope.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "scope.sql",
+          "line": 3,
+          "message": "scope.sql:3: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scope.sql",
+          "line": 4,
+          "message": "scope.sql:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scope.sql",
+          "line": 5,
+          "message": "scope.sql:5: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scope.sql",
+          "line": 6,
+          "message": "scope.sql:6: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scope.sql",
+          "line": 8,
+          "message": "scope.sql:8: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scope.sql",
+          "line": 9,
+          "message": "scope.sql:9: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "unknown-scope.sql",
+          "line": 1,
+          "message": "unknown-scope.sql:1: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unknown-scope.sql",
+          "line": 2,
+          "message": "unknown-scope.sql:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unknown-scope.sql",
+          "line": 3,
+          "message": "unknown-scope.sql:3: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unknown-scope.sql",
+          "line": 4,
+          "message": "unknown-scope.sql:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unknown-scope.sql",
+          "line": 5,
+          "message": "unknown-scope.sql:5: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unknown-scope.sql",
+          "line": 6,
+          "message": "unknown-scope.sql:6: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unknown-scope.sql",
+          "line": 7,
+          "message": "unknown-scope.sql:7: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_scope_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unrecoverable_embedded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "unknown.ts",
+          "line": 3,
+          "message": "unknown.ts:3: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unrecoverable_embedded_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "values": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "values.sql",
+          "line": 2,
+          "message": "values.sql:2: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "verdict_inputs_advise_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "verdict-inputs.ts",
+          "line": 3,
+          "message": "verdict-inputs.ts:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 4,
+          "message": "verdict-inputs.ts:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: ambiguous-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 5,
+          "message": "verdict-inputs.ts:5: postgres-no-transformed-uuid-predicates application #0 proved a violation, but remaining SQL is unresolved for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 6,
+          "message": "verdict-inputs.ts:6: postgres-no-transformed-uuid-predicates application #0 proved a violation, but remaining SQL is unresolved for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "verdict-inputs.ts",
+          "line": 5,
+          "message": "verdict-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 6,
+          "message": "verdict-inputs.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "verdict_inputs_advise_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "verdict-inputs.ts",
+          "line": 3,
+          "message": "verdict-inputs.ts:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 4,
+          "message": "verdict-inputs.ts:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: ambiguous-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "verdict-inputs.ts",
+          "line": 5,
+          "message": "verdict-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 6,
+          "message": "verdict-inputs.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "verdict_inputs_low_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "verdict-inputs.ts",
+          "line": 3,
+          "message": "verdict-inputs.ts:3: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 4,
+          "message": "verdict-inputs.ts:4: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 5,
+          "message": "verdict-inputs.ts:5: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 5,
+          "message": "verdict-inputs.ts:5: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 6,
+          "message": "verdict-inputs.ts:6: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.id"
+        },
+        {
+          "file": "verdict-inputs.ts",
+          "line": 6,
+          "message": "verdict-inputs.ts:6: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [src/returns.ts]
+    options:
+      importSpecifier: "@example/db"

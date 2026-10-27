@@ -1,0 +1,452 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-table-shape allow entry: table:missing",
+          "rule": "postgres-table-shape",
+          "target": "table:missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "column_lists": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:empty_key: (shape empty) table has no primary key",
+          "rule": "postgres-table-shape",
+          "target": "table:empty_key"
+        },
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:partial: (shape not_fk) column owner_id must not be a foreign key",
+          "rule": "postgres-table-shape",
+          "target": "table:partial"
+        },
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:partial: (shape other) foreign key on owner_id must reference one of \"other.events\", found audit.events",
+          "rule": "postgres-table-shape",
+          "target": "table:partial"
+        },
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:partial: (shape pattern) no column matches ^absent$ with nullable",
+          "rule": "postgres-table-shape",
+          "target": "table:partial"
+        },
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:partial: (shape triggers) no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch()",
+          "rule": "postgres-table-shape",
+          "target": "table:partial"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:empty_key: use a real key",
+          "rule": "postgres-table-shape",
+          "target": "table:empty_key"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "edge_nullable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:nullable_revisions: (shape revision-history) column revised_by_id must be nullable",
+          "rule": "postgres-table-shape",
+          "target": "table:nullable_revisions"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "edge_ref_pattern": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:ref_pattern: (shape ref-pattern) no column matches _id$ with a foreign key, references users, accounts",
+          "rule": "postgres-table-shape",
+          "target": "table:ref_pattern"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "edge_statement_trigger": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:domain_events: (shape append-only-events) no BEFORE UPDATE OR DELETE FOR EACH STATEMENT trigger executing fn_reject_mutation()",
+          "rule": "postgres-table-shape",
+          "target": "table:domain_events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "edge_two_shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: (shape alpha) missing required column alpha",
+          "rule": "postgres-table-shape",
+          "target": "table:orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: (shape beta) missing required column beta",
+          "rule": "postgres-table-shape",
+          "target": "table:orders"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: table name matches banned pattern ^orders$: not a domain table",
+          "rule": "postgres-table-shape",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "edge_unchecked": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_shapes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_misses_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "main": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:audit_events: (shape append-only-events) forbidden column updated_at",
+          "rule": "postgres-table-shape",
+          "target": "table:audit_events"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:bad_revisions: (shape revision-history) column changes must be NOT NULL",
+          "rule": "postgres-table-shape",
+          "target": "table:bad_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:bad_revisions: (shape revision-history) column changes must be jsonb, found json",
+          "rule": "postgres-table-shape",
+          "target": "table:bad_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:bad_revisions: (shape revision-history) column revised_by_id must be a foreign key",
+          "rule": "postgres-table-shape",
+          "target": "table:bad_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:bad_revisions: (shape revision-history) forbidden column updated_at",
+          "rule": "postgres-table-shape",
+          "target": "table:bad_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:bad_revisions: (shape revision-history) no BEFORE UPDATE OR DELETE FOR EACH ROW trigger executing fn_reject_mutation()",
+          "rule": "postgres-table-shape",
+          "target": "table:bad_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:bare_cursors: (shape job-cursor) no column matches ^cursor_|_through_at$",
+          "rule": "postgres-table-shape",
+          "target": "table:bare_cursors"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:cascade_revisions: (shape revision-history) foreign key on revised_by_id must be ON DELETE SET NULL, found CASCADE",
+          "rule": "postgres-table-shape",
+          "target": "table:cascade_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:comment_votes: (shape per-target-votes) foreign key on user_id must be ON DELETE CASCADE, found SET NULL",
+          "rule": "postgres-table-shape",
+          "target": "table:comment_votes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:content_votes: (shape per-target-votes) forbidden column target_table",
+          "rule": "postgres-table-shape",
+          "target": "table:content_votes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:draft_changes: (shape change-ledger) column changed_by_id must be a foreign key",
+          "rule": "postgres-table-shape",
+          "target": "table:draft_changes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:flag_cursors: (shape job-cursor) forbidden column singleton",
+          "rule": "postgres-table-shape",
+          "target": "table:flag_cursors"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:invoice_status_changes: (shape change-ledger) foreign key on changed_by_id must reference one of deleted_user_identities, found accounts",
+          "rule": "postgres-table-shape",
+          "target": "table:invoice_status_changes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:missing_revisions: (shape revision-history) missing required column changes",
+          "rule": "postgres-table-shape",
+          "target": "table:missing_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:nopk_cursors: (shape job-cursor) table has no primary key",
+          "rule": "postgres-table-shape",
+          "target": "table:nopk_cursors"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:order_history: table name matches banned pattern _(history|change_logs|audit_logs)$: use a *_revisions table",
+          "rule": "postgres-table-shape",
+          "target": "table:order_history"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:part_revisions: (shape revision-history) missing required column changes",
+          "rule": "postgres-table-shape",
+          "target": "table:part_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:payment_status_changes: (shape change-ledger) foreign key on changed_by_id must be ON DELETE RESTRICT, found SET NULL",
+          "rule": "postgres-table-shape",
+          "target": "table:payment_status_changes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:plain_revisions: (shape revision-history) column revised_by_id must be a foreign key",
+          "rule": "postgres-table-shape",
+          "target": "table:plain_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:plain_revisions: (shape revision-history) no column matches _id$ with a foreign key",
+          "rule": "postgres-table-shape",
+          "target": "table:plain_revisions"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:refund_status_changes: (shape change-ledger) forbidden column changed_at",
+          "rule": "postgres-table-shape",
+          "target": "table:refund_status_changes"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:sync_cursors: (shape job-cursor) primary key column cursor_name must be boolean or an enum, found text",
+          "rule": "postgres-table-shape",
+          "target": "table:sync_cursors"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:tenant_cursors: (shape job-cursor) primary key column tenant_id must be boolean or an enum, found uuid",
+          "rule": "postgres-table-shape",
+          "target": "table:tenant_cursors"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pattern_diagnostics": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:empty_key: (shape labels) no AFTER INSERT FOR EACH ROW trigger executing a\"b()",
+          "rule": "postgres-table-shape",
+          "target": "table:empty_key"
+        },
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:empty_key: (shape labels) no BEFORE TRUNCATE FOR EACH STATEMENT trigger executing fn_trunc()",
+          "rule": "postgres-table-shape",
+          "target": "table:empty_key"
+        },
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:partial: (shape action) no column matches ^absent$ with a foreign key, ON DELETE CASCADE",
+          "rule": "postgres-table-shape",
+          "target": "table:partial"
+        },
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:partial: (shape plain) no column matches ^owner_id$ with not a foreign key",
+          "rule": "postgres-table-shape",
+          "target": "table:partial"
+        },
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:partial: (shape required) no column matches ^note$ with NOT NULL",
+          "rule": "postgres-table-shape",
+          "target": "table:partial"
+        },
+        {
+          "file": "edges.json",
+          "line": 1,
+          "message": "edges.json: table:partial: (shape typed) no column matches ^note$ with type uuid",
+          "rule": "postgres-table-shape",
+          "target": "table:partial"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

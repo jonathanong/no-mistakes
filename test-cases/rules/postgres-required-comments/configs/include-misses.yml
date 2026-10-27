@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-required-comments
+    scope: repository
+    include: ["services/api/**"]
+    options:
+      schemaCatalogPath: schema.json
+      objects: [table]

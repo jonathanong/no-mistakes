@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [sql/lenient-locations.sql]
+    options:
+      sqlInclude: [sql/lenient-locations.sql]
+      bannedShapes: [correlated-exists-set-operation, not-in-subquery, count-for-existence]
+      importSpecifier: "@example/db"
+      unanalyzableSql: ignore

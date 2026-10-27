@@ -1,0 +1,21 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - schema.sql
+      - writes.sql
+    options:
+      importSpecifier: "@example/db"
+      extraGeneratedColumns:
+        - { table: orders, column: computed }
+        - { table: PUBLIC.ORDERS, column: id }
+        - { table: same, column: computed }
+        - { table: unique_orders, column: computed }
+        - { table: external_orders, column: computed }
+        - { table: outside.external_orders, column: computed }
+        - { table: '"public.orders"', column: computed }
+        - { table: "broken name", column: computed }
+        - { table: '"', column: computed }
+        - { table: "123", column: computed }
+        - { table: "", column: computed }

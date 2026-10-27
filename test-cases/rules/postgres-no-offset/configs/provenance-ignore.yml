@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    include:
+      - src/client.mts
+      - src/http-only.mts
+    options:
+      importSpecifier: db
+      executorNames: [connection]
+      include: ["**/*.mts"]
+      unanalyzableSql: ignore

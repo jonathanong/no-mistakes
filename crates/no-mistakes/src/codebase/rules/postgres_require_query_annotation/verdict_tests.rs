@@ -1,3 +1,4 @@
+// Output cases moved to cli_postgres_snapshot_require_query_annotation.
 use super::*;
 use crate::codebase::postgres::SqlVerdictStatus;
 
@@ -13,9 +14,8 @@ fn advise_records_only_proven_executor_candidates() {
     let mut facts =
         super::super::prepare_sql_rule_facts(&root, &config, &files, &sources, RULE_ID).unwrap();
     facts.enable_sql_verdicts();
-    let findings =
+    let _findings =
         check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
     let verdicts = facts.sql_verdicts();
     assert_eq!(verdicts.len(), 3, "{verdicts:?}");
     assert_eq!(verdicts[0].status, SqlVerdictStatus::ProvenClear);
@@ -40,9 +40,8 @@ fn advice_does_not_promote_one_helper_context_to_a_whole_call_proof() {
     let mut facts =
         super::super::prepare_sql_rule_facts(&root, &config, &files, &sources, RULE_ID).unwrap();
     facts.enable_sql_verdicts();
-    let findings =
+    let _findings =
         check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
     let verdicts = facts.sql_verdicts();
     assert_eq!(verdicts.len(), 1, "{verdicts:?}");
     assert_eq!(verdicts[0].status, SqlVerdictStatus::Abstain);

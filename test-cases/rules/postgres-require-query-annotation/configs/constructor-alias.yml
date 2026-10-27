@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [undeclared-constructor-alias.ts]
+    options:
+      importSpecifier: "@example/db"

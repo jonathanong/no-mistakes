@@ -1,0 +1,1810 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "banned_functions_disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "banned_functions_dynamic": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "dynamic.test.ts",
+          "line": 2,
+          "message": "dynamic.test.ts:2: SQL could not be analyzed for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_functions_embedded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "embedded.test.ts",
+          "line": 2,
+          "message": "embedded.test.ts:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "embedded.test.ts",
+          "line": 3,
+          "message": "embedded.test.ts:3: function call \"pg_catalog\".\"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "embedded.test.ts",
+          "line": 4,
+          "message": "embedded.test.ts:4: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "embedded.test.ts",
+          "line": 5,
+          "message": "embedded.test.ts:5: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "embedded.test.ts",
+          "line": 6,
+          "message": "embedded.test.ts:6: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_functions_positions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 1,
+          "message": "positions.sql:1: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 10,
+          "message": "positions.sql:10: function call \"pg_catalog\".\"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 11,
+          "message": "positions.sql:11: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 12,
+          "message": "positions.sql:12: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 2,
+          "message": "positions.sql:2: function call \"pg_catalog\".\"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 3,
+          "message": "positions.sql:3: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 4,
+          "message": "positions.sql:4: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 5,
+          "message": "positions.sql:5: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 6,
+          "message": "positions.sql:6: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 7,
+          "message": "positions.sql:7: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 8,
+          "message": "positions.sql:8: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 9,
+          "message": "positions.sql:9: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_functions_procedural": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "procedural.sql",
+          "line": 11,
+          "message": "procedural.sql:11: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "procedural.sql",
+          "line": 2,
+          "message": "procedural.sql:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "procedural.sql",
+          "line": 5,
+          "message": "procedural.sql:5: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "procedural.sql",
+          "line": 6,
+          "message": "procedural.sql:6: function call \"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "procedural.sql",
+          "line": 7,
+          "message": "procedural.sql:7: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "procedural.sql",
+          "line": 8,
+          "message": "procedural.sql:8: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_functions_routines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "routines.sql",
+          "line": 12,
+          "message": "routines.sql:12: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "routines.sql",
+          "line": 13,
+          "message": "routines.sql:13: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "routines.sql",
+          "line": 2,
+          "message": "routines.sql:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "routines.sql",
+          "line": 3,
+          "message": "routines.sql:3: function call \"pg_catalog\".\"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "routines.sql",
+          "line": 4,
+          "message": "routines.sql:4: function call \"pg_sleep_until\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "routines.sql",
+          "line": 5,
+          "message": "routines.sql:5: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "routines.sql",
+          "line": 8,
+          "message": "routines.sql:8: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "routines.sql",
+          "line": 9,
+          "message": "routines.sql:9: function call \"pg_sleep_for\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_name_custom_other": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "names.sql",
+          "line": 6,
+          "message": "names.sql:6: function call \"custom\".\"other\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_name_custom_other_quoted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "names.sql",
+          "line": 7,
+          "message": "names.sql:7: function call \"custom\".\"Other\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_name_pg_sleep": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "names.sql",
+          "line": 1,
+          "message": "names.sql:1: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "names.sql",
+          "line": 2,
+          "message": "names.sql:2: function call \"public\".\"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "names.sql",
+          "line": 3,
+          "message": "names.sql:3: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_name_public_pg_sleep": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "names.sql",
+          "line": 2,
+          "message": "names.sql:2: function call \"public\".\"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_name_quoted_odd_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "names.sql",
+          "line": 5,
+          "message": "names.sql:5: function call \"custom.schema\".\"odd.function\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "banned_name_quoted_pg_sleep": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "names.sql",
+          "line": 4,
+          "message": "names.sql:4: function call \"PG_SLEEP\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 8,
+          "message": "positions.sql:8: uuidv7() is banned in DEFAULT; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 9,
+          "message": "positions.sql:9: uuidv7() is banned in DEFAULT; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_having": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 2,
+          "message": "positions.sql:2: uuidv7() is banned in HAVING; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_hinted_uuidv7": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 10,
+          "message": "positions.sql:10: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 11,
+          "message": "positions.sql:11: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 12,
+          "message": "positions.sql:12: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 13,
+          "message": "positions.sql:13: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 14,
+          "message": "positions.sql:14: function call \"pg_catalog\".\"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 15,
+          "message": "positions.sql:15: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 2,
+          "message": "positions.sql:2: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 3,
+          "message": "positions.sql:3: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 4,
+          "message": "positions.sql:4: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 5,
+          "message": "positions.sql:5: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 6,
+          "message": "positions.sql:6: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 7,
+          "message": "positions.sql:7: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 8,
+          "message": "positions.sql:8: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 9,
+          "message": "positions.sql:9: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation; choose stable",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_join_on": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 3,
+          "message": "positions.sql:3: uuidv7() is banned in JOIN ON; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 7,
+          "message": "positions.sql:7: uuidv7() is banned in JOIN ON; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_object_uuidv7": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 10,
+          "message": "positions.sql:10: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 11,
+          "message": "positions.sql:11: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 12,
+          "message": "positions.sql:12: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 13,
+          "message": "positions.sql:13: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 14,
+          "message": "positions.sql:14: function call \"pg_catalog\".\"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 15,
+          "message": "positions.sql:15: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 2,
+          "message": "positions.sql:2: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 3,
+          "message": "positions.sql:3: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 4,
+          "message": "positions.sql:4: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 5,
+          "message": "positions.sql:5: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 6,
+          "message": "positions.sql:6: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 7,
+          "message": "positions.sql:7: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 8,
+          "message": "positions.sql:8: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 9,
+          "message": "positions.sql:9: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_order_by": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 2,
+          "message": "positions.sql:2: uuidv7() is banned in ORDER BY; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_returning": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 15,
+          "message": "positions.sql:15: uuidv7() is banned in RETURNING; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 4,
+          "message": "positions.sql:4: uuidv7() is banned in RETURNING; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 5,
+          "message": "positions.sql:5: uuidv7() is banned in RETURNING; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 6,
+          "message": "positions.sql:6: uuidv7() is banned in RETURNING; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_select_list": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 10,
+          "message": "positions.sql:10: uuidv7() is banned in SELECT list; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 12,
+          "message": "positions.sql:12: uuidv7() is banned in SELECT list; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 14,
+          "message": "positions.sql:14: pg_catalog.uuidv7() is banned in SELECT list; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 2,
+          "message": "positions.sql:2: uuidv7() is banned in SELECT list; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 3,
+          "message": "positions.sql:3: uuidv7() is banned in SELECT list; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_set": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 4,
+          "message": "positions.sql:4: uuidv7() is banned in SET; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 5,
+          "message": "positions.sql:5: uuidv7() is banned in SET; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 7,
+          "message": "positions.sql:7: uuidv7() is banned in SET; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_string_uuidv7": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 10,
+          "message": "positions.sql:10: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 11,
+          "message": "positions.sql:11: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 12,
+          "message": "positions.sql:12: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 13,
+          "message": "positions.sql:13: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 14,
+          "message": "positions.sql:14: function call \"pg_catalog\".\"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 15,
+          "message": "positions.sql:15: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 2,
+          "message": "positions.sql:2: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 3,
+          "message": "positions.sql:3: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 4,
+          "message": "positions.sql:4: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 5,
+          "message": "positions.sql:5: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 6,
+          "message": "positions.sql:6: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 7,
+          "message": "positions.sql:7: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 8,
+          "message": "positions.sql:8: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 9,
+          "message": "positions.sql:9: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_values": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 4,
+          "message": "positions.sql:4: uuidv7() is banned in VALUES; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 7,
+          "message": "positions.sql:7: uuidv7() is banned in VALUES; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_where": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 10,
+          "message": "positions.sql:10: uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 11,
+          "message": "positions.sql:11: uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 12,
+          "message": "positions.sql:12: uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 13,
+          "message": "positions.sql:13: uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 14,
+          "message": "positions.sql:14: pg_catalog.uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 2,
+          "message": "positions.sql:2: uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 4,
+          "message": "positions.sql:4: uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 5,
+          "message": "positions.sql:5: uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 6,
+          "message": "positions.sql:6: uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "positions.sql",
+          "line": 7,
+          "message": "positions.sql:7: uuidv7() is banned in WHERE; stable bound",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "complete_suppression_owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "complete_suppression_reuse": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "executed_complete_owned": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "finite_fragments_unexecuted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: builder SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: function call \"pg_sleep\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "from_less_builders_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/from-less-builders.ts",
+          "line": 10,
+          "message": "src/from-less-builders.ts:10: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "src/from-less-builders.ts",
+          "line": 6,
+          "message": "src/from-less-builders.ts:6: LIMIT 500 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 500 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "host_suppressed_finite_fragments": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "implicit_fetch_origins_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/implicit-fetch-origins.sql",
+          "line": 14,
+          "message": "sql/implicit-fetch-origins.sql:14: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/implicit-fetch-origins.sql",
+          "line": 23,
+          "message": "sql/implicit-fetch-origins.sql:23: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/implicit-fetch-origins.sql",
+          "line": 26,
+          "message": "sql/implicit-fetch-origins.sql:26: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/implicit-fetch-origins.sql",
+          "line": 31,
+          "message": "sql/implicit-fetch-origins.sql:31: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/implicit-fetch-origins.sql",
+          "line": 33,
+          "message": "sql/implicit-fetch-origins.sql:33: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/implicit-fetch-origins.sql",
+          "line": 36,
+          "message": "sql/implicit-fetch-origins.sql:36: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "sql/implicit-fetch-origins.sql",
+          "line": 4,
+          "message": "sql/implicit-fetch-origins.sql:4: LIMIT 1 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 1 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member_class_field_arrow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/class-field-arrow.ts",
+          "line": 4,
+          "message": "src/class-field-arrow.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member_class_method": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/class-method.ts",
+          "line": 4,
+          "message": "src/class-method.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member_method_forwarding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/method-forwarding.ts",
+          "line": 4,
+          "message": "src/method-forwarding.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member_named_property_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/named-property-function.ts",
+          "line": 4,
+          "message": "src/named-property-function.ts:4: LIMIT 7 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 7 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member_object_method": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/object-method.ts",
+          "line": 4,
+          "message": "src/object-method.ts:4: LIMIT 5 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 5 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member_property_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/property-function.ts",
+          "line": 4,
+          "message": "src/property-function.ts:4: LIMIT 7 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 7 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member_this_method": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/this-method.ts",
+          "line": 4,
+          "message": "src/this-method.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "member_unused_method": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/unused-method.ts",
+          "line": 4,
+          "message": "src/unused-method.ts:4: LIMIT 4 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 4 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "prepared_custom_executors": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/custom-executors.ts",
+          "line": 2,
+          "message": "src/custom-executors.ts:2: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        },
+        {
+          "file": "src/custom-executors.ts",
+          "line": 3,
+          "message": "src/custom-executors.ts:3: NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+          "rule": "postgres-sql-shape-policy",
+          "target": "not-in-subquery"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "qualified_uuidv7_where": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "positions.sql",
+          "line": 14,
+          "message": "positions.sql:14: pg_catalog.uuidv7() is banned in WHERE",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "returned_await": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/await.ts",
+          "line": 3,
+          "message": "src/await.ts:3: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "returned_named": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/named.ts",
+          "line": 3,
+          "message": "src/named.ts:3: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "returned_recursive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/recursive.ts",
+          "line": 6,
+          "message": "src/recursive.ts:6: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "returned_shadow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/shadow.ts",
+          "line": 5,
+          "message": "src/shadow.ts:5: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "returned_shadow_edge": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/shadow-edge.ts",
+          "line": 5,
+          "message": "src/shadow-edge.ts:5: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_quoted_odd_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "review.sql",
+          "line": 5,
+          "message": "review.sql:5: \"custom.schema\".\"odd.function\"() is banned in WHERE",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_quoted_select_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "review.sql",
+          "line": 8,
+          "message": "review.sql:8: \"select\"() is banned in WHERE",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_quoted_upper_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "review.sql",
+          "line": 6,
+          "message": "review.sql:6: \"Upper\".\"quote\"\"function\"() is banned in WHERE",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_simple_function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "review.sql",
+          "line": 7,
+          "message": "review.sql:7: _simple$9() is banned in WHERE",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_uuidv7_global": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "review.sql",
+          "line": 2,
+          "message": "review.sql:2: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "review.sql",
+          "line": 3,
+          "message": "review.sql:3: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "review.sql",
+          "line": 4,
+          "message": "review.sql:4: function call \"uuidv7\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_uuidv7_where": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "review.sql",
+          "line": 2,
+          "message": "review.sql:2: uuidv7() is banned in WHERE",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "review.sql",
+          "line": 3,
+          "message": "review.sql:3: uuidv7() is banned in WHERE",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shadowed_call_fail_closed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/shadow.ts",
+          "line": 5,
+          "message": "src/shadow.ts:5: LIMIT 2 is a literal batch size that cannot be tuned without a deploy; bind it (LIMIT $1) or list 2 in shapeOptions.literalLimit.allowedValues",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        },
+        {
+          "file": "src/shadow.ts",
+          "line": 6,
+          "message": "src/shadow.ts:6: executed SQL is not statically recoverable for shape policy",
+          "rule": "postgres-sql-shape-policy",
+          "target": "literal-limit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "table_pages_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/table-pages.sql",
+          "line": 10,
+          "message": "sql/table-pages.sql:10: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/table-pages.sql",
+          "line": 2,
+          "message": "sql/table-pages.sql:2: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/table-pages.sql",
+          "line": 3,
+          "message": "sql/table-pages.sql:3: walks every row of public.orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"public\".\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/table-pages.sql",
+          "line": 4,
+          "message": "sql/table-pages.sql:4: walks every row of Order Items in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"Order Items\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "sql/table-pages.sql",
+          "line": 5,
+          "message": "sql/table-pages.sql:5: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        },
+        {
+          "file": "src/table-pages.ts",
+          "line": 2,
+          "message": "src/table-pages.ts:2: walks every row of orders in id order with nothing else selective; choose rows that need work (a work-item row, a dirty marker, a due timestamp or a parent id) or list `\"orders\"` in shapeOptions.keysetOnlySweep.ignoreTables",
+          "rule": "postgres-sql-shape-policy",
+          "target": "keyset-only-sweep"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

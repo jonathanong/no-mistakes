@@ -1,0 +1,1658 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "append_positions_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/append-positions.ts",
+          "line": 18,
+          "message": "src/append-positions.ts:18: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#5"
+        },
+        {
+          "file": "src/append-positions.ts",
+          "line": 18,
+          "message": "src/append-positions.ts:18: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        },
+        {
+          "file": "src/append-positions.ts",
+          "line": 21,
+          "message": "src/append-positions.ts:21: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#6"
+        },
+        {
+          "file": "src/append-positions.ts",
+          "line": 5,
+          "message": "src/append-positions.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/append-positions.ts",
+          "line": 8,
+          "message": "src/append-positions.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "copy_data_locations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/copy.sql",
+          "line": 5,
+          "message": "db/copy.sql:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "copy_header_edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/copy-edge.sql",
+          "line": 10,
+          "message": "db/copy-edge.sql:10: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "db/copy-edge.sql",
+          "line": 10,
+          "message": "db/copy-edge.sql:10: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "db/copy-edge.sql",
+          "line": 4,
+          "message": "db/copy-edge.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "copy_unterminated": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "crlf_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/disabled.ts",
+          "line": 1,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        },
+        {
+          "file": "src/line-disabled.ts",
+          "line": 3,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/crlf.ts",
+          "line": 4,
+          "message": "src/crlf.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/crlf.ts",
+          "line": 8,
+          "message": "src/crlf.ts:8: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "crlf_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/disabled.ts",
+          "line": 1,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        },
+        {
+          "file": "src/line-disabled.ts",
+          "line": 3,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/crlf.ts",
+          "line": 10,
+          "message": "src/crlf.ts:10: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/crlf.ts",
+          "line": 4,
+          "message": "src/crlf.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/crlf.ts",
+          "line": 8,
+          "message": "src/crlf.ts:8: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "crlf_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/disabled.ts",
+          "line": 1,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        },
+        {
+          "file": "src/line-disabled.ts",
+          "line": 3,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/crlf.ts",
+          "line": 11,
+          "message": "src/crlf.ts:11: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "src/crlf.ts",
+          "line": 4,
+          "message": "src/crlf.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/crlf.ts",
+          "line": 8,
+          "message": "src/crlf.ts:8: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_executor_names": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/custom-executors.ts",
+          "line": 2,
+          "message": "src/custom-executors.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/custom-executors.ts",
+          "line": 3,
+          "message": "src/custom-executors.ts:3: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_sql_include_unscanned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disabled_next_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dml_and_containers": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/containers.sql",
+          "line": 1,
+          "message": "db/containers.sql:1: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 1,
+          "message": "db/containers.sql:1: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 2,
+          "message": "db/containers.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 2,
+          "message": "db/containers.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 2,
+          "message": "db/containers.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#5"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 3,
+          "message": "db/containers.sql:3: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#6"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 3,
+          "message": "db/containers.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#7"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 4,
+          "message": "db/containers.sql:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#8"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 4,
+          "message": "db/containers.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#10"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 4,
+          "message": "db/containers.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#9"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 5,
+          "message": "db/containers.sql:5: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#11"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 5,
+          "message": "db/containers.sql:5: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#12"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 6,
+          "message": "db/containers.sql:6: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#13"
+        },
+        {
+          "file": "db/containers.sql",
+          "line": 6,
+          "message": "db/containers.sql:6: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#14"
+        },
+        {
+          "file": "db/dml.sql",
+          "line": 2,
+          "message": "db/dml.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "db/dml.sql",
+          "line": 3,
+          "message": "db/dml.sql:3: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "db/dml.sql",
+          "line": 3,
+          "message": "db/dml.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "db/dml.sql",
+          "line": 4,
+          "message": "db/dml.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        },
+        {
+          "file": "db/dml.sql",
+          "line": 5,
+          "message": "db/dml.sql:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#5"
+        },
+        {
+          "file": "db/dml.sql",
+          "line": 6,
+          "message": "db/dml.sql:6: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#6"
+        },
+        {
+          "file": "db/dml.sql",
+          "line": 7,
+          "message": "db/dml.sql:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#7"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_unanalyzable_default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 20,
+          "message": "src/query.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 35,
+          "message": "src/query.ts:35: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 38,
+          "message": "src/query.ts:38: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_unanalyzable_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 20,
+          "message": "src/query.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 35,
+          "message": "src/query.ts:35: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 38,
+          "message": "src/query.ts:38: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_unanalyzable_fail_upper": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 20,
+          "message": "src/query.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 35,
+          "message": "src/query.ts:35: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 38,
+          "message": "src/query.ts:38: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_unanalyzable_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 30,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 20,
+          "message": "src/query.ts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "edges_four_offsets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/edges.sql",
+          "line": 1,
+          "message": "db/edges.sql:1: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "db/edges.sql",
+          "line": 2,
+          "message": "db/edges.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "db/edges.sql",
+          "line": 3,
+          "message": "db/edges.sql:3: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "db/edges.sql",
+          "line": 3,
+          "message": "db/edges.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "effort_default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/query.sql",
+          "line": 2,
+          "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 11,
+          "message": "src/query.ts:11: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 12,
+          "message": "src/query.ts:12: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#6"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 8,
+          "message": "src/query.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#5"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "effort_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/query.sql",
+          "line": 2,
+          "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 11,
+          "message": "src/query.ts:11: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 12,
+          "message": "src/query.ts:12: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 8,
+          "message": "src/query.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#5"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "effort_low_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/query.sql",
+          "line": 2,
+          "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 8,
+          "message": "src/query.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#5"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "effort_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/query.sql",
+          "line": 2,
+          "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 11,
+          "message": "src/query.ts:11: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 12,
+          "message": "src/query.ts:12: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#6"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 8,
+          "message": "src/query.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#5"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_offset_zero": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/zero.ts",
+          "line": 4,
+          "message": "src/zero.ts:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude_query": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "executor_provenance_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/client.mts",
+          "line": 6,
+          "message": "src/client.mts:6: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/client.mts",
+          "line": 7,
+          "message": "src/client.mts:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "executor_provenance_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/client.mts",
+          "line": 8,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/client.mts",
+          "line": 7,
+          "message": "src/client.mts:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explain_offsets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/explain.sql",
+          "line": 3,
+          "message": "db/explain.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "db/explain.sql",
+          "line": 4,
+          "message": "db/explain.sql:4: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "db/explain.sql",
+          "line": 5,
+          "message": "db/explain.sql:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "db/explain.sql",
+          "line": 7,
+          "message": "db/explain.sql:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_offset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper_alias_appends": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "composed-helper-alias.ts",
+          "line": 14,
+          "message": "composed-helper-alias.ts:14: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "composed-helper-alias.ts",
+          "line": 22,
+          "message": "composed-helper-alias.ts:22: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        },
+        {
+          "file": "composed-helper-alias.ts",
+          "line": 36,
+          "message": "composed-helper-alias.ts:36: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        },
+        {
+          "file": "composed-helper-alias.ts",
+          "line": 51,
+          "message": "composed-helper-alias.ts:51: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "composed-helper-alias.ts",
+          "line": 53,
+          "message": "composed-helper-alias.ts:53: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "composed-helper-alias.ts",
+          "line": 7,
+          "message": "composed-helper-alias.ts:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "unprovenMemberQuerySql": 148,
+      "warnings": []
+    }
+  },
+  "include_misses_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_query": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "interpolated_offset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_sql_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/disabled.ts",
+          "line": 1,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        },
+        {
+          "file": "src/invalid.ts",
+          "line": 2,
+          "message": "src/invalid.ts:2: postgres-no-offset application #0 has unresolved SQL for offset: invalid-sql",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/invalid.ts",
+          "line": 3,
+          "message": "src/invalid.ts:3: postgres-no-offset application #0 has unresolved SQL for offset: invalid-sql",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/line-disabled.ts",
+          "line": 3,
+          "message": "directive for `postgres-no-offset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-no-offset"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/query.sql",
+          "line": 2,
+          "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "keyword_locations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/locations.sql",
+          "line": 4,
+          "message": "db/locations.sql:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "db/locations.sql",
+          "line": 9,
+          "message": "db/locations.sql:9: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "lenient_ddl": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/lenient.sql",
+          "line": 2,
+          "message": "db/lenient.sql:2: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "db/lenient.sql",
+          "line": 3,
+          "message": "db/lenient.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "limit_without_offset": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "loose_selector_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/loose.ts",
+          "line": 2,
+          "message": "src/loose.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "loose_selector_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/loose.ts",
+          "line": 2,
+          "message": "src/loose.ts:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "materialized_cte": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing_sql_skipped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "namespace_methods_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "namespace_methods_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  },
+  "offset_in_prose": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "other_executor_quiet": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "prepared_missing_sql": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shared_declaration": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/shared.ts",
+          "line": 4,
+          "message": "src/shared.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/shared.ts",
+          "line": 4,
+          "message": "src/shared.ts:4: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shared_declaration_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "source_map_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/source-map.ts",
+          "line": 11,
+          "message": "src/source-map.ts:11: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#4"
+        },
+        {
+          "file": "src/source-map.ts",
+          "line": 13,
+          "message": "src/source-map.ts:13: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#5"
+        },
+        {
+          "file": "src/source-map.ts",
+          "line": 16,
+          "message": "src/source-map.ts:16: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#6"
+        },
+        {
+          "file": "src/source-map.ts",
+          "line": 2,
+          "message": "src/source-map.ts:2: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "src/source-map.ts",
+          "line": 8,
+          "message": "src/source-map.ts:8: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        },
+        {
+          "file": "src/source-map.ts",
+          "line": 9,
+          "message": "src/source-map.ts:9: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#3"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sql_outside_include": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sql_suppressions": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sql_views_offsets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/views.sql",
+          "line": 2,
+          "message": "db/views.sql:2: OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        },
+        {
+          "file": "db/views.sql",
+          "line": 3,
+          "message": "db/views.sql:3: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "standalone_table": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/query.sql",
+          "line": 2,
+          "message": "db/query.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stdin_string": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "db/stdin-string.sql",
+          "line": 1,
+          "message": "db/stdin-string.sql:1: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_default_embedded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/invalid.ts",
+          "line": 2,
+          "message": "src/invalid.ts:2: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_ignored_embedded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

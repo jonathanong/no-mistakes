@@ -1,0 +1,17 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - schema.sql
+      - fail-update.ts
+      - fail-insert-cols.ts
+      - fail-insert-columnless.ts
+      - fail-upsert.ts
+      - fail-merge.sql
+      - pass.ts
+    options:
+      importSpecifier: "@example/db"
+      extraGeneratedColumns:
+        - table: items
+          column: created_at

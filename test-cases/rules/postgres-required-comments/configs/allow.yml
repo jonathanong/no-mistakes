@@ -1,0 +1,21 @@
+version: 2
+rules:
+  - rule: postgres-required-comments
+    scope: repository
+    include: [schema.json]
+    options:
+      schemaCatalogPath: schema.json
+      minLength: 10
+      objects: [table, view, materialized-view, column]
+      exemptColumnNamePatterns: [^(id|created_at|updated_at)$, ^vendor_]
+      allow:
+        - object: "table:schema_migrations"
+          reason: Owned by the migration runner
+        - object: "column:orders.secret"
+          reason: internal
+        - object: "view:open_orders"
+          reason: documented in the app
+        - object: "materialized-view:paid_orders"
+          reason: documented in the app
+        - object: "table:not_real"
+          reason: not a finding

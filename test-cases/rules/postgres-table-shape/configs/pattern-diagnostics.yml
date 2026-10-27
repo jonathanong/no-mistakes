@@ -1,0 +1,37 @@
+version: 2
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    include: [edges.json]
+    options:
+      schemaCatalogPath: edges.json
+      shapes:
+        - name: typed
+          tablePattern: ^partial$
+          requiredColumns:
+            - namePattern: ^note$
+              type: uuid
+        - name: required
+          tablePattern: ^partial$
+          requiredColumns:
+            - namePattern: ^note$
+              nullable: false
+        - name: plain
+          tablePattern: ^partial$
+          requiredColumns:
+            - namePattern: ^owner_id$
+              foreignKey: false
+        - name: action
+          tablePattern: ^partial$
+          requiredColumns:
+            - namePattern: ^absent$
+              onDelete: cascade
+        - name: labels
+          tablePattern: ^empty_key$
+          requiredTriggers:
+            - function: "\"a\"\"b\""
+              timing: after
+              events: [insert]
+            - function: fn_trunc
+              events: [truncate]
+              forEachRow: false

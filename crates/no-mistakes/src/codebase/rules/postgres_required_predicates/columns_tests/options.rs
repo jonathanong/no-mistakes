@@ -1,5 +1,6 @@
+// Output cases moved to cli_postgres_snapshot_required_predicates.
 use super::super::*;
-use super::{config_yaml, fixture, run, COLUMNS};
+use super::{config_yaml, fixture, COLUMNS};
 
 #[test]
 fn repeated_scans_are_identical() {
@@ -83,35 +84,4 @@ fn new_options_reject_invalid_values() {
         ..Default::default()
     })
     .is_ok());
-}
-
-#[test]
-fn textual_require_message_stays_on_the_same_select() {
-    let root = fixture("fail");
-    let findings = check_with_files(
-        &root,
-        &config_yaml(
-            "sqlInclude: [\"sql/**/*.sql\"]\nrelations:\n  - table: topics\n    require: [\"parent_id IS NOT NULL\"]\n    requireColumns: [parent_id]\n",
-        ),
-        &[root.join("sql/001.sql")],
-    )
-    .unwrap();
-    assert!(findings.iter().any(|finding| finding
-        .message
-        .contains("queries against topics must include `parent_id IS NOT NULL`")));
-}
-
-#[test]
-fn a_loaded_catalog_skips_partition_checks_when_they_are_off() {
-    let findings = run(
-        "columns",
-        "sqlInclude: [\"sql/**/*.sql\"]\nschemaCatalogPath: schema.json\npartitionKeys: off\nrelations:\n  - {table: orders, requireColumns: [account_id]}\n",
-        "sql/fail-kind.sql",
-    );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.message.contains("partition key")),
-        "{findings:?}"
-    );
 }

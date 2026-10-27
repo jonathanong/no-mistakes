@@ -15,38 +15,7 @@ fn run(name: &str) -> Vec<RuleFinding> {
     findings
 }
 
-#[test]
-fn loose_selector_stays_on_named_imports_and_excludes_globals_and_local_shadows() {
-    let mut cfg = load(".no-mistakes.max.yml");
-    cfg.rules[0].options = serde_yaml::from_str("{ include: [src/loose.ts], importSpecifier: '', executorNames: [query, globalQuery, read] }").unwrap();
-    let file = root().join("src/loose.ts");
-    let max = check_with_files(&root(), &cfg, std::slice::from_ref(&file)).unwrap();
-    assert_eq!(
-        max.iter().map(|finding| finding.line).collect::<Vec<_>>(),
-        [2]
-    );
-    cfg.effort = Some(crate::config::v2::Effort::Low);
-    assert_eq!(
-        check_with_files(&root(), &cfg, std::slice::from_ref(&file)).unwrap(),
-        max
-    );
-}
-
-#[test]
-fn namespace_non_query_methods_remain_out_of_scope() {
-    let mut cfg = load(".no-mistakes.max.yml");
-    cfg.rules[0].options = serde_yaml::from_str(
-        "{ include: [src/namespace.ts], importSpecifier: '@example/db', executorNames: [read] }",
-    )
-    .unwrap();
-    let file = root().join("src/namespace.ts");
-    let max = check_with_files(&root(), &cfg, std::slice::from_ref(&file)).unwrap();
-    assert!(max.is_empty());
-    cfg.effort = Some(crate::config::v2::Effort::Low);
-    assert!(check_with_files(&root(), &cfg, std::slice::from_ref(&file))
-        .unwrap()
-        .is_empty());
-}
+// Output cases moved to cli_postgres_snapshot_no_offset.
 
 fn prepared(
     mut config: NoMistakesConfig,
@@ -143,12 +112,7 @@ fn malformed_sql_is_uncertainty_and_never_proven_clear() {
     );
     let (cfg, files, sources, mut facts) = prepared(cfg);
     facts.enable_sql_verdicts();
-    assert!(
-        check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts)
-            .unwrap()
-            .iter()
-            .all(|finding| finding.file.ends_with(".sql"))
-    );
+    check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();
     let verdicts = facts.sql_verdicts();
     assert_eq!(verdicts.len(), 2);
     assert!(verdicts.iter().all(|verdict| verdict.status

@@ -1,53 +1,8 @@
 use super::*;
 use crate::codebase::postgres::{SqlCreateIndexMetadata, SqlIndexParam};
-use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
-    NoMistakesConfig,
-};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-fn fixture(name: &str) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules/postgres-redundant-index/fixture")
-            .join(name),
-    )
-}
-
-fn config(extra: &str) -> NoMistakesConfig {
-    NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(&format!(
-                "sqlInclude: [\"migrations/**/*.sql\"]\n{extra}"
-            ))
-            .unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    }
-}
-
-fn sql_files(root: &Path) -> Vec<PathBuf> {
-    [
-        "001.sql",
-        "0001.sql",
-        "0002.sql",
-        "2.sql",
-        "10.sql",
-        "V2__create.sql",
-        "V10__drop.sql",
-    ]
-    .into_iter()
-    .map(|name| root.join("migrations").join(name))
-    .filter(|path| path.is_file())
-    .collect()
-}
-
-fn run(root: &Path, extra: &str) -> Vec<RuleFinding> {
-    check_with_files(root, &config(extra), &sql_files(root)).unwrap()
-}
+// Output cases moved to cli_postgres_snapshot_redundant_index.
 
 fn param(name: &str, ordering: Option<&str>, nulls: Option<&str>) -> SqlIndexParam {
     SqlIndexParam {
@@ -75,65 +30,6 @@ fn live<'a>(index: &'a SqlCreateIndexMetadata) -> redundancy::LiveIndex<'a> {
         path: Path::new("migrations/001.sql"),
         index,
     }
-}
-
-#[test]
-fn flags_strict_prefix_btree_index() {
-    let findings = run(&fixture("fail"), "");
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(
-        findings[0].target.as_deref(),
-        Some("events.idx_events__topic_id")
-    );
-    assert!(findings[0]
-        .message
-        .contains("idx_events__topic_id__created_at"));
-}
-
-#[test]
-fn unique_shorter_index_is_not_redundant() {
-    assert!(run(&fixture("pass"), "").is_empty());
-}
-
-#[test]
-fn same_line_directive_exempts_the_index() {
-    assert!(run(&fixture("allow"), "").is_empty());
-}
-
-#[test]
-fn later_drop_removes_the_prefix_index() {
-    assert!(run(&fixture("dropped"), "").is_empty());
-}
-
-#[test]
-fn concurrent_drop_index_removes_the_prefix_index() {
-    assert!(run(&fixture("concurrent-drop"), "").is_empty());
-}
-
-#[test]
-fn allowed_index_exempts_the_prefix() {
-    assert!(run(
-        &fixture("fail"),
-        "allowedIndexes: [events.idx_events__topic_id]\n"
-    )
-    .is_empty());
-}
-
-#[test]
-fn stale_allowed_index_is_a_finding() {
-    let findings = run(
-        &fixture("pass"),
-        "allowedIndexes: [events.idx_never_matched]\n",
-    );
-    assert!(findings
-        .iter()
-        .any(|finding| finding.message.contains("stale")));
-}
-
-#[test]
-fn custom_allow_directive_must_match_the_comment() {
-    let findings = run(&fixture("allow"), "allowDirective: skip-index\n");
-    assert_eq!(findings.len(), 1, "{findings:?}");
 }
 
 #[test]
@@ -334,41 +230,6 @@ fn numeric_filename_prefixes_sort_before_lexicographic_digits() {
 }
 
 #[test]
-fn schema_qualified_tables_are_not_compared_together() {
-    assert!(run(&fixture("schema"), "").is_empty());
-}
-
-#[test]
-fn drop_index_in_another_schema_does_not_remove_the_prefix() {
-    let findings = run(&fixture("schema-drop"), "");
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(
-        findings[0].target.as_deref(),
-        Some("public.events.idx_events__topic_id")
-    );
-}
-
-#[test]
-fn drop_table_removes_that_table_indexes() {
-    assert!(run(&fixture("dropped-table"), "").is_empty());
-}
-
-#[test]
-fn numeric_later_drop_removes_the_prefix_index() {
-    assert!(run(&fixture("numeric-order"), "").is_empty());
-}
-
-#[test]
-fn flyway_version_prefix_drop_removes_the_prefix_index() {
-    assert!(run(&fixture("flyway-order"), "").is_empty());
-}
-
-#[test]
-fn multiline_create_index_allow_directive_uses_the_create_line() {
-    assert!(run(&fixture("multiline"), "").is_empty());
-}
-
-#[test]
 fn describe_index_falls_back_to_columns_for_unnamed_indexes() {
     let unnamed = SqlCreateIndexMetadata {
         name: None,
@@ -384,15 +245,4 @@ fn describe_index_falls_back_to_columns_for_unnamed_indexes() {
     let described = redundancy::describe_index(&unnamed);
     assert!(described.contains("implicit index"));
     assert!(described.contains("<expr>"));
-}
-
-#[test]
-fn earlier_drop_does_not_remove_a_later_prefix_create() {
-    let findings = run(&fixture("earlier-drop"), "");
-    assert_eq!(findings.len(), 1, "{findings:?}");
-}
-
-#[test]
-fn predicate_string_literals_are_case_sensitive() {
-    assert!(run(&fixture("predicate-case"), "").is_empty());
 }

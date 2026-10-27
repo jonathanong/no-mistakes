@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: [names.sql]
+    options:
+      bannedShapes: [banned-function-call]
+      shapeOptions:
+        bannedFunctionCall:
+          functions: [pg_sleep]
+      importSpecifier: "@example/db"
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql
+      unanalyzableSql: ignore

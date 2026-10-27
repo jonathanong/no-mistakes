@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-redundant-index
+    scope: repository
+    options:
+      sqlInclude: [migrations/001.sql]
+      allowDirective: skip-index
