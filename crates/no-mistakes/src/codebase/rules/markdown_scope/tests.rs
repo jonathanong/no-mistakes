@@ -1,5 +1,7 @@
 use super::*;
 
+// CLI JSON cannot show this helper invariant.
+
 #[test]
 fn mermaid_extensions_are_ascii_case_insensitive() {
     let files = [

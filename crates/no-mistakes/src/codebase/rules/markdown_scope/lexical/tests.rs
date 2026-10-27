@@ -1,5 +1,7 @@
 use super::*;
 
+// CLI JSON cannot show this helper invariant.
+
 #[test]
 fn relative_paths_require_compatible_roots_and_compare_windows_case_insensitively() {
     let cases = [

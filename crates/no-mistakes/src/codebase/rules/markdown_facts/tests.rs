@@ -1,5 +1,7 @@
 use super::*;
 
+// CLI JSON cannot show this helper invariant.
+
 #[test]
 fn combined_markdown_demands_share_one_source_read() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

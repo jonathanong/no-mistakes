@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: markdown-structure-budget
+    scope: repository
+    include:
+      - "**/*.md"
+    exclude:
+      - doc.md
+    options:
+      maxLines: 1
+      baselineFile: baseline.json

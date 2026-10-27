@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        # `foo/../../src` normalizes outside the repository and matches no file.
+        - path: "foo/../../src"
+          bannedExtensions: [".js"]

@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: rust-max-lines-per-file
+    scope: repository
+    include: ["inline_block.rs"]
+    options:
+      srcMax: 0

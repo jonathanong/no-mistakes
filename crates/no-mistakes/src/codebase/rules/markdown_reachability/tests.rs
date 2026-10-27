@@ -4,6 +4,9 @@ use crate::config::v2::{
     NoMistakesConfig,
 };
 
+// Output cases moved to cli_mrf_snapshot_markdown_reachability. Keep read
+// errors, depth validation, lexical path helpers, and graph internals below.
+
 mod depth_three;
 mod scope_partition;
 
@@ -90,33 +93,6 @@ fn accepts_only_supported_depths() {
 }
 
 #[test]
-fn full_check_accepts_direct_and_readme_paths_and_rejects_other_paths() {
-    let root = fixture("paths");
-    let files = [
-        "CLAUDE.md",
-        "README.md",
-        "other.md",
-        "direct.md",
-        "indexed.md",
-        "arbitrary.md",
-        "lost.md",
-    ];
-    let findings = run(&root, &config("", &["**/*.md"], &[]), &files).unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.file.as_str())
-            .collect::<Vec<_>>(),
-        ["arbitrary.md", "lost.md"]
-    );
-    assert_eq!(
-        findings[0].message,
-        "reachable at depth 2, but an intermediary must be a configured index Markdown file"
-    );
-    assert!(findings[1].message.contains("not reachable"));
-}
-
-#[test]
 fn markdown_links_follow_the_actual_filesystem_case_resolution() {
     let root = fixture("case-path");
     let findings = run(
@@ -141,23 +117,6 @@ fn markdown_links_follow_the_actual_filesystem_case_resolution() {
             "a case-sensitive filesystem keeps the Markdown link unresolved"
         );
     }
-}
-
-#[test]
-fn reports_excess_depth_when_a_readme_path_exceeds_the_configured_limit() {
-    let root = fixture("paths");
-    let findings = run(
-        &root,
-        &config("maxDepth: 1", &["**/*.md"], &[]),
-        &["CLAUDE.md", "README.md", "indexed.md"],
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "indexed.md");
-    assert_eq!(
-        findings[0].message,
-        "reachable only at depth 2; maximum is 1"
-    );
 }
 
 #[test]
@@ -268,57 +227,6 @@ fn finding_keys_normalize_relative_malformed_and_parent_only_paths() {
 }
 
 #[test]
-fn default_depth_two_distinguishes_an_invalid_intermediary_in_findings_and_baselines() {
-    let root = fixture("invalid-intermediary");
-    let files = ["CLAUDE.md", "overview.md", "detail.md", "baseline.json"];
-    let findings = run(&root, &config("", &["**/*.md"], &[]), &files).unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "detail.md");
-    assert_eq!(
-        findings[0].message,
-        "reachable at depth 2, but an intermediary must be a configured index Markdown file"
-    );
-    assert!(run(
-        &root,
-        &config("baselineFile: baseline.json", &["**/*.md"], &[]),
-        &files,
-    )
-    .unwrap()
-    .is_empty());
-    assert!(run(
-        &root,
-        &config("indexFilenames: [overview.md]", &["**/*.md"], &[]),
-        &files,
-    )
-    .unwrap()
-    .is_empty());
-}
-
-#[test]
-fn recognizes_reference_links_and_ignores_non_local_or_escaping_links() {
-    let root = fixture("links");
-    let findings = run(
-        &root,
-        &config("", &["**/*.md"], &[]),
-        &[
-            "CLAUDE.md",
-            "docs/doc.md",
-            "docs/My Guide.md",
-            "docs/unlinked.md",
-            "docs/blocked.md",
-        ],
-    )
-    .unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.file.as_str())
-            .collect::<Vec<_>>(),
-        ["docs/blocked.md", "docs/unlinked.md"]
-    );
-}
-
-#[test]
 fn shortest_depths_use_a_single_multi_source_bfs_and_skip_duplicate_queue_entries() {
     let root = Path::new("/repo");
     let claude = root.join("CLAUDE.md");
@@ -346,44 +254,6 @@ fn shortest_depths_use_a_single_multi_source_bfs_and_skip_duplicate_queue_entrie
 }
 
 #[test]
-fn baseline_requires_exact_state_and_filtered_targets_make_entries_stale() {
-    let root = fixture("baseline-match");
-    let options = "baselineFile: baseline.json";
-    let files = ["CLAUDE.md", "other.md", "deep.md", "baseline.json"];
-    let findings = run(&root, &config(options, &["**/*.md"], &[]), &files).unwrap();
-    assert!(findings.is_empty(), "{findings:#?}");
-    let filtered = run(&root, &config(options, &["**/*.md"], &["deep.md"]), &files).unwrap();
-    assert_eq!(filtered.len(), 1);
-    assert!(filtered[0].message.contains("deleted or excluded"));
-}
-
-#[test]
-fn baseline_entry_for_a_configured_root_is_stale() {
-    let root = fixture("baseline-root");
-    let findings = run(
-        &root,
-        &config("baselineFile: baseline.json", &["**/*.md"], &[]),
-        &["CLAUDE.md", "baseline.json"],
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0].message.contains("deleted or excluded"));
-}
-
-#[test]
-fn mismatched_baseline_state_is_stale() {
-    let root = fixture("baseline-mismatched");
-    let findings = run(
-        &root,
-        &config("baselineFile: baseline.json", &["**/*.md"], &[]),
-        &["CLAUDE.md", "other.md", "deep.md", "baseline.json"],
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0].message.contains("does not match"));
-}
-
-#[test]
 fn baseline_must_be_tracked_and_valid_json() {
     let root = fixture("baseline-invalid");
     let config = config("baselineFile: baseline.json", &["**/*.md"], &[]);
@@ -392,57 +262,6 @@ fn baseline_must_be_tracked_and_valid_json() {
         .unwrap_err()
         .to_string()
         .contains("tracked"));
-}
-
-#[test]
-fn accepts_a_tracked_baseline_outside_the_rule_project_root() {
-    let root = fixture("scoped");
-    let mut config = config("baselineFile: baselines/reachability.json", &[], &[]);
-    config.projects.insert(
-        "docs".to_string(),
-        crate::config::v2::schema::Project {
-            root: Some("docs".to_string()),
-            ..Default::default()
-        },
-    );
-    config.rules[0].scope = None;
-    config.rules[0].projects = vec!["docs".to_string()];
-    let findings = run(
-        &root,
-        &config,
-        &[
-            "docs/CLAUDE.md",
-            "docs/other.md",
-            "docs/deep.md",
-            "baselines/reachability.json",
-        ],
-    )
-    .unwrap();
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
-fn stale_external_baseline_entries_use_request_relative_finding_paths() {
-    let root = fixture("external-request");
-    let external = root.parent().unwrap().join("external-project");
-    let mut config = config("baselineFile: baseline.json", &[], &[]);
-    config.projects.insert(
-        "external".to_string(),
-        crate::config::v2::schema::Project {
-            root: Some(external.to_string_lossy().to_string()),
-            ..Default::default()
-        },
-    );
-    config.rules[0].scope = None;
-    config.rules[0].projects = vec!["external".to_string()];
-    let findings = run(
-        &root,
-        &config,
-        &["baseline.json", "../external-project/CLAUDE.md"],
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "../external-project/stale.md");
 }
 
 #[test]
@@ -479,17 +298,4 @@ fn rejects_ambiguous_stale_external_baseline_keys() {
     assert!(error
         .to_string()
         .contains("ambiguous baseline key `stale.md`"));
-}
-
-#[test]
-fn dispatcher_applies_standard_file_suppression() {
-    let root = fixture("suppression");
-    let config_path = root.join(".no-mistakes.yml");
-    let findings = crate::codebase::rules::run_filesystem_rules_with_files(
-        &root,
-        Some(&config_path),
-        &[root.join("CLAUDE.md"), root.join("lost.md")],
-    )
-    .unwrap();
-    assert!(findings.is_empty(), "{findings:#?}");
 }

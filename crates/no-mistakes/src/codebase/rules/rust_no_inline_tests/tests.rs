@@ -7,6 +7,9 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
+// Output cases moved to cli_mrf_snapshot_rust_no_inline_tests. Keep absolute
+// roots and finding order below.
+
 fn config_with_rule(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
@@ -50,118 +53,6 @@ fn fixture(path: &str) -> PathBuf {
         .join(path)
 }
 
-fn check_fixture(path: &str) -> Vec<RuleFinding> {
-    let path = fixture(path);
-    check_file(&path, path.parent().unwrap())
-}
-
-#[test]
-fn no_match_on_clean_source() {
-    assert!(check_fixture("unit/clean.rs").is_empty());
-}
-
-#[test]
-fn no_match_on_out_of_line_tests() {
-    assert!(
-        check_fixture("unit/out_of_line.rs").is_empty(),
-        "out-of-line mod tests; must not be flagged"
-    );
-}
-
-#[test]
-fn matches_simple_inline() {
-    let findings = check_fixture("unit/simple_inline.rs");
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].line, 1);
-}
-
-#[test]
-fn matches_inline_on_one_line() {
-    let findings = check_fixture("unit/one_line.rs");
-    assert_eq!(findings.len(), 1);
-}
-
-#[test]
-fn matches_pub_mod() {
-    let findings = check_fixture("unit/pub_mod.rs");
-    assert_eq!(findings.len(), 1);
-}
-
-#[test]
-fn matches_cfg_test_function() {
-    let findings = check_fixture("unit/cfg_fn.rs");
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].line, 1);
-    assert!(
-        findings[0].message.contains("inline #[cfg(test)] item"),
-        "{}",
-        findings[0].message
-    );
-}
-
-#[test]
-fn matches_cfg_test_use() {
-    let findings = check_fixture("unit/cfg_use.rs");
-    assert_eq!(findings.len(), 1);
-}
-
-#[test]
-fn matches_cfg_test_impl_item() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/rust-no-inline-tests/fixture/fail-associated");
-    let findings = check_file(&root.join("lib.rs"), &root);
-    assert_eq!(findings.len(), 3);
-    assert_eq!(findings[0].line, 4);
-}
-
-#[test]
-fn matches_with_whitespace_in_cfg() {
-    let findings = check_fixture("unit/whitespace_cfg.rs");
-    assert_eq!(findings.len(), 1);
-}
-
-#[test]
-fn matches_with_extra_attributes() {
-    let findings = check_fixture("unit/extra_attrs.rs");
-    assert_eq!(findings.len(), 1);
-}
-
-#[test]
-fn ignores_cfg_path_attribute_without_tokens() {
-    assert!(check_fixture("unit/path_cfg.rs").is_empty());
-}
-
-#[test]
-fn respects_disable_file_comment() {
-    let findings = check_fixture("unit/disable_file.rs");
-    assert!(findings.is_empty());
-}
-
-#[test]
-fn check_returns_empty_for_no_rs_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let config = config_with_rule("{}");
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(findings.is_empty());
-}
-
-#[test]
-fn check_reports_correct_file_path() {
-    let root = fixture("correct-path");
-    let config = config_with_rule("{}");
-    let findings = check(&root, &config).unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "mymod.rs");
-}
-
-#[test]
-fn check_respects_excludes() {
-    let root = fixture("respects-excludes");
-    let config = config_with_rule("{excludes: [\"generated\"]}");
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty());
-}
-
 #[test]
 fn check_with_files_respects_roots() {
     let root = fixture("roots");
@@ -181,22 +72,11 @@ fn check_with_files_respects_roots() {
 }
 
 #[test]
-fn check_with_files_normalizes_relative_roots() {
-    let root = fixture("roots");
-    let outside = root.join("a.rs");
-    let inside = root.join("sub/b.rs");
-    let config = config_with_rule("{roots: [\"sub\"]}");
-    let all_files = vec![outside, inside];
-    let findings = check_with_files(&root, &config, &all_files).unwrap();
-    assert_eq!(findings.len(), 1, "relative root resolves relative to root");
-    assert!(findings[0].file.contains("sub"));
-}
-
-#[test]
 fn check_sorts_by_file_then_line() {
     let root = fixture("sort-by-file");
     let config = config_with_rule("{}");
     let findings = check(&root, &config).unwrap();
+    // Snapshot normalization sorts arrays, so it does not lock emission order.
     assert_eq!(findings.len(), 3);
     for i in 1..findings.len() {
         let a = (&findings[i - 1].file, findings[i - 1].line);

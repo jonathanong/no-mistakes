@@ -1,0 +1,449 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "excludes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line_count_blank_and_comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line_count_block_comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "block_comment.rs",
+          "line": 1,
+          "message": "1 code lines (max 0) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_byte_raw_string": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "byte_raw_string_comment_markers.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_char_slash": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "char_slash.rs",
+          "line": 1,
+          "message": "1 code lines (max 0) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_doc_comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "doc_comment.rs",
+          "line": 1,
+          "message": "1 code lines (max 0) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line_count_escaped_char": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "escaped_char.rs",
+          "line": 1,
+          "message": "1 code lines (max 0) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_escaped_quote": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "escaped_quote.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_inline_block": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "inline_block.rs",
+          "line": 1,
+          "message": "1 code lines (max 0) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_multiline_raw_string": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "multiline_raw_string_comment_markers.rs",
+          "line": 1,
+          "message": "5 code lines (max 4) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_nested_block": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "nested_block.rs",
+          "line": 1,
+          "message": "1 code lines (max 0) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_raw_string": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "raw_string_comment_markers.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_simple": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "simple.rs",
+          "line": 1,
+          "message": "3 code lines (max 2) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_string_block_marker": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "string_block.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_count_string_line_marker": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "string_line.rs",
+          "line": 1,
+          "message": "1 code lines (max 0) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "over_src_limit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "big.rs",
+          "line": 1,
+          "message": "10 code lines (max 3) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "per_project": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "worker/lib.rs",
+          "line": 1,
+          "message": "3 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "physical_at_code_limit": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "physical_over_code_limit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "physical_vs_code.rs",
+          "line": 1,
+          "message": "3 code lines (max 2) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "relative_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sub/big.rs",
+          "line": 1,
+          "message": "10 code lines (max 3) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sort_by_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "a.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        },
+        {
+          "file": "b.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "test_file_limit": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "tests_directory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "within_src_limit": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

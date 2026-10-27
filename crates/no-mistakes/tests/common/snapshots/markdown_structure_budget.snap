@@ -1,0 +1,169 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "baseline_changed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "doc.md",
+          "line": 1,
+          "message": "stale baseline entry: visual counts no longer match the baseline",
+          "rule": "markdown-structure-budget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "baseline_exact": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "baseline_excluded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "doc.md",
+          "line": 1,
+          "message": "stale baseline entry: references a deleted or excluded Markdown file",
+          "rule": "markdown-structure-budget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "baseline_resolved": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "doc.md",
+          "line": 1,
+          "message": "stale baseline entry: is no longer a structure-budget violation",
+          "rule": "markdown-structure-budget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "cr_line_endings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exact-cr.md",
+          "line": 1,
+          "message": "oversized Markdown has 1 tables (max 0) and 0 Mermaid blocks (max 1)",
+          "rule": "markdown-structure-budget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "external_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "../external-project/stale.md",
+          "line": 1,
+          "message": "stale baseline entry: references a deleted or excluded Markdown file",
+          "rule": "markdown-structure-budget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "strict_thresholds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "over-budget.md",
+          "line": 1,
+          "message": "oversized Markdown has 2 tables (max 1) and 2 Mermaid blocks (max 1)",
+          "rule": "markdown-structure-budget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "table_and_mermaid_counts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "over-budget.md",
+          "line": 1,
+          "message": "oversized Markdown has 2 tables (max 1) and 2 Mermaid blocks (max 1)",
+          "rule": "markdown-structure-budget"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unicode_scalars": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "unicode.md",
+          "line": 1,
+          "message": "oversized Markdown has 2 tables (max 1) and 0 Mermaid blocks (max 1)",
+          "rule": "markdown-structure-budget"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

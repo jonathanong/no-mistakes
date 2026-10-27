@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: markdown-reachability
+    scope: repository
+    include:
+      - domain/guide.md
+    options:
+      rootFilenames: [AGENTS.md]
+      maxDepth: 2

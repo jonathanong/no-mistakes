@@ -1,0 +1,9 @@
+version: 2
+projects:
+  external:
+    root: "../external-project"
+rules:
+  - rule: markdown-structure-budget
+    projects: [external]
+    options:
+      baselineFile: baseline.json

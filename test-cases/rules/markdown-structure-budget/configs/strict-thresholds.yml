@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: markdown-structure-budget
+    scope: repository
+    include:
+      - exact-crlf.md
+      - over-budget.md
+    options:
+      maxLines: 6
+      maxChars: 100
+      maxTables: 1
+      maxMermaid: 1

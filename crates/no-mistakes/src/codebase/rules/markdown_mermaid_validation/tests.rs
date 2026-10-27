@@ -1,5 +1,8 @@
 use super::*;
 
+// Output cases moved to cli_mrf_snapshot_markdown_mermaid. Keep fact-candidate
+// reads and partial diagnostic rendering below.
+
 fn diagnostic(
     diagram_line: Option<usize>,
     diagram_column: Option<usize>,
@@ -13,35 +16,6 @@ fn diagnostic(
         diagram_type: None,
         message: "syntax error".to_string(),
     }
-}
-
-#[test]
-fn standalone_rule_wrapper_reads_saved_markdown_fixtures() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/markdown-mermaid-validation");
-    let config =
-        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
-    let files = [
-        "invalid-state.md",
-        "invalid-uppercase.MD",
-        "invalid-mixed.MdX",
-        "valid.md",
-    ]
-    .map(|name| root.join(name))
-    .to_vec();
-
-    let findings = check_with_files(&root, &config, &files).unwrap();
-
-    assert_eq!(findings.len(), 3, "{findings:#?}");
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file == "invalid-state.md"));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file == "invalid-uppercase.MD"));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file == "invalid-mixed.MdX"));
 }
 
 #[test]

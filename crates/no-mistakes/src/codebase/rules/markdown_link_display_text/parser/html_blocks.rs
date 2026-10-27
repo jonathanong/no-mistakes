@@ -46,6 +46,8 @@ fn starts_with_open_tag(value: &str, tag: &str) -> bool {
             || rest.starts_with(' ')
             || rest.starts_with('\t')
             || rest.starts_with('\n')
+            // CRLF leaves `\r` before the split `\n`.
+            || rest.starts_with('\r')
     })
 }
 

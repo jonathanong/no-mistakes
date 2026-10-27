@@ -1,0 +1,36 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "saved_fixtures": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid-mixed.MdX",
+          "line": 4,
+          "message": "invalid Mermaid diagram (sequence) at diagram line 2, column 9: unexpected text; expected plus, minus, central, num, actor",
+          "rule": "markdown-mermaid-validation"
+        },
+        {
+          "file": "invalid-state.md",
+          "line": 3,
+          "message": "invalid Mermaid diagram (stateDiagram) at diagram line 2, column 8: unexpected statement separator; expected node identifier, styled id, edge state",
+          "rule": "markdown-mermaid-validation"
+        },
+        {
+          "file": "invalid-uppercase.MD",
+          "line": 3,
+          "message": "invalid Mermaid diagram (flowchart-v2) at diagram line 2, column 6: unexpected end of input; expected node identifier, edge label",
+          "rule": "markdown-mermaid-validation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

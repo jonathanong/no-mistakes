@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: markdown-mermaid-validation
+    scope: repository
+    include:
+      - invalid-state.md
+      - invalid-uppercase.MD
+      - invalid-mixed.MdX
+      - valid.md

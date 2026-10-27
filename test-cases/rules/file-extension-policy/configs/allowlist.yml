@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      allowlist: ["backend/legacy.js"]
+      scopes:
+        - path: backend
+          bannedExtensions: [".js"]

@@ -7,6 +7,9 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
+// Output cases moved to cli_mrf_snapshot_rust_no_inline_allows. Keep unreadable
+// paths, absolute roots, and unconfigured-rule emptiness below.
+
 fn config_with_rule(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
@@ -50,53 +53,6 @@ fn fixture(path: &str) -> PathBuf {
         .join(path)
 }
 
-fn check_fixture(path: &str) -> Vec<RuleFinding> {
-    let path = fixture(path);
-    check_file(&path, path.parent().unwrap())
-}
-
-#[test]
-fn no_match_on_clean_source() {
-    assert!(check_fixture("unit/clean.rs").is_empty());
-}
-
-#[test]
-fn matches_inline_allow_attribute() {
-    let findings = check_fixture("unit/inline_allow.rs");
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].line, 1);
-    assert!(findings[0].message.contains("allow(dead_code)"));
-}
-
-#[test]
-fn matches_indented_inline_allow_attribute() {
-    let findings = check_fixture("unit/indented_allow.rs");
-    assert_eq!(findings.len(), 1);
-}
-
-#[test]
-fn matches_path_form_allow_attribute() {
-    let findings = check_fixture("unit/path_allow.rs");
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0].message.contains("allow()"));
-}
-
-#[test]
-fn normalizes_namespaced_lint_tokens() {
-    let findings = check_fixture("unit/namespaced_allow.rs");
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0]
-        .message
-        .contains("allow(clippy::all,unused_imports)"));
-}
-
-#[test]
-fn invalid_rust_with_allow_marker_reports_uncertainty() {
-    let findings = check_fixture("unit/invalid.rs");
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
-}
-
 #[test]
 fn unreadable_file_reports_unanalyzable_input() {
     let tmp = tempfile::tempdir().unwrap();
@@ -105,31 +61,6 @@ fn unreadable_file_reports_unanalyzable_input() {
         check_file(&path, tmp.path())[0].target.as_deref(),
         Some("unanalyzable")
     );
-}
-
-#[test]
-fn respects_disable_file_comment() {
-    assert!(check_fixture("unit/disable_file.rs").is_empty());
-}
-
-#[test]
-fn check_respects_excludes() {
-    let root = fixture("excludes");
-    let config = config_with_rule("{excludes: [\"generated\"]}");
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty());
-}
-
-#[test]
-fn check_with_files_respects_roots() {
-    let root = fixture("roots");
-    let sub = root.join("sub");
-    let outside = root.join("a.rs");
-    let inside = sub.join("b.rs");
-    let config = config_with_rule("{roots: [\"sub\"]}");
-    let findings = check_with_files(&root, &config, &[outside, inside]).unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "sub/b.rs");
 }
 
 #[test]
@@ -145,7 +76,7 @@ fn check_with_files_respects_absolute_roots() {
 }
 
 #[test]
-fn helpers_cover_unrooted_excludes_and_non_list_allow_attrs() {
+fn helpers_cover_unrooted_excludes_absolute_roots_and_missing_files() {
     let root = Path::new("/repo");
     assert!(is_excluded(
         root,
@@ -164,10 +95,6 @@ fn helpers_cover_unrooted_excludes_and_non_list_allow_attrs() {
     let roots = normalize_roots(&opts, root, &[PathBuf::from("/repo/fallback")]);
     assert!(roots.contains(&PathBuf::from("/repo/src")));
     assert!(roots.contains(&PathBuf::from("/abs")));
-    let parsed = syn::parse_file("#[allow] fn f() {}").unwrap();
-    let findings = findings_from_parsed(Path::new("/repo/a.rs"), root, &parsed);
-    assert_eq!(findings.len(), 1);
-    assert!(findings[0].message.contains("allow()"));
     assert_eq!(
         check_file(Path::new("/repo/missing.rs"), root)[0]
             .target
@@ -177,17 +104,8 @@ fn helpers_cover_unrooted_excludes_and_non_list_allow_attrs() {
 }
 
 #[test]
-fn check_discovers_relative_absolute_roots_and_skips_test_files() {
+fn check_discovers_absolute_roots_and_skips_unconfigured_rules() {
     let root = fixture("roots");
-    let relative = config_with_rule("{roots: [\"sub\"]}");
-    let findings = check(&root, &relative).unwrap();
-    assert_eq!(findings.len(), 1);
-    assert!(
-        findings[0].file.ends_with("sub/b.rs"),
-        "unexpected file: {}",
-        findings[0].file
-    );
-
     let sub = root.join("sub");
     let absolute = config_with_rule(&format!("{{roots: [\"{}\"]}}", sub.display()));
     let findings = check(&root, &absolute).unwrap();
@@ -198,13 +116,6 @@ fn check_discovers_relative_absolute_roots_and_skips_test_files() {
         findings[0].file
     );
 
-    let findings = check(&root, &config_with_rule("{}")).unwrap();
-    assert!(findings
-        .iter()
-        .all(|finding| !finding.file.ends_with("tests.rs")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file.ends_with("a.rs")));
     assert!(check(&root, &NoMistakesConfig::default())
         .unwrap()
         .is_empty());

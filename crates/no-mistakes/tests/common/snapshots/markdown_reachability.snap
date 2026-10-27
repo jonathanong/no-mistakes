@@ -1,0 +1,423 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "baseline_exact": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "baseline_excluded_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "deep.md",
+          "line": 1,
+          "message": "stale baseline entry: references a deleted or excluded Markdown file",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "baseline_mismatched": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "deep.md",
+          "line": 1,
+          "message": "stale baseline entry: baseline does not match current depth",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "baseline_root_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "CLAUDE.md",
+          "line": 1,
+          "message": "stale baseline entry: references a deleted or excluded Markdown file",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "direct_and_readme_paths": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "arbitrary.md",
+          "line": 1,
+          "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
+          "rule": "markdown-reachability"
+        },
+        {
+          "file": "lost.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "excess_depth": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "indexed.md",
+          "line": 1,
+          "message": "reachable only at depth 2; maximum is 1",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "excluded_root_still_links": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "external_stale_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "../external-project/stale.md",
+          "line": 1,
+          "message": "stale baseline entry: references a deleted or excluded Markdown file",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "file_suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_intermediary": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "detail.md",
+          "line": 1,
+          "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_intermediary_baseline": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_intermediary_index": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nested_project_scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/lost.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reference_and_escaping_links": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/blocked.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability"
+        },
+        {
+          "file": "docs/unlinked.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scope_alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "outer.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scope_application_remapper": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "scope_partition": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/nested.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability"
+        },
+        {
+          "file": "outer.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scoped_external_baseline": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shortcut_index_names": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "second.md",
+          "line": 1,
+          "message": "reachable at depth 3, but an intermediary must be a configured index Markdown file",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "third_hop_baseline": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "domain/guide.md",
+          "line": 1,
+          "message": "stale baseline entry: is reachable; remove its baseline entry",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "three_hop_index_routes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "domain/deeper/deep.md",
+          "line": 1,
+          "message": "reachable only at depth 4; maximum is 3",
+          "rule": "markdown-reachability"
+        },
+        {
+          "file": "first.md",
+          "line": 1,
+          "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
+          "rule": "markdown-reachability"
+        },
+        {
+          "file": "second.md",
+          "line": 1,
+          "message": "reachable at depth 3, but an intermediary must be a configured index Markdown file",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "two_hop_default_depth": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "domain/guide.md",
+          "line": 1,
+          "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "two_hop_explicit_depth": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "domain/guide.md",
+          "line": 1,
+          "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
+          "rule": "markdown-reachability"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

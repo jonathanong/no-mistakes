@@ -1,0 +1,5 @@
+version: 2
+rules:
+  - rule: rust-no-inline-tests
+    scope: repository
+    include: ["one_line.rs"]

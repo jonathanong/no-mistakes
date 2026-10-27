@@ -1,0 +1,121 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "canonical_html_fragment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/guide.md",
+          "line": 1,
+          "message": "docs/guide.md is not linked from a configured parent markdown file; add a whole-file markdown link to this file from a parent",
+          "rule": "markdown-child-links",
+          "target": "docs/guide.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "canonical_html_whole_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fragment_counts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fragment_ignored": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/guide.md",
+          "line": 1,
+          "message": "docs/guide.md is not linked from a configured parent markdown file; add a whole-file markdown link to this file from a parent",
+          "rule": "markdown-child-links",
+          "target": "docs/guide.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "linked_whole_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing_markdown_link": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/guide.md",
+          "line": 1,
+          "message": "docs/guide.md is not linked from a configured parent markdown file; add a markdown link to this file from a parent",
+          "rule": "markdown-child-links",
+          "target": "docs/guide.md"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_whole_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/guide.md",
+          "line": 1,
+          "message": "docs/guide.md is not linked from a configured parent markdown file; add a whole-file markdown link to this file from a parent",
+          "rule": "markdown-child-links",
+          "target": "docs/guide.md"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

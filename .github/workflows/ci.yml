@@ -544,7 +544,10 @@ jobs:
             cargo test --locked -p no-mistakes --test macos_invocation
           fi
           # Compare the same committed JSON snapshots on both native platforms.
+          # Markdown, Rust, and file-rule snapshots live in this suite so native
+          # jobs do not compile suite_cli_rules inside the ten-minute step.
           cargo test --locked -p no-mistakes --test suite_cli_postgres cli_postgres_snapshot_
+          cargo test --locked -p no-mistakes --test suite_cli_postgres cli_mrf_snapshot_
 
       - name: Run native CLI smoke test
         timeout-minutes: 2

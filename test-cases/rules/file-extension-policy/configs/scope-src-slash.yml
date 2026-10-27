@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        # A trailing slash is an empty segment and collapses to `src`.
+        - path: "src/"
+          bannedExtensions: [".js"]

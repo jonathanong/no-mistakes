@@ -2,6 +2,26 @@
 
 #[path = "common/check_json_snapshot.rs"]
 mod check_json_snapshot;
+#[path = "cli_mrf_snapshot_file_extension_policy.rs"]
+mod cli_mrf_snapshot_file_extension_policy;
+#[path = "cli_mrf_snapshot_markdown_child_links.rs"]
+mod cli_mrf_snapshot_markdown_child_links;
+#[path = "cli_mrf_snapshot_markdown_eval_tests.rs"]
+mod cli_mrf_snapshot_markdown_eval_tests;
+#[path = "cli_mrf_snapshot_markdown_link_display_text.rs"]
+mod cli_mrf_snapshot_markdown_link_display_text;
+#[path = "cli_mrf_snapshot_markdown_mermaid.rs"]
+mod cli_mrf_snapshot_markdown_mermaid;
+#[path = "cli_mrf_snapshot_markdown_reachability.rs"]
+mod cli_mrf_snapshot_markdown_reachability;
+#[path = "cli_mrf_snapshot_markdown_structure_budget.rs"]
+mod cli_mrf_snapshot_markdown_structure_budget;
+#[path = "cli_mrf_snapshot_rust_max_lines.rs"]
+mod cli_mrf_snapshot_rust_max_lines;
+#[path = "cli_mrf_snapshot_rust_no_inline_allows.rs"]
+mod cli_mrf_snapshot_rust_no_inline_allows;
+#[path = "cli_mrf_snapshot_rust_no_inline_tests.rs"]
+mod cli_mrf_snapshot_rust_no_inline_tests;
 #[path = "cli_postgres_snapshot_constraint_validate.rs"]
 mod cli_postgres_snapshot_constraint_validate;
 #[path = "cli_postgres_snapshot_fk_on_delete.rs"]

@@ -1,0 +1,367 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowed_mts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allowlisted": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "banned_extension": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/index.js",
+          "line": 1,
+          "message": "backend/index.js: file uses .js extension — align with scope policy",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "check_with_files": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/index.ts",
+          "line": 1,
+          "message": "backend/index.ts: file uses .ts extension — align with scope policy",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declaration_dts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declarations_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dot_prefix": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/helper.js",
+          "line": 1,
+          "message": "src/helper.js: file uses .js extension — align with scope policy",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escape_foo_parent_src": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scope-foo-escape.yml",
+          "line": 1,
+          "message": "foo/../../src: configured root escapes the repository",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escape_parent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scope-parent.yml",
+          "line": 1,
+          "message": "..: configured root escapes the repository",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escape_parent_src": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scope-parent-src.yml",
+          "line": 1,
+          "message": "../src: configured root escapes the repository",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "escape_src_parent_parent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scope-src-parent-parent.yml",
+          "line": 1,
+          "message": "src/../..: configured root escapes the repository",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/services/auth/index.js",
+          "line": 1,
+          "message": "backend/services/auth/index.js: file uses .js extension — align with scope policy",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_extension": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "out_of_scope": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "overlap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/services/auth/index.js",
+          "line": 1,
+          "message": "backend/services/auth/index.js: file uses .js extension — align with scope policy",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "prefix_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "scope_dot_src": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/helper.js",
+          "line": 1,
+          "message": "src/helper.js: file uses .js extension — align with scope policy",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scope_escape": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "../outside: configured root escapes the repository",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scope_src": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/helper.js",
+          "line": 1,
+          "message": "src/helper.js: file uses .js extension — align with scope policy",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scope_src_parent_src": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/helper.js",
+          "line": 1,
+          "message": "src/helper.js: file uses .js extension — align with scope policy",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scope_src_slash": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/helper.js",
+          "line": 1,
+          "message": "src/helper.js: file uses .js extension — align with scope policy",
+          "rule": "file-extension-policy"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,2 @@
+/// doc comment
+fn foo() {}

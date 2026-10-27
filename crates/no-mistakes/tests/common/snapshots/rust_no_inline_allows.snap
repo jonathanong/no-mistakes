@@ -1,0 +1,201 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "combined_invalid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/invalid.rs",
+          "line": 1,
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "rule": "rust-no-inline-allows",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "excludes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "indented_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "indented_allow.rs",
+          "line": 1,
+          "message": "inline #[allow(unused_imports)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "inline_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "inline_allow.rs",
+          "line": 1,
+          "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid.rs",
+          "line": 1,
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "rule": "rust-no-inline-allows",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "namespaced_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "namespaced_allow.rs",
+          "line": 1,
+          "message": "inline #[allow(clippy::all,unused_imports)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "path_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "path_allow.rs",
+          "line": 1,
+          "message": "inline #[allow()] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "relative_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sub/b.rs",
+          "line": 1,
+          "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "skips_test_files": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "a.rs",
+          "line": 1,
+          "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows"
+        },
+        {
+          "file": "sub/b.rs",
+          "line": 1,
+          "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
