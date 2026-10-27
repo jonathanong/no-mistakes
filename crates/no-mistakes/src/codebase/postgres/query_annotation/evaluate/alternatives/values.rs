@@ -6,6 +6,15 @@ mod prefixes;
 mod progress;
 pub(super) use progress::Walk;
 
+pub(super) fn unchanged_without_arguments(before: &Scope, after: &Scope) -> bool {
+    // Shared bindings fix every immutable prefix, but not mutable arena slots.
+    // Borrow only a warm summary: cold scopes retain their original walk.
+    before.same_bindings(after)
+        && before
+            .cached_references()
+            .is_some_and(|edges| edges.arguments.is_empty())
+}
+
 pub(super) fn changes(
     before: &Value,
     after: &Value,

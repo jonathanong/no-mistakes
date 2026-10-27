@@ -101,7 +101,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 let mut comparisons = scopes
                     .iter()
                     .zip(&self.scopes)
-                    .filter(|(before, _)| !precise_records && before.contains_reference())
+                    .filter(|(before, after)| {
+                        !precise_records
+                            && before.contains_reference()
+                            && !super::values::unchanged_without_arguments(before, after)
+                    })
                     .peekable();
                 // Peek retains the first eligible scope without a second scan.
                 if comparisons.peek().is_some() {
