@@ -1,0 +1,9 @@
+version: 2
+shared: &shared
+  root: apps/missing
+projects:
+  web:
+    <<: *shared
+rules:
+  - rule: no-mistakes-config
+    scope: repository

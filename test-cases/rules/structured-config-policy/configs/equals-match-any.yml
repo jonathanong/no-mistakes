@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: ["any.yml", "drift.yml"]
+          valueAssertions:
+            - key: items.[].name
+              kind: equals-file
+              match: any
+              file: root.yml
+              fromKey: items.0.name

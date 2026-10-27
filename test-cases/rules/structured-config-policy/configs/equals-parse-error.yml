@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: ["pkg/.oxlintrc.json"]
+          valueAssertions:
+            - key: plugins
+              kind: equals-file
+              file: invalid.json
+              fromKey: plugins

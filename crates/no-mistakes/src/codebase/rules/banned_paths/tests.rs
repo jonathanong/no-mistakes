@@ -1,5 +1,4 @@
 use super::*;
-use crate::config::v2::load_v2_config;
 use std::path::Path;
 
 fn fixture_root(name: &str) -> PathBuf {
@@ -10,49 +9,8 @@ fn fixture_root(name: &str) -> PathBuf {
     )
 }
 
-#[test]
-fn flags_configured_path_globs() {
-    let root = fixture_root("fail");
-    let config_path = root.join(".no-mistakes.yml");
-    let config = load_v2_config(&root, Some(&config_path)).unwrap();
-    let files = vec![
-        root.join("web/pages/index.tsx"),
-        root.join("web/src/pages/account.tsx"),
-        root.join("web/app/[topicType]/page.tsx"),
-        root.join("web/app/topic/page.tsx"),
-        root.join("web/app/t/page.tsx"),
-        root.join("web/app/file.js"),
-        root.join("web/app/file.ts"),
-        root.join("web/app/file.css"),
-        root.join("web/app/components/button.ts"),
-        root.join("web/app/[[...slug]]/page.tsx"),
-    ];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-    let files: Vec<&str> = findings
-        .iter()
-        .map(|finding| finding.file.as_str())
-        .collect();
-    assert_eq!(
-        files,
-        vec![
-            "web/app/[[...slug]]/page.tsx",
-            "web/app/[topicType]/page.tsx",
-            "web/app/file.js",
-            "web/app/file.ts",
-            "web/app/topic/page.tsx",
-            "web/pages/index.tsx",
-            "web/src/pages/account.tsx",
-        ]
-    );
-    let default_message = findings
-        .iter()
-        .find(|finding| finding.file == "web/app/topic/page.tsx")
-        .map(|finding| finding.message.as_str());
-    assert_eq!(
-        default_message,
-        Some("web/app/topic/page.tsx: path is banned by `web/app/topic/**`")
-    );
-}
+// Output cases moved to cli_rra_snapshot_banned_paths. Keep bracket escaping,
+// the absolute external-project skip bypass, and invalid-glob errors.
 
 #[test]
 fn escapes_only_literal_route_bracket_segments() {
@@ -76,23 +34,6 @@ fn escapes_only_literal_route_bracket_segments() {
         escape_literal_route_brackets("web/app/[topicType"),
         "web/app/[topicType"
     );
-}
-
-#[test]
-fn respects_rule_include_and_suppression() {
-    let root = fixture_root("suppressed");
-    let config_path = root.join(".no-mistakes.yml");
-    let config = load_v2_config(&root, Some(&config_path)).unwrap();
-    let files = vec![
-        root.join("web/pages/index.tsx"),
-        root.join("web/pages/allowed.tsx"),
-        root.join("other/pages/index.tsx"),
-    ];
-    let mut findings = check_with_files(&root, &config, &files).unwrap();
-    let sources = super::super::source_store_for_files(&files);
-    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "web/pages/index.tsx");
 }
 
 #[test]

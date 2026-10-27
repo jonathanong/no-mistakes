@@ -117,6 +117,34 @@ mod cli_gha_snapshot_step_timeouts;
 mod cli_gha_snapshot_test_timeout_literals;
 #[path = "cli_gha_snapshot_workflow_topology.rs"]
 mod cli_gha_snapshot_workflow_topology;
+#[path = "cli_rra_snapshot_banned_paths.rs"]
+mod cli_rra_snapshot_banned_paths;
+#[path = "cli_rra_snapshot_banned_renamed_files.rs"]
+mod cli_rra_snapshot_banned_renamed_files;
+#[path = "cli_rra_snapshot_no_empty_or_comments_only_files.rs"]
+mod cli_rra_snapshot_no_empty_or_comments_only_files;
+#[path = "cli_rra_snapshot_no_git_identity_mutation.rs"]
+mod cli_rra_snapshot_no_git_identity_mutation;
+#[path = "cli_rra_snapshot_no_mistakes_config.rs"]
+mod cli_rra_snapshot_no_mistakes_config;
+#[path = "cli_rra_snapshot_no_raw_ephemeral_port.rs"]
+mod cli_rra_snapshot_no_raw_ephemeral_port;
+#[path = "cli_rra_snapshot_no_sparse_checkout.rs"]
+mod cli_rra_snapshot_no_sparse_checkout;
+#[path = "cli_rra_snapshot_no_test_git_sha.rs"]
+mod cli_rra_snapshot_no_test_git_sha;
+#[path = "cli_rra_snapshot_require_files_in_subdirs.rs"]
+mod cli_rra_snapshot_require_files_in_subdirs;
+#[path = "cli_rra_snapshot_require_storybook_stories.rs"]
+mod cli_rra_snapshot_require_storybook_stories;
+#[path = "cli_rra_snapshot_require_test_per_subdir.rs"]
+mod cli_rra_snapshot_require_test_per_subdir;
+#[path = "cli_rra_snapshot_strict_package_layout.rs"]
+mod cli_rra_snapshot_strict_package_layout;
+#[path = "cli_rra_snapshot_structured_config_policy.rs"]
+mod cli_rra_snapshot_structured_config_policy;
+#[path = "cli_rra_snapshot_unconstructed_error_class.rs"]
+mod cli_rra_snapshot_unconstructed_error_class;
 
 #[path = "cli_check_git_identity_prefixes.rs"]
 mod cli_check_git_identity_prefixes;

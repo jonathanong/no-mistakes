@@ -1,0 +1,9 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      includeAllReactNamedExports: true

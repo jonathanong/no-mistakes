@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: ["custom/**/*.yml"]
+          when:
+            - key: inherit
+          valueAssertions:
+            - kind: ancestor-override-subset
+              extendsKey: inherit
+              overridesKey: layers
+              filesKey: globs
+              rulesKey: policy

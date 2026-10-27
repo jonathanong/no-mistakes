@@ -4,6 +4,8 @@ use crate::config::v2::{
     NoMistakesConfig,
 };
 
+// Output cases moved to cli_rra_snapshot_no_git_identity_mutation.
+
 fn fixture() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/no-git-identity-mutation/fixture/literal-prefixes")
@@ -49,25 +51,6 @@ fn literal_prefix_controls_remain_clear() {
     let findings =
         super::super::run_filesystem_rules_with_config(&root, &config("{}"), &files).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
-fn prefixes_preserve_explicit_exclusions_and_managed_runner_exception() {
-    let root = fixture();
-    let files = ["mutations.sh", "managed.yml", "self-hosted.yml"].map(|name| root.join(name));
-    let findings = check_with_files(
-        &root,
-        &config("excludePaths: ['mutations.sh']\nconditionallyAllowedWorkflows: ['*.yml']"),
-        &files,
-    )
-    .unwrap();
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| (finding.file.as_str(), finding.line))
-            .collect::<Vec<_>>(),
-        [("self-hosted.yml", 5)]
-    );
 }
 
 #[test]

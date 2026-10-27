@@ -1,0 +1,11 @@
+version: 2
+testPlan:
+  vitest:
+    environments:
+      prePush:
+        all: true
+        limit:
+          files: 10
+rules:
+  - rule: no-mistakes-config
+    scope: repository

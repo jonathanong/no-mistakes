@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: banned-renamed-files
+    scope: repository
+    options:
+      bannedBasenames:
+        - name: middleware
+          message: "rename it"
+      extensions: [".ts"]

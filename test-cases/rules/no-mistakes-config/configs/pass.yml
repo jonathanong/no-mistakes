@@ -1,0 +1,10 @@
+version: 2
+projects:
+  web:
+    root: web
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: no-mistakes-config
+    scope: repository

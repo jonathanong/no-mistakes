@@ -1,0 +1,15 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: web
+  admin:
+    type: nextjs
+    root: admin
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      # Component inclusion is additive; generic include is the scope boundary.
+      include: [components/**/*.tsx]
+      includeAllReactNamedExports: true

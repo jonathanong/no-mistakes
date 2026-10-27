@@ -2,26 +2,13 @@ use super::*;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId};
 use crate::codebase::ts_resolver::TsConfig;
 
+// Output cases moved to cli_rra_snapshot_unconstructed_error_class.
+
 fn root() -> PathBuf {
     fixture()
         .parent()
         .unwrap()
         .join("workspace-export-targets/fixture")
-}
-
-#[test]
-fn workspace_exports_resolve_multiple_stars_and_subpaths_outside_rule_include() {
-    let report = diagnostic_report(&root());
-    assert_eq!(
-        reported_channel(&report, "rules"),
-        ["app/queues/errors.mts:3 UnusedError"],
-        "{report}"
-    );
-    assert_eq!(
-        reported_channel(&report, "advisories"),
-        Vec::<String>::new(),
-        "{report}"
-    );
 }
 
 #[test]
@@ -71,42 +58,4 @@ fn workspace_export_constructor_metadata_retains_concrete_class_identity() {
         assert!(file.ends_with(path), "{target:?}");
         assert_eq!(symbol.as_ref(), name, "{target:?}");
     }
-}
-
-#[test]
-fn unresolved_and_conflicting_star_exports_preserve_ancestry_uncertainty() {
-    let root = fixture()
-        .parent()
-        .unwrap()
-        .join("workspace-export-ambiguity/fixture");
-    let report = diagnostic_report(&root);
-    assert_eq!(
-        reported_channel(&report, "rules"),
-        Vec::<String>::new(),
-        "{report}"
-    );
-    assert_eq!(
-        reported_channel(&report, "advisories"),
-        ["app/main.mts:3 unanalyzable", "app/main.mts:4 unanalyzable"],
-        "{report}"
-    );
-    let report: serde_json::Value = serde_json::from_str(
-        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
-            serde_json::json!({
-                "root": root, "config": root.join("default.yml"),
-            }),
-        ))
-        .unwrap(),
-    )
-    .unwrap();
-    assert_eq!(
-        reported_channel(&report, "rules"),
-        Vec::<String>::new(),
-        "{report}"
-    );
-    assert_eq!(
-        reported_channel(&report, "advisories"),
-        ["default-app/main.mts:2 unanalyzable"],
-        "{report}"
-    );
 }

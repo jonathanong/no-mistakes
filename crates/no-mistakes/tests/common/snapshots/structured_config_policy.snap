@@ -1,0 +1,829 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "ancestor_curated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "abs/.oxlintrc.json",
+          "line": 1,
+          "message": "abs/.oxlintrc.json: ancestor-override-subset extends must be a non-empty portable relative path or package specifier",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "bool-extends/.oxlintrc.json",
+          "line": 1,
+          "message": "bool-extends/.oxlintrc.json: ancestor-override-subset extends must be a string or an array of strings",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "odd/.oxlintrc.json",
+          "line": 1,
+          "message": "odd/.oxlintrc.json: ancestor override in `odd-parent.json` must be an array",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_custom_keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "custom/child-lost/config.yml",
+          "line": 1,
+          "message": "custom/child-lost/config.yml: lost ancestor override must be a value-equal subset of `policy`",
+          "rule": "structured-config-policy",
+          "target": "policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "lost/.oxlintrc.json",
+          "line": 1,
+          "message": "restate lost overrides",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_cycle_escape": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "cycle/.oxlintrc.json",
+          "line": 1,
+          "message": "cycle/.oxlintrc.json: ancestor-override-subset extends cycle through `./.oxlintrc.json`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "missing/.oxlintrc.json",
+          "line": 1,
+          "message": "missing/.oxlintrc.json: ancestor-override-subset `./nope.json` is missing",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "outside/.oxlintrc.json",
+          "line": 1,
+          "message": "outside/.oxlintrc.json: ancestor-override-subset `../../nested-plugins/.oxlintrc.json` is outside the repository root",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "symlink/.oxlintrc.json",
+          "line": 1,
+          "message": "symlink/.oxlintrc.json: ancestor-override-subset `../escape-link/.oxlintrc.json` is outside the repository root",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude/lost/.oxlintrc.json",
+          "line": 1,
+          "message": "exclude/lost/.oxlintrc.json: lost ancestor override must be a value-equal subset of `rules`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_extends_inventory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "cycle/.oxlintrc.json",
+          "line": 1,
+          "message": "cycle/.oxlintrc.json: ancestor-override-subset extends cycle through `./.oxlintrc.json`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "deep/lost/.oxlintrc.json",
+          "line": 1,
+          "message": "deep/lost/.oxlintrc.json: lost ancestor override must be a value-equal subset of `rules`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "drift/.oxlintrc.json",
+          "line": 1,
+          "message": "drift/.oxlintrc.json: lost ancestor override must be a value-equal subset of `rules`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "lost/.oxlintrc.json",
+          "line": 1,
+          "message": "lost/.oxlintrc.json: lost ancestor override must be a value-equal subset of `rules`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "missing/.oxlintrc.json",
+          "line": 1,
+          "message": "missing/.oxlintrc.json: ancestor-override-subset `./nope.json` is missing",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "multi/.oxlintrc.json",
+          "line": 1,
+          "message": "multi/.oxlintrc.json: lost ancestor override must be a value-equal subset of `rules`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "outside/.oxlintrc.json",
+          "line": 1,
+          "message": "outside/.oxlintrc.json: ancestor-override-subset `../../nested-plugins/.oxlintrc.json` is outside the repository root",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "symlink/.oxlintrc.json",
+          "line": 1,
+          "message": "symlink/.oxlintrc.json: ancestor-override-subset `../escape-link/.oxlintrc.json` is outside the repository root",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_include_configs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "lost/.oxlintrc.json",
+          "line": 1,
+          "message": "lost/.oxlintrc.json: lost ancestor override must be a value-equal subset of `rules`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "malformed/child/.oxlintrc.json",
+          "line": 1,
+          "message": "malformed/child/.oxlintrc.json: ancestor override in `malformed/base.json` files must contain valid string globs",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "malformed/invalid-extends/.oxlintrc.json",
+          "line": 1,
+          "message": "malformed/invalid-extends/.oxlintrc.json: ancestor-override-subset extends must be a string or an array of strings",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "malformed/padded-extends/.oxlintrc.json",
+          "line": 1,
+          "message": "malformed/padded-extends/.oxlintrc.json: ancestor-override-subset extends must be a non-empty portable relative path or package specifier",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_parse_custom": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid.json",
+          "line": 1,
+          "message": "invalid.json: failed to parse JSONC (Expected colon after the string or word in object property on line 1 column 7)",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_per_child": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "per-child/nested/.oxlintrc.json",
+          "line": 1,
+          "message": "per-child/nested/.oxlintrc.json: lost ancestor override must be a value-equal subset of `rules`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_precedence": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ancestor_shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "malformed-shapes/nested/.oxlintrc.json",
+          "line": 1,
+          "message": "malformed-shapes/nested/.oxlintrc.json: ancestor override in `malformed-shapes/base.json` excludeFiles must contain valid string globs",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "malformed-shapes/nested/.oxlintrc.json",
+          "line": 1,
+          "message": "malformed-shapes/nested/.oxlintrc.json: ancestor override in `malformed-shapes/base.json` must be an object",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        },
+        {
+          "file": "malformed-shapes/nested/.oxlintrc.json",
+          "line": 1,
+          "message": "malformed-shapes/nested/.oxlintrc.json: ancestor override in `malformed-shapes/base.json` rules must be an object",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_sibling": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sibling/app/nested/.oxlintrc.json",
+          "line": 1,
+          "message": "sibling/app/nested/.oxlintrc.json: lost ancestor override must be a value-equal subset of `rules`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "lost/.oxlintrc.json",
+          "line": 1,
+          "message": "lost/.oxlintrc.json: lost ancestor override must be a value-equal subset of `rules`",
+          "rule": "structured-config-policy",
+          "target": "rules"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ancestor_when_skips": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "equals_empty_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pkg/.oxlintrc.json",
+          "line": 1,
+          "message": "pkg/.oxlintrc.json: equals-file assertion is missing `file`",
+          "rule": "structured-config-policy",
+          "target": "plugins"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "equals_indexed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "drift.yml",
+          "line": 1,
+          "message": "names must match",
+          "rule": "structured-config-policy",
+          "target": "items.0.name"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "equals_match_any": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "drift.yml",
+          "line": 1,
+          "message": "drift.yml: config value `items.[].name` must equal `items.0.name` from `root.yml`",
+          "rule": "structured-config-policy",
+          "target": "items.[].name"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "equals_missing_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pkg/.oxlintrc.json",
+          "line": 1,
+          "message": "pkg/.oxlintrc.json: equals-file `missing.json` is missing",
+          "rule": "structured-config-policy",
+          "target": "plugins"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "equals_missing_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pkg/.oxlintrc.json",
+          "line": 1,
+          "message": "pkg/.oxlintrc.json: equals-file assertion is missing `key`",
+          "rule": "structured-config-policy",
+          "target": ""
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "equals_parse_custom": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid.json",
+          "line": 1,
+          "message": "invalid.json: failed to parse JSONC (Unterminated object on line 1 column 2)",
+          "rule": "structured-config-policy",
+          "target": "plugins"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "equals_parse_error": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid.json",
+          "line": 1,
+          "message": "invalid.json: failed to parse JSONC (Unterminated object on line 1 column 2)",
+          "rule": "structured-config-policy",
+          "target": "plugins"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "invalid.yml",
+          "line": 1,
+          "message": "invalid.yml: failed to parse YAML (did not find expected node content at line 3 column 1, while parsing a flow node)",
+          "rule": "structured-config-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "jsonc_any_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "no-bind.json",
+          "line": 1,
+          "message": "no-bind.json: config value `rules.no-restricted-properties.[]` must match at least one array entry",
+          "rule": "structured-config-policy",
+          "target": "rules.no-restricted-properties.[]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "jsonc_any_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "jsonc_banned": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".oxlintrc.json",
+          "line": 1,
+          "message": ".oxlintrc.json: banned config key `legacy` is present",
+          "rule": "structured-config-policy",
+          "target": "legacy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "merge_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: banned config key `runtime.legacy.enabled` is present",
+          "rule": "structured-config-policy",
+          "target": "runtime.legacy.enabled"
+        },
+        {
+          "file": "sequence.yml",
+          "line": 1,
+          "message": "sequence.yml: banned config key `runtime.legacy.enabled` is present",
+          "rule": "structured-config-policy",
+          "target": "runtime.legacy.enabled"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "overrides_bind": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "drop.json",
+          "line": 1,
+          "message": "drop.json: config value `overrides.[].rules.no-restricted-properties.[]` must match at least one array entry",
+          "rule": "structured-config-policy",
+          "target": "overrides.[].rules.no-restricted-properties.[]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "plugins_drift": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "drift/.oxlintrc.json",
+          "line": 1,
+          "message": "drift/.oxlintrc.json: config value `plugins` must equal `plugins` from `.oxlintrc.json`",
+          "rule": "structured-config-policy",
+          "target": "plugins"
+        },
+        {
+          "file": "omit-plugins/.oxlintrc.json",
+          "line": 1,
+          "message": "omit-plugins/.oxlintrc.json: config value `plugins` must equal `plugins` from `.oxlintrc.json`",
+          "rule": "structured-config-policy",
+          "target": "plugins"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "prefix_single_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `overrides.[].files.[]` must not be a single-file entry",
+          "rule": "structured-config-policy",
+          "target": "overrides.[].files.[]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "required_banned": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: banned config key `legacy.enabled` is present",
+          "rule": "structured-config-policy",
+          "target": "legacy.enabled"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: required config key `runtime.owner` is missing",
+          "rule": "structured-config-policy",
+          "target": "runtime.owner"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_kind": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: required config key `missingRequiredKey` is missing",
+          "rule": "structured-config-policy",
+          "target": "missingRequiredKey"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "value_assertions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `allowBuilds` must be an object with strict boolean values",
+          "rule": "structured-config-policy",
+          "target": "allowBuilds"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `badFiles` must be an array of strings",
+          "rule": "structured-config-policy",
+          "target": "badFiles"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `features.strict` must be a strict boolean",
+          "rule": "structured-config-policy",
+          "target": "features.strict"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `globTarget` must match glob `src/**/*.ts`",
+          "rule": "structured-config-policy",
+          "target": "globTarget"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `limits.retries` must be a positive number",
+          "rule": "structured-config-policy",
+          "target": "limits.retries"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `overrides.[].files.[]` must be a string starting with `**/`",
+          "rule": "structured-config-policy",
+          "target": "overrides.[].files.[]"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `overrides.[].files.[]` must not be a single-file entry",
+          "rule": "structured-config-policy",
+          "target": "overrides.[].files.[]"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `rules.[]` must contain `severity` with the configured value",
+          "rule": "structured-config-policy",
+          "target": "rules.[]"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config value `runtime.mode` must equal the configured value",
+          "rule": "structured-config-policy",
+          "target": "runtime.mode"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

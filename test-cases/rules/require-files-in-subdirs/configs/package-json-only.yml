@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: require-files-in-subdirs
+    scope: repository
+    options:
+      packages:
+        - root: queues
+          requiredFiles: [package.json]

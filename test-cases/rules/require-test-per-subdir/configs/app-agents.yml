@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      roots: [app/agents]
+      testGlob: "*.test.mts"

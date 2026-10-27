@@ -1,3 +1,4 @@
+// Output cases moved to cli_rra_snapshot_structured_config_policy.
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -126,47 +127,4 @@ fn ancestor_override_subset_flags_lost_and_keeps_valid_nested_configs() {
         assert!(!files.contains(&file), "{body}");
     }
     assert_eq!(findings.len(), 9, "{body}");
-}
-
-#[test]
-fn ancestor_override_subset_parameterized_keys() {
-    let root = fixture_root();
-    let files = inventory(
-        &root,
-        &[
-            "custom/base.yml",
-            "custom/child/config.yml",
-            "custom/child/file.ts",
-            "custom/child-lost/config.yml",
-            "custom/child-lost/file.ts",
-        ],
-    );
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-policies:
-  - files: ["custom/**/*.yml"]
-    when:
-      - key: inherit
-    valueAssertions:
-      - kind: ancestor-override-subset
-        extendsKey: inherit
-        overridesKey: layers
-        filesKey: globs
-        rulesKey: policy
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-    let body = format!("{findings:?}");
-    let found: Vec<&str> = findings
-        .iter()
-        .map(|finding| finding.file.as_str())
-        .collect();
-    assert!(found.contains(&"custom/child-lost/config.yml"), "{body}");
-    assert!(!found.contains(&"custom/child/config.yml"), "{body}");
-    assert!(!found.contains(&"custom/base.yml"), "{body}");
-    assert_eq!(findings.len(), 1, "{body}");
 }

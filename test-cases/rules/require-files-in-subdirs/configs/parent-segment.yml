@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: require-files-in-subdirs
+    scope: repository
+    options:
+      packages:
+        # `services/../agents` is `agents`. A literal join still contains `..`.
+        - root: services/../agents
+          requiredFiles: [README.md]

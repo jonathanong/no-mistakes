@@ -1,3 +1,4 @@
+// Output cases moved to cli_rra_snapshot_no_mistakes_config.
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -54,18 +55,6 @@ fn run(name: &str) -> Vec<RuleFinding> {
 }
 
 #[test]
-fn merge_key_does_not_supply_the_project_root() {
-    // `<<: *shared` is not expanded, so the anchored root is not checked.
-    let findings = run("merge-key");
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.message.contains("apps/missing")),
-        "{findings:?}"
-    );
-}
-
-#[test]
 fn missing_project_root_is_a_finding() {
     let findings = run("missing-path");
     assert!(
@@ -100,24 +89,6 @@ fn env_level_limit_with_direct_group_is_a_finding() {
 }
 
 #[test]
-fn env_all_with_limit_is_not_a_direct_group_conflict() {
-    let root = fixture("pass");
-    let config = enable(
-        serde_yaml::from_str(
-            "testPlan:\n  vitest:\n    environments:\n      prePush:\n        all: true\n        limit:\n          files: 10\n",
-        )
-        .unwrap(),
-    );
-    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.message.contains("#9440")),
-        "{findings:?}"
-    );
-}
-
-#[test]
 fn omitted_groups_still_flag_env_level_limit() {
     let root = fixture("pass");
     let config = enable(
@@ -136,11 +107,6 @@ fn omitted_groups_still_flag_env_level_limit() {
 }
 
 #[test]
-fn valid_config_is_silent() {
-    assert!(run("pass").is_empty(), "{:?}", run("pass"));
-}
-
-#[test]
 fn disabled_rule_is_silent() {
     let root = fixture("missing-path");
     let config: NoMistakesConfig =
@@ -149,20 +115,6 @@ fn disabled_rule_is_silent() {
     assert!(check_with_files(&root, &config, &files(&root))
         .unwrap()
         .is_empty());
-}
-
-#[test]
-fn repo_root_dot_is_a_present_directory() {
-    let root = fixture("pass");
-    let config = enable(serde_yaml::from_str("projects:\n  app:\n    root: .\n").unwrap());
-    assert!(
-        check_with_files(&root, &config, &files(&root))
-            .unwrap()
-            .iter()
-            .all(|finding| !finding.message.contains("projects.app.root")),
-        "{:?}",
-        check_with_files(&root, &config, &files(&root)).unwrap()
-    );
 }
 
 #[test]

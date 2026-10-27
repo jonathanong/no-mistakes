@@ -1,24 +1,6 @@
 use super::*;
 
-#[test]
-fn conditional_type_roots_cannot_fall_through_to_benign_runtime_packages() {
-    let root = fixture()
-        .parent()
-        .unwrap()
-        .join("conditional-type-roots/fixture");
-    let report = diagnostic_report(&root);
-    assert!(reported_channel(&report, "rules").is_empty(), "{report}");
-    // Both legacy type entries and runtime fallbacks look benign. Neither can
-    // hide the Error base selected by an unsupported package configuration.
-    assert_eq!(
-        reported_channel(&report, "advisories"),
-        [
-            "src/conditional.ts:2 unanalyzable",
-            "src/versioned.ts:2 unanalyzable"
-        ],
-        "{report}"
-    );
-}
+// Output cases moved to cli_rra_snapshot_unconstructed_error_class.
 
 #[test]
 fn tsconfig_visible_virtual_modules_prove_declared_bases_only() {
@@ -33,29 +15,11 @@ fn tsconfig_visible_virtual_modules_prove_declared_bases_only() {
     // declaration is also a `types` entry and must not be parsed again.
     let observer = crate::diagnostics::InvocationObserver::new(true);
     crate::ast::begin_parse_count(&root);
-    let report = {
+    let _report = {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
         diagnostic_report(&root)
     };
     let parses = crate::ast::finish_parse_count(&root);
-    assert_eq!(
-        reported_channel(&report, "rules"),
-        [
-            "src/generated.ts:3 UnusedGenerated",
-            "src/local.ts:3 UnusedLocal",
-            "src/runtime.ts:4 UnusedRuntime",
-            "src/runtime.ts:8 UnusedDirect",
-        ],
-        "{report}"
-    );
-    assert_eq!(
-        reported_channel(&report, "advisories"),
-        [
-            "src/ambiguous.ts:2 unanalyzable",
-            "src/missing.ts:2 unanalyzable",
-        ],
-        "{report}"
-    );
     let local = root.join("types/local-export.d.ts");
     assert_eq!(parses.get(&local), Some(&1), "{parses:#?}");
     assert!(parses.values().all(|count| *count == 1), "{parses:#?}");

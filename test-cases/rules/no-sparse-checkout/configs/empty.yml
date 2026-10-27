@@ -1,0 +1,4 @@
+version: 2
+rules:
+  - rule: no-sparse-checkout
+    scope: repository

@@ -1,0 +1,1918 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "additive_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/components/Card.tsx",
+          "line": 1,
+          "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Card.tsx#Card"
+        },
+        {
+          "file": "web/other/Other.tsx",
+          "line": 2,
+          "message": "React component `Other` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "other/Other.tsx#Other"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_opt_outs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Gone.tsx",
+          "line": 1,
+          "message": "Storybook component opt-out `components/Gone.tsx#Gone` does not match a selected component.",
+          "rule": "require-storybook-stories",
+          "target": "components/Gone.tsx#Gone"
+        },
+        {
+          "file": "components/Missing.tsx",
+          "line": 1,
+          "message": "Storybook component opt-out `components/Missing.tsx#Missing` must include a reason.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "components/nope/**",
+          "line": 1,
+          "message": "Storybook file opt-out `components/nope/**` does not match any project file.",
+          "rule": "require-storybook-stories"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "colocated_tests": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/NestedOnly.tsx",
+          "line": 1,
+          "message": "React component `NestedOnly` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/NestedOnly.tsx#NestedOnly"
+        },
+        {
+          "file": "components/SpecOnly.tsx",
+          "line": 1,
+          "message": "React component `SpecOnly` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/SpecOnly.tsx#SpecOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "colocated_without_option": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/MockTs.tsx",
+          "line": 1,
+          "message": "React component `MockTs` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/MockTs.tsx#MockTs"
+        },
+        {
+          "file": "components/MockTsx.tsx",
+          "line": 1,
+          "message": "React component `MockTsx` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/MockTsx.tsx#MockTsx"
+        },
+        {
+          "file": "components/NestedOnly.tsx",
+          "line": 1,
+          "message": "React component `NestedOnly` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/NestedOnly.tsx#NestedOnly"
+        },
+        {
+          "file": "components/PlainTs.tsx",
+          "line": 1,
+          "message": "React component `PlainTs` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/PlainTs.tsx#PlainTs"
+        },
+        {
+          "file": "components/PlainTsx.tsx",
+          "line": 1,
+          "message": "React component `PlainTsx` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/PlainTsx.tsx#PlainTsx"
+        },
+        {
+          "file": "components/SpecOnly.tsx",
+          "line": 1,
+          "message": "React component `SpecOnly` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/SpecOnly.tsx#SpecOnly"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "comments": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "config_project_root": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "covered": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "covered_no_project_root": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "default_export": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "defaults": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "direct_child": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_import": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "effort_default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "plain/LiteralMissing.tsx",
+          "line": 1,
+          "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "LiteralMissing.tsx#LiteralMissing"
+        },
+        {
+          "file": "web/First.tsx",
+          "line": 1,
+          "message": "React component `First` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "First.tsx#First"
+        },
+        {
+          "file": "web/Second.tsx",
+          "line": 1,
+          "message": "React component `Second` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "Second.tsx#Second"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "effort_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "plain/LiteralMissing.tsx",
+          "line": 1,
+          "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "LiteralMissing.tsx#LiteralMissing"
+        },
+        {
+          "file": "web/First.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `First` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "web/Second.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Second` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "effort_low_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/First.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `First` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "web/Second.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Second` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "plain/LiteralMissing.tsx",
+          "line": 1,
+          "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "LiteralMissing.tsx#LiteralMissing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "effort_low_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/Disabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "web/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "plain/LiteralMissing.tsx",
+          "line": 1,
+          "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "LiteralMissing.tsx#LiteralMissing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "effort_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "plain/LiteralMissing.tsx",
+          "line": 1,
+          "message": "React component `LiteralMissing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "LiteralMissing.tsx#LiteralMissing"
+        },
+        {
+          "file": "web/First.tsx",
+          "line": 1,
+          "message": "React component `First` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "First.tsx#First"
+        },
+        {
+          "file": "web/Second.tsx",
+          "line": 1,
+          "message": "React component `Second` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "Second.tsx#Second"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "effort_transitive_low_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/Child.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Child` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "web/Disabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "web/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "effort_transitive_low_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/Disabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "web/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "effort_transitive_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/Disabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "web/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_project": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_repository": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "generic_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/components/Card.tsx",
+          "line": 1,
+          "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Card.tsx#Card"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper_import": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Hidden.tsx",
+          "line": 1,
+          "message": "React component `Hidden` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Hidden.tsx#Hidden"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_multiple_targets": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "warning: rules check skipped: require-storybook-stories requires exactly one project target"
+      ]
+    }
+  },
+  "mdx_story": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing_component": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_project": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "options_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/components/Card.tsx",
+          "line": 1,
+          "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Card.tsx#Card"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "overlapping_projects": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "admin/components/Card.tsx",
+          "line": 1,
+          "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Card.tsx#Card"
+        },
+        {
+          "file": "web/components/Card.tsx",
+          "line": 1,
+          "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Card.tsx#Card"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "plain_colocated_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "plain_colocated_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "plain_named_low_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "LiteralMissing.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `LiteralMissing` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "plain_named_max_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "private_index": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "project_root": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reachable_story": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reexport": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "same_file_sibling": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Card.tsx",
+          "line": 5,
+          "message": "React component `Sibling` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Card.tsx#Sibling"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "components/Broken.tsx",
+          "line": 1,
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "selected_allow_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "selected_base": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Broken.tsx",
+          "line": 1,
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_broken_jsx": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "components/FileDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "components/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Broken.jsx",
+          "line": 1,
+          "message": "Selected React source could not be analyzed (parsing components/Broken.jsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_default_exports": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "components/FileDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "components/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "selected_empty_options": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "components/FileDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "components/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "selected_ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "components/FileDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "components/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "selected_mixed_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "components/Broken.tsx",
+          "line": 1,
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "outside/Valid.tsx",
+          "line": 1,
+          "message": "React component `Valid` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "outside/Valid.tsx#Valid"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_named_exports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "components/FileDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "components/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "outside/Valid.tsx",
+          "line": 1,
+          "message": "React component `Valid` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "outside/Valid.tsx#Valid"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_next_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "components/FileDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "components/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "Selected React source could not be analyzed (parsing outside/NextLine.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 118, end: 119 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_override": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Broken.tsx",
+          "line": 1,
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_plain_ts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "components/FileDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "components/LineDisabled.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "selected_project_exclude": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "selected_required_props": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Broken.tsx",
+          "line": 1,
+          "message": "Selected React source could not be analyzed (parsing components/Broken.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `:` but found `<`\", labels: [LabeledSpan { label: Some(\"`:` expected\"), span: Span { start: 104, end: 105 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "selected_rule_exclude": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "selected_rule_include": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "outside/NextLine.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "side_effect_story": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "single_story_config": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stories_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/stories/Broken.stories.tsx",
+          "line": 1,
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_allow_absent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Absent.tsx",
+          "line": 1,
+          "message": "Storybook component opt-out `components/Absent.tsx#Absent` does not match a selected component.",
+          "rule": "require-storybook-stories",
+          "target": "components/Absent.tsx#Absent"
+        },
+        {
+          "file": "web/stories/Broken.stories.tsx",
+          "line": 1,
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_allow_broken": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_allow_broken_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_base": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/stories/Broken.stories.tsx",
+          "line": 1,
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_filtered": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_independent": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "React component `Unknown` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Unknown.tsx#Unknown"
+        },
+        {
+          "file": "web/stories/Broken.stories.tsx",
+          "line": 1,
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_options_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/stories/Broken.stories.tsx",
+          "line": 1,
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_options_advise_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/stories/Broken.stories.tsx",
+          "line": 1,
+          "message": "Selected Storybook story could not be analyzed (parsing web/stories/Broken.stories.tsx: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Unexpected token. Did you mean `{'}'}` or `&rbrace;`?\", labels: [LabeledSpan { label: None, span: Span { start: 114, end: 114 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_options_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_options_ignore_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "web/stories/FileDisabled.stories.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        },
+        {
+          "file": "web/stories/LineDisabled.stories.tsx",
+          "line": 1,
+          "message": "directive for `require-storybook-stories` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "require-storybook-stories"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_project_exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_project_exclude_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_rule_exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_rule_exclude_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_rule_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_rule_include_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stories_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "other/components/Missing.tsx",
+          "line": 1,
+          "message": "React component `Missing` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Missing.tsx#Missing"
+        },
+        {
+          "file": "web/components/Unknown.tsx",
+          "line": 1,
+          "message": "Storybook coverage of `Unknown` is unknown because a selected story could not be analyzed. Fix the malformed story syntax or read error and rerun the check to establish coverage, or add a documented component exemption.",
+          "rule": "require-storybook-stories",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "test_files_excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "type_only_story": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "components/Card.tsx",
+          "line": 1,
+          "message": "React component `Card` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "target": "components/Card.tsx#Card"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_project": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unselected_wrapper": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

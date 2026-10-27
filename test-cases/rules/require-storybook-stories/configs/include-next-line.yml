@@ -1,0 +1,10 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: "."
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: ["outside/NextLine.tsx"]

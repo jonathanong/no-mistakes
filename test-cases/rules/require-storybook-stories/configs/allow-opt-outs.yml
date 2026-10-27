@@ -1,0 +1,17 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: "."
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      includeAllReactNamedExports: true
+      allowComponents:
+        "components/Missing.tsx#Missing": ""
+        "components/Gone.tsx#Gone": "no longer exists"
+      allowFiles:
+        "components/Card.tsx": "covered by story"
+        "components/nope/**": "gone"

@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: banned-renamed-files
+    scope: repository
+    options:
+      scope: web
+      bannedBasenames:
+        - name: middleware
+          message: "rename it"
+      extensions: [".mts"]

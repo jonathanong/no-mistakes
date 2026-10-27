@@ -1,7 +1,9 @@
 use super::*;
 
+// Output cases moved to cli_rra_snapshot_unconstructed_error_class.
+
 #[test]
-fn dynamic_bases_follow_policy_without_guessing_error_ancestry() {
+fn dynamic_bases_audit_preserves_suppressed_channel() {
     let root = fixture().parent().unwrap().join("dynamic-bases/fixture");
     for policy in ["report", "advise", "ignore"] {
         let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
@@ -15,99 +17,10 @@ fn dynamic_bases_follow_policy_without_guessing_error_ancestry() {
         let result: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
             serde_json::from_str(&json).unwrap(),
         );
-        let rules = result["rules"].as_array().unwrap();
-        let advisories = result["advisories"].as_array().unwrap();
-        assert_eq!(result["warnings"], serde_json::json!([]));
-        let definite: Vec<_> = rules
-            .iter()
-            .filter(|finding| finding["target"] != "unanalyzable")
-            .map(|finding| finding["target"].as_str().unwrap())
-            .collect();
-        // The value import proves this same package declaration is analyzable;
-        // the one-line type-only import must still remain uncertain.
-        assert_eq!(
-            definite,
-            ["DefinitelyDead", "RuntimeError"],
-            "{policy}: {result}"
-        );
-        let uncertain: Vec<_> = rules
-            .iter()
-            .chain(advisories)
-            .filter(|finding| finding["target"] == "unanalyzable")
-            .collect();
-        let names = [
-            "MixedError",
-            "MixedBase",
-            "default",
-            "ExpressionBase",
-            "ComputedBase",
-            "StaticChild",
-            "Errors.Dynamic",
-            "TypeOnly",
-        ];
-        assert_eq!(
-            uncertain.len(),
-            if policy == "ignore" { 0 } else { names.len() },
-            "{policy}: {result}"
-        );
-        if policy != "ignore" {
-            for name in names {
-                assert!(
-                    uncertain.iter().any(|finding| finding["message"]
-                        .as_str()
-                        .unwrap()
-                        .contains(&format!("`{name}`"))),
-                    "{name}: {result}"
-                );
-            }
-            let type_only = uncertain
-                .iter()
-                .find(|finding| finding["file"] == "src/type-only.ts")
-                .unwrap();
-            assert_eq!(type_only["line"], 1);
-            for (name, line) in [("MixedError", 4), ("StaticChild", 9)] {
-                let finding = uncertain
-                    .iter()
-                    .find(|row| {
-                        row["message"]
-                            .as_str()
-                            .unwrap()
-                            .contains(&format!("`{name}`"))
-                    })
-                    .unwrap();
-                assert_eq!(finding["line"], line, "{result}");
-            }
-            // Static type-only bases retain the unresolved-target advisory policy.
-            assert!(advisories.contains(type_only));
-            for finding in uncertain
-                .iter()
-                .filter(|row| row["file"] != "src/type-only.ts")
-            {
-                assert_eq!(rules.contains(finding), policy == "report", "{result}");
-                let message = finding["message"].as_str().unwrap();
-                assert!(message.contains("base ancestry contains a dynamic extends expression"));
-                assert!(message.contains("statically named class or analyzable import"));
-                assert!(message.contains("An Error argument does not prove"));
-            }
-        }
-        assert_eq!(
-            rules.len(),
-            if policy == "report" { 9 } else { 2 },
-            "{result}"
-        );
-        assert_eq!(
-            advisories.len(),
-            match policy {
-                "report" => 1,
-                "advise" => 8,
-                _ => 0,
-            },
-            "{result}"
-        );
         assert_eq!(
             result["suppressed"].as_array().unwrap().len(),
             if policy == "ignore" { 0 } else { 1 },
-            "{result}"
+            "{policy}: {result}"
         );
     }
 }

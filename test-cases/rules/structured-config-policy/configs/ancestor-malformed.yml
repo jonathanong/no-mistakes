@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: ["malformed/**/.oxlintrc.json"]
+          valueAssertions:
+            - kind: ancestor-override-subset

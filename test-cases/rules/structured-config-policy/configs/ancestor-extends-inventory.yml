@@ -1,0 +1,31 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files:
+            - .oxlintrc.json
+            - nested/.oxlintrc.json
+            - lost/.oxlintrc.json
+            - drift/.oxlintrc.json
+            - superset/.oxlintrc.json
+            - still-matches/.oxlintrc.json
+            - unmatched/.oxlintrc.json
+            - standalone/.oxlintrc.json
+            - empty-children/.oxlintrc.json
+            - package-extends/.oxlintrc.json
+            - string-extends/.oxlintrc.json
+            - deep/mid/.oxlintrc.json
+            - deep/nested/.oxlintrc.json
+            - deep/lost/.oxlintrc.json
+            - cycle/.oxlintrc.json
+            - missing/.oxlintrc.json
+            - outside/.oxlintrc.json
+            - symlink/.oxlintrc.json
+            - multi/.oxlintrc.json
+            - multi-ok/.oxlintrc.json
+          when:
+            - key: extends
+          valueAssertions:
+            - kind: ancestor-override-subset

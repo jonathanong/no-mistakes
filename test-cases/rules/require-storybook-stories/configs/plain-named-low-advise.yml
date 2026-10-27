@@ -1,0 +1,12 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: "."
+effort: low
+unanalyzable: advise
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      includeAllReactNamedExports: true

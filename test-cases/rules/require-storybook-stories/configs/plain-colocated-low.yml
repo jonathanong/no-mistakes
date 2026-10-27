@@ -1,0 +1,12 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: "."
+effort: low
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: ["*.tsx"]
+      allowColocatedTests: true

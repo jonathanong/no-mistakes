@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      # `services/../agents` is `agents`. A literal join still contains `..`.
+      roots: ["services/../agents"]
+      testGlob: "*.test.mts"

@@ -1,0 +1,87 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured_globs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/app/[[...slug]]/page.tsx",
+          "line": 1,
+          "message": "optional catch-all routes are banned",
+          "rule": "banned-paths",
+          "target": "web/app/**/[[...slug]]/**"
+        },
+        {
+          "file": "web/app/[topicType]/page.tsx",
+          "line": 1,
+          "message": "topicType dynamic segments are banned",
+          "rule": "banned-paths",
+          "target": "web/app/**/[topicType]/**"
+        },
+        {
+          "file": "web/app/file.js",
+          "line": 1,
+          "message": "direct app JavaScript and TypeScript files are banned",
+          "rule": "banned-paths",
+          "target": "web/app/*.[jt]s"
+        },
+        {
+          "file": "web/app/file.ts",
+          "line": 1,
+          "message": "direct app JavaScript and TypeScript files are banned",
+          "rule": "banned-paths",
+          "target": "web/app/*.[jt]s"
+        },
+        {
+          "file": "web/app/topic/page.tsx",
+          "line": 1,
+          "message": "web/app/topic/page.tsx: path is banned by `web/app/topic/**`",
+          "rule": "banned-paths",
+          "target": "web/app/topic/**"
+        },
+        {
+          "file": "web/pages/index.tsx",
+          "line": 1,
+          "message": "Next.js pages router files are not allowed",
+          "rule": "banned-paths",
+          "target": "web/pages/**"
+        },
+        {
+          "file": "web/src/pages/account.tsx",
+          "line": 1,
+          "message": "Next.js pages router files are not allowed",
+          "rule": "banned-paths",
+          "target": "web/src/pages/**"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_and_suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/pages/index.tsx",
+          "line": 1,
+          "message": "Next.js pages router files are not allowed",
+          "rule": "banned-paths",
+          "target": "web/pages/**"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

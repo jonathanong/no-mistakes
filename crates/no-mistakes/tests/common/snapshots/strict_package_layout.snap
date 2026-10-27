@@ -1,0 +1,115 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default_test_patterns": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dot_root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/api/index.js",
+          "line": 1,
+          "message": "packages/api/index.js: root-level file must be in allowedRootFiles, a test file, or a .md file",
+          "rule": "strict-package-layout"
+        },
+        {
+          "file": "packages/api/tmp/debug.ts",
+          "line": 1,
+          "message": "packages/api/tmp/debug.ts: subdirectory tmp/ is not allowed (allowedSubdirs: [src, __tests__])",
+          "rule": "strict-package-layout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_packages": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "escaping_outside": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "escaping_parent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queues/email/helpers.js",
+          "line": 1,
+          "message": "queues/email/helpers.js: root-level file must be in allowedRootFiles, a test file, or a .md file",
+          "rule": "strict-package-layout"
+        },
+        {
+          "file": "queues/email/utils/format.mts",
+          "line": 1,
+          "message": "queues/email/utils/format.mts: subdirectory utils/ is not allowed (allowedSubdirs: [enqueues])",
+          "rule": "strict-package-layout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

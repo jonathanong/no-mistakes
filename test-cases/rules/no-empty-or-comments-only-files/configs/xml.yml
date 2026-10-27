@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    options:
+      extensions: [".xml"]

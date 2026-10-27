@@ -1,3 +1,4 @@
+// Output cases moved to cli_rra_snapshot_structured_config_policy.
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -25,84 +26,6 @@ fn config(yaml: &str) -> NoMistakesConfig {
 }
 
 #[test]
-fn merge_key_copies_a_banned_key() {
-    // `<<: *defaults` is expanded, so the anchored banned key is present.
-    let root = fixture_root("merge-key");
-    let files = vec![
-        root.join("app.yml"),
-        root.join("sequence.yml"),
-        root.join("scalar.yml"),
-        root.join("required.yml"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-policies:
-  - files: [app.yml, sequence.yml, scalar.yml]
-    bannedKeys: [runtime.legacy.enabled]
-  - files: [required.yml]
-    requiredKeys: [runtime.owner]
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-    assert!(
-        findings.iter().any(|finding| {
-            finding.file.ends_with("app.yml") && finding.message.contains("runtime.legacy.enabled")
-        }),
-        "{findings:?}"
-    );
-    assert!(
-        findings.iter().any(|finding| {
-            finding.file.ends_with("sequence.yml")
-                && finding.message.contains("runtime.legacy.enabled")
-        }),
-        "{findings:?}"
-    );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.file.ends_with("scalar.yml")),
-        "{findings:?}"
-    );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.message.contains("runtime.owner")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn reports_required_and_banned_structured_config_keys() {
-    let root = fixture_root("fixture");
-    let files = vec![root.join("app.yml")];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-policies:
-  - files: [app.yml]
-    requiredKeys: [runtime.version, runtime.owner]
-    bannedKeys: [legacy.enabled]
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 2);
-    assert!(findings
-        .iter()
-        .any(|finding| finding.message.contains("runtime.owner")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.message.contains("legacy.enabled")));
-}
-
-#[test]
 fn reports_unreadable_structured_config_paths() {
     let root = fixture_root("fixture");
     let files = vec![root.join("config")];
@@ -121,59 +44,6 @@ policies:
 
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
-}
-
-#[test]
-fn reports_value_assertion_violations() {
-    let root = fixture_root("fixture");
-    let files = vec![root.join("app.yml")];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-policies:
-  - files: [app.yml]
-    valueAssertions:
-      - key: features.strict
-        kind: boolean
-      - key: limits.retries
-        kind: positive-number
-      - key: badFiles
-        kind: string-array
-      - key: allowBuilds
-        kind: record-of-boolean
-      - key: overrides.[].files.[]
-        kind: string-prefix
-        prefix: "**/"
-      - key: overrides.[].files.[]
-        kind: not-single-file
-      - key: globTarget
-        kind: string-glob
-        glob: "src/**/*.ts"
-      - key: runtime.mode
-        kind: equals
-        value: production
-      - key: rules.[]
-        kind: object-shape
-        requiredValues:
-          severity: error
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-    let body = format!("{findings:?}");
-
-    assert_eq!(findings.len(), 9, "{body}");
-    assert!(body.contains("strict boolean"), "{body}");
-    assert!(body.contains("positive number"), "{body}");
-    assert!(body.contains("array of strings"), "{body}");
-    assert!(body.contains("strict boolean values"), "{body}");
-    assert!(body.contains("starting with `**/`"), "{body}");
-    assert!(body.contains("single-file entry"), "{body}");
-    assert!(body.contains("match glob `src/**/*.ts`"), "{body}");
-    assert!(body.contains("must equal"), "{body}");
-    assert!(body.contains("severity"), "{body}");
 }
 
 #[test]
@@ -425,30 +295,6 @@ overrides:
     assert!(wildcard_missing[0]
         .message
         .contains("required by assertion"));
-}
-
-#[test]
-fn unknown_value_assertion_kinds_do_not_disable_the_policy() {
-    let root = fixture_root("fixture");
-    let files = vec![root.join("app.yml")];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-policies:
-  - files: ["app.yml"]
-    requiredKeys: [missingRequiredKey]
-    valueAssertions:
-      - key: enabled
-        kind: boolish
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1, "unexpected findings: {findings:?}");
-    assert!(findings[0].message.contains("missingRequiredKey"));
 }
 
 #[test]

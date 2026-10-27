@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files:
+            - diamond/nested/.oxlintrc.json
+            - odd/.oxlintrc.json
+            - bool-extends/.oxlintrc.json
+            - abs/.oxlintrc.json
+            - star-seg/.oxlintrc.json
+          valueAssertions:
+            - kind: ancestor-override-subset
+              key: rules

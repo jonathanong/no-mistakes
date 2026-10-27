@@ -1,5 +1,7 @@
 use super::*;
 
+// Output cases moved to cli_rra_snapshot_no_sparse_checkout.
+
 fn fixture(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/no-sparse-checkout/fixture")
@@ -187,15 +189,6 @@ fn each_checkout_step_maps_its_own_inputs_and_line_suppression() {
 }
 
 #[test]
-fn option_include_adds_another_workflow_root() {
-    let root = fixture("custom");
-    let config =
-        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
-    let files = vec![root.join("ci/no-mistakes-workflows/check.yml")];
-    assert_eq!(check_with_files(&root, &config, &files).unwrap().len(), 1);
-}
-
-#[test]
 fn non_yaml_file_is_not_checked_even_when_selected() {
     let root = fixture("custom");
     let config =
@@ -204,15 +197,6 @@ fn non_yaml_file_is_not_checked_even_when_selected() {
     assert!(check_with_files(&root, &config, &[file])
         .unwrap()
         .is_empty());
-}
-
-#[test]
-fn default_selection_includes_composite_action_yaml() {
-    let root = fixture("action");
-    let config =
-        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
-    let file = root.join(".github/actions/check/action.yaml");
-    assert_eq!(check_with_files(&root, &config, &[file]).unwrap().len(), 1);
 }
 
 #[test]
