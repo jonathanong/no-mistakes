@@ -9,7 +9,7 @@ pub(super) fn computed(value: &ComputedMemberExpression<'_>, source: &str) -> Ex
     match (index, unwrap_ts_wrappers(&value.expression)) {
         (Some(index), _) => Expr::Index(Box::new(object), index),
         (None, Expression::StringLiteral(name)) => {
-            Expr::Member(Box::new(object), name.value.to_string())
+            Expr::Member(Box::new(object), crate::ast::js_literal(name).into_owned())
         }
         (None, _) => Expr::ComputedMember(
             Box::new(object),
@@ -22,11 +22,11 @@ pub(super) fn static_index(value: &Expression<'_>) -> Option<usize> {
     const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
     let value = match unwrap_ts_wrappers(value) {
         Expression::StringLiteral(value) => {
-            return value
-                .value
+            let text = crate::ast::js_literal(value);
+            return text
                 .parse::<usize>()
                 .ok()
-                .filter(|index| index.to_string() == value.value.as_str());
+                .filter(|index| index.to_string() == text);
         }
         Expression::NumericLiteral(value) => value.value,
         Expression::UnaryExpression(unary)

@@ -39,12 +39,13 @@ fn named(text: &str) -> bool {
 }
 fn literal(expression: &Expression<'_>) -> bool {
     match expression {
-        Expression::StringLiteral(value) => named(&value.value),
+        Expression::StringLiteral(value) => named(&crate::ast::js_literal(value)),
         Expression::TemplateLiteral(value) => value
             .quasis
             .first()
-            .and_then(|part| part.value.cooked.as_ref())
-            .is_some_and(|text| named(text)),
+            .filter(|part| part.value.cooked.is_some())
+            .map(crate::ast::template_quasi_text)
+            .is_some_and(|text| named(&text)),
         _ => false,
     }
 }
@@ -128,8 +129,9 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
             .quasi
             .quasis
             .first()
-            .and_then(|part| part.value.cooked.as_ref())
-            .is_some_and(|text| named(text))
+            .filter(|part| part.value.cooked.is_some())
+            .map(crate::ast::template_quasi_text)
+            .is_some_and(|text| named(&text))
         {
             // Low effort judges the literal head, independently of the tag.
             return if appended { Head::AppendTag } else { Head::Tag };

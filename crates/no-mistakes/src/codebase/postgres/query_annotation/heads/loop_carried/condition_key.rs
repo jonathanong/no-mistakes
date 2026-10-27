@@ -52,7 +52,9 @@ fn structural(value: &Expression<'_>, references: &mut Vec<Span>) -> Option<Key>
         // This is structural identity, not JavaScript numeric equality:
         // +0/-0 differ, while matching NaN bit patterns get the same key.
         Expression::NumericLiteral(value) => Some(Key::Number(value.value.to_bits())),
-        Expression::StringLiteral(value) => Some(Key::String(value.value.to_string())),
+        Expression::StringLiteral(value) => {
+            Some(Key::String(crate::ast::js_literal(value).into_owned()))
+        }
         Expression::BigIntLiteral(value) => Some(Key::BigInt(value.value.to_string())),
         Expression::NullLiteral(_) => Some(Key::Null),
         Expression::UnaryExpression(value) if value.operator != UnaryOperator::Delete => {

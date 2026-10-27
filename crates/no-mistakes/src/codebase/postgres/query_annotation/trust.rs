@@ -45,12 +45,12 @@ pub(super) fn collect(
                 }
                 ImportDeclarationSpecifier::ImportSpecifier(value) => {
                     (import.source.value == "sql-template-strings"
-                        && (value.imported.name() == "default"
-                            || (value.imported.name() == "sql"
+                        && (crate::ast::module_export_name(&value.imported) == "default"
+                            || (crate::ast::module_export_name(&value.imported) == "sql"
                                 && value.local.name.eq_ignore_ascii_case("sql"))))
                         || super::super::embedded::matches_trusted_sql_import(
-                            import.source.value.as_str(),
-                            value.imported.name().as_str(),
+                            crate::ast::js_literal(&import.source).as_ref(),
+                            crate::ast::module_export_name(&value.imported).as_ref(),
                             &options.trusted_sql_tags,
                         )
                 }

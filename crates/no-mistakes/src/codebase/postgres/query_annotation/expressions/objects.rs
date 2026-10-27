@@ -7,7 +7,7 @@ pub(super) fn object(value: &ObjectExpression<'_>, source: &str) -> Expr {
             if !property.computed
                 && !property.method
                 && property.kind == oxc_ast::ast::PropertyKind::Init
-                && property.key.static_name().is_some_and(|name| name != "__proto__"))
+                && crate::ast::property_key_name(&property.key).is_some_and(|name| name != "__proto__"))
     });
     if precise {
         let (keys, values) = value
@@ -15,7 +15,7 @@ pub(super) fn object(value: &ObjectExpression<'_>, source: &str) -> Expr {
             .iter()
             .filter_map(|property| match property {
                 ObjectPropertyKind::ObjectProperty(property) => Some((
-                    property.key.static_name()?.to_string(),
+                    crate::ast::property_key_name(&property.key)?.into_owned(),
                     expression(&property.value, source),
                 )),
                 ObjectPropertyKind::SpreadProperty(_) => None,
