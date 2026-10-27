@@ -66,6 +66,7 @@ pub(crate) fn build_duplicate_selectors(
                 attribute: selector.attribute.clone(),
                 value: value.clone(),
                 file: relative_string(root, &selector.file),
+                line: selector.line,
             });
         }
     }
@@ -73,6 +74,7 @@ pub(crate) fn build_duplicate_selectors(
         a.value
             .cmp(&b.value)
             .then_with(|| a.file.cmp(&b.file))
+            .then_with(|| a.line.cmp(&b.line))
             .then_with(|| a.attribute.cmp(&b.attribute))
     });
     duplicates

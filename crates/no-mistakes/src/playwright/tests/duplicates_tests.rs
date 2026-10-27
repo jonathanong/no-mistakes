@@ -256,3 +256,25 @@ fn html_id_and_test_id_literal_policies_are_independent() {
         }
     }
 }
+
+#[test]
+fn duplicate_selectors_keep_each_occurrence_line() {
+    // Two occurrences in one file must each report their own attribute line.
+    let selector = |line| selectors::AppSelector {
+        file: PathBuf::from("/repo/web/app/a.tsx"),
+        attribute: "data-testid".to_string(),
+        value: AppSelectorValue::Exact("same".to_string()),
+        line,
+        recovered: false,
+    };
+    let duplicates = build_duplicate_selectors(
+        Path::new("/repo"),
+        &[selector(9), selector(3)],
+        UniqueSelectorPolicy {
+            test_ids: true,
+            ..UniqueSelectorPolicy::default()
+        },
+    );
+    let lines: Vec<_> = duplicates.iter().map(|duplicate| duplicate.line).collect();
+    assert_eq!(lines, vec![3, 9]);
+}

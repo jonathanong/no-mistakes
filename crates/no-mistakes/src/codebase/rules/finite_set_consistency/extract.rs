@@ -1,5 +1,6 @@
 use super::comments::{strip_comments, strip_sql_comments};
 use super::literals::{quoted_strings_sql, quoted_strings_ts};
+use super::locate::set_line;
 pub(super) use super::markdown::extract_markdown_table_code_cells;
 use super::object::{const_object_body, top_level_object_keys, top_level_property_values};
 pub(super) use super::ts_array::{extract_ts_array_literal, extract_ts_const_array_property};
@@ -26,6 +27,8 @@ pub(super) use sql_enum::extract_sql_enum;
 #[derive(Debug, Clone)]
 pub(super) struct ExtractedSet {
     pub(super) file: String,
+    /// 1-based line of the key or declaration the set was read from.
+    pub(super) line: usize,
     pub(super) values: BTreeSet<String>,
     pub(super) issues: Vec<ExtractionIssue>,
 }
@@ -55,7 +58,8 @@ pub(super) fn extract_set_with_sources(
         let paths = resolve_spec_files(root, &spec.file, target_roots);
         let mut values = BTreeSet::new();
         let mut issues = Vec::new();
-        for path in &paths {
+        let mut line = 1;
+        for (index, path) in paths.iter().enumerate() {
             if spec.kind == TS_CALL_FIRST_STRING_ARGUMENT {
                 extract_call_first_string_argument(
                     root,
@@ -70,6 +74,9 @@ pub(super) fn extract_set_with_sources(
             let source = sources
                 .read_path(path)
                 .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+            if index == 0 {
+                line = set_line(spec, &source);
+            }
             values.extend(match spec.kind.as_str() {
                 "ts-string-union" => extract_ts_string_union(&source, &spec.target),
                 "ts-const-object-keys" => extract_ts_const_object_keys(&source, &spec.target),
@@ -92,6 +99,7 @@ pub(super) fn extract_set_with_sources(
             .expect("resolve_spec_files always returns at least one path");
         ExtractedSet {
             file: relative_slash_path(root, path),
+            line,
             values,
             issues,
         }

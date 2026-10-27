@@ -30,18 +30,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/literal-a.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<section id=\"literal-duplicate\">First literal owner</section>",
           "target": "id=literal-duplicate"
         },
         {
           "file": "web/app/literal-b.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<aside id=\"literal-duplicate\">Second literal owner</aside>",
           "target": "id=literal-duplicate"
         }
       ],
@@ -84,34 +84,34 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/derived-a.tsx",
-          "line": 1,
+          "line": 3,
           "message": "selector [id=\"recovered-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "export function DerivedA() {",
+          "sourceLine": "return <section id={LOCAL_ID}>Local const owner</section>; // EXPECT_LOW_UNANALYZABLE_LOCAL",
           "target": "id=recovered-duplicate"
         },
         {
           "file": "web/app/derived-b.tsx",
-          "line": 1,
+          "line": 4,
           "message": "selector [id=\"recovered-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "sourceLine": "return <aside id={IMPORTED_ID}>Imported const owner</aside>; // EXPECT_LOW_UNANALYZABLE_IMPORTED",
           "target": "id=recovered-duplicate"
         },
         {
           "file": "web/app/literal-a.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<section id=\"literal-duplicate\">First literal owner</section>",
           "target": "id=literal-duplicate"
         },
         {
           "file": "web/app/literal-b.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<aside id=\"literal-duplicate\">Second literal owner</aside>",
           "target": "id=literal-duplicate"
         }
       ],
@@ -154,18 +154,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/literal-a.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<section id=\"literal-duplicate\">First literal owner</section>",
           "target": "id=literal-duplicate"
         },
         {
           "file": "web/app/literal-b.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<aside id=\"literal-duplicate\">Second literal owner</aside>",
           "target": "id=literal-duplicate"
         }
       ],
@@ -199,35 +199,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "web/app/literal-a.tsx",
-          "line": 1,
-          "message": "selector [data-testid=\"recovered-test-control\"] is duplicated; Playwright selectors must be unique",
-          "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
-          "target": "data-testid=recovered-test-control"
+          "line": 6,
+          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-html-ids",
+          "sourceLine": "<section id=\"literal-duplicate\">First literal owner</section>",
+          "target": "id=literal-duplicate"
         },
         {
           "file": "web/app/literal-a.tsx",
-          "line": 1,
-          "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
-          "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
-          "target": "id=literal-duplicate"
-        },
-        {
-          "file": "web/app/literal-b.tsx",
-          "line": 1,
+          "line": 7,
           "message": "selector [data-testid=\"recovered-test-control\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<button data-testid={TEST_CONTROL_ID}>First test-ID owner</button>",
           "target": "data-testid=recovered-test-control"
         },
         {
           "file": "web/app/literal-b.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<aside id=\"literal-duplicate\">Second literal owner</aside>",
           "target": "id=literal-duplicate"
+        },
+        {
+          "file": "web/app/literal-b.tsx",
+          "line": 7,
+          "message": "selector [data-testid=\"recovered-test-control\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid={TEST_CONTROL_ID}>Second test-ID owner</button>",
+          "target": "data-testid=recovered-test-control"
         }
       ],
       "warnings": []
@@ -260,18 +260,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "web/app/literal-a.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<section id=\"literal-duplicate\">First literal owner</section>",
           "target": "id=literal-duplicate"
         },
         {
           "file": "web/app/literal-b.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-duplicate\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { TEST_CONTROL_ID } from './ids';",
+          "sourceLine": "<aside id=\"literal-duplicate\">Second literal owner</aside>",
           "target": "id=literal-duplicate"
         }
       ],

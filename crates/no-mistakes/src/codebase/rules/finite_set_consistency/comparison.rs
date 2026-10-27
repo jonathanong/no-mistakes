@@ -24,7 +24,7 @@ fn compare_equal_set(
 ) {
     for value in left.values.difference(&right.values) {
         findings.push(finding(
-            &right.file,
+            right,
             comparison,
             format!(
                 "{} contains `{}` but {} does not",
@@ -35,7 +35,7 @@ fn compare_equal_set(
     }
     for value in right.values.difference(&left.values) {
         findings.push(finding(
-            &left.file,
+            left,
             comparison,
             format!(
                 "{} contains `{}` but {} does not",
@@ -62,7 +62,7 @@ fn compare_glob_coverage(
             Err(error) => {
                 has_invalid_glob = true;
                 findings.push(finding(
-                    &right.file,
+                    right,
                     comparison,
                     format!(
                         "{} contains invalid glob `{pattern}`: {error}",
@@ -82,7 +82,7 @@ fn compare_glob_coverage(
     for value in &left.values {
         if !globs.is_match(value) {
             findings.push(finding(
-                &right.file,
+                right,
                 comparison,
                 format!(
                     "{} contains `{}` but no glob in {} covers it",
@@ -102,7 +102,7 @@ fn compare_mentions(
 ) {
     for value in left.values.difference(&right.values) {
         findings.push(finding(
-            &right.file,
+            right,
             comparison,
             format!(
                 "{} contains `{}` but {} does not mention it",

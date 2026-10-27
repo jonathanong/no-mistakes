@@ -280,5 +280,7 @@ finite set, restore the files or pattern that should populate a `minSize`
 set, restore the YAML selector path and its `minSize: 1`, or narrow the
 configured extraction.
 
-Suppression: use `no-mistakes` suppression directives. Findings currently report
-line 1 for finite set mismatches.
+Suppression: use `no-mistakes` suppression directives. A finding points at the
+line of the compared YAML/JSON key (for example `updates.0.cooldown.exclude`)
+or TypeScript declaration in the file that is missing the value. When the key
+cannot be located, it falls back to the nearest ancestor key, then line 1.

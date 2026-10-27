@@ -5,6 +5,7 @@ mod extract;
 mod extraction_completeness;
 use effort::diagnostics_with_lookup;
 mod literals;
+mod locate;
 mod low;
 mod markdown;
 mod object;
@@ -144,16 +145,16 @@ pub fn try_required_call_site_fact_files(
     Ok(paths)
 }
 
-pub(super) fn finding(
-    file: &str,
+fn finding(
+    set: &extract::ExtractedSet,
     comparison: &Comparison,
     fallback: String,
     value: &str,
 ) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),
-        file: file.to_string(),
-        line: 1,
+        file: set.file.clone(),
+        line: set.line,
         message: comparison.message.clone().unwrap_or(fallback),
         import: None,
         target: Some(value.to_string()),
@@ -163,6 +164,9 @@ pub(super) fn finding(
 #[cfg(test)]
 #[path = "finite_set_consistency/tests/config_sets.rs"]
 mod config_set_tests;
+#[cfg(test)]
+#[path = "finite_set_consistency/tests/locate.rs"]
+mod locate_tests;
 #[cfg(test)]
 #[path = "finite_set_consistency/tests/min_size.rs"]
 mod min_size_tests;

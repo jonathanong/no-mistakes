@@ -97,11 +97,13 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
                 attribute: "data-testid".to_string(),
                 value: "save".to_string(),
                 file: "web/app/page.tsx".to_string(),
+                line: 2,
             },
             DuplicateSelector {
                 attribute: HTML_ID_ATTRIBUTE.to_string(),
                 value: "save".to_string(),
                 file: "web/app/other.tsx".to_string(),
+                line: 2,
             },
         ],
         fetch_apis: vec![CoverageFetch {
@@ -124,6 +126,11 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
     assert!(targets.contains(&(PLAYWRIGHT_COVERAGE, Some("data-testid=missing"))));
     assert!(targets.contains(&(PLAYWRIGHT_UNIQUE_TEST_IDS, Some("data-testid=save"))));
     assert!(targets.contains(&(PLAYWRIGHT_UNIQUE_HTML_IDS, Some("id=save"))));
+    // Duplicate findings point at the attribute line, never line 1.
+    assert!(findings
+        .iter()
+        .filter(|finding| finding.rule != PLAYWRIGHT_COVERAGE)
+        .all(|finding| finding.line == 2));
 }
 
 #[test]
@@ -204,11 +211,13 @@ fn findings_from_report_filters_disabled_duplicate_rules() {
                 attribute: "data-testid".to_string(),
                 value: "save".to_string(),
                 file: "web/app/page.tsx".to_string(),
+                line: 2,
             },
             DuplicateSelector {
                 attribute: HTML_ID_ATTRIBUTE.to_string(),
                 value: "save".to_string(),
                 file: "web/app/other.tsx".to_string(),
+                line: 2,
             },
         ],
         fetch_apis: vec![],
@@ -302,6 +311,7 @@ fn findings_from_report_maps_id_duplicates_to_test_ids_when_html_rule_is_disable
             attribute: HTML_ID_ATTRIBUTE.to_string(),
             value: "save".to_string(),
             file: "web/app/page.tsx".to_string(),
+            line: 2,
         }],
         fetch_apis: vec![],
     };

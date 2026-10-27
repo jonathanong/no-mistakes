@@ -62,18 +62,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/other.tsx",
-          "line": 1,
+          "line": 2,
           "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "export function OtherSave() {",
+          "sourceLine": "return <button data-testid=\"save\">Other save</button>;",
           "target": "data-testid=save"
         },
         {
           "file": "web/app/page.tsx",
-          "line": 1,
+          "line": 25,
           "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"save\">Save</button>",
           "target": "data-testid=save"
         }
       ],
@@ -108,18 +108,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "web/app/other.tsx",
-          "line": 1,
+          "line": 8,
           "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"literal-test\" />",
           "target": "data-testid=literal-test"
         },
         {
           "file": "web/app/page.tsx",
-          "line": 1,
+          "line": 13,
           "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"literal-test\" />",
           "target": "data-testid=literal-test"
         },
         {
@@ -154,27 +154,19 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/other.tsx",
-          "line": 1,
-          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
-          "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID } from './ids';",
-          "target": "data-testid=literal-test"
-        },
-        {
-          "file": "web/app/other.tsx",
-          "line": 1,
-          "message": "selector [id=\"derived-html-id\"] is duplicated; Playwright selectors must be unique",
-          "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID } from './ids';",
-          "target": "id=derived-html-id"
-        },
-        {
-          "file": "web/app/other.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-id\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID } from './ids';",
+          "sourceLine": "<div id=\"literal-id\" />",
           "target": "id=literal-id"
+        },
+        {
+          "file": "web/app/other.tsx",
+          "line": 7,
+          "message": "selector [id=\"derived-html-id\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<div id={SHARED_ID} /> {/* EXPECT_HTML */}",
+          "target": "id=derived-html-id"
         },
         {
           "file": "web/app/other.tsx",
@@ -185,28 +177,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "id=derived-html-id"
         },
         {
-          "file": "web/app/page.tsx",
-          "line": 1,
+          "file": "web/app/other.tsx",
+          "line": 8,
           "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"literal-test\" />",
           "target": "data-testid=literal-test"
         },
         {
           "file": "web/app/page.tsx",
-          "line": 1,
-          "message": "selector [id=\"derived-html-id\"] is duplicated; Playwright selectors must be unique",
+          "line": 10,
+          "message": "selector [id=\"literal-id\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
-          "target": "id=derived-html-id"
+          "sourceLine": "<div id=\"literal-id\" />",
+          "target": "id=literal-id"
         },
         {
           "file": "web/app/page.tsx",
-          "line": 1,
-          "message": "selector [id=\"literal-id\"] is duplicated; Playwright selectors must be unique",
+          "line": 11,
+          "message": "selector [id=\"derived-html-id\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
-          "target": "id=literal-id"
+          "sourceLine": "<div id={SHARED_ID} /> {/* EXPECT_HTML */}",
+          "target": "id=derived-html-id"
         },
         {
           "file": "web/app/page.tsx",
@@ -223,6 +215,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "playwright-unique-test-ids",
           "sourceLine": "<div id={makeId()} /> {/* EXPECT_HTML */}",
           "target": "id={makeId()}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 13,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid=\"literal-test\" />",
+          "target": "data-testid=literal-test"
         },
         {
           "file": "web/app/page.tsx",
@@ -256,18 +256,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/other.tsx",
-          "line": 1,
+          "line": 8,
           "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"literal-test\" />",
           "target": "data-testid=literal-test"
         },
         {
           "file": "web/app/page.tsx",
-          "line": 1,
+          "line": 13,
           "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"literal-test\" />",
           "target": "data-testid=literal-test"
         },
         {
@@ -293,18 +293,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/other.tsx",
-          "line": 1,
-          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
-          "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID } from './ids';",
-          "target": "data-testid=literal-test"
-        },
-        {
-          "file": "web/app/other.tsx",
-          "line": 1,
+          "line": 6,
           "message": "selector [id=\"literal-id\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { SHARED_ID } from './ids';",
+          "sourceLine": "<div id=\"literal-id\" />",
           "target": "id=literal-id"
         },
         {
@@ -316,19 +308,19 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "id={SHARED_ID}"
         },
         {
-          "file": "web/app/page.tsx",
-          "line": 1,
+          "file": "web/app/other.tsx",
+          "line": 8,
           "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"literal-test\" />",
           "target": "data-testid=literal-test"
         },
         {
           "file": "web/app/page.tsx",
-          "line": 1,
+          "line": 10,
           "message": "selector [id=\"literal-id\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-html-ids",
-          "sourceLine": "import { SHARED_ID, TEST_ID } from './ids';",
+          "sourceLine": "<div id=\"literal-id\" />",
           "target": "id=literal-id"
         },
         {
@@ -346,6 +338,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "playwright-unique-html-ids",
           "sourceLine": "<div id={makeId()} /> {/* EXPECT_HTML */}",
           "target": "id={makeId()}"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 13,
+          "message": "selector [data-testid=\"literal-test\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid=\"literal-test\" />",
+          "target": "data-testid=literal-test"
         },
         {
           "file": "web/app/page.tsx",
@@ -379,18 +379,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/other.tsx",
-          "line": 1,
+          "line": 2,
           "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "export function OtherSave() {",
+          "sourceLine": "return <button data-testid=\"save\">Other save</button>;",
           "target": "data-testid=save"
         },
         {
           "file": "web/app/page.tsx",
-          "line": 1,
+          "line": 25,
           "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"save\">Save</button>",
           "target": "data-testid=save"
         }
       ],
@@ -408,10 +408,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/page.tsx",
-          "line": 1,
+          "line": 4,
           "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "export default function Page() {",
+          "sourceLine": "<button data-testid=\"save\">Save</button>",
+          "target": "data-testid=save"
+        },
+        {
+          "file": "web/app/page.tsx",
+          "line": 5,
+          "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
+          "rule": "playwright-unique-test-ids",
+          "sourceLine": "<button data-testid=\"save\">Save duplicate</button>",
           "target": "data-testid=save"
         }
       ],
@@ -438,18 +446,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/other.tsx",
-          "line": 1,
+          "line": 2,
           "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "export function OtherSave() {",
+          "sourceLine": "return <button data-testid=\"save\">Other save</button>;",
           "target": "data-testid=save"
         },
         {
           "file": "web/app/page.tsx",
-          "line": 1,
+          "line": 25,
           "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"save\">Save</button>",
           "target": "data-testid=save"
         }
       ],
@@ -467,18 +475,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "web/app/other.tsx",
-          "line": 1,
+          "line": 2,
           "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "export function OtherSave() {",
+          "sourceLine": "return <button data-testid=\"save\">Other save</button>;",
           "target": "data-testid=save"
         },
         {
           "file": "web/app/page.tsx",
-          "line": 1,
+          "line": 25,
           "message": "selector [data-testid=\"save\"] is duplicated; Playwright selectors must be unique",
           "rule": "playwright-unique-test-ids",
-          "sourceLine": "import { IMPORTED_ID } from './ids';",
+          "sourceLine": "<button data-testid=\"save\">Save</button>",
           "target": "data-testid=save"
         },
         {
