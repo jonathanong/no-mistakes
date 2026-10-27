@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files:
+            - cycle/.oxlintrc.json
+            - missing/.oxlintrc.json
+            - outside/.oxlintrc.json
+            - symlink/.oxlintrc.json
+          when:
+            - key: extends
+          valueAssertions:
+            - kind: ancestor-override-subset

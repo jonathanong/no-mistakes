@@ -1,0 +1,337 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "check_with_files": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "only_comment.ts",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_extensions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "only_comment.ts",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "empty.ts",
+          "line": 1,
+          "message": "file is empty",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "placeholder.ts",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "html_comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "doc.md",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "html_content": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "intentionally_empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "js_block_comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "a.ts",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "js_line_comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "a.ts",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "js_real_content": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "md_comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "doc.md",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mjs_comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "a.mjs",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sort": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "a.ts",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        },
+        {
+          "file": "b.ts",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sql_comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.sql",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sql_content": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unknown_extension": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "empty.xml",
+          "line": 1,
+          "message": "file is empty",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unterminated_block": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "a.ts",
+          "line": 1,
+          "message": "file contains only comments — add real content or remove it",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "whitespace_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "ws.ts",
+          "line": 1,
+          "message": "file is empty",
+          "rule": "no-empty-or-comments-only-files"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

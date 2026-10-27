@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: [".oxlintrc.json"]
+          valueAssertions:
+            - key: rules.no-restricted-properties.[]
+              kind: object-shape
+              match: any
+              requiredKeys: [message]
+              forbiddenKeys: [object]
+              requiredValues:
+                property: bind

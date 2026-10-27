@@ -1,0 +1,20 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: web
+  other:
+    type: nextjs
+    root: other
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: ["components/*.tsx"]
+      stories: ["stories/*.stories.tsx"]
+      unanalyzable: advise
+  - rule: require-storybook-stories
+    projects: [other]
+    options:
+      include: ["components/*.tsx"]
+      stories: ["stories/*.stories.tsx"]

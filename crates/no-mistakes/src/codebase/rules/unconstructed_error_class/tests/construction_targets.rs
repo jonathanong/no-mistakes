@@ -1,5 +1,7 @@
 use super::*;
 
+// Output cases moved to cli_rra_snapshot_unconstructed_error_class.
+
 fn root() -> PathBuf {
     fixture()
         .parent()
@@ -27,63 +29,17 @@ fn report(config: &str, effort: Option<&str>) -> serde_json::Value {
 }
 
 #[test]
-fn resolved_constructors_and_intrinsics_preserve_definite_error_findings() {
+fn construction_target_audit_preserves_suppressed_channel() {
     for config in [".no-mistakes.yml", "report.yml", "advise.yml", "ignore.yml"] {
         for effort in [None, Some("low"), Some("max")] {
             let value = report(config, effort);
-            let names: Vec<_> = value["rules"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|row| row["target"].as_str().unwrap())
-                .collect();
-            assert_eq!(
-                names,
-                ["DeadError", "IntlUnusedError", "KnownCtorUnusedError"],
-                "{value}"
-            );
-            let advisories = value["advisories"].as_array().unwrap();
-            assert_eq!(
-                advisories.len(),
-                if config == "ignore.yml" { 0 } else { 10 },
-                "{value}"
-            );
             assert_eq!(
                 value["suppressed"].as_array().unwrap().len(),
                 if config == "ignore.yml" { 0 } else { 2 },
-                "{value}"
+                "{config} {effort:?}: {value}"
             );
-            assert!(advisories.iter().all(|row| row["target"] == "unanalyzable"));
-            assert!(advisories.iter().all(|row| row["file"] != "src/main.ts"
-                && row["file"] != "src/globals.ts"
-                && row["file"] != "src/errors.ts"));
-            if config == "report.yml" {
-                assert!(value["rules"]
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .chain(advisories)
-                    .all(|row| row["message"]
-                        .as_str()
-                        .unwrap()
-                        .starts_with("constructor policy:")));
-            }
         }
     }
-}
-
-#[test]
-fn consumer_pg_object_facade_and_nullish_ajv_are_silent_with_complete_declarations() {
-    let root = fixture().parent().unwrap().join("real-imports/fixture");
-    let report = diagnostic_report(&root);
-    assert_eq!(
-        reported_channel(&report, "rules"),
-        ["src/errors.ts:1 UnusedError"]
-    );
-    assert_eq!(
-        reported_channel(&report, "advisories"),
-        Vec::<String>::new()
-    );
 }
 
 #[test]
@@ -164,17 +120,6 @@ fn prepared_unknown_alternatives_are_not_erased_by_constructor_metadata() {
         &graph,
         &changed_class_site
     ));
-}
-
-#[test]
-fn cjs_namespace_alias_constructor_is_known_even_without_public_class_flags() {
-    let root = fixture()
-        .parent()
-        .unwrap()
-        .join("constructor-credit/fixture");
-    let report = diagnostic_report(&root);
-    assert_eq!(report["rules"], serde_json::json!([]));
-    assert_eq!(report["advisories"], serde_json::json!([]));
 }
 
 #[test]

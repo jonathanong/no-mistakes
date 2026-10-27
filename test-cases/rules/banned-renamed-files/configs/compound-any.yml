@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: banned-renamed-files
+    scope: repository
+    options:
+      bannedBasenames:
+        - name: webpack.config
+          message: "remove webpack config"
+          matchCompoundExtensions: true
+      extensions: [".ts", ".js"]

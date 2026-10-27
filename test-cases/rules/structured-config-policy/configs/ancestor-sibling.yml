@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: ["sibling/**/.oxlintrc.json"]
+          when:
+            - key: extends
+          valueAssertions:
+            - kind: ancestor-override-subset

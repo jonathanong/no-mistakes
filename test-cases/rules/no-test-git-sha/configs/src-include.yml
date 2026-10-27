@@ -1,0 +1,5 @@
+version: 2
+rules:
+  - rule: no-test-git-sha
+    scope: repository
+    include: ["src/**/*.ts"]

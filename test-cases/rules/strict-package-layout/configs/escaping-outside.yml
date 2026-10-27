@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: strict-package-layout
+    scope: repository
+    options:
+      packages:
+        - root: "../outside"
+          sourceExtension: .ts
+          allowedRootFiles: [package.json]
+          allowedSubdirs: [src]

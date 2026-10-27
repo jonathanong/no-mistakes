@@ -1,0 +1,111 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowed_context": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/example.test.ts",
+          "line": 1,
+          "message": "tests/example.test.ts:1: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
+          "rule": "no-test-git-sha"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "both_lines": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/example.test.ts",
+          "line": 1,
+          "message": "tests/example.test.ts:1: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
+          "rule": "no-test-git-sha"
+        },
+        {
+          "file": "tests/example.test.ts",
+          "line": 2,
+          "message": "tests/example.test.ts:2: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
+          "rule": "no-test-git-sha"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude_example": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "hex_boundaries": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/boundaries.test.ts",
+          "line": 1,
+          "message": "tests/boundaries.test.ts:1: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
+          "rule": "no-test-git-sha"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "src_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/value.ts",
+          "line": 1,
+          "message": "src/value.ts:1: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
+          "rule": "no-test-git-sha"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tests_include": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

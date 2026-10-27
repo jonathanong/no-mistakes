@@ -1,0 +1,31 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: [app.yml]
+          valueAssertions:
+            - key: features.strict
+              kind: boolean
+            - key: limits.retries
+              kind: positive-number
+            - key: badFiles
+              kind: string-array
+            - key: allowBuilds
+              kind: record-of-boolean
+            - key: overrides.[].files.[]
+              kind: string-prefix
+              prefix: "**/"
+            - key: overrides.[].files.[]
+              kind: not-single-file
+            - key: globTarget
+              kind: string-glob
+              glob: "src/**/*.ts"
+            - key: runtime.mode
+              kind: equals
+              value: production
+            - key: rules.[]
+              kind: object-shape
+              requiredValues:
+                severity: error

@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    include:
+      - "**/.oxlintrc.json"
+    options:
+      policies:
+        - files: ["lost/.oxlintrc.json"]
+          valueAssertions:
+            - kind: ancestor-override-subset

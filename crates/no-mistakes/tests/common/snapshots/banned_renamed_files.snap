@@ -1,0 +1,228 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "compound": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/webpack.config.dev.ts",
+          "line": 1,
+          "message": "remove webpack.config.* — bundling is handled by the framework",
+          "rule": "banned-renamed-files"
+        },
+        {
+          "file": "web/webpack.config.js",
+          "line": 1,
+          "message": "remove webpack.config.* — bundling is handled by the framework",
+          "rule": "banned-renamed-files"
+        },
+        {
+          "file": "web/webpack.config.prod.js",
+          "line": 1,
+          "message": "remove webpack.config.* — bundling is handled by the framework",
+          "rule": "banned-renamed-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "compound_extension": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail_suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/middleware.ts",
+          "line": 1,
+          "message": "rename middleware.{ts,mts,js} to proxy.ts (Next.js 16+)",
+          "rule": "banned-renamed-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "in_scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/middleware.ts",
+          "line": 1,
+          "message": "rename middleware.{ts,mts,js} to proxy.ts (Next.js 16+)",
+          "rule": "banned-renamed-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mts_extension": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/middleware.mts",
+          "line": 1,
+          "message": "rename it",
+          "rule": "banned-renamed-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_dot_extension": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "anywhere/middleware.ts",
+          "line": 1,
+          "message": "rename it",
+          "rule": "banned-renamed-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "non_matching_extension": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "out_of_scope": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "prefix_scope": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "regex_ignores_extensions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/jest.config.cjs",
+          "line": 1,
+          "message": "remove jest.config.* — tests run under vitest",
+          "rule": "banned-renamed-files"
+        },
+        {
+          "file": "web/jest.config.js",
+          "line": 1,
+          "message": "remove jest.config.* — tests run under vitest",
+          "rule": "banned-renamed-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root_scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/middleware.ts",
+          "line": 1,
+          "message": "rename middleware.{ts,mts,js} to proxy.ts (Next.js 16+)",
+          "rule": "banned-renamed-files"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

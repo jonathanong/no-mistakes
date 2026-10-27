@@ -1,0 +1,22 @@
+version: 2
+effort: low
+projects:
+  web:
+    type: nextjs
+    root: web
+  other:
+    type: nextjs
+    root: other
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: ["components/*.tsx"]
+      stories: ["stories/*.stories.tsx"]
+      allowFiles:
+        "stories/Broken.stories.tsx": "Separate harness"
+  - rule: require-storybook-stories
+    projects: [other]
+    options:
+      include: ["components/*.tsx"]
+      stories: ["stories/*.stories.tsx"]

@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["stories/**/*.stories.tsx"]

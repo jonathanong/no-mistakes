@@ -19,17 +19,9 @@ stories: ["stories/**/*.stories.tsx"]
 
     let error = check(&root, &invalid, None).unwrap_err().to_string();
     assert!(error.contains("requires exactly one project target"));
-
-    let mut unknown = config(
-        r#"
-stories: ["stories/**/*.stories.tsx"]
-"#,
-    );
-    unknown.rules[0].projects = vec!["unknown".to_string()];
-
-    let findings = check(&root, &unknown, None).unwrap();
-    assert!(findings.is_empty());
 }
+
+// Output cases moved to cli_rra_snapshot_require_storybook_stories.
 
 #[test]
 fn storybook_config_pattern_parser_handles_supported_shapes() {

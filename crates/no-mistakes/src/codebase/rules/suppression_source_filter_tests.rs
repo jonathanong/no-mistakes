@@ -1,3 +1,5 @@
+// In-memory source filters and already-suppressed rules. check JSON only
+// shows post-filter findings for a real rule, so these stay unit tests.
 use super::*;
 
 fn sample_finding(file: &str, line: usize) -> RuleFinding {

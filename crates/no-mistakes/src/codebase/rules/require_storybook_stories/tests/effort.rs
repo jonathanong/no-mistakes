@@ -1,6 +1,8 @@
 use super::*;
 use crate::config::v2::{Effort, Unanalyzable};
 
+// Output cases moved to cli_rra_snapshot_require_storybook_stories.
+
 fn run(
     effort: Option<Effort>,
     policy: Unanalyzable,
@@ -61,65 +63,6 @@ fn run_config(
 }
 
 #[test]
-fn low_preserves_definite_findings_and_routes_only_residuals() {
-    let max = run(Some(Effort::Max), Unanalyzable::Report, false);
-    assert_eq!(max.findings.len(), 3, "{:?}", max.findings);
-    assert_eq!(
-        max.findings,
-        run(None, Unanalyzable::Report, false).findings
-    );
-    for policy in [
-        Unanalyzable::Report,
-        Unanalyzable::Advise,
-        Unanalyzable::Ignore,
-    ] {
-        let low = run(Some(Effort::Low), policy, false);
-        let definite: Vec<_> = low
-            .findings
-            .iter()
-            .filter(|finding| finding.target.as_deref() != Some("unanalyzable"))
-            .collect();
-        assert_eq!(definite.len(), 1, "{:?}", low.findings);
-        assert!(definite
-            .iter()
-            .all(|finding| max.findings.contains(finding)));
-        assert_eq!(
-            low.findings.len(),
-            if policy == Unanalyzable::Report { 3 } else { 1 }
-        );
-        assert_eq!(
-            low.advisories.len(),
-            if policy == Unanalyzable::Advise { 2 } else { 0 }
-        );
-        assert!(max.findings.len() >= low.findings.len());
-        for finding in low.findings.iter().chain(&low.advisories) {
-            assert!(!finding.file.contains("Disabled"), "{finding:?}");
-            if finding.target.as_deref() == Some("unanalyzable") {
-                assert!(finding.message.contains("effort low"));
-                assert!(finding
-                    .message
-                    .contains("Import and use the component directly"));
-            }
-        }
-    }
-}
-
-#[test]
-fn transitive_coverage_is_uncertainty_rather_than_a_definite_low_violation() {
-    assert!(run(Some(Effort::Max), Unanalyzable::Report, true)
-        .findings
-        .is_empty());
-    for policy in [Unanalyzable::Advise, Unanalyzable::Ignore] {
-        let low = run(Some(Effort::Low), policy, true);
-        assert!(low.findings.is_empty(), "{:?}", low.findings);
-        assert_eq!(
-            low.advisories.len(),
-            if policy == Unanalyzable::Advise { 1 } else { 0 }
-        );
-    }
-}
-
-#[test]
 fn low_skips_transitive_graph_and_dynamic_boundary_work() {
     for effort in [Effort::Low, Effort::Max] {
         let observer = crate::diagnostics::InvocationObserver::new(true);
@@ -157,37 +100,6 @@ fn standalone_rule_honors_freshly_loaded_low_policy() {
         .rules
         .iter()
         .all(|rule| rule.resolved_analysis.is_none()));
-    assert_eq!(
-        crate::codebase::rules::run_check(
-            &root,
-            Some(&root.join(".no-mistakes.low-ignore.yml")),
-            None
-        )
-        .unwrap()
-        .len(),
-        1
-    );
-}
-
-#[test]
-fn implicit_boundary_exemptions_are_residuals_and_colocated_tests_still_clear() {
-    let root = fixture("effort/plain");
-    for effort in [Effort::Low, Effort::Max] {
-        let mut cfg = config("includeAllReactNamedExports: true");
-        cfg.effort = Some(effort);
-        cfg.unanalyzable = Some(Unanalyzable::Advise);
-        let result = run_config(&root, cfg);
-        assert!(result.findings.is_empty());
-        assert_eq!(
-            result.advisories.len(),
-            if effort == Effort::Low { 1 } else { 0 }
-        );
-        let mut cfg = config("{ include: ['*.tsx'], allow_colocated_tests: true }");
-        cfg.effort = Some(effort);
-        let result = run_config(&root, cfg);
-        assert!(result.findings.is_empty());
-        assert!(result.advisories.is_empty());
-    }
 }
 
 #[test]

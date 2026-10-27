@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: [app.yml]
+          requiredKeys: [runtime.version, runtime.owner]
+          bannedKeys: [legacy.enabled]

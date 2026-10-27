@@ -1,0 +1,16 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: web
+  plain:
+    type: nextjs
+    root: plain
+effort: max
+unanalyzable: report
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: [Child.tsx]
+      stories: ["*.stories.tsx"]

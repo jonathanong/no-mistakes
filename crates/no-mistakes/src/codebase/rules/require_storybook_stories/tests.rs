@@ -3,7 +3,7 @@ use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
 use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
-use crate::config::v2::schema::{Project, ProjectType, RuleDef, StringOrList};
+use crate::config::v2::schema::{Project, ProjectType, RuleDef};
 use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment};
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -30,18 +30,6 @@ fn config(options: &str) -> NoMistakesConfig {
         options: serde_yaml::from_str(options).unwrap(),
         ..Default::default()
     });
-    config
-}
-
-fn config_with_storybook(options: &str) -> NoMistakesConfig {
-    let mut config = config(options);
-    config.tests.storybook.configs = Some(StringOrList::One(".storybook/main.ts".to_string()));
-    config
-}
-
-fn config_with_project_root(root: &str, options: &str) -> NoMistakesConfig {
-    let mut config = config(options);
-    config.projects.get_mut("web").unwrap().root = Some(root.to_string());
     config
 }
 
@@ -160,27 +148,7 @@ fn deferred_suppression_sources_use_prepared_component_text() {
     ));
 }
 
-#[test]
-fn missing_project_target_is_ignored() {
-    let root = fixture("comments");
-    let mut config = config("");
-    config.projects.remove("web");
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
-    let sources = snapshot.source_store_for(&root);
-
-    let findings = super::runner::check_with_resolver(
-        &root,
-        &config,
-        &CheckFactMap::default(),
-        &empty_resolver(&root),
-        None,
-        false,
-        &sources,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty());
-}
+// Output cases moved to cli_rra_snapshot_require_storybook_stories.
 
 fn react_facts(
     components: Vec<ComponentFacts>,

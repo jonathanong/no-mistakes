@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      roots: [agents]
+      testGlob: "*.test.mts"
+      directChild: true

@@ -229,26 +229,7 @@ fn scan_derives_package_dirs_from_file_list_without_dir_metadata() {
     assert!(findings[0].file.contains("packages/email/src/index.mts"));
 }
 
-// ── fixture-based integration tests ─────────────────────────────────────────
-
-#[test]
-fn pass_fixture_has_no_findings() {
-    let root = fixture("rules/strict-package-layout/pass");
-    let config_path = root.join(".no-mistakes.yml");
-    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty(), "unexpected findings: {findings:#?}");
-}
-
-#[test]
-fn fail_fixture_has_findings() {
-    let root = fixture("rules/strict-package-layout/fail");
-    let config_path = root.join(".no-mistakes.yml");
-    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
-    let findings = check(&root, &config).unwrap();
-    assert!(!findings.is_empty(), "expected findings but got none");
-    assert!(findings.iter().all(|f| f.rule == RULE_ID));
-}
+// Output cases moved to cli_rra_snapshot_strict_package_layout.
 
 #[test]
 fn check_with_files_returns_same_as_check() {
@@ -405,22 +386,6 @@ fn escaping_root_does_not_match_files_inside_or_outside_the_repo() {
             "{root_spec} matched files"
         );
     }
-}
-
-#[test]
-fn dot_root_fixture_flags_only_files_under_packages() {
-    let root = fixture("rules/strict-package-layout/dot-root");
-    let config_path = root.join(".no-mistakes.yml");
-    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
-    let findings = check(&root, &config).unwrap();
-    let files: Vec<_> = findings
-        .iter()
-        .map(|finding| finding.file.as_str())
-        .collect();
-    assert_eq!(
-        files,
-        vec!["packages/api/index.js", "packages/api/tmp/debug.ts"]
-    );
 }
 
 #[test]

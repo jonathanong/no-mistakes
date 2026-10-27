@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: require-files-in-subdirs
+    scope: repository
+    options:
+      packages:
+        - root: packages
+          requiredFiles:
+            - package.json
+            - enqueues/*.mts
+          requireAnyOf:
+            - [workers/*.mts]

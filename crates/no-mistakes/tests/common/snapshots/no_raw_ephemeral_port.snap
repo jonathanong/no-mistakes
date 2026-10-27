@@ -1,0 +1,501 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow_binder": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.jsx",
+          "line": 2,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice use a configured allocator",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "escaped.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice use a configured allocator",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "options.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice use a configured allocator",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice use a configured allocator",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "trailing.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice use a configured allocator",
+          "rule": "no-raw-ephemeral-port"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_miss": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_py_on_listen": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "js_bind_listen": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "server.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "js_function_bind": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "listen_zero": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.jsx",
+          "line": 2,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "escaped.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "options.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "trailing.ts",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_recall": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "server.py",
+          "line": 2,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 3,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 4,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 5,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 6,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 7,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 10,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 11,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 2,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 3,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 4,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 5,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 6,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 7,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 8,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 9,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_recall_allow_ts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "disabled.ts",
+          "line": 1,
+          "message": "directive for `no-raw-ephemeral-port` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 20,
+          "message": "directive for `no-raw-ephemeral-port` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 21,
+          "message": "directive for `no-raw-ephemeral-port` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "no-raw-ephemeral-port"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "server.py",
+          "line": 2,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 3,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 4,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 5,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 6,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 7,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_recall_py": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "disabled.ts",
+          "line": 1,
+          "message": "directive for `no-raw-ephemeral-port` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 20,
+          "message": "directive for `no-raw-ephemeral-port` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.ts",
+          "line": 21,
+          "message": "directive for `no-raw-ephemeral-port` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "no-raw-ephemeral-port"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "server.py",
+          "line": 2,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 3,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 4,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 5,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 6,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 7,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next_line_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "python_shell_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "compose.yml",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "script.sh",
+          "line": 2,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 3,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        },
+        {
+          "file": "server.py",
+          "line": 4,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_bind": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "server.py",
+          "line": 1,
+          "message": "raw ephemeral port 0 bind/listen can occupy a deterministic runner slice",
+          "rule": "no-raw-ephemeral-port"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

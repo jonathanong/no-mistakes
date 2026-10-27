@@ -1,3 +1,5 @@
+// Absolute paths and trusted-root registration. check JSON would leak the
+// machine path, so these stay unit tests.
 use super::*;
 use std::path::Path;
 

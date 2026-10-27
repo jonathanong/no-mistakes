@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: strict-package-layout
+    scope: repository
+    options:
+      testFilePatterns: ["*.test.ts", "*.spec.ts"]
+      testDirName: "__tests__"
+      packages:
+        - root: ./packages
+          sourceExtension: .ts
+          allowedRootFiles: [package.json, README.md, index.ts]
+          allowedSubdirs: [src, __tests__]

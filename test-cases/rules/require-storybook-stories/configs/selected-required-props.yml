@@ -1,0 +1,16 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: .
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    exclude: ["components/GenericExcluded.tsx"]
+    options:
+      include: ["components/*.tsx"]
+      exclude: ["components/Excluded.tsx"]
+      ignoreIndexAndPrivateFiles: true
+      requiredProps: ["data-testid"]
+      allowFiles:
+        "components/Allowed.tsx": "Covered by a separate harness"

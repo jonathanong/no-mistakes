@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: strict-package-layout
+    scope: repository
+    options:
+      packages:
+        - root: pkg
+          sourceExtension: .mts

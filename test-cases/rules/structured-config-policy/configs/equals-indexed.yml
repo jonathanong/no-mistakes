@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: ["root.yml", "match.yml", "drift.yml"]
+          valueAssertions:
+            - key: items.0.name
+              kind: equals-file
+              file: root.yml
+              message: names must match

@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies:
+        - files: ["app.yml"]
+          requiredKeys: [missingRequiredKey]
+          valueAssertions:
+            - key: enabled
+              kind: boolish

@@ -1,3 +1,5 @@
+// Synthetic findings, absolute paths, and `../` escapes. check --format json
+// cannot show this filter, so these stay unit tests.
 use super::*;
 
 fn suppression_fixture(name: &str) -> std::path::PathBuf {

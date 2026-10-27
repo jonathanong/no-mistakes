@@ -1,4 +1,7 @@
 use super::*;
+use crate::config::v2::schema::StringOrList;
+
+// Output cases moved to cli_rra_snapshot_require_storybook_stories.
 
 #[test]
 fn namespace_and_allow_findings_cover_non_matching_edges() {
@@ -82,23 +85,6 @@ fn namespace_and_allow_findings_cover_non_matching_edges() {
 }
 
 #[test]
-fn direct_and_transitive_story_coverage_passes() {
-    let root = fixture("covered");
-    let findings = check(
-        &root,
-        &config(
-            r#"
-include_all_react_named_exports: true
-"#,
-        ),
-        None,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
 fn standalone_check_accepts_explicit_relative_and_absolute_tsconfig_paths() {
     let root = fixture("covered");
     let config = config(
@@ -162,21 +148,6 @@ fn standalone_check_seeds_configured_project_roots_outside_workspaces() {
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "packages/ignored/src/Button.tsx");
-}
-
-#[test]
-fn project_without_root_uses_repository_root() {
-    let root = fixture("covered");
-    let mut cfg = config(
-        r#"
-include_all_react_named_exports: true
-"#,
-    );
-    cfg.projects.get_mut("web").unwrap().root = None;
-
-    let findings = check(&root, &cfg, None).unwrap();
-
-    assert!(findings.is_empty(), "{findings:#?}");
 }
 
 #[test]
@@ -246,55 +217,6 @@ fn config_helpers_cover_tsconfig_and_storybook_fallbacks() {
 }
 
 #[test]
-fn default_story_config_and_test_exclusion_are_used() {
-    let root = fixture("defaults");
-    let findings = check(
-        &root,
-        &config_with_storybook(
-            r#"
-include_all_react_named_exports: true
-"#,
-        ),
-        None,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
-fn storybook_config_paths_prefer_project_root() {
-    let root = fixture("config-project-root");
-    let mut cfg = config_with_project_root(
-        "web",
-        r#"
-include_all_react_named_exports: true
-"#,
-    );
-    cfg.tests.storybook.configs = Some(StringOrList::One(".storybook/main.ts".to_string()));
-    let findings = check(&root, &cfg, None).unwrap();
-
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
-fn single_string_story_config_is_used() {
-    let root = fixture("single-story-config");
-    let findings = check(
-        &root,
-        &config_with_storybook(
-            r#"
-include_all_react_named_exports: true
-"#,
-        ),
-        None,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
 fn absolute_story_config_patterns_are_project_relative() {
     let root = fixture("defaults");
     let pattern = root.join("stories/**/*.stories.tsx");
@@ -305,130 +227,4 @@ fn absolute_story_config_patterns_are_project_relative() {
     );
 
     assert_eq!(relative, "stories/**/*.stories.tsx");
-}
-
-#[test]
-fn imported_story_files_count_as_reachable_coverage() {
-    let root = fixture("reachable-story-import");
-    let findings = check(
-        &root,
-        &config(
-            r#"
-stories: ["stories/entry.stories.tsx"]
-include_all_react_named_exports: true
-"#,
-        ),
-        None,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
-fn side_effect_story_imports_extend_reachable_coverage() {
-    let root = fixture("side-effect-story");
-    let findings = check(
-        &root,
-        &config(
-            r#"
-stories: ["stories/entry.stories.tsx"]
-include_all_react_named_exports: true
-"#,
-        ),
-        None,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
-fn mdx_story_imports_count_as_story_coverage() {
-    let root = fixture("mdx-story");
-    let findings = check(
-        &root,
-        &config(
-            r#"
-stories: ["stories/**/*.mdx"]
-include_all_react_named_exports: true
-"#,
-        ),
-        None,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
-fn selected_leaves_are_covered_through_unselected_wrappers() {
-    let root = fixture("unselected-wrapper");
-    let findings = check(
-        &root,
-        &config(
-            r#"
-stories: ["stories/**/*.stories.tsx"]
-include: ["components/Leaf.tsx"]
-"#,
-        ),
-        None,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "{findings:#?}");
-}
-
-#[test]
-fn reports_selected_component_without_story() {
-    let root = fixture("missing");
-    let findings = check(
-        &root,
-        &config(
-            r#"
-stories: ["stories/**/*.stories.tsx"]
-include_all_react_named_exports: true
-"#,
-        ),
-        None,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "components/Missing.tsx");
-    assert!(findings[0]
-        .message
-        .contains("add an accepted colocated test"));
-    assert_eq!(
-        findings[0].target.as_deref(),
-        Some("components/Missing.tsx#Missing")
-    );
-}
-
-#[test]
-fn colocated_tests_can_cover_selected_components() {
-    let root = fixture("colocated-tests");
-    let findings = check(
-        &root,
-        &config(
-            r#"
-stories: ["stories/**/*.stories.tsx"]
-include_all_react_named_exports: true
-allow_colocated_tests: true
-"#,
-        ),
-        None,
-    )
-    .unwrap();
-
-    assert_eq!(
-        findings
-            .iter()
-            .filter_map(|finding| finding.target.as_deref())
-            .collect::<Vec<_>>(),
-        vec![
-            "components/NestedOnly.tsx#NestedOnly",
-            "components/SpecOnly.tsx#SpecOnly",
-        ]
-    );
 }

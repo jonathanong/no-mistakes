@@ -1,0 +1,816 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "array_form": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "script.sh",
+          "line": 1,
+          "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "commented_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "echo_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "env_var_form": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_paths": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "excluded_path": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "setup.sh",
+          "line": 2,
+          "message": "setup.sh:2: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "setup.sh",
+          "line": 3,
+          "message": "setup.sh:3: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "git_config_email": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "script.sh",
+          "line": 1,
+          "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper_form": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "script.sh",
+          "line": 1,
+          "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_continued": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "script.sh",
+          "line": 1,
+          "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_number": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "script.sh",
+          "line": 3,
+          "message": "script.sh:3: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_prefixes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "managed.yml",
+          "line": 5,
+          "message": "managed.yml:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 10,
+          "message": "mutations.sh:10: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 11,
+          "message": "mutations.sh:11: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 12,
+          "message": "mutations.sh:12: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 13,
+          "message": "mutations.sh:13: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 14,
+          "message": "mutations.sh:14: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 15,
+          "message": "mutations.sh:15: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 16,
+          "message": "mutations.sh:16: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 17,
+          "message": "mutations.sh:17: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 18,
+          "message": "mutations.sh:18: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 19,
+          "message": "mutations.sh:19: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 22,
+          "message": "mutations.sh:22: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 23,
+          "message": "mutations.sh:23: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 25,
+          "message": "mutations.sh:25: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 26,
+          "message": "mutations.sh:26: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 27,
+          "message": "mutations.sh:27: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 28,
+          "message": "mutations.sh:28: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 29,
+          "message": "mutations.sh:29: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 3,
+          "message": "mutations.sh:3: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 31,
+          "message": "mutations.sh:31: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 32,
+          "message": "mutations.sh:32: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 33,
+          "message": "mutations.sh:33: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 35,
+          "message": "mutations.sh:35: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 36,
+          "message": "mutations.sh:36: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 37,
+          "message": "mutations.sh:37: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 38,
+          "message": "mutations.sh:38: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 39,
+          "message": "mutations.sh:39: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 4,
+          "message": "mutations.sh:4: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 5,
+          "message": "mutations.sh:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 6,
+          "message": "mutations.sh:6: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 7,
+          "message": "mutations.sh:7: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 8,
+          "message": "mutations.sh:8: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 9,
+          "message": "mutations.sh:9: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "self-hosted.yml",
+          "line": 5,
+          "message": "self-hosted.yml:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_prefixes_excluded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "self-hosted.yml",
+          "line": 5,
+          "message": "self-hosted.yml:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal_prefixes_managed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "mutations.sh",
+          "line": 10,
+          "message": "mutations.sh:10: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 11,
+          "message": "mutations.sh:11: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 12,
+          "message": "mutations.sh:12: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 13,
+          "message": "mutations.sh:13: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 14,
+          "message": "mutations.sh:14: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 15,
+          "message": "mutations.sh:15: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 16,
+          "message": "mutations.sh:16: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 17,
+          "message": "mutations.sh:17: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 18,
+          "message": "mutations.sh:18: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 19,
+          "message": "mutations.sh:19: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 22,
+          "message": "mutations.sh:22: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 23,
+          "message": "mutations.sh:23: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 25,
+          "message": "mutations.sh:25: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 26,
+          "message": "mutations.sh:26: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 27,
+          "message": "mutations.sh:27: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 28,
+          "message": "mutations.sh:28: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 29,
+          "message": "mutations.sh:29: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 3,
+          "message": "mutations.sh:3: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 31,
+          "message": "mutations.sh:31: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 32,
+          "message": "mutations.sh:32: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 33,
+          "message": "mutations.sh:33: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 35,
+          "message": "mutations.sh:35: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 36,
+          "message": "mutations.sh:36: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 37,
+          "message": "mutations.sh:37: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 38,
+          "message": "mutations.sh:38: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 39,
+          "message": "mutations.sh:39: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 4,
+          "message": "mutations.sh:4: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 5,
+          "message": "mutations.sh:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 6,
+          "message": "mutations.sh:6: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 7,
+          "message": "mutations.sh:7: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 8,
+          "message": "mutations.sh:8: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "mutations.sh",
+          "line": 9,
+          "message": "mutations.sh:9: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        },
+        {
+          "file": "self-hosted.yml",
+          "line": 5,
+          "message": "self-hosted.yml:5: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "managed_runners": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mapping_managed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "non_script": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_managed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "read_only_array": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "read_only_helper": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "read_only_shell": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "readonly_lookup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "self_hosted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 2,
+          "message": ".github/workflows/ci.yml:2: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shebang_deploy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "deploy",
+          "line": 2,
+          "message": "deploy:2: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shell_form": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "script.sh",
+          "line": 1,
+          "message": "script.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "target_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scripts/setup.sh",
+          "line": 1,
+          "message": "scripts/setup.sh:1: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

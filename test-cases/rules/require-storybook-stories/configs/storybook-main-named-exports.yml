@@ -1,0 +1,13 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: "."
+tests:
+  storybook:
+    configs: .storybook/main.ts
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      includeAllReactNamedExports: true

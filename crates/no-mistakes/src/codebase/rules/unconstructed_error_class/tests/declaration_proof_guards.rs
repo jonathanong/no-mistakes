@@ -3,42 +3,13 @@ use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::dependencies::graph::GraphBuildPlan;
 use crate::codebase::ts_source::facts::{collect_ts_facts_with_session_and_context, TsFactContext};
 
+// Output cases moved to cli_rra_snapshot_unconstructed_error_class.
+
 fn root() -> PathBuf {
     fixture()
         .parent()
         .unwrap()
         .join("declaration-proof-guards/fixture")
-}
-
-#[test]
-fn declaration_typeof_proof_rejects_optional_computed_signature_and_runtime_shapes() {
-    let root = root();
-    let report = diagnostic_report(&root);
-    assert_eq!(
-        reported_channel(&report, "rules"),
-        [
-            "src/declaration-consumers.ts:5 DefiniteUnusedError",
-            "src/declaration-consumers.ts:6 PropertyUnusedError",
-            "src/errors.ts:1 RuntimeError",
-        ],
-        "{report}"
-    );
-    assert_eq!(
-        reported_channel(&report, "advisories"),
-        [
-            "src/declaration-consumers.ts:7 unanalyzable",
-            "src/declaration-consumers.ts:8 unanalyzable",
-            "src/declaration-consumers.ts:9 unanalyzable",
-            "src/declaration-consumers.ts:10 unanalyzable",
-            "src/declaration-consumers.ts:11 unanalyzable",
-            "src/declaration-consumers.ts:12 unanalyzable",
-            "src/declaration-consumers.ts:13 unanalyzable",
-            "src/declaration-consumers.ts:14 unanalyzable",
-            "src/runtime.ts:7 unanalyzable",
-            "src/runtime.ts:8 unanalyzable",
-        ],
-        "{report}"
-    );
 }
 
 #[test]

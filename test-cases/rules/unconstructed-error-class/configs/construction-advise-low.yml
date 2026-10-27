@@ -1,0 +1,7 @@
+version: 2
+effort: low
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+    include: [src/**]
+    options: { unanalyzable: advise }

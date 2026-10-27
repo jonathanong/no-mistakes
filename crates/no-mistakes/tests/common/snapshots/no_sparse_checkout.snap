@@ -1,0 +1,131 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "composite_action": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/check/action.yaml",
+          "line": 6,
+          "message": ".github/actions/check/action.yaml:6: composite action passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "target": "sparse-checkout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "ci/no-mistakes-workflows/check.yml",
+          "line": 6,
+          "message": "ci/no-mistakes-workflows/check.yml:6: job \"build\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "target": "sparse-checkout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_include_miss": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "review_locations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/comment-and-script.yml",
+          "line": 22,
+          "message": ".github/workflows/comment-and-script.yml:22: job \"build\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "target": "sparse-checkout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workflows": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/bad.yml",
+          "line": 2,
+          "message": ".github/workflows/bad.yml: invalid YAML (did not find expected ',' or '}' at line 2 column 1, while parsing a flow mapping at line 1 column 15)",
+          "rule": "no-sparse-checkout"
+        },
+        {
+          "file": ".github/workflows/both.yml",
+          "line": 6,
+          "message": ".github/workflows/both.yml:6: job \"cleanup\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "target": "sparse-checkout"
+        },
+        {
+          "file": ".github/workflows/both.yml",
+          "line": 8,
+          "message": ".github/workflows/both.yml:8: job \"cleanup\" passes `sparse-checkout-cone-mode` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "target": "sparse-checkout-cone-mode"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml:7: job \"build\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "target": "sparse-checkout"
+        },
+        {
+          "file": ".github/workflows/two-checkouts.yml",
+          "line": 6,
+          "message": ".github/workflows/two-checkouts.yml:6: job \"build\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "target": "sparse-checkout"
+        },
+        {
+          "file": ".github/workflows/two-checkouts.yml",
+          "line": 7,
+          "message": ".github/workflows/two-checkouts.yml:7: job \"build\" passes `sparse-checkout-cone-mode` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "target": "sparse-checkout-cone-mode"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
