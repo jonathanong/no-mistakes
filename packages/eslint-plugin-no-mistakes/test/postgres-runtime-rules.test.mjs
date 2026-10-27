@@ -64,10 +64,6 @@ const languageOptions = {
 };
 const IMPORT = `import { query, read, write } from "@example/db";\n`;
 
-function ids(code, rule, option, filename = "app.ts") {
-  return messages(code, rule, { importSpecifier: "@example/db", ...option }, filename);
-}
-
 describe("plugin exports", () => {
   it("registers postgres runtime rules outside presets", () => {
     assert.ok(plugin.rules["postgres-no-executor-adapter"]);

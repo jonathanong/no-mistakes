@@ -1,4 +1,1343 @@
 {
+  "async-call-disposition": [
+    {
+      "file": "valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "param-var.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue/"
+              ],
+              "sourceSpecifierPatterns": [
+                "/[/"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [],
+              "sourceSpecifierPatterns": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "suppressed-file.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-invalid.ts",
+      "findings": [
+        {
+          "column": 32,
+          "endColumn": 49,
+          "endLine": 5,
+          "file": "retained-invalid.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 32,
+          "endLine": 6,
+          "file": "retained-invalid.ts",
+          "line": 6,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 41,
+          "endLine": 7,
+          "file": "retained-invalid.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 54,
+          "endLine": 8,
+          "file": "retained-invalid.ts",
+          "line": 8,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 66,
+          "endColumn": 83,
+          "endLine": 9,
+          "file": "retained-invalid.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 60,
+          "endColumn": 77,
+          "endLine": 10,
+          "file": "retained-invalid.ts",
+          "line": 10,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 61,
+          "endColumn": 78,
+          "endLine": 11,
+          "file": "retained-invalid.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 82,
+          "endColumn": 99,
+          "endLine": 12,
+          "file": "retained-invalid.ts",
+          "line": 12,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 92,
+          "endColumn": 109,
+          "endLine": 13,
+          "file": "retained-invalid.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 84,
+          "endColumn": 101,
+          "endLine": 14,
+          "file": "retained-invalid.ts",
+          "line": 14,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 61,
+          "endColumn": 78,
+          "endLine": 15,
+          "file": "retained-invalid.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 74,
+          "endColumn": 91,
+          "endLine": 16,
+          "file": "retained-invalid.ts",
+          "line": 16,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 48,
+          "endColumn": 65,
+          "endLine": 17,
+          "file": "retained-invalid.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 59,
+          "endLine": 18,
+          "file": "retained-invalid.ts",
+          "line": 18,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 59,
+          "endLine": 20,
+          "file": "retained-invalid.ts",
+          "line": 20,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 44,
+          "endColumn": 61,
+          "endLine": 21,
+          "file": "retained-invalid.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 70,
+          "endColumn": 87,
+          "endLine": 22,
+          "file": "retained-invalid.ts",
+          "line": 22,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 30,
+          "endColumn": 47,
+          "endLine": 23,
+          "file": "retained-invalid.ts",
+          "line": 23,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 70,
+          "endColumn": 87,
+          "endLine": 24,
+          "file": "retained-invalid.ts",
+          "line": 24,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 67,
+          "endColumn": 84,
+          "endLine": 25,
+          "file": "retained-invalid.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 58,
+          "endColumn": 75,
+          "endLine": 26,
+          "file": "retained-invalid.ts",
+          "line": 26,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 68,
+          "endColumn": 85,
+          "endLine": 27,
+          "file": "retained-invalid.ts",
+          "line": 27,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 61,
+          "endColumn": 78,
+          "endLine": 28,
+          "file": "retained-invalid.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 67,
+          "endColumn": 84,
+          "endLine": 29,
+          "file": "retained-invalid.ts",
+          "line": 29,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 64,
+          "endColumn": 81,
+          "endLine": 30,
+          "file": "retained-invalid.ts",
+          "line": 30,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 72,
+          "endColumn": 89,
+          "endLine": 31,
+          "file": "retained-invalid.ts",
+          "line": 31,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 46,
+          "endLine": 32,
+          "file": "retained-invalid.ts",
+          "line": 32,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 56,
+          "endLine": 33,
+          "file": "retained-invalid.ts",
+          "line": 33,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 91,
+          "endColumn": 108,
+          "endLine": 34,
+          "file": "retained-invalid.ts",
+          "line": 34,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 39,
+          "endLine": 39,
+          "file": "retained-invalid.ts",
+          "line": 39,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 34,
+          "endLine": 40,
+          "file": "retained-invalid.ts",
+          "line": 40,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 43,
+          "endLine": 41,
+          "file": "retained-invalid.ts",
+          "line": 41,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 41,
+          "endLine": 42,
+          "file": "retained-invalid.ts",
+          "line": 42,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 58,
+          "endLine": 43,
+          "file": "retained-invalid.ts",
+          "line": 43,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 115,
+          "endColumn": 132,
+          "endLine": 45,
+          "file": "retained-invalid.ts",
+          "line": 45,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 110,
+          "endColumn": 127,
+          "endLine": 46,
+          "file": "retained-invalid.ts",
+          "line": 46,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 105,
+          "endColumn": 122,
+          "endLine": 47,
+          "file": "retained-invalid.ts",
+          "line": 47,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 136,
+          "endColumn": 153,
+          "endLine": 48,
+          "file": "retained-invalid.ts",
+          "line": 48,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-globals.ts",
+      "findings": [
+        {
+          "column": 19,
+          "endColumn": 35,
+          "endLine": 5,
+          "file": "retained-globals.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-global.ts",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 30,
+          "endLine": 3,
+          "file": "retained-mutated-global.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-spy-write.ts",
+      "findings": [
+        {
+          "column": 52,
+          "endColumn": 69,
+          "endLine": 5,
+          "file": "retained-mutated-spy-write.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-spy-delete.ts",
+      "findings": [
+        {
+          "column": 52,
+          "endColumn": 69,
+          "endLine": 5,
+          "file": "retained-mutated-spy-delete.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-spy-update.ts",
+      "findings": [
+        {
+          "column": 52,
+          "endColumn": 69,
+          "endLine": 5,
+          "file": "retained-mutated-spy-update.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "retained-mutated-framework.ts",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 30,
+          "endLine": 5,
+          "file": "retained-mutated-framework.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "suppressed-lines.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 6,
+          "file": "suppressed-lines.ts",
+          "line": 6,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 8,
+          "file": "suppressed-lines.ts",
+          "line": 8,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 3,
+          "file": "docs.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs.ts",
+      "findings": [
+        {
+          "column": 32,
+          "endColumn": 46,
+          "endLine": 7,
+          "file": "docs.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "invalid.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 10,
+          "file": "invalid.ts",
+          "line": 10,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 11,
+          "file": "invalid.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 12,
+          "file": "invalid.ts",
+          "line": 12,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 25,
+          "endLine": 13,
+          "file": "invalid.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 24,
+          "endLine": 14,
+          "file": "invalid.ts",
+          "line": 14,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 30,
+          "endLine": 15,
+          "file": "invalid.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 16,
+          "file": "invalid.ts",
+          "line": 16,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 17,
+          "file": "invalid.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 18,
+          "file": "invalid.ts",
+          "line": 18,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 24,
+          "endLine": 19,
+          "file": "invalid.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 25,
+          "endLine": 20,
+          "file": "invalid.ts",
+          "line": 20,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 21,
+          "file": "invalid.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 35,
+          "endColumn": 53,
+          "endLine": 25,
+          "file": "invalid.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 43,
+          "endLine": 26,
+          "file": "invalid.ts",
+          "line": 26,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 44,
+          "endLine": 27,
+          "file": "invalid.ts",
+          "line": 27,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 49,
+          "endLine": 28,
+          "file": "invalid.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 45,
+          "endLine": 29,
+          "file": "invalid.ts",
+          "line": 29,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 51,
+          "endLine": 30,
+          "file": "invalid.ts",
+          "line": 30,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 45,
+          "endColumn": 63,
+          "endLine": 31,
+          "file": "invalid.ts",
+          "line": 31,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 42,
+          "endColumn": 60,
+          "endLine": 32,
+          "file": "invalid.ts",
+          "line": 32,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 25,
+          "endLine": 35,
+          "file": "invalid.ts",
+          "line": 35,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 41,
+          "file": "invalid.ts",
+          "line": 41,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 40,
+          "endLine": 47,
+          "file": "invalid.ts",
+          "line": 47,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 50,
+          "endLine": 48,
+          "file": "invalid.ts",
+          "line": 48,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "mutable-cjs.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 4,
+          "file": "mutable-cjs.ts",
+          "line": 4,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 5,
+          "file": "mutable-cjs.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 6,
+          "file": "mutable-cjs.ts",
+          "line": 6,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "/^enqueue[A-Z].*/",
+                "/^sendSms$/"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "async-try-catch-return-await": [
     {
       "file": "valid.ts",
@@ -1967,7 +3306,7 @@
       "options": [
         {
           "getterCalleePatterns": [
-            "^serverApi//.get$"
+            "^serverApi\\.get$"
           ],
           "nullableReturnTypeNames": [
             "MaybeUser"
@@ -1983,7 +3322,7 @@
       "options": [
         {
           "getterCalleePatterns": [
-            "^client//.fetchEntity$"
+            "^client\\.fetchEntity$"
           ],
           "inferNullableFromTopLevelEntityPath": true,
           "requiredWrapperCallee": "asNullable",
@@ -2000,7 +3339,7 @@
       "options": [
         {
           "getterCalleePatterns": [
-            "^client//.fetchEntity$"
+            "^client\\.fetchEntity$"
           ],
           "includePathPatterns": [
             "backend/**"
@@ -2160,7 +3499,7 @@
       "options": [
         {
           "getterCalleePatterns": [
-            "^serverApi//.get$"
+            "^serverApi\\.get$"
           ],
           "nullableReturnTypeNames": [
             "MaybeUser"
@@ -2199,7 +3538,7 @@
       "options": [
         {
           "getterCalleePatterns": [
-            "^client//.fetchEntity$"
+            "^client\\.fetchEntity$"
           ],
           "nullableReturnTypeNames": [
             "EntityResult"
@@ -2238,7 +3577,7 @@
       "options": [
         {
           "getterCalleePatterns": [
-            "^client//.fetchEntity$"
+            "^client\\.fetchEntity$"
           ],
           "inferNullableFromTopLevelEntityPath": true,
           "requiredWrapperCallee": "asNullable",

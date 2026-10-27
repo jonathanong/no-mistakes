@@ -1,4 +1,3 @@
-import assert from "node:assert/strict";
 import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";

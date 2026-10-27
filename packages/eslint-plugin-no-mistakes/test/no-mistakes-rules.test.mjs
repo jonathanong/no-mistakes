@@ -9,7 +9,7 @@ import {
   snapshotDocument,
   snapshotSuite,
 } from "./diagnostic-snapshot.mjs";
-import { __dirname, lint, messages, require } from "./helpers.mjs";
+import { __dirname, lint, require } from "./helpers.mjs";
 
 function ruleFixture(rule, name) {
   return readFileSync(
@@ -52,159 +52,6 @@ function lintCase(code, filename, option) {
 }
 
 describe("async-call-disposition", () => {
-  it("allows explicit enqueue promise disposition", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-call-disposition", "valid.ts"),
-        "async-call-disposition",
-        asyncTargetOptions,
-        "valid.ts",
-      ),
-      [],
-    );
-  });
-
-  it("allows retained promises and known mock pass-through returns", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-call-disposition", "retained-valid.ts"),
-        "async-call-disposition",
-        asyncTargetOptions,
-        "retained-valid.ts",
-      ),
-      [],
-    );
-  });
-
-  it("keeps unknown callbacks and unproven collections reported", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-call-disposition", "retained-invalid.ts"),
-        "async-call-disposition",
-        asyncTargetOptions,
-        "retained-invalid.ts",
-      ),
-      Array(38).fill("disposition"),
-    );
-  });
-
-  it("recognizes unshadowed framework globals without accepting arbitrary globals", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-call-disposition", "retained-globals.ts"),
-        "async-call-disposition",
-        asyncTargetOptions,
-        "retained-globals.ts",
-      ),
-      ["disposition"],
-    );
-  });
-
-  it("rejects rewritten framework globals", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-call-disposition", "retained-mutated-global.ts"),
-        "async-call-disposition",
-        asyncTargetOptions,
-        "retained-mutated-global.ts",
-      ),
-      ["disposition"],
-    );
-  });
-
-  it("rejects rewritten spy methods and framework aliases in isolated fixtures", () => {
-    for (const name of [
-      "retained-mutated-spy-write.ts",
-      "retained-mutated-spy-delete.ts",
-      "retained-mutated-spy-update.ts",
-      "retained-mutated-framework.ts",
-    ]) {
-      assert.deepEqual(
-        messages(
-          ruleFixture("async-call-disposition", name),
-          "async-call-disposition",
-          asyncTargetOptions,
-          name,
-        ),
-        ["disposition"],
-      );
-    }
-  });
-
-  it("honors file and line suppression comments only for this rule", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-call-disposition", "suppressed-file.ts"),
-        "async-call-disposition",
-        asyncTargetOptions,
-        "suppressed-file.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-call-disposition", "suppressed-lines.ts"),
-        "async-call-disposition",
-        asyncTargetOptions,
-        "suppressed-lines.ts",
-      ),
-      ["disposition", "disposition"],
-    );
-  });
-
-  it("executes the documented TypeScript examples", () => {
-    const doc = readFileSync(
-      resolve(__dirname, "../../../docs/eslint-rules/async-call-disposition.md"),
-      "utf8",
-    );
-    const snippets = [...doc.matchAll(/```ts\n([\s\S]*?)```/g)];
-    assert.equal(snippets.length, 9);
-    for (const [index, snippet] of snippets.entries()) {
-      const code = `import { enqueueEmail } from "@app/jobs";\n${snippet[1].replace(/import \{ enqueueEmail \} from "@app\/jobs";\n/g, "")}`;
-      assert.deepEqual(
-        messages(code, "async-call-disposition", asyncTargetOptions, "docs.ts"),
-        index < 2 ? ["disposition"] : [],
-      );
-    }
-  });
-
-  it("reports floating enqueue promises", () => {
-    assert.deepEqual(
-      messages(
-        ruleFixture("async-call-disposition", "invalid.ts"),
-        "async-call-disposition",
-        asyncTargetOptions,
-        "invalid.ts",
-      ),
-      [
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-        "disposition",
-      ],
-    );
-  });
-
   it("offers void suggestions for bare enqueue expression statements", () => {
     const [message] = lint(
       `import { enqueueEmail } from "@app/jobs";\nenqueueEmail("1");`,
@@ -216,57 +63,21 @@ describe("async-call-disposition", () => {
     assert.equal(message.suggestions[0].messageId, "markVoid");
     assert.deepEqual(message.suggestions[0].fix, { range: [42, 42], text: "void " });
   });
+});
 
-  it("tracks non-reassigned mutable CommonJS bindings", () => {
-    const code = `let jobs = require("@app/jobs");
+const asyncDispositionCode = `let jobs = require("@app/jobs");
 var sendSms = require("@app/jobs").sendSms;
 var { enqueueEmail: defaultedEnqueue = fallback } = require("@app/jobs");
 jobs.enqueueEmail("1");
 sendSms("1");
 defaultedEnqueue("1");
 `;
-    assert.deepEqual(
-      messages(code, "async-call-disposition", asyncTargetOptions, "mutable-cjs.ts"),
-      ["disposition", "disposition", "disposition"],
-    );
-  });
-
-  it("ignores var bindings that also define parameters", () => {
-    const code = `function load(enqueueEmail) {
+const asyncDispositionParamVarCode = `function load(enqueueEmail) {
   enqueueEmail("1");
   var enqueueEmail = require("@app/jobs").enqueueEmail;
   enqueueEmail("1");
 }
 `;
-    assert.deepEqual(
-      messages(code, "async-call-disposition", asyncTargetOptions, "param-var.ts"),
-      [],
-    );
-  });
-
-  it("is a no-op without targets and ignores invalid regexes", () => {
-    const code = ruleFixture("async-call-disposition", "invalid.ts");
-    assert.deepEqual(messages(code, "async-call-disposition", undefined, "invalid.ts"), []);
-    assert.deepEqual(
-      messages(
-        code,
-        "async-call-disposition",
-        { targets: [{ sourceSpecifierPatterns: ["/[/"], calleeNamePatterns: ["/^enqueue/"] }] },
-        "invalid.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        code,
-        "async-call-disposition",
-        { targets: [{ sourceSpecifierPatterns: [], calleeNamePatterns: [] }] },
-        "invalid.ts",
-      ),
-      [],
-    );
-  });
-});
 
 describe("test-no-delayed-rejects", () => {
   it("snapshots test-no-delayed-rejects diagnostics", async () => {
@@ -1374,6 +1185,19 @@ const reexportCode = `
 const typescriptImportCode = 'import { createProgram } from "typescript"; createProgram();';
 
 it("snapshots remaining diagnostics", async () => {
+  const asyncDoc = readFileSync(
+    resolve(__dirname, "../../../docs/eslint-rules/async-call-disposition.md"),
+    "utf8",
+  );
+  const asyncDocSnippets = [...asyncDoc.matchAll(/```ts\n([\s\S]*?)```/g)];
+  assert.equal(asyncDocSnippets.length, 9);
+  const asyncDocCases = asyncDocSnippets.map(([, text]) =>
+    lintCase(
+      `import { enqueueEmail } from "@app/jobs";\n${text.replace(/import \{ enqueueEmail \} from "@app\/jobs";\n/g, "")}`,
+      "docs.ts",
+      asyncTargetOptions,
+    ),
+  );
   const exportRenaming = ruleFixture("ts-no-export-renaming", "options.ts");
   const preserveOptions = ruleFixture("ts-preserve-null-option-defaults", "options.ts");
   const serverOptions = ruleFixture("server-require-nullable-fetch-wrapper", "options.ts");
@@ -1382,6 +1206,74 @@ it("snapshots remaining diagnostics", async () => {
   const tryInvalid = ruleFixture("async-try-catch-return-await", "invalid.ts");
   await expect(
     snapshotDocument({
+      "async-call-disposition": snapshotSuite("async-call-disposition", languageOptions, {
+        valid: [
+          // Retained promises and known mock pass-through returns are clear.
+          lintCase(
+            ruleFixture("async-call-disposition", "valid.ts"),
+            "valid.ts",
+            asyncTargetOptions,
+          ),
+          lintCase(
+            ruleFixture("async-call-disposition", "retained-valid.ts"),
+            "retained-valid.ts",
+            asyncTargetOptions,
+          ),
+          lintCase(asyncDispositionParamVarCode, "param-var.ts", asyncTargetOptions),
+          // No targets, invalid regexes, and empty selectors are no-ops.
+          lintCase(ruleFixture("async-call-disposition", "invalid.ts"), "invalid.ts"),
+          lintCase(ruleFixture("async-call-disposition", "invalid.ts"), "invalid.ts", {
+            targets: [{ sourceSpecifierPatterns: ["/[/"], calleeNamePatterns: ["/^enqueue/"] }],
+          }),
+          lintCase(ruleFixture("async-call-disposition", "invalid.ts"), "invalid.ts", {
+            targets: [{ sourceSpecifierPatterns: [], calleeNamePatterns: [] }],
+          }),
+          lintCase(
+            ruleFixture("async-call-disposition", "suppressed-file.ts"),
+            "suppressed-file.ts",
+            asyncTargetOptions,
+          ),
+          ...asyncDocCases.slice(2),
+        ],
+        invalid: [
+          // Unknown callbacks and unproven collections retain all findings.
+          lintCase(
+            ruleFixture("async-call-disposition", "retained-invalid.ts"),
+            "retained-invalid.ts",
+            asyncTargetOptions,
+          ),
+          lintCase(
+            ruleFixture("async-call-disposition", "retained-globals.ts"),
+            "retained-globals.ts",
+            asyncTargetOptions,
+          ),
+          lintCase(
+            ruleFixture("async-call-disposition", "retained-mutated-global.ts"),
+            "retained-mutated-global.ts",
+            asyncTargetOptions,
+          ),
+          ...[
+            "retained-mutated-spy-write.ts",
+            "retained-mutated-spy-delete.ts",
+            "retained-mutated-spy-update.ts",
+            "retained-mutated-framework.ts",
+          ].map((name) =>
+            lintCase(ruleFixture("async-call-disposition", name), name, asyncTargetOptions),
+          ),
+          lintCase(
+            ruleFixture("async-call-disposition", "suppressed-lines.ts"),
+            "suppressed-lines.ts",
+            asyncTargetOptions,
+          ),
+          ...asyncDocCases.slice(0, 2),
+          lintCase(
+            ruleFixture("async-call-disposition", "invalid.ts"),
+            "invalid.ts",
+            asyncTargetOptions,
+          ),
+          lintCase(asyncDispositionCode, "mutable-cjs.ts", asyncTargetOptions),
+        ],
+      }),
       "async-try-catch-return-await": snapshotSuite(
         "async-try-catch-return-await",
         languageOptions,

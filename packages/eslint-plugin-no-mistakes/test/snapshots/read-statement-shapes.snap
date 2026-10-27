@@ -1,0 +1,348 @@
+{
+  "no-consecutive-unbatched-reads": [
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 48,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 32,
+          "endLine": 10,
+          "file": "fixture.ts",
+          "line": 10,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 27,
+          "endLine": 17,
+          "file": "fixture.ts",
+          "line": 17,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 27,
+          "endLine": 21,
+          "file": "fixture.ts",
+          "line": 21,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 68,
+          "endLine": 24,
+          "file": "fixture.ts",
+          "line": 24,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 70,
+          "endColumn": 99,
+          "endLine": 24,
+          "file": "fixture.ts",
+          "line": 24,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 25,
+          "file": "fixture.ts",
+          "line": 25,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 37,
+          "endLine": 28,
+          "file": "fixture.ts",
+          "line": 28,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 68,
+          "endLine": 28,
+          "file": "fixture.ts",
+          "line": 28,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 48,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 32,
+          "endLine": 10,
+          "file": "fixture.ts",
+          "line": 10,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 27,
+          "endLine": 17,
+          "file": "fixture.ts",
+          "line": 17,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 27,
+          "endLine": 21,
+          "file": "fixture.ts",
+          "line": 21,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 38,
+          "endColumn": 68,
+          "endLine": 24,
+          "file": "fixture.ts",
+          "line": 24,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 70,
+          "endColumn": 99,
+          "endLine": 24,
+          "file": "fixture.ts",
+          "line": 24,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 25,
+          "file": "fixture.ts",
+          "line": 25,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 37,
+          "endLine": 28,
+          "file": "fixture.ts",
+          "line": 28,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 68,
+          "endLine": 28,
+          "file": "fixture.ts",
+          "line": 28,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "imports": [
+            {
+              "imported": "cache",
+              "source": "@app/cache"
+            }
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 32,
+          "endLine": 5,
+          "file": "fixture.ts",
+          "line": 5,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    }
+  ]
+}

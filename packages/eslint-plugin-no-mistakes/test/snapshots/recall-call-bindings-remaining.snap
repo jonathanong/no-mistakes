@@ -1,4 +1,272 @@
 {
+  "async-call-disposition": [
+    {
+      "file": "recall.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 4,
+          "file": "recall.mjs",
+          "line": 4,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 6,
+          "file": "recall.mjs",
+          "line": 6,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 7,
+          "file": "recall.mjs",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 8,
+          "file": "recall.mjs",
+          "line": 8,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 9,
+          "file": "recall.mjs",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 10,
+          "file": "recall.mjs",
+          "line": 10,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "enqueueEmail"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "call-method.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 3,
+          "file": "call-method.mjs",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "call-method.mjs",
+          "line": 4,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "call",
+                "enqueueEmail"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "comma-alias.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 4,
+          "file": "comma-alias.mjs",
+          "line": 4,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 12,
+          "endLine": 7,
+          "file": "comma-alias.mjs",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 12,
+          "endLine": 10,
+          "file": "comma-alias.mjs",
+          "line": 10,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "enqueueEmail"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "instantiated-alias.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 6,
+          "file": "instantiated-alias.ts",
+          "line": 6,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 9,
+          "file": "instantiated-alias.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "enqueueEmail"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "namespace-alias.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "namespace-alias.mjs",
+          "line": 4,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 7,
+          "file": "namespace-alias.mjs",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "calleeNamePatterns": [
+                "enqueueEmail"
+              ],
+              "sourceSpecifierPatterns": [
+                "@app/jobs"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "async-try-catch-return-await": [
     {
       "file": "recall.mjs",

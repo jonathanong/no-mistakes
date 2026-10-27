@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import tsParser from "@typescript-eslint/parser";
 import { Linter } from "eslint";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { fixture, __dirname, plugin } from "./helpers.mjs";
+import { fixture, __dirname } from "./helpers.mjs";
 
 const require = createRequire(import.meta.url);
 const { allowsCollectionKey } = require("../src/rules/postgres-no-executor-adapter-collection");

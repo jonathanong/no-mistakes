@@ -1,7 +1,7 @@
 import tsParser from "@typescript-eslint/parser";
 import { expect, it } from "vitest";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { NAMES, SQL, withSyncRead } from "./postgres-no-async-sql-builder-helpers.mjs";
+import { SQL, withSyncRead } from "./postgres-no-async-sql-builder-helpers.mjs";
 
 const languageOptions = {
   ecmaVersion: 2024,

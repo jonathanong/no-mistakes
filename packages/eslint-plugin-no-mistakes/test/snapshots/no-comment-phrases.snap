@@ -1,0 +1,1276 @@
+[
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/strings.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {}
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "patterns": []
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ],
+        "requireSuppressionReason": true
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file-bare.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file-blank.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file-block.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file-block.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ],
+        "requireSuppressionReason": true
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+        "line": 1,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 43,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+        "line": 3,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+        "line": 4,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 4,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+        "line": 5,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/jsx.jsx",
+    "findings": [
+      {
+        "column": 33,
+        "endColumn": 61,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/jsx.jsx",
+        "line": 1,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/shebang.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/shebang.mjs",
+        "line": 2,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/messages.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/messages.mjs",
+        "line": 1,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 30,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/messages.mjs",
+        "line": 2,
+        "message": "Fallback configured phrase message.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/messages.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 30,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/messages.mjs",
+        "line": 2,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "patterns": [
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/messages.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 30,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/messages.mjs",
+        "line": 2,
+        "message": "Top level only",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Top level only",
+        "patterns": [
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+        "line": 1,
+        "message": "Scoped kept",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Top level only",
+        "patterns": [
+          {
+            "message": "Scoped kept",
+            "pattern": "kept for compatibility"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 1,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+        "line": 1,
+        "message": "Invalid comment phrase pattern [: Invalid regular expression: /[/i: Unterminated character class",
+        "messageId": "invalidPattern",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "patterns": [
+          {
+            "flags": "i",
+            "pattern": "["
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/invalid.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 1,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/invalid.mjs",
+        "line": 1,
+        "message": "Invalid comment phrase pattern [: Invalid regular expression: /[/: Unterminated character class",
+        "messageId": "invalidPattern",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/invalid.mjs",
+        "line": 1,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "pattern": "["
+          },
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 1,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 2,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 3,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 9,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 4,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 10,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 5,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 12,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 6,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "patterns": [
+          {
+            "flags": "g",
+            "pattern": "alpha"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 1,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 2,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 3,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 10,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 5,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "patterns": [
+          {
+            "flags": "y",
+            "pattern": "alpha"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 1,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 2,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 3,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 9,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 4,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 10,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 5,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 12,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 6,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 5,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 7,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 7,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 8,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "patterns": [
+          {
+            "flags": "g",
+            "pattern": "a*"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 1,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 2,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 8,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 3,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 9,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 4,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 10,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 5,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 12,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/regex.mjs",
+        "line": 6,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "patterns": [
+          {
+            "flags": "g",
+            "pattern": "(?=alpha)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/case.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/case.mjs",
+        "line": 2,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/case.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/case.mjs",
+        "line": 1,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/case.mjs",
+        "line": 2,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "flags": "i",
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 1,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 12,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 20,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 23,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 23,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 1,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 12,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 20,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 23,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 23,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ],
+        "requireSuppressionReason": false
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 1,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 5,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 7,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 9,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 9,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 12,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 20,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 73,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 21,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 23,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/reasons.mjs",
+        "line": 23,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ],
+        "requireSuppressionReason": true
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file-bare.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file-bare.mjs",
+        "line": 2,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 43,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file-bare.mjs",
+        "line": 3,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ],
+        "requireSuppressionReason": true
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file-blank.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/suppression-file-blank.mjs",
+        "line": 4,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ],
+        "requireSuppressionReason": true
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/late-file.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/late-file.mjs",
+        "line": 3,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 43,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/late-file.mjs",
+        "line": 4,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/late-file.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/late-file.mjs",
+        "line": 3,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 43,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/no-comment-phrases/late-file.mjs",
+        "line": 4,
+        "message": "Delete the compatibility tombstone and update its callers.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "message": "Fallback configured phrase message.",
+        "patterns": [
+          {
+            "message": "Delete the compatibility tombstone and update its callers.",
+            "pattern": "(?:retain|kept|keep|preserve|left).{0,60}compat|compat.{0,60}(?:retain|kept|keep|preserve|left)|backwards?[- ]?compat"
+          },
+          {
+            "pattern": "configured-fallback-phrase"
+          }
+        ],
+        "requireSuppressionReason": true
+      }
+    ]
+  }
+]

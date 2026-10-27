@@ -1,0 +1,629 @@
+{
+  "no-consecutive-unbatched-reads": [
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "imports": [
+            {
+              "imported": "cache",
+              "source": "@app/cache"
+            }
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "imports": [
+            {
+              "imported": "cache",
+              "source": "@app/cache"
+            }
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "imports": [
+            {
+              "imported": "cache",
+              "source": "@app/cache"
+            }
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "imports": [
+            {
+              "imported": "cache",
+              "source": "@app/cache"
+            }
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "readMethods": [
+            "get"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 43,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 25,
+          "endLine": 5,
+          "file": "fixture.ts",
+          "line": 5,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 25,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "imports": [
+            {
+              "imported": "cache",
+              "source": "@app/cache"
+            }
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 5,
+          "file": "fixture.ts",
+          "line": 5,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 43,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 39,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "imports": [
+            {
+              "imported": "cache",
+              "source": "@app/cache"
+            }
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 25,
+          "endLine": 8,
+          "file": "fixture.ts",
+          "line": 8,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 50,
+          "endLine": 9,
+          "file": "fixture.ts",
+          "line": 9,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 43,
+          "endLine": 4,
+          "file": "fixture.ts",
+          "line": 4,
+          "message": "Custom contract",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 25,
+          "endLine": 5,
+          "file": "fixture.ts",
+          "line": 5,
+          "message": "Custom contract",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 25,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Custom contract",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "clients": [
+            "client"
+          ],
+          "message": "Custom contract",
+          "readMethods": [
+            "get",
+            "ttl"
+          ]
+        }
+      ]
+    }
+  ],
+  "require-top-level-registration": [
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.",
+          "messageId": "registration",
+          "ruleId": "no-mistakes/require-top-level-registration",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 48,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.",
+          "messageId": "registration",
+          "ruleId": "no-mistakes/require-top-level-registration",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 48,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.",
+          "messageId": "registration",
+          "ruleId": "no-mistakes/require-top-level-registration",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.",
+          "messageId": "registration",
+          "ruleId": "no-mistakes/require-top-level-registration",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 31,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.",
+          "messageId": "registration",
+          "ruleId": "no-mistakes/require-top-level-registration",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.",
+          "messageId": "registration",
+          "ruleId": "no-mistakes/require-top-level-registration",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.",
+          "messageId": "registration",
+          "ruleId": "no-mistakes/require-top-level-registration",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "callback": "onStop",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    },
+    {
+      "file": "fixture.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 1,
+          "file": "fixture.ts",
+          "line": 1,
+          "message": "Custom contract",
+          "messageId": "registration",
+          "ruleId": "no-mistakes/require-top-level-registration",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "callback": "onStop",
+          "message": "Custom contract",
+          "registrar": {
+            "imported": "register",
+            "source": "@app/lifecycle"
+          }
+        }
+      ]
+    }
+  ]
+}

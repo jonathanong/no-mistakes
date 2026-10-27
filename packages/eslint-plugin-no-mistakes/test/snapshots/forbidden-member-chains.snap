@@ -1,0 +1,775 @@
+[
+  {
+    "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/safe.mjs",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "chains": [
+          {
+            "message": "Use the entry helper.",
+            "path": "records.entry"
+          },
+          {
+            "message": "Open the panel through the helper.",
+            "path": "*.panel.open"
+          },
+          {
+            "message": "Toggle the drawer through the helper.",
+            "path": [
+              "drawer",
+              "toggle"
+            ],
+            "receiver": "*"
+          },
+          {
+            "message": "Do not read the numeric slot.",
+            "path": "matrix.1"
+          },
+          {
+            "message": "Do not read the private slot.",
+            "path": "*.#slot"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 1,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 16,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 2,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 3,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 4,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 19,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 5,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 6,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 7,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 19,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 8,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 9,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 9,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 10,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 23,
+        "endLine": 11,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 11,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 25,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 12,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 13,
+        "message": "Toggle the drawer through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 14,
+        "message": "Toggle the drawer through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 10,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 15,
+        "message": "Do not read the numeric slot.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 12,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 16,
+        "message": "Do not read the numeric slot.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 12,
+        "endLine": 17,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 17,
+        "message": "Do not read the numeric slot.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 18,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 21,
+        "endLine": 19,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 19,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 6,
+        "endColumn": 22,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 20,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 21,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 21,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 22,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 16,
+        "endColumn": 32,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 22,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 22,
+        "endLine": 26,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 26,
+        "message": "Do not read the private slot.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 27,
+        "endLine": 29,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 29,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 12,
+        "endColumn": 28,
+        "endLine": 32,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 32,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 23,
+        "endLine": 35,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 35,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 36,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 36,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 21,
+        "endLine": 37,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 37,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 25,
+        "endLine": 38,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 38,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "chains": [
+          {
+            "message": "Use the entry helper.",
+            "path": "records.entry"
+          },
+          {
+            "message": "Open the panel through the helper.",
+            "path": "*.panel.open"
+          },
+          {
+            "message": "Toggle the drawer through the helper.",
+            "path": [
+              "drawer",
+              "toggle"
+            ],
+            "receiver": "*"
+          },
+          {
+            "message": "Do not read the numeric slot.",
+            "path": "matrix.1"
+          },
+          {
+            "message": "Do not read the private slot.",
+            "path": "*.#slot"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/markup.jsx",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/markup.jsx",
+        "line": 2,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "chains": [
+          {
+            "message": "Use the entry helper.",
+            "path": "records.entry"
+          },
+          {
+            "message": "Open the panel through the helper.",
+            "path": "*.panel.open"
+          },
+          {
+            "message": "Toggle the drawer through the helper.",
+            "path": [
+              "drawer",
+              "toggle"
+            ],
+            "receiver": "*"
+          },
+          {
+            "message": "Do not read the numeric slot.",
+            "path": "matrix.1"
+          },
+          {
+            "message": "Do not read the private slot.",
+            "path": "*.#slot"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 28,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 1,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 2,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 3,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 19,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 4,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 16,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 5,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 6,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 7,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 7,
+        "message": "Toggle the drawer through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 8,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 31,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/nested.mjs",
+        "line": 8,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "chains": [
+          {
+            "message": "Use the entry helper.",
+            "path": "records.entry"
+          },
+          {
+            "message": "Open the panel through the helper.",
+            "path": "*.panel.open"
+          },
+          {
+            "message": "Toggle the drawer through the helper.",
+            "path": [
+              "drawer",
+              "toggle"
+            ],
+            "receiver": "*"
+          },
+          {
+            "message": "Do not read the numeric slot.",
+            "path": "matrix.1"
+          },
+          {
+            "message": "Do not read the private slot.",
+            "path": "*.#slot"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 1,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 1,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 2,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 3,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 3,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 2,
+        "endColumn": 15,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 4,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 22,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 5,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 28,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 6,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 7,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 8,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 9,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 9,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 10,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 11,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 11,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 22,
+        "endColumn": 38,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 12,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 2,
+        "endColumn": 15,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/wrappers.ts",
+        "line": 13,
+        "message": "Use the entry helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "chains": [
+          {
+            "message": "Use the entry helper.",
+            "path": "records.entry"
+          },
+          {
+            "message": "Open the panel through the helper.",
+            "path": "*.panel.open"
+          },
+          {
+            "message": "Toggle the drawer through the helper.",
+            "path": [
+              "drawer",
+              "toggle"
+            ],
+            "receiver": "*"
+          },
+          {
+            "message": "Do not read the numeric slot.",
+            "path": "matrix.1"
+          },
+          {
+            "message": "Do not read the private slot.",
+            "path": "*.#slot"
+          }
+        ]
+      }
+    ]
+  }
+]

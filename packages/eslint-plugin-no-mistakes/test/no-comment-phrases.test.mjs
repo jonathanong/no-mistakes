@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import tsParser from "@typescript-eslint/parser";
+import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { fixture, lint, plugin, require, __dirname } from "./helpers.mjs";
 
 const { ruleSuppression } = require("../src/rule-suppression");
 const id = "no-comment-phrases";
 const fixtureRoot = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
-const DEFAULT_MESSAGE =
-  "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.";
 // Identical comments would alternate under a stateful global regex. Zero-width
 // `a*` matches every comment once, including `beta` and the empty block.
 const regexLines = {
@@ -72,115 +72,74 @@ function oxlintLines(configName, name) {
 }
 
 describe(id, () => {
-  it("flags configured line, block, and JSX comments and ignores strings", () => {
-    assert.deepEqual(lines("comments.mjs"), [1, 3, 4, 5]);
-    assert.deepEqual(lines("jsx.jsx"), [1]);
-    assert.deepEqual(lines("strings.ts"), []);
-    assert.deepEqual(lines("shebang.mjs"), [2]);
-    assert.deepEqual(lines("comments.mjs", "error"), []);
-    assert.deepEqual(lines("comments.mjs", ["error", {}]), []);
-    assert.deepEqual(lines("comments.mjs", ["error", { patterns: [] }]), []);
-  });
-
-  it("uses a scoped pattern message, then the top-level message, then the default", () => {
-    const findings = check("messages.mjs");
-    assert.deepEqual(
-      findings.map((message) => message.message),
-      [options.patterns[0].message, options.message],
-    );
-    assert.equal(
-      check("messages.mjs", ["error", { patterns: [{ pattern: "configured-fallback-phrase" }] }])[0]
-        .message,
-      DEFAULT_MESSAGE,
-    );
-    assert.equal(
-      check("messages.mjs", [
-        "error",
-        { patterns: [{ pattern: "configured-fallback-phrase" }], message: "Top level only" },
-      ])[0].message,
-      "Top level only",
-    );
-    assert.equal(
-      check("comments.mjs", [
-        "error",
-        {
-          patterns: [{ pattern: "kept for compatibility", message: "Scoped kept" }],
-          message: "Top level only",
-        },
-      ])[0].message,
-      "Scoped kept",
-    );
-  });
-
-  it("rejects invalid patterns and still applies valid siblings", () => {
-    const invalidOnly = check("comments.mjs", [
-      "error",
-      { patterns: [{ pattern: "[", flags: "i" }] },
-    ]);
-    assert.equal(invalidOnly.length, 1);
-    assert.equal(invalidOnly[0].messageId, "invalidPattern");
-    assert.match(invalidOnly[0].message, /\[/);
-    const both = check("invalid.mjs", ["error", ruleOptions(".oxlintrc.invalid.json")]);
-    assert.deepEqual(
-      both.map((message) => message.messageId),
-      ["invalidPattern", "phrase"],
-    );
-    assert.equal(both[1].line, 1);
-  });
-
-  it("defines global, sticky, and zero-width matches once per comment", () => {
-    for (const [configName, expected] of Object.entries(regexLines)) {
-      assert.deepEqual(
-        lines("regex.mjs", ["error", ruleOptions(configName)]),
-        expected,
-        configName,
-      );
-    }
-    assert.deepEqual(lines("case.mjs"), [2]);
-    assert.deepEqual(lines("case.mjs", ["error", ruleOptions(".oxlintrc.case.json")]), [1, 2]);
-  });
-
-  it("requires a nonempty reason only when requireSuppressionReason is on", () => {
-    assert.deepEqual(lines("reasons.mjs"), reasonOff);
-    assert.deepEqual(
-      lines("reasons.mjs", ["error", { ...options, requireSuppressionReason: false }]),
-      reasonOff,
-    );
-    assert.deepEqual(
-      lines("reasons.mjs", ["error", { ...options, requireSuppressionReason: true }]),
-      reasonOn,
-    );
-    assert.deepEqual(lines("suppression-file.mjs"), []);
-    assert.deepEqual(
-      lines("suppression-file.mjs", ["error", { ...options, requireSuppressionReason: true }]),
-      [],
-    );
-    assert.deepEqual(lines("suppression-file-bare.mjs"), []);
-    assert.deepEqual(
-      lines("suppression-file-bare.mjs", ["error", { ...options, requireSuppressionReason: true }]),
-      [2, 3],
-    );
-    assert.deepEqual(lines("suppression-file-blank.mjs"), []);
-    assert.deepEqual(
-      lines("suppression-file-blank.mjs", [
-        "error",
-        { ...options, requireSuppressionReason: true },
-      ]),
-      [4],
-    );
-    assert.deepEqual(lines("suppression-file-block.mjs"), []);
-    assert.deepEqual(
-      lines("suppression-file-block.mjs", [
-        "error",
-        { ...options, requireSuppressionReason: true },
-      ]),
-      [],
-    );
-    assert.deepEqual(lines("late-file.mjs"), [3, 4]);
-    assert.deepEqual(
-      lines("late-file.mjs", ["error", { ...options, requireSuppressionReason: true }]),
-      [3, 4],
-    );
+  it("snapshots configured comment diagnostics and suppression policies", async () => {
+    const item = (name, setting = ["error", options]) => ({
+      code: fixture(`${id}/${name}`),
+      filename: resolve(fixtureRoot, name),
+      ...(Array.isArray(setting) ? { options: setting.slice(1) } : {}),
+      ...(name.endsWith(".ts") ? { languageOptions: { parser: tsParser } } : {}),
+    });
+    const reason = (enabled) => ["error", { ...options, requireSuppressionReason: enabled }];
+    const suite = {
+      valid: [
+        item("strings.ts"),
+        item("comments.mjs", "error"),
+        item("comments.mjs", ["error", {}]),
+        item("comments.mjs", ["error", { patterns: [] }]),
+        item("suppression-file.mjs"),
+        item("suppression-file.mjs", reason(true)),
+        item("suppression-file-bare.mjs"),
+        item("suppression-file-blank.mjs"),
+        item("suppression-file-block.mjs"),
+        item("suppression-file-block.mjs", reason(true)),
+      ],
+      invalid: [
+        item("comments.mjs"),
+        item("jsx.jsx"),
+        item("shebang.mjs"),
+        item("messages.mjs"),
+        item("messages.mjs", ["error", { patterns: [{ pattern: "configured-fallback-phrase" }] }]),
+        item("messages.mjs", [
+          "error",
+          { patterns: [{ pattern: "configured-fallback-phrase" }], message: "Top level only" },
+        ]),
+        item("comments.mjs", [
+          "error",
+          {
+            patterns: [{ pattern: "kept for compatibility", message: "Scoped kept" }],
+            message: "Top level only",
+          },
+        ]),
+        item("comments.mjs", ["error", { patterns: [{ pattern: "[", flags: "i" }] }]),
+        item("invalid.mjs", ["error", ruleOptions(".oxlintrc.invalid.json")]),
+        ...Object.keys(regexLines).map((config) =>
+          item("regex.mjs", ["error", ruleOptions(config)]),
+        ),
+        item("case.mjs"),
+        item("case.mjs", ["error", ruleOptions(".oxlintrc.case.json")]),
+        item("reasons.mjs"),
+        item("reasons.mjs", reason(false)),
+        item("reasons.mjs", reason(true)),
+        item("suppression-file-bare.mjs", reason(true)),
+        item("suppression-file-blank.mjs", reason(true)),
+        item("late-file.mjs"),
+        item("late-file.mjs", reason(true)),
+      ],
+    };
+    await expect(
+      snapshotDocument(
+        snapshotSuite(
+          id,
+          {
+            ecmaVersion: 2024,
+            sourceType: "module",
+            globals: {},
+            parserOptions: { ecmaFeatures: { jsx: true } },
+          },
+          suite,
+        ),
+      ),
+    ).toMatchFileSnapshot("snapshots/no-comment-phrases.snap");
   });
 
   it("keeps the shared suppression helper unchanged unless a caller opts in", () => {

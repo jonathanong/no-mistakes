@@ -1,4 +1,6 @@
 import { expect, it } from "vitest";
+import { resolve } from "node:path";
+import { __dirname } from "./helpers.mjs";
 import { snapshotSuite } from "./diagnostic-snapshot.mjs";
 
 const languageOptions = {
@@ -18,4 +20,19 @@ it("counts only this rule when a case also has a parse error", () => {
       invalid: [{ code: "const =", filename: "parse-only.js" }],
     }),
   ).toThrow(/produced 0 diagnostics/);
+});
+
+it("preserves regex escapes in snapshot options", () => {
+  const options = [{ interactiveComponents: ["/\\.Item$/", resolve(__dirname, "fixture.jsx")] }];
+  const rows = snapshotSuite("playwright-require-interactive-test-id", languageOptions, {
+    valid: [{ code: "const value = 1;", options }],
+  });
+  expect(rows[0].options).toEqual([
+    {
+      interactiveComponents: [
+        "/\\.Item$/",
+        "<root>/packages/eslint-plugin-no-mistakes/test/fixture.jsx",
+      ],
+    },
+  ]);
 });

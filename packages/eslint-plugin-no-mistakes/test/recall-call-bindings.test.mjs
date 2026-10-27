@@ -1,8 +1,7 @@
-import assert from "node:assert/strict";
 import tsParser from "@typescript-eslint/parser";
 import { describe, expect, it } from "vitest";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { fixture, messages } from "./helpers.mjs";
+import { fixture } from "./helpers.mjs";
 
 const languageOptions = {
   ecmaVersion: 2024,
@@ -59,61 +58,6 @@ const server = {
 };
 
 describe("call-binding recall", () => {
-  it("follows default imports, static keys, and forwarded calls", () => {
-    assert.equal(
-      messages(
-        fixture("async-call-disposition/recall.mjs"),
-        "async-call-disposition",
-        jobs,
-        "recall.mjs",
-      ).length,
-      6,
-    );
-    assert.equal(
-      messages(
-        fixture("async-call-disposition/call-method.mjs"),
-        "async-call-disposition",
-        {
-          targets: [
-            {
-              sourceSpecifierPatterns: ["@app/jobs"],
-              calleeNamePatterns: ["call", "enqueueEmail"],
-            },
-          ],
-        },
-        "call-method.mjs",
-      ).length,
-      2,
-    );
-    assert.deepEqual(
-      messages(
-        fixture("async-call-disposition/comma-alias.mjs"),
-        "async-call-disposition",
-        jobs,
-        "comma-alias.mjs",
-      ),
-      ["disposition", "disposition", "disposition"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("async-call-disposition/instantiated-alias.ts"),
-        "async-call-disposition",
-        jobs,
-        "instantiated-alias.ts",
-      ),
-      ["disposition", "disposition"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("async-call-disposition/namespace-alias.mjs"),
-        "async-call-disposition",
-        jobs,
-        "namespace-alias.mjs",
-      ),
-      ["disposition", "disposition"],
-    );
-  });
-
   it("snapshots remaining diagnostics", async () => {
     const localGetter = fixture("server-require-nullable-fetch-wrapper/local-getter-name.ts");
     const localAlias = fixture("server-require-nullable-fetch-wrapper/local-alias.ts");
@@ -129,6 +73,32 @@ describe("call-binding recall", () => {
     };
     await expect(
       snapshotDocument({
+        "async-call-disposition": snapshotSuite("async-call-disposition", languageOptions, {
+          invalid: [
+            // Six findings through a default import and forwarded calls.
+            lintCase(fixture("async-call-disposition/recall.mjs"), "recall.mjs", jobs),
+            // Static call-method and enqueueEmail selectors both remain recognized.
+            lintCase(fixture("async-call-disposition/call-method.mjs"), "call-method.mjs", {
+              targets: [
+                {
+                  sourceSpecifierPatterns: ["@app/jobs"],
+                  calleeNamePatterns: ["call", "enqueueEmail"],
+                },
+              ],
+            }),
+            lintCase(fixture("async-call-disposition/comma-alias.mjs"), "comma-alias.mjs", jobs),
+            lintCase(
+              fixture("async-call-disposition/instantiated-alias.ts"),
+              "instantiated-alias.ts",
+              jobs,
+            ),
+            lintCase(
+              fixture("async-call-disposition/namespace-alias.mjs"),
+              "namespace-alias.mjs",
+              jobs,
+            ),
+          ],
+        }),
         "async-try-catch-return-await": snapshotSuite(
           "async-try-catch-return-await",
           languageOptions,

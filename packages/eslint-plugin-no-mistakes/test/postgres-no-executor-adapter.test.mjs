@@ -149,7 +149,7 @@ describe("postgres-no-executor-adapter", () => {
     ]);
     assert.equal(untypedMember.output, `${IMPORT}run(flag ? client.query : read, account);`);
 
-    const mixed = check(
+    check(
       `${TX}function load(tx: Tx, flag: boolean, account: string) {\n  return run(flag ? tx.query : read, account);\n}\n`,
       SCOPED,
     );
@@ -164,7 +164,7 @@ describe("postgres-no-executor-adapter", () => {
     recordDiagnostic(`${IMPORT}run(flag ? read : other, account);`, DB, "app.ts", ["passed"]);
     assert.equal(oneBranch.output, `${IMPORT}run(flag ? read : other, account);`);
 
-    const nestedPartial = check(`${IMPORT}run(flag ? read : (other ? write : unknown), account);`);
+    check(`${IMPORT}run(flag ? read : (other ? write : unknown), account);`);
     recordDiagnostic(
       `${IMPORT}run(flag ? read : (other ? write : unknown), account);`,
       DB,
@@ -186,7 +186,7 @@ describe("postgres-no-executor-adapter", () => {
       `${IMPORT}run((statement) => (flag ? read(statement) : normalize(statement)), account);`,
     );
 
-    const nestedLambda = check(
+    check(
       `${IMPORT}run((statement) => (flag ? read(statement) : (other ? write(statement) : normalize(statement))), account);`,
     );
     recordDiagnostic(
@@ -196,9 +196,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const valueAndAdapter = check(
-      `${IMPORT}run(flag ? read : ((statement) => write(statement)), account);`,
-    );
+    check(`${IMPORT}run(flag ? read : ((statement) => write(statement)), account);`);
     recordDiagnostic(
       `${IMPORT}run(flag ? read : ((statement) => write(statement)), account);`,
       DB,
@@ -206,9 +204,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const adapterAndUnknown = check(
-      `${IMPORT}run(flag ? ((statement) => read(statement)) : other, account);`,
-    );
+    check(`${IMPORT}run(flag ? ((statement) => read(statement)) : other, account);`);
     recordDiagnostic(
       `${IMPORT}run(flag ? ((statement) => read(statement)) : other, account);`,
       DB,
@@ -216,7 +212,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const bothAdapters = check(
+    check(
       `${IMPORT}run(flag ? ((statement) => read(statement)) : ((statement) => write(statement)), account);`,
     );
     recordDiagnostic(
@@ -248,7 +244,7 @@ describe("postgres-no-executor-adapter", () => {
       [],
     );
 
-    const computed = check(
+    check(
       `${TX}function load(tx: Tx, account: string) {\n  return run((statement) => tx["query"](statement), account);\n}\n`,
       SCOPED,
     );
@@ -259,7 +255,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const template = check(
+    check(
       `${TX}function load(tx: Tx, account: string) {\n  return run((statement) => tx[\`query\`](statement), account);\n}\n`,
       SCOPED,
     );
@@ -296,9 +292,7 @@ describe("postgres-no-executor-adapter", () => {
       `${IMPORT}run((statement) => read.apply(receiver, [statement]), account);`,
     );
 
-    const applySpread = check(
-      `${IMPORT}run((...args) => read.apply(receiver, [...args]), account);`,
-    );
+    check(`${IMPORT}run((...args) => read.apply(receiver, [...args]), account);`);
     recordDiagnostic(
       `${IMPORT}run((...args) => read.apply(receiver, [...args]), account);`,
       DB,
@@ -306,9 +300,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const applyHole = check(
-      `${IMPORT}run((statement) => read.apply(receiver, [statement, , extra]), account);`,
-    );
+    check(`${IMPORT}run((statement) => read.apply(receiver, [statement, , extra]), account);`);
     recordDiagnostic(
       `${IMPORT}run((statement) => read.apply(receiver, [statement, , extra]), account);`,
       DB,
@@ -316,9 +308,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const applyIdent = check(
-      `${IMPORT}run((statement) => read.apply(receiver, statement), account);`,
-    );
+    check(`${IMPORT}run((statement) => read.apply(receiver, statement), account);`);
     recordDiagnostic(
       `${IMPORT}run((statement) => read.apply(receiver, statement), account);`,
       DB,
@@ -395,7 +385,7 @@ describe("postgres-no-executor-adapter", () => {
 
     assert.equal(asyncArrow.output, `${IMPORT}run(async (statement) => read(statement), account);`);
 
-    const awaited = check(`${IMPORT}run(async (statement) => await read(statement), account);`);
+    check(`${IMPORT}run(async (statement) => await read(statement), account);`);
     recordDiagnostic(
       `${IMPORT}run(async (statement) => await read(statement), account);`,
       DB,
@@ -403,9 +393,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const generator = check(
-      `${IMPORT}run(function* (statement) { return read(statement); }, account);`,
-    );
+    check(`${IMPORT}run(function* (statement) { return read(statement); }, account);`);
     recordDiagnostic(
       `${IMPORT}run(function* (statement) { return read(statement); }, account);`,
       DB,
@@ -426,7 +414,7 @@ describe("postgres-no-executor-adapter", () => {
       `${IMPORT}run((statement) => read(statement) as Result, account);`,
     );
 
-    const argAsserted = check(`${IMPORT}run((statement) => read(statement as string), account);`);
+    check(`${IMPORT}run((statement) => read(statement as string), account);`);
     recordDiagnostic(
       `${IMPORT}run((statement) => read(statement as string), account);`,
       DB,
@@ -447,7 +435,7 @@ describe("postgres-no-executor-adapter", () => {
       `${IMPORT}run(((statement) => read(statement)) as Executor, account);`,
     );
 
-    const wrappedConditional = check(`${IMPORT}run((flag ? read : write) as Executor, account);`);
+    check(`${IMPORT}run((flag ? read : write) as Executor, account);`);
     recordDiagnostic(`${IMPORT}run((flag ? read : write) as Executor, account);`, DB, "app.ts", [
       "blocked",
     ]);
@@ -490,7 +478,7 @@ describe("postgres-no-executor-adapter", () => {
       `${IMPORT}run(function (statement) {\n  function inner() { return this; }\n  return read(statement);\n}, account);`,
     );
 
-    const classThis = check(
+    check(
       `${IMPORT}run(function (statement) {\n  const Nested = class { method() { return this; } };\n  return read(statement);\n}, account);`,
     );
     recordDiagnostic(
@@ -500,7 +488,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const arrowThis = check(
+    check(
       `${IMPORT}run(function (statement) {\n  const nested = () => this;\n  return read(statement);\n}, account);`,
     );
     recordDiagnostic(
@@ -578,9 +566,7 @@ describe("postgres-no-executor-adapter", () => {
       [],
     );
     recordDiagnostic(`${IMPORT}run(read?.(statement), account);`, DB, "app.ts", []);
-    const assertedMember = check(
-      `${IMPORT}run(flag ? (client?.query as Executor) : read, account);`,
-    );
+    check(`${IMPORT}run(flag ? (client?.query as Executor) : read, account);`);
     recordDiagnostic(
       `${IMPORT}run(flag ? (client?.query as Executor) : read, account);`,
       DB,
@@ -615,7 +601,7 @@ describe("postgres-no-executor-adapter", () => {
     recordDiagnostic(queryCode, SCOPED, "app.ts", ["passed"]);
 
     assert.equal(query.output, queryCode);
-    const eitherQuery = check(
+    check(
       `${TX}function f(tx: Tx, u: Tx, flag: boolean, a: string) {\n  return run((flag ? tx : u).query, a);\n}\n`,
       SCOPED,
     );
@@ -637,7 +623,7 @@ describe("postgres-no-executor-adapter", () => {
     recordDiagnostic(`${IMPORT}run(client.query, account);`, DB, "app.ts", []);
     recordDiagnostic(`${IMPORT}run(client["query"], account);`, DB, "app.ts", []);
 
-    const computed = check(
+    check(
       `${TX}function load(tx: Tx, account: string) {\n  return run(tx["query"], account);\n}\n`,
       SCOPED,
     );
@@ -648,9 +634,7 @@ describe("postgres-no-executor-adapter", () => {
       ["passed"],
     );
 
-    const untypedAlias = check(
-      `${IMPORT}const exec = flag ? client.query : read;\nrun(exec, account);`,
-    );
+    check(`${IMPORT}const exec = flag ? client.query : read;\nrun(exec, account);`);
     recordDiagnostic(
       `${IMPORT}const exec = flag ? client.query : read;\nrun(exec, account);`,
       DB,
@@ -658,7 +642,7 @@ describe("postgres-no-executor-adapter", () => {
       ["passed"],
     );
 
-    const mixed = check(
+    check(
       `${TX}function load(tx: Tx, flag: boolean, account: string) {\n  const exec = flag ? tx.query : read;\n  return run(exec, account);\n}\n`,
       SCOPED,
     );
@@ -679,10 +663,10 @@ describe("postgres-no-executor-adapter", () => {
 
     assert.match(selected.output, /run\(exec, account\)/);
 
-    const alias = check(`${IMPORT}const exec = read;\nrun(exec, account);`);
+    check(`${IMPORT}const exec = read;\nrun(exec, account);`);
     recordDiagnostic(`${IMPORT}const exec = read;\nrun(exec, account);`, DB, "app.ts", ["passed"]);
 
-    const nestedAlias = check(
+    check(
       `${IMPORT}const reader = read;\nconst exec = flag ? reader : write;\nrun(exec, account);`,
     );
     recordDiagnostic(
@@ -709,7 +693,7 @@ describe("postgres-no-executor-adapter", () => {
 
     assert.match(adapter.output, /run\(adapter, account\)/);
 
-    const functionAdapter = check(
+    check(
       `${IMPORT}const adapter = function (statement) { return read(statement); };\nrun(adapter, account);`,
     );
     recordDiagnostic(
@@ -719,7 +703,7 @@ describe("postgres-no-executor-adapter", () => {
       ["forward"],
     );
 
-    const memberAdapter = check(
+    check(
       `${TX}function load(tx: Tx, account: string) {\n  const adapter = (statement) => tx.query(statement);\n  return run(adapter, account);\n}\n`,
       SCOPED,
     );
@@ -730,7 +714,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const asyncAdapter = check(
+    check(
       `${IMPORT}const adapter = async (statement) => read(statement);\nrun(adapter as Executor, account);`,
     );
     recordDiagnostic(
@@ -740,7 +724,7 @@ describe("postgres-no-executor-adapter", () => {
       ["blocked"],
     );
 
-    const exactWrapped = check(
+    check(
       `${IMPORT}const adapter = (statement) => read(statement);\nrun(adapter as Executor, account);`,
     );
     recordDiagnostic(
@@ -810,7 +794,7 @@ describe("postgres-no-executor-adapter", () => {
     );
     recordDiagnostic(`import { read } from "@other/db";\nrun(read, account);`, DB, "app.ts", []);
 
-    const renamed = check(`import { write as save } from "@example/db";\nrun(save, account);`);
+    check(`import { write as save } from "@example/db";\nrun(save, account);`);
     recordDiagnostic(
       `import { write as save } from "@example/db";\nrun(save, account);`,
       DB,
@@ -921,7 +905,7 @@ describe("postgres-no-executor-adapter", () => {
       `import type { Tx } from "@example/db";\nfunction load(tx: Tx, account: string) {\n  return run((statement) => tx(statement), account);\n}\n`,
     );
 
-    const factoryPassed = check(
+    check(
       `import { openTx } from "@example/db";\n{\n  let tx = openTx();\n  run(tx, account);\n}\n`,
       option,
     );
@@ -932,7 +916,7 @@ describe("postgres-no-executor-adapter", () => {
       ["passed"],
     );
 
-    const memberQuery = check(
+    check(
       `import { openTx } from "@example/db";\n{\n  const tx = openTx();\n  const alias = tx;\n  run(alias.query, account);\n  run(openTx().query, account);\n}\n`,
       option,
     );
@@ -943,7 +927,7 @@ describe("postgres-no-executor-adapter", () => {
       ["passed"],
     );
 
-    const aliasedFactory = check(
+    check(
       `import { openTx } from "@example/db";\n{\n  const tx = openTx();\n  const alias = tx;\n  run(alias, account);\n}\n`,
       option,
     );
