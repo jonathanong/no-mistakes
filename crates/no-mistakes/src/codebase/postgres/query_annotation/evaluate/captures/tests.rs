@@ -1,14 +1,4 @@
 use super::*;
-use std::ops::DerefMut;
-
-// Legacy full-remap test oracles mutate their owned maps directly. Production
-// exposes only the guarded origin remap, never an unconstrained mutable view.
-impl DerefMut for CapturedOrigins {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        Arc::make_mut(&mut self.0)
-    }
-}
-
 fn fixture() -> CapturedBindings {
     let path = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
         .join("capture-snapshot-sharing.json");
@@ -107,4 +97,26 @@ fn identity_empty_and_unshared_remaps_preserve_buffers_until_a_real_change() {
     unique.remap(&FxHashMap::from_iter([(2, 1)]));
     assert_eq!(unique["owner"], 1);
     assert_eq!(unique.get_key_value("owner").unwrap().0.as_ptr(), pointer);
+}
+
+#[test]
+fn cached_prefix_guard_rejects_private_and_out_of_range_origins() {
+    let mut bindings: CapturedBindings =
+        FxHashMap::from_iter([(1, FxHashMap::from_iter([("name".into(), 0)]).into())]);
+    assert!(prefix_is_unchanged(&bindings, 2));
+    assert!(
+        !prefix_is_unchanged(&bindings, 1),
+        "owner at base is private"
+    );
+
+    let mut out_of_range: CapturedOrigins = FxHashMap::from_iter([("name".into(), 99)]).into();
+    assert_eq!(out_of_range.max_origin(), Some(99));
+    assert!(!prefix_is_unchanged(
+        &FxHashMap::from_iter([(0, out_of_range.clone())]),
+        2
+    ));
+    out_of_range.remap(&FxHashMap::from_iter([(99, 1)]));
+    assert_eq!(out_of_range.max_origin(), Some(1));
+    bindings.insert(0, out_of_range);
+    assert!(prefix_is_unchanged(&bindings, 2));
 }

@@ -124,7 +124,7 @@ fn malformed_domain_or_wrong_movement_hint_never_skips_changed_origins() {
 fn sparse_forward_storage_keeps_original_identity_capacity_behavior() {
     let mut input = captures(0, 0);
     input.reserve(1024);
-    input.get_mut(&0).unwrap().reserve(1024);
+    input.get_mut(&0).unwrap().reserve_origins(1024);
     let expected = (input.capacity(), input[&0].capacity());
     let mut probes = 0;
     assert!(!remap_after_compaction(
