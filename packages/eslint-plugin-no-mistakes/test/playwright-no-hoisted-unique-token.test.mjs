@@ -1,13 +1,9 @@
 import tsParser from "@typescript-eslint/parser";
 import { expect, it } from "vitest";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { plugin } from "./helpers.mjs";
 
 const ruleName = "playwright-no-hoisted-unique-token";
-const rule = plugin.rules[ruleName];
 const languageOptions = { ecmaVersion: 2024, sourceType: "module" };
-// RuleTester linted this plugin rule object.
-void rule;
 
 const TOKEN_FACTORIES = [{ tokenFactories: ["randomSuffix"] }];
 

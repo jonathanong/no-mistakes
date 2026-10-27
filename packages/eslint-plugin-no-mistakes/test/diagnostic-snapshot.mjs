@@ -194,15 +194,25 @@ export function snapshotSuite(rule, languageOptions, suite) {
         ...languageOptions,
         ...(typeof item === "object" ? item.languageOptions : undefined),
       };
+      const findings = languageOptionsFindings({
+        code,
+        filename,
+        languageOptions: caseLanguage,
+        options: options ?? undefined,
+        rule,
+      });
+      // RuleTester required invalid cases to report and valid cases to be clean.
+      if (
+        (kind === "invalid" && findings.length === 0) ||
+        (kind === "valid" && findings.length > 0)
+      ) {
+        throw new Error(
+          `${kind} ${rule} case ${filename ?? "<input>"} produced ${findings.length} diagnostics`,
+        );
+      }
       rows.push({
         file: filename ? relativeDiagnosticFile(filename, filename) : "<input>",
-        findings: languageOptionsFindings({
-          code,
-          filename,
-          languageOptions: caseLanguage,
-          options: options ?? undefined,
-          rule,
-        }),
+        findings,
         kind,
         options,
       });

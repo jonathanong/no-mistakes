@@ -1,13 +1,9 @@
 import tsParser from "@typescript-eslint/parser";
 import { expect, it } from "vitest";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { plugin } from "./helpers.mjs";
 
 const ruleName = "playwright-no-raw-scroll-pagination";
-const rule = plugin.rules[ruleName];
 const languageOptions = { ecmaVersion: 2024, sourceType: "module" };
-// RuleTester linted this plugin rule object.
-void rule;
 
 const PAGINATED_WAIT = `page.waitForRequest(
   (req) => req.url().includes("/api/v1/posts") && req.url().includes("after=")
