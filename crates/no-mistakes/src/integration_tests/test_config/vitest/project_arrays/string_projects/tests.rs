@@ -13,6 +13,10 @@ struct DirectProjectResolver {
 }
 
 impl ImportResolution for DirectProjectResolver {
+    fn matches_paths_alias(&self, _: &str, _: &Path) -> bool {
+        false
+    }
+
     fn resolve(&self, _: &str, _: &Path) -> Option<PathBuf> {
         Some(self.target.clone())
     }
@@ -160,6 +164,10 @@ struct CountingVisibleResolver {
 }
 
 impl ImportResolution for CountingVisibleResolver {
+    fn matches_paths_alias(&self, _: &str, _: &Path) -> bool {
+        false
+    }
+
     fn resolve(&self, _: &str, _: &Path) -> Option<PathBuf> {
         None
     }

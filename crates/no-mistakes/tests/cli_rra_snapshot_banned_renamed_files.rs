@@ -9,6 +9,39 @@ fn banned_renamed_files_json_matches_snapshot() {
     assert_saved_fixture(
         "banned_renamed_files",
         &[
+            (
+                "non_banned_name",
+                rules_path(RULE, "fixture", "cases/non-banned-name-passes"),
+                rules_path(RULE, "configs", "middleware-web.yml"),
+            ),
+            (
+                "compound_basename",
+                rules_path(RULE, "fixture", "cases/compound-flags-single-and-multipart"),
+                rules_path(RULE, "configs", "compound-any.yml"),
+            ),
+            (
+                "compound_unrelated_prefix",
+                rules_path(
+                    RULE,
+                    "fixture",
+                    "cases/compound-does-not-match-unrelated-prefix",
+                ),
+                rules_path(RULE, "configs", "compound-any.yml"),
+            ),
+            (
+                "regex_basename",
+                rules_path(
+                    RULE,
+                    "fixture",
+                    "cases/regex-matches-basename-ignoring-extensions-filter",
+                ),
+                rules_path(RULE, "configs", "regex-any.yml"),
+            ),
+            (
+                "regex_non_match",
+                rules_path(RULE, "fixture", "cases/regex-non-match-passes"),
+                rules_path(RULE, "configs", "regex-any.yml"),
+            ),
             ("pass", rules_path(RULE, "fixture", "pass"), web.clone()),
             (
                 "in_scope",

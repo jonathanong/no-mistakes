@@ -31,9 +31,8 @@ pub(crate) trait ImportResolverFacade: Sync {
 
     /// True when a tsconfig `paths` pattern matches `specifier`.
     /// A `baseUrl` join is not a paths alias.
-    fn matches_paths_alias(&self, _specifier: &str, _importing_file: &Path) -> bool {
-        false
-    }
+    /// Each facade must answer explicitly to preserve paths-alias precedence.
+    fn matches_paths_alias(&self, specifier: &str, importing_file: &Path) -> bool;
 }
 
 // Existing graph and runner-config call sites use this shorter name. New

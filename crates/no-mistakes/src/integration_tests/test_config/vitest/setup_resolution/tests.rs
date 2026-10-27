@@ -4,6 +4,10 @@ use crate::codebase::ts_resolver::ImportClassification;
 struct MissingSourceResolver;
 
 impl ImportResolution for MissingSourceResolver {
+    fn matches_paths_alias(&self, _: &str, _: &Path) -> bool {
+        false
+    }
+
     fn resolve(&self, _: &str, _: &Path) -> Option<PathBuf> {
         unreachable!("a missing setup source has no imports to resolve")
     }

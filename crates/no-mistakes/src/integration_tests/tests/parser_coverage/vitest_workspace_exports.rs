@@ -10,6 +10,10 @@ struct MissingWorkspaceSourceResolver {
 }
 
 impl ImportResolution for MissingWorkspaceSourceResolver {
+    fn matches_paths_alias(&self, _: &str, _: &Path) -> bool {
+        false
+    }
+
     fn resolve(&self, specifier: &str, _: &Path) -> Option<PathBuf> {
         (specifier == "./missing-projects.cjs").then(|| {
             self.resolved_missing_source.store(true, Ordering::Relaxed);

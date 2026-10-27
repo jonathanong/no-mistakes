@@ -6,6 +6,10 @@ use std::path::PathBuf;
 struct NoopResolver;
 
 impl ImportResolution for NoopResolver {
+    fn matches_paths_alias(&self, _: &str, _: &Path) -> bool {
+        false
+    }
+
     fn resolve(&self, _: &str, _: &Path) -> Option<PathBuf> {
         None
     }

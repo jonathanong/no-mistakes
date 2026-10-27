@@ -33,7 +33,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "compound_basename": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "webpack.config.dev.ts",
+          "line": 1,
+          "message": "remove webpack config",
+          "rule": "banned-renamed-files"
+        },
+        {
+          "file": "webpack.config.js",
+          "line": 1,
+          "message": "remove webpack config",
+          "rule": "banned-renamed-files"
+        },
+        {
+          "file": "webpack.config.prod.js",
+          "line": 1,
+          "message": "remove webpack config",
+          "rule": "banned-renamed-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "compound_extension": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "compound_unrelated_prefix": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -133,6 +176,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "non_banned_name": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "non_matching_extension": {
     "exitCode": 0,
     "report": {
@@ -181,6 +236,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "regex_basename": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "jest.config.cjs",
+          "line": 1,
+          "message": "remove jest.config.* — tests run under vitest",
+          "rule": "banned-renamed-files"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "regex_ignores_extensions": {
     "exitCode": 1,
     "report": {
@@ -203,6 +277,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "banned-renamed-files"
         }
       ],
+      "warnings": []
+    }
+  },
+  "regex_non_match": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
       "warnings": []
     }
   },
