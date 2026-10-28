@@ -34,3 +34,21 @@ export function unsafeDefault(select, extra, from = mutate(select)) {
   if (extra) statement.append(extra.join)
   return statement
 }
+
+// An empty native default is inert, but the first append can complete a head.
+export function continueHead(select, extra, from = sql``) {
+  const statement = select.append(sql`NING SELECT 1`)
+  if (extra) statement.append(extra.columns)
+  statement.append(from)
+  if (extra) statement.append(extra.join)
+  return statement
+}
+
+// An empty native default is inert, but the first append can complete a head.
+export function closeComment(select, extra, from = sql``) {
+  const statement = select.append(sql` repaired */ SELECT 1`)
+  if (extra) statement.append(extra.columns)
+  statement.append(from)
+  if (extra) statement.append(extra.join)
+  return statement
+}
