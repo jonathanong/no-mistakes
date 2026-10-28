@@ -129,3 +129,13 @@ export async function disposal() {
   const query = sql`/* disposal */ SELECT 1`
   return query
 }
+
+// Even an await within the root initializer suspends a partially built heap.
+export async function initializerAwait() {
+  const query = sql`/* initializerAwait */ SELECT 1`.append(await suffix())
+  return query
+}
+export async function taggedAwait() {
+  const query = sql`/* taggedAwait */ SELECT ${await value()}`
+  return query
+}

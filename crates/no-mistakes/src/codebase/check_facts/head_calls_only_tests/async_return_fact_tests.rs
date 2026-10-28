@@ -18,6 +18,7 @@ fn async_native_origins_require_all_prepared_effects_and_exact_await_consumption
         "dynamic-query.mts",
         "mutated.mts",
         "mutated-query.mts",
+        "exported-query.mts",
     ]
     .map(|name| root.join("src").join(name));
     let mut low = None;
@@ -52,7 +53,7 @@ fn async_native_origins_require_all_prepared_effects_and_exact_await_consumption
             .iter()
             .map(|span| heads.calls.get(span).copied())
             .collect::<Vec<_>>();
-        assert_eq!(proofs.len(), 31);
+        assert_eq!(proofs.len(), 33);
         assert_eq!(
             &proofs[..3],
             &[
@@ -64,7 +65,7 @@ fn async_native_origins_require_all_prepared_effects_and_exact_await_consumption
         assert!(proofs[3..]
             .iter()
             .all(|proof| *proof == Some(HeadProof::Unproven)));
-        for index in [4, 6, 8] {
+        for index in [4, 6, 8, 9] {
             let gap = facts.ts.get(&paths[index]).unwrap();
             assert!(gap
                 .query_annotation_heads
@@ -140,6 +141,29 @@ fn async_export_aliases_memoize_positive_and_negative_owner_censuses() {
         work.get("postgres.annotation.async_return_reference_visits")
             .copied(),
         Some((callable_visits + builder_visits) as u64)
+    );
+    let expected_export_visits = [&caller, &helper]
+        .into_iter()
+        .map(|path| {
+            facts
+                .ts
+                .get(path)
+                .unwrap()
+                .ts
+                .module_bindings
+                .as_ref()
+                .unwrap()
+                .exports
+                .iter()
+                .filter(|export| !export.type_only)
+                .count()
+        })
+        .sum::<usize>();
+    assert!(expected_export_visits >= 80);
+    assert_eq!(
+        work.get("postgres.annotation.async_export_index_visits")
+            .copied(),
+        Some(expected_export_visits as u64)
     );
     let expected_import_visits = facts
         .ts
