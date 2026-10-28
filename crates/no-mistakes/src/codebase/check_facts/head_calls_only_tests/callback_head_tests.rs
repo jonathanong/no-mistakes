@@ -40,6 +40,13 @@ fn exact_imported_callback_proofs_stay_in_low_prepared_calls() {
         assert_eq!(proofs[10], Some(HeadProof::Missing));
         if efforts == ["low"] {
             assert!(file.query_annotation.is_empty());
+            assert!(
+                !observer
+                    .snapshot()
+                    .work
+                    .contains_key("postgres.annotation.namespace_index_builds"),
+                "files without namespace destructures build no namespace indexes"
+            );
             assert_eq!(
                 observer
                     .snapshot()
