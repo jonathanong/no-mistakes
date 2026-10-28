@@ -3,6 +3,9 @@ impl ImportCollector {
         let binding = callee
             .split_once('.')
             .map_or(callee, |(binding, _)| binding);
+        if self.is_commonjs_binding(binding) {
+            return CallTargetIdentity::ModuleExport;
+        }
         if self.local_binding_shadows(binding) {
             if matches!(binding, "globalThis" | "window" | "self" | "global") {
                 return CallTargetIdentity::Unknown;
@@ -195,5 +198,3 @@ impl ImportCollector {
                 || self.predeclared_imported_bindings.contains(binding))
     }
 }
-
-include!("extract_callable_scope_helper.rs");

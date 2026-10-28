@@ -25,8 +25,10 @@ pub(crate) enum PathAnchor {
     Module,
     /// `process.cwd()`, which is the live repository for a test run.
     Cwd,
-    /// `os.tmpdir()` or the result of `mkdtemp`.
+    /// A directory created and owned by the test through `mkdtemp`.
     Temp,
+    /// The process-wide temporary directory, which the test does not own.
+    SharedTemp,
     /// A relative literal, resolved against the process working directory.
     Relative,
     Absolute,

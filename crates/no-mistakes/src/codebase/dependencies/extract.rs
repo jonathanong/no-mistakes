@@ -64,6 +64,7 @@ include!("extract_collector_aliases.rs");
 mod extract_collector_aggregate_aliases;
 include!("extract_collector_deferred_aliases.rs");
 include!("extract_visit_helpers.rs");
+include!("extract_callable_scope_helper.rs");
 include!("extract_visit_variables.rs");
 include!("extract_control_flow_scopes.rs");
 include!("extract_loop_assignment_scopes.rs");
@@ -83,6 +84,7 @@ use extract_visit_hoist::{
 };
 include!("extract_visit_types.rs");
 include!("extract_binding_helpers.rs");
+include!("extract_commonjs_bindings.rs");
 include!("extract_syntax_helpers.rs");
 
 #[cfg(test)]

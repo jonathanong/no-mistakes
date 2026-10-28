@@ -3,12 +3,11 @@
 //! Syntactic heuristics only: `join`/`resolve`, `tmpdir`, `mkdtemp`, `cwd`, and
 //! `import.meta.dirname` are recognised by spelling, and only immutable `const`
 //! aliases are followed. Everything else is `Unknown`, never guessed.
+mod calls;
 mod composite;
 
-use self::composite::callee_root;
 pub(super) use self::composite::imported_locals;
 use super::{PathAnchor, PathOrigin, Projector};
-use crate::fx::FxHashSet;
 use oxc_ast::{ast::*, AstKind};
 
 impl PathOrigin {
@@ -68,63 +67,6 @@ impl PathOrigin {
 }
 
 impl<'a> Projector<'a, '_> {
-    pub(super) fn call_path(
-        &mut self,
-        call: &CallExpression<'a>,
-        imported: &FxHashSet<&str>,
-    ) -> Option<PathOrigin> {
-        if !imported.contains(callee_root(&call.callee)?) {
-            return None;
-        }
-        let first = call.arguments.first()?;
-        let Some(first) = first.as_expression() else {
-            return Some(PathOrigin::unknown());
-        };
-        let origin = self.origin(first, 0);
-        // `glob(pattern, { cwd })` resolves the pattern against `cwd`; options this
-        // pass cannot read leave a relative pattern with an unknown base.
-        let options = call
-            .arguments
-            .get(1)
-            .and_then(Argument::as_expression)
-            .map(Expression::get_inner_expression);
-        let options = match options {
-            Some(Expression::Identifier(id)) => self
-                .const_init(id)
-                .map(Expression::get_inner_expression)
-                .or(options),
-            other => other,
-        };
-        if origin.anchor != PathAnchor::Relative {
-            return Some(origin);
-        }
-        Some(match options {
-            None => origin,
-            Some(Expression::ObjectExpression(options)) => {
-                let cwd = options.properties.iter().find_map(|p| match p {
-                    ObjectPropertyKind::ObjectProperty(p)
-                        if !p.computed
-                            && crate::ast::property_key_name(&p.key).as_deref() == Some("cwd") =>
-                    {
-                        Some(&p.value)
-                    }
-                    _ => None,
-                });
-                let spread = options
-                    .properties
-                    .iter()
-                    .any(|p| matches!(p, ObjectPropertyKind::SpreadProperty(_)));
-                match cwd {
-                    Some(cwd) => self.origin(cwd, 0).append(origin),
-                    None if spread => PathOrigin::unknown(),
-                    None => origin,
-                }
-            }
-            Some(Expression::Identifier(_)) => PathOrigin::unknown(),
-            Some(_) => origin,
-        })
-    }
-
     fn origin(&mut self, expression: &Expression<'a>, depth: usize) -> PathOrigin {
         if depth >= 16 || !self.take() {
             return PathOrigin::unknown();

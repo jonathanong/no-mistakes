@@ -74,6 +74,66 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
         }
     }
 }
+
+pub(super) fn collect_require_bindings(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts) {
+    let loads: crate::fx::FxHashSet<_> = facts
+        .loads
+        .iter()
+        .filter(|load| load.kind == "require")
+        .map(|load| load.span.start)
+        .collect();
+    let mut bindings: Vec<_> = facts
+        .bindings
+        .iter()
+        .filter(|binding| binding.runtime)
+        .collect();
+    bindings.sort_unstable_by_key(|binding| binding.span.start);
+    for node in semantic.nodes().iter() {
+        let AstKind::VariableDeclarator(declaration) = node.kind() else {
+            continue;
+        };
+        let Some(init) = declaration.init.as_ref() else {
+            continue;
+        };
+        let mut expression = init.get_inner_expression();
+        while let Expression::StaticMemberExpression(member) = expression {
+            expression = member.object.get_inner_expression();
+        }
+        let Expression::CallExpression(call) = expression else {
+            continue;
+        };
+        if !loads.contains(&call.span.start) {
+            continue;
+        }
+        let id = declaration.id.span();
+        let mut named = crate::fx::FxHashMap::default();
+        if let BindingPattern::ObjectPattern(object) = &declaration.id {
+            for property in &object.properties {
+                if let BindingPattern::BindingIdentifier(local) = &property.value {
+                    if !property.computed {
+                        if let Some(imported) = crate::ast::property_key_name(&property.key) {
+                            named.insert(local.name.as_str(), imported.into_owned());
+                        }
+                    }
+                }
+            }
+        }
+        let first = bindings.partition_point(|binding| binding.span.start < id.start);
+        for binding in bindings[first..]
+            .iter()
+            .take_while(|binding| binding.span.start < id.end)
+        {
+            if binding.span.end <= id.end {
+                facts.require_bindings.push(RequireBinding {
+                    local: binding.name.clone(),
+                    load_start: call.span.start,
+                    scope_id: binding.scope_id,
+                    imported: named.get(binding.name.as_str()).cloned(),
+                });
+            }
+        }
+    }
+}
 fn name(value: &ModuleExportName<'_>) -> String {
     match value {
         ModuleExportName::IdentifierName(value) => value.name.to_string(),

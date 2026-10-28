@@ -2,7 +2,7 @@
 use super::config::Enumerator;
 use crate::codebase::dependencies::graph::{KnownCallTargetRef, ResolvedCallSite};
 
-pub(super) const FS_MODULES: &[&str] = &["fs", "fs/promises"];
+pub(super) const FS_MODULES: &[&str] = &["fs", "fs/promises", "fs-extra"];
 const FS_ENUMERATORS: &[&str] = &[
     "readdir",
     "readdirSync",
@@ -40,6 +40,13 @@ pub(super) enum Scan {
 }
 
 pub(super) fn scan_of(site: &ResolvedCallSite, extra: &[Enumerator]) -> Option<Scan> {
+    // Only the language's import.meta receiver has this unshadowable spelling.
+    if matches!(
+        site.source_callee.as_str(),
+        "import.meta.glob" | "import.meta.globEager"
+    ) {
+        return Some(Scan::Resolved);
+    }
     if site.targets().any(|candidate| match candidate.target {
         KnownCallTargetRef::ModuleExport {
             specifier,

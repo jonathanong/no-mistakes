@@ -6,6 +6,12 @@ external modules, virtual queue jobs, or virtual GitHub Actions workflow jobs
 and steps. Every edge has an internal `EdgeKind`,
 serialized in JSON/YAML/text output through the `via` field.
 
+Statically named top-level `const` CommonJS namespace, destructured, and member
+bindings project calls through the existing imported module/export targets.
+Their lexical owner keeps shadowed locals separate. This adds no edge kind;
+unsupported or unresolved loads remain uncertain rather than gaining guessed
+targets. See [live repository scans](rules/test-no-live-repository-scan.md).
+
 Class-base and constructor analysis can demand package declaration facts through
 the request-owned source store. These facts add canonical `Extends` targets,
 ambient class records, and internal constructor proof metadata. Ordinary

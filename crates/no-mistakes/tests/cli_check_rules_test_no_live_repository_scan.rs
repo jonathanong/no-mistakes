@@ -78,6 +78,19 @@ fn rejects_scans_reachable_from_vitest_roots_and_allows_bounded_input() {
         "tests/path-forms.test.ts:21",
         "tests/path-forms.test.ts:28",
         "tests/path-forms.test.ts:29",
+        "tests/require-mixed.test.ts:4",
+        "tests/require-mixed.test.ts:5",
+        "tests/require-mixed.test.ts:10",
+        "tests/require-boundaries.test.ts:3",
+        "tests/require-boundaries.test.ts:5",
+        "tests/require-boundaries.test.ts:9",
+        "tests/require-bindings.test.ts:7",
+        "tests/require-bindings.test.ts:8",
+        "tests/require-bindings.test.ts:9",
+        "tests/require-forward.test.ts:3",
+        "tests/require-provenance.test.ts:3",
+        "tests/require-provenance.test.ts:6",
+        "tests/require-provenance.test.ts:9",
     ] {
         assert!(
             findings.contains(&expected.to_string()),
@@ -104,9 +117,15 @@ fn rejects_scans_reachable_from_vitest_roots_and_allows_bounded_input() {
         "tests/path-edge.test.ts:11",
         "tests/path-edge.test.ts:19",
         "tests/path-edge.test.ts:22",
-        "tests/require-bindings.test.ts:3",
-        "tests/require-bindings.test.ts:4",
-        "tests/require-bindings.test.ts:5",
+        "tests/require-computed-only.test.ts:3",
+        "tests/require-mixed.test.ts:14",
+        "tests/require-boundaries.test.ts:27",
+        "tests/require-shadowed-load.test.ts:5",
+        "tests/require-unmodeled-patterns.test.ts:4",
+        "tests/require-unmodeled-patterns.test.ts:5",
+        "tests/require-unmodeled-patterns.test.ts:7",
+        "tests/require-unmodeled-patterns.test.ts:8",
+        "tests/require-before-init.test.ts:2",
         "tests/unresolved-receiver.test.ts:3",
         "tests/unresolved-root.test.ts:8",
     ] {
@@ -118,6 +137,49 @@ fn rejects_scans_reachable_from_vitest_roots_and_allows_bounded_input() {
     // A CommonJS global and cwd-less glob options are live, not unresolved.
     assert!(findings.contains(&"tests/path-edge.test.ts:15".to_string()));
     assert!(findings.contains(&"tests/path-edge.test.ts:20".to_string()));
+    // The plain binding's resolved scans have independent roots; its require
+    // declaration does not also need an unresolved advisory.
+    assert!(!advisories.contains(&"tests/require-mixed.test.ts:8".to_string()));
+    for absent in [2, 11, 16, 23, 24] {
+        assert!(!findings.contains(&format!("tests/require-boundaries.test.ts:{absent}")));
+        assert!(
+            !advisories.contains(&format!("tests/require-boundaries.test.ts:{absent}")),
+            "duplicate or suppressed require: {advisories:?}"
+        );
+    }
+    assert_eq!(
+        advisories
+            .iter()
+            .filter(|entry| *entry == "tests/require-boundaries.test.ts:27")
+            .count(),
+        1,
+        "direct require scan must have one advisory: {advisories:?}"
+    );
+    for bounded in [4, 7, 10] {
+        let location = format!("tests/require-provenance.test.ts:{bounded}");
+        assert!(!findings.contains(&location), "bounded scan: {findings:?}");
+        assert!(
+            !advisories.contains(&location),
+            "bounded scan: {advisories:?}"
+        );
+    }
+    // A numeric export cannot match the configured named enumerators.
+    let numeric = "tests/require-unmodeled-patterns.test.ts:6".to_string();
+    assert!(!findings.contains(&numeric) && !advisories.contains(&numeric));
+    for recognized in [2, 5, 8] {
+        assert!(
+            !advisories.contains(&format!("tests/require-provenance.test.ts:{recognized}")),
+            "recognized binding should not produce a duplicate advisory: {advisories:?}"
+        );
+    }
+    assert!(
+        !findings.contains(&"tests/require-forward.test.ts:6".to_string()),
+        "forward fixture root: {findings:?}"
+    );
+    assert!(
+        !advisories.contains(&"tests/require-forward.test.ts:6".to_string()),
+        "forward fixture root: {advisories:?}"
+    );
 }
 
 #[test]

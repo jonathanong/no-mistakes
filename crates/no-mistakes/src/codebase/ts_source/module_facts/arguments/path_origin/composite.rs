@@ -46,7 +46,8 @@ impl<'a> Projector<'a, '_> {
         };
         let mut args = call.arguments.iter().map(Argument::as_expression);
         match name {
-            "tmpdir" | "mkdtemp" | "mkdtempSync" => PathOrigin::anchored(PathAnchor::Temp),
+            "tmpdir" => PathOrigin::anchored(PathAnchor::SharedTemp),
+            "mkdtemp" | "mkdtempSync" => PathOrigin::anchored(PathAnchor::Temp),
             "cwd" if receiver == Some("process") => PathOrigin::anchored(PathAnchor::Cwd),
             "join" | "resolve" | "normalize"
                 if receiver.is_none_or(|r| matches!(r, "path" | "posix" | "win32")) =>
@@ -79,14 +80,21 @@ impl<'a> Projector<'a, '_> {
 pub(in super::super) fn imported_locals(
     facts: &super::super::super::TypeScriptModuleFacts,
 ) -> crate::fx::FxHashSet<&str> {
-    facts
+    let mut locals: crate::fx::FxHashSet<&str> = facts
         .imports
         .iter()
         .filter(|import| !import.type_only)
         .flat_map(|import| import.bindings.iter())
         .filter(|binding| !binding.type_only)
         .map(|binding| binding.local.as_str())
-        .collect()
+        .collect();
+    locals.extend(
+        facts
+            .require_bindings
+            .iter()
+            .map(|binding| binding.local.as_str()),
+    );
+    locals
 }
 
 /// Leftmost identifier of a static member chain.

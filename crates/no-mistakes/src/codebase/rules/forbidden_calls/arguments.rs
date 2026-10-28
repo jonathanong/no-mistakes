@@ -10,7 +10,13 @@ pub(crate) fn for_call(
         return None;
     }
     let module = facts.module_bindings.as_deref()?;
-    if !module.diagnostics.is_empty() {
+    // The fact owner withholds argument proofs for binding-unsafe diagnostics;
+    // an unrelated opaque module load does not invalidate these recorded facts.
+    if !module
+        .diagnostics
+        .iter()
+        .all(crate::codebase::ts_source::module_facts::argument_safe_diagnostic)
+    {
         return None;
     }
     module.call_arguments.as_deref()?.get(&offset)

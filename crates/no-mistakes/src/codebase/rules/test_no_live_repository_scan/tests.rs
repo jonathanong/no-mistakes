@@ -17,6 +17,10 @@ fn classify_separates_bounded_live_and_unresolved_roots() {
     assert!(matches!(classify(None, dirs), Verdict::Unresolved(_)));
     let temp = origin(PathAnchor::Temp, &["x"]);
     assert_eq!(classify(Some(&temp), dirs), Verdict::Allowed);
+    assert!(matches!(
+        classify(Some(&origin(PathAnchor::SharedTemp, &[])), dirs),
+        Verdict::Live(_)
+    ));
     let fixture = origin(PathAnchor::Module, &["fixtures", "a"]);
     assert_eq!(classify(Some(&fixture), dirs), Verdict::Allowed);
     for anchor in [
@@ -41,6 +45,8 @@ fn enumerates_matches_builtins_and_configured_imports() {
     assert!(enumerates("fs", "default.readdirSync", &[]));
     assert!(enumerates("fs", "promises.readdir", &[]));
     assert!(enumerates("fs/promises", "readdir", &[]));
+    assert!(enumerates("fs-extra", "default.readdirSync", &[]));
+    assert!(!enumerates("fs-extra", "copy", &[]));
     assert!(enumerates("fast-glob", "default", &[]));
     assert!(!enumerates("fs", "readFileSync", &[]));
     assert!(!enumerates("globby", "isDynamicPattern", &[]));

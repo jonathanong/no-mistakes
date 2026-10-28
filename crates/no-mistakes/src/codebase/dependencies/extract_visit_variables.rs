@@ -131,10 +131,14 @@ fn visit_variable_declaration_with_bindings<'a>(
         }
     }
 }
-fn visit_variable_declaration_with_values<'a>(collector: &mut ImportCollector, declaration: &VariableDeclaration<'a>) {
+fn visit_variable_declaration_with_values<'a>(
+    collector: &mut ImportCollector,
+    declaration: &VariableDeclaration<'a>,
+) {
     visit_variable_declaration_with_bindings(collector, declaration);
     collector.record_callable_declaration_bindings(declaration);
     collector.record_const_callable_aliases(declaration);
+    collector.record_static_commonjs_bindings(declaration, false);
     collector.record_value_declaration(declaration);
     walk::walk_variable_declaration(collector, declaration);
 }

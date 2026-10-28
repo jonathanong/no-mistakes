@@ -92,6 +92,8 @@ mod cli_check_rules_repository_guards;
 mod cli_check_rules_swift;
 #[path = "cli_check_rules_test_no_live_repository_scan.rs"]
 mod cli_check_rules_test_no_live_repository_scan;
+#[path = "cli_check_rules_test_no_live_repository_scan_shapes.rs"]
+mod cli_check_rules_test_no_live_repository_scan_shapes;
 #[path = "cli_check_rules_tsconfig.rs"]
 mod cli_check_rules_tsconfig;
 #[path = "cli_check_rules_unconstructed_error_class.rs"]

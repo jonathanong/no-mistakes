@@ -94,6 +94,30 @@ fn invalid_semantic_identity_does_not_publish_literal_argument_proofs() {
 }
 
 #[test]
+fn computed_load_does_not_erase_independent_path_proofs() {
+    let facts = read_fixture(
+        "test-no-live-repository-scan",
+        "tests/require-mixed.test.ts",
+        true,
+    );
+    assert!(!facts.diagnostics.is_empty());
+    assert!(facts.diagnostics.iter().all(argument_safe_diagnostic));
+    let calls = facts
+        .call_arguments
+        .expect("load uncertainty is not a binding error");
+    for segment in ["docs", "src", "packages"] {
+        assert!(
+            calls.values().any(|call| {
+                call.path.as_ref().is_some_and(|path| {
+                    path.anchor == arguments::PathAnchor::Relative && path.segments == [segment]
+                })
+            }),
+            "missing independent {segment} proof"
+        );
+    }
+}
+
+#[test]
 fn literal_argument_and_static_key_identities_remain_distinct() {
     let facts = read_fixture("forbidden-calls/literal-identity", "repro.mjs", true);
     assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
