@@ -20,7 +20,7 @@ pub(crate) struct Pending {
     pub proof: HeadProof,
 }
 
-pub(super) fn module_projection(
+pub(in super::super) fn module_projection(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     module: Option<&TypeScriptModuleFacts>,
