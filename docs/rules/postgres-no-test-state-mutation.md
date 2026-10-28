@@ -94,7 +94,14 @@ checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the
 SQL value, executor alias, unsupported helper, or invalid SQL remains
 unanalyzable under the configured policy. Put a complete literal at the
 configured executor or select `max` to use broader analysis. Low keeps the
-same `testGlobs`, `helperRoots`, and `include`/`exclude` boundaries.
+same `testGlobs`, `helperRoots`, and `include`/`exclude` boundaries. Complete
+The shared SQL extractor parses PostgreSQL `ANALYZE` relation lists with
+`VERBOSE` and per-relation column lists; malformed lists and parenthesized
+option lists remain unanalyzable.
+
+At `max`, finite helper returns, direct throwing branches, literal iterator
+domains, and local Set guards use bounded full-SQL proofs. Annotation `low`
+requests skip these proofs and do not invoke the annotation evaluator.
 
 ## What it catches
 
@@ -166,16 +173,6 @@ specific executed SQL call, or `// no-mistakes-disable-line
 postgres-no-test-state-mutation` on its line. Use
 `// no-mistakes-disable-file postgres-no-test-state-mutation` only for a file
 whose exception is intentional, with a reason in the adjacent comment.
-
-## Effort
-
-This rule supports `max` effort. Selecting `low` falls back to `max` with a
-configuration warning. The shared SQL extractor parses PostgreSQL `ANALYZE`
-relation lists with `VERBOSE` and per-relation column lists; malformed lists
-and parenthesized option lists remain unanalyzable.
-Finite helper returns, direct throwing branches, literal iterator domains, and
-local Set guards use bounded full-SQL proofs. Annotation `low` requests skip
-these proofs and do not invoke the annotation evaluator.
 
 ## Related rules
 
