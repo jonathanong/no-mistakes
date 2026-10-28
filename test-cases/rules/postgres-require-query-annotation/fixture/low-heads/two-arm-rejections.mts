@@ -70,7 +70,7 @@ async function spreadArgument(flag) {
 async function wrapperCall(flag) {
   let q
   if (flag) { q = sql`/* wrapper */ SELECT ${flag}` } else { q = sql`/* wrapper */ SELECT ${flag}` }
-  read(q).then(wrap) // low: false
+  wrap(read(q)) // low: false
 }
 async function captured(flag) {
   function nested() { return q }
