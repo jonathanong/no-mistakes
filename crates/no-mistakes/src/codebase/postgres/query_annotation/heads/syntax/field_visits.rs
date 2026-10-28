@@ -40,6 +40,9 @@ impl Syntax {
                             && call.arguments[2].as_expression().is_some()))
                 {
                     self.record_result_calls.insert(span(call.span));
+                    if call.arguments.len() == 3 {
+                        self.record_options_calls.insert(span(call.span));
+                    }
                 }
             }
         }
