@@ -16,3 +16,9 @@ fn explicit_total_returns_join_only_the_same_proven_head() {
         );
     }
 }
+
+#[test]
+fn finite_return_guards_do_not_hide_builder_mutations_or_returns() {
+    let (source, _, heads) = fixture("finite-helper-guards.mts");
+    assert_eq!(assert_markers(&source, &heads), 18);
+}

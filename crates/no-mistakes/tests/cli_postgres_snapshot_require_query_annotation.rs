@@ -166,6 +166,9 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("finite_helper_returns_local", "low-heads", "finite-helper-returns-local-report.yml"),
         case("finite_helper_returns_imported_report", "finite-helper-returns", "finite-helper-returns-report.yml"),
         case("finite_helper_returns_imported_ignore", "finite-helper-returns", "finite-helper-returns-ignore.yml"),
+        // Guard bodies cannot invalidate a returned builder head; report and ignore retain the same findings.
+        case("finite_helper_guards_report", "low-heads", "finite-helper-guards-report.yml"),
+        case("finite_helper_guards_ignore", "low-heads", "finite-helper-guards-ignore.yml"),
         // Only exact imported callback paths clear; unknown paths retain their findings.
         case("callback_heads_report", "callback-heads", "callback-heads-low-report.yml"),
         case("callback_heads_ignore", "callback-heads", "callback-heads-low-ignore.yml"),
