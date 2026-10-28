@@ -103,6 +103,7 @@ fn acquire_lock_with_budget(
             InvocationErrorKind::CommandTimeout,
             "invocation deadline elapsed during lock acquisition",
         )
+        .with_phase("invocation.lock")
         .into());
     }
     let acquisition_started = clock::now();
@@ -155,6 +156,12 @@ pub(super) fn classify_lock_result(
             Err(InvocationError::new(
                 InvocationErrorKind::CommandTimeout,
                 deadline::timeout_diagnostic(timeout, "invocation.lock"),
+            )
+            .with_phase("invocation.lock")
+            .with_holder(
+                error
+                    .downcast_ref::<InvocationError>()
+                    .and_then(|error| error.holder().cloned()),
             )
             .into())
         }

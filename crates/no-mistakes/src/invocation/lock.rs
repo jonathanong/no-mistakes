@@ -1,8 +1,8 @@
+use super::holder::LockHolder;
 use super::{clock, InvocationError, InvocationErrorKind};
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use std::fs::{File, OpenOptions, TryLockError};
-use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
@@ -69,12 +69,13 @@ pub(super) fn acquire_lock_from(
     loop {
         if !first_attempt || acquisition_started.is_some() {
             if let Some(timeout) = timeout.filter(|timeout| started.elapsed() >= *timeout) {
-                return Err(lock_timeout_error(timeout));
+                return Err(lock_timeout_error(timeout, path));
             }
         }
         match classify_try_lock(file.try_lock(), path, fail_on_lock) {
             TryLockOutcome::Acquired => {
-                write_holder_pid(&file)?;
+                // Diagnostic only: a failed record must not fail the invocation.
+                let _ = LockHolder::current().record(path);
                 return Ok(file);
             }
             TryLockOutcome::Failed(error) => return Err(error),
@@ -108,24 +109,11 @@ fn classify_try_lock(
     match result {
         Ok(()) => TryLockOutcome::Acquired,
         Err(TryLockError::Error(error)) => TryLockOutcome::Failed(lock_error(path, error)),
-        Err(TryLockError::WouldBlock) if fail_on_lock => TryLockOutcome::Failed(
-            InvocationError::new(
-                InvocationErrorKind::LockBusy,
-                "another no-mistakes invocation is already running",
-            )
-            .into(),
-        ),
+        Err(TryLockError::WouldBlock) if fail_on_lock => {
+            TryLockOutcome::Failed(lock_busy_error(path))
+        }
         Err(TryLockError::WouldBlock) => TryLockOutcome::Wait,
     }
-}
-
-fn write_holder_pid(file: &File) -> Result<()> {
-    let mut file = file.try_clone()?;
-    file.set_len(0)?;
-    file.seek(SeekFrom::Start(0))?;
-    write!(file, "{}", std::process::id())?;
-    file.flush()?;
-    Ok(())
 }
 
 fn report_lock_wait(path: &Path, elapsed: Duration, last_reported_secs: &mut Option<u64>) {
@@ -134,8 +122,8 @@ fn report_lock_wait(path: &Path, elapsed: Duration, last_reported_secs: &mut Opt
         return;
     }
     *last_reported_secs = Some(secs);
-    let holder = match read_holder_pid(path) {
-        Some(pid) => format!("pid {pid}"),
+    let holder = match LockHolder::read(path) {
+        Some(holder) => holder.describe(),
         None => "another no-mistakes invocation".to_string(),
     };
     crate::diagnostics::print_stderr(format_args!(
@@ -143,21 +131,39 @@ fn report_lock_wait(path: &Path, elapsed: Duration, last_reported_secs: &mut Opt
     ));
 }
 
-fn read_holder_pid(path: &Path) -> Option<u32> {
-    let mut file = File::open(path).ok()?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).ok()?;
-    contents.trim().parse().ok()
+fn held_by(holder: &Option<LockHolder>) -> String {
+    match holder {
+        Some(holder) => format!(" (held by {})", holder.describe()),
+        None => String::new(),
+    }
 }
 
-fn lock_timeout_error(timeout: Duration) -> anyhow::Error {
+fn lock_busy_error(path: &Path) -> anyhow::Error {
+    let holder = LockHolder::read(path);
+    InvocationError::new(
+        InvocationErrorKind::LockBusy,
+        format!(
+            "another no-mistakes invocation is already running{}",
+            held_by(&holder)
+        ),
+    )
+    .with_phase("invocation.lock")
+    .with_holder(holder)
+    .into()
+}
+
+fn lock_timeout_error(timeout: Duration, path: &Path) -> anyhow::Error {
+    let holder = LockHolder::read(path);
     InvocationError::new(
         InvocationErrorKind::LockTimeout,
         format!(
-            "timed out after {} seconds waiting for another no-mistakes invocation",
-            timeout.as_secs()
+            "timed out after {} seconds waiting for another no-mistakes invocation{}",
+            timeout.as_secs(),
+            held_by(&holder)
         ),
     )
+    .with_phase("invocation.lock")
+    .with_holder(holder)
     .into()
 }
 

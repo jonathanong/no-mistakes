@@ -173,3 +173,34 @@ JSON entrypoints accept and return Node `Buffer` values of UTF-8 JSON so the
 addon avoids UTF-16 string copies at the N-API boundary.
 
 [Node/N-API guide](../node-api.md)
+
+## Lock and deadline errors
+
+A call that fails on the invocation lock or the analysis deadline rejects with
+an `Error` that keeps the CLI's message and adds:
+
+- `error.code`: `NO_MISTAKES_LOCK_BUSY`, `NO_MISTAKES_LOCK_TIMEOUT`, or
+  `NO_MISTAKES_DEADLINE`.
+- `error.details`: the same object the CLI writes under `--format json`
+  (`kind`, `phase`, `message`, `exitCode`, and for lock failures `holder` with
+  `pid`, `cwd`, `command`, `startedAtMs`, `ageSeconds`). Lock failures carry
+  `exitCode` `75` and deadlines `124`, matching the
+  [CLI exit-code contract](../cli/README.md#exit-code-contract).
+
+Lock failures and deadlines detected at the invocation boundary are structured.
+Other failures keep plain messages.
+
+```js
+try {
+  await check({ root: ".", lockTimeout: 5 });
+} catch (error) {
+  if (error.code === "NO_MISTAKES_LOCK_TIMEOUT") {
+    console.error(error.details.holder); // who holds the lock
+  }
+}
+```
+
+`lockStatus()` returns `{ state: "held" | "free", lockFile, holder }` without
+waiting and without taking the lock; it matches `no-mistakes lock status
+--format json`. The `LockStatus`, `LockHolder`, `InvocationErrorKind`,
+`InvocationErrorDetails`, and `InvocationError` types are exported.

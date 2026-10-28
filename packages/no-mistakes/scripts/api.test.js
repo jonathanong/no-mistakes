@@ -1,6 +1,7 @@
 require("./api-tests/proxy");
 require("./api-tests/planning");
 require("./api-tests/exports");
+require("./api-tests/invocation-errors");
 require("./api-tests/declarations-core");
 require("./api-tests/declarations-unbounded");
 require("./api-tests/declarations-export-invariants");

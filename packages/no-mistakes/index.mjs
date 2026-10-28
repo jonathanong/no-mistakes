@@ -31,6 +31,7 @@ export const {
   infraOutputs,
   infraResourceRefs,
   infraTestFor,
+  lockStatus,
   lockfileDiff,
   playwrightCheck,
   playwrightEdges,

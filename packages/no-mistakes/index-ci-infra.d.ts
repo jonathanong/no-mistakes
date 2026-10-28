@@ -113,3 +113,6 @@ export function generatePostgresCatalog(
 export function analyzeTypeScriptModules(
   options: WithInvocationOptions<TypeScriptModulesOptions>,
 ): Promise<WithInvocationResult<TypeScriptModulesReport>>;
+
+/** Read-only report of the machine-wide invocation lock; never waits and takes no lock. */
+export function lockStatus(): Promise<import("./invocation-types").LockStatus>;

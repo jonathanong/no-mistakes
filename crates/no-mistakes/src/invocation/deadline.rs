@@ -61,6 +61,7 @@ impl DeadlineGuard {
                 InvocationErrorKind::CommandTimeout,
                 "invocation deadline elapsed during lock acquisition".to_string(),
             )
+            .with_phase("invocation.lock")
             .into());
         }
         let deadline = match (deadline, limit) {
@@ -150,6 +151,7 @@ pub fn check_timeout() -> Result<()> {
         InvocationErrorKind::CommandTimeout,
         timeout_diagnostic(timeout, current_phase()),
     )
+    .with_phase(current_phase())
     .into())
 }
 
@@ -173,6 +175,7 @@ pub fn commit_timeout() -> Result<()> {
             InvocationErrorKind::CommandTimeout,
             timeout_diagnostic(deadline.timeout, current_phase()),
         )
+        .with_phase(current_phase())
         .into());
     }
     deadline.committed = true;

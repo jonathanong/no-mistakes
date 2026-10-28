@@ -39,6 +39,14 @@ no-mistakes call-sites backend/services/urls/add-url.mts addUrl --format json
 rg -n 'addUrl\(|skipCreatedEvents' backend/
 ```
 
+Exit codes: `75` means another invocation holds the lock (`--fail-on-lock` or
+`--lock-timeout`; retry later or run `no-mistakes lock status --format json` to
+see the holder's pid, cwd, command, and age); `124` means the analysis deadline
+elapsed. Under `--format json` lock failures, and deadlines caught at the invocation boundary (a `--timeout` firing mid-command exits 124 with stderr only), write `{"error":{"kind":"lock_busy" |
+"lock_timeout" | "deadline","phase":...,"holder":{...}}}` to stdout, so an empty
+stdout no longer means a hang. Do not treat exit `75` as "no impact"; wait and
+retry.
+
 Use `--verbose-timings` to retain published work counts on a CLI hard timeout.
 The bounded stderr snapshot labels its timings and counters `PARTIAL`; counts
 are lower bounds because unfinished work may not have published local counters.
