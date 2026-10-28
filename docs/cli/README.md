@@ -52,7 +52,7 @@ or after the command name:
 | Status | Meaning | JSON `error.kind` |
 | --- | --- | --- |
 | `0` | Success. | none |
-| `75` | Lock contention (EX_TEMPFAIL): `--fail-on-lock` found the lock busy, or `--lock-timeout` elapsed while waiting. Retrying later may succeed. | `lock_busy`, `lock_timeout` |
+| `75` | Lock contention (`EX_TEMPFAIL`): `--fail-on-lock` found the lock busy, or `--lock-timeout` elapsed while waiting. Retrying later may succeed. | `lock_busy`, `lock_timeout` |
 | `124` | The analysis deadline elapsed (`--timeout`, `--invocation-timeout-ms`), matching `timeout(1)`. | `deadline` |
 | `2` | Any other error, including lock setup failures and invalid arguments. | none |
 
