@@ -472,3 +472,9 @@ The same prepared facts project an exact imported helper's fixed callback SQL
 head to a direct inline configured executor callback, independently per call.
 The async API shares low's same-file fixed-builder callback proof and exact
 async callback parameter census without invoking the annotation evaluator.
+
+The async `check()` and `analyzeProject()` annotation reports also share low's
+[awaited fresh native return-origin proof](postgres-query-annotation/low-effort.md#awaited-fresh-native-return-origins).
+It uses the same prepared source/effect projections and requires exact awaited
+`const` consumption by the immediately next configured executor. No API option,
+report field or max-effort contract changes.

@@ -369,3 +369,31 @@ elsewhere can expose the builder and remains unanalyzable. Rewrite
 unresolved shapes as a named literal at the call or as one local `const`
 initialized with that literal head and passed directly. Existing file and line
 suppressions apply to definite findings too.
+
+### Awaited fresh native return origins
+
+Low effort also follows one direct imported async function whose successful return
+is one fresh private `sql-template-strings` builder. Setup and awaited work must
+precede that allocation. The remaining body permits only discarded native appends,
+proven append-only calls with the builder in argument position zero, and its sole
+terminal return. Direct imported effects use the same prepared source resolver;
+their existing bounded same-file effect composition still applies. Every effect
+obligation must resolve before the caller gains a head proof.
+
+```ts
+const query = await buildQuery(userId, options)
+await read(query)
+```
+
+The result must be one local `const` used only as the immediately next configured
+executor's sole argument. A missing `await`, optional or chained call, another
+result use, escaping builder, early return, `try`/`finally`, postallocation await,
+unknown effect, custom tag, source gap or unresolved import leaves the call
+unanalyzable. Keep the fresh builder private, move awaited setup before allocation,
+and expose append-only source effects to make the contract inspectable.
+
+Only continuation-safe leading heads qualify: appending can change `BEGIN` to
+`BEGINNING` or complete a partial comment. Stable missing heads remain findings;
+unknown continuations retain the configured advisory/report/ignore policy. The
+proof inspects the existing AST/facts and never composes full SQL variants. Max
+effort keeps its existing evaluation behavior.
