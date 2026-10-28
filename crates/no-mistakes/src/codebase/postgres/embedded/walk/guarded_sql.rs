@@ -55,7 +55,6 @@ impl GuardedCase {
             allowed_set: membership.receiver,
             allowed_constructor: set.constructor,
             set_declaration: set.declaration,
-            guard: guard.span.start,
             valid: true,
             nodes: 0,
         };
@@ -79,7 +78,6 @@ struct Uses<'a> {
     allowed_set: u32,
     allowed_constructor: u32,
     set_declaration: u32,
-    guard: u32,
     valid: bool,
     nodes: usize,
 }

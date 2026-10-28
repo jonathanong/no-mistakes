@@ -44,6 +44,18 @@ fn exact_literal_set_guard_bounds_only_its_identical_parameter() {
 }
 
 #[test]
+fn malformed_membership_and_unsafe_sink_shapes_keep_runtime_sql_unknown() {
+    let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
+        .join("tests/finite-set-shapes.test.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let facts = extract_embedded_sql_from_source(&path, &source, &tagged_options());
+    assert_eq!(facts.calls.len(), 15);
+    for call in &facts.calls {
+        assert!(call.variants.is_empty(), "unbounded SQL shape: {call:?}");
+    }
+}
+
+#[test]
 fn source_visible_intrinsic_mutation_voids_all_local_set_guards() {
     let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
         .join("tests/finite-set-prototype.test.ts");
@@ -87,6 +99,69 @@ fn imported_constructor_cannot_prove_global_membership() {
     let facts = extract_embedded_sql_from_source(&path, &source, &tagged_options());
     assert_eq!(facts.calls.len(), 1);
     assert!(facts.calls[0].variants.is_empty());
+}
+
+#[test]
+fn namespace_and_bare_constructor_references_void_local_intrinsic_trust() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation");
+    for name in [
+        "finite-set-namespace-import.test.ts",
+        "finite-set-bare-reference.test.ts",
+    ] {
+        let path = root.join("tests").join(name);
+        let source = std::fs::read_to_string(&path).unwrap();
+        let facts = extract_embedded_sql_from_source(&path, &source, &tagged_options());
+        assert_eq!(facts.calls.len(), 1, "{name}");
+        assert!(facts.calls[0].variants.is_empty(), "{name}");
+    }
+}
+
+#[test]
+fn other_runtime_constructor_bindings_and_global_aliases_are_untrusted() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation");
+    for name in [
+        "finite-set-default-import.test.ts",
+        "finite-set-global-alias.test.ts",
+    ] {
+        let path = root.join("tests").join(name);
+        let source = std::fs::read_to_string(&path).unwrap();
+        let facts = extract_embedded_sql_from_source(&path, &source, &tagged_options());
+        assert_eq!(facts.calls.len(), 1, "{name}");
+        assert!(facts.calls[0].variants.is_empty(), "{name}");
+    }
+}
+
+#[test]
+fn named_class_expression_cannot_supply_native_set_membership() {
+    let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
+        .join("tests/finite-set-named-expressions.test.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let facts = extract_embedded_sql_from_source(&path, &source, &tagged_options());
+    assert_eq!(facts.calls.len(), 1);
+    assert!(facts.calls[0].variants.is_empty());
+}
+
+#[test]
+fn oversized_guard_sink_stops_before_proving_runtime_sql() {
+    let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
+        .join("tests/finite-set-budget.test.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let facts = extract_embedded_sql_from_source(&path, &source, &tagged_options());
+    assert_eq!(facts.calls.len(), 1);
+    assert!(facts.calls[0].variants.is_empty());
+}
+
+#[test]
+fn ambient_enum_name_does_not_shadow_runtime_constructor() {
+    let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
+        .join("tests/finite-set-ambient-enum.test.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let facts = extract_embedded_sql_from_source(&path, &source, &tagged_options());
+    assert_eq!(facts.calls.len(), 1);
+    assert_eq!(
+        super::texts(&facts.calls[0]),
+        ["/* ambientEnum */ SELECT 1 FROM safe_one"]
+    );
 }
 
 #[test]

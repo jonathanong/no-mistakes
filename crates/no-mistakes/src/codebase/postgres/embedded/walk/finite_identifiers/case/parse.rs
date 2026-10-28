@@ -86,34 +86,31 @@ pub(super) fn selection(
                 }
             } else if alias.is_none() {
                 if let Expression::ComputedMemberExpression(select) = unwrap_ts_wrappers(init) {
-                    if !select.optional
-                        && matches!(unwrap_ts_wrappers(&select.object), Expression::Identifier(root) if root.name == map.as_ref()?.0.name)
-                        && matches!(unwrap_ts_wrappers(&select.expression), Expression::Identifier(field) if field.name == key)
-                    {
-                        alias = Some((id, select));
+                    if let (Expression::Identifier(root), Expression::Identifier(field)) = (
+                        unwrap_ts_wrappers(&select.object),
+                        unwrap_ts_wrappers(&select.expression),
+                    ) {
+                        if !select.optional
+                            && root.name == map.as_ref()?.0.name
+                            && field.name == key
+                        {
+                            alias = Some((id, root.span.start, field.span.start));
+                        }
                     }
                 }
             }
         }
     }
     let (map_id, map_values): (_, FxHashMap<String, (String, u32)>) = map?;
-    let (alias_id, select) = alias?;
-    if map_id.span.start >= alias_id.span.start {
-        return None;
-    }
+    let (alias_id, map_ref, key_ref) = alias?;
+    // The ordered walk records an alias only after its map declaration.
     let mut values = Vec::new();
     for key in keys {
         values.push(map_values.get(&key)?.clone());
     }
     let mut allowed = FxHashSet::default();
-    let Expression::Identifier(map_ref) = unwrap_ts_wrappers(&select.object) else {
-        return None;
-    };
-    let Expression::Identifier(key_ref) = unwrap_ts_wrappers(&select.expression) else {
-        return None;
-    };
-    allowed.insert(map_ref.span.start);
-    allowed.insert(key_ref.span.start);
+    allowed.insert(map_ref);
+    allowed.insert(key_ref);
     Some(Selection {
         map: map_id.name.to_string(),
         alias: alias_id.name.to_string(),
