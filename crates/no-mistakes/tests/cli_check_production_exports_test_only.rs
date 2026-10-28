@@ -331,12 +331,25 @@ fn dynamic_imports_check_json_snapshot() {
             "src/assigned-consumer.mts",
             "src/mixed-line.mts",
             "src/paren-consumer.mts",
+            // `({ default: m.X, other })`, `({ ...m })` and `({ [k]: m.X })`.
+            "src/then-default-extra-consumer.mts",
+            "src/then-default-extra-consumer.mts",
+            "src/then-default-extra-consumer.mts",
             "src/unknown-consumer.mts",
             "src/unresolved-consumer.mts",
             "src/unresolved-consumer.mts",
             "src/wrapper-consumer.mts",
             "src/wrapper-consumer.mts",
+            // A whole-module `vi.mock` factory is a namespace use, not `default`.
+            "tests/mock-factory.test.mts",
+            "tests/mock-factory.test.mts",
         ],
+        "{report}"
+    );
+    assert!(
+        advisories
+            .iter()
+            .all(|item| !item["message"].as_str().unwrap().contains("`default`")),
         "{report}"
     );
     let root = crate::check_json_snapshot::rules_path(RULE, "fixture", "dynamic-imports");

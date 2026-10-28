@@ -2,6 +2,7 @@ use super::*;
 use oxc_syntax::node::NodeId;
 
 mod loader;
+mod member;
 
 type Parent<'a> = (NodeId, AstKind<'a>);
 
@@ -40,7 +41,7 @@ fn parent<'a>(node: NodeId, semantic: &Semantic<'a>) -> Option<Parent<'a>> {
         .map(|n| (n.id(), n.kind()))
 }
 
-/// `import("x").then(cb)` where `cb` is `(m) => m.Name` or `({ Name }) => ...`.
+/// `import("x").then(cb)` where `cb` is `(m) => m.Name`, `(m) => ({ default: m.Name })` or `({ Name }) => ...`.
 fn then_callback(
     member: oxc_span::Span,
     member_id: NodeId,
@@ -70,14 +71,7 @@ fn then_callback(
     match &params.items[0].pattern {
         BindingPattern::ObjectPattern(object) => object_names(object),
         BindingPattern::BindingIdentifier(param) => {
-            let Expression::StaticMemberExpression(read) = body?.get_inner_expression() else {
-                return None;
-            };
-            let Expression::Identifier(object) = read.object.get_inner_expression() else {
-                return None;
-            };
-            (!read.optional && object.name == param.name)
-                .then(|| vec![read.property.name.to_string()])
+            member::body(body?, &param.name).map(|name| vec![name])
         }
         _ => None,
     }
