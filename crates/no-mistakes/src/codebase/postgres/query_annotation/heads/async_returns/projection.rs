@@ -13,7 +13,14 @@ pub(in super::super) fn collect(
     module: Option<&TypeScriptModuleFacts>,
     executors: &FxHashSet<Span>,
 ) -> (BTreeMap<String, Summary>, Vec<Pending>) {
-    if syntax.async_returns.is_empty() && syntax.async_callers.is_empty() {
+    if syntax.async_returns.is_empty()
+        && !syntax.async_callers.iter().any(|caller| {
+            executors.contains(&caller.call)
+                && bindings
+                    .owner(caller.callee)
+                    .is_some_and(|owner| owner.imported)
+        })
+    {
         return Default::default();
     }
     let Some(module) = module else {
@@ -162,3 +169,6 @@ pub(in super::super) fn collect(
     }
     (exports, pending)
 }
+
+#[cfg(test)]
+mod metadata_tests;

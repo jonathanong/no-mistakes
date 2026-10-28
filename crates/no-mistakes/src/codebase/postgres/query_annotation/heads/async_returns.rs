@@ -53,3 +53,9 @@ pub(crate) struct Pending {
     specifier: String,
     imported: String,
 }
+
+#[cfg(test)]
+mod grammar_tests;
+
+#[cfg(test)]
+mod resolve_boundary_tests;

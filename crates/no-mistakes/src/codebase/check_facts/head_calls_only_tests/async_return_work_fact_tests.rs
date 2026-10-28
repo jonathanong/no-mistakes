@@ -119,15 +119,23 @@ fn ordinary_awaited_calls_do_not_construct_async_origin_censuses() {
         .join("async-return-origin");
     let fixture = crate::test_support::materialize_saved_fixture(&saved);
     let root = fixture.path();
-    let observer = InvocationObserver::new(true);
-    with_observer(Some(observer.clone()), || {
-        collect_check_facts(
-            root,
-            vec![root.join("src/ordinary.mts")],
-            plan(root, &config(&["low"])),
-        )
-    });
-    let work = observer.snapshot().work;
-    assert!(!work.contains_key("postgres.annotation.async_return_censuses"));
-    assert!(!work.contains_key("postgres.annotation.async_return_reference_visits"));
+    for name in ["ordinary.mts", "unconsumed.mts"] {
+        let observer = InvocationObserver::new(true);
+        with_observer(Some(observer.clone()), || {
+            collect_check_facts(
+                root,
+                vec![root.join("src").join(name)],
+                plan(root, &config(&["low"])),
+            )
+        });
+        let work = observer.snapshot().work;
+        for counter in [
+            "postgres.annotation.async_return_censuses",
+            "postgres.annotation.async_return_reference_visits",
+            "postgres.annotation.async_import_censuses",
+            "postgres.annotation.async_export_index_visits",
+        ] {
+            assert!(!work.contains_key(counter), "{name}: {counter}");
+        }
+    }
 }
