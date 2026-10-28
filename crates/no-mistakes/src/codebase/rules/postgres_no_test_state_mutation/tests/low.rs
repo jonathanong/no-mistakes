@@ -71,7 +71,6 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
         .any(|finding| finding.line == lines("safe direct SQL")));
     for marker in [
         "imported member receiver advisory",
-        "object member receiver advisory",
         "namespace member receiver advisory",
         "awaited object member advisory",
         "quoted semicolon stays safe",
@@ -91,7 +90,6 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
     }
     for marker in [
         "imported member receiver advisory",
-        "object member receiver advisory",
         "namespace member receiver advisory",
         "awaited object member advisory",
         "residual helper",
@@ -119,6 +117,10 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
             facts.sql_verdicts()
         );
     }
+    assert!(!facts.sql_verdicts().iter().any(|row| {
+        crate::codebase::ts_source::byte_offset_to_line(&source, row.span.0 as usize) as usize
+            == lines("unrelated local member stays outside scope")
+    }));
     let (reported, reported_facts) = run("report.yml");
     assert!(reported
         .iter()

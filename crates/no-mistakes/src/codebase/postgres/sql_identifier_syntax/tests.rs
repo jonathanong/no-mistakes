@@ -126,6 +126,16 @@ fn low_syntax_broad_member_selection_is_unknown_and_profile_local() {
 }
 
 #[test]
+fn erased_import_cannot_select_an_unproved_member_receiver() {
+    fixture("type-only-member.ts", |program, source, ts| {
+        assert!(ts.module_bindings.as_ref().unwrap().imports[0].type_only);
+        let profile = EmbeddedSqlOptions::configured("@example/db", &["query".into()]);
+        let result = collect(program, &ts, source, &[profile]);
+        assert!(result.profiles[0].1.is_empty());
+    });
+}
+
+#[test]
 fn low_syntax_scope_union_keeps_distinct_applications_once() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/effort-low");

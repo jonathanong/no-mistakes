@@ -5,7 +5,7 @@ declare const obj: { query(sql: string): Promise<void> };
 
 query('DROP TABLE app.users'); // direct mutation
 p.query('DROP TABLE app.imported_member'); // imported member receiver advisory
-obj.query('DROP TABLE app.object_member'); // object member receiver advisory
+obj.query('DROP TABLE app.object_member'); // unrelated local member stays outside scope
 ns.query('DROP TABLE app.namespace_member'); // namespace member receiver advisory
 await db.query({ text: 'DROP TABLE app.awaited_member' }); // awaited object member advisory
 const sleep = 'SELECT pg_sleep(1)';

@@ -67,7 +67,11 @@ fn direct_calls(
             && parts.last().is_some_and(|name| name == "query")
             && profile.executor_names.iter().any(|name| name == "query")
             && (profile.import_specifier.is_empty()
-                || (call.unproven_member && !(named || alias || namespace || typed)));
+                || (call.unproven_member
+                    && owner.is_some_and(|binding| {
+                        selection.advisory_receivers.contains(&binding.id)
+                    })
+                    && !(named || alias || namespace || typed)));
         if !(named || alias || namespace || loose || typed) {
             continue;
         }
