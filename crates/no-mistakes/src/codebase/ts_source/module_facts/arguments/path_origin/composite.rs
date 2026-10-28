@@ -76,6 +76,19 @@ impl<'a> Projector<'a, '_> {
     }
 }
 
+pub(in super::super) fn imported_locals(
+    facts: &super::super::super::TypeScriptModuleFacts,
+) -> crate::fx::FxHashSet<&str> {
+    facts
+        .imports
+        .iter()
+        .filter(|import| !import.type_only)
+        .flat_map(|import| import.bindings.iter())
+        .filter(|binding| !binding.type_only)
+        .map(|binding| binding.local.as_str())
+        .collect()
+}
+
 /// Leftmost identifier of a static member chain.
 pub(super) fn callee_root<'a>(expression: &'a Expression<'_>) -> Option<&'a str> {
     match expression.get_inner_expression() {

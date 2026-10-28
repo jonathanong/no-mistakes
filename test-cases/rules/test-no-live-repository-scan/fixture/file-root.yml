@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      roots:
+        # An import-only root has no call site, so it must still reach its imports.
+        - file: tests/import-side-effect.test.ts

@@ -81,6 +81,7 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
     let target_roots = super::super::target_roots(root, config, application);
     let roots = roots::expand(roots::ExpandRequest {
         rule: RULE_ID,
+        allow_sourceless: false,
         root,
         options,
         graph,

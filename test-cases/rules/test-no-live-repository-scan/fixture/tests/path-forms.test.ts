@@ -25,3 +25,7 @@ readdirSync(param("x")); // UNRESOLVED call not modeled
 readdirSync(...[here]); // UNRESOLVED spread
 readdirSync(process.env.ROOT as string); // UNRESOLVED environment
 readdirSync(await Promise.resolve(here)); // UNRESOLVED await of a call
+readdirSync("fixtures/../src"); // LIVE parent traversal leaves the fixture dir
+readdirSync(join(here, "fixtures", "..", "src")); // LIVE parent traversal through join
+const globOptions = { cwd: join(here, "fixtures") };
+globSync("**/*", globOptions); // allowed: cwd read through a const options binding

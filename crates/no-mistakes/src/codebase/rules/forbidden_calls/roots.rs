@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 
 pub(crate) struct ExpandRequest<'a> {
     pub rule: &'a str,
+    /// Accept a root file that has no call site, such as an import-only test.
+    pub allow_sourceless: bool,
     pub root: &'a Path,
     pub options: &'a Options,
     pub graph: &'a DepGraph,
@@ -56,7 +58,7 @@ pub(crate) fn expand_with_files(input: ExpandRequest<'_>) -> Result<(Vec<NodeId>
         let mut expanded = input
             .graph
             .expand_call_roots(std::slice::from_ref(&call_root));
-        if expanded.is_empty() {
+        if expanded.is_empty() && !input.allow_sourceless {
             bail!(
                 "{}: a configured root resolves to no callable source",
                 input.rule

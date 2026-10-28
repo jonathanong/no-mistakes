@@ -42,6 +42,7 @@ fn default_policy_json_snapshot() {
         ("unresolved_report", "report.yml"),
         ("custom_fixture_dirs", "fixture-dirs.yml"),
         ("glob_root", "glob-root.yml"),
+        ("import_only_file_root", "file-root.yml"),
         ("extra_enumerator", "enumerators.yml"),
         ("severity_advisory", "advisory.yml"),
     ]
@@ -74,6 +75,8 @@ fn rejects_scans_reachable_from_vitest_roots_and_allows_bounded_input() {
         "tests/path-forms.test.ts:16",
         "tests/path-forms.test.ts:17",
         "tests/path-forms.test.ts:21",
+        "tests/path-forms.test.ts:28",
+        "tests/path-forms.test.ts:29",
     ] {
         assert!(
             findings.contains(&expected.to_string()),
@@ -132,6 +135,13 @@ fn documented_options_narrow_and_extend_the_policy() {
     let (_, report) = check("glob-root.yml");
     let findings = located(&report["rules"]);
     assert_eq!(findings, ["helpers/policy-scan.ts:5"], "{findings:?}");
+    // A root with no call site of its own still reaches its imports' module scope.
+    let (_, report) = check("file-root.yml");
+    assert_eq!(
+        located(&report["rules"]),
+        ["helpers/scan-on-import.ts:3"],
+        "{report}"
+    );
     let (_, report) = check("enumerators.yml");
     let findings = located(&report["rules"]);
     assert!(

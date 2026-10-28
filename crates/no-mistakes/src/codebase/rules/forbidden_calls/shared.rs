@@ -32,6 +32,7 @@ pub(crate) fn expand_roots(request: SharedRoots<'_>) -> Result<(Vec<NodeId>, Vec
     super::config::validate(&options)?;
     super::roots::expand_with_files(super::roots::ExpandRequest {
         rule: request.rule,
+        allow_sourceless: true,
         root: request.root,
         options: &options,
         graph: request.graph,

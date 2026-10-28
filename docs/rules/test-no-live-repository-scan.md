@@ -73,7 +73,9 @@ resolved. These go to the non-failing `advisories` list by default. Set
 Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 `dirname`, `fileURLToPath`, `new URL(..., import.meta.url)`, `import.meta.dirname`,
 `__dirname`, `process.cwd()`, `tmpdir()`, `mkdtemp`, template literals, and
-immutable `const` aliases. A generic helper such as
+immutable `const` aliases, including a `const` glob options object with a `cwd`.
+Parent traversal is resolved, so `fixtures/../src` is a live path, not a fixture
+path. A generic helper such as
 `listFiles(dir: string)` is therefore an unresolved root at its enumeration even
 when every caller passes a fixture; pass a `const` fixture path at the call site
 or suppress the helper.

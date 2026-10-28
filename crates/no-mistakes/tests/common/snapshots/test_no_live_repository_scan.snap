@@ -212,6 +212,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/path-forms.test.ts",
+          "import": "globSync",
+          "line": 31,
+          "message": "live repository scan: `globSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"**/*\", globOptions); // allowed: cwd read through a const options binding",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
           "import": "readdirSync",
           "line": 13,
           "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
@@ -262,6 +271,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(join(here, \"__fixtures__\", \"a\")); // allowed fixture segment",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 28,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"fixtures/../src\"); // LIVE parent traversal leaves the fixture dir",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 29,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(here, \"fixtures\", \"..\", \"src\")); // LIVE parent traversal through join",
           "target": "live repository scan"
         }
       ],
@@ -492,6 +519,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(posix.normalize(\"a/b\")); // LIVE relative",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 28,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"fixtures/../src\"); // LIVE parent traversal leaves the fixture dir",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 29,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(here, \"fixtures\", \"..\", \"src\")); // LIVE parent traversal through join",
           "target": "live repository scan"
         }
       ],
@@ -732,6 +777,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(posix.normalize(\"a/b\")); // LIVE relative",
           "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 28,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"fixtures/../src\"); // LIVE parent traversal leaves the fixture dir",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 29,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(here, \"fixtures\", \"..\", \"src\")); // LIVE parent traversal through join",
+          "target": "live repository scan"
         }
       ],
       "warnings": []
@@ -778,6 +841,53 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `readdirSync` enumerates a path under process.cwd(), and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(join(process.cwd(), \".github\"));",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "import_only_file_root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/suppressed-file.test.ts",
+          "line": 1,
+          "message": "directive for `test-no-live-repository-scan` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file test-no-live-repository-scan",
+          "target": "test-no-live-repository-scan"
+        },
+        {
+          "file": "tests/suppressed.test.ts",
+          "line": 4,
+          "message": "directive for `test-no-live-repository-scan` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line test-no-live-repository-scan",
+          "target": "test-no-live-repository-scan"
+        },
+        {
+          "file": "tests/suppressed.test.ts",
+          "line": 6,
+          "message": "directive for `test-no-live-repository-scan` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "readdirSync(\"packages\"); // no-mistakes-disable-line test-no-live-repository-scan",
+          "target": "test-no-live-repository-scan"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/scan-on-import.ts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export const names = readdirSync(\"../../.github\");",
           "target": "live repository scan"
         }
       ],
@@ -994,6 +1104,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(await Promise.resolve(here)); // UNRESOLVED await of a call",
           "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 28,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"fixtures/../src\"); // LIVE parent traversal leaves the fixture dir",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 29,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(here, \"fixtures\", \"..\", \"src\")); // LIVE parent traversal through join",
+          "target": "live repository scan"
         },
         {
           "file": "tests/unresolved-root.test.ts",
@@ -1228,6 +1356,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(await Promise.resolve(here)); // UNRESOLVED await of a call",
           "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 28,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"fixtures/../src\"); // LIVE parent traversal leaves the fixture dir",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-forms.test.ts",
+          "import": "readdirSync",
+          "line": 29,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(join(here, \"fixtures\", \"..\", \"src\")); // LIVE parent traversal through join",
+          "target": "live repository scan"
         },
         {
           "file": "tests/unresolved-root.test.ts",
