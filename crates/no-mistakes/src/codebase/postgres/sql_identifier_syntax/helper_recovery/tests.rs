@@ -92,7 +92,9 @@ fn helper_values_recover_fresh_builders_defaults_and_all_boolean_alternatives() 
             continue;
         }
         let mut engine = Engine::new(&catalog, &mut cache, Limits::default());
-        let values = engine.evaluate(&query, &call.arguments[0]).expect(raw);
+        let values = engine
+            .evaluate_at(&query, &call.arguments[0], None)
+            .expect(raw);
         assert!(!values.is_empty());
         for value in &values {
             assert!(matches!(value, Value::Sql(_)), "{raw}");
@@ -149,7 +151,7 @@ fn helper_values_reject_opaque_calls_and_dynamic_fragments() {
         {
             assert!(
                 Engine::new(&catalog, &mut cache, Limits::default())
-                    .evaluate(&query, &call.arguments[0])
+                    .evaluate_at(&query, &call.arguments[0], None)
                     .is_none(),
                 "{raw}"
             );
@@ -243,7 +245,9 @@ fn generated_bind_ranges_keep_real_parameters_and_known_branches() {
             continue;
         }
         let mut engine = Engine::new(&catalog, &mut cache, Limits::default());
-        let values = engine.evaluate(&path, &call.arguments[0]).expect(raw);
+        let values = engine
+            .evaluate_at(&path, &call.arguments[0], None)
+            .expect(raw);
         let Value::Sql(sql) = &values[0] else {
             panic!()
         };
@@ -355,7 +359,7 @@ fn aggregate_sql_bytes_and_cache_hits_obey_each_roots_limits() {
         .unwrap();
     let mut warm = Cache::default();
     assert!(Engine::new(&catalog, &mut warm, Limits::default())
-        .evaluate(&path, &call.arguments[0])
+        .evaluate_at(&path, &call.arguments[0], None)
         .is_some());
     for mut cache in [Cache::default(), warm] {
         let limits = Limits {
@@ -363,7 +367,9 @@ fn aggregate_sql_bytes_and_cache_hits_obey_each_roots_limits() {
             ..Limits::default()
         };
         let mut engine = Engine::new(&catalog, &mut cache, limits);
-        assert!(engine.evaluate(&path, &call.arguments[0]).is_none());
+        assert!(engine
+            .evaluate_at(&path, &call.arguments[0], None)
+            .is_none());
         assert!(engine.residual());
     }
 }
@@ -398,7 +404,7 @@ fn async_helpers_keep_promise_values_distinct_and_unknown_await_residual() {
         let mut cache = Cache::default();
         if raw.starts_with("read(") {
             let mut engine = Engine::new(&pure, &mut cache, Limits::default());
-            let values = engine.evaluate(&path, &call.arguments[0]);
+            let values = engine.evaluate_at(&path, &call.arguments[0], None);
             assert_eq!(
                 values.is_some(),
                 raw.contains("await asyncFragment"),

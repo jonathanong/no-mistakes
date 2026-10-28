@@ -35,7 +35,7 @@ fn prepared_catalog_follows_exports_and_preserves_mutation_cycle_and_failure_unc
             }
             let mut cache = Cache::default();
             let mut engine = Engine::new(&catalog, &mut cache, Limits::default());
-            let values = engine.evaluate(&caller, &call.arguments[0]);
+            let values = engine.evaluate_at(&caller, &call.arguments[0], None);
             if raw.contains("forwarded") {
                 let values = values.unwrap();
                 assert_eq!(values.len(), 1);
@@ -71,6 +71,8 @@ fn prepared_catalog_follows_exports_and_preserves_mutation_cycle_and_failure_unc
         .unwrap();
     let mut cache = Cache::default();
     let mut engine = Engine::new(&catalog, &mut cache, Limits::default());
-    assert!(engine.evaluate(&caller, &call.arguments[0]).is_none());
+    assert!(engine
+        .evaluate_at(&caller, &call.arguments[0], None)
+        .is_none());
     assert!(engine.residual());
 }

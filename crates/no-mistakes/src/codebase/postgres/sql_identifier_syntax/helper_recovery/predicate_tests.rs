@@ -74,7 +74,7 @@ fn strict_scalar_predicates_correlate_boolean_builder_branches_within_budget() {
                 ..Limits::default()
             },
         );
-        let values = engine.evaluate(&path, &call.arguments[0]);
+        let values = engine.evaluate_at(&path, &call.arguments[0], None);
         if label.contains("CORRELATED") {
             let values = values.expect(raw);
             assert!(!engine.residual(), "{raw}");

@@ -77,7 +77,7 @@ fn closed_operator_values_preserve_sql_and_decline_unknown_coercion() {
         }
         let suffix = source[call.span.1 as usize..].lines().next().unwrap();
         let mut engine = Engine::new(&catalog, &mut cache, Limits::default());
-        let values = engine.evaluate(&path, &call.arguments[0]);
+        let values = engine.evaluate_at(&path, &call.arguments[0], None);
         if suffix.contains("UNKNOWN") {
             assert!(values.is_none());
             assert!(engine.residual());
@@ -131,7 +131,9 @@ fn concatenation_exhaustion_cannot_publish_a_complete_sql_value() {
             },
         );
         assert_eq!(
-            engine.evaluate(&path, &call.arguments[0]).is_some(),
+            engine
+                .evaluate_at(&path, &call.arguments[0], None)
+                .is_some(),
             succeeds
         );
         assert_eq!(engine.residual(), !succeeds);

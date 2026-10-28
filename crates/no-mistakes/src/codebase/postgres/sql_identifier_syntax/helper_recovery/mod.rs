@@ -152,8 +152,10 @@ mod precision_tests;
 mod coverage_tests;
 
 #[cfg(test)]
+#[path = "tests/abrupt.rs"]
 mod abrupt_tests;
 #[cfg(test)]
+#[path = "tests/locals.rs"]
 mod locals_tests;
 #[cfg(test)]
 mod patch_budget_tests;

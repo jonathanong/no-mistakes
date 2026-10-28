@@ -4,10 +4,6 @@ use crate::codebase::postgres::embedded::helpers::program::Stmt;
 use std::path::Path;
 
 impl Engine<'_> {
-    #[cfg(test)]
-    pub fn evaluate(&mut self, file: &Path, lowered: &Lowered) -> Option<Vec<Value>> {
-        self.evaluate_at(file, lowered, None)
-    }
     pub fn evaluate_at(
         &mut self,
         file: &Path,

@@ -68,7 +68,7 @@ fn finite_switch_requires_source_proven_abrupt_default_and_literal_arms() {
         let label = source[call.span.1 as usize..].lines().next().unwrap();
         let mut cache = Cache::default();
         let mut engine = Engine::new(&catalog, &mut cache, Limits::default());
-        let values = engine.evaluate(&path, &call.arguments[0]);
+        let values = engine.evaluate_at(&path, &call.arguments[0], None);
         if label.contains("COMPLETE") {
             assert!(!engine.residual(), "{raw}");
             let values = values.expect(raw);

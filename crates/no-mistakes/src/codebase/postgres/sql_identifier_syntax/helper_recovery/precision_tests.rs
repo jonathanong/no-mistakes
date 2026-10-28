@@ -31,7 +31,7 @@ fn boolean_short_branches_are_constrained_and_inherited_members_are_unknown() {
         }
         let mut cache = Cache::default();
         let mut engine = Engine::new(&catalog, &mut cache, Limits::default());
-        let values = engine.evaluate(&path, &call.arguments[0]);
+        let values = engine.evaluate_at(&path, &call.arguments[0], None);
         if raw.contains("inherited()") {
             assert!(values.is_none());
             assert!(engine.residual());
