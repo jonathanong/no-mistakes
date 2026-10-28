@@ -94,7 +94,7 @@ checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the
 SQL value, executor alias, unsupported helper, or invalid SQL remains
 unanalyzable under the configured policy. Put a complete literal at the
 configured executor or select `max` to use broader analysis. Low keeps the
-same `testGlobs`, `helperRoots`, and `include`/`exclude` boundaries. Complete
+same `testGlobs`, `helperRoots`, and `include`/`exclude` boundaries.
 The shared SQL extractor parses PostgreSQL `ANALYZE` relation lists with
 `VERBOSE` and per-relation column lists; malformed lists and parenthesized
 option lists remain unanalyzable.
