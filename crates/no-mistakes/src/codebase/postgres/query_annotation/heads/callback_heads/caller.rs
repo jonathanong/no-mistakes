@@ -107,10 +107,8 @@ impl Caller<'_, '_, '_> {
             return;
         };
         if !call.arguments.iter().any(|arg| {
-            matches!(
-                arg.as_expression().map(unwrap_ts_wrappers),
-                Some(Expression::ArrowFunctionExpression(_))
-            )
+            arg.as_expression()
+                .is_some_and(|value| inline::may_execute(value, self.executors))
         }) {
             return;
         }
