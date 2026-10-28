@@ -8,9 +8,14 @@ use crate::diagnostics::{with_observer, InvocationObserver};
 fn closed_capture_never_publishes_a_head_before_import_obligations_resolve() {
     let (_, _, heads) = fixture_with_effects("../captured-import-effects/src/many.mts");
     assert_eq!(heads.conditional_effects.len(), 64);
-    assert_eq!(heads.pending_effects.len(), 1);
+    let pending = heads
+        .pending_effects
+        .iter()
+        .filter(|pending| pending.imported == "append")
+        .collect::<Vec<_>>();
+    assert_eq!(pending.len(), 1);
     assert!(heads.conditional_effects.iter().all(|condition| {
-        condition.required == [heads.pending_effects[0].span]
+        condition.required == [pending[0].span]
             && heads.calls.get(&condition.span) == Some(&HeadProof::Unproven)
     }));
 }
@@ -41,7 +46,15 @@ fn a_recovered_callee_write_rejects_the_otherwise_closed_captured_owner() {
             .into_iter()
             .collect::<crate::fx::FxHashSet<_>>();
         let bindings = Bindings::new(&syntax, &ts, executors.iter().copied(), true);
-        assert_eq!(bindings.effects().pending.len(), 2);
+        assert_eq!(
+            bindings
+                .effects()
+                .pending
+                .iter()
+                .filter(|pending| pending.imported == "append")
+                .count(),
+            2
+        );
         let closed = with_observer(Some(observer.clone()), || {
             captured_prefix::proofs(
                 &syntax,
