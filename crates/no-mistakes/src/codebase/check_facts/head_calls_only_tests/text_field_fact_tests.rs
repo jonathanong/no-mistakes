@@ -1,4 +1,4 @@
-use super::{collect_check_facts, config, plan};
+use super::super::{collect_check_facts, config, plan};
 use crate::codebase::postgres::query_annotation::heads::HeadProof;
 use crate::diagnostics::{with_observer, InvocationObserver};
 
@@ -68,7 +68,11 @@ fn captured_text_reads_keep_low_proofs_under_mixed_demand() {
         if efforts == ["max"] {
             assert!(file.query_annotation_heads.is_none());
             max_variants = Some(
-                embedded.calls.iter().map(|call| call.variants.len()).collect::<Vec<_>>(),
+                embedded
+                    .calls
+                    .iter()
+                    .map(|call| call.variants.len())
+                    .collect::<Vec<_>>(),
             );
             continue;
         }
@@ -86,7 +90,11 @@ fn captured_text_reads_keep_low_proofs_under_mixed_demand() {
         if let Some(prior) = &low {
             assert_eq!(&proofs, prior);
             assert_eq!(
-                embedded.calls.iter().map(|call| call.variants.len()).collect::<Vec<_>>(),
+                embedded
+                    .calls
+                    .iter()
+                    .map(|call| call.variants.len())
+                    .collect::<Vec<_>>(),
                 max_variants.clone().expect("max control"),
             );
         } else {

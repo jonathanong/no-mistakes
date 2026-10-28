@@ -144,7 +144,11 @@ pub(crate) fn module_projection(
             continue;
         };
         pending.push(Pending {
-            kind: Kind::Record,
+            kind: if syntax.record_options_calls.contains(&call.span) {
+                Kind::Builder
+            } else {
+                Kind::Record
+            },
             span: call.span,
             specifier: specifier.to_string(),
             imported: imported.to_string(),

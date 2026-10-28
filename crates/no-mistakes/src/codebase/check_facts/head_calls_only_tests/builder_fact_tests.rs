@@ -2,6 +2,9 @@ use super::{collect_check_facts, config, plan};
 use crate::codebase::postgres::query_annotation::heads::HeadProof;
 use crate::diagnostics::{with_observer, InvocationObserver};
 
+#[path = "text_field_fact_tests.rs"]
+mod text_field_fact_tests;
+
 #[test]
 fn imported_builder_endpoints_require_typed_prepared_source() {
     let saved = crate::test_support::rule_fixture_root("postgres-require-query-annotation")

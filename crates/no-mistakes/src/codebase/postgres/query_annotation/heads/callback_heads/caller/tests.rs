@@ -1,8 +1,18 @@
-use super::pending;
+use super::{visit, Pending, Span};
 use crate::codebase::ts_source::facts::{
     collect_file_facts_from_program, TsFactContext, TsFactPlan,
 };
-use crate::fx::FxHashSet;
+use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
+use crate::fx::{FxHashMap, FxHashSet};
+use oxc_ast::ast::Program;
+
+fn pending(
+    program: &Program<'_>,
+    module: &TypeScriptModuleFacts,
+    executors: &FxHashSet<Span>,
+) -> Vec<Pending> {
+    visit(program, module, executors, &FxHashMap::default(), None).0
+}
 
 #[test]
 fn caller_projection_requires_an_exact_inline_executor_and_trusted_payload() {
@@ -33,9 +43,13 @@ fn caller_projection_requires_an_exact_inline_executor_and_trusted_payload() {
         );
         assert_eq!(calls.call_spans.len(), 6);
         let projected = pending(program, module, &calls.call_spans.into_iter().collect());
-        assert_eq!(projected.len(), 2);
+        // The source-visible callback proof also accepts a block body and one
+        // ordinary options object; the untrusted member-tag payload stays false.
+        assert_eq!(projected.len(), 4);
         assert_eq!(projected[0].payloads, [true, false]);
-        assert_eq!(projected[1].payloads, [false, false]);
+        assert_eq!(projected[1].payloads, [true, false]);
+        assert_eq!(projected[2].payloads, [true, false]);
+        assert_eq!(projected[3].payloads, [false, false]);
     })
     .unwrap();
 }
