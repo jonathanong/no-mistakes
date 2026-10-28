@@ -8,6 +8,14 @@ impl PreparedCatalog<'_> {
         let Some(facts) = self.files.get(file) else {
             return false;
         };
+        // A companion can collect this profile outside the requesting application's roots.
+        if self.application.is_some_and(|application| {
+            !facts
+                .sql_identifier_syntax
+                .includes_application(application)
+        }) {
+            return false;
+        }
         facts
             .sql_identifier_syntax
             .profiles

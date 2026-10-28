@@ -22,8 +22,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "helpers/sql.ts",
-          "line": 2,
-          "message": "helpers/sql.ts:2: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 4,
+          "message": "helpers/sql.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "return 'DROP TABLE app.inside_helper';",
           "target": "DROP TABLE"
@@ -52,8 +52,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "helpers/sql.ts",
-          "line": 2,
-          "message": "helpers/sql.ts:2: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 4,
+          "message": "helpers/sql.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "return 'DROP TABLE app.inside_helper';",
           "target": "DROP TABLE"

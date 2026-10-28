@@ -84,6 +84,17 @@ fn helper_outside_configured_roots_stays_unresolved_with_source_in_inventory() {
             }),
             "{config_name}: outside helper lost uncertainty"
         );
+        assert!(
+            facts.sql_verdicts().iter().any(|row| {
+                row.file == "tests/scope.test.ts"
+                    && crate::codebase::ts_source::byte_offset_to_line(&source, row.span.0 as usize)
+                        == line("abrupt helper stays application-owned")
+                    && row.status == crate::codebase::postgres::SqlVerdictStatus::ProvenClear
+                    && row.residual_reasons.is_empty()
+            }),
+            "{config_name}: companion changed the throw proof: {:?}",
+            facts.sql_verdicts()
+        );
         assert!(!findings.iter().any(|row| row.file == "outside/sql.ts"));
         assert!(findings.iter().any(|row| {
             row.file == "helpers/sql.ts" && row.target.as_deref() == Some("DROP TABLE")
