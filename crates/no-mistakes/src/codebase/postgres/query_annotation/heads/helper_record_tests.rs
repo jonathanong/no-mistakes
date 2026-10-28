@@ -37,3 +37,9 @@ fn immutable_record_text_and_exact_local_destructuring() {
         .unwrap();
     assert_eq!(*call.1, super::super::HeadProof::Missing);
 }
+
+#[test]
+fn record_text_shapes_require_own_data_fields_and_paired_destructuring() {
+    let (source, _, heads) = fixture("record-text-shapes.mts");
+    assert_eq!(assert_markers(&source, &heads), 10);
+}

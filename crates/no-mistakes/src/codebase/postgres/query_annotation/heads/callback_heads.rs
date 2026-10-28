@@ -2,6 +2,9 @@
 mod caller;
 mod producer;
 mod uses;
+#[cfg(test)]
+#[path = "callback_heads/uses_tests.rs"]
+mod uses_tests;
 
 use super::{syntax::Syntax, Span};
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;

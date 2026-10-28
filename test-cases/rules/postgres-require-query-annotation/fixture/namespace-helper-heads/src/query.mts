@@ -72,3 +72,5 @@ function shadow() {
 const getter = { get named() { return opaque } }
 const { named: getterNamed } = getter
 read(getterNamed()) // low: false
+// Exporting an unrelated local must leave namespace helper ownership intact.
+export const unrelated = 'fixed'
