@@ -8,6 +8,11 @@ literal or another tagged template:
 query(sql`/* widgets/list */`.append(sql`SELECT id FROM widgets WHERE owner_id = ${ownerId}`));
 ```
 
+The trusted import proof uses the package's standard tag and `.append`
+semantics. Replacing the package implementation or a shared builder prototype
+at runtime is outside that contract. Local builder writes and escapes remain
+subject to the ownership checks below.
+
 The composed SQL is `/* widgets/list */SELECT id FROM widgets WHERE owner_id = ?`.
 The extractor retains generated bind positions separately from literal text;
 its structured SQL facts use normalized placeholder identifiers.
@@ -26,6 +31,10 @@ not establish the prefix proof. Other nonliteral and helper-produced appends can
 unresolved even when max recovers their values and proves the leading head.
 A local const initialized by that trusted tag also permits later statement
 appends with one opaque suffix when its uses remain safe and in order.
+At low effort, a discarded call to a proven same-file or direct imported
+append-only function also preserves the local builder's fixed prefix. The
+function's first parameter can only be used in discarded static append chains;
+other uses and unresolved imports leave the later read unanalyzable.
 
 When full SQL recovery encounters independent conditional appends, it explores
 all-off first, then each singleton, then pairs, and larger combinations in that

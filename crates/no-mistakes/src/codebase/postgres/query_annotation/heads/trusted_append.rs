@@ -43,20 +43,31 @@ pub(super) fn proofs(
     bindings: &Bindings<'_>,
     calls: &BTreeMap<Span, HeadProof>,
     candidates: &FxHashSet<Span>,
+    low_candidates: Option<&FxHashSet<Span>>,
 ) -> (FxHashSet<Span>, FxHashMap<Span, HeadProof>) {
-    if candidates.is_empty() {
+    if candidates.is_empty() && low_candidates.is_none_or(FxHashSet::is_empty) {
         return Default::default();
     }
     let mut legacy = FxHashSet::default();
     let mut prefix = FxHashMap::default();
     for call in &syntax.calls {
-        if !candidates.contains(&call.span) {
+        let low = low_candidates.is_some_and(|spans| spans.contains(&call.span));
+        let max = candidates.contains(&call.span);
+        if !low && !max {
             continue;
         }
-        let prefix_proof = bindings
-            .prefix_candidate(call.head, call.span)
+        let prefix_proof = low
+            .then(|| bindings.prefix_candidate(call.head, call.span, false))
+            .flatten()
             .filter(|proof| *proof != HeadProof::Unproven);
-        if prefix_proof.is_none() && !matches!(calls.get(&call.span), Some(HeadProof::Literal)) {
+        let legacy_prefix_proof = max
+            .then(|| bindings.prefix_candidate(call.head, call.span, true))
+            .flatten()
+            .filter(|proof| *proof != HeadProof::Unproven);
+        if prefix_proof.is_none()
+            && legacy_prefix_proof.is_none()
+            && !matches!(calls.get(&call.span), Some(HeadProof::Literal))
+        {
             continue;
         }
         let key = match call.head.reference() {
@@ -82,7 +93,15 @@ pub(super) fn proofs(
         }
         if let Some(proof) = prefix_proof {
             prefix.insert(call.span, proof);
-        } else if matches!(calls.get(&call.span), Some(HeadProof::Literal)) {
+        }
+        if max
+            && legacy_prefix_proof.is_none()
+            && matches!(calls.get(&call.span), Some(HeadProof::Literal))
+            && matches!(
+                bindings.proof_legacy(call.head, call.span),
+                HeadProof::Literal
+            )
+        {
             legacy.insert(call.span);
         }
     }

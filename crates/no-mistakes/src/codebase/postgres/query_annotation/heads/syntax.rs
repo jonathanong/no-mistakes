@@ -4,8 +4,11 @@ use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{Expression, Program};
 use oxc_ast_visit::Visit;
 mod append_visits;
+mod const_visits;
+mod field_visits;
+mod helper_visits;
+mod literals;
 mod visitor;
-
 pub(super) struct Call {
     pub span: Span,
     pub head: Head,
@@ -15,13 +18,27 @@ pub(super) struct Call {
 pub(super) struct Syntax {
     pub collect_helper_heads: bool,
     pub helper_returns: FxHashMap<Span, super::helper_heads::Summary>,
+    pub record_returns: FxHashMap<Span, super::helper_records::Summary>,
+    pub finite_returns: FxHashMap<Span, super::finite_returns::Candidate>,
+    pub record_initializers: FxHashMap<Span, (Span, Span)>,
+    pub builder_direct_calls: FxHashMap<Span, Span>,
+    pub confirmed_builder_reads: FxHashSet<Span>,
+    pub repeated_append_refs: FxHashSet<Span>,
+    pub optional_calls: FxHashSet<Span>,
     pub helper_arguments: FxHashMap<Span, Span>,
+    pub effect_functions: FxHashMap<Span, super::effects::FunctionSyntax>,
+    pub effect_calls: Vec<super::effects::CallSyntax>,
+    pub dynamic_refs: Vec<Span>,
+    pub return_sinks: FxHashSet<Span>,
     pub append_tags: FxHashMap<Span, Span>,
     pub collect_append_tags: bool,
     pub literal_helpers: Option<Vec<super::literal_helpers::Candidate>>,
     pub calls: Vec<Call>,
     pub loop_candidates: Vec<super::loop_carried::Candidate>,
     pub constants: FxHashMap<Span, Head>,
+    pub string_constants: FxHashSet<Span>,
+    pub value_reads: FxHashMap<Span, Span>,
+    pub record_result_calls: FxHashSet<Span>,
     pub assignments: super::assignments::Assignments,
     pub append_receivers: FxHashSet<Span>,
     pub discarded_appends: FxHashSet<Span>,
@@ -33,26 +50,6 @@ pub(super) struct Syntax {
 fn span(span: oxc_span::Span) -> Span {
     (span.start, span.end)
 }
-fn named(text: &str) -> bool {
-    // Inspect only the FIRST block comment; a later named comment cannot repair
-    // an empty first one. Decoded/cooked text determines runtime string bytes.
-    text.trim_start()
-        .strip_prefix("/*")
-        .and_then(|tail| tail.find("*/").map(|end| !tail[..end].trim().is_empty()))
-        .unwrap_or(false)
-}
-fn literal(expression: &Expression<'_>) -> bool {
-    match expression {
-        Expression::StringLiteral(value) => named(&crate::ast::js_literal(value)),
-        Expression::TemplateLiteral(value) => value
-            .quasis
-            .first()
-            .filter(|part| part.value.cooked.is_some())
-            .map(crate::ast::template_quasi_text)
-            .is_some_and(|text| named(&text)),
-        _ => false,
-    }
-}
 #[derive(Clone, Copy)]
 pub(super) enum Head {
     Literal,
@@ -61,6 +58,7 @@ pub(super) enum Head {
     AppendPrefixTag,
     Text(super::text::TextHead),
     Reference(Span),
+    FieldReference(Span),
     AppendReference(Span),
     AppendPrefixReference(Span),
     Unproven,
@@ -93,14 +91,17 @@ impl Head {
     pub fn reference(self) -> Option<Span> {
         match self {
             Self::Reference(span)
+            | Self::FieldReference(span)
             | Self::AppendReference(span)
             | Self::AppendPrefixReference(span) => Some(span),
             _ => None,
         }
     }
 }
-// Preserve Tag through concatenation so local constants still require safe uses.
-pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
+pub(super) fn head<'a>(expression: &'a Expression<'a>) -> Head {
+    bounded_head(expression, 8)
+}
+pub(super) fn bounded_head<'a>(mut expression: &'a Expression<'a>, depth: u8) -> Head {
     let mut concatenated = false;
     let mut appended = false;
     let mut opaque_append = false;
@@ -128,7 +129,10 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
         }
         break;
     }
-    if literal(expression) {
+    if let Expression::ConditionalExpression(branch) = expression {
+        return super::conditional::head(branch, depth, concatenated || appended || opaque_append);
+    }
+    if literals::literal(expression) {
         if opaque_append {
             return Head::Unproven;
         }
@@ -137,6 +141,11 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
         } else {
             Head::Literal
         };
+    }
+    if !concatenated && !appended && !opaque_append {
+        if let Some((_, reference)) = field_visits::field(expression, "text") {
+            return Head::FieldReference(reference);
+        }
     }
     if !concatenated {
         if let Expression::Identifier(id) = expression {
@@ -157,9 +166,8 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
             .first()
             .filter(|part| part.value.cooked.is_some())
             .map(crate::ast::template_quasi_text)
-            .is_some_and(|text| named(&text))
+            .is_some_and(|text| literals::named(&text))
         {
-            // Low effort judges the literal head, independently of the tag.
             return if opaque_append {
                 Head::AppendPrefixTag
             } else if appended {
