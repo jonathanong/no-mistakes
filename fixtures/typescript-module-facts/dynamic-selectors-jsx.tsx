@@ -7,3 +7,12 @@ export const view = <Jsx />;
 const Mixed = retry(() => import("./a"));
 export const mixed = <Mixed />;
 Mixed.then((m: any) => m.X);
+// A member-style element name reads a property of the result, so it is consumed.
+const Member = retry(() => import("./a"));
+export const memberView = <Member.Inner />;
+// JSX attributes and children are sinks, like any JSX expression container.
+export const inAttribute = <div render={dynamic(() => import("./a"))}>{dynamic(() => import("./a"))}</div>;
+// The `next/dynamic` shapes: a `.then` loader proves its member, a bare one proves `default`.
+const Named = dynamic(() => import("./a").then((m: any) => m.Name));
+const Plain = dynamic(() => import("./b"));
+export const nextViews = [<Named />, <Plain />];

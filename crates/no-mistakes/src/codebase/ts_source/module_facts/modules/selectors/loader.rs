@@ -1,4 +1,5 @@
 use super::*;
+use oxc_syntax::operator::UnaryOperator;
 
 /// `dynamic(() => import("x"))`: only an arrow passed directly as a call
 /// argument is a loader whose result is the default export. A stored loader
@@ -14,41 +15,52 @@ pub(super) fn default(
     if !function.is_expression() || !call.arguments.iter().any(|a| a.span() == function.span) {
         return None;
     }
-    // The wrapper's own result may be unwrapped, chained or handed to an unknown
-    // consumer, so the module is not provably its default.
-    let kind = parent(call_id, semantic)?.1;
-    if consumed(kind) {
-        return None;
-    }
-    match kind {
-        // Returned (`return wrap(...)`, `() => wrap(...)`) to an unknown consumer.
-        AstKind::ReturnStatement(_) | AstKind::ArrowFunctionExpression(_) => None,
-        AstKind::VariableDeclarator(declarator) => {
-            let BindingPattern::BindingIdentifier(binding) = &declarator.id else {
-                return None;
-            };
-            let unconsumed = semantic
-                .scoping()
-                .get_resolved_references(binding.symbol_id.get()?)
-                .all(|reference| {
-                    parent(reference.node_id(), semantic).is_some_and(|p| !consumed(p.1))
-                });
-            unconsumed.then(|| vec!["default".to_string()])
-        }
-        _ => Some(vec!["default".to_string()]),
-    }
+    // Allow-list: the wrapper's result may be unwrapped, chained or forwarded by
+    // any other parent, so only these sinks leave the module as its default.
+    let proven = match parent(call_id, semantic)?.1 {
+        AstKind::ExpressionStatement(_)
+        | AstKind::ExportDefaultDeclaration(_)
+        | AstKind::JSXExpressionContainer(_) => true,
+        AstKind::VariableDeclarator(declarator) => stored_unconsumed(call_id, declarator, semantic),
+        _ => false,
+    };
+    proven.then(|| vec!["default".to_string()])
 }
 
-/// A parent that reads, chains or forwards the wrapper's result.
-fn consumed(kind: AstKind<'_>) -> bool {
-    matches!(
-        kind,
-        AstKind::StaticMemberExpression(_)
-            | AstKind::ComputedMemberExpression(_)
-            | AstKind::PrivateFieldExpression(_)
-            | AstKind::ChainExpression(_)
-            | AstKind::AwaitExpression(_)
-            | AstKind::CallExpression(_)
-            | AstKind::NewExpression(_)
-    )
+/// `const X = wrap(...)` whose every reference is a JSX element name, a type
+/// query or an export specifier. Reassigned, aliased or called uses are unproven.
+fn stored_unconsumed(
+    call_id: NodeId,
+    declarator: &VariableDeclarator<'_>,
+    semantic: &Semantic<'_>,
+) -> bool {
+    let BindingPattern::BindingIdentifier(binding) = &declarator.id else {
+        return false;
+    };
+    let declaration = semantic
+        .nodes()
+        .parent_id(semantic.nodes().parent_id(call_id));
+    let is_const = matches!(
+        semantic.nodes().kind(declaration),
+        AstKind::VariableDeclaration(d) if d.kind == VariableDeclarationKind::Const
+    );
+    let Some(symbol) = binding.symbol_id.get() else {
+        return false;
+    };
+    is_const
+        && semantic
+            .scoping()
+            .get_resolved_references(symbol)
+            .all(|reference| non_consuming(semantic.nodes().parent_kind(reference.node_id())))
+}
+
+fn non_consuming(kind: AstKind<'_>) -> bool {
+    match kind {
+        AstKind::JSXOpeningElement(_)
+        | AstKind::JSXClosingElement(_)
+        | AstKind::TSTypeQuery(_)
+        | AstKind::ExportSpecifier(_) => true,
+        AstKind::UnaryExpression(unary) => unary.operator == UnaryOperator::Typeof,
+        _ => false,
+    }
 }

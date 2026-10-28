@@ -23,7 +23,11 @@ fn selectors(file: &str) -> Vec<Vec<String>> {
 
 #[test]
 fn loader_default_in_jsx_is_proven_and_mixed_use_is_not() {
-    assert_eq!(selectors("dynamic-selectors-jsx.tsx"), [["default"]]);
+    // Jsx, the attribute and child loaders, `.then` (Name), then the bare loader.
+    assert_eq!(
+        selectors("dynamic-selectors-jsx.tsx"),
+        [["default"], ["default"], ["default"], ["Name"], ["default"]]
+    );
 }
 
 #[test]
@@ -34,6 +38,7 @@ fn dynamic_import_selectors_record_only_proven_forms() {
         vec!["A"],
         vec!["B"],
         vec!["C", "D"],
+        vec!["default"],
         vec!["default"],
         vec!["default"],
         vec!["default"],
