@@ -61,6 +61,9 @@ pub(crate) use diagnostics::diagnostics_snapshot_impl;
 pub use diagnostics::diagnostics_snapshot_json;
 mod filesystem;
 pub(crate) mod infra_swift;
+mod lock_status;
+#[cfg(test)]
+mod lock_status_tests;
 mod lockfile_diff;
 #[cfg(feature = "mermaid-validation")]
 mod mermaid;
@@ -97,6 +100,7 @@ pub use infra_swift::{
 };
 // json_binding! is compiled out under coverage; tests and analyzeProject
 // command reports still call the impl.
+pub(crate) use lock_status::lock_status_json_impl;
 pub(crate) use lockfile_diff::lockfile_diff_json_impl;
 #[cfg(feature = "mermaid-validation")]
 pub(crate) use mermaid::validate_mermaid_markdown_json_impl;
@@ -190,6 +194,12 @@ json_binding!(react_usages_json, "reactUsagesJson", react_usages_json_impl);
 
 include!("napi_api/wrappers_query.rs");
 
+json_binding!(
+    lock_status_json,
+    "lockStatusJson",
+    lock_status_json_impl,
+    pure
+);
 json_binding!(
     lockfile_diff_json,
     "lockfileDiffJson",

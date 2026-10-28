@@ -119,3 +119,6 @@ fn anchored_acquisition_budget_includes_work_before_opening_the_file() {
     let ordinary = acquire_lock(&path, Some(Duration::ZERO), false).unwrap();
     drop(ordinary);
 }
+
+#[path = "holder_tests.rs"]
+mod holder_tests;

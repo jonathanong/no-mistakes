@@ -55,6 +55,8 @@ function createMockAddon(collectionGap) {
           : {}),
       });
     },
+    lockStatusJson: async (json) =>
+      JSON.stringify({ command: "lockStatus", options: JSON.parse(json) }),
     resolveConfigJson: async (json) =>
       JSON.stringify({ command: "resolveConfig", options: JSON.parse(json) }),
     validateMermaidMarkdownJson: async (json) =>

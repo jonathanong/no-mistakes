@@ -44,7 +44,8 @@ fn lock_contention_supports_fail_timeout_and_release() {
         timeout.downcast_ref::<InvocationError>().unwrap().kind(),
         InvocationErrorKind::LockTimeout
     );
-    assert_eq!(timeout_exit_code(&timeout), Some(124));
+    assert_eq!(timeout_exit_code(&timeout), None);
+    assert_eq!(exit_code(&timeout), EXIT_TEMPFAIL);
     drop(held);
     assert!(acquire_lock(&path, Some(Duration::from_secs(1)), false).is_ok());
 }

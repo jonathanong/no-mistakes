@@ -86,7 +86,12 @@ test("declarations expose invocation controls on every analysis", () => {
     /export function (\w+)\([\s\S]*?\): Promise<[^;]+>;/g,
   );
   for (const [declaration, name] of declarations) {
-    if (name === "version" || name === "parsePostgresSql" || name === "diagnosticsSnapshot") {
+    if (
+      name === "version" ||
+      name === "parsePostgresSql" ||
+      name === "diagnosticsSnapshot" ||
+      name === "lockStatus"
+    ) {
       assert.doesNotMatch(declaration, /WithInvocationOptions/);
     } else {
       assert.match(declaration, /WithInvocationOptions/, `${name} must accept invocation options`);

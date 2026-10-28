@@ -81,3 +81,48 @@ export interface DiagnosticsProgressSnapshot {
 export function diagnosticsSnapshot(options: {
   id: string;
 }): Promise<DiagnosticsProgressSnapshot | null>;
+
+/** Who holds the machine-wide invocation lock, as recorded by the holder. */
+export interface LockHolder {
+  pid: number;
+  /** Working directory of the holder; a pid alone is ambiguous across sandboxes. */
+  cwd: string | null;
+  /** The holder's command line. Empty for legacy pid-only records. */
+  command: string;
+  /** Unix epoch milliseconds when the holder acquired the lock; 0 when unknown. */
+  startedAtMs: number;
+  /** Whole seconds the lock has been held; null when the start time is unknown. */
+  ageSeconds: number | null;
+}
+
+/** Result of `lockStatus()` / `no-mistakes lock status --format json`. */
+export interface LockStatus {
+  state: "held" | "free";
+  lockFile: string;
+  /** Present only while the lock is held. */
+  holder: LockHolder | null;
+}
+
+/** Stable `kind` values for invocation failures. */
+export type InvocationErrorKind = "lock_busy" | "lock_timeout" | "deadline";
+
+/**
+ * The `error` object written to stdout under `--format json`, also exposed as
+ * `error.details` on rejected Node API calls. CLI exit codes: `lock_busy` and
+ * `lock_timeout` exit 75 (EX_TEMPFAIL); `deadline` exits 124.
+ */
+export interface InvocationErrorDetails {
+  kind: InvocationErrorKind;
+  /** Phase that was running, for example `invocation.lock` or `check.prepare`. */
+  phase: string | null;
+  message: string;
+  exitCode: 75 | 124;
+  /** Present for lock failures when the holder record could be read. */
+  holder?: LockHolder;
+}
+
+/** Rejection from a Node API call that failed on the invocation lock or deadline. */
+export interface InvocationError extends Error {
+  code: "NO_MISTAKES_LOCK_BUSY" | "NO_MISTAKES_LOCK_TIMEOUT" | "NO_MISTAKES_DEADLINE";
+  details: InvocationErrorDetails;
+}

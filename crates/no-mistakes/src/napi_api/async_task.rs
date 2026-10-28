@@ -44,9 +44,9 @@ impl Task for JsonValueTask {
             ),
             None => prepare(),
         }
-        .map_err(to_napi_error)?;
+        .map_err(to_invocation_napi_error)?;
         let jobs_warning = crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
-        crate::invocation::check_timeout().map_err(to_napi_error)?;
+        crate::invocation::check_timeout().map_err(to_invocation_napi_error)?;
         let run = || crate::ast::with_request_parse_cache(|| (self.run)(options));
         let output = match &_diagnostics {
             Some(request) => request.observer.trace(
@@ -56,7 +56,7 @@ impl Task for JsonValueTask {
             ),
             None => run(),
         };
-        crate::invocation::check_timeout().map_err(to_napi_error)?;
+        crate::invocation::check_timeout().map_err(to_invocation_napi_error)?;
         buffer_with_jobs_warning(output, jobs_warning)
     }
 
@@ -94,9 +94,9 @@ impl Task for JsonTask {
             ),
             None => prepare(),
         }
-        .map_err(to_napi_error)?;
+        .map_err(to_invocation_napi_error)?;
         let jobs_warning = crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
-        crate::invocation::check_timeout().map_err(to_napi_error)?;
+        crate::invocation::check_timeout().map_err(to_invocation_napi_error)?;
         let run = || crate::ast::with_request_parse_cache(|| (self.run)(options_json));
         let output = match &_diagnostics {
             Some(request) => request.observer.trace(
@@ -106,7 +106,7 @@ impl Task for JsonTask {
             ),
             None => run(),
         };
-        crate::invocation::check_timeout().map_err(to_napi_error)?;
+        crate::invocation::check_timeout().map_err(to_invocation_napi_error)?;
         buffer_with_jobs_warning(output, jobs_warning)
     }
 
@@ -126,6 +126,19 @@ fn buffer_with_jobs_warning(
 fn utf8_json(options_json: &Buffer) -> napi::Result<&str> {
     std::str::from_utf8(options_json.as_ref())
         .map_err(|error| napi::Error::from_reason(format!("options JSON must be UTF-8: {error}")))
+}
+
+/// Marker that introduces the machine-readable lock/deadline error appended to
+/// the message. The JS facade strips it and exposes `error.code` / `error.details`.
+pub(crate) const ERROR_JSON_MARKER: &str = "\nno-mistakes-error-json: ";
+
+pub(super) fn to_invocation_napi_error(error: anyhow::Error) -> napi::Error {
+    let mut reason = format!("{error:#}");
+    if let Some(report) = crate::invocation::error_report(&error) {
+        reason.push_str(ERROR_JSON_MARKER);
+        reason.push_str(&report["error"].to_string());
+    }
+    napi::Error::from_reason(reason)
 }
 
 pub(super) fn to_napi_error(error: impl std::fmt::Display) -> napi::Error {

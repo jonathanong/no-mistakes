@@ -13,6 +13,8 @@ mod flow;
 mod infra;
 #[path = "main/invocation.rs"]
 mod invocation;
+#[path = "main/lock_cmd.rs"]
+mod lock_cmd;
 mod lockfile;
 mod postgres;
 #[path = "main/query_render.rs"]
@@ -100,6 +102,8 @@ enum Command {
     /// Plan, explain, and visualize test impacts based on changed files.
     #[command(alias = "test")]
     Tests(TestsArgs),
+    /// Inspect the machine-wide invocation lock.
+    Lock(lock_cmd::LockArgs),
     /// Analyze lockfile changes (diff packages).
     Lockfile(lockfile::LockfileArgs),
     /// Map changed files to triggered GitHub Actions workflows and env usage.
@@ -119,11 +123,7 @@ enum Command {
 fn main() -> ExitCode {
     match run() {
         Ok(code) => code,
-        Err(error) => {
-            let message = format!("error: {error:#}\n");
-            eprint!("{message}");
-            ExitCode::from(no_mistakes::invocation::timeout_exit_code(&error).unwrap_or(2))
-        }
+        Err(error) => invocation::report_error(&error),
     }
 }
 
@@ -186,6 +186,7 @@ fn run_domain_command(command: Command) -> Result<CommandDispatch> {
         Command::Check(args) => check::run(args),
         Command::Config(args) => config_cmd::run(args),
         Command::Tests(args) => tests_run(args),
+        Command::Lock(args) => lock_cmd::run(args),
         Command::Lockfile(args) => lockfile::run(args),
         Command::Ci(args) => ci_run(args),
         Command::ImpactedChecks(args) => impacted_checks_run(args),

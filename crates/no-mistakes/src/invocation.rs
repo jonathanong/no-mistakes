@@ -8,14 +8,26 @@ mod child;
 mod clock;
 #[path = "invocation/deadline.rs"]
 mod deadline;
+#[path = "invocation/error.rs"]
+mod error;
+#[path = "invocation/holder.rs"]
+mod holder;
 #[path = "invocation/lock.rs"]
 mod lock;
+#[path = "invocation/lock_status.rs"]
+mod lock_status;
 #[path = "invocation/napi_options.rs"]
 mod napi_options;
 
 pub use child::command_output;
 pub(crate) use child::stream::stream_command_lines;
 pub use deadline::{check_timeout, commit_timeout, set_timeout_phase};
+pub use error::{
+    error_report, exit_code, timeout_exit_code, InvocationError, InvocationErrorKind,
+    EXIT_TEMPFAIL, EXIT_TIMEOUT,
+};
+pub use holder::LockHolder;
+pub use lock_status::{lock_status, LockState, LockStatus};
 pub use napi_options::{extract_napi_options, extract_napi_options_value, InvocationOptions};
 
 use deadline::DeadlineGuard;
@@ -121,64 +133,10 @@ impl InvocationArgs {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum InvocationErrorKind {
-    LockBusy,
-    LockTimeout,
-    CommandTimeout,
-}
-
-#[derive(Debug)]
-pub struct InvocationError {
-    kind: InvocationErrorKind,
-    message: String,
-}
-
-impl InvocationError {
-    pub(super) fn new(kind: InvocationErrorKind, message: impl Into<String>) -> Self {
-        Self {
-            kind,
-            message: message.into(),
-        }
-    }
-
-    pub fn kind(&self) -> InvocationErrorKind {
-        self.kind
-    }
-}
-
-impl std::fmt::Display for InvocationError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.message)
-    }
-}
-
-impl std::error::Error for InvocationError {}
-
 pub struct InvocationGuard {
     _deadline: DeadlineGuard,
     _parent_signals: child::ParentSignalForwardingGuard,
     _lock: File,
-}
-
-pub fn timeout_exit_code(error: &anyhow::Error) -> Option<u8> {
-    error.chain().find_map(|cause| {
-        if cause
-            .downcast_ref::<std::io::Error>()
-            .is_some_and(|error| error.kind() == std::io::ErrorKind::TimedOut)
-        {
-            return Some(124);
-        }
-        cause
-            .downcast_ref::<InvocationError>()
-            .is_some_and(|error| {
-                matches!(
-                    error.kind(),
-                    InvocationErrorKind::LockTimeout | InvocationErrorKind::CommandTimeout
-                )
-            })
-            .then_some(124)
-    })
 }
 
 pub(super) fn nonzero_seconds(seconds: u64) -> Option<Duration> {

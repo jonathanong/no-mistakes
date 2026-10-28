@@ -47,9 +47,40 @@ or after the command name:
   `profile: "ci"` clears any supplied `timeout` / `lockTimeout` the same way.
   Each `ciTopology()` call reads the current workflow and configuration files.
 
-Command and lock-wait timeouts exit with status `124`. Immediate lock
-contention and lock setup errors exit with status `2`. Errors are written to
-stderr; successful structured output keeps its existing schema.
+### Exit-code contract
+
+| Status | Meaning | JSON `error.kind` |
+| --- | --- | --- |
+| `0` | Success. | none |
+| `75` | Lock contention (EX_TEMPFAIL): `--fail-on-lock` found the lock busy, or `--lock-timeout` elapsed while waiting. Retrying later may succeed. | `lock_busy`, `lock_timeout` |
+| `124` | The analysis deadline elapsed (`--timeout`, `--invocation-timeout-ms`), matching `timeout(1)`. | `deadline` |
+| `2` | Any other error, including lock setup failures and invalid arguments. | none |
+
+Command-specific codes (for example `dead-exports` or `check` findings) keep
+the meanings documented on their pages. A shared `--invocation-timeout-ms`
+budget that expires while waiting for the lock is a deadline (`124`, phase
+`invocation.lock`), not lock contention.
+
+The lock is machine-wide by design: each analysis uses every core, so
+invocations run one at a time instead of oversubscribing the CPU. Scoping the
+lock per repository is intentionally not offered.
+
+Errors are written to stderr. Lock messages name the holder, for example
+`another no-mistakes invocation is already running (held by pid 264 (cwd
+/work/repo, command `no-mistakes check`, held for 12s))`. The holder records
+its pid, working directory, command line, and start time in the lock file.
+
+When `--format json` (or `--json`) is set, a lock or deadline failure also
+writes one JSON object to stdout instead of leaving it empty:
+
+```json
+{"error":{"kind":"lock_busy","phase":"invocation.lock","message":"another no-mistakes invocation is already running (held by pid 264 ...)","exitCode":75,"holder":{"pid":264,"cwd":"/work/repo","command":"no-mistakes check","startedAtMs":1700000000000,"ageSeconds":12}}}
+```
+
+`phase` is the running phase (`invocation.lock`, or for deadlines the active
+phase such as `check.prepare`); `holder` is present for lock failures when the
+holder record is readable. Successful structured output keeps its existing
+schema. Use [`lock status`](lock.md) to inspect the holder without waiting.
 
 Global `--timings` prints invocation phase durations to stderr.
 `--verbose-timings` implies timings and adds deterministic work counters.
@@ -80,6 +111,7 @@ after the command name. See [Performance diagnostics](diagnostics.md).
 | [`registry-extension`](registry-extension.md) | Summarize how entries register in a registry file. |
 | [`check`](check.md) | Configured project-wide checks. |
 | [`config`](config.md) | Dump the effective resolved configuration ([`config resolve`](config-resolve.md)). |
+| [`lock`](lock.md) | Read-only status of the machine-wide invocation lock and its holder ([`lock status`](lock-status.md)). |
 | [`lockfile`](lockfile.md) | Show which packages changed between two lockfile versions. |
 | [`tests`](tests.md) | Test plan, impact, explanation, comments, and graphs. |
 | [`playwright`](playwright.md) | Playwright route, selector, and assertion coverage. |

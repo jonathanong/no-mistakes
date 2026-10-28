@@ -90,3 +90,29 @@ fn command_error_survives_unavailable_writer_and_occupied_progress_queue() {
         );
     }
 }
+
+#[test]
+fn json_output_is_detected_from_every_spelling() {
+    let args = |list: &[&str]| list.iter().map(|arg| arg.to_string()).collect::<Vec<_>>();
+    assert!(wants_json(args(&[
+        "no-mistakes",
+        "check",
+        "--format",
+        "json"
+    ])));
+    assert!(wants_json(args(&["no-mistakes", "check", "--format=json"])));
+    assert!(wants_json(args(&["no-mistakes", "check", "--json"])));
+    assert!(!wants_json(args(&[
+        "no-mistakes",
+        "check",
+        "--format",
+        "md"
+    ])));
+    assert!(!wants_json(args(&["no-mistakes", "check", "--format"])));
+}
+
+#[test]
+fn lock_status_parses_as_its_own_command() {
+    let cli = Cli::try_parse_from(["no-mistakes", "lock", "status", "--format", "json"]).unwrap();
+    assert!(matches!(cli.command, super::super::Command::Lock(_)));
+}

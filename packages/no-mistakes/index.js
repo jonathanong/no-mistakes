@@ -4,6 +4,7 @@ const { resolveNativePackage } = require("./scripts/native-package");
 const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || resolveNativePackage().addonPath;
 const native = require(addonPath);
 const planning = require("./planning");
+const { decorateInvocationError } = require("./invocation-errors");
 const { writePlanningImpactArtifacts: writeArtifacts } = require("./planning-impact-artifacts");
 const { createPlanningArtifactLock } = require("./planning-impact-artifacts-lock");
 const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
@@ -11,7 +12,11 @@ const path = require("node:path");
 
 async function callJson(fn, options) {
   const input = Buffer.from(JSON.stringify(options || {}));
-  return JSON.parse(await fn(input));
+  try {
+    return JSON.parse(await fn(input));
+  } catch (error) {
+    throw decorateInvocationError(error);
+  }
 }
 
 function createJsonApis(descriptors) {
@@ -50,6 +55,7 @@ const jsonApis = createJsonApis({
   infraOutputs: "infraOutputsJson",
   infraResourceRefs: "infraResourceRefsJson",
   infraTestFor: "infraTestForJson",
+  lockStatus: "lockStatusJson",
   lockfileDiff: "lockfileDiffJson",
   validateMermaidMarkdown: "validateMermaidMarkdownJson",
   playwrightCheck: "playwrightCheckJson",
@@ -127,6 +133,7 @@ module.exports.writePlanningImpactArtifacts = writePlanningImpactArtifacts;
 module.exports.callSites = jsonApis.callSites;
 module.exports.check = jsonApis.check;
 module.exports.resolveConfig = jsonApis.resolveConfig;
+module.exports.lockStatus = jsonApis.lockStatus;
 module.exports.ciEnv = jsonApis.ciEnv;
 module.exports.ciImpact = jsonApis.ciImpact;
 module.exports.ciTopology = ciTopology;

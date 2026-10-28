@@ -226,6 +226,7 @@ remain failures. See
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
 | `check`                                    | `check(options)` (including configured `forbidden-lint-suppressions`)                                                                                                                                                                                                                                                           |
 | `config resolve`                           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
+| `lock status` | `lockStatus()` (read-only; takes no invocation lock) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
 | `effects`                                  | `effects(options)`                                                                                                                                                                                                                                                         |
 | `rsc-callers`                              | `rscCallers(options)`                                                                                                                                                                                                                                                      |
@@ -297,6 +298,7 @@ remain failures. See
 | `related` | `related(options)` |
 | `resolveCheck` | `resolveCheck(options)` |
 | `resolveConfig` | `resolveConfig(options)` |
+| `lockStatus` | `lockStatus()` |
 | `rscCallers` | `rscCallers(options)` |
 | `swiftImporters` | `swiftImporters(options)` |
 | `swiftTestTargets` | `swiftTestTargets(options)` |

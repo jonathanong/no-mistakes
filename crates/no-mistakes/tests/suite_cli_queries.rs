@@ -37,6 +37,8 @@ mod cli_infra_swift;
 mod cli_integration_route_coverage;
 #[path = "cli_invocation.rs"]
 mod cli_invocation;
+#[path = "cli_invocation_lock.rs"]
+mod cli_invocation_lock;
 #[path = "cli_lockfile.rs"]
 mod cli_lockfile;
 #[path = "cli_lockfile2.rs"]
