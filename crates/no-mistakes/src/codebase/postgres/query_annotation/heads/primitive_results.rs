@@ -14,6 +14,33 @@ pub(super) struct Memo {
     exports: Option<ExportIndex>,
 }
 
+pub(super) fn apply(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    ts: &crate::codebase::ts_source::facts::TsFileFacts,
+    executors: &crate::fx::FxHashSet<Span>,
+    calls: &mut std::collections::BTreeMap<Span, HeadProof>,
+) {
+    let mut primitive_memo = Memo::default();
+    let clean_module = ts
+        .module_bindings
+        .as_deref()
+        .is_some_and(|module| module.diagnostics.is_empty());
+    for call in syntax
+        .calls
+        .iter()
+        .filter(|call| executors.contains(&call.span))
+    {
+        if let Some(summary) = super::helper_records::local_result_proof(syntax, bindings, call) {
+            calls.insert(call.span, summary.proof());
+        } else if clean_module {
+            if let Some(proof) = proof(syntax, bindings, call, &mut primitive_memo) {
+                calls.insert(call.span, proof);
+            }
+        }
+    }
+}
+
 pub(super) fn proof(
     syntax: &Syntax,
     bindings: &Bindings<'_>,

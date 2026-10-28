@@ -24,7 +24,10 @@ fn primitive_result_source_proofs_are_memoized_without_low_evaluation() {
             assert!(file.query_annotation_heads.is_none());
             continue;
         }
-        assert_eq!(max_calls.as_ref(), Some(&calls));
+        // Low-only fact extraction intentionally omits max evaluator metadata.
+        if efforts == ["low", "max"] {
+            assert_eq!(max_calls.as_ref(), Some(&calls));
+        }
         let heads = file.query_annotation_heads.as_ref().expect("low heads");
         let proofs = embedded
             .call_spans
@@ -47,6 +50,7 @@ fn primitive_result_source_proofs_are_memoized_without_low_evaluation() {
         prior = Some(proofs);
         if efforts == ["low"] {
             assert!(file.query_annotation.is_empty());
+            assert!(embedded.calls.iter().all(|call| call.variants.is_empty()));
             assert_eq!(
                 observer
                     .snapshot()
