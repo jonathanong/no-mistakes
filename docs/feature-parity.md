@@ -124,6 +124,10 @@ an exact returned parameter append chain when the helper result is discarded.
 They also preserve that parameter's fixed head through captured callbacks
 whose only parameter uses are discarded static appends, regardless of when
 those callbacks run.
+The same prepared low proof can follow one direct source import whose helper
+returns an immutable append alias of its first fresh tagged argument. It
+checks every parameter and alias reference and permits only an inert native
+default after the first argument; extra caller objects remain unresolved.
 CLI and async Node checks share the same inert later-parameter default proof
 and exact closed-object gate for a defaulted helper destructure.
 
