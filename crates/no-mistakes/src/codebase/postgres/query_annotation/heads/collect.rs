@@ -105,16 +105,15 @@ pub(crate) fn collect_prepared(
         Vec::new()
     };
     let helper_calls = literal_helpers::proofs(&syntax, &bindings, ts);
-    let (exported_callbacks, pending_callbacks) = if include_all_calls {
-        callback_heads::collect(
-            program,
-            ts.module_bindings.as_deref(),
-            &syntax,
-            &executor_calls,
-        )
-    } else {
-        Default::default()
-    };
+    let (exported_callbacks, pending_callbacks) = callback_heads::collect(
+        include_all_calls,
+        program,
+        ts.module_bindings.as_deref(),
+        &syntax,
+        &bindings,
+        &executor_calls,
+        &mut calls,
+    );
     let (exported_helpers, exported_values, exported_records, pending_imports) =
         if include_all_calls {
             helper_heads::module_projection(
