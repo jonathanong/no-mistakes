@@ -3,7 +3,7 @@ import sql from 'sql-template-strings'
 
 function resetGuard(flag: boolean) {
   const q = sql`/* resetGuard */ SELECT 1`
-  if (q.reset()) throw Error('reset')
+  if (q.reset()) throw Error('reset') // The condition may mutate q even when the guard does not throw.
   if (flag) return q
   return q
 }
