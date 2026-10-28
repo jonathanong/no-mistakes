@@ -23,6 +23,9 @@ impl Syntax<'_> {
                 },
             );
         }
+        let previous = self.metadata.enter_call(None, Some(span(value.span)), None);
+        walk::walk_new_expression(self, value);
+        self.metadata.restore(previous);
     }
     pub(super) fn recover_arrow(&mut self, value: &oxc_ast::ast::ArrowFunctionExpression<'_>) {
         if self.recover_helpers {

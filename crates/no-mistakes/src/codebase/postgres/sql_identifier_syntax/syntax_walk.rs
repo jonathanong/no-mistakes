@@ -6,7 +6,6 @@ use oxc_ast::ast::{
 use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
 mod recovery;
-
 impl<'a> Visit<'a> for Syntax<'_> {
     fn visit_with_statement(&mut self, value: &oxc_ast::ast::WithStatement<'a>) {
         self.recovery.dynamic_scope = true;
@@ -186,9 +185,6 @@ impl<'a> Visit<'a> for Syntax<'_> {
     }
     fn visit_new_expression(&mut self, value: &NewExpression<'a>) {
         self.recover_constructor(value);
-        let previous = self.metadata.enter_call(None, Some(span(value.span)), None);
-        walk::walk_new_expression(self, value);
-        self.metadata.restore(previous);
     }
     fn visit_tagged_template_expression(&mut self, value: &TaggedTemplateExpression<'a>) {
         let owner = self.template_binds.tag_owner(&value.tag);

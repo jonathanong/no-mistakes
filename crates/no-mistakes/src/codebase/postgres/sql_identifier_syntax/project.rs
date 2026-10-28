@@ -3,7 +3,6 @@ type Declared = std::collections::BTreeMap<
     EmbeddedSqlOptions,
     Vec<crate::config::v2::schema::EffectTargetConfig>,
 >;
-
 pub(crate) fn collect(
     program: &Program<'_>,
     ts: &TsFileFacts,
@@ -12,7 +11,6 @@ pub(crate) fn collect(
 ) -> FileFacts {
     collect_with_types(program, ts, source, profiles, &Default::default())
 }
-
 pub(crate) fn collect_with_types(
     program: &Program<'_>,
     ts: &TsFileFacts,
