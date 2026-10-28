@@ -11,12 +11,10 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     captured: &CapturedBindings,
     cached: (&mut Prefix, usize),
 ) -> Reachable {
-    let _timing = crate::codebase::postgres::query_annotation::progress::timing(
+    let _timing = crate::codebase::postgres::query_annotation::progress::timing_and_count(
         "postgres.annotation.reachability_walk",
+        "postgres.annotation.reachability_walks",
     );
-    if let Some(observer) = crate::diagnostics::current() {
-        observer.increment("postgres.annotation.reachability_walks", 1);
-    }
     let (prefix, base) = cached;
     // The caller supplies every preserved environment as a root.
     prefix.refresh(&scopes[..base]);

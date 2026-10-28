@@ -122,20 +122,41 @@ fn saved_fixture_has_opt_in_phase_timings_and_identical_findings() {
         .unwrap()
         + 1;
     assert_eq!(report["rules"][0]["line"], unsafe_line);
-    for label in [
-        "postgres.annotation.root",
-        "postgres.annotation.module",
-        "postgres.annotation.snapshot",
-        "postgres.annotation.snapshot_clone",
-        "postgres.annotation.snapshot_restore",
-        "postgres.annotation.entrypoint",
-        "postgres.annotation.alternatives_snapshot",
-        "postgres.annotation.alternatives_snapshot_restore",
-        "postgres.annotation.alternative_arm",
-        "postgres.annotation.alternatives_join",
-        "postgres.annotation.alternatives_finish",
-        "postgres.annotation.reachability_walk",
-    ] {
+    let docs = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../docs/cli/diagnostics.md"
+    ));
+    let (_, phase_docs) = docs
+        .split_once("<!-- postgres-annotation-phase-timings:start -->")
+        .expect("annotation timing docs start marker");
+    let (phase_docs, _) = phase_docs
+        .split_once("<!-- postgres-annotation-phase-timings:end -->")
+        .expect("annotation timing docs end marker");
+    let labels = phase_docs
+        .lines()
+        .filter(|line| line.starts_with("- "))
+        .map(|line| {
+            line.strip_prefix("- `")
+                .expect("annotation timing bullet must start with a label")
+                .split_once('`')
+                .expect("annotation timing label must close its backtick")
+                .0
+        })
+        .collect::<Vec<_>>();
+    assert!(
+        !labels.is_empty(),
+        "annotation timing docs must list labels"
+    );
+    assert_eq!(
+        labels
+            .iter()
+            .copied()
+            .collect::<std::collections::BTreeSet<_>>()
+            .len(),
+        labels.len(),
+        "annotation timing docs must not repeat labels"
+    );
+    for label in labels {
         assert!(
             !disabled.timings.iter().any(|timing| timing.label == label),
             "{label}"

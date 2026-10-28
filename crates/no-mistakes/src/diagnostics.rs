@@ -4,7 +4,7 @@
 //! Callers must keep the disabled state as `None`, so adding instrumentation to
 //! a hot path does not even read the clock during an ordinary invocation.
 
-mod context;
+pub(crate) mod context;
 mod memory;
 mod observer;
 mod progress;

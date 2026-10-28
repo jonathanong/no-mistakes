@@ -9,10 +9,17 @@ thread_local! {
     static TIMING_CONTEXT: RefCell<Vec<TimingKind>> = const { RefCell::new(Vec::new()) };
 }
 
+#[cfg(test)]
+pub(crate) mod tests;
+
 /// Return the observer scoped to this execution thread. Rayon entrypoints must
 /// propagate the invocation observer explicitly with [`with_observer`]; an
 /// unrelated concurrent request can never observe another thread's state.
 pub fn current() -> Option<Arc<InvocationObserver>> {
+    // Test-only call-site instrumentation verifies reachable walks never repeat this lookup.
+    // no-mistakes-disable-next-line rust-no-inline-tests
+    #[cfg(test)]
+    tests::record_current_lookup();
     ACTIVE.with(|active| active.borrow().last().cloned().flatten())
 }
 
