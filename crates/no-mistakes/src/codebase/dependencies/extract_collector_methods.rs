@@ -3,7 +3,8 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
     let require_callee = is_require_resolve_callee(&call.callee)
         .then_some("require.resolve")
         .or_else(|| is_require_callee(&call.callee).then_some("require"));
-    if let Some(callee) = require_callee.filter(|_| !collector.local_binding_shadows("require")) {
+    let global_require = require_callee.is_some() && collector.global_require_available();
+    if let Some(callee) = require_callee.filter(|_| global_require) {
         if collector.should_record_call(callee) {
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
@@ -21,9 +22,9 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
             });
         }
     }
-    if is_require_resolve_callee(&call.callee) && !collector.local_binding_shadows("require") {
+    if is_require_resolve_callee(&call.callee) && global_require {
         record_runtime_require_import(collector, call, ImportKind::RequireResolve);
-    } else if is_require_callee(&call.callee) && !collector.local_binding_shadows("require") {
+    } else if is_require_callee(&call.callee) && global_require {
         record_runtime_require_import(collector, call, ImportKind::Require);
     } else if let Some(callee) = recorded_call_callee(collector, call) {
         if collector.should_record_call(&callee) {

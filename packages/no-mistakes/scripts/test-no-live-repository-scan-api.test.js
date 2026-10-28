@@ -47,6 +47,7 @@ test(
     const cases = [
       ["default", ".no-mistakes.yml"],
       ["unresolved_report", "report.yml"],
+      ["container_exports", "containers.yml"],
     ];
     const snapshots = {};
 

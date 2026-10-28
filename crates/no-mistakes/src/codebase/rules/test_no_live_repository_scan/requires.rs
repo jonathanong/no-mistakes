@@ -4,7 +4,9 @@
 //! enumerator under a name the graph does not follow. A require is reported as
 //! an unresolved root unless every binding from that load has a resolved scan.
 use super::config::Enumerator;
-use super::enumerators::{enumerates, scan_of, Scan, FS_MODULES, GLOB_MODULES};
+use super::enumerators::{
+    enumerates, may_enumerate_export, scan_of, Scan, FS_MODULES, GLOB_MODULES,
+};
 use super::findings;
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{KnownCallTargetRef, ResolvedCallSite, TsFactLookup};
@@ -126,7 +128,7 @@ impl Sites {
                                 binding
                                     .imported
                                     .as_deref()
-                                    .is_none_or(|path| enumerates(module, path, extra))
+                                    .is_none_or(|path| may_enumerate_export(module, path, extra))
                             })
                             .collect();
                         if relevant.is_empty()

@@ -71,6 +71,30 @@ fn argumentless_require_resolve_call_is_ignored() {
 }
 
 #[test]
+fn imported_require_factory_does_not_create_commonjs_edges() {
+    for file in ["imported-require.test.ts", "imported-require-late.test.ts"] {
+        let path = crate::test_support::rule_fixture_root("test-no-live-repository-scan")
+            .join("tests")
+            .join(file);
+        let source = std::fs::read_to_string(path).unwrap();
+        let imports = ts_extractor().extract(&source).unwrap();
+        assert_eq!(specs(&imports), vec!["../helpers/require-factory"]);
+        assert_eq!(kinds(&imports), vec![ImportKind::Static]);
+    }
+}
+
+#[test]
+fn erased_type_import_does_not_hide_commonjs_loader() {
+    let path = crate::test_support::rule_fixture_root("test-no-live-repository-scan")
+        .join("helpers/type-only-require.ts");
+    let source = std::fs::read_to_string(path).unwrap();
+    let imports = ts_extractor().extract(&source).unwrap();
+    assert!(imports
+        .iter()
+        .any(|import| { import.kind == ImportKind::Require && import.specifier == "node:fs" }));
+}
+
+#[test]
 fn records_lines_side_effects_and_reexports() {
     let imports = ts_extractor()
         .extract("import 'polyfill';\nexport { helper } from '@scope/pkg/helpers';")

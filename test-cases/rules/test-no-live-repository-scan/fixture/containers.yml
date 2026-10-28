@@ -1,0 +1,13 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      enumerators:
+        - module: walker
+          export: ns.scan
+        - module: node:fs
+          export: readFileSync.child
+        - module: fast-glob

@@ -91,6 +91,8 @@ demotes them.
 
 Statically recognized top-level `const` CommonJS bindings participate in path
 provenance, including namespace bindings and renamed destructured bindings.
+The loader must be the global runtime `require`. Runtime imports named
+`require` are separate bindings; erased type-only imports do not shadow the loader.
 Nested, mutable, or otherwise unsupported bindings retain the unresolved fallback.
 A resolved scan through one binding
 does not suppress an unresolved load of the same module through another binding
@@ -102,6 +104,9 @@ line as an unresolved root. A computed `require(moduleName)` is also reported:
 the module could expose enumeration, so it cannot pass silently. These fallback
 diagnostics are replaced by a resolved direct scan through a recognized static
 binding. An unknown direct member scan at the load's own offset is reported once.
+Unknown export containers, including `fs.promises`, retain the fallback until
+their enumeration uses are accounted for. Configured descendant exports also
+keep their container visible.
 
 Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 `dirname`, `fileURLToPath`, `new URL(..., import.meta.url)`, `import.meta.dirname`,

@@ -1,6 +1,11 @@
 // Project immutable, statically named CommonJS loads through the existing
 // imported-binding path of the canonical call graph.
 impl ImportCollector {
+    fn global_require_available(&self) -> bool {
+        !self.local_binding_shadows("require")
+            && !self.predeclared_imported_bindings.contains("require")
+    }
+
     fn is_commonjs_binding(&self, local: &str) -> bool {
         self.callee_binding_scope(local).is_some_and(|scope| {
             self.commonjs_bindings
@@ -23,7 +28,7 @@ impl ImportCollector {
             || declaration.kind != VariableDeclarationKind::Const
             || self.current_lexical_scope_id() != 0
             || self.module_block_depth != 0
-            || self.local_binding_shadows("require")
+            || !self.global_require_available()
         {
             return;
         }
