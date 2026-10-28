@@ -196,3 +196,5 @@ mod relative_pending;
 
 #[path = "head_calls_only_tests/callback_export_payload_tests.rs"]
 mod callback_export_payload_tests;
+#[path = "head_calls_only_tests/string_prefix_fact_tests.rs"]
+mod string_prefix_fact_tests;
