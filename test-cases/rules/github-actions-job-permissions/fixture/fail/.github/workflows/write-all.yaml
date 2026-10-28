@@ -1,0 +1,9 @@
+on: push
+permissions: write-all
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
+  call:
+    uses: owner/repo/.github/workflows/reuse.yml@v1

@@ -1,0 +1,13 @@
+on: push
+permissions: &wide
+  id-token: write
+jobs:
+  inherited:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo inherited
+  override:
+    permissions: *wide
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo override

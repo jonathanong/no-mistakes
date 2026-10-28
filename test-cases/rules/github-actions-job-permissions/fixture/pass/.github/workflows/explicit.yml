@@ -1,0 +1,24 @@
+on: push
+permissions:
+  id-token: write
+jobs:
+  empty:
+    permissions: {}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo empty
+  own-read:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo read
+  own-write:
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo write
+  call:
+    permissions: {}
+    uses: ./.github/workflows/reusable.yml

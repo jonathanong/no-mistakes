@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-job-permissions
+    scope: repository
+    include:
+      - .github/workflows/selected.yml
+    exclude:
+      - .github/workflows/excluded.yml
