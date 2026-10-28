@@ -3,6 +3,7 @@ use super::Span;
 use crate::fx::FxHashSet;
 mod domain;
 mod grammar;
+mod index;
 mod proof;
 pub(super) use grammar::{loop_domain, root, template};
 pub(super) use proof::proofs;

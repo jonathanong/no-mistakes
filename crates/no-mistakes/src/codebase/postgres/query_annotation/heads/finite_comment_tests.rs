@@ -21,3 +21,6 @@ fn finite_helper_name_calls_require_closed_stable_literal_provenance() {
     let (source, _, heads) = fixture_with_effects("finite-comment-domain.mts");
     assert_eq!(assert_markers(&source, &heads), 7);
 }
+
+#[path = "finite_comment_index_tests.rs"]
+mod finite_comment_index_tests;
