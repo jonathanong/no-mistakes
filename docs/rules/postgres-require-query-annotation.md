@@ -302,7 +302,11 @@ mutable, or parameter-derived text remains unresolved.
 An inline callback that forwards its parameter directly to a configured
 executor can also retain a fixed named head supplied through a direct imported
 source helper. The helper must prove every callback invocation's payload from
-one fresh trusted builder argument or a fixed named template.
+one fresh trusted builder argument or a fixed named template. A local builder
+payload must be unexported: direct, aliased, and default runtime exports expose
+its mutable object to other modules, so a local reference census cannot prove
+a closed lifetime. An unrelated module export does not disqualify a private
+function-local binding with the same name.
 An exact stable same-file helper can also supply a fresh trusted named builder.
 An async inline callback may append to its parameter through direct static
 appends or a source-proven append-only helper before one configured executor
