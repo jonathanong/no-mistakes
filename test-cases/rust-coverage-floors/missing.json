@@ -1,0 +1,12 @@
+{
+  "data": [
+    {
+      "totals": {
+        "lines": {
+          "count": 100,
+          "covered": 98
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "data": [
+    {
+      "totals": {
+        "lines": {
+          "count": 0,
+          "covered": 0,
+          "percent": 98
+        },
+        "functions": {
+          "count": 0,
+          "covered": 0,
+          "percent": 98
+        },
+        "regions": {
+          "count": 0,
+          "covered": 0,
+          "percent": 98
+        }
+      }
+    }
+  ]
+}

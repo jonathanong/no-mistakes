@@ -1,0 +1,42 @@
+{
+  "data": [
+    {
+      "totals": {
+        "lines": {
+          "count": 99,
+          "covered": 98,
+          "percent": 98
+        },
+        "functions": {
+          "count": 99,
+          "covered": 98,
+          "percent": 98
+        },
+        "regions": {
+          "count": 99,
+          "covered": 98,
+          "percent": 98
+        }
+      }
+    },
+    {
+      "totals": {
+        "lines": {
+          "count": 1,
+          "covered": 0,
+          "percent": 98
+        },
+        "functions": {
+          "count": 1,
+          "covered": 0,
+          "percent": 98
+        },
+        "regions": {
+          "count": 1,
+          "covered": 0,
+          "percent": 98
+        }
+      }
+    }
+  ]
+}
