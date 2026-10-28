@@ -1,0 +1,9 @@
+on: push
+permissions:
+  id-token: write
+  future-scope: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo mixed

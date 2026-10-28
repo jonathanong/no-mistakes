@@ -95,8 +95,33 @@ fn uncertain_permissions_follow_unanalyzable_policy() {
         config.rules[0].options = serde_yaml::from_str(&format!("unanalyzable: {name}")).unwrap();
         let output =
             diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
-        assert!(output.findings.is_empty(), "{output:?}");
+        assert!(output.findings.is_empty(), "{:?}", output.findings);
         assert_eq!(output.advisories.len(), expected);
+    }
+}
+
+#[test]
+fn unknown_scope_policy_keeps_independent_known_write() {
+    let (root, mut config, files) = fixture("mixed");
+    let sources = source_store_for_files(&files);
+    for (policy, unresolved_findings, unresolved_advisories) in
+        [("report", 1, 0), ("advise", 0, 1), ("ignore", 0, 0)]
+    {
+        config.rules[0].options = serde_yaml::from_str(&format!("unanalyzable: {policy}")).unwrap();
+        let output =
+            diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
+        assert_eq!(
+            targets(&output.findings, "mixed.yml"),
+            if unresolved_findings == 1 {
+                vec!["build", "unanalyzable"]
+            } else {
+                vec!["build"]
+            }
+        );
+        assert_eq!(output.advisories.len(), unresolved_advisories);
+        if unresolved_advisories == 1 {
+            assert_eq!(output.advisories[0].target.as_deref(), Some("unanalyzable"));
+        }
     }
 }
 
