@@ -1,9 +1,7 @@
 //! Exact, bounded comment-name projection; no SQL variant composition.
 use super::TemplateUse;
 use crate::codebase::postgres::query_annotation::heads::{
-    bindings::Bindings,
-    syntax::{Head, Syntax},
-    HeadProof, Span,
+    bindings::Bindings, syntax::Syntax, HeadProof, Span,
 };
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::FxHashSet;
@@ -18,7 +16,8 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
     let Some(module) = module else {
         return BTreeMap::new();
     };
-    if !syntax.collect_finite
+    if executors.is_empty()
+        || !syntax.collect_finite
         || (!syntax
             .finite_templates
             .iter()
@@ -29,48 +28,43 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
     {
         return BTreeMap::new();
     }
+    let mut index = super::index::Index::new(syntax, bindings, module, executors);
     let mut found = BTreeMap::new();
     for candidate in &syntax.finite_templates {
-        if executors.contains(&candidate.call) && direct(syntax, bindings, module, candidate) {
+        if executors.contains(&candidate.call) && direct(syntax, bindings, &mut index, candidate) {
             found.insert(candidate.call, HeadProof::Literal);
         }
     }
     for root in &syntax.finite_roots {
-        if !syntax.calls.iter().any(|call| {
-            executors.contains(&call.span)
-                && matches!(call.head, Head::Reference(reference)
-                if bindings.owner(reference).is_some_and(|owner|
-                    (owner.span.start, owner.span.end) == root.declaration))
-        }) {
-            continue;
-        }
-        let Some(values) = super::domain::helper_domain(syntax, bindings, module, root) else {
+        let Some(calls) = index.endpoints.get(&root.declaration) else {
             continue;
         };
-        if !all_named(&root.before, &root.after, &values) {
+        if calls.is_empty() {
             continue;
         }
-        for call in &syntax.calls {
-            if !executors.contains(&call.span) || !matches!(call.head, Head::Reference(_)) {
-                continue;
-            }
-            let Some(reference) = call.head.reference() else {
-                continue;
-            };
+        let Some(values) = index.helper_domain(syntax, bindings, root) else {
+            continue;
+        };
+        if !all_named(&root.before, &root.after, values) {
+            continue;
+        }
+        for &(call, reference) in &index.endpoints[&root.declaration] {
+            index.work.endpoints += 1;
             if syntax.contexts.get(&reference).copied().flatten() == Some(root.function)
                 && bindings.finite_root_accepts(syntax, root.declaration, reference)
             {
-                found.insert(call.span, HeadProof::Literal);
+                found.insert(call, HeadProof::Literal);
             }
         }
     }
+    index.report();
     found
 }
 
 fn direct(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
-    module: &TypeScriptModuleFacts,
+    index: &mut super::index::Index<'_>,
     candidate: &TemplateUse,
 ) -> bool {
     let Some(owner) = bindings.owner(candidate.reference) else {
@@ -80,7 +74,7 @@ fn direct(
     declaration == candidate.domain.declaration
         && !owner.imported
         && owner.runtime
-        && super::domain::stable(syntax, bindings, module, owner)
+        && index.stable(syntax, bindings, owner)
         && all_named(
             &candidate.before,
             &candidate.after,
