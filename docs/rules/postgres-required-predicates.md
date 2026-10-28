@@ -267,6 +267,9 @@ alternatives, and use fresh configured builders. Bind values in supported SQL
 templates are treated as values, not SQL text. Findings retain the physical SQL
 locations. Schema-catalog checks and SQL files selected by `sqlInclude` keep their
 existing behavior at both efforts.
+Opaque method calls in a helper's throwing guard are not assumed inert; they
+retain the caller's unanalyzable diagnostic. Move such validation outside the
+SQL-producing helper or use a source-visible supported condition.
 
 Use `effort: max` to analyze shapes outside the bounded low subset. The default
 remains `max`.

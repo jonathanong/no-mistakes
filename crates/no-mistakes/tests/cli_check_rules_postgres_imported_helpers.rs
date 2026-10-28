@@ -410,7 +410,8 @@ fn proven_throw_switches_are_judged_and_unproven_defaults_abstain() {
     // arm's second SELECT do not. The orders identifier is judged; accounts
     // is not a required relation. An inherited key, a non-throwing
     // `assertNever`, an unknown fragment, and a statement spliced as an
-    // identifier publish nothing. A throw guard and a bound `??` are judged.
+    // identifier publish nothing. An opaque method-call guard stays unknown
+    // at its caller; only the bound `??` case is judged.
     assert_eq!(
         required("proven-throw-switch"),
         expect(&[
@@ -419,7 +420,7 @@ fn proven_throw_switches_are_judged_and_unproven_defaults_abstain() {
             ("src/queries.mts", 35, "orders"),
             ("src/queries.mts", 40, UNANALYZABLE),
             ("src/queries.mts", 58, UNANALYZABLE),
-            ("src/queries.mts", 63, "orders"),
+            ("src/queries.mts", 67, UNANALYZABLE),
             ("src/queries.mts", 74, "orders"),
             ("src/queries.mts", 87, UNANALYZABLE),
             ("src/queries.mts", 92, UNANALYZABLE),
