@@ -41,8 +41,20 @@ markdown, Rust, file-rule, and package-config JSON snapshots without updating
 them; each case compares normalized output at `--jobs 1` and `--jobs 2`. The
 markdown, Rust, and file-rule modules are registered in the postgres suite, and
 the `cli_rrb_snapshot_` subset in the package-config suite, so
-those jobs do not also compile `suite_cli_rules` inside the ten-minute step.
+those jobs do not also compile `suite_cli_rules` inside the bounded native step.
 Linux runs the same cases in the full Rust coverage suite.
+
+Native macOS and Windows jobs have a 30-minute aggregate deadline and a
+15-minute platform Rust step; the real-addon API step retains its five-minute
+limit. One observed Windows run spent about nine minutes eighteen seconds on
+setup and builds, then reached the former ten-minute Rust-step limit after
+42 PostgreSQL and ten markdown/Rust/file snapshots passed, with eleven of
+eighteen package-config snapshots complete. The step and aggregate job were
+cancelled without a test or compiler failure. An earlier Windows run passed,
+so this censored observation shows hosted timing variation rather than a
+completed-runtime guarantee. The additional bounded capacity retains every
+native test command and allows room for remaining snapshots, API checks, and
+cleanup.
 
 Compiled Vitest workers use independent invocation locks. Linux keeps a private
 `XDG_RUNTIME_DIR`; macOS and Windows use the existing Cargo test marker
