@@ -124,6 +124,19 @@ mutable-builder lifetime checks, including escapes before execution. An
 unknown, partial, or missing arm remains unanalyzable; the syntax pass does
 not evaluate the condition or combine SQL text.
 
+Low also accepts a first comment name supplied by a bounded runtime string
+set. A synchronous `for (const [name, other] of [["one", "x"], ...])` may
+capture the exact read-only `name` binding in a callback when every direct
+tuple row has a string name. A same-file helper may instead receive its first
+parameter through one local `select` closure whose complete call set supplies
+at most 16 direct string literals. The helper may append an ordinary template
+with that name to an empty, exactly imported `sql-template-strings` builder;
+its later safe appends do not change the first comment. Every substituted
+prefix must close a nonempty `/* name */` before any other interpolation.
+Aliases, writes, defaults, spreads, extra or dynamic calls, escaped helpers,
+untrusted builders, and tagged bind interpolation remain unresolved. This
+proof joins only the leading comment and does not compose the SQL suffix.
+
 These are deliberately narrow low-effort syntax proofs. Low does not run the
 helper/value evaluator, so other helper-produced heads can remain unresolved
 when `effort: max` can recover them. A direct template tagged with an exact

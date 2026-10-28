@@ -10,6 +10,8 @@ mod effects_tests;
 mod failures;
 #[path = "field_tests.rs"]
 mod field_tests;
+#[path = "finite_comment_tests.rs"]
+mod finite_comment_tests;
 #[path = "finite_return_tests.rs"]
 mod finite_return_tests;
 #[path = "gap_tests.rs"]

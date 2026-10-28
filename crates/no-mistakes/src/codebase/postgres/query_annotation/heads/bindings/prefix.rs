@@ -2,6 +2,28 @@ use super::{Bindings, Head, Span, Syntax};
 use crate::fx::FxHashSet;
 
 impl Bindings<'_> {
+    pub(in crate::codebase::postgres::query_annotation::heads) fn finite_root_accepts(
+        &self,
+        syntax: &Syntax,
+        declaration: Span,
+        reference: Span,
+    ) -> bool {
+        let Some(owner) = self.owner(reference) else {
+            return false;
+        };
+        let Some(&tag) = syntax.append_tags.get(&declaration) else {
+            return false;
+        };
+        let Some(tag_owner) = self.owner(tag) else {
+            return false;
+        };
+        !owner.imported
+            && (owner.span.start, owner.span.end) == declaration
+            && self.trusted_roots.contains(&declaration)
+            && tag_owner.imported
+            && self.trusted_import(tag_owner.id)
+            && self.append_safety.accepts(declaration, reference)
+    }
     pub(in crate::codebase::postgres::query_annotation::heads) fn conditional_prefix(
         &self,
         head: Head,

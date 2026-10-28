@@ -15,6 +15,9 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn collect_with_helpe
     let mut syntax = Syntax {
         collect_append_tags,
         collect_helper_heads,
+        collect_finite: collect_helper_heads
+            && program.source_text.contains("/*")
+            && program.source_text.contains("${"),
         literal_helpers: helpers.then(Vec::new),
         ..Default::default()
     };

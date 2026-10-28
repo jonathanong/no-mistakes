@@ -11,6 +11,7 @@ mod collect;
 mod conditional;
 mod diagnostics;
 mod effects;
+mod finite_comments;
 mod finite_returns;
 mod helper_heads;
 mod helper_records;
