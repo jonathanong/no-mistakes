@@ -1,6 +1,5 @@
 //! Original syntax proofs for annotation low effort; no helper value evaluation.
 use std::collections::BTreeMap;
-use std::collections::BTreeSet;
 mod append;
 mod append_constants;
 mod assignments;
@@ -52,7 +51,7 @@ pub(crate) struct AnnotationHeads {
     pub(crate) exported_records: BTreeMap<String, helper_records::Summary>,
     pub(crate) pending_imports: Vec<helper_heads::Pending>,
     pub(crate) pending_namespaces: Vec<namespace_heads::Pending>,
-    pub(crate) exported_effects: BTreeSet<String>,
+    pub(crate) exported_effects: BTreeMap<String, effects::Signature>,
     pub(crate) pending_effects: Vec<effects::Pending>,
     pub(crate) exported_callbacks: BTreeMap<String, callback_heads::Summary>,
     pub(crate) pending_callbacks: Vec<callback_heads::Pending>,
