@@ -43,6 +43,25 @@ pub(super) fn unresolved(
     )
 }
 
+pub(super) fn unresolved_require(
+    root: &Path,
+    application: &RuleDef,
+    file: &Path,
+    line: u32,
+    specifier: &str,
+) -> RuleFinding {
+    RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: relative_slash_path(root, file),
+        line: line as usize,
+        message: application.message.clone().unwrap_or_else(|| format!(
+            "unresolved root: `require(\"{specifier}\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import {{ readdirSync }} from \"{specifier}\"`, or add `no-mistakes-disable-next-line {RULE_ID}` with a reason."
+        )),
+        import: Some(format!("require(\"{specifier}\")")),
+        target: Some("unresolved root".to_string()),
+    }
+}
+
 fn build(
     root: &Path,
     application: &RuleDef,

@@ -104,6 +104,9 @@ fn rejects_scans_reachable_from_vitest_roots_and_allows_bounded_input() {
             "tests/path-forms.test.ts:25",
             "tests/path-forms.test.ts:26",
             "tests/path-forms.test.ts:27",
+            "tests/require-bindings.test.ts:3",
+            "tests/require-bindings.test.ts:4",
+            "tests/require-bindings.test.ts:5",
             "tests/unresolved-root.test.ts:8",
         ]
     );

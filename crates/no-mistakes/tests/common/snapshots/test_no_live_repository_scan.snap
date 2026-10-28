@@ -61,6 +61,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         },
         {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"glob\")",
+          "line": 5,
+          "message": "unresolved root: `require(\"glob\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"glob\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const g = require(\"glob\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const { readdirSync: ls } = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 4,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
+        },
+        {
           "file": "tests/unresolved-root.test.ts",
           "import": "readdirSync",
           "line": 8,
@@ -354,6 +381,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         },
         {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"glob\")",
+          "line": 5,
+          "message": "unresolved root: `require(\"glob\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"glob\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const g = require(\"glob\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const { readdirSync: ls } = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 4,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
+        },
+        {
           "file": "tests/unresolved-root.test.ts",
           "import": "readdirSync",
           "line": 8,
@@ -599,6 +653,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(await Promise.resolve(here)); // UNRESOLVED await of a call",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"glob\")",
+          "line": 5,
+          "message": "unresolved root: `require(\"glob\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"glob\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const g = require(\"glob\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const { readdirSync: ls } = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 4,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const read = require(\"node:fs\").readdirSync;",
           "target": "unresolved root"
         },
         {
@@ -1124,6 +1205,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "live repository scan"
         },
         {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"glob\")",
+          "line": 5,
+          "message": "unresolved root: `require(\"glob\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"glob\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const g = require(\"glob\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const { readdirSync: ls } = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 4,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
+        },
+        {
           "file": "tests/unresolved-root.test.ts",
           "import": "readdirSync",
           "line": 8,
@@ -1374,6 +1482,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "test-no-live-repository-scan",
           "sourceLine": "readdirSync(join(here, \"fixtures\", \"..\", \"src\")); // LIVE parent traversal through join",
           "target": "live repository scan"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"glob\")",
+          "line": 5,
+          "message": "unresolved root: `require(\"glob\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"glob\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const g = require(\"glob\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const { readdirSync: ls } = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 4,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
         },
         {
           "file": "tests/unresolved-root.test.ts",

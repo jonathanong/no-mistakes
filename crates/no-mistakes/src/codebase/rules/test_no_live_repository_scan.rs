@@ -4,6 +4,7 @@ mod enumerators;
 mod findings;
 mod provenance;
 mod reachable;
+mod requires;
 
 use super::analysis_policy::AnalysisDiagnostics;
 use super::forbidden_calls::{call_argument_values, expand_roots, site_source_node, SharedRoots};
@@ -63,6 +64,7 @@ pub(crate) fn check_with_graph(
         let reachable = reachable::sources(graph, &roots, &root_files);
         let filter = super::path_filter::RulePathFilter::new(&root, config, application)?;
         let fixture_dirs = options.fixture_dirs();
+        let mut sites = requires::Sites::default();
         for site in graph.resolved_call_sites() {
             if site.invocation != crate::codebase::dependencies::extract::InvocationKind::Call
                 || !reachable.contains(&site_source_node(site))
@@ -70,6 +72,7 @@ pub(crate) fn check_with_graph(
             {
                 continue;
             }
+            sites.visit(site, &options.enumerators);
             let Some(scan) = scan_of(site, &options.enumerators) else {
                 continue;
             };
@@ -97,6 +100,12 @@ pub(crate) fn check_with_graph(
                         UnresolvedRoot::Advise => diagnostics.advisories.push(finding),
                     }
                 }
+            }
+        }
+        for finding in sites.unresolved_requires(&root, application, facts, &options.enumerators) {
+            match options.unresolved_root {
+                UnresolvedRoot::Report => diagnostics.findings.push(finding),
+                UnresolvedRoot::Advise => diagnostics.advisories.push(finding),
             }
         }
     }

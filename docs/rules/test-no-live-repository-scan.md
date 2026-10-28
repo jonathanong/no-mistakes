@@ -71,6 +71,11 @@ resolved. These go to the non-failing `advisories` list by default. Set
 `unresolvedRoot: report` to fail on them; the rule's `severity: advisory` still
 demotes them.
 
+A CommonJS `require` of `fs`, `fs/promises`, a glob package, or a configured
+enumerator that no call in the same file resolves to (a renamed destructure such
+as `const { readdirSync: ls } = require("fs")`, `require("fs").readdirSync`, or
+`require("glob").sync`) is reported on the `require` line as an unresolved root.
+
 Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 `dirname`, `fileURLToPath`, `new URL(..., import.meta.url)`, `import.meta.dirname`,
 `__dirname`, `process.cwd()`, `tmpdir()`, `mkdtemp`, template literals, and

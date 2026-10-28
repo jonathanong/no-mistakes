@@ -2,7 +2,7 @@
 use super::config::Enumerator;
 use crate::codebase::dependencies::graph::{KnownCallTargetRef, ResolvedCallSite};
 
-const FS_MODULES: &[&str] = &["fs", "fs/promises"];
+pub(super) const FS_MODULES: &[&str] = &["fs", "fs/promises"];
 const FS_ENUMERATORS: &[&str] = &[
     "readdir",
     "readdirSync",
@@ -11,7 +11,7 @@ const FS_ENUMERATORS: &[&str] = &[
     "glob",
     "globSync",
 ];
-const GLOB_MODULES: &[&str] = &["glob", "fast-glob", "tinyglobby", "globby"];
+pub(super) const GLOB_MODULES: &[&str] = &["glob", "fast-glob", "tinyglobby", "globby"];
 /// Exports of the glob packages that only inspect or rewrite a pattern.
 const GLOB_PURE: &[&str] = &[
     "escapePath",
