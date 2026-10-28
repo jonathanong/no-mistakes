@@ -96,7 +96,12 @@ pub(super) fn check_source(rel: &str, source: &str, policy: Unanalyzable) -> Ana
             if permissions::inspect(own).unresolved {
                 diagnostics.unanalyzable(
                     policy,
-                    unresolved(rel, line, job_id, "job permissions are not fully static"),
+                    unresolved(
+                        rel,
+                        locations.job_permissions_line(job_id),
+                        job_id,
+                        "job permissions are not fully static",
+                    ),
                 );
             }
             continue;

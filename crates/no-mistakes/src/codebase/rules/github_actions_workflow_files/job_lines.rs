@@ -5,6 +5,7 @@ use document::Document;
 
 pub(crate) struct Locations {
     lines: BTreeMap<String, usize>,
+    job_permissions: BTreeMap<String, usize>,
     declaration: usize,
     permissions: usize,
 }
@@ -18,6 +19,13 @@ impl Locations {
         self.permissions
     }
 
+    pub(crate) fn job_permissions_line(&self, job: &str) -> usize {
+        self.job_permissions
+            .get(job)
+            .copied()
+            .unwrap_or_else(|| self.line(job))
+    }
+
     pub(crate) fn jobs_line(&self) -> usize {
         self.declaration
     }
@@ -28,6 +36,7 @@ impl Locations {
 pub(crate) fn collect(source: &str) -> Locations {
     let mut locations = Locations {
         lines: BTreeMap::new(),
+        job_permissions: BTreeMap::new(),
         declaration: 1,
         permissions: 1,
     };
@@ -51,6 +60,15 @@ pub(crate) fn collect(source: &str) -> Locations {
                     locations
                         .lines
                         .insert(key.to_owned(), document.nodes[job[0]].line);
+                    if let Some(mapping) = document.mapping(job[1]) {
+                        for entry in mapping.as_chunks::<2>().0 {
+                            if document.key(entry[0]) == Some("permissions") {
+                                locations
+                                    .job_permissions
+                                    .insert(key.to_owned(), document.nodes[entry[0]].line);
+                            }
+                        }
+                    }
                 }
             }
         }
