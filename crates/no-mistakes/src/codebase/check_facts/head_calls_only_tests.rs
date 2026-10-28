@@ -198,3 +198,6 @@ mod relative_pending;
 mod callback_export_payload_tests;
 #[path = "head_calls_only_tests/string_prefix_fact_tests.rs"]
 mod string_prefix_fact_tests;
+
+#[path = "head_calls_only_tests/terminal_block_return_tests.rs"]
+mod terminal_block_return_tests;

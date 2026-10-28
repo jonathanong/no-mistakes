@@ -130,3 +130,5 @@ pub(super) fn collect_with_helpers(
 mod effect_boundary_coverage_tests;
 #[path = "string_prefix_tests.rs"]
 mod string_prefix_tests;
+#[path = "terminal_block_return_tests.rs"]
+mod terminal_block_return_tests;

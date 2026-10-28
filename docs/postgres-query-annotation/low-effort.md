@@ -82,7 +82,11 @@ single final return. Aliases, captures, property writes, and passing the
 builder to another helper keep the return unresolved.
 
 A same-file function declaration may also have explicit early `if` returns
-followed by a final top-level return. A final `switch` qualifies when every
+followed by a final top-level return. An early block may contain ordinary
+prefix statements before its terminal return, including safe conditional
+appends on the returned native builder. The proof still accounts for every
+same-function return and rejects hidden alternatives or unsafe builder uses.
+A final `switch` qualifies when every
 case returns a fixed head and its default either throws directly or calls an
 exact, stable same-file synchronous function whose body consists of one throw.
 All returning paths must prove the same named or missing result. A caller may
