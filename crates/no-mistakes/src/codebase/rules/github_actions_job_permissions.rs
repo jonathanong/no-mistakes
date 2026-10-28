@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 mod diagnostics;
 mod findings;
 mod permissions;
+mod scan;
 
 pub const RULE_ID: &str = "github-actions-job-permissions";
 
