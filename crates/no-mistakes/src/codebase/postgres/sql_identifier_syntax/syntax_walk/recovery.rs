@@ -48,10 +48,23 @@ impl Syntax<'_> {
             self.recovery.stack.pop();
         }
     }
-    pub(super) fn recover_call(&mut self, call: &CallExpression<'_>) {
+    pub(super) fn recover_call(&mut self, call: &CallExpression<'_>, selected: bool) {
         if !self.recover_helpers {
             return;
         }
+        let selected_argument = call.arguments.iter().any(|argument| {
+            let Some(expression) = argument.as_expression() else {
+                return false;
+            };
+            self.recovery_bindings
+                .references_in(span(expression.span()))
+                .any(|(_, at)| {
+                    self.targets.contains(&at)
+                        || self.aliases.contains_key(&at)
+                        || self.typed_targets.contains(&at)
+                        || self.namespace_targets.contains_key(&at)
+                })
+        });
         self.recovery.call(
             call,
             &helper_recovery::lower::Context {
@@ -59,6 +72,7 @@ impl Syntax<'_> {
                 bindings: &self.recovery_bindings,
                 tags: &self.template_binds,
             },
+            selected || selected_argument,
         );
     }
 

@@ -105,7 +105,12 @@ impl FileModels {
             },
         );
     }
-    pub fn call(&mut self, call: &CallExpression<'_>, ctx: &lower::Context<'_>) {
+    pub fn call(
+        &mut self,
+        call: &CallExpression<'_>,
+        ctx: &lower::Context<'_>,
+        lower_arguments: bool,
+    ) {
         if super::chain(&call.callee)
             .is_some_and(|(_, parts)| parts.last().is_some_and(|part| part == "eval"))
         {
@@ -133,7 +138,13 @@ impl FileModels {
                 .arguments
                 .iter()
                 .filter_map(Argument::as_expression)
-                .map(|arg| lower::expression(arg, ctx))
+                .map(|arg| {
+                    if lower_arguments {
+                        lower::expression(arg, ctx)
+                    } else {
+                        lower::opaque_expression(arg, ctx)
+                    }
+                })
                 .collect(),
         });
     }
@@ -150,6 +161,9 @@ mod precision_tests;
 
 #[cfg(test)]
 mod coverage_tests;
+
+#[cfg(test)]
+mod model_demand_tests;
 
 #[cfg(test)]
 #[path = "tests/abrupt.rs"]

@@ -17,25 +17,38 @@ use oxc_span::GetSpan;
 #[derive(Default)]
 pub(crate) struct Bindings {
     slots: FxHashMap<Span, usize>,
+    runtime: Vec<(Span, usize)>,
 }
 impl Bindings {
     pub fn new(module: &TypeScriptModuleFacts) -> Self {
         let mut slots = FxHashMap::default();
+        let mut runtime = Vec::new();
         for binding in &module.bindings {
             slots.insert((binding.span.start, binding.span.end), binding.id);
             for reference in &binding.references {
                 if reference.runtime {
-                    slots.insert((reference.span.start, reference.span.end), binding.id);
+                    let at = (reference.span.start, reference.span.end);
+                    slots.insert(at, binding.id);
+                    runtime.push((at, binding.id));
                 }
             }
         }
-        Self { slots }
+        runtime.sort_unstable_by_key(|(at, _)| *at);
+        Self { slots, runtime }
     }
     pub fn id(&self, at: oxc_span::Span) -> Option<usize> {
         self.slots.get(&span(at)).copied()
     }
     pub fn name(&self, at: oxc_span::Span) -> Option<String> {
         self.id(at).map(|id| format!("binding:{id}"))
+    }
+    pub fn references_in(&self, at: Span) -> impl Iterator<Item = (usize, Span)> + '_ {
+        let first = self.runtime.partition_point(|(span, _)| span.0 < at.0);
+        self.runtime[first..]
+            .iter()
+            .take_while(move |(span, _)| span.0 < at.1)
+            .filter(move |(span, _)| span.1 <= at.1)
+            .map(|(span, id)| (*id, *span))
     }
 }
 #[derive(Clone)]
@@ -148,5 +161,25 @@ pub(crate) fn expression(node: &Expression<'_>, ctx: &Context<'_>) -> Lowered {
         asynchronous: false,
         tags: scope.tags,
         references: scope.references,
+    }
+}
+
+/// Retain exact runtime references while treating an unselected argument as opaque.
+pub(crate) fn opaque_expression(node: &Expression<'_>, ctx: &Context<'_>) -> Lowered {
+    let at = node.span();
+    Lowered {
+        program: Program {
+            params: Vec::new(),
+            body: vec![Stmt::Return(
+                Some(Expr::Opaque),
+                Mark {
+                    line: byte_offset_to_line(ctx.source, at.start as usize),
+                    origin: at.start,
+                },
+            )],
+        },
+        asynchronous: false,
+        tags: FxHashSet::default(),
+        references: ctx.bindings.references_in(span(at)).collect(),
     }
 }

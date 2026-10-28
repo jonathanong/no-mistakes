@@ -94,7 +94,6 @@ impl<'a> Visit<'a> for Syntax<'_> {
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
         self.metadata.reference(span(value.span));
-        self.recover_call(value);
         let callee = chain(&value.callee);
         let unproven_member = self.scoped_member_advisory
             && callee.as_ref().is_some_and(|(_, parts)| {
@@ -114,6 +113,7 @@ impl<'a> Visit<'a> for Syntax<'_> {
                     && parts.len() > 1
                     && parts.last().is_some_and(|name| name == "query"))
         }) || unproven_member;
+        self.recover_call(value, selected);
         let root = selected.then(|| callee.as_ref().unwrap().0);
         if selected {
             self.calls.push(Call {
