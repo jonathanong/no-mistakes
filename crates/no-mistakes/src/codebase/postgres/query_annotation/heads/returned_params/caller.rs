@@ -34,7 +34,8 @@ pub(super) fn root(mut expression: &Expression<'_>) -> Option<Root> {
         let Expression::Identifier(tag) = unwrap_ts_wrappers(&first.tag) else {
             return None;
         };
-        let proof = super::super::syntax::head(call.arguments[0].as_expression()?).proof(false);
+        // The factory appends before returning, even without outer append links.
+        let proof = super::super::syntax::head(call.arguments[0].as_expression()?).proof(true);
         (proof != super::super::HeadProof::Unproven).then_some(Root {
             callee: (callee.span.start, callee.span.end),
             tag: (tag.span.start, tag.span.end),
