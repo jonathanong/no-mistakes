@@ -82,9 +82,11 @@ low effort and compose text for full SQL consumers, with interpolations treated
 as value placeholders. Conditional appends use bounded breadth-first alternatives;
 loops retain zero/one previews and an unknown remainder. These behaviors share
 Rust, CLI and async Node evidence; see [append composition](postgres-query-annotation/append-composition.md).
-Low annotation checks also prove fixed literal return heads in local helpers
-and one-hop source imports from the prepared inventory, without running the
+Low annotation checks also prove fixed literal return heads in local helpers,
+including concise arrow bodies and local export aliases, and one-hop source imports from the prepared inventory, without running the
 annotation evaluator. This prefix proof does not establish complete SQL.
+Opaque append suffixes preserve a prefix only for the trusted
+`sql-template-strings` tag; other tags and their later reads remain unresolved.
 An exact source helper may forward a proven head into a direct inline
 configured executor callback, with each imported call checked separately.
 They also accept finite conditional expressions whose every arm has a named
