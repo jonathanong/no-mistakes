@@ -153,3 +153,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
 ```
+
+## Related rules
+
+[`github-actions-checkout-credentials`](github-actions-checkout-credentials.md)
+checks whether checkout steps persist a write-capable token. This rule checks
+whether a job inherits an explicit write grant, regardless of whether the job
+contains a checkout step.
+[`github-actions-script-expressions`](github-actions-script-expressions.md)
+checks untrusted expressions embedded in scripts; permission isolation does
+not replace that input-safety check.
