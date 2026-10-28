@@ -31,3 +31,9 @@ fn discarded_local_second_argument_effects_keep_factory_heads() {
     let (source, _, heads) = fixture_with_effects("second-argument-duplicate.mts");
     assert_eq!(assert_markers(&source, &heads), 1);
 }
+
+#[test]
+fn second_argument_effect_boundaries_stay_unproven() {
+    let (source, _, heads) = fixture_with_effects("second-argument-boundaries.mts");
+    assert_eq!(assert_markers(&source, &heads), 6);
+}
