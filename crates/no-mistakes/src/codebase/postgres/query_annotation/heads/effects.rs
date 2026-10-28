@@ -4,7 +4,12 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BindingPattern, Expression, Function, FunctionType};
 
 mod defaults;
+mod dependencies;
+mod exports;
+mod imported;
+pub(super) mod ownership;
 mod prepare;
+pub(super) mod projection;
 mod summary;
 pub(crate) use prepare::Pending;
 pub(super) use prepare::{prepare, Prepared};

@@ -102,6 +102,12 @@ closures when every binding use is proven safe.
 Captured trusted local builders also qualify when every exact-binding use is a
 discarded append, a configured executor read, or a proven local append-only
 effect. This preserves only the fixed head, even across arbitrary closure order.
+CLI and async Node checks also share a bounded local helper effect containing
+one direct named-import dependency. Its plain, closed append-only source export
+must prove before dependent executor reads are accepted. Unknown/reexported
+exports, multiple imported edges, and incompatible outer defaults stay
+unresolved; this proof does not run the SQL evaluator.
+
 The shared low proof also accepts bounded same-file append-only helper calls
 and a returned parameter-rooted append chain when the caller discards it. An
 append-only helper's captured callback may make discarded static appends to

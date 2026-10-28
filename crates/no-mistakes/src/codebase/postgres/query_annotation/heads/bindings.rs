@@ -58,6 +58,7 @@ impl<'a> Bindings<'a> {
         }) else {
             return index;
         };
+        super::effects::ownership::extend(syntax, module, &mut wanted);
         // A closed captured root needs ownership for every runtime reference,
         // including uses that are not executor or append candidates.
         let finite_declarations = super::finite_comments::declarations(syntax);

@@ -28,8 +28,7 @@ pub(in super::super) fn project(
                 resolve(&effect.specifier, &target)
                     .and_then(|path| files.get(&path))
                     .and_then(|file| file.query_annotation_heads.as_deref())
-                    .and_then(|heads| heads.exported_effects.get(&effect.imported))
-                    .is_some_and(|signature| signature.accepts(effect.shape))
+                    .is_some_and(|heads| effect.proven_by(heads))
             }) {
                 completed.push((path.clone(), pending.span, summary.proof));
             }

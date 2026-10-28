@@ -191,3 +191,6 @@ mod builder_facts;
 mod captured_facts;
 #[path = "head_calls_only_tests/relative_pending_tests.rs"]
 mod relative_pending;
+
+#[path = "head_calls_only_tests/import_effect_deps_tests.rs"]
+mod import_effect_deps_tests;
