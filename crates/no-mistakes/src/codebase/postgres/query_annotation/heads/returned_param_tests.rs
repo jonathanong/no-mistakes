@@ -33,3 +33,21 @@ fn duplicate_prepared_import_identity_rejects_returned_parameter_projection() {
     .unwrap();
     assert!(changed.pending_returned_params.is_empty());
 }
+
+#[test]
+fn returned_parameter_roots_require_continuation_safe_heads() {
+    use super::super::HeadProof;
+    let (source, _, heads) = fixture_with_effects("returned-param-continuation.mts");
+    assert_eq!(super::support::assert_markers(&source, &heads), 6);
+    // Only stable roots enter the prepared source-hop queue. EOF BEGIN and
+    // partial/empty comments must remain unproven regardless of helper identity.
+    let proofs = heads
+        .pending_returned_params
+        .iter()
+        .map(|p| p.proof)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        proofs,
+        vec![HeadProof::Missing, HeadProof::Literal, HeadProof::Missing]
+    );
+}
