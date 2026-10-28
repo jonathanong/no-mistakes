@@ -24,7 +24,16 @@ pub(super) fn run(
             .par_iter()
             .map(|path| check_file(root, path, sources, policy, defer_suppression))
             .collect();
-        for result in per_file {
+        for mut result in per_file {
+            if let Some(message) = &rule.message {
+                for finding in result
+                    .findings
+                    .iter_mut()
+                    .chain(result.advisories.iter_mut())
+                {
+                    finding.message.clone_from(message);
+                }
+            }
             diagnostics.append(result);
         }
     }
