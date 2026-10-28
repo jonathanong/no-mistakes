@@ -47,12 +47,16 @@ fn returned_first_builder_projects_one_prepared_hop_without_low_evaluation() {
             .iter()
             .map(|span| heads.calls.get(span).copied())
             .collect::<Vec<_>>();
-        assert_eq!(proofs.len(), 7);
+        assert_eq!(proofs.len(), 13);
         assert_eq!(proofs[0], Some(HeadProof::Literal));
         assert!(proofs[1..6]
             .iter()
             .all(|proof| *proof == Some(HeadProof::Unproven)));
         assert_eq!(proofs[6], Some(HeadProof::Missing));
+        assert_eq!(&proofs[7..10], &[Some(HeadProof::Unproven); 3]);
+        assert_eq!(proofs[10], Some(HeadProof::Missing));
+        assert_eq!(proofs[11], Some(HeadProof::Literal));
+        assert_eq!(proofs[12], Some(HeadProof::Missing));
         if let Some(prior) = &low_proofs {
             assert_eq!(&proofs, prior);
             assert_eq!(format!("{:?}", embedded.calls), max_calls.clone().unwrap());
