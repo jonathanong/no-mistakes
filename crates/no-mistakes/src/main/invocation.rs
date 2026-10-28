@@ -22,7 +22,8 @@ pub(super) fn wants_json(matches: &clap::ArgMatches) -> bool {
 
 /// Print the error, plus a JSON error object when JSON output was requested, and pick the exit code.
 pub(super) fn report_error(error: &anyhow::Error, output: &CliErrorOutput) -> ExitCode {
-    eprintln!("error: {error:#}");
+    let message = format!("error: {error:#}\n");
+    eprint!("{message}");
     if let Some(report) = output.report_or_wait(error) {
         println!("{report}");
         output.complete();

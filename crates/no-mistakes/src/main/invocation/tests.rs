@@ -5,6 +5,8 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 use wait_timeout::ChildExt;
 
+#[path = "tests/error_formatting.rs"]
+mod error_formatting;
 #[path = "tests/timeout.rs"]
 mod timeout;
 
