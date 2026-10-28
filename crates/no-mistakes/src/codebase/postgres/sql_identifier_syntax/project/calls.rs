@@ -63,10 +63,11 @@ fn direct_calls(
                 || (parts.len() == 2 && parts[1] == "query")
                 || input::indirect_executor_call(parts));
         // Broad member selection has no positive receiver ownership proof.
-        let loose = profile.import_specifier.is_empty()
-            && parts.len() > 1
+        let loose = parts.len() > 1
             && parts.last().is_some_and(|name| name == "query")
-            && profile.executor_names.iter().any(|name| name == "query");
+            && profile.executor_names.iter().any(|name| name == "query")
+            && (profile.import_specifier.is_empty()
+                || (call.unproven_member && !(named || alias || namespace || typed)));
         if !(named || alias || namespace || loose || typed) {
             continue;
         }

@@ -1,6 +1,13 @@
-import { query } from '@example/db';
+import { query, pool as p, pool as db } from '@example/db';
+import * as ns from '@example/db';
+
+declare const obj: { query(sql: string): Promise<void> };
 
 query('DROP TABLE app.users'); // direct mutation
+p.query('DROP TABLE app.imported_member'); // imported member receiver advisory
+obj.query('DROP TABLE app.object_member'); // object member receiver advisory
+ns.query('DROP TABLE app.namespace_member'); // namespace member receiver advisory
+await db.query({ text: 'DROP TABLE app.awaited_member' }); // awaited object member advisory
 const sleep = 'SELECT pg_sleep(1)';
 query(sleep); // one local const mutation
 query('SELECT id FROM app.users'); // safe direct SQL

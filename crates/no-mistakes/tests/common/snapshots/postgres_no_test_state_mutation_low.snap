@@ -8,106 +8,90 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "tests/mutation.test.ts",
-          "line": 11,
-          "message": "tests/mutation.test.ts:11: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "line": 10,
+          "message": "tests/mutation.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await db.query({ text: 'DROP TABLE app.awaited_member' }); // awaited object member advisory",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 16,
+          "message": "tests/mutation.test.ts:16: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(opaqueSql()); // residual helper",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 18,
+          "message": "tests/mutation.test.ts:18: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "run('DROP TABLE app.aliased'); // residual executor alias",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 12,
-          "message": "tests/mutation.test.ts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, invalid-sql",
+          "line": 19,
+          "message": "tests/mutation.test.ts:19: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, invalid-sql",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query('CREATE TABLE broken ('); // residual invalid SQL",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 15,
-          "message": "tests/mutation.test.ts:15: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"CREATE TABLE app.prefix (id integer);\"",
+          "line": 22,
+          "message": "tests/mutation.test.ts:22: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"CREATE TABLE app.prefix (id integer);\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`CREATE TABLE app.prefix (id integer); ${opaque}`); // prefix CREATE",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 16,
-          "message": "tests/mutation.test.ts:16: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SET session_replication_role = replica;\"",
+          "line": 23,
+          "message": "tests/mutation.test.ts:23: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SET session_replication_role = replica;\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SET session_replication_role = replica; ${opaque}`); // prefix SET",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 17,
-          "message": "tests/mutation.test.ts:17: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT pg_sleep(1);\"",
+          "line": 24,
+          "message": "tests/mutation.test.ts:24: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT pg_sleep(1);\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT pg_sleep(1); ${opaque}`); // prefix sleep",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 18,
-          "message": "tests/mutation.test.ts:18: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT 1;\"",
+          "line": 25,
+          "message": "tests/mutation.test.ts:25: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT 1;\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT 1; ${opaque}`); // safe prefix, residual tail",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 20,
-          "message": "tests/mutation.test.ts:20: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"DROP TABLE app.const_prefix;\"",
+          "line": 27,
+          "message": "tests/mutation.test.ts:27: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"DROP TABLE app.const_prefix;\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(constPrefix); // const prefix call",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 21,
-          "message": "tests/mutation.test.ts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT 'DROP TABLE hidden;';\"",
+          "line": 28,
+          "message": "tests/mutation.test.ts:28: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT 'DROP TABLE hidden;';\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT 'DROP TABLE hidden;'; ${opaque}`); // quoted semicolon stays safe",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 22,
-          "message": "tests/mutation.test.ts:22: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT 1 /* DROP TABLE hidden; */;\"",
+          "line": 29,
+          "message": "tests/mutation.test.ts:29: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT 1 /* DROP TABLE hidden; */;\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT 1 /* DROP TABLE hidden; */; ${opaque}`); // commented semicolon stays safe",
-          "target": "test-state-mutation"
-        },
-        {
-          "file": "tests/mutation.test.ts",
-          "line": 23,
-          "message": "tests/mutation.test.ts:23: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
-          "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query(`CREATE TABLE unfinished (id integer; ${opaque}`); // invalid prefix template",
-          "target": "test-state-mutation"
-        },
-        {
-          "file": "tests/mutation.test.ts",
-          "line": 25,
-          "message": "tests/mutation.test.ts:25: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
-          "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query(offsetSql()); // mixed helper remains unproved for test-state",
-          "target": "test-state-mutation"
-        },
-        {
-          "file": "tests/mutation.test.ts",
-          "line": 26,
-          "message": "tests/mutation.test.ts:26: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
-          "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query(`DROP\\x20TABLE app.escaped; ${opaque}`); // escaped prefix stays unproved",
-          "target": "test-state-mutation"
-        },
-        {
-          "file": "tests/mutation.test.ts",
-          "line": 27,
-          "message": "tests/mutation.test.ts:27: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT 1;/nDROP TABLE app.multiline;\"",
-          "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query(`SELECT 1;",
           "target": "test-state-mutation"
         },
         {
@@ -115,7 +99,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 30,
           "message": "tests/mutation.test.ts:30: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query(`SELECT ${opaque}`); // no-semicolon interpolation stays unproved",
+          "sourceLine": "query(`CREATE TABLE unfinished (id integer; ${opaque}`); // invalid prefix template",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 32,
+          "message": "tests/mutation.test.ts:32: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(offsetSql()); // mixed helper remains unproved for test-state",
           "target": "test-state-mutation"
         },
         {
@@ -123,15 +115,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 33,
           "message": "tests/mutation.test.ts:33: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query(mutableSql); // mutable assignment stays unproved",
+          "sourceLine": "query(`DROP\\x20TABLE app.escaped; ${opaque}`); // escaped prefix stays unproved",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 36,
-          "message": "tests/mutation.test.ts:36: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "line": 34,
+          "message": "tests/mutation.test.ts:34: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail; known SQL prefix \"SELECT 1;/nDROP TABLE app.multiline;\"",
           "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query(destructuredSql); // destructuring assignment stays unproved",
+          "sourceLine": "query(`SELECT 1;",
           "target": "test-state-mutation"
         },
         {
@@ -139,7 +131,47 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 37,
           "message": "tests/mutation.test.ts:37: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(`SELECT ${opaque}`); // no-semicolon interpolation stays unproved",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 40,
+          "message": "tests/mutation.test.ts:40: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(mutableSql); // mutable assignment stays unproved",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 43,
+          "message": "tests/mutation.test.ts:43: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(destructuredSql); // destructuring assignment stays unproved",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 44,
+          "message": "tests/mutation.test.ts:44: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query('DROP\\x20TABLE app.escaped_string;'); // escaped string stays unproved",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 7,
+          "message": "tests/mutation.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query('DROP TABLE app.imported_member'); // imported member receiver advisory",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 8,
+          "message": "tests/mutation.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "obj.query('DROP TABLE app.object_member'); // object member receiver advisory",
           "target": "test-state-mutation"
         },
         {
@@ -147,7 +179,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "tests/mutation.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query(opaqueSql()); // residual helper",
+          "sourceLine": "ns.query('DROP TABLE app.namespace_member'); // namespace member receiver advisory",
           "target": "test-state-mutation"
         }
       ],
@@ -158,59 +190,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "tests/mutation.test.ts",
-          "line": 15,
-          "message": "tests/mutation.test.ts:15: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 11,
+          "message": "tests/mutation.test.ts:11: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "const sleep = 'SELECT pg_sleep(1)';",
+          "target": "pg_sleep"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 22,
+          "message": "tests/mutation.test.ts:22: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`CREATE TABLE app.prefix (id integer); ${opaque}`); // prefix CREATE",
           "target": "CREATE TABLE"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 16,
-          "message": "tests/mutation.test.ts:16: executed test SQL uses session_replication_role; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 23,
+          "message": "tests/mutation.test.ts:23: executed test SQL uses session_replication_role; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SET session_replication_role = replica; ${opaque}`); // prefix SET",
           "target": "session_replication_role"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 17,
-          "message": "tests/mutation.test.ts:17: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 24,
+          "message": "tests/mutation.test.ts:24: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT pg_sleep(1); ${opaque}`); // prefix sleep",
           "target": "pg_sleep"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 19,
-          "message": "tests/mutation.test.ts:19: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 26,
+          "message": "tests/mutation.test.ts:26: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "const constPrefix = `DROP TABLE app.const_prefix; ${opaque}`; // const prefix DROP",
           "target": "DROP TABLE"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 28,
-          "message": "tests/mutation.test.ts:28: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 35,
+          "message": "tests/mutation.test.ts:35: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "DROP TABLE app.multiline;",
           "target": "DROP TABLE"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 3,
-          "message": "tests/mutation.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 6,
+          "message": "tests/mutation.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query('DROP TABLE app.users'); // direct mutation",
           "target": "DROP TABLE"
-        },
-        {
-          "file": "tests/mutation.test.ts",
-          "line": 4,
-          "message": "tests/mutation.test.ts:4: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
-          "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "const sleep = 'SELECT pg_sleep(1)';",
-          "target": "pg_sleep"
         }
       ],
       "warnings": []
@@ -222,123 +254,139 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "tests/mutation.test.ts",
-          "line": 12,
-          "message": "tests/mutation.test.ts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: invalid-sql",
+          "line": 10,
+          "message": "tests/mutation.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `db` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await db.query({ text: 'DROP TABLE app.awaited_member' }); // awaited object member advisory",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 16,
+          "message": "tests/mutation.test.ts:16: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(opaqueSql()); // residual helper",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 19,
+          "message": "tests/mutation.test.ts:19: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: invalid-sql",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query('CREATE TABLE broken ('); // residual invalid SQL",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 15,
-          "message": "tests/mutation.test.ts:15: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"CREATE TABLE app.prefix (id integer); sql_placeholder_1\"",
+          "line": 22,
+          "message": "tests/mutation.test.ts:22: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"CREATE TABLE app.prefix (id integer); sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`CREATE TABLE app.prefix (id integer); ${opaque}`); // prefix CREATE",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 16,
-          "message": "tests/mutation.test.ts:16: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"SET session_replication_role = replica; sql_placeholder_1\"",
+          "line": 23,
+          "message": "tests/mutation.test.ts:23: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"SET session_replication_role = replica; sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SET session_replication_role = replica; ${opaque}`); // prefix SET",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 17,
-          "message": "tests/mutation.test.ts:17: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT pg_sleep(1); sql_placeholder_1\"",
+          "line": 24,
+          "message": "tests/mutation.test.ts:24: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT pg_sleep(1); sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT pg_sleep(1); ${opaque}`); // prefix sleep",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 18,
-          "message": "tests/mutation.test.ts:18: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT 1; sql_placeholder_1\"",
+          "line": 25,
+          "message": "tests/mutation.test.ts:25: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT 1; sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT 1; ${opaque}`); // safe prefix, residual tail",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 20,
-          "message": "tests/mutation.test.ts:20: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"DROP TABLE app.const_prefix; sql_placeholder_1\"",
+          "line": 27,
+          "message": "tests/mutation.test.ts:27: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"DROP TABLE app.const_prefix; sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(constPrefix); // const prefix call",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 21,
-          "message": "tests/mutation.test.ts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT 'DROP TABLE hidden;'; sql_placeholder_1\"",
+          "line": 28,
+          "message": "tests/mutation.test.ts:28: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT 'DROP TABLE hidden;'; sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT 'DROP TABLE hidden;'; ${opaque}`); // quoted semicolon stays safe",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 22,
-          "message": "tests/mutation.test.ts:22: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT 1 /* DROP TABLE hidden; */; sql_placeholder_1\"",
+          "line": 29,
+          "message": "tests/mutation.test.ts:29: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT 1 /* DROP TABLE hidden; */; sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT 1 /* DROP TABLE hidden; */; ${opaque}`); // commented semicolon stays safe",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 23,
-          "message": "tests/mutation.test.ts:23: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"CREATE TABLE unfinished (id integer; sql_placeholder_1\"",
+          "line": 30,
+          "message": "tests/mutation.test.ts:30: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"CREATE TABLE unfinished (id integer; sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`CREATE TABLE unfinished (id integer; ${opaque}`); // invalid prefix template",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 26,
-          "message": "tests/mutation.test.ts:26: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"DROP TABLE app.escaped; sql_placeholder_1\"",
+          "line": 33,
+          "message": "tests/mutation.test.ts:33: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"DROP TABLE app.escaped; sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`DROP\\x20TABLE app.escaped; ${opaque}`); // escaped prefix stays unproved",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 27,
-          "message": "tests/mutation.test.ts:27: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT 1;/nDROP TABLE app.multiline;/nsql_placeholder_1\"",
+          "line": 34,
+          "message": "tests/mutation.test.ts:34: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT 1;/nDROP TABLE app.multiline;/nsql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT 1;",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 30,
-          "message": "tests/mutation.test.ts:30: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT sql_placeholder_1\"",
+          "line": 37,
+          "message": "tests/mutation.test.ts:37: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"SELECT sql_placeholder_1\"",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT ${opaque}`); // no-semicolon interpolation stays unproved",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 33,
-          "message": "tests/mutation.test.ts:33: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "line": 40,
+          "message": "tests/mutation.test.ts:40: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(mutableSql); // mutable assignment stays unproved",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 36,
-          "message": "tests/mutation.test.ts:36: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "line": 43,
+          "message": "tests/mutation.test.ts:43: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(destructuredSql); // destructuring assignment stays unproved",
           "target": "test-state-mutation"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 9,
-          "message": "tests/mutation.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "line": 7,
+          "message": "tests/mutation.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
           "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query(opaqueSql()); // residual helper",
-          "target": "test-state-mutation"
+          "sourceLine": "p.query('DROP TABLE app.imported_member'); // imported member receiver advisory",
+          "target": "undeclared-executor-type"
         }
       ],
       "codebase": [],
@@ -349,84 +397,93 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/mutation.test.ts",
           "line": 11,
-          "message": "tests/mutation.test.ts:11: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "message": "tests/mutation.test.ts:11: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "const sleep = 'SELECT pg_sleep(1)';",
+          "target": "pg_sleep"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 18,
+          "message": "tests/mutation.test.ts:18: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "run('DROP TABLE app.aliased'); // residual executor alias",
           "target": "DROP TABLE"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 15,
-          "message": "tests/mutation.test.ts:15: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 22,
+          "message": "tests/mutation.test.ts:22: executed test SQL uses CREATE TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`CREATE TABLE app.prefix (id integer); ${opaque}`); // prefix CREATE",
           "target": "CREATE TABLE"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 16,
-          "message": "tests/mutation.test.ts:16: executed test SQL uses session_replication_role; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 23,
+          "message": "tests/mutation.test.ts:23: executed test SQL uses session_replication_role; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SET session_replication_role = replica; ${opaque}`); // prefix SET",
           "target": "session_replication_role"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 17,
-          "message": "tests/mutation.test.ts:17: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 24,
+          "message": "tests/mutation.test.ts:24: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`SELECT pg_sleep(1); ${opaque}`); // prefix sleep",
           "target": "pg_sleep"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 19,
-          "message": "tests/mutation.test.ts:19: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 26,
+          "message": "tests/mutation.test.ts:26: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "const constPrefix = `DROP TABLE app.const_prefix; ${opaque}`; // const prefix DROP",
           "target": "DROP TABLE"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 26,
-          "message": "tests/mutation.test.ts:26: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 33,
+          "message": "tests/mutation.test.ts:33: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query(`DROP\\x20TABLE app.escaped; ${opaque}`); // escaped prefix stays unproved",
           "target": "DROP TABLE"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 28,
-          "message": "tests/mutation.test.ts:28: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 35,
+          "message": "tests/mutation.test.ts:35: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "DROP TABLE app.multiline;",
           "target": "DROP TABLE"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 3,
-          "message": "tests/mutation.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
-          "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "query('DROP TABLE app.users'); // direct mutation",
-          "target": "DROP TABLE"
-        },
-        {
-          "file": "tests/mutation.test.ts",
-          "line": 37,
-          "message": "tests/mutation.test.ts:37: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 44,
+          "message": "tests/mutation.test.ts:44: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query('DROP\\x20TABLE app.escaped_string;'); // escaped string stays unproved",
           "target": "DROP TABLE"
         },
         {
           "file": "tests/mutation.test.ts",
-          "line": 4,
-          "message": "tests/mutation.test.ts:4: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 6,
+          "message": "tests/mutation.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "const sleep = 'SELECT pg_sleep(1)';",
-          "target": "pg_sleep"
+          "sourceLine": "query('DROP TABLE app.users'); // direct mutation",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutation.test.ts",
+          "line": 9,
+          "message": "tests/mutation.test.ts:9: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "ns.query('DROP TABLE app.namespace_member'); // namespace member receiver advisory",
+          "target": "DROP TABLE"
         }
       ],
+      "unprovenMemberQuerySql": 2,
       "warnings": []
     }
   }

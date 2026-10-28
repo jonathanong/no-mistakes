@@ -103,6 +103,12 @@ At `max`, finite helper returns, direct throwing branches, literal iterator
 domains, and local Set guards use bounded full-SQL proofs. Annotation `low`
 requests skip these proofs and do not invoke the annotation evaluator.
 
+Member `.query` calls with SQL-looking arguments and no declared executor
+receiver type remain unresolved at low, including imported object receivers
+and awaited calls. With `unanalyzableSql: advise`, they produce advisories;
+they do not establish that the receiver executes PostgreSQL SQL. Declare the
+receiver type or call a configured executor directly to prove it.
+
 ## What it catches
 
 The rule rejects these statements in executed SQL from selected tests or

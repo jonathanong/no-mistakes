@@ -70,6 +70,10 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
         .iter()
         .any(|finding| finding.line == lines("safe direct SQL")));
     for marker in [
+        "imported member receiver advisory",
+        "object member receiver advisory",
+        "namespace member receiver advisory",
+        "awaited object member advisory",
         "quoted semicolon stays safe",
         "commented semicolon stays safe",
         "invalid prefix template",
@@ -86,6 +90,10 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
         );
     }
     for marker in [
+        "imported member receiver advisory",
+        "object member receiver advisory",
+        "namespace member receiver advisory",
+        "awaited object member advisory",
         "residual helper",
         "residual executor alias",
         "residual invalid SQL",
@@ -168,7 +176,27 @@ fn mixed_low_sql_preserves_other_helper_recovery_without_proving_test_state() {
         .position(|line| line.contains("mixed helper remains unproved"))
         .unwrap() as u32
         + 1;
+    let member_line = source
+        .lines()
+        .position(|line| line.contains("imported member receiver advisory"))
+        .unwrap() as u32
+        + 1;
     for key in syntax.application_keys() {
+        let member = syntax
+            .calls_for(&key)
+            .unwrap()
+            .iter()
+            .find(|call| call.line == member_line)
+            .unwrap();
+        assert!(matches!(
+            member.input,
+            crate::codebase::postgres::sql_identifier_syntax::Input::Unknown
+        ));
+        assert!(!syntax
+            .recovery
+            .sinks
+            .get(&key.profile)
+            .is_some_and(|sinks| sinks.contains(&member.span)));
         let call = syntax
             .calls_for(&key)
             .unwrap()

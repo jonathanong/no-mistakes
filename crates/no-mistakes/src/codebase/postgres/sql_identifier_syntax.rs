@@ -61,6 +61,7 @@ struct Call {
     span: Span,
     callee: Option<(Span, Vec<String>)>,
     input: Input,
+    unproven_member: bool,
 }
 #[derive(Default)]
 struct Syntax<'source> {
@@ -74,6 +75,7 @@ struct Syntax<'source> {
     namespace_targets: FxHashMap<Span, FxHashSet<String>>,
     typed_targets: FxHashSet<Span>,
     loose_query: bool,
+    scoped_member_advisory: bool,
     recover_helpers: bool,
     calls: Vec<Call>,
     constants: FxHashMap<Span, Input>,

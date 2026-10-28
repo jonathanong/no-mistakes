@@ -80,6 +80,11 @@ impl<'a> Visit<'a> for Syntax<'_> {
         self.metadata.reference(span(value.span));
         self.recover_call(value);
         let callee = chain(&value.callee);
+        let unproven_member = self.scoped_member_advisory
+            && callee.as_ref().is_some_and(|(_, parts)| {
+                parts.len() > 1 && parts.last().is_some_and(|name| name == "query")
+            })
+            && input::sql_looking_member_call(value);
         let selected = callee.as_ref().is_some_and(|(root, parts)| {
             (parts.len() == 1 && (self.targets.contains(root) || self.aliases.contains_key(root)))
                 || (parts.len() == 2 && self.aliases.contains_key(root) && parts[1] == "query")
@@ -92,7 +97,7 @@ impl<'a> Visit<'a> for Syntax<'_> {
                 || (self.loose_query
                     && parts.len() > 1
                     && parts.last().is_some_and(|name| name == "query"))
-        });
+        }) || unproven_member;
         let root = selected.then(|| callee.as_ref().unwrap().0);
         if selected {
             self.calls.push(Call {
@@ -114,6 +119,7 @@ impl<'a> Visit<'a> for Syntax<'_> {
                     Input::Unknown
                 },
                 callee,
+                unproven_member,
             });
         }
         let previous = self.metadata.enter_call(

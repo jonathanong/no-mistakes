@@ -64,6 +64,10 @@ pub(crate) fn collect_with_types_and_demand(
             profile.import_specifier.is_empty()
                 && profile.executor_names.iter().any(|name| name == "query")
         }),
+        scoped_member_advisory: profiles.iter().any(|profile| {
+            !profile.import_specifier.is_empty()
+                && profile.executor_names.iter().any(|name| name == "query")
+        }),
         ..Default::default()
     };
     for selection in &selections {

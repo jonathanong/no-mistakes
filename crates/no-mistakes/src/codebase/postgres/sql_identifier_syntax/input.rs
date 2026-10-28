@@ -1,4 +1,42 @@
 use super::*;
+use oxc_ast::ast::{ObjectPropertyKind, PropertyKey};
+
+pub(super) fn sql_looking_member_call(call: &CallExpression<'_>) -> bool {
+    let Some(argument) = call.arguments.first().and_then(|arg| arg.as_expression()) else {
+        return false;
+    };
+    sql_looking(argument)
+}
+
+fn sql_looking(expression: &Expression<'_>) -> bool {
+    let leading = match unwrap_ts_wrappers(expression) {
+        Expression::StringLiteral(value) => Some(crate::ast::js_literal(value).into_owned()),
+        Expression::TemplateLiteral(value) => value.quasis.first().and_then(|quasi| {
+            quasi
+                .value
+                .cooked
+                .as_ref()
+                .map(|_| crate::ast::template_quasi_text(quasi).into_owned())
+        }),
+        Expression::ObjectExpression(value) => {
+            return value.properties.iter().any(|property| {
+                let ObjectPropertyKind::ObjectProperty(property) = property else {
+                    return false;
+                };
+                let text = match &property.key {
+                    PropertyKey::StaticIdentifier(key) => key.name == "text",
+                    PropertyKey::StringLiteral(key) => crate::ast::js_literal(key) == "text",
+                    _ => false,
+                };
+                !property.computed && text && sql_looking(&property.value)
+            });
+        }
+        _ => None,
+    };
+    leading.is_some_and(|text| {
+        crate::codebase::postgres::embedded::walk::scope::has_diagnostic_leading_statement(&text)
+    })
+}
 
 pub(super) fn input(
     expression: &Expression<'_>,
