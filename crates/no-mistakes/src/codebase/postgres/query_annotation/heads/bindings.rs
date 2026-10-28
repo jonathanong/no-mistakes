@@ -59,13 +59,15 @@ impl<'a> Bindings<'a> {
         }) else {
             return index;
         };
-        // A closed captured root needs ownership for every runtime reference,
-        // including uses that are not executor or append candidates.
+        // Closed roots need ownership for every runtime reference.
         let finite_declarations = super::finite_comments::declarations(syntax);
         for binding in &module.bindings {
             if syntax
-                .append_tags
+                .string_heads
                 .contains_key(&(binding.span.start, binding.span.end))
+                || syntax
+                    .append_tags
+                    .contains_key(&(binding.span.start, binding.span.end))
                 || finite_declarations.contains(&(binding.span.start, binding.span.end))
             {
                 wanted.extend(

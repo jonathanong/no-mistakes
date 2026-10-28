@@ -82,6 +82,12 @@ uncertainty. See [the rule contract](rules/shellcheck-runner.md#what-it-catchesr
 For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
 unanalyzable policy in both APIs; it omits annotation evaluator preparation.
+CLI and async Node checks also share the low-effort proof for a local primitive
+`let` string with a continuation-safe head, discarded literal/template `+=`
+writes, and only direct configured executor reads in the same function.
+Conditional appends and template interpolations need no SQL evaluation;
+captures, aliases, reassignment, and dynamic ownership gaps remain unresolved.
+
 These proofs include trusted builder append prefixes and fixed-return helpers
 in the same file or through one direct source import, including local export
 aliases and concise arrow bodies. Opaque append suffixes preserve the prefix

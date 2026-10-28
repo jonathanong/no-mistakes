@@ -166,6 +166,26 @@ see [SQL verdicts](../postgres-sql-verdicts.md).
 
 ### Effort
 
+Low effort also accepts a function-local `let` initialized with a primitive
+string or template whose leading annotation survives any suffix. Every write
+must be a discarded `+=` with a string literal or template RHS; conditional
+appends and interpolations are allowed. For example:
+
+```ts
+let statement = `/* accounts/list */ SELECT id FROM accounts`;
+if (active) statement += ` WHERE active = true`;
+statement += ` LIMIT ${limit}`;
+query(statement);
+```
+
+The complete semantic reference census must contain only those writes and
+first-argument reads by configured executors in the same function. Reassignment,
+updates, aliases, captured uses, dynamic ownership gaps, nested RHS reads,
+optional calls, and loop uses remain unresolved. `"BEGIN" += "NING"` and an
+unfinished opening comment do not establish a continuation-safe head. This
+annotation-only proof does not recover complete SQL and never runs the evaluator.
+
+
 Maximum effort also recognizes a direct loop-carried literal reassignment in
 `for...of`, `for...in`, `while`, `do...while`, and simple `for` loops: an
 unconditional executor call followed by a missing-annotation literal assignment

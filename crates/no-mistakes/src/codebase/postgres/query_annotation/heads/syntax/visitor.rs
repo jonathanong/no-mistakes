@@ -76,6 +76,7 @@ impl<'a> Visit<'a> for Syntax {
         } else {
             self.assignments.declaration(value);
         }
+        self.string_declaration(value);
         walk::walk_variable_declaration(self, value);
     }
     fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
@@ -126,7 +127,7 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_assignment_target_property_identifier(self, value);
     }
     fn visit_assignment_expression(&mut self, value: &AssignmentExpression<'a>) {
-        self.assignments.assignment(value);
+        self.string_assignment(value);
         walk::walk_assignment_expression(self, value);
     }
     fn visit_function(&mut self, value: &Function<'a>, flags: ScopeFlags) {
