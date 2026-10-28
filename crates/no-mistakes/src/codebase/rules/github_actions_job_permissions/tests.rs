@@ -78,6 +78,9 @@ fn uncertain_permissions_follow_unanalyzable_policy() {
         ("types.yml", "unknown-scope"),
         ("malformed.yml", "unanalyzable"),
         ("jobs-shape.yml", "unanalyzable"),
+        ("job-shapes.yml", "scalar-job"),
+        ("job-shapes.yml", "null-job"),
+        ("job-shapes.yml", "list-job"),
         ("missing-jobs.yml", "unanalyzable"),
         ("empty-jobs.yml", "unanalyzable"),
         ("root-null.yml", "unanalyzable"),
@@ -326,4 +329,16 @@ fn file_catalog_and_public_dispatch_keep_suppression_boundaries() {
     assert_eq!(dispatched, check(&root, &config).unwrap());
     assert_eq!(dispatched.len(), 1);
     assert_eq!(dispatched[0].target.as_deref(), Some("visible"));
+}
+
+#[test]
+fn job_location_fallback_uses_the_job_or_jobs_declaration() {
+    let (root, _, _) = fixture("fail");
+    let source = std::fs::read_to_string(root.join(".github/workflows/inherited.yml")).unwrap();
+    let locations =
+        crate::codebase::rules::github_actions_workflow_files::job_lines::collect(&source);
+    // There is no permission key to locate for an inheriting job. The shared
+    // locator must retain a usable declaration rather than returning line zero.
+    assert_eq!(locations.job_permissions_line("build"), 8);
+    assert_eq!(locations.job_permissions_line("missing-job"), 7);
 }

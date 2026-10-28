@@ -432,6 +432,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": ".github/workflows/job-shapes.yml",
+          "line": 5,
+          "message": ".github/workflows/job-shapes.yml:5: cannot determine job permissions (job definition is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "scalar-job: ${{ inputs.job }}",
+          "target": "scalar-job"
+        },
+        {
+          "file": ".github/workflows/job-shapes.yml",
+          "line": 6,
+          "message": ".github/workflows/job-shapes.yml:6: cannot determine job permissions (job definition is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "null-job:",
+          "target": "null-job"
+        },
+        {
+          "file": ".github/workflows/job-shapes.yml",
+          "line": 7,
+          "message": ".github/workflows/job-shapes.yml:7: cannot determine job permissions (job definition is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "list-job: [runs-on, ubuntu-latest]",
+          "target": "list-job"
+        },
+        {
           "file": ".github/workflows/jobs-shape.yml",
           "line": 4,
           "message": ".github/workflows/jobs-shape.yml:4: cannot determine job permissions (jobs is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
@@ -550,6 +574,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-job-permissions",
           "sourceLine": "permissions: ${{ inputs.permissions }}",
           "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/job-shapes.yml",
+          "line": 5,
+          "message": ".github/workflows/job-shapes.yml:5: cannot determine job permissions (job definition is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "scalar-job: ${{ inputs.job }}",
+          "target": "scalar-job"
+        },
+        {
+          "file": ".github/workflows/job-shapes.yml",
+          "line": 6,
+          "message": ".github/workflows/job-shapes.yml:6: cannot determine job permissions (job definition is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "null-job:",
+          "target": "null-job"
+        },
+        {
+          "file": ".github/workflows/job-shapes.yml",
+          "line": 7,
+          "message": ".github/workflows/job-shapes.yml:7: cannot determine job permissions (job definition is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "list-job: [runs-on, ubuntu-latest]",
+          "target": "list-job"
         },
         {
           "file": ".github/workflows/jobs-shape.yml",
