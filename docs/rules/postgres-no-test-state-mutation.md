@@ -66,6 +66,8 @@ enclosed function call. `EXPLAIN ANALYZE` and `EXPLAIN (ANALYZE true/on)` do.
 SQL printed in an assertion message, stored in a snapshot, or compared as data
 (for example `pg_indexes.indexdef`) does not reach an executor and is not
 reported. Ordinary DML in test setup is allowed by this rule.
+PostgreSQL `ANALYZE` with a comma-separated relation list is also allowed.
+The complete list is parsed; malformed lists remain unanalyzable.
 
 `SELECT ... INTO` is not flagged, including forms that create a new table.
 The rule does not classify that statement as one of the mutations listed above.
@@ -113,6 +115,12 @@ specific executed SQL call, or `// no-mistakes-disable-line
 postgres-no-test-state-mutation` on its line. Use
 `// no-mistakes-disable-file postgres-no-test-state-mutation` only for a file
 whose exception is intentional, with a reason in the adjacent comment.
+
+## Effort
+
+This rule supports `max` effort. Selecting `low` falls back to `max` with a
+configuration warning. Complete PostgreSQL `ANALYZE` relation lists are parsed
+by the shared SQL extractor; malformed lists remain unanalyzable.
 
 ## Related rules
 

@@ -7,6 +7,7 @@ use sqlparser::keywords::Keyword;
 use sqlparser::parser::{Parser, ParserError};
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
+mod analyze;
 mod comment;
 mod metadata;
 mod table_star;
@@ -19,6 +20,7 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
             .iter()
             .filter(|token| !matches!(token.token, Token::Whitespace(_)));
         let candidate = match (head.next(), head.next()) {
+            (Some(first), Some(_)) if word(first, "ANALYZE") => true,
             (Some(first), Some(second)) if word(first, "COMMENT") => word(second, "ON"),
             (Some(first), Some(second)) if word(first, "ALTER") => {
                 word(second, "INDEX") || word(second, "TEXT") || word(second, "TABLE")
@@ -55,7 +57,8 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
             output.extend_from_slice(chunk);
             continue;
         }
-        let replacement = trigger::rewrite(&code)
+        let replacement = analyze::rewrite(&code)
+            .or_else(|| trigger::rewrite(&code))
             .or_else(|| table_star::rewrite(&code))
             .or_else(|| rewrite(&code))
             .or_else(|| comment::rewrite(&code))

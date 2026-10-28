@@ -164,6 +164,8 @@ pub(crate) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
 }
 
 #[cfg(test)]
+mod analyze_list_tests;
+#[cfg(test)]
 mod radix_first_tests;
 #[cfg(test)]
 mod tests;

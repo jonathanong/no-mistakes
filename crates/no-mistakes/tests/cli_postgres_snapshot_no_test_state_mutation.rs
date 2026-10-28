@@ -18,6 +18,13 @@ fn postgres_no_test_state_mutation_check_json_snapshot() {
     assert_saved_fixture(
         "postgres_no_test_state_mutation",
         &[
+            // Valid PostgreSQL multi-relation ANALYZE is clear; malformed SQL
+            // stays unknown and the separate DROP TABLE remains a finding.
+            (
+                "analyze_relation_list",
+                root.clone(),
+                config("analyze-test.yml"),
+            ),
             // Targets that must remain: DROP TABLE, CREATE TABLE, CREATE TABLE,
             // ALTER TABLE, CREATE VIEW, DROP VIEW, CREATE VIEW, ALTER SYSTEM,
             // session_replication_role, pg_sleep, pg_sleep, TRUNCATE.
