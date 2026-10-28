@@ -74,8 +74,11 @@ error: another no-mistakes invocation is already running (held by pid 264 (cwd /
 The holder records its pid, working directory, command line, and start time in
 an `invocation.lock.holder` file beside the lock file.
 
-When `--format json` (or `--json`) is set, a lock or deadline failure also
-writes one JSON object to stdout instead of leaving it empty:
+When `--format json` (or `--json`) is set, a lock failure, or a deadline
+detected at the invocation boundary (lock acquisition and the checks before and
+after a command runs), also writes one JSON object to stdout instead of leaving
+it empty. A `--timeout` that fires in the watchdog while a command is running
+still exits `124` with stderr only:
 
 ```json
 {"error":{"kind":"lock_busy","phase":"invocation.lock","message":"another no-mistakes invocation is already running (held by pid 264 ...)","exitCode":75,"holder":{"pid":264,"cwd":"/work/repo","command":"no-mistakes check","startedAtMs":1700000000000,"ageSeconds":12}}}

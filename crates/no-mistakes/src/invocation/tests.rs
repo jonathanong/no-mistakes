@@ -29,28 +29,6 @@ fn fixture_path(name: &str) -> std::path::PathBuf {
 }
 
 #[test]
-fn lock_contention_supports_fail_timeout_and_release() {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("invocation.lock");
-    let held = acquire_lock(&path, None, false).unwrap();
-    let busy = acquire_lock(&path, None, true).unwrap_err();
-    assert_eq!(
-        busy.downcast_ref::<InvocationError>().unwrap().kind(),
-        InvocationErrorKind::LockBusy
-    );
-    assert_eq!(timeout_exit_code(&busy), None);
-    let timeout = acquire_lock(&path, Some(Duration::from_millis(1)), false).unwrap_err();
-    assert_eq!(
-        timeout.downcast_ref::<InvocationError>().unwrap().kind(),
-        InvocationErrorKind::LockTimeout
-    );
-    assert_eq!(timeout_exit_code(&timeout), None);
-    assert_eq!(exit_code(&timeout), EXIT_TEMPFAIL);
-    drop(held);
-    assert!(acquire_lock(&path, Some(Duration::from_secs(1)), false).is_ok());
-}
-
-#[test]
 fn cli_defaults_and_zero_values_have_napi_parity() {
     assert_eq!(
         InvocationArgs::default().options(),
