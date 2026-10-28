@@ -14,7 +14,9 @@ const _: fn(Option<std::sync::Arc<diagnostics::InvocationObserver>>, String) =
 const _: fn(&diagnostics::InvocationObserver) =
     diagnostics::InvocationObserver::render_progress_signal_stderr;
 
-#[cfg(target_os = "macos")]
+// Exercise this copied boundary on Linux too: its crate-root dependencies must
+// be checked locally, not first discovered by the native macOS job.
+#[cfg(unix)]
 #[allow(dead_code, unused_imports)]
 #[path = "../src/invocation.rs"]
 mod invocation;
@@ -23,10 +25,16 @@ mod invocation;
 // the full suite_cli_queries harness otherwise runs only on Linux coverage CI.
 // fsmonitor loads this helper through `crate::saved_fixture`, so the macOS
 // harness must declare the same module the Linux queries suite declares.
-#[cfg(target_os = "macos")]
+#[cfg(unix)]
 #[path = "cli_invocation.rs"]
 mod cli_invocation;
-#[cfg(target_os = "macos")]
+#[cfg(unix)]
 #[allow(dead_code)]
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
+
+#[cfg(unix)]
+mod test_support {
+    // Share the saved-fixture loader without importing the full library harness.
+    pub(crate) use super::saved_fixture::materialize_path as materialize_saved_fixture;
+}
