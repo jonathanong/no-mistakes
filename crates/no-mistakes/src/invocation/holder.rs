@@ -23,6 +23,12 @@ pub struct LockHolder {
     pub age_seconds: Option<u64>,
 }
 
+pub(super) fn sidecar_path(lock: &Path) -> std::path::PathBuf {
+    let mut name = lock.as_os_str().to_owned();
+    name.push(".holder");
+    name.into()
+}
+
 pub(super) fn now_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -78,9 +84,19 @@ impl LockHolder {
         self
     }
 
-    pub(super) fn read(path: &Path) -> Option<Self> {
-        let contents = std::fs::read_to_string(path).ok()?;
+    /// Read the holder record next to `lock`. It lives in a sidecar file because
+    /// the lock file itself is unreadable to other processes where locks are mandatory.
+    pub(super) fn read(lock: &Path) -> Option<Self> {
+        let contents = std::fs::read_to_string(sidecar_path(lock)).ok()?;
         Self::parse(&contents).map(Self::with_age)
+    }
+
+    /// Record this holder after the lock is acquired, replacing any previous record.
+    pub(super) fn record(&self, lock: &Path) -> std::io::Result<()> {
+        let sidecar = sidecar_path(lock);
+        let staged = sidecar.with_extension(format!("holder.{}.tmp", self.pid));
+        std::fs::write(&staged, serde_json::to_string(self)?)?;
+        std::fs::rename(staged, sidecar)
     }
 
     /// Human description used in lock messages.

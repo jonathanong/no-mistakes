@@ -29,7 +29,11 @@ fn hold_lock(home: &Path, fixture: &str) -> File {
     assert_eq!(status["state"], "free");
     let lock_file = PathBuf::from(status["lockFile"].as_str().unwrap());
     let source = saved_fixture::materialize("invocation", fixture);
+    // The empty lock file is the fixture's lock; the holder record lives beside it.
     std::fs::copy(source.path().join("invocation.lock"), &lock_file).unwrap();
+    let mut sidecar = lock_file.clone().into_os_string();
+    sidecar.push(".holder");
+    std::fs::copy(source.path().join("invocation.lock.holder"), sidecar).unwrap();
     let file = File::options().write(true).open(&lock_file).unwrap();
     file.lock().unwrap();
     file

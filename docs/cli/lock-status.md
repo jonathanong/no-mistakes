@@ -30,8 +30,9 @@ instantaneous shared lock and never rewrites the holder record. Exit status is
 
 - `state` is `held` or `free`.
 - `holder` is `null` when the lock is free (a leftover record from an exited
-  process is never reported) or when a holder predates holder records, in which
-  case only `pid` may be known and `cwd` is `null`.
+  process is never reported) or when the lock is held but its record is empty or
+  unreadable. A holder that predates holder records is reported with only `pid`
+  set; `cwd` is `null` and `command` is empty.
 - `ageSeconds` is computed when read; it is `null` when the start time is
   unknown.
 

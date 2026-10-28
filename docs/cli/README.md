@@ -47,7 +47,7 @@ or after the command name:
   `profile: "ci"` clears any supplied `timeout` / `lockTimeout` the same way.
   Each `ciTopology()` call reads the current workflow and configuration files.
 
-### Exit-code contract
+## Exit-code contract
 
 | Status | Meaning | JSON `error.kind` |
 | --- | --- | --- |
@@ -65,10 +65,14 @@ The lock is machine-wide by design: each analysis uses every core, so
 invocations run one at a time instead of oversubscribing the CPU. Scoping the
 lock per repository is intentionally not offered.
 
-Errors are written to stderr. Lock messages name the holder, for example
-`another no-mistakes invocation is already running (held by pid 264 (cwd
-/work/repo, command `no-mistakes check`, held for 12s))`. The holder records
-its pid, working directory, command line, and start time in the lock file.
+Errors are written to stderr. Lock messages name the holder:
+
+```text
+error: another no-mistakes invocation is already running (held by pid 264 (cwd /work/repo, command `no-mistakes check`, held for 12s))
+```
+
+The holder records its pid, working directory, command line, and start time in
+an `invocation.lock.holder` file beside the lock file.
 
 When `--format json` (or `--json`) is set, a lock or deadline failure also
 writes one JSON object to stdout instead of leaving it empty:

@@ -13,7 +13,7 @@ fn fixture(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/invocation")
         .join(name)
-        .join("invocation.lock");
+        .join("invocation.lock.holder");
     std::fs::read_to_string(path).unwrap()
 }
 
@@ -114,13 +114,15 @@ fn status_reports_held_free_and_missing_lock_files() {
     assert_eq!((status.state, status.holder), (LockState::Free, None));
 }
 
+// Windows reports a path below a file as "not found", which is a free lock.
+#[cfg(unix)]
 #[test]
 fn status_surfaces_unopenable_lock_paths() {
     let directory = tempfile::tempdir().unwrap();
     let blocked = directory.path().join("file.txt").join("invocation.lock");
     std::fs::copy(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/invocation/lock-holder/invocation.lock"),
+            .join("../../fixtures/invocation/lock-holder/invocation.lock.holder"),
         directory.path().join("file.txt"),
     )
     .unwrap();

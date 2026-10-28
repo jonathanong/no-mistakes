@@ -3,7 +3,6 @@ use super::{clock, InvocationError, InvocationErrorKind};
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use std::fs::{File, OpenOptions, TryLockError};
-use std::io::{Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
@@ -75,7 +74,8 @@ pub(super) fn acquire_lock_from(
         }
         match classify_try_lock(file.try_lock(), path, fail_on_lock) {
             TryLockOutcome::Acquired => {
-                write_holder(&file)?;
+                // Diagnostic only: a failed record must not fail the invocation.
+                let _ = LockHolder::current().record(path);
                 return Ok(file);
             }
             TryLockOutcome::Failed(error) => return Err(error),
@@ -114,15 +114,6 @@ fn classify_try_lock(
         }
         Err(TryLockError::WouldBlock) => TryLockOutcome::Wait,
     }
-}
-
-fn write_holder(file: &File) -> Result<()> {
-    let mut file = file.try_clone()?;
-    file.set_len(0)?;
-    file.seek(SeekFrom::Start(0))?;
-    write!(file, "{}", serde_json::to_string(&LockHolder::current())?)?;
-    file.flush()?;
-    Ok(())
 }
 
 fn report_lock_wait(path: &Path, elapsed: Duration, last_reported_secs: &mut Option<u64>) {
