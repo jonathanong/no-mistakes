@@ -42,7 +42,7 @@ pub(super) struct Syntax {
     pub finite_selects: Vec<super::finite_comments::Select>,
     pub active_domains: Vec<super::finite_comments::Domain>,
     pub namespace_destructures: Vec<super::namespace_heads::Candidate>,
-    pub effect_functions: FxHashMap<Span, super::effects::FunctionSyntax>,
+    pub effect_functions: FxHashMap<Span, [Option<super::effects::FunctionSyntax>; 2]>,
     pub effect_calls: Vec<super::effects::CallSyntax>,
     pub returned_effect_appends: FxHashSet<Span>,
     pub dynamic_refs: Vec<Span>,

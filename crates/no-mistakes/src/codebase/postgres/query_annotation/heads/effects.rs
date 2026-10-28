@@ -18,6 +18,7 @@ pub(crate) struct Conditional {
 #[derive(Clone, Copy)]
 pub(super) struct FunctionSyntax {
     pub parameter: Span,
+    pub position: u8,
     pub function: Span,
     pub body: Span,
     pub signature: Signature,
@@ -58,17 +59,20 @@ pub(super) struct CallSyntax {
     pub span: Span,
     pub callee: Span,
     pub builder: Span,
+    pub position: u8,
     pub shape: CallShape,
 }
 
-pub(super) fn function(value: &Function<'_>) -> Option<FunctionSyntax> {
+pub(super) fn function(value: &Function<'_>) -> [Option<FunctionSyntax>; 2] {
     if value.r#type != FunctionType::FunctionDeclaration || value.r#async || value.generator {
-        return None;
+        return [None, None];
     }
-    let body = value.body.as_ref()?;
+    let Some(body) = value.body.as_ref() else {
+        return [None, None];
+    };
     let params = &value.params;
     if params.rest.is_some() || params.items.is_empty() {
-        return None;
+        return [None, None];
     }
     let mut signature = Signature::default();
     for (index, param) in params.items.iter().enumerate() {
@@ -80,23 +84,37 @@ pub(super) fn function(value: &Function<'_>) -> Option<FunctionSyntax> {
                 &mut signature,
             )
         {
-            return None;
+            return [None, None];
         }
     }
-    let BindingPattern::BindingIdentifier(parameter) = &params.items[0].pattern else {
-        return None;
-    };
-    Some(FunctionSyntax {
-        parameter: (parameter.span.start, parameter.span.end),
-        function: (value.span.start, value.span.end),
-        body: (body.span.start, body.span.end),
-        signature,
+    std::array::from_fn(|position| {
+        // Keep the existing first-parameter grammar; the new position has no defaults.
+        if position == 1
+            && !(params.items.len() == 2
+                && params.items.iter().all(|param| {
+                    param.initializer.is_none()
+                        && matches!(param.pattern, BindingPattern::BindingIdentifier(_))
+                }))
+        {
+            return None;
+        }
+        let BindingPattern::BindingIdentifier(parameter) = &params.items.get(position)?.pattern
+        else {
+            return None;
+        };
+        Some(FunctionSyntax {
+            parameter: (parameter.span.start, parameter.span.end),
+            position: position as u8,
+            function: (value.span.start, value.span.end),
+            body: (body.span.start, body.span.end),
+            signature,
+        })
     })
 }
 
-pub(super) fn call(expression: &Expression<'_>) -> Option<CallSyntax> {
+pub(super) fn call(expression: &Expression<'_>) -> [Option<CallSyntax>; 2] {
     let Expression::CallExpression(call) = unwrap_ts_wrappers(expression) else {
-        return None;
+        return [None, None];
     };
     if call.optional
         || call
@@ -104,21 +122,13 @@ pub(super) fn call(expression: &Expression<'_>) -> Option<CallSyntax> {
             .iter()
             .any(|arg| arg.as_expression().is_none())
     {
-        return None;
+        return [None, None];
     }
     let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) else {
-        return None;
+        return [None, None];
     };
-    let Expression::Identifier(builder) =
-        unwrap_ts_wrappers(call.arguments.first()?.as_expression()?)
-    else {
-        return None;
-    };
-    Some(CallSyntax {
-        span: (call.span.start, call.span.end),
-        callee: (callee.span.start, callee.span.end),
-        builder: (builder.span.start, builder.span.end),
-        shape: CallShape {
+    let shape =
+        CallShape {
             arg_count: call.arguments.len(),
             closed_objects: call.arguments.iter().take(16).enumerate().fold(
                 0,
@@ -130,6 +140,22 @@ pub(super) fn call(expression: &Expression<'_>) -> Option<CallSyntax> {
                     }
                 },
             ),
-        },
+        };
+    std::array::from_fn(|position| {
+        if position == 1 && call.arguments.len() != 2 {
+            return None;
+        }
+        let Expression::Identifier(builder) =
+            unwrap_ts_wrappers(call.arguments.get(position)?.as_expression()?)
+        else {
+            return None;
+        };
+        Some(CallSyntax {
+            span: (call.span.start, call.span.end),
+            callee: (callee.span.start, callee.span.end),
+            builder: (builder.span.start, builder.span.end),
+            position: position as u8,
+            shape,
+        })
     })
 }

@@ -20,6 +20,8 @@ mod namespace_fact_tests;
 mod returned_param_fact_tests;
 #[path = "head_calls_only_tests/returned_prefix_fact_tests.rs"]
 mod returned_prefix_fact_tests;
+#[path = "head_calls_only_tests/second_effect_fact_tests.rs"]
+mod second_effect_fact_tests;
 #[path = "head_calls_only_tests/text_field_fact_tests.rs"]
 mod text_field_fact_tests;
 

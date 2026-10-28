@@ -60,7 +60,7 @@ fn classify_call(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     trusted_roots: &FxHashSet<Span>,
-    proven: &FxHashMap<usize, Signature>,
+    proven: &FxHashMap<(usize, u8), Signature>,
     imports: &FxHashMap<usize, Option<(&str, &str)>>,
     out: &mut Prepared,
 ) {
@@ -80,6 +80,9 @@ fn classify_call(
         return;
     };
     if callee.imported {
+        if call.position != 0 {
+            return;
+        }
         let Some((specifier, imported)) = imports.get(&callee.id).copied().flatten() else {
             return;
         };
@@ -91,7 +94,7 @@ fn classify_call(
             shape: call.shape,
         });
     } else if proven
-        .get(&callee.id)
+        .get(&(callee.id, call.position))
         .is_some_and(|signature| signature.accepts(call.shape))
     {
         out.allowed.insert(call.builder);
@@ -117,7 +120,7 @@ fn imports(module: &TypeScriptModuleFacts) -> FxHashMap<usize, Option<(&str, &st
 
 fn exported(
     module: &TypeScriptModuleFacts,
-    proven: &FxHashMap<usize, Signature>,
+    proven: &FxHashMap<(usize, u8), Signature>,
 ) -> BTreeMap<String, Signature> {
     let roots = module
         .scopes
@@ -155,7 +158,7 @@ fn exported(
             .get(export.local.as_str())
             .copied()
             .flatten()
-            .and_then(|id| proven.get(&id).copied())
+            .and_then(|id| proven.get(&(id, 0)).copied())
         else {
             continue;
         };

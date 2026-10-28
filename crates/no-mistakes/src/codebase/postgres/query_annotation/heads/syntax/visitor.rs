@@ -83,9 +83,8 @@ impl<'a> Visit<'a> for Syntax {
     }
     fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
         if self.collect_helper_heads {
-            if let Some(candidate) = super::super::effects::call(&value.expression) {
-                self.effect_calls.push(candidate);
-            }
+            let effects = super::super::effects::call(&value.expression);
+            self.effect_calls.extend(effects.into_iter().flatten());
         }
         let literal = super::super::append::reference(&value.expression);
         if let Some(reference) = literal {
