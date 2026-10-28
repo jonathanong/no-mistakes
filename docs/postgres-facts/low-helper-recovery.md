@@ -80,8 +80,11 @@ mutation of caller-owned builders, rest/spread arguments, computed object
 definitions, unknown await behavior, or unresolved/ambiguous exports. Imported
 helpers must already have facts in the selected low-effort scope; analysis does
 not broaden the file selection or parse excluded files as a fallback.
-For test-state checks, source-visible callees may be elsewhere in the declared
-rule application. Reported sinks remain in its test and helper globs.
+For test-state checks, helper models are available only in configured
+`testGlobs` and `helperRoots`, intersected with the application's
+`include`/`exclude` boundaries. A selected executor call into a helper outside
+those roots remains unresolved under the configured uncertainty policy, even
+when the helper source is present in the request inventory.
 
 Helpers that receive a SQL object, directly or nested inside an argument, keep
 returned SQL read-only because it may alias that input. Such results can be

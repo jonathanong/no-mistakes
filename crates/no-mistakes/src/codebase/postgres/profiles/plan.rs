@@ -56,8 +56,8 @@ pub fn configure_prepared_postgres_plan(
             let declared_factories = postgres_effects
                 .map(|effects| effects.returned_executors.as_slice())
                 .unwrap_or_default();
-            // Report in test/helper scope; collect callees across the declared application.
-            let include = options.include.clone();
+            // Low facts follow the same configured test/helper scope as the rule.
+            let include = super::scans::include(&rule.rule, &options);
             let scan =
                 crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan::new(
                     root,

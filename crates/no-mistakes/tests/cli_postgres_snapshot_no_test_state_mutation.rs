@@ -184,3 +184,26 @@ fn postgres_no_test_state_mutation_declared_factory_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_no_test_state_mutation_forwarding_check_json_snapshot() {
+    let root = fixture().join("effort-forwarding");
+    // Transport must keep the known mutation as well as opaque executor escapes.
+    assert_saved_fixture(
+        "postgres_no_test_state_mutation_forwarding",
+        &[("low", root.clone(), root.join("low.yml"))],
+    );
+}
+
+#[test]
+fn postgres_no_test_state_mutation_helper_scope_check_json_snapshot() {
+    let root = fixture().join("effort-scope");
+    // Another rule's wider helper catalog cannot prove this rule's outside call.
+    assert_saved_fixture(
+        "postgres_no_test_state_mutation_helper_scope",
+        &[
+            ("low", root.clone(), root.join("low.yml")),
+            ("mixed", root.clone(), root.join("mixed.yml")),
+        ],
+    );
+}

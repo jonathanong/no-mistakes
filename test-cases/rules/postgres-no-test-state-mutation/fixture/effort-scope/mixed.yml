@@ -1,0 +1,15 @@
+effort: low
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    options:
+      testGlobs: ['tests/**/*.test.ts']
+      helperRoots: ['helpers/**/*.ts']
+      importSpecifier: '@example/db'
+      unanalyzableSql: advise
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ['outside/**/*.ts']
+      importSpecifier: '@example/db'
+      unanalyzableSql: advise

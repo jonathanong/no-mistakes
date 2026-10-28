@@ -1,6 +1,79 @@
 use super::*;
 
 #[test]
+fn declared_factory_forwarding_keeps_opaque_advice_and_known_helper_mutation() {
+    let root = fixture().join("effort-forwarding");
+    let files = [
+        root.join("tests/forwarding.test.ts"),
+        root.join("db/index.ts"),
+    ];
+    let source = std::fs::read_to_string(&files[0]).unwrap();
+    let sources = super::super::super::source_store_for_files(&files);
+    let mut config = crate::config::v2::load_v2_config(&root, Some(&root.join("low.yml"))).unwrap();
+    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+        &root,
+        &mut config,
+        &files,
+        &sources,
+    )
+    .unwrap();
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        &root,
+        &files,
+        Arc::clone(&sources),
+        &config,
+        &[RULE_ID],
+    )
+    .unwrap()
+    .with_fresh_sql_verdicts();
+    let findings =
+        check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
+    let rows = facts.sql_verdicts();
+    let line = |marker: &str| {
+        source
+            .lines()
+            .position(|text| text.contains(marker))
+            .unwrap() as u32
+            + 1
+    };
+    for marker in [
+        "first executor forwarding",
+        "second executor forwarding",
+        "unresolved selected sink",
+    ] {
+        assert!(
+            rows.iter().any(|row| {
+                row.file == "tests/forwarding.test.ts"
+                    && crate::codebase::ts_source::byte_offset_to_line(&source, row.span.0 as usize)
+                        == line(marker)
+                    && row.status == crate::codebase::postgres::SqlVerdictStatus::Abstain
+                    && row.advisory
+            }),
+            "{marker}: {rows:?}"
+        );
+    }
+    let mutation = line("helper executes a known mutation");
+    assert!(
+        rows.iter().any(|row| {
+            row.file == "tests/forwarding.test.ts"
+                && crate::codebase::ts_source::byte_offset_to_line(&source, row.span.0 as usize)
+                    == mutation
+                && row.status == crate::codebase::postgres::SqlVerdictStatus::Violation
+                && row.residual_reasons.is_empty()
+        }),
+        "known helper mutation lost: {rows:?}"
+    );
+    assert!(
+        findings.iter().any(|row| {
+            row.file == "tests/forwarding.test.ts"
+                && row.line == line("DROP TABLE app.forwarded_mutation") as usize
+                && row.target.as_deref() == Some("DROP TABLE")
+        }),
+        "known helper mutation finding lost: {findings:?}"
+    );
+}
+
+#[test]
 fn declared_relative_factory_creates_real_low_sql_obligations() {
     let root = fixture().join("effort-factory");
     let files = [

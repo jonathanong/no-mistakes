@@ -85,7 +85,7 @@ the rule application's finding text. There is no autofix.
 test files and helper roots, without the maximum-effort executor and builder
 walk. A direct named executor import can receive a SQL literal or one local
 `const` initialized with a literal. Low also checks complete SQL returned by
-bounded source-visible helpers in the declared rule application, including
+bounded source-visible helpers in configured test and helper roots, including
 fresh tagged builders and finite static alternatives. The helper must be
 resolvable through the prepared source catalog; recovery stops at its depth,
 work, SQL-size, or alternative-count limit. A helper that escapes, reads
@@ -111,9 +111,11 @@ checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the
 SQL value, executor alias, unsupported helper, or invalid SQL remains
 unanalyzable under the configured policy. Put a complete literal at the
 configured executor or select `max` to use broader analysis. Low keeps the
-same `testGlobs` and `helperRoots` report boundaries. Helper source must remain
-inside the application's `include`/`exclude` boundaries. The shared SQL
-extractor parses PostgreSQL `ANALYZE` relation lists with `VERBOSE` and
+same `testGlobs` and `helperRoots` fact and report boundaries. Helper source
+outside those roots cannot prove a selected executor call, which remains
+unanalyzable under the configured policy even when the source is in the file
+inventory. The application's `include`/`exclude` boundaries also apply. The
+shared SQL extractor parses PostgreSQL `ANALYZE` relation lists with `VERBOSE` and
 per-relation column lists; malformed lists and parenthesized option lists
 remain unanalyzable.
 
