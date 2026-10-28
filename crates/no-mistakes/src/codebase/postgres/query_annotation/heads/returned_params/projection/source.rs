@@ -12,10 +12,31 @@ pub(super) fn source_proof(
     candidate: &Candidate,
     dynamic: &[Span],
 ) -> bool {
+    let mut visits = 0;
+    let result = prove(syntax, bindings, callable, candidate, dynamic, &mut visits);
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("postgres.annotation.returned_parameter_source_censuses", 1);
+        observer.increment(
+            "postgres.annotation.returned_parameter_source_reference_visits",
+            visits,
+        );
+    }
+    result
+}
+
+fn prove(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    callable: &ModuleBinding,
+    candidate: &Candidate,
+    dynamic: &[Span],
+    visits: &mut u64,
+) -> bool {
     let declaration = (callable.span.start, callable.span.end);
     if !bindings.declaration_safe(declaration)
         || !bindings.declaration_safe(candidate.function)
         || callable.references.iter().any(|usage| {
+            *visits += 1;
             let span = (usage.span.start, usage.span.end);
             !bindings.declaration_safe(span)
                 || syntax.assignments.writes.contains_key(&span)
