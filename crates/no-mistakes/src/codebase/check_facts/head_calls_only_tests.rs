@@ -8,6 +8,8 @@ use crate::config::v2::{
 };
 use crate::diagnostics::{with_observer, InvocationObserver};
 
+#[path = "head_calls_only_tests/async_return_fact_tests.rs"]
+mod async_return_fact_tests;
 #[path = "head_calls_only_tests/callback_head_tests.rs"]
 mod callback_head_tests;
 #[path = "head_calls_only_tests/callback_more_tests.rs"]

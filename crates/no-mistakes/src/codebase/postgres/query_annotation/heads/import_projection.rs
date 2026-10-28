@@ -104,6 +104,7 @@ pub(crate) fn project(
             }
         }
     }
+    super::async_returns::project(files, &resolve);
     for (path, span, proof) in completed {
         let Some(heads) = files
             .get_mut(&path)

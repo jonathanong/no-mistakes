@@ -404,3 +404,10 @@ report/advise/ignore policy. Rewrite them to a direct helper wrapping one static
 literal, or use the existing rule suppression directives documented above.
 `sqlLiteralHelpers` is independent of deprecated `trustedSqlTags` and does not
 add helper support to the general SQL extraction API.
+
+Low effort can also prove a direct awaited imported async factory's fresh native
+builder when all setup awaits precede allocation and all subsequent builder uses
+are proven append-only effects followed by its sole terminal return. Consume that
+result in one `const` immediately passed as the configured executor's sole
+argument. Missing awaits, extra uses, unresolved effects and alternate return
+paths remain unanalyzable; see [awaited return origins](../postgres-query-annotation/low-effort.md#awaited-fresh-native-return-origins).

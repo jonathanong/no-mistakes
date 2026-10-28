@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 mod append;
 mod append_constants;
 mod assignments;
+mod async_returns;
 mod bindings;
 mod branch_assignments;
 mod callback_heads;
@@ -58,6 +59,8 @@ pub(crate) struct AnnotationHeads {
     pub(crate) exported_callbacks: BTreeMap<String, callback_heads::Summary>,
     pub(crate) pending_callbacks: Vec<callback_heads::Pending>,
     pub(crate) exported_returned_params: std::collections::BTreeSet<String>,
+    pub(crate) exported_async_returns: BTreeMap<String, async_returns::Summary>,
+    pub(crate) pending_async_returns: Vec<async_returns::Pending>,
     pub(crate) pending_returned_params: Vec<returned_params::Pending>,
     pub(crate) conditional_effects: Vec<effects::Conditional>,
     pub(crate) loop_carried_missing: BTreeMap<Span, Vec<Option<String>>>,
