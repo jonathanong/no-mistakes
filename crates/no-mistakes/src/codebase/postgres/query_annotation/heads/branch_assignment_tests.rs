@@ -64,7 +64,7 @@ fn branch_assignment_shape_and_lifetime_controls_remain_unproven() {
     let (source, _, heads) = fixture("two-arm-rejections.mts");
     assert_eq!(assert_markers(&source, &heads), 16);
     assert_eq!(
-        proof_at(&source, &heads, "read(q)", 12),
+        proof_at(&source, &heads, "read(argumentQuery)", 0),
         HeadProof::Unproven,
         "arguments access must invalidate the function-local lifetime proof"
     );
