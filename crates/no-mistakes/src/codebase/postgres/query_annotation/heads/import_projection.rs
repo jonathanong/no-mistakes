@@ -82,7 +82,8 @@ pub(crate) fn project(
             let proven = files
                 .get(&target)
                 .and_then(|target| target.query_annotation_heads.as_deref())
-                .is_some_and(|heads| heads.exported_effects.contains(&pending.imported));
+                .and_then(|heads| heads.exported_effects.get(&pending.imported))
+                .is_some_and(|signature| signature.accepts(pending.shape));
             if proven {
                 effects
                     .entry(path.clone())
