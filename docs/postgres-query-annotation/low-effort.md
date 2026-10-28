@@ -174,14 +174,20 @@ A discarded call to a same-file or direct imported function declaration may
 also preserve that trusted local builder's prefix. The helper must receive the
 builder as its first argument, and every use of that parameter must be a
 discarded, static `.append(oneExpression)` chain. The helper may choose a
-suffix at runtime. Defaults, aliases, captured parameters, used append results,
-and other parameter uses leave the later read unanalyzable. Direct imported
-helpers qualify only when their prepared source file exports the proven
-function; unresolved and re-exported helpers remain unanalyzable.
+suffix at runtime. A nested callback may also use that exact parameter as
+the receiver of discarded static appends. The callback may run later or more
+than once because these uses only add suffixes. The callback may be stored or
+returned; its scheduling identity is irrelevant to the exact parameter uses.
+A nested return or implicit arrow result of `.append(...)` exposes the builder
+and stays unanalyzable.
+Defaults, aliases, used append results, and other parameter uses leave the
+later read unanalyzable. Direct imported helpers qualify only when their
+prepared source file exports the proven function; unresolved and re-exported
+helpers remain unanalyzable.
 One helper may call another proven same-file append-only helper with the same
 first parameter as a complete expression statement. This composition is
 bounded to four local edges and requires exact lexical call bindings; cycles,
-used call results, aliases, and nested captures remain unresolved. A helper
+used call results, aliases, and nested helper calls remain unresolved. A helper
 may also `return query.append(suffix)` when that entire static append chain
 is rooted at its first parameter and its caller discards the helper result.
 The returned builder does not become a general value-flow proof.
