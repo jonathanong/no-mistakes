@@ -17,8 +17,9 @@ impl Syntax {
         if let Some(candidate) = super::super::returned_params::function(value) {
             self.returned_params.insert(declaration, candidate);
         }
-        if let Some(summary) = super::super::effects::function(value) {
-            self.effect_functions.insert(declaration, summary);
+        let effects = super::super::effects::function(value);
+        if effects.iter().any(Option::is_some) {
+            self.effect_functions.insert(declaration, effects);
         }
         if let Some(summary) = super::super::helper_heads::function(value) {
             if let Some(reference) = summary.head.reference() {
