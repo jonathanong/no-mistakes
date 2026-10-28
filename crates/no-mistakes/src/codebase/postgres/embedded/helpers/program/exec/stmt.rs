@@ -64,26 +64,37 @@ impl Machine<'_> {
             ),
             Stmt::Throw => Some(Vec::new()),
             Stmt::ForOf(name, iterable, body) => self.for_of(name, iterable, body, path),
-            Stmt::Switch(discriminant, arms) => self.switch(discriminant, arms, path),
+            Stmt::Switch(discriminant, arms, default) => {
+                self.switch(discriminant, arms, default.as_ref(), path)
+            }
             Stmt::Opaque => None,
         }
     }
 
     /// Unknown selectors keep every arm. Past the cap the call abstains.
     #[rustfmt::skip]
-    fn switch(&mut self, discriminant: &Expr, arms: &[SwitchArm], path: Path) -> Option<Vec<Path>> {
+    fn switch(&mut self, discriminant: &Expr, arms: &[SwitchArm], default: Option<&Expr>, path: Path) -> Option<Vec<Path>> {
         let mut out = Vec::new();
         for (path, selector) in self.eval(discriminant, path)? {
             match selector {
                 Val::Str(text) => {
                     if let Some(arm) = arms.iter().find(|arm| arm.cases.iter().any(|case| case == &text.value)) {
                         out.extend(self.switch_arm(arm, path)?);
+                    } else if let Some(default) = default {
+                        if !self.eval(default, path)?.is_empty() { return None; }
                     }
                 }
                 Val::Unknown | Val::Free => {
                     for arm in arms { out.extend(self.switch_arm(arm, path.clone())?); }
+                    if let Some(default) = default {
+                        if !self.eval(default, path)?.is_empty() { return None; }
+                    }
                 }
-                _ => {}
+                _ => {
+                    if let Some(default) = default {
+                        if !self.eval(default, path)?.is_empty() { return None; }
+                    }
+                }
             }
             if out.len() > MAX_EMBEDDED_SQL_VARIANTS { return None; }
         }

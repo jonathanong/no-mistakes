@@ -367,6 +367,14 @@ applications run through the existing async `check()` binding and through
 `check`. Import the exported `PostgresNoTestStateMutationOptions` type for
 `testGlobs`, `helperRoots`, executor targets, and the unanalyzable policy. The
 runtime export remains `check(options)`; this rule adds no separate function.
+The shared prepared facts can also enumerate literal SQL fragments selected
+by a local map from an exact imported Vitest `it.each` literal key array.
+It also enumerates a local literal `Set` domain after a dominating membership
+guard throws on nonmembers, with the same CLI and async API result.
+The prepared helper projection also resolves fixed SQL switch arms whose
+default is proven to throw, including a source-visible imported thrower.
+Local builder assignments after a direct throwing branch use the same
+reachable SQL alternatives in CLI and async Node check reports.
 
 The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLiteralHelpers` in rule configuration, for example `["pg-copy-streams#from"]`. Both effort modes recognize direct imported helper calls with one static literal argument; `SqlExecutorProfile.sqlLiteralHelpers` records the configured identities in requested SQL verdicts. See [the annotation rule](rules/postgres-require-query-annotation.md#configured-single-literal-sql-helpers).
 

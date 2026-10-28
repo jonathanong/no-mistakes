@@ -10,6 +10,8 @@ mod append_decisions;
 mod append_sites;
 #[path = "tests/branch_correlation.rs"]
 mod branch_correlation;
+#[path = "tests/branch_throw.rs"]
+mod branch_throw;
 #[path = "tests/captured_bindings.rs"]
 mod captured_bindings;
 #[path = "tests/captured_builder_identities.rs"]
@@ -32,10 +34,14 @@ mod final_assignment_consumers;
 mod final_interpolation;
 #[path = "tests/final_rebinding.rs"]
 mod final_rebinding;
+#[path = "tests/finite_identifiers.rs"]
+mod finite_identifiers;
 #[path = "tests/folded_append_origins.rs"]
 mod folded_append_origins;
 #[path = "tests/guard_alias.rs"]
 mod guard_alias;
+#[path = "tests/guarded_sql.rs"]
+mod guarded_sql;
 #[path = "tests/helper_effects.rs"]
 mod helper_effects;
 #[path = "tests/helper_provenance.rs"]

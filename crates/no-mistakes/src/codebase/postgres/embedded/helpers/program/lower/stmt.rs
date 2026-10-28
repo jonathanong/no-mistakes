@@ -22,13 +22,6 @@ fn one(scope: &mut Scope<'_, '_>, statement: &Statement<'_>) -> Option<Vec<Stmt>
         Statement::ExpressionStatement(statement) => {
             vec![Stmt::Expr(expr::lower(scope, &statement.expression))]
         }
-        Statement::IfStatement(statement)
-            if switch::skippable(statement, &|name| {
-                scope.ctx.throws.contains(name) && !scope.is_rebound(name)
-            }) =>
-        {
-            Vec::new()
-        }
         Statement::IfStatement(statement) => {
             let test = expr::lower(scope, &statement.test);
             let then = body(scope, &statement.consequent)?;
@@ -142,9 +135,10 @@ pub(super) fn contributes_sql(statement: &Stmt) -> bool {
         Stmt::ForOf(_, iterable, body) => {
             expr::contributes_sql(iterable) || body.iter().any(contributes_sql)
         }
-        Stmt::Switch(discriminant, arms) => {
+        Stmt::Switch(discriminant, arms, default) => {
             expr::contributes_sql(discriminant)
                 || arms.iter().any(|arm| expr::contributes_sql(&arm.value))
+                || default.as_ref().is_some_and(expr::contributes_sql)
         }
         Stmt::Throw | Stmt::Opaque => false,
     }

@@ -37,7 +37,7 @@ pub(super) fn lower_all(
     let mut programs = FxHashMap::default();
     for (name, resolvable) in raw {
         if let Some(lowered) = lower(resolvable.params, Body::Statements(resolvable.body), &ctx) {
-            insert(&mut programs, name, lowered);
+            insert(&mut programs, name, lowered, throwing.contains(*name));
         }
     }
     for (name, declarator_init) in expression_arrows(program) {
@@ -51,7 +51,7 @@ pub(super) fn lower_all(
             continue;
         }
         if let Some(lowered) = lower(&arrow.params, Body::Expression(body), &ctx) {
-            insert(&mut programs, name, lowered);
+            insert(&mut programs, name, lowered, false);
         }
     }
     programs
@@ -61,8 +61,9 @@ fn insert(
     programs: &mut FxHashMap<String, std::sync::Arc<HelperProgram>>,
     name: &str,
     lowered: HelperProgram,
+    always_throws: bool,
 ) {
-    if lowered.contributes_sql() {
+    if always_throws || lowered.contributes_sql() {
         programs.insert(name.to_string(), std::sync::Arc::new(lowered));
     }
 }

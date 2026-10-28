@@ -81,6 +81,10 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) sql_statement_types: HashSet<String>,
     pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,
     pub(super) literal_objects: super::const_literals::LiteralObjects,
+    pub(super) vitest_it_imports: crate::fx::FxHashSet<String>,
+    pub(super) finite_cases: Vec<super::finite_identifiers::FiniteCase>,
+    pub(super) guarded_cases: Vec<super::guarded_sql::GuardedCase>,
+    pub(super) set_intrinsic_safe: bool,
     pub(super) declaring_const: bool,
     pub(super) clause_unions: crate::fx::FxHashSet<(usize, String)>,
     pub(crate) exported_constants:

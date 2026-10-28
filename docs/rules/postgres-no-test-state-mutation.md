@@ -35,6 +35,33 @@ globs are outside this rule. There is no `sqlInclude` option: the rule checks
 SQL that reaches configured executors in this explicit scope rather than
 scanning raw `.sql` files.
 
+Source-visible synchronous helpers may return one of several fixed SQL
+statements from a `switch`. A default that always throws adds no SQL variant,
+including when it calls a prepared imported function whose body is proved to
+throw. A default that can return or whose implementation is outside the
+configured source scope stays unanalyzable. The same recovery applies to
+`check` through the CLI and async Node API.
+An opaque method call in a throwing guard remains unanalyzable: that method
+could change a SQL builder on the path that continues after the guard.
+For local SQL builders assigned in finite `if` branches, a direct throwing
+branch cannot reach the later executor call. Every branch that can reach it
+must still assign a recoverable statement; a missing assignment or escaped
+builder remains unanalyzable.
+
+A direct `it` import from `vitest` with no local name collision can supply a finite runtime
+domain through `it.each(['first', 'second'])`. Inside its callback, a local
+`const` map with literal own keys and literal `sql` fields may select one
+fixed fragment per row before a configured executor call. Every selected key
+must exist. Writes, aliases, escapes, unknown iterator bindings, and keys
+inferred only from TypeScript types remain unanalyzable.
+
+A same-function `const` literal `Set` can bound an appended SQL identifier when
+an exact negated `.has(value)` guard immediately throws before the executor.
+The guarded parameter must be the appended value, and the Set must stay local
+and unmodified. This proof covers up to 16 fixed strings. Shadowed constructors,
+member overrides, escaped sets, reassigned arguments, caught throws, and
+TypeScript-only unions stay unanalyzable.
+
 `importSpecifier` defaults to empty, so configure an executor module or inherit
 it from [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope).
 When an executor module is set, `executorNames` defaults to `query`, `read`,

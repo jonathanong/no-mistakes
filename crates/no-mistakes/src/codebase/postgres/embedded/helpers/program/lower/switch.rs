@@ -5,7 +5,7 @@ mod shape {
     use super::super::super::{Expr, Stmt, SwitchArm};
     use super::super::{expr, Scope};
     use crate::codebase::ts_source::unwrap_ts_wrappers;
-    use oxc_ast::ast::{Argument, CallExpression, Expression, FormalParameters, FunctionBody, IfStatement, LogicalOperator, Statement, SwitchStatement, UnaryOperator};
+    use oxc_ast::ast::{Argument, BindingPattern, Expression, FormalParameters, FunctionBody, Statement, SwitchStatement, VariableDeclarationKind};
     use oxc_span::GetSpan;
     use std::collections::HashSet;
 
@@ -57,47 +57,21 @@ mod shape {
             && call.arguments.iter().all(|arg| !matches!(arg, Argument::SpreadElement(_)))
     }
 
-    pub(crate) fn skippable(statement: &IfStatement<'_>, throws: &impl Fn(&str) -> bool) -> bool {
-        statement.alternate.is_none()
-            && sequence(std::slice::from_ref(&statement.consequent), throws)
-            && opaque_check(&statement.test)
-    }
-
-    fn opaque_check(expr: &Expression<'_>) -> bool {
-        match unwrap_ts_wrappers(expr) {
-            Expression::UnaryExpression(unary) if unary.operator == UnaryOperator::LogicalNot => opaque_check(&unary.argument),
-            Expression::LogicalExpression(logical) if logical.operator != LogicalOperator::Coalesce => {
-                opaque_check(&logical.left) && opaque_check(&logical.right)
-            }
-            Expression::CallExpression(call) => member_call(call),
-            _ => false,
-        }
-    }
-
-    fn member_call(call: &CallExpression<'_>) -> bool {
-        if call.optional { return false; }
-        let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else { return false };
-        member.property.name != "append"
-            && matches!(unwrap_ts_wrappers(&member.object), Expression::Identifier(_))
-            && call.arguments.iter().all(|arg| arg.as_expression().is_some_and(ident))
-    }
-
-    fn ident(expr: &Expression<'_>) -> bool {
-        matches!(unwrap_ts_wrappers(expr), Expression::Identifier(_))
-    }
     pub(crate) fn lower(scope: &mut Scope<'_, '_>, statement: &SwitchStatement<'_>) -> Stmt {
         let Some(discriminant) = selector(scope, &statement.discriminant) else { return Stmt::Opaque };
         let mut arms: Vec<SwitchArm> = Vec::new();
         let mut pending = Vec::new();
         // Labels that fell through into a throwing default. A later repeat is not that arm.
         let mut seen = Vec::new();
-        let mut threw = false;
+        let mut default = None;
         for case in &statement.cases {
             let Some(test) = &case.test else {
                 let throws = |name: &str| scope.ctx.throws.contains(name) && !scope.is_rebound(name);
-                if !sequence(&case.consequent, &throws) { return Stmt::Opaque; }
+                let proven = sequence(&case.consequent, &throws) || inert_then_throw(scope, &case.consequent);
+                let deferred = if proven { None } else { deferred_throw(scope, &case.consequent) };
+                if !proven && deferred.is_none() { return Stmt::Opaque; }
                 seen.append(&mut pending);
-                threw = true;
+                default = Some(deferred);
                 continue;
             };
             let Some(label) = string_label(test) else { return Stmt::Opaque };
@@ -109,7 +83,34 @@ mod shape {
             let Some(arm) = literal_return(scope, &case.consequent, &mut pending) else { return Stmt::Opaque };
             arms.push(arm);
         }
-        if threw && pending.is_empty() && !arms.is_empty() { Stmt::Switch(discriminant, arms) } else { Stmt::Opaque }
+        if let Some(default) = default.filter(|_| pending.is_empty() && !arms.is_empty()) {
+            Stmt::Switch(discriminant, arms, default)
+        } else { Stmt::Opaque }
+    }
+
+    /// Only a read of a parameter into a fresh const may precede a final throw.
+    fn inert_then_throw(scope: &Scope<'_, '_>, statements: &[Statement<'_>]) -> bool {
+        let statements = match statements {
+            [Statement::BlockStatement(block)] => block.body.as_slice(),
+            other => other,
+        };
+        let Some((last, prefix)) = statements.split_last() else { return false };
+        matches!(last, Statement::ThrowStatement(_)) && prefix.iter().all(|statement| {
+            let Statement::VariableDeclaration(declaration) = statement else { return false };
+            if declaration.kind != VariableDeclarationKind::Const { return false; }
+            let [declarator] = declaration.declarations.as_slice() else { return false };
+            let BindingPattern::BindingIdentifier(_) = &declarator.id else { return false };
+            let Some(init) = &declarator.init else { return false };
+            let Expression::Identifier(value) = unwrap_ts_wrappers(init) else { return false };
+            scope.params.iter().any(|param| param == value.name.as_str())
+        })
+    }
+
+    /// A source-visible callee may prove abruptness only during prepared projection.
+    fn deferred_throw(scope: &mut Scope<'_, '_>, statements: &[Statement<'_>]) -> Option<Expr> {
+        let [Statement::ReturnStatement(ret)] = statements else { return None };
+        let value = expr::lower(scope, ret.argument.as_ref()?);
+        matches!(value, Expr::Call(..)).then_some(value)
     }
 
     /// A number evaluates as an unknown scalar and would keep every arm.
@@ -141,8 +142,8 @@ mod shape {
     }
 }
 
+pub(super) use shape::lower;
 pub(crate) use shape::names;
-pub(super) use shape::{lower, skippable};
 
 use oxc_ast::ast::{FormalParameters, FunctionBody};
 use oxc_ast_visit::Visit;

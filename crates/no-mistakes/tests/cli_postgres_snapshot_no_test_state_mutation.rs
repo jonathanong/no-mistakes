@@ -77,6 +77,33 @@ fn postgres_no_test_state_mutation_check_json_snapshot() {
                 root.clone(),
                 config("explain-test.yml"),
             ),
+            // Both reachable DDL arms remain findings; returning, unknown, and
+            // builder-mutating guards remain advisory.
+            (
+                "finite_helper_abrupt",
+                root.clone(),
+                config("finite-helper.yml"),
+            ),
+            // A direct throw removes the absent branch; a live absent branch advises.
+            (
+                "branch_builder_throw",
+                root.clone(),
+                config("branch-builder.yml"),
+            ),
+            // The literal Vitest iterator clears one finite UPDATE; unknown selectors advise.
+            (
+                "finite_runtime_identifier",
+                root.clone(),
+                config("finite-identifiers.yml"),
+            ),
+            // Literal Set guard clears a read; both bounded DROP variants remain findings.
+            (
+                "finite_set_guard",
+                root.clone(),
+                config("finite-set-guard.yml"),
+            ),
+            // CommonJS arguments aliasing invalidates a guarded parameter.
+            ("finite_set_cjs", root.clone(), config("finite-set-cjs.yml")),
             // CREATE TABLE, session_replication_role, and pg_sleep remain.
             // unanalyzable-sql remains only for fail.
             ("prefix_fail", root.clone(), config("prefix-fail.yml")),

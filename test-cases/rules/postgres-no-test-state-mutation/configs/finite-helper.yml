@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - tests/finite-helper.test.ts
+      - helpers/abrupt.ts
+    options:
+      testGlobs: ["tests/**/*.test.ts"]
+      helperRoots: ["helpers/**"]
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{ module: "@example/db", name: sql }]
+      unanalyzable: advise

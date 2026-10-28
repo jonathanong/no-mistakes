@@ -1,0 +1,19 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - tests/finite-set-guard.test.ts
+      - tests/finite-set-escaped-positive.test.ts
+      - tests/finite-set-escaped-negative.test.ts
+      - tests/finite-set-imported.test.ts
+      - tests/finite-set-function.test.ts
+      - tests/finite-set-class.test.ts
+      - tests/finite-set-forward-var.test.ts
+      - tests/finite-set-enclosing-var.test.ts
+      - tests/finite-set-type-only.test.ts
+    options:
+      testGlobs: ["tests/**/*.test.ts"]
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{ module: "@example/db", name: sql }]
+      unanalyzable: report

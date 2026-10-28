@@ -7,7 +7,9 @@ mod calls;
 mod const_literals;
 mod executor_arguments;
 mod executors;
+mod finite_identifiers;
 mod flow;
+mod guarded_sql;
 mod head_calls;
 mod iife;
 mod imported;
@@ -96,8 +98,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        self.poison_literal_callee(call);
-        self.visit_sql_call(call);
+        self.visit_finite_call(call);
     }
 
     fn visit_simple_assignment_target(&mut self, target: &ast::SimpleAssignmentTarget<'a>) {
@@ -119,7 +120,6 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
             self.revoke_namespace_expression(&template.tag, index, expression);
         }
     }
-    // Erased types cannot retain a runtime builder reference.
     fn visit_ts_type(&mut self, _: &ast::TSType<'a>) {}
     fn visit_identifier_reference(&mut self, id: &ast::IdentifierReference<'a>) {
         self.poison_literal_reference(id);

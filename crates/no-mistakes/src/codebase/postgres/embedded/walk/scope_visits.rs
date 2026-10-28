@@ -32,7 +32,21 @@ impl<'a> ScopeVisitor<'a> {
             }
         }
         self.enter_function();
+        let guarded = (!self.head_calls_only
+            && self.set_intrinsic_safe
+            && self.lookup("Set").is_none())
+        .then(|| {
+            super::guarded_sql::GuardedCase::from_function(function, self.function_scopes.len())
+        })
+        .flatten();
+        let inserted = guarded.is_some();
+        if let Some(guarded) = guarded {
+            self.guarded_cases.push(guarded);
+        }
         walk::walk_function(self, function, flags);
+        if inserted {
+            self.guarded_cases.pop();
+        }
         self.leave_plain_function();
         self.leave_function();
         self.pop_scope();

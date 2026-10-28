@@ -9,12 +9,13 @@ use super::locate::{Located, Locator};
 use super::CheckFileFacts;
 use crate::codebase::dependencies::extract::ImportedBindingKind;
 use crate::codebase::postgres::{
-    run_helper_program, Callee, Callees, EmbeddedSqlOptions, HelperProgram, ImportedSite, Outcome,
-    RecoveredSql, Ret, SiteArg, MAX_CALL_DEPTH,
+    Callee, Callees, EmbeddedSqlOptions, ImportedSite, Outcome, RecoveredSql, Ret, SiteArg,
 };
 use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
+mod frame;
+use frame::Frame;
 
 /// Profile index, executor module, helper module, helper, arguments.
 type Key = (usize, PathBuf, PathBuf, String, Vec<SiteArg>);
@@ -101,15 +102,7 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         if let Some(text) = self.summary_text(options, from, site) {
             return Some(vec![text]);
         }
-        let mut frame = Frame {
-            shared: self,
-            profile,
-            options,
-            root: from.to_path_buf(),
-            file: from.to_path_buf(),
-            depth: 0,
-            stack: Vec::new(),
-        };
+        let mut frame = Frame::new(self, profile, options, from);
         let outcomes = match frame.call(&site.local, &site.args) {
             Callee::Done(outcomes) => outcomes,
             Callee::Unresolved | Callee::Failed => return None,
@@ -122,7 +115,7 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
                 texts.push(text);
             }
         }
-        Some(texts)
+        (!texts.is_empty()).then_some(texts)
     }
 }
 
@@ -148,79 +141,6 @@ fn hole_text(outcome: Outcome, builder: Option<usize>, value_used: bool) -> Opti
             _ => None,
         },
     }
-}
-
-/// One module's view while its helper runs.
-struct Frame<'s, 'a, 'o, R> {
-    shared: &'s mut Shared<'a, R>,
-    profile: usize,
-    options: &'o EmbeddedSqlOptions,
-    /// The module whose executor is being completed.
-    root: PathBuf,
-    file: PathBuf,
-    depth: u8,
-    stack: Vec<(PathBuf, String)>,
-}
-
-impl<R: FnMut(&str, &Path) -> Option<PathBuf>> Callees for Frame<'_, '_, '_, R> {
-    fn call(&mut self, name: &str, args: &[SiteArg]) -> Callee {
-        if self.depth >= MAX_CALL_DEPTH {
-            return Callee::Failed;
-        }
-        let Some((origin, local)) = self.shared.find(&self.file, name, None) else {
-            return Callee::Unresolved;
-        };
-        if self
-            .stack
-            .iter()
-            .any(|(file, known)| *file == origin && *known == local)
-        {
-            return Callee::Failed;
-        }
-        let key = (
-            self.profile,
-            self.root.clone(),
-            origin.clone(),
-            local.clone(),
-            args.to_vec(),
-        );
-        if let Some(known) = self.shared.cache.get(&key) {
-            return known.clone().map_or(Callee::Failed, Callee::Done);
-        }
-        let Some(program) = helper_program(self.shared, self.options, &origin, &local) else {
-            return Callee::Unresolved;
-        };
-        let mut stack = self.stack.clone();
-        stack.push((origin.clone(), local));
-        let mut child = Frame {
-            shared: &mut *self.shared,
-            profile: self.profile,
-            options: self.options,
-            root: self.root.clone(),
-            file: origin.clone(),
-            depth: self.depth + 1,
-            stack,
-        };
-        let stamp = (origin != self.root).then_some(origin.as_path());
-        let outcomes = run_helper_program(&program, args, stamp, &mut child);
-        self.shared.cache.insert(key, outcomes.clone());
-        outcomes.map_or(Callee::Failed, Callee::Done)
-    }
-}
-
-fn helper_program<R>(
-    shared: &Shared<'_, R>,
-    options: &EmbeddedSqlOptions,
-    origin: &Path,
-    local: &str,
-) -> Option<std::sync::Arc<HelperProgram>> {
-    let (_, embedded) = shared
-        .files
-        .get(origin)?
-        .embedded_sql
-        .iter()
-        .find(|(known, _)| known == options)?;
-    embedded.exported_programs.get(local).cloned()
 }
 
 #[cfg(test)]
