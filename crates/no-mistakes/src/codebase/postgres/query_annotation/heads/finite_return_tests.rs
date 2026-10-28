@@ -22,3 +22,18 @@ fn finite_return_guards_do_not_hide_builder_mutations_or_returns() {
     let (source, _, heads) = fixture("finite-helper-guards.mts");
     assert_eq!(assert_markers(&source, &heads), 18);
 }
+
+#[test]
+fn finite_return_branch_shapes_keep_totality_and_abrupt_paths_explicit() {
+    let (source, _, heads) = fixture("finite-helper-return-grammar.mts");
+    assert_eq!(assert_markers(&source, &heads), 11);
+    let missing = source.find("read(opaqueMissing(true))").unwrap() as u32;
+    assert_eq!(
+        heads
+            .calls
+            .iter()
+            .find(|(span, _)| span.0 == missing)
+            .map(|(_, proof)| *proof),
+        Some(super::super::HeadProof::Missing),
+    );
+}
