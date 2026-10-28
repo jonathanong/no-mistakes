@@ -7,19 +7,9 @@ use serde_json::Value;
 mod aliases;
 use aliases::AliasSafety;
 
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) enum ArgumentValue {
-    Scalar(Value),
-    Array(Vec<Self>),
-    Object(FxHashMap<String, Self>),
-    Unknown,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct ArgumentValues {
-    pub(crate) values: Vec<ArgumentValue>,
-    pub(crate) spread_from: Option<usize>,
-}
+mod path_origin;
+mod types;
+pub(crate) use types::{ArgumentValue, ArgumentValues, PathAnchor, PathOrigin};
 
 pub(super) fn collect(
     semantic: &Semantic<'_>,
@@ -43,6 +33,7 @@ pub(super) fn collect(
         .filter(|b| roots.contains(&b.scope_id) && names.contains(b.name.as_str()))
         .map(|b| b.id)
         .collect();
+    let imported = path_origin::imported_locals(facts);
     let mut immutable = AliasSafety::default();
     let mut result = FxHashMap::default();
     let mut dynamic_scope = false;
@@ -62,9 +53,9 @@ pub(super) fn collect(
                 }
             }
         }
-        let (offset, arguments) = match node.kind() {
-            AstKind::CallExpression(call) => (call.span.start, &call.arguments),
-            AstKind::NewExpression(call) => (call.span.start, &call.arguments),
+        let (offset, arguments, callee) = match node.kind() {
+            AstKind::CallExpression(call) => (call.span.start, &call.arguments, Some(call)),
+            AstKind::NewExpression(call) => (call.span.start, &call.arguments, None),
             _ => continue,
         };
         let mut projector = Projector {
@@ -93,11 +84,13 @@ pub(super) fn collect(
                 }
             })
             .collect();
+        let path = callee.and_then(|call| projector.call_path(call, &imported));
         result.insert(
             offset,
             ArgumentValues {
                 values,
                 spread_from,
+                path,
             },
         );
     }
@@ -105,6 +98,7 @@ pub(super) fn collect(
         for call in result.values_mut() {
             call.values.fill(ArgumentValue::Unknown);
             call.spread_from = Some(0);
+            call.path = call.path.take().map(|_| PathOrigin::unknown());
         }
     }
     result

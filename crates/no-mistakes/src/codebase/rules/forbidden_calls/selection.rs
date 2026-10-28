@@ -11,7 +11,8 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod invocations;
-use invocations::{allowed_invocations, site_source_node};
+use invocations::allowed_invocations;
+pub(crate) use invocations::site_source_node;
 
 pub(crate) fn graph_plan(
     config: &NoMistakesConfig,
@@ -79,6 +80,8 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
     config::validate(options)?;
     let target_roots = super::super::target_roots(root, config, application);
     let roots = roots::expand(roots::ExpandRequest {
+        rule: RULE_ID,
+        allow_sourceless: false,
         root,
         options,
         graph,

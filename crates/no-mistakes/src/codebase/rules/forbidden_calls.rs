@@ -6,12 +6,16 @@ pub(crate) use argument_scope::argument_facts_covered;
 pub use argument_scope::{configure_argument_facts, ArgumentFactScope};
 mod config;
 mod findings;
+mod root_files;
 mod roots;
 mod selection;
 
 pub const RULE_ID: &str = "forbidden-calls";
 
-pub(crate) use selection::{check_with_graph, graph_plan};
+pub(crate) use selection::{check_with_graph, graph_plan, site_source_node};
+mod shared;
+pub(crate) use arguments::for_call as call_argument_values;
+pub(crate) use shared::{expand_roots, SharedRoots};
 
 #[cfg(test)]
 mod tests;
@@ -30,6 +34,7 @@ pub fn argument_facts_required(config: &crate::config::v2::NoMistakesConfig) -> 
 /// True when a forbidden-calls application names a `vitest:` collection root.
 pub fn vitest_roots_configured(config: &crate::config::v2::NoMistakesConfig) -> bool {
     catalog_root_configured(config, "vitest")
+        || super::test_no_live_repository_scan::vitest_roots_configured(config)
 }
 
 /// True when a forbidden-calls application names a `playwright:` collection root.

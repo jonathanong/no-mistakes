@@ -1,12 +1,14 @@
 use super::super::path_filter::GlobMatcher;
 use super::config::{catalog_names, Options, PlaywrightRoot, Root};
-use super::RULE_ID;
+use super::root_files::{excludes_root, reject_parse_error, require_file};
 use crate::codebase::dependencies::graph::{CallRoot, DepGraph, NodeId};
-use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
 
-pub(super) struct ExpandRequest<'a> {
+pub(crate) struct ExpandRequest<'a> {
+    pub rule: &'a str,
+    /// Accept a root file that has no call site, such as an import-only test.
+    pub allow_sourceless: bool,
     pub root: &'a Path,
     pub options: &'a Options,
     pub graph: &'a DepGraph,
@@ -16,14 +18,20 @@ pub(super) struct ExpandRequest<'a> {
     pub target_roots: &'a [PathBuf],
 }
 
-pub(super) fn expand(input: ExpandRequest<'_>) -> Result<Vec<NodeId>> {
+pub(crate) fn expand(input: ExpandRequest<'_>) -> Result<Vec<NodeId>> {
+    expand_with_files(input).map(|(nodes, _)| nodes)
+}
+
+/// Expanded call roots plus the source files the selectors named, including
+/// files that have no call site and so contribute no call node.
+pub(crate) fn expand_with_files(input: ExpandRequest<'_>) -> Result<(Vec<NodeId>, Vec<PathBuf>)> {
     let exclude_roots = input
         .options
         .exclude_roots
         .as_ref()
         .map(|patterns| patterns.values())
         .unwrap_or_default();
-    let exclude_roots = GlobMatcher::new(&exclude_roots, "forbidden-calls excludeRoots")?;
+    let exclude_roots = GlobMatcher::new(&exclude_roots, &format!("{} excludeRoots", input.rule))?;
     let mut call_roots = Vec::new();
     let mut skipped_unknown = false;
     for selector in &input.options.roots {
@@ -34,24 +42,35 @@ pub(super) fn expand(input: ExpandRequest<'_>) -> Result<Vec<NodeId>> {
         }
     }
     if call_roots.is_empty() && skipped_unknown {
-        return Ok(Vec::new());
+        return Ok((Vec::new(), Vec::new()));
     }
     if call_roots.is_empty() {
-        bail!("{RULE_ID}: excludeRoots excluded all configured roots");
+        bail!("{}: excludeRoots excluded all configured roots", input.rule);
     }
     let mut nodes = Vec::new();
+    let mut files = Vec::new();
     for call_root in call_roots {
+        match &call_root {
+            CallRoot::File(file) | CallRoot::Module(file) => files.push(file.clone()),
+            CallRoot::Function { file, .. } => files.push(file.clone()),
+            CallRoot::Files { files: selected } => files.extend(selected.iter().cloned()),
+        }
         let mut expanded = input
             .graph
             .expand_call_roots(std::slice::from_ref(&call_root));
-        if expanded.is_empty() {
-            bail!("{RULE_ID}: a configured root resolves to no callable source");
+        if expanded.is_empty() && !input.allow_sourceless {
+            bail!(
+                "{}: a configured root resolves to no callable source",
+                input.rule
+            );
         }
         nodes.append(&mut expanded);
     }
     nodes.sort();
     nodes.dedup();
-    Ok(nodes)
+    files.sort();
+    files.dedup();
+    Ok((nodes, files))
 }
 
 fn expand_selector(
@@ -62,36 +81,42 @@ fn expand_selector(
 ) -> Result<Option<CallRoot>> {
     match selector {
         Root::File(selector) => {
-            let file = require_file(input.root, &selector.file, "file root")?;
+            let file = require_file(input.rule, input.root, &selector.file, "file root")?;
             if excludes_root(input.root, &file, exclude_roots) {
                 return Ok(None);
             }
-            reject_parse_error(input.graph, input.root, &file)?;
+            reject_parse_error(input.rule, input.graph, input.root, &file)?;
             Ok(Some(CallRoot::File(file)))
         }
         Root::Module(selector) => {
-            let file = require_file(input.root, &selector.module, "module root")?;
+            let file = require_file(input.rule, input.root, &selector.module, "module root")?;
             if excludes_root(input.root, &file, exclude_roots) {
                 return Ok(None);
             }
-            reject_parse_error(input.graph, input.root, &file)?;
+            reject_parse_error(input.rule, input.graph, input.root, &file)?;
             Ok(Some(CallRoot::Module(file)))
         }
         Root::Function(selector) => {
-            let file = require_file(input.root, &selector.function.file, "function root")?;
+            let file = require_file(
+                input.rule,
+                input.root,
+                &selector.function.file,
+                "function root",
+            )?;
             if excludes_root(input.root, &file, exclude_roots) {
                 return Ok(None);
             }
-            reject_parse_error(input.graph, input.root, &file)?;
+            reject_parse_error(input.rule, input.graph, input.root, &file)?;
             Ok(Some(CallRoot::Function {
                 file,
                 symbol: selector.function.symbol.clone(),
             }))
         }
         Root::Vitest(selector) => {
-            let catalog = input.vitest.context(
-                "forbidden-calls Vitest roots require a prepared Vitest project catalog",
-            )?;
+            let catalog = input.vitest.context(format!(
+                "{} Vitest roots require a prepared Vitest project catalog",
+                input.rule
+            ))?;
             let files = catalog.matching_files(
                 input.root,
                 &catalog_names(&selector.vitest),
@@ -100,9 +125,10 @@ fn expand_selector(
             collection_root(input, files, "Vitest root matched no files", exclude_roots)
         }
         Root::Playwright(PlaywrightRoot { playwright }) => {
-            let catalog = input.playwright.context(
-                "forbidden-calls Playwright roots require a prepared Playwright project catalog",
-            )?;
+            let catalog = input.playwright.context(format!(
+                "{} Playwright roots require a prepared Playwright project catalog",
+                input.rule
+            ))?;
             let (files, unknown) = catalog.matching_files(
                 input.root,
                 &catalog_names(playwright),
@@ -141,41 +167,14 @@ fn collection_root(
     exclude_roots: &GlobMatcher,
 ) -> Result<Option<CallRoot>> {
     if files.is_empty() {
-        bail!("{RULE_ID}: {empty_message}");
+        bail!("{}: {empty_message}", input.rule);
     }
     files.retain(|file| !excludes_root(input.root, file, exclude_roots));
     if files.is_empty() {
         return Ok(None);
     }
     for file in &files {
-        reject_parse_error(input.graph, input.root, file)?;
+        reject_parse_error(input.rule, input.graph, input.root, file)?;
     }
     Ok(Some(CallRoot::Files { files }))
-}
-
-fn excludes_root(root: &Path, file: &Path, exclude_roots: &GlobMatcher) -> bool {
-    exclude_roots.is_match(&relative_slash_path(root, file))
-}
-
-fn reject_parse_error(graph: &DepGraph, root: &Path, path: &Path) -> Result<()> {
-    let Some(error) = graph.parse_error(path) else {
-        return Ok(());
-    };
-    bail!(
-        "{RULE_ID}: configured root `{}` failed to parse: {error}",
-        relative_slash_path(root, path)
-    );
-}
-
-fn require_file(root: &Path, configured: &str, kind: &str) -> Result<PathBuf> {
-    let path = Path::new(configured);
-    let path = if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        root.join(path)
-    };
-    if !path.is_file() {
-        bail!("{RULE_ID}: {kind} `{configured}` is not a file");
-    }
-    Ok(crate::codebase::ts_resolver::normalize_path(&path))
 }

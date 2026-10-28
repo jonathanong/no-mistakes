@@ -1,0 +1,5 @@
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      fixtureDirs: ["a/b"]

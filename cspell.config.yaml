@@ -13,6 +13,8 @@ ignorePaths:
   - "test-cases/**"
   - "crates/**/target/**"
 words:
+  - opendir
+  - opendirSync
   - UNLOGGED
   - TEMPFAIL
   - indexdef

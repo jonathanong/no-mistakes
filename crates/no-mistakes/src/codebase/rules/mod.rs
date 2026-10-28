@@ -121,6 +121,7 @@ pub mod swift_no_raw_print;
 pub mod swift_viewmodel_main_actor;
 pub mod test_email_domain_policy;
 pub mod test_no_dependency_pins;
+pub mod test_no_live_repository_scan;
 pub mod test_no_unmocked_dynamic_imports;
 pub mod tsconfig_alias_folder_mapping;
 pub mod tsconfig_file_coverage;

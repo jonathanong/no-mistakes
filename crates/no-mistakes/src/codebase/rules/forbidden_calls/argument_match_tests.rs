@@ -13,6 +13,7 @@ fn check(predicate: serde_json::Value, value: ArgumentValue) -> Match {
         Some(&ArgumentValues {
             values: vec![value],
             spread_from: None,
+            path: None,
         }),
     )
 }
@@ -122,7 +123,8 @@ fn property_missing_position_spread_and_conjunction_keep_three_values() {
             &condition,
             Some(&ArgumentValues {
                 values: vec![],
-                spread_from: None
+                spread_from: None,
+                path: None
             })
         ),
         Match::No
@@ -132,7 +134,8 @@ fn property_missing_position_spread_and_conjunction_keep_three_values() {
             &condition,
             Some(&ArgumentValues {
                 values: vec![],
-                spread_from: Some(0)
+                spread_from: Some(0),
+                path: None
             })
         ),
         Match::Unknown
@@ -146,7 +149,8 @@ fn property_missing_position_spread_and_conjunction_keep_three_values() {
             &conditions,
             Some(&ArgumentValues {
                 values: vec![ArgumentValue::Unknown, scalar(json!(3))],
-                spread_from: None
+                spread_from: None,
+                path: None
             })
         ),
         Match::No

@@ -95,6 +95,7 @@ pub use super::swift_no_raw_print::RULE_ID as SWIFT_NO_RAW_PRINT;
 pub use super::swift_viewmodel_main_actor::RULE_ID as SWIFT_VIEWMODEL_MAIN_ACTOR;
 pub use super::test_email_domain_policy::RULE_ID as TEST_EMAIL_DOMAIN_POLICY;
 pub use super::test_no_dependency_pins::RULE_ID as TEST_NO_DEPENDENCY_PINS;
+pub use super::test_no_live_repository_scan::RULE_ID as TEST_NO_LIVE_REPOSITORY_SCAN;
 pub use super::test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;
 pub use super::tsconfig_alias_folder_mapping::RULE_ID as TSCONFIG_ALIAS_FOLDER_MAPPING;
 pub use super::tsconfig_file_coverage::RULE_ID as TSCONFIG_FILE_COVERAGE;

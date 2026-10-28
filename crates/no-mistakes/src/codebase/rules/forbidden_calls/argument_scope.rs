@@ -50,16 +50,20 @@ impl ArgumentFactScope {
 }
 
 fn for_config(root: &Path, config: &NoMistakesConfig) -> Option<Arc<ArgumentFactScope>> {
-    let applications = config.rule_applications(super::RULE_ID);
-    if !applications
-        .iter()
-        .any(|application| requires_arguments(application))
-    {
+    // `test-no-live-repository-scan` always reads the first argument's path origin.
+    let applications = config
+        .rule_applications(super::RULE_ID)
+        .into_iter()
+        .filter(|application| requires_arguments(application))
+        .chain(
+            config.rule_applications(crate::codebase::rules::test_no_live_repository_scan::RULE_ID),
+        )
+        .collect::<Vec<_>>();
+    if applications.is_empty() {
         return None;
     }
     let filters = applications
         .into_iter()
-        .filter(|application| requires_arguments(application))
         .map(|application| RulePathFilter::new(root, config, application).map(Arc::new))
         .collect::<anyhow::Result<Vec<_>>>()
         .ok();
