@@ -20,7 +20,7 @@ fn callback_producer_requires_closed_receiver_and_payload_uses() {
                 };
                 let name = function.id.as_ref()?.name.as_str().to_string();
                 let body = function.body.as_ref()?;
-                let proof = Uses::inspect(body, vec!["base", "execute"], 1);
+                let proof = Uses::inspect(body, vec!["base", "execute"], 1, &Default::default());
                 Some((name, proof))
             })
             .collect::<BTreeMap<_, _>>()

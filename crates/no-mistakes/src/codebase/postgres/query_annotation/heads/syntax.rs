@@ -54,6 +54,7 @@ pub(super) struct Syntax {
     pub string_constants: FxHashSet<Span>,
     pub value_reads: FxHashMap<Span, Span>,
     pub record_result_calls: FxHashSet<Span>,
+    pub record_options_calls: FxHashSet<Span>,
     pub assignments: super::assignments::Assignments,
     pub append_receivers: FxHashSet<Span>,
     pub discarded_appends: FxHashSet<Span>,
