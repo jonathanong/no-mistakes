@@ -20,3 +20,14 @@ fn captured_parameter_appends_keep_only_the_fixed_prefix() {
 
 #[path = "branch_default_coverage_tests.rs"]
 mod coverage_tests;
+#[test]
+fn discarded_local_second_argument_effects_keep_factory_heads() {
+    let (source, _, heads) = fixture_with_effects("second-argument-effects.mts");
+    assert_eq!(assert_markers(&source, &heads), 15);
+    let (source, _, heads) = fixture_with_effects("second-argument-unsafe.mts");
+    assert_eq!(assert_markers(&source, &heads), 8);
+    let (source, _, heads) = fixture_with_effects("second-argument-dynamic.mts");
+    assert_eq!(assert_markers(&source, &heads), 1);
+    let (source, _, heads) = fixture_with_effects("second-argument-duplicate.mts");
+    assert_eq!(assert_markers(&source, &heads), 1);
+}

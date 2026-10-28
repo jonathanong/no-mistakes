@@ -14,7 +14,7 @@ pub(super) fn proven(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     declarations: &FxHashMap<Span, Option<&ModuleBinding>>,
-) -> FxHashMap<usize, Signature> {
+) -> FxHashMap<(usize, u8), Signature> {
     let calls = syntax
         .effect_calls
         .iter()
@@ -22,29 +22,32 @@ pub(super) fn proven(
         .collect::<FxHashMap<_, _>>();
     let mut dynamic_refs = syntax.dynamic_refs.clone();
     dynamic_refs.sort_unstable();
-    let mut candidates: FxHashMap<usize, Option<(Signature, Vec<usize>)>> = FxHashMap::default();
-    for (&declaration, summary) in &syntax.effect_functions {
+    let mut candidates: FxHashMap<(usize, u8), Option<(Signature, Vec<(usize, u8)>)>> =
+        FxHashMap::default();
+    for (&declaration, summaries) in &syntax.effect_functions {
         let Some(callable) = declarations.get(&declaration).copied().flatten() else {
             continue;
         };
-        let Some(parameter) = declarations.get(&summary.parameter).copied().flatten() else {
-            continue;
-        };
-        let dependencies = dependencies(
-            syntax,
-            bindings,
-            Input {
-                summary,
-                callable,
-                parameter,
-            },
-            &dynamic_refs,
-            &calls,
-        );
-        candidates
-            .entry(callable.id)
-            .and_modify(|entry| *entry = None)
-            .or_insert(dependencies.map(|required| (summary.signature, required)));
+        for summary in summaries.iter().flatten() {
+            let Some(parameter) = declarations.get(&summary.parameter).copied().flatten() else {
+                continue;
+            };
+            let dependencies = dependencies(
+                syntax,
+                bindings,
+                Input {
+                    summary,
+                    callable,
+                    parameter,
+                },
+                &dynamic_refs,
+                &calls,
+            );
+            candidates
+                .entry((callable.id, summary.position))
+                .and_modify(|entry| *entry = None)
+                .or_insert(dependencies.map(|required| (summary.signature, required)));
+        }
     }
     let mut proven = FxHashMap::default();
     // Four local edges are enough for the inventoried helper chain. A cycle
@@ -52,15 +55,15 @@ pub(super) fn proven(
     for _ in 0..=4 {
         let next = candidates
             .iter()
-            .filter_map(|(&id, candidate)| {
+            .filter_map(|(&key, candidate)| {
                 let (signature, deps) = candidate.as_ref()?;
-                (!proven.contains_key(&id)
+                (!proven.contains_key(&key)
                     && deps.iter().all(|dep| {
                         proven
                             .get(dep)
                             .is_some_and(|known: &Signature| known.plain())
                     }))
-                .then_some((id, *signature))
+                .then_some((key, *signature))
             })
             .collect::<Vec<_>>();
         if next.is_empty() {
@@ -77,7 +80,7 @@ fn dependencies(
     input: Input<'_>,
     dynamic_refs: &[Span],
     calls: &FxHashMap<Span, &CallSyntax>,
-) -> Option<Vec<usize>> {
+) -> Option<Vec<(usize, u8)>> {
     let Input {
         summary,
         callable,
@@ -133,7 +136,7 @@ fn dependencies(
             if !own_context {
                 return false;
             }
-            if syntax.returned_effect_appends.contains(&span) {
+            if summary.position == 0 && syntax.returned_effect_appends.contains(&span) {
                 return true;
             }
             let Some(call) = calls.get(&span) else {
@@ -145,7 +148,7 @@ fn dependencies(
             if callee.imported {
                 return false;
             }
-            required.push(callee.id);
+            required.push((callee.id, call.position));
             true
         });
     valid.then_some(required)

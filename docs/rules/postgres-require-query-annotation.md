@@ -294,6 +294,10 @@ captured append-only closures. Every exact-binding use must be a discarded
 static append, a proven local append-only effect, or the helper's own direct
 return. Captured returns, aliases, writes, unknown effects, and dynamic lexical
 access remain unanalyzable; this return proof does not change max effort.
+The local effect helper may take that builder as its second of two plain
+parameters when its direct call is discarded and every exact parameter use
+only appends a suffix. Imported effect helpers retain their first-argument
+contract. This proves the returned builder's leading name only.
 For a fresh plain record, the helper may return an immutable local string
 template as its `text` property. A caller may also extract exactly
 `const { text, values } = helper(args)` and pass those bindings once to a
