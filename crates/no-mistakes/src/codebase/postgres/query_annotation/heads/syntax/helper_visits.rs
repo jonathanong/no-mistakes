@@ -11,6 +11,9 @@ impl Syntax {
             return;
         };
         let declaration = span(id.span);
+        if let Some(candidate) = super::super::async_returns::function(value) {
+            self.async_returns.insert(declaration, candidate);
+        }
         if let Some(summary) = super::super::helper_records::function(value) {
             self.record_returns.insert(declaration, summary);
         }

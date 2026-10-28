@@ -5,21 +5,18 @@ use oxc_ast::{ast::*, AstKind};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 mod loops;
-impl Syntax {
-    fn context(&mut self, context: Context, walk: impl FnOnce(&mut Self)) {
-        let previous = std::mem::replace(&mut self.assignments.context, context);
-        walk(self);
-        self.assignments.context = previous;
-    }
-    fn repeating(&mut self, span: oxc_span::Span, walk: impl FnOnce(&mut Self)) {
-        let mut context = self.assignments.context;
-        context.repeated.get_or_insert((span.start, span.end));
-        self.context(context, walk);
-    }
-}
 impl<'a> Visit<'a> for Syntax {
+    fn visit_program(&mut self, value: &Program<'a>) {
+        self.async_body(&value.body, value.span);
+        walk::walk_program(self, value);
+    }
+    fn visit_await_expression(&mut self, value: &AwaitExpression<'a>) {
+        self.async_await(value.span);
+        walk::walk_await_expression(self, value);
+    }
     fn visit_function_body(&mut self, value: &FunctionBody<'a>) {
         super::super::branch_assignments::collect(self, value);
+        self.async_body(&value.statements, value.span);
         walk::walk_function_body(self, value);
     }
     fn visit_class(&mut self, value: &Class<'a>) {

@@ -151,7 +151,19 @@ pub(crate) fn collect_prepared(
     } else {
         Vec::new()
     };
+    let (exported_async_returns, pending_async_returns) = if include_all_calls {
+        super::async_returns::collect(
+            &syntax,
+            &bindings,
+            ts.module_bindings.as_deref(),
+            &executor_calls,
+        )
+    } else {
+        Default::default()
+    };
     AnnotationHeads {
+        exported_async_returns,
+        pending_async_returns,
         exported_helpers,
         exported_values,
         exported_records,
