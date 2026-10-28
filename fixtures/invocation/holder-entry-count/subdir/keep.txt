@@ -1,0 +1,1 @@
+Nested files must not inflate the immediate directory entry count.

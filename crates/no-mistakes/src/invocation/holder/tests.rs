@@ -1,7 +1,23 @@
 use super::{command_name, sidecar_path, LockHolder};
 use crate::invocation::lock::acquire_lock;
 use std::ffi::OsString;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+fn entry_count(path: &Path) -> usize {
+    ignore::WalkBuilder::new(path)
+        .hidden(false)
+        .max_depth(Some(1))
+        .build()
+        .map(Result::unwrap)
+        .filter(|entry| entry.depth() == 1)
+        .count()
+}
+
+#[test]
+fn entry_counts_include_hidden_staging_but_not_nested_files_or_root() {
+    let directory = crate::test_support::materialize_saved_fixture(&fixture("holder-entry-count"));
+    assert_eq!(entry_count(directory.path()), 3);
+}
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -41,7 +57,7 @@ fn replacing_a_saved_holder_record_keeps_it_owner_only() {
     );
     assert_eq!(LockHolder::read(&lock).unwrap().pid, std::process::id());
     // Unique staging files are cleaned up after the atomic replacement.
-    assert_eq!(std::fs::read_dir(directory.path()).unwrap().count(), 2);
+    assert_eq!(entry_count(directory.path()), 2);
 }
 
 #[test]
@@ -59,9 +75,9 @@ fn failed_atomic_replacement_cleans_up_staging_and_keeps_acquisition_available()
     let lock = directory.path().join("invocation.lock");
     assert!(LockHolder::current().record(&lock).is_err());
     assert!(sidecar_path(&lock).is_dir());
-    assert_eq!(std::fs::read_dir(directory.path()).unwrap().count(), 1);
+    assert_eq!(entry_count(directory.path()), 1);
     // Diagnostic publication failure must never prevent a real lock acquisition.
     let _held = acquire_lock(&lock, None, false).unwrap();
     assert!(LockHolder::read(&lock).is_none());
-    assert_eq!(std::fs::read_dir(directory.path()).unwrap().count(), 2);
+    assert_eq!(entry_count(directory.path()), 2);
 }
