@@ -449,6 +449,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "await query(`/* shorthand */ UPDATE records SET ${update.sql} WHERE id = $1`);",
           "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/finite-iterator-receiver.test.ts",
+          "line": 12,
+          "message": "tests/finite-iterator-receiver.test.ts:12: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`/* recordMethod */ ${selected.sql}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/finite-iterator-receiver.test.ts",
+          "line": 19,
+          "message": "tests/finite-iterator-receiver.test.ts:19: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`/* recordTag */ ${selected.sql}`);",
+          "target": "unanalyzable-sql"
         }
       ],
       "warnings": []

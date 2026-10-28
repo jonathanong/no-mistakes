@@ -52,7 +52,9 @@ A direct `it` import from `vitest` with no local name collision can supply a fin
 domain through `it.each(['first', 'second'])`. Inside its callback, a local
 `const` map with literal own keys and literal `sql` fields may select one
 fixed fragment per row before a configured executor call. Every selected key
-must exist. Writes, aliases, escapes, unknown iterator bindings, and keys
+must exist. Method or tagged calls through a selected record can change its
+SQL field through `this` and remain unanalyzable. Writes, aliases, escapes,
+unknown iterator bindings, and keys
 inferred only from TypeScript types remain unanalyzable.
 
 A same-function `const` literal `Set` can bound an appended SQL identifier when

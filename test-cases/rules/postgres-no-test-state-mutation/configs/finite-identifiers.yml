@@ -4,6 +4,7 @@ rules:
     scope: repository
     include:
       - tests/finite-identifiers.test.ts
+      - tests/finite-iterator-receiver.test.ts
     options:
       testGlobs: ["tests/**/*.test.ts"]
       importSpecifier: "@example/db"

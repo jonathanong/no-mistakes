@@ -1,7 +1,8 @@
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, AssignmentExpression, Function, IdentifierReference,
-    StaticMemberExpression, UpdateExpression,
+    ArrowFunctionExpression, AssignmentExpression, CallExpression, Expression, Function,
+    IdentifierReference, StaticMemberExpression, TaggedTemplateExpression, UpdateExpression,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
@@ -15,7 +16,27 @@ pub(super) struct Uses<'a> {
     pub(super) valid: bool,
     pub(super) nodes: usize,
 }
+impl Uses<'_> {
+    fn is_record_receiver(&self, expression: &Expression<'_>) -> bool {
+        matches!(unwrap_ts_wrappers(expression), Expression::StaticMemberExpression(member)
+            if matches!(unwrap_ts_wrappers(&member.object), Expression::Identifier(id) if id.name == self.alias))
+    }
+}
 impl<'a> Visit<'a> for Uses<'_> {
+    // A method or tag receives the selected record as `this`, allowing it to
+    // replace the own SQL field even though the field access itself is a read.
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        if self.is_record_receiver(&call.callee) {
+            self.valid = false;
+        }
+        walk::walk_call_expression(self, call);
+    }
+    fn visit_tagged_template_expression(&mut self, tagged: &TaggedTemplateExpression<'a>) {
+        if self.is_record_receiver(&tagged.tag) {
+            self.valid = false;
+        }
+        walk::walk_tagged_template_expression(self, tagged);
+    }
     fn enter_node(&mut self, _: oxc_ast::AstKind<'a>) {
         self.nodes += 1;
         if self.nodes > 512 {
