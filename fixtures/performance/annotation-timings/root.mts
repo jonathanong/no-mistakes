@@ -1,7 +1,8 @@
 import { read } from '@data-stores/psql'
 import sql from 'sql-template-strings'
 
-// A call inside an unsupported class body exercises the unmodeled-call timing.
+// Keep postgres_annotation_timings.snap in sync when lines change.
+// This unsupported class call exercises the unmodeled-call timing.
 class TimingProbe {
   inspect() { Math.max(1, 2) }
 }
