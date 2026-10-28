@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - tests/finite-set-arguments-positive.test.cjs
+      - tests/finite-set-arguments-negative.test.cjs
+    options:
+      testGlobs: ["tests/**/*.test.cjs"]
+      importSpecifier: "@example/db"
+      unanalyzable: report

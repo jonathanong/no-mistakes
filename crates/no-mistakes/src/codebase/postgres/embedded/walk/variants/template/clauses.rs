@@ -27,6 +27,7 @@ use oxc_ast::ast::{ConditionalExpression, Expression, TemplateLiteral};
 use oxc_span::GetSpan;
 
 mod logic;
+mod finite_member;
 
 pub(in crate::codebase::postgres::embedded::walk::variants) fn recover(visitor: &ScopeVisitor<'_>, template: &TemplateLiteral<'_>, depth: u8, constraints: &[(u64, u32)]) -> Option<Vec<Recovered>> {
     if depth == 0 || effects::mutates_captured_fragment(visitor, template) { return None; }
@@ -76,13 +77,16 @@ fn clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, depth: u8, constrai
     match expr {
         Expression::StringLiteral(literal) => text(visitor, expr, crate::ast::js_literal(literal).into_owned(), line),
         Expression::TemplateLiteral(template) => recover(visitor, template, depth - 1, constraints),
-        Expression::Identifier(_) => constant(visitor, expr, constraints),
+        Expression::Identifier(id) => super::super::super::guarded::recover(visitor, expr, id)
+            .or_else(|| constant(visitor, expr, constraints)),
         Expression::ConditionalExpression(branch) => conditional(visitor, branch, depth, constraints),
         Expression::LogicalExpression(branch) => logic::recover(visitor, branch, depth, constraints),
         Expression::CallExpression(call) => call_clause(visitor, expr, call, line),
+        Expression::StaticMemberExpression(member) => finite_member::recover(visitor, member, expr, line),
         _ => None,
     }
 }
+
 
 fn conditional(visitor: &ScopeVisitor<'_>, branch: &ConditionalExpression<'_>, depth: u8, constraints: &[(u64, u32)]) -> Option<Vec<Recovered>> {
     if visitor.expression_mutates_builder(&branch.test) { return None; }

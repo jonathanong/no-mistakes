@@ -390,6 +390,68 @@ export function groupedKind(kind: string) {
     }
   }
 }
+
+// A parameter read into a fresh const cannot change the final throw.
+export function constThenThrow(kind: string) {
+  switch (kind) {
+    case "x":
+      return sql`CREATE TABLE finite_x (id int)`;
+    case "y":
+      return sql`SELECT 1`;
+    default: {
+      const unexpected: never = kind as never;
+      throw new Error(String(unexpected));
+    }
+  }
+}
+function abrupt(value: string): never {
+  throw new Error(value);
+}
+export function callToAbrupt(kind: string) {
+  switch (kind) {
+    case "x":
+      return sql`CREATE TABLE finite_x (id int)`;
+    default:
+      return abrupt(kind);
+  }
+}
+function canReturn(value: string) { return value; }
+export function callCanReturn(kind: string) {
+  switch (kind) {
+    case "x":
+      return sql`CREATE TABLE finite_x (id int)`;
+    default:
+      return canReturn(kind);
+  }
+}
+async function asyncAbort(value: string): Promise<never> { throw new Error(value); }
+function* generatorAbort(value: string) { throw new Error(value); }
+let mutableAbort = (value: string): never => { throw new Error(value); };
+mutableAbort = value => value as never;
+export function unsafeDefaults(kind: string) {
+  switch (kind) {
+    case "x": return sql`CREATE TABLE finite_x (id int)`;
+    default: return asyncAbort(kind);
+  }
+}
+export function generatorDefault(kind: string) {
+  switch (kind) {
+    case "x": return sql`CREATE TABLE finite_x (id int)`;
+    default: return generatorAbort(kind);
+  }
+}
+export function optionalDefault(kind: string) {
+  switch (kind) {
+    case "x": return sql`CREATE TABLE finite_x (id int)`;
+    default: return abrupt?.(kind);
+  }
+}
+export function reassignedDefault(kind: string) {
+  switch (kind) {
+    case "x": return sql`CREATE TABLE finite_x (id int)`;
+    default: return mutableAbort(kind);
+  }
+}
 function failClosed(value: never): never {
   throw new Error(String(value));
 }
@@ -508,7 +570,7 @@ export async function asyncSwitch(kind: string) {
   }
 }
 
-// A check the model cannot evaluate still throws no SQL.
+// These member calls lack a source-proven purity contract in helper lowering.
 export function guardedLimit(limit: number) {
   if (!Number.isInteger(limit)) throw new Error("bad limit");
   return sql`SELECT id FROM orders WHERE account_id = ${1} LIMIT ${limit}`;
@@ -519,10 +581,16 @@ export function guardedBlock(limit: number) {
   }
   return sql`SELECT id FROM orders WHERE account_id = ${1}`;
 }
-// `&&` of opaque member checks is still a throw guard.
+// `&&` cannot make opaque member calls safe to omit.
 export function guardedAnd(limit: number, offset: number) {
   if (!Number.isInteger(limit) && !Number.isInteger(offset)) throw new Error("bad");
   return sql`SELECT id FROM orders WHERE account_id = ${1}`;
+}
+// The opaque method may mutate a builder even when its guard does not throw.
+export function mutatingMethodGuard(guard: { update(q: unknown): boolean }) {
+  const q = sql`SELECT 1`;
+  if (!guard.update(q)) throw new Error("bad");
+  return q;
 }
 // Not a throw guard: both arms return SQL, and the test is opaque.
 export function opaqueBranch(limit: number) {

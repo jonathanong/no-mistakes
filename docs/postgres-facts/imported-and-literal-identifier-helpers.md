@@ -84,9 +84,10 @@ Each call runs the model against the call site's arguments:
   unknown scalar forks into both outcomes, and a repeated test of the same
   parameters agrees with its first answer. `throw` ends a path, since the
   executor never runs after it, and an early `return` ends its path with the
-  SQL appended so far. An `if` that only throws, and whose test cannot write
-  SQL (`!Number.isInteger(limit)`, or `&&` / `||` of such member calls, not a
-  helper call or `.append`), is skipped. A recoverable `switch` yields one
+  SQL appended so far. Throwing `if` conditions use the same supported
+  expression model. An opaque method call such as `Number.isInteger(limit)`
+  is not assumed read-only and leaves the caller unanalyzable: an unknown
+  implementation could mutate SQL before the continuing path. A recoverable `switch` yields one
   alternative per arm. An unknown selector, or a name that is not bound,
   keeps every arm; a selector that matches none reaches `default` and that
   path ends. An untagged hole that calls the helper is the union of those
@@ -96,7 +97,8 @@ Each call runs the model against the call site's arguments:
   returned arm. A return that is not a string, a returned string containing
   a NUL, or a nested call past the depth cap leaves the call unanalyzable.
   `default` is proven only when the analyzer sees `throw`, or a
-  same-file callee whose body always throws — a function named `assertNever`
+  source-visible callee whose body always throws. Imported callees must be
+  present in the prepared source scope and resolved by that projection; a function named `assertNever`
   is not enough. A `switch` that is not this shape, including a `default` that
   does not throw, stays `Dynamic` rather than keeping the known arms. At most
   **16** paths survive; past that the call stays `Dynamic` and the union is

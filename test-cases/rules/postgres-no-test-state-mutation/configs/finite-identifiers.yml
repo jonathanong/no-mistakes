@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - tests/finite-identifiers.test.ts
+      - tests/finite-iterator-receiver.test.ts
+      - tests/finite-iterator-targets.test.ts
+    options:
+      testGlobs: ["tests/**/*.test.ts"]
+      importSpecifier: "@example/db"
+      unanalyzable: report

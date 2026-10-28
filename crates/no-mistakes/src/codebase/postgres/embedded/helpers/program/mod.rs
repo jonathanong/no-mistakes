@@ -52,7 +52,7 @@ pub(crate) enum Stmt {
     /// `for (const name of iterable) body`, unrolled over a known array.
     ForOf(String, Expr, Vec<Stmt>),
     /// Literal returns and a proven throwing `default`.
-    Switch(Expr, Vec<SwitchArm>),
+    Switch(Expr, Vec<SwitchArm>, Option<Expr>),
     Opaque,
 }
 

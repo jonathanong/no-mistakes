@@ -3,6 +3,7 @@ use super::Recovered;
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{ConditionalExpression, IfStatement, LogicalExpression};
 use oxc_ast_visit::Visit;
+mod abrupt;
 mod join;
 mod paths;
 pub(super) use join::joined;
@@ -88,6 +89,14 @@ pub(in crate::codebase::postgres::embedded::walk) fn if_statement<'a>(
     match taken {
         Some(true) => select(visitor, &left, &right),
         Some(false) => select(visitor, &right, &left),
+        None if abrupt::throws(&statement.consequent) => select(visitor, &right, &left),
+        None if statement
+            .alternate
+            .as_ref()
+            .is_some_and(|arm| abrupt::throws(arm)) =>
+        {
+            select(visitor, &left, &right)
+        }
         None => visitor.join_variants(&left, &right, id, (truth_arm, 1 - truth_arm)),
     }
 }

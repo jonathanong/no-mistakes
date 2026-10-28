@@ -23,6 +23,11 @@ pub(crate) fn collect_calls<'a>(
     let imported_value_origins =
         super::super::namespace_imports::configured_values(program, options, bindings);
     let (imported_names, constant_namespaces) = imported::value_import_names(program);
+    let vitest_it_imports = if head_calls_only {
+        Default::default()
+    } else {
+        super::super::finite_identifiers::vitest_it_imports(program)
+    };
     let mut visitor = ScopeVisitor {
         head_calls_only,
         source,
@@ -78,6 +83,12 @@ pub(crate) fn collect_calls<'a>(
         sql_statement_types: sql_statement_type_bindings(program),
         unproven_member_query_spans: Vec::new(),
         literal_objects: super::super::const_literals::LiteralObjects::default(),
+        vitest_it_imports,
+        finite_cases: Vec::new(),
+        guarded_cases: Vec::new(),
+        set_intrinsic_safe: head_calls_only
+            || !(source.contains("Set") || source.contains("\\u"))
+            || super::super::guarded_sql::intrinsic_safe(program),
         declaring_const: false,
         clause_unions: crate::fx::fx_set(),
         exported_constants: Default::default(),

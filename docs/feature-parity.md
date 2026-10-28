@@ -105,10 +105,15 @@ proof, while other mutations retain conservative provenance. Unknown provenance 
 Opt-in [`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md)
 uses explicit test and helper globs to reject
 executed PostgreSQL schema or server-state changes and `pg_sleep`. It shares
-the prepared TS/JS and SQL facts across CLI `check`, async Node `check()`, and
+bounded literal fragment alternatives from exact Vitest `it.each` runtime rows,
+and identifiers bounded by a local literal `Set` with a dominating throw guard,
+and prepared TS/JS and SQL facts, across CLI `check`, async Node `check()`, and
 `analyzeProject()` checks. SQL held only as assertion text or snapshot data,
 and production migrations outside the declared test scope, stay out of this
-rule.
+rule. Fixed SQL switch arms with a source-visible, proven throwing default
+are checked through the shared prepared helper projection in both interfaces.
+Finite local builder assignments also retain their reachable alternatives
+when a branch ends in a direct throw.
 
 The opt-in `postgres-json-relation-ids` check inspects selected migration SQL
 and executed embedded SQL for JSON identifier keys without a same-row foreign

@@ -117,6 +117,14 @@ fn fails(programs: &Programs, name: &str, args: &[SiteArg]) {
     );
 }
 
+fn throws(programs: &Programs, name: &str, args: &[SiteArg]) {
+    assert_eq!(
+        exec(programs, name, args),
+        Some(Vec::new()),
+        "{name} should have no returning path"
+    );
+}
+
 #[test]
 fn strings_and_fresh_builders() {
     let p = load("exec.ts");
@@ -275,12 +283,12 @@ fn ternary_text_and_aliases() {
 fn throwing_ends_a_path() {
     let p = load("exec.ts");
     assert_eq!(one(&p, "throwsOnUnsafe", &[lit("ok")]), "sql:SELECT 1");
-    fails(&p, "throwsOnUnsafe", &[lit("bad")]);
+    throws(&p, "throwsOnUnsafe", &[lit("bad")]);
     assert_eq!(
         exec(&p, "throwsOnUnsafe", &[SiteArg::Scalar]).unwrap(),
         ["sql:SELECT 1"]
     );
-    assert!(!p.contains_key("alwaysThrows"));
+    throws(&p, "alwaysThrows", &[]);
 }
 
 #[test]

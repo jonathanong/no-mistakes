@@ -28,6 +28,9 @@ pub(super) fn recover(
             Some(vec![scalar])
         }
         Expression::Identifier(id) => {
+            if let Some(values) = super::guarded::recover(visitor, expr, id) {
+                return Some(values);
+            }
             let binding = visitor.lookup(id.name.as_str())?;
             // A declaration's body can run after its enclosing SQL changes.
             // Only immutable primitive values have a stable captured snapshot.

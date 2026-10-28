@@ -106,7 +106,7 @@ pub(crate) fn run(
             outcomes.push(outcome);
         }
     }
-    (outcomes.len() <= MAX_EMBEDDED_SQL_VARIANTS && !outcomes.is_empty()).then_some(outcomes)
+    (outcomes.len() <= MAX_EMBEDDED_SQL_VARIANTS).then_some(outcomes)
 }
 
 fn default_value(machine: &mut Machine<'_>, param: &Param, path: &mut Path) -> Option<Val> {

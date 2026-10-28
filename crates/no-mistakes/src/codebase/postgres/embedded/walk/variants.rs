@@ -9,6 +9,7 @@ pub(super) mod control;
 mod effects;
 mod escape_effects;
 mod expression;
+mod guarded;
 mod helper;
 mod helper_alias;
 mod helper_bindings;

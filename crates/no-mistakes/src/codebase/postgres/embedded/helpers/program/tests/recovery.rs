@@ -1,6 +1,6 @@
 //! Proven-throw switches, throw guards, and bound `??`.
 
-use super::{exec, fails, lit, load, one};
+use super::{exec, fails, lit, load, one, throws};
 use crate::codebase::postgres::embedded::helpers::SiteArg;
 
 #[test]
@@ -15,8 +15,8 @@ fn switch_returns_every_literal_arm_unless_default_throws() {
     );
     assert_eq!(one(&p, "markReadSql", &[lit("post")]), posts);
     // A value that matches no arm, including an inherited key, reaches default.
-    fails(&p, "markReadSql", &[lit("constructor")]);
-    fails(&p, "markReadSql", &[SiteArg::Bool(true)]);
+    throws(&p, "markReadSql", &[lit("constructor")]);
+    throws(&p, "markReadSql", &[SiteArg::Bool(true)]);
 
     let owned = "sql:SELECT id FROM orders WHERE account_id = $1";
     let member = "sql:SELECT id FROM orders WHERE member_id = $1";
@@ -26,18 +26,19 @@ fn switch_returns_every_literal_arm_unless_default_throws() {
         [owned, member, all]
     );
     assert_eq!(one(&p, "accessSql", &[lit("all")]), all);
-    fails(&p, "accessSql", &[lit("constructor")]);
+    throws(&p, "accessSql", &[lit("constructor")]);
 
     assert_eq!(
         exec(&p, "tableName", &[SiteArg::Scalar]).unwrap(),
         ["str:orders", "str:accounts"]
     );
     assert_eq!(one(&p, "tableName", &[lit("x")]), "str:orders");
-    fails(&p, "tableName", &[lit("constructor")]);
+    throws(&p, "tableName", &[lit("constructor")]);
     assert_eq!(
         exec(&p, "tableViaThrow", &[SiteArg::Scalar]).unwrap(),
         ["str:orders", "str:accounts"]
     );
+    throws(&p, "tableViaThrow", &[lit("constructor")]);
     assert_eq!(
         one(&p, "groupedKind", &[lit("b")]),
         "sql:SELECT 1 FROM posts WHERE id = $1"
@@ -46,12 +47,50 @@ fn switch_returns_every_literal_arm_unless_default_throws() {
         exec(&p, "groupedKind", &[SiteArg::Scalar]).unwrap().len(),
         2
     );
+    throws(&p, "groupedKind", &[lit("constructor")]);
+    assert_eq!(
+        exec(&p, "constThenThrow", &[SiteArg::Scalar]).unwrap(),
+        ["sql:CREATE TABLE finite_x (id int)", "sql:SELECT 1"]
+    );
+    assert_eq!(
+        exec(&p, "callToAbrupt", &[SiteArg::Scalar]).unwrap(),
+        ["sql:CREATE TABLE finite_x (id int)"]
+    );
+    throws(&p, "constThenThrow", &[lit("constructor")]);
+    throws(&p, "callToAbrupt", &[lit("constructor")]);
+    fails(&p, "callCanReturn", &[SiteArg::Scalar]);
+    for name in [
+        "unsafeDefaults",
+        "generatorDefault",
+        "optionalDefault",
+        "reassignedDefault",
+    ] {
+        fails(&p, name, &[SiteArg::Scalar]);
+    }
 
     // Not proven: the name assertNever, a local before return, no default
     // (usesSwitch), past the cap, or async.
-    fails(&p, "assertNeverIsNotProof", &[SiteArg::Scalar]);
-    // A known arm is not kept when default is not proven to throw.
-    fails(&p, "assertNeverIsNotProof", &[lit("x")]);
+    let Some(super::super::Stmt::Switch(_, _, Some(super::super::Expr::Call(callee, _)))) = p
+        .get("assertNeverIsNotProof")
+        .and_then(|program| program.body.first())
+    else {
+        panic!("expected deferred default call");
+    };
+    assert_eq!(callee, "assertNever");
+    assert!(
+        !p.contains_key("assertNever"),
+        "returning helper is not abrupt"
+    );
+    assert_eq!(
+        exec(&p, "assertNeverIsNotProof", &[SiteArg::Scalar]),
+        None,
+        "an unknown selector may reach the returning default"
+    );
+    // A fixed matching label never reaches the returning default.
+    assert_eq!(
+        one(&p, "assertNeverIsNotProof", &[lit("x")]),
+        "sql:SELECT 1 FROM orders"
+    );
     // A repeated label abstains; the first arm is not kept.
     fails(&p, "duplicateLabel", &[lit("a")]);
     // A label that fell through to default is not a later arm.
@@ -67,24 +106,17 @@ fn switch_returns_every_literal_arm_unless_default_throws() {
     fails(&p, "switchCap", &[SiteArg::Scalar]);
     assert_eq!(one(&p, "switchCap", &[lit("01")]), "sql:SELECT 1");
     assert!(!p.contains_key("asyncSwitch"));
-    assert!(!p.contains_key("failClosed"));
+    assert_eq!(exec(&p, "failClosed", &[SiteArg::Scalar]), Some(Vec::new()));
 }
 
 #[test]
-fn throw_guards_are_skipped_when_they_cannot_write_sql() {
+fn opaque_throw_guards_cannot_skip_possible_sql_mutation() {
     let p = load("exec.ts");
-    assert_eq!(
-        one(&p, "guardedLimit", &[SiteArg::Scalar]),
-        "sql:SELECT id FROM orders WHERE account_id = $1 LIMIT $2"
-    );
-    assert_eq!(
-        one(&p, "guardedBlock", &[SiteArg::Scalar]),
-        "sql:SELECT id FROM orders WHERE account_id = $1"
-    );
-    assert_eq!(
-        one(&p, "guardedAnd", &[SiteArg::Scalar, SiteArg::Scalar]),
-        "sql:SELECT id FROM orders WHERE account_id = $1"
-    );
+    // A name or member-call shape alone does not prove a guard is pure.
+    fails(&p, "guardedLimit", &[SiteArg::Scalar]);
+    fails(&p, "guardedBlock", &[SiteArg::Scalar]);
+    fails(&p, "guardedAnd", &[SiteArg::Scalar, SiteArg::Scalar]);
+    fails(&p, "mutatingMethodGuard", &[SiteArg::Scalar]);
     // Both arms return SQL, so an opaque test still fails closed.
     fails(&p, "opaqueBranch", &[SiteArg::Scalar]);
 }
