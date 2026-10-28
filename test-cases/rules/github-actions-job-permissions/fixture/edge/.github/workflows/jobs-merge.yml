@@ -1,0 +1,14 @@
+on: push
+permissions:
+  id-token: write
+catalog: &jobs
+  inherited:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo catalog
+jobs:
+  <<: *jobs
+  explicit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo explicit

@@ -1,0 +1,3 @@
+rules:
+  - rule: github-actions-job-permissions
+    scope: repository

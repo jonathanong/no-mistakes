@@ -159,7 +159,7 @@ fn unknown_rule_options_fail_configuration() {
 
 #[test]
 fn flow_quoted_keys_aliases_and_merges_do_not_hide_inherited_writes() {
-    // A merge without its own permissions is uncertain, but cannot hide a known root write.
+    // A merge without its own permissions is uncertain and must be reported.
     let (root, config, files) = fixture("flow");
     let sources = source_store_for_files(&files);
     let output =
@@ -184,4 +184,131 @@ fn flow_quoted_keys_aliases_and_merges_do_not_hide_inherited_writes() {
     assert!(!all
         .iter()
         .any(|finding| finding.target.as_deref() == Some("explicit")));
+}
+
+#[test]
+fn merge_and_nonmapping_shapes_report_uncertainty_without_hiding_explicit_jobs() {
+    let findings = raw("edge");
+    for (file, target) in [
+        ("job-merge.yml", "merged"),
+        ("job-merge.yml", "explicit"),
+        ("jobs-merge.yml", "unanalyzable"),
+        ("jobs-merge.yml", "explicit"),
+        ("root-list.yml", "unanalyzable"),
+        ("nonstring-job.yml", "unanalyzable"),
+        ("nonstring-job.yml", "explicit"),
+        ("root-merge.yml", "unanalyzable"),
+        ("root-merge.yml", "explicit"),
+        ("permissions-merge.yml", "unanalyzable"),
+        ("permissions-merge.yml", "build"),
+        ("nonstring-scope.yml", "unanalyzable"),
+        ("nonstring-scope.yml", "build"),
+    ] {
+        assert!(
+            findings
+                .iter()
+                .any(|finding| finding.file.ends_with(file)
+                    && finding.target.as_deref() == Some(target)),
+            "missing {file}/{target}: {findings:?}"
+        );
+    }
+    let merged = findings
+        .iter()
+        .filter(|finding| {
+            finding.file.ends_with("job-merge.yml") && finding.target.as_deref() == Some("merged")
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        merged.len(),
+        1,
+        "job merge must not prove an inherited write: {merged:?}"
+    );
+    assert!(merged[0].message.contains("cannot determine"));
+    let jobs_merge = findings
+        .iter()
+        .filter(|finding| {
+            finding.file.ends_with("jobs-merge.yml")
+                && finding.target.as_deref() == Some("unanalyzable")
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(jobs_merge.len(), 1, "{jobs_merge:?}");
+    assert!(jobs_merge[0].message.contains("merge"));
+}
+
+#[test]
+fn custom_message_applies_to_definite_findings_and_unknown_advisories() {
+    let (root, config, files) = fixture("custom");
+    let sources = source_store_for_files(&files);
+    let output =
+        diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
+    assert_eq!(output.findings.len(), 1, "{:?}", output.findings);
+    assert_eq!(output.advisories.len(), 1, "{:?}", output.advisories);
+    for (finding, target) in [
+        (&output.findings[0], "build"),
+        (&output.advisories[0], "unanalyzable"),
+    ] {
+        assert_eq!(finding.rule, RULE_ID);
+        assert!(finding.file.ends_with("mixed.yml"));
+        assert!(finding.line > 0);
+        assert_eq!(finding.target.as_deref(), Some(target));
+        assert_eq!(
+            finding.message,
+            "Move the write scope to the job that needs it."
+        );
+    }
+}
+
+#[test]
+fn unreadable_utf8_and_missing_sources_follow_policy_and_suppression() {
+    let (root, mut config, mut files) = fixture("unreadable");
+    files.push(root.join(".github/workflows/missing.yml"));
+    let sources = source_store_for_files(&files);
+    let raw = diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
+    assert_eq!(raw.findings.len(), 3, "{:?}", raw.findings);
+    for (file, line) in [("invalid.yml", 2), ("disabled.yml", 3), ("missing.yml", 1)] {
+        assert!(
+            raw.findings
+                .iter()
+                .any(|finding| finding.file.ends_with(file)
+                    && finding.line == line
+                    && finding.target.as_deref() == Some("unanalyzable")),
+            "missing {file}:{line}: {:?}",
+            raw.findings
+        );
+    }
+    let visible =
+        diagnostics_with_files_and_sources(&root, &config, &files, &sources, false).unwrap();
+    assert_eq!(visible.findings.len(), 2, "{:?}", visible.findings);
+    assert!(!visible
+        .findings
+        .iter()
+        .any(|finding| finding.file.ends_with("disabled.yml")));
+    config.rules[0].options = serde_yaml::from_str("unanalyzable: advise").unwrap();
+    let advised =
+        diagnostics_with_files_and_sources(&root, &config, &files, &sources, false).unwrap();
+    assert!(advised.findings.is_empty());
+    assert_eq!(advised.advisories.len(), 2);
+}
+
+#[test]
+fn unknown_job_permissions_locate_the_key_for_line_suppression() {
+    let (root, config, files) = fixture("permission-suppression");
+    let sources = source_store_for_files(&files);
+    let raw = diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
+    assert_eq!(raw.findings.len(), 4, "{:?}", raw.findings);
+    for (target, line) in [("next-line", 7), ("same-line", 13), ("visible", 19)] {
+        assert!(
+            raw.findings
+                .iter()
+                .any(|finding| finding.file.ends_with("job-unknown.yml")
+                    && finding.target.as_deref() == Some(target)
+                    && finding.line == line),
+            "missing {target}:{line}: {:?}",
+            raw.findings
+        );
+    }
+    let visible =
+        diagnostics_with_files_and_sources(&root, &config, &files, &sources, false).unwrap();
+    assert_eq!(visible.findings.len(), 1, "{:?}", visible.findings);
+    assert_eq!(visible.findings[0].target.as_deref(), Some("visible"));
 }

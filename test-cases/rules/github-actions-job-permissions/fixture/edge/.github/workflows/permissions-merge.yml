@@ -1,0 +1,11 @@
+on: push
+scopes: &scopes
+  contents: read
+permissions:
+  <<: *scopes
+  id-token: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build

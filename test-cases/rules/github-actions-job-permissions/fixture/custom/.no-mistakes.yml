@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-job-permissions
+    scope: repository
+    message: Move the write scope to the job that needs it.
+    options:
+      unanalyzable: advise
