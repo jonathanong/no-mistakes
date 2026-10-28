@@ -392,6 +392,8 @@ It also enumerates a local literal `Set` domain after a dominating membership
 guard throws on nonmembers, with the same CLI and async API result.
 The prepared helper projection also resolves fixed SQL switch arms whose
 default is proven to throw, including a source-visible imported thrower.
+It composes finite literal-string returns into complete ordinary SQL templates
+before the shared policy check; tagged-template substitutions remain binds.
 Local builder assignments after a direct throwing branch use the same
 reachable SQL alternatives in CLI and async Node check reports.
 

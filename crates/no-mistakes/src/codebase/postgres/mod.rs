@@ -72,7 +72,7 @@ pub(crate) use embedded::helpers::{
         Program as HelperProgram,
     },
     splice::splice as splice_imported_sql,
-    ImportedSite, PendingImportedSql, SiteArg,
+    ImportedSite, PendingImportedSql, SiteArg, SiteKind,
 };
 pub(crate) use embedded::walk::resolve::functions::provenance::RecoveredSql;
 pub use embedded::{

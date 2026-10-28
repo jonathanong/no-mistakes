@@ -124,6 +124,7 @@ impl ScopeVisitor<'_> {
                 super::imported::constants::namespace::piece(self, member, false)
                     .or_else(|| self.spliced_member(member, placeholder))
             },
+            Expression::CallExpression(call) => super::imported::clause::piece(self, call),
             _ => None,
         }
     }

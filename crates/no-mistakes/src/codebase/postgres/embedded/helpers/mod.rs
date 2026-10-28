@@ -21,7 +21,7 @@ mod unpublish;
 pub(crate) use constant::ExportedConstant;
 pub(crate) use sites::Sites;
 pub(crate) use summary::{
-    BuilderHelper, HelperSummary, ImportedSite, LiteralArg, PendingImportedSql, SiteArg,
+    BuilderHelper, HelperSummary, ImportedSite, LiteralArg, PendingImportedSql, SiteArg, SiteKind,
 };
 
 #[cfg(test)]

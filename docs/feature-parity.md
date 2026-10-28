@@ -200,6 +200,9 @@ Static SQL returned by imported helpers (relative, `tsconfig` `paths` and barrel
 imports, with string-literal arguments spliced into literal-identifier
 templates) is recovered for every embedded-SQL rule and mapped to the helper's
 original file and line, including assigned results and appended fragments.
+An ordinary SQL template can also insert finite literal table names from a
+same-file helper whose imported default throw is proven by prepared module
+facts; tagged template substitutions remain binds.
 Static runtime namespace reads such as `names.TABLE` and `names.default` also
 recover exported string constants through prepared imports and re-exports;
 computed, optional, method, type-only, and non-const reads remain unknown.

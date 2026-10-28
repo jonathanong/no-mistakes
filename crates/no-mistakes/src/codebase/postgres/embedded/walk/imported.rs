@@ -14,6 +14,7 @@ use oxc_ast::ast::{
     CallExpression, Expression, ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement,
 };
 mod args;
+pub(super) mod clause;
 #[cfg(test)]
 #[macro_use]
 pub(super) mod clause_args_test_counter;
@@ -171,6 +172,7 @@ fn site_hole(
         ImportedSite {
             local: name.to_string(),
             member: None,
+            kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
             args,
             value_used,
             line,

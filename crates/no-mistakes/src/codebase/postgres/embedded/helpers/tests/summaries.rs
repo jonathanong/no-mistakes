@@ -11,6 +11,7 @@ fn literals(values: &[&str]) -> ImportedSite {
     ImportedSite {
         local: "helper".into(),
         member: None,
+        kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
         args: values
             .iter()
             .map(|value| SiteArg::Literal((*value).into()))
@@ -102,6 +103,7 @@ fn parameters_are_spliced_wherever_they_are_interpolated() {
     let scalar = ImportedSite {
         local: "helper".into(),
         member: None,
+        kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
         args: vec![SiteArg::Scalar],
         value_used: false,
         line: 1,
@@ -153,6 +155,7 @@ fn spliced_literals_are_credited_to_the_caller_not_the_placeholder() {
     let site = ImportedSite {
         local: "arrow".into(),
         member: None,
+        kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
         args: vec![SiteArg::Literal(LiteralArg {
             text: "OFFSET 40".into(),
             line: 12,
@@ -206,6 +209,7 @@ fn a_statement_builder_helper_fills_only_a_matching_builder_call() {
     let call = |args: Vec<SiteArg>| ImportedSite {
         local: "helper".into(),
         member: None,
+        kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
         args,
         value_used: false,
         line: 1,

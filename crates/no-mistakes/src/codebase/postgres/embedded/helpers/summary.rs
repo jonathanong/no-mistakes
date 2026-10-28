@@ -68,12 +68,20 @@ pub(crate) enum SiteArg {
 }
 
 /// An imported helper called from this file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SiteKind {
+    Sql,
+    PlainClause,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ImportedSite {
     /// The callee's local name; the projection looks up its import binding.
     pub(crate) local: String,
     /// Static export selected from a runtime namespace import, for constants only.
     pub(crate) member: Option<String>,
+    /// Plain text is legal only inside an ordinary template's complete SQL.
+    pub(crate) kind: SiteKind,
     pub(crate) args: Vec<SiteArg>,
     /// The call's result feeds an expression (not just a statement), so a
     /// builder helper must hand back the builder it was given.

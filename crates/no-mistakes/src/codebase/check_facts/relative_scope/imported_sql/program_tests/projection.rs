@@ -34,6 +34,7 @@ fn a_located_helper_without_matching_sql_facts_is_not_a_summary() {
     let site = ImportedSite {
         local: "h".to_string(),
         member: None,
+        kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
         args: Vec::new(),
         value_used: true,
         line: 1,

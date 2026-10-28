@@ -1,4 +1,4 @@
-use super::{frame::helper_program, hole_text, Frame, Locator, Shared};
+use super::{clause_text, frame::helper_program, hole_text, Frame, Locator, Shared};
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::dependencies::extract::{
     ExportedBinding, ImportedBinding, ImportedBindingKind,
@@ -41,6 +41,27 @@ fn hole_text_accepts_a_builder_suffix_and_a_sql_return() {
         suffixes: Vec::new(),
     };
     assert!(hole_text(other, None, true).is_none());
+}
+
+#[test]
+fn plain_clause_requires_a_source_mapped_string() {
+    let mapped = Outcome {
+        ret: Ret::Str("orders".into(), Some(sql("orders"))),
+        suffixes: Vec::new(),
+    };
+    assert_eq!(clause_text(mapped).unwrap().sql, "orders");
+    for ret in [
+        Ret::Str("orders".into(), None),
+        Ret::Str("orders".into(), Some(sql("accounts"))),
+        Ret::Str("orders\n".into(), Some(sql("orders\n"))),
+        Ret::Sql(sql("orders")),
+    ] {
+        assert!(clause_text(Outcome {
+            ret,
+            suffixes: Vec::new()
+        })
+        .is_none());
+    }
 }
 
 #[test]
@@ -124,6 +145,7 @@ fn missing_modules_and_void_programs_fail_closed() {
     let site = ImportedSite {
         local: "h".to_string(),
         member: None,
+        kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
         args: Vec::new(),
         value_used: true,
         line: 1,
