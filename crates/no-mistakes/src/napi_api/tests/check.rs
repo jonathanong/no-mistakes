@@ -1,6 +1,9 @@
 use super::*;
 use serde_json::json;
 
+#[path = "check_job_permissions.rs"]
+mod check_job_permissions;
+
 #[path = "check_test_state.rs"]
 mod check_test_state;
 

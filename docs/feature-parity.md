@@ -1,5 +1,11 @@
 # Feature Parity
 
+Native GitHub Actions checks include opt-in
+[`github-actions-job-permissions`](rules/github-actions-job-permissions.md).
+Rust, CLI `check`, async Node `check()` and `analyzeProject()` check reports use
+the same workflow scope, inherited-write findings, unresolved policy, and
+suppression handling.
+
 Playwright config `testMatch` / `testIgnore` accept static string globs, RegExp
 literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
 produce scoped aggregate-check warnings; see

@@ -91,6 +91,11 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
+        GITHUB_ACTIONS_JOB_PERMISSIONS => {
+            github_actions_job_permissions::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         GITHUB_ACTIONS_DOCKER_HOST_PORTS => {
             github_actions_docker_host_ports::check_with_files_and_sources(
                 root, config, files, sources,

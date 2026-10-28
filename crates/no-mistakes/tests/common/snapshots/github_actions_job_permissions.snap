@@ -1,0 +1,671 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "custom-message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 2,
+          "message": "Move the write scope to the job that needs it.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 6,
+          "message": "Move the write scope to the job that needs it.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "edge": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/job-merge.yml",
+          "line": 12,
+          "message": ".github/workflows/job-merge.yml:12: job `explicit` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "explicit:",
+          "target": "explicit"
+        },
+        {
+          "file": ".github/workflows/job-merge.yml",
+          "line": 7,
+          "message": ".github/workflows/job-merge.yml:7: cannot determine job permissions (job merge may supply permissions). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "merged:",
+          "target": "merged"
+        },
+        {
+          "file": ".github/workflows/jobs-merge.yml",
+          "line": 11,
+          "message": ".github/workflows/jobs-merge.yml:11: job `explicit` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "explicit:",
+          "target": "explicit"
+        },
+        {
+          "file": ".github/workflows/jobs-merge.yml",
+          "line": 9,
+          "message": ".github/workflows/jobs-merge.yml:9: cannot determine job permissions (jobs merge may supply additional jobs). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "jobs:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/nonstring-job.yml",
+          "line": 4,
+          "message": ".github/workflows/nonstring-job.yml:4: cannot determine job permissions (job name is not a string). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "jobs:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/nonstring-job.yml",
+          "line": 6,
+          "message": ".github/workflows/nonstring-job.yml:6: job `explicit` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "explicit:",
+          "target": "explicit"
+        },
+        {
+          "file": ".github/workflows/nonstring-scope.yml",
+          "line": 2,
+          "message": ".github/workflows/nonstring-scope.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/nonstring-scope.yml",
+          "line": 6,
+          "message": ".github/workflows/nonstring-scope.yml:6: job `build` inherits workflow-level write permissions (contents: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/permissions-merge.yml",
+          "line": 4,
+          "message": ".github/workflows/permissions-merge.yml:4: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/permissions-merge.yml",
+          "line": 8,
+          "message": ".github/workflows/permissions-merge.yml:8: job `build` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/root-list.yml",
+          "line": 1,
+          "message": ".github/workflows/root-list.yml:1: cannot determine job permissions (workflow is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "- on: push",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-merge.yml",
+          "line": 5,
+          "message": ".github/workflows/root-merge.yml:5: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-merge.yml",
+          "line": 8,
+          "message": ".github/workflows/root-merge.yml:8: job `explicit` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "explicit:",
+          "target": "explicit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/inherited.yml",
+          "line": 12,
+          "message": ".github/workflows/inherited.yml:12: job `call` inherits workflow-level write permissions (id-token: write, contents: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "call:",
+          "target": "call"
+        },
+        {
+          "file": ".github/workflows/inherited.yml",
+          "line": 8,
+          "message": ".github/workflows/inherited.yml:8: job `build` inherits workflow-level write permissions (id-token: write, contents: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/write-all.yaml",
+          "line": 4,
+          "message": ".github/workflows/write-all.yaml:4: job `build` inherits workflow-level write permissions (write-all) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/write-all.yaml",
+          "line": 8,
+          "message": ".github/workflows/write-all.yaml:8: job `call` inherits workflow-level write permissions (write-all) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "call:",
+          "target": "call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/alias.yml",
+          "line": 5,
+          "message": ".github/workflows/alias.yml:5: job `inherited` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "inherited:",
+          "target": "inherited"
+        },
+        {
+          "file": ".github/workflows/flow.yml",
+          "line": 4,
+          "message": ".github/workflows/flow.yml:4: job `quoted-job` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "\"quoted-job\": {runs-on: ubuntu-latest, steps: [{run: echo flow}]}",
+          "target": "quoted-job"
+        },
+        {
+          "file": ".github/workflows/merge.yml",
+          "line": 9,
+          "message": ".github/workflows/merge.yml:9: cannot determine job permissions (job merge may supply permissions). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "merged:",
+          "target": "merged"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 2,
+          "message": ".github/workflows/mixed.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 6,
+          "message": ".github/workflows/mixed.yml:6: job `build` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed-advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 2,
+          "message": ".github/workflows/mixed.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 6,
+          "message": ".github/workflows/mixed.yml:6: job `build` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mixed.yml",
+          "line": 6,
+          "message": ".github/workflows/mixed.yml:6: job `build` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "permission-suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/job-unknown.yml",
+          "line": 19,
+          "message": ".github/workflows/job-unknown.yml:19: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "visible"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/selected.yml",
+          "line": 4,
+          "message": ".github/workflows/selected.yml:4: job `selected` inherits workflow-level write permissions (write-all) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "selected:",
+          "target": "selected"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/directives.yml",
+          "line": 14,
+          "message": ".github/workflows/directives.yml:14: job `visible` inherits workflow-level write permissions (id-token: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "visible:",
+          "target": "visible"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unreadable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/invalid.yml",
+          "line": 2,
+          "message": ".github/workflows/invalid.yml:2: cannot determine job permissions (cannot read workflow source as UTF-8 (invalid utf-8 sequence of 1 bytes from index 9)). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unresolved": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/empty-jobs.yml",
+          "line": 4,
+          "message": ".github/workflows/empty-jobs.yml:4: cannot determine job permissions (workflow has no jobs to analyze). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "jobs: {}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/expression.yml",
+          "line": 2,
+          "message": ".github/workflows/expression.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions: ${{ inputs.permissions }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/jobs-shape.yml",
+          "line": 4,
+          "message": ".github/workflows/jobs-shape.yml:4: cannot determine job permissions (jobs is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "jobs: [build, test]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 3,
+          "message": ".github/workflows/malformed.yml:3: cannot determine job permissions (invalid YAML (did not find expected ',' or '}' at line 3 column 5, while parsing a flow mapping at line 2 column 14)). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "jobs:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/missing-jobs.yml",
+          "line": 1,
+          "message": ".github/workflows/missing-jobs.yml:1: cannot determine job permissions (workflow has no jobs to analyze). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "on: push",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-invalid-access.yml",
+          "line": 2,
+          "message": ".github/workflows/root-invalid-access.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-list.yml",
+          "line": 2,
+          "message": ".github/workflows/root-list.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-null.yml",
+          "line": 2,
+          "message": ".github/workflows/root-null.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-unknown-scope.yml",
+          "line": 2,
+          "message": ".github/workflows/root-unknown-scope.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 11,
+          "message": ".github/workflows/types.yml:11: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions: [contents, read]",
+          "target": "list-permissions"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 16,
+          "message": ".github/workflows/types.yml:16: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions: ${{ inputs.job_permissions }}",
+          "target": "expression-permissions"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 21,
+          "message": ".github/workflows/types.yml:21: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "invalid-access"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 27,
+          "message": ".github/workflows/types.yml:27: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unknown-scope"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 6,
+          "message": ".github/workflows/types.yml:6: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "null-permissions"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unresolved-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/empty-jobs.yml",
+          "line": 4,
+          "message": ".github/workflows/empty-jobs.yml:4: cannot determine job permissions (workflow has no jobs to analyze). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "jobs: {}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/expression.yml",
+          "line": 2,
+          "message": ".github/workflows/expression.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions: ${{ inputs.permissions }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/jobs-shape.yml",
+          "line": 4,
+          "message": ".github/workflows/jobs-shape.yml:4: cannot determine job permissions (jobs is not a mapping). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "jobs: [build, test]",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/malformed.yml",
+          "line": 3,
+          "message": ".github/workflows/malformed.yml:3: cannot determine job permissions (invalid YAML (did not find expected ',' or '}' at line 3 column 5, while parsing a flow mapping at line 2 column 14)). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "jobs:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/missing-jobs.yml",
+          "line": 1,
+          "message": ".github/workflows/missing-jobs.yml:1: cannot determine job permissions (workflow has no jobs to analyze). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "on: push",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-invalid-access.yml",
+          "line": 2,
+          "message": ".github/workflows/root-invalid-access.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-list.yml",
+          "line": 2,
+          "message": ".github/workflows/root-list.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-null.yml",
+          "line": 2,
+          "message": ".github/workflows/root-null.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/root-unknown-scope.yml",
+          "line": 2,
+          "message": ".github/workflows/root-unknown-scope.yml:2: cannot determine job permissions (workflow permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 11,
+          "message": ".github/workflows/types.yml:11: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions: [contents, read]",
+          "target": "list-permissions"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 16,
+          "message": ".github/workflows/types.yml:16: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions: ${{ inputs.job_permissions }}",
+          "target": "expression-permissions"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 21,
+          "message": ".github/workflows/types.yml:21: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "invalid-access"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 27,
+          "message": ".github/workflows/types.yml:27: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "unknown-scope"
+        },
+        {
+          "file": ".github/workflows/types.yml",
+          "line": 6,
+          "message": ".github/workflows/types.yml:6: cannot determine job permissions (job permissions are not fully static). Use literal permission values and a mapping of jobs so inherited write access can be checked.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "permissions:",
+          "target": "null-permissions"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unresolved-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

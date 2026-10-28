@@ -41,6 +41,9 @@ defaults are outside this check.
 There are no rule-specific options. The shared `scope`, `projects`, `include`,
 and `exclude` fields select applications. By default the rule selects direct
 workflow YAML files under `.github/workflows/`.
+The shared `message` field replaces diagnostic text without changing its file,
+line, target, or finding/advisory channel. The default effort is `max`; requesting
+`low` falls back to `max` with the standard analysis warning.
 
 ```yaml
 rules:

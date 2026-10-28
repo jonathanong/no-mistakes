@@ -10,6 +10,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR,
     rules::GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA,
     rules::GITHUB_ACTIONS_JOB_TIMEOUTS,
+    rules::GITHUB_ACTIONS_JOB_PERMISSIONS,
     rules::GITHUB_ACTIONS_STEP_TIMEOUTS,
     rules::GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS,
     rules::github_actions_pinned_hash::RULE_ID,
@@ -153,6 +154,7 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
 
 mod download_integrity;
 mod finite_sets;
+mod github_actions;
 mod manifests;
 mod payload_compatibility;
 mod redirects;

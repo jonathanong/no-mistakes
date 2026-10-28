@@ -314,3 +314,16 @@ fn unknown_job_permissions_locate_the_key_for_line_suppression() {
     assert_eq!(visible.findings.len(), 1, "{:?}", visible.findings);
     assert_eq!(visible.findings[0].target.as_deref(), Some("visible"));
 }
+
+#[test]
+fn file_catalog_and_public_dispatch_keep_suppression_boundaries() {
+    let (root, config, files) = fixture("suppression");
+    // The file-catalog API defers suppression to its request owner.
+    let raw = super::check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(raw.len(), 4, "{raw:?}");
+    let dispatched =
+        crate::codebase::rules::run_filesystem_rules_with_config(&root, &config, &files).unwrap();
+    assert_eq!(dispatched, check(&root, &config).unwrap());
+    assert_eq!(dispatched.len(), 1);
+    assert_eq!(dispatched[0].target.as_deref(), Some("visible"));
+}

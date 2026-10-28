@@ -351,6 +351,12 @@ configuration errors. A base-side ref also needs the base repository. Credential
 and ref obligations can produce separate rows; neither policy hides known
 credential failures. See the [ref contract](../rules/github-actions-checkout-credentials.md#pull_request_target-refs).
 
+[`github-actions-job-permissions`](../rules/github-actions-job-permissions.md)
+has no rule-specific options. It checks jobs inheriting explicit workflow-level
+writes; it does not assume repository permission defaults. Shared
+`options.unanalyzable` defaults to `report`, with `advise` and `ignore` available
+for unknown permission declarations. Known inherited writes remain findings.
+
 For [`github-actions-download-integrity`](../rules/github-actions-download-integrity.md),
 `options.trustedHosts` defaults to `localhost`, `127.0.0.1`, `api.github.com`,
 and `objects.githubusercontent.com`. Omitting the option keeps that default.
