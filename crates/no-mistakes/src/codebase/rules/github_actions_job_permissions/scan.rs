@@ -45,6 +45,15 @@ pub(super) fn check_source(rel: &str, source: &str, policy: Unanalyzable) -> Ana
         );
     }
     let Some(jobs_value) = root.get(key("jobs")) else {
+        diagnostics.unanalyzable(
+            policy,
+            unresolved(
+                rel,
+                locations.jobs_line(),
+                "unanalyzable",
+                "workflow has no jobs to analyze",
+            ),
+        );
         return diagnostics;
     };
     let Some(jobs) = jobs_value.as_mapping() else {
@@ -59,6 +68,17 @@ pub(super) fn check_source(rel: &str, source: &str, policy: Unanalyzable) -> Ana
         );
         return diagnostics;
     };
+    if jobs.is_empty() {
+        diagnostics.unanalyzable(
+            policy,
+            unresolved(
+                rel,
+                locations.jobs_line(),
+                "unanalyzable",
+                "workflow has no jobs to analyze",
+            ),
+        );
+    }
     for (job_key, job_value) in jobs {
         if job_key.as_str() == Some("<<") {
             diagnostics.unanalyzable(
