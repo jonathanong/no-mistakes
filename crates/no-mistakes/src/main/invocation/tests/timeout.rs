@@ -12,7 +12,13 @@ fn partial_timeout_subprocess_helper() {
     if mode.starts_with("verbose") {
         args.push("--verbose-timings");
     }
-    let cli = Cli::parse_from(args);
+    if mode.contains("json") {
+        args.push("--json");
+    }
+    use clap::{CommandFactory, FromArgMatches};
+    let matches = Cli::command().get_matches_from(args);
+    let json = wants_json(&matches);
+    let cli = Cli::from_arg_matches(&matches).unwrap();
     let observer = cli.diagnostics.observer();
     assert_eq!(observer.is_some(), mode.starts_with("verbose"));
     assert!(!observer.as_ref().is_some_and(|o| o.progress_enabled()));
@@ -23,17 +29,33 @@ fn partial_timeout_subprocess_helper() {
     // must survive process::exit even though no observer guard can unwind.
     seed_saved_source(observer.clone());
     let _stderr_lock = mode.ends_with("locked").then(|| std::io::stderr().lock());
-    if mode.ends_with("blocked") {
+    if mode.ends_with("blocked") && !mode.ends_with("stdoutblocked") {
         use std::io::Write;
         std::io::stderr().write_all(&[b'x'; 4096]).unwrap();
         std::io::stderr().flush().unwrap();
     }
-    let _execution = ExecutionGuard::acquire_for_cli(InvocationOptions {
-        timeout: Some(Duration::from_millis(150)),
-        invocation_timeout: None,
-        ..InvocationOptions::default()
-    })
+    let _stdout_lock = mode
+        .ends_with("stdoutlocked")
+        .then(|| std::io::stdout().lock());
+    let output = no_mistakes::invocation::CliErrorOutput::new(json);
+    let _execution = ExecutionGuard::acquire_for_cli_with_output(
+        InvocationOptions {
+            timeout: Some(Duration::from_millis(150)),
+            invocation_timeout: None,
+            ..InvocationOptions::default()
+        },
+        output.clone(),
+    )
     .unwrap();
+    if mode.ends_with("stdoutblocked") {
+        #[cfg(target_os = "linux")]
+        fill_stdout_pipe();
+    }
+    if mode.contains("boundary") {
+        let error =
+            std::io::Error::new(std::io::ErrorKind::TimedOut, "boundary deadline elapsed").into();
+        report_error(&error, &output);
+    }
     std::thread::sleep(Duration::from_secs(10));
     panic!("watchdog failed to enforce its deadline");
 }
@@ -60,6 +82,14 @@ fn verbose_timeout_without_progress_preserves_partial_counters_and_stays_bounded
         "off-locked",
         "verbose-blocked",
         "off-blocked",
+        "json",
+        "verbose-json",
+        "json-locked",
+        "json-blocked",
+        "json-stdoutlocked",
+        "json-stdoutblocked",
+        "json-boundary",
+        "json-boundary-stdoutblocked",
     ] {
         if mode.ends_with("blocked") && !cfg!(target_os = "linux") {
             continue;
@@ -84,8 +114,17 @@ fn verbose_timeout_without_progress_preserves_partial_counters_and_stays_bounded
         if mode.ends_with("blocked") {
             use std::os::unix::process::CommandExt;
             unsafe {
-                command.pre_exec(|| {
-                    if nix::libc::fcntl(2, nix::libc::F_SETPIPE_SZ, 4096) == -1 {
+                command.pre_exec(move || {
+                    if nix::libc::fcntl(
+                        if mode.ends_with("stdoutblocked") {
+                            1
+                        } else {
+                            2
+                        },
+                        nix::libc::F_SETPIPE_SZ,
+                        4096,
+                    ) == -1
+                    {
                         return Err(std::io::Error::last_os_error());
                     }
                     Ok(())
@@ -110,7 +149,28 @@ fn verbose_timeout_without_progress_preserves_partial_counters_and_stays_bounded
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8(output.stdout).unwrap();
-        assert_eq!(stdout.trim(), "running 1 test", "no command stdout: {mode}");
+        if mode.contains("json") && !mode.ends_with("stdoutblocked") {
+            let report: serde_json::Value = serde_json::from_str(
+                stdout
+                    .lines()
+                    .find(|line| line.starts_with('{'))
+                    .expect("JSON timeout report"),
+            )
+            .unwrap();
+            assert_eq!(report["error"]["kind"], "deadline", "{mode}");
+            assert_eq!(report["error"]["exitCode"], 124, "{mode}");
+            assert!(
+                report["error"]["phase"].is_null() || report["error"]["phase"] == "command",
+                "{mode}"
+            );
+            assert_eq!(
+                stdout.lines().filter(|line| line.starts_with('{')).count(),
+                1,
+                "{stdout}"
+            );
+        } else if !mode.ends_with("stdoutblocked") {
+            assert_eq!(stdout.trim(), "running 1 test", "no command stdout: {mode}");
+        }
         if mode.ends_with("blocked") {
             continue;
         }
@@ -130,5 +190,30 @@ fn verbose_timeout_without_progress_preserves_partial_counters_and_stays_bounded
         } else {
             assert!(!stderr.contains("[PARTIAL"), "{stderr}");
         }
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn fill_stdout_pipe() {
+    use std::io::Write;
+    std::io::stdout().flush().unwrap();
+    // Fill the inherited pipe without blocking before the boundary can claim.
+    // Restore its original status flags before testing the blocking JSON write.
+    unsafe {
+        let flags = nix::libc::fcntl(1, nix::libc::F_GETFL);
+        assert!(flags >= 0);
+        assert_eq!(
+            nix::libc::fcntl(1, nix::libc::F_SETFL, flags | nix::libc::O_NONBLOCK),
+            0
+        );
+        let bytes = [b'x'; 4096];
+        while nix::libc::write(1, bytes.as_ptr().cast(), bytes.len()) >= 0 {}
+        // Atomic 4096-byte writes may fail while a smaller remainder is free.
+        while nix::libc::write(1, bytes.as_ptr().cast(), 1) >= 0 {}
+        assert_eq!(
+            std::io::Error::last_os_error().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        assert_eq!(nix::libc::fcntl(1, nix::libc::F_SETFL, flags), 0);
     }
 }

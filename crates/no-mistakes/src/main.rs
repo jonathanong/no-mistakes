@@ -30,7 +30,7 @@ mod swift;
 mod test_support;
 
 use anyhow::Result;
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, FromArgMatches, Parser, Subcommand};
 use no_mistakes::cli::JobsArg;
 use no_mistakes::codebase::dependencies::{self, Direction, TraverseArgs};
 use no_mistakes::codebase::import_usages::{self, ImportUsagesArgs};
@@ -121,14 +121,13 @@ enum Command {
 }
 
 fn main() -> ExitCode {
-    match run() {
+    let matches = Cli::command().get_matches();
+    let output = no_mistakes::invocation::CliErrorOutput::new(invocation::wants_json(&matches));
+    let cli = Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit());
+    match invocation::run_with_output(cli, output.clone()) {
         Ok(code) => code,
-        Err(error) => invocation::report_error(&error),
+        Err(error) => invocation::report_error(&error, &output),
     }
-}
-
-fn run() -> Result<ExitCode> {
-    invocation::run(Cli::parse())
 }
 
 #[path = "main/dispatch.rs"]

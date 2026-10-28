@@ -64,6 +64,31 @@ fn lock_status_reports_the_holder_recorded_in_the_lock_file() {
 }
 
 #[test]
+fn lock_status_remains_available_with_deadline_and_contention_flags() {
+    let home = tempfile::tempdir().unwrap();
+    let _held = hold_lock(home.path(), "lock-holder");
+    let output = command(
+        home.path(),
+        &[
+            "lock",
+            "status",
+            "--format",
+            "json",
+            "--timeout",
+            "1",
+            "--invocation-timeout-ms",
+            "1",
+            "--lock-timeout",
+            "1",
+            "--fail-on-lock",
+        ],
+    );
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(json(&output)["state"], "held");
+    assert_eq!(json(&output)["holder"]["pid"], 4242);
+}
+
+#[test]
 fn lock_status_is_free_once_the_holder_exits_even_with_a_stale_record() {
     let home = tempfile::tempdir().unwrap();
     drop(hold_lock(home.path(), "lock-holder"));
@@ -129,4 +154,21 @@ fn lock_failures_keep_stdout_empty_without_json_output() {
     let output = command(home.path(), &["check", "--fail-on-lock"]);
     assert_eq!(output.status.code(), Some(75));
     assert!(output.stdout.is_empty());
+}
+
+#[test]
+fn literal_output_flags_as_paths_do_not_change_text_lock_errors() {
+    let home = tempfile::tempdir().unwrap();
+    let _held = hold_lock(home.path(), "lock-holder");
+    for paths in [
+        vec!["--json"],
+        vec!["--format=json"],
+        vec!["--format", "json"],
+    ] {
+        let mut args = vec!["dependents", "--format", "paths", "--fail-on-lock", "--"];
+        args.extend(paths);
+        let output = command(home.path(), &args);
+        assert_eq!(output.status.code(), Some(75), "{output:?}");
+        assert!(output.stdout.is_empty(), "{output:?}");
+    }
 }

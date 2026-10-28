@@ -1,7 +1,7 @@
 //! Holder metadata that the lock owner records in the lock file.
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::{ffi::OsString, path::Path};
 
 const MAX_COMMAND_CHARS: usize = 512;
 
@@ -14,6 +14,7 @@ pub struct LockHolder {
     #[serde(default)]
     pub cwd: Option<String>,
     #[serde(default)]
+    /// Executable basename only for new records; arguments are never recorded.
     pub command: String,
     /// Unix epoch milliseconds when the holder acquired the lock; 0 when unknown.
     #[serde(default)]
@@ -37,26 +38,12 @@ pub(super) fn now_ms() -> u64 {
 
 impl LockHolder {
     pub(super) fn current() -> Self {
-        let mut args = std::env::args();
-        let program = args.next().map(|program| {
-            Path::new(&program)
-                .file_name()
-                .map_or(program.clone(), |name| name.to_string_lossy().into_owned())
-        });
-        let command: String = program
-            .into_iter()
-            .chain(args)
-            .collect::<Vec<_>>()
-            .join(" ")
-            .chars()
-            .take(MAX_COMMAND_CHARS)
-            .collect();
         Self {
             pid: std::process::id(),
             cwd: std::env::current_dir()
                 .ok()
                 .map(|cwd| cwd.to_string_lossy().into_owned()),
-            command,
+            command: command_name(std::env::args_os()),
             started_at_ms: now_ms(),
             age_seconds: None,
         }
@@ -84,8 +71,8 @@ impl LockHolder {
         self
     }
 
-    /// Read the holder record next to `lock`. It lives in a sidecar file because
-    /// the lock file itself is unreadable to other processes where locks are mandatory.
+    /// Read best-effort metadata, which can name a previous holder during handoff.
+    /// A separate file remains readable on platforms with mandatory file locks.
     pub(super) fn read(lock: &Path) -> Option<Self> {
         let contents = std::fs::read_to_string(sidecar_path(lock)).ok()?;
         Self::parse(&contents).map(Self::with_age)
@@ -94,9 +81,12 @@ impl LockHolder {
     /// Record this holder after the lock is acquired, replacing any previous record.
     pub(super) fn record(&self, lock: &Path) -> std::io::Result<()> {
         let sidecar = sidecar_path(lock);
-        let staged = sidecar.with_extension(format!("holder.{}.tmp", self.pid));
-        std::fs::write(&staged, serde_json::to_string(self)?)?;
-        std::fs::rename(staged, sidecar)
+        // NamedTempFile creates a unique file (0600 on Unix), so a
+        // leftover staging file cannot broaden permissions or expose arguments.
+        let mut staged = tempfile::NamedTempFile::new_in(lock.parent().unwrap_or(Path::new(".")))?;
+        serde_json::to_writer(staged.as_file_mut(), self)?;
+        staged.persist(sidecar).map_err(|error| error.error)?;
+        Ok(())
     }
 
     /// Human description used in lock messages.
@@ -117,3 +107,21 @@ impl LockHolder {
         }
     }
 }
+
+fn command_name(args: impl IntoIterator<Item = OsString>) -> String {
+    args.into_iter()
+        .next()
+        .and_then(|program| {
+            Path::new(&program).file_name().map(|name| {
+                name.to_string_lossy()
+                    .chars()
+                    .take(MAX_COMMAND_CHARS)
+                    .collect()
+            })
+        })
+        .unwrap_or_default()
+}
+
+#[cfg(test)]
+#[path = "holder/tests.rs"]
+mod tests;

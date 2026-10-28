@@ -87,7 +87,7 @@ export interface LockHolder {
   pid: number;
   /** Working directory of the holder; a pid alone is ambiguous across sandboxes. */
   cwd: string | null;
-  /** The holder's command line. Empty for legacy pid-only records. */
+  /** Executable basename for new records; legacy records may contain arguments. Empty for pid-only records. */
   command: string;
   /** Unix epoch milliseconds when the holder acquired the lock; 0 when unknown. */
   startedAtMs: number;

@@ -1,0 +1,1 @@
+This directory prevents publishing a holder record as a regular file.

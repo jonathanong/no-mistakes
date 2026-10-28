@@ -92,23 +92,34 @@ fn command_error_survives_unavailable_writer_and_occupied_progress_queue() {
 }
 
 #[test]
-fn json_output_is_detected_from_every_spelling() {
-    let args = |list: &[&str]| list.iter().map(|arg| arg.to_string()).collect::<Vec<_>>();
-    assert!(wants_json(args(&[
-        "no-mistakes",
-        "check",
-        "--format",
-        "json"
-    ])));
-    assert!(wants_json(args(&["no-mistakes", "check", "--format=json"])));
-    assert!(wants_json(args(&["no-mistakes", "check", "--json"])));
-    assert!(!wants_json(args(&[
-        "no-mistakes",
-        "check",
-        "--format",
-        "md"
-    ])));
-    assert!(!wants_json(args(&["no-mistakes", "check", "--format"])));
+fn json_output_uses_validated_command_arguments() {
+    use clap::CommandFactory;
+    for args in [
+        vec!["check", "--format", "json"],
+        vec!["check", "--format=json"],
+        vec!["check", "--json"],
+        vec!["lock", "status", "--format=json"],
+        vec!["test", "plan", "vitest", "--json"],
+        vec!["tests", "why", "src/example.ts", "--format=json"],
+        vec!["lockfile", "diff", "--base", "HEAD~1"],
+    ] {
+        let matches = Cli::command()
+            .try_get_matches_from(std::iter::once("no-mistakes").chain(args.iter().copied()))
+            .unwrap();
+        assert!(wants_json(&matches), "{args:?}");
+    }
+    for args in [
+        vec!["check", "--format", "md"],
+        vec!["check"],
+        vec!["dependents", "--format", "paths", "--", "--json"],
+        vec!["dependents", "--format", "paths", "--", "--format=json"],
+        vec!["dependents", "--format", "paths", "--", "--format", "json"],
+    ] {
+        let matches = Cli::command()
+            .try_get_matches_from(std::iter::once("no-mistakes").chain(args.iter().copied()))
+            .unwrap();
+        assert!(!wants_json(&matches), "{args:?}");
+    }
 }
 
 #[test]

@@ -1,31 +1,45 @@
 use super::deadline::{self, Deadline, DeadlineGuard};
 use super::lock::{acquire_lock, acquire_lock_from, lock_path};
 use super::{
-    child, clock, set_timeout_phase, InvocationError, InvocationErrorKind, InvocationGuard,
-    InvocationOptions,
+    child, clock, set_timeout_phase, CliErrorOutput, InvocationError, InvocationErrorKind,
+    InvocationGuard, InvocationOptions,
 };
 use anyhow::{Context, Result};
+#[path = "acquisition/cli.rs"]
+mod cli;
 
 impl InvocationGuard {
     pub fn acquire(options: InvocationOptions) -> Result<Self> {
-        Self::acquire_with_parent_signal_forwarding(options, false)
-    }
-
-    pub fn acquire_for_cli(options: InvocationOptions) -> Result<Self> {
-        Self::acquire_with_parent_signal_forwarding(options, true)
-    }
-
-    fn acquire_with_parent_signal_forwarding(
-        options: InvocationOptions,
-        forward_parent_signals: bool,
-    ) -> Result<Self> {
-        Self::acquire_resolving_path(options, forward_parent_signals, lock_path)
+        Self::acquire_resolving_path(options, false, lock_path)
     }
 
     pub(super) fn acquire_resolving_path(
         options: InvocationOptions,
         forward_parent_signals: bool,
         resolve_path: impl FnOnce() -> Result<std::path::PathBuf>,
+    ) -> Result<Self> {
+        Self::acquire_resolving_path_with_json(options, forward_parent_signals, resolve_path, false)
+    }
+
+    pub(super) fn acquire_resolving_path_with_json(
+        options: InvocationOptions,
+        forward_parent_signals: bool,
+        resolve_path: impl FnOnce() -> Result<std::path::PathBuf>,
+        json: bool,
+    ) -> Result<Self> {
+        Self::acquire_resolving_path_with_output(
+            options,
+            forward_parent_signals,
+            resolve_path,
+            CliErrorOutput::new(json),
+        )
+    }
+
+    fn acquire_resolving_path_with_output(
+        options: InvocationOptions,
+        forward_parent_signals: bool,
+        resolve_path: impl FnOnce() -> Result<std::path::PathBuf>,
+        output: CliErrorOutput,
     ) -> Result<Self> {
         let invocation_deadline = options
             .invocation_timeout
@@ -45,9 +59,10 @@ impl InvocationGuard {
         // request's process-global deadline, cancellation, or child registry.
         let early_deadline = if forward_parent_signals && invocation_deadline.is_some() {
             set_timeout_phase("invocation.lock");
-            Some(DeadlineGuard::install_for_cli_with_deadline(
+            Some(DeadlineGuard::install_for_cli_with_output(
                 None,
                 invocation_deadline,
+                output.clone(),
             )?)
         } else {
             None
@@ -70,9 +85,13 @@ impl InvocationGuard {
             set_timeout_phase("command");
         }
         let deadline = match (forward_parent_signals, invocation_deadline) {
-            (true, None) => DeadlineGuard::install_for_cli(options.timeout)?,
+            (true, None) => {
+                DeadlineGuard::install_for_cli_with_output(options.timeout, None, output.clone())?
+            }
             (false, None) => DeadlineGuard::install_for_invocation(options.timeout, None)?,
-            (true, limit) => DeadlineGuard::install_for_cli_with_deadline(options.timeout, limit)?,
+            (true, limit) => {
+                DeadlineGuard::install_for_cli_with_output(options.timeout, limit, output)?
+            }
             (false, limit) => {
                 DeadlineGuard::install_for_invocation_with_deadline(options.timeout, None, limit)?
             }

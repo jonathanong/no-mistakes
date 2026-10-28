@@ -1,4 +1,6 @@
 use super::{active_deadline, current_phase, timeout_diagnostic};
+#[path = "output.rs"]
+mod output;
 use crate::invocation::clock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -9,6 +11,7 @@ pub(super) fn watch_deadline(
     expires_at: Instant,
     timeout: Duration,
     observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
+    output: crate::invocation::CliErrorOutput,
 ) {
     loop {
         if cancel.load(Ordering::Acquire) {
@@ -19,7 +22,19 @@ pub(super) fn watch_deadline(
             if cancel.load(Ordering::Acquire) || !deadline_still_active(expires_at) {
                 return;
             }
-            let message = timeout_diagnostic(timeout, current_phase());
+            let phase = current_phase();
+            let message = timeout_diagnostic(timeout, phase);
+            {
+                let error = crate::invocation::InvocationError::new(
+                    crate::invocation::InvocationErrorKind::CommandTimeout,
+                    message.clone(),
+                )
+                .with_phase(phase)
+                .into();
+                if let Some(report) = output.report_or_wait(&error) {
+                    output::emit(format!("{report}\n"), output.clone());
+                }
+            }
             crate::diagnostics::render_timeout_stderr(observer, message);
             crate::invocation::child::process_tree::terminate_registered_groups();
             std::process::exit(124);

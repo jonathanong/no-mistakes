@@ -201,6 +201,13 @@ try {
 ```
 
 `lockStatus()` returns `{ state: "held" | "free", lockFile, holder }` without
-waiting and without taking the lock; it matches `no-mistakes lock status
---format json`. The `LockStatus`, `LockHolder`, `InvocationErrorKind`,
+waiting; it briefly probes with a shared lock and matches `no-mistakes lock
+status --format json`. A simultaneous `--fail-on-lock` CLI invocation may
+contend with that probe. The status command ignores `--timeout`,
+`--invocation-timeout-ms`, `--lock-timeout`, and `--fail-on-lock`. Its holder
+sidecar is best-effort and remains after release or a crash, so a held lock may
+briefly be reported with the previous holder during acquisition. New sidecars
+store only the executable basename in `command`, not arguments; older sidecars
+can still contain a full command line. New records are replaced atomically with
+owner-only Unix permissions (`0600`). The `LockStatus`, `LockHolder`, `InvocationErrorKind`,
 `InvocationErrorDetails`, and `InvocationError` types are exported.
