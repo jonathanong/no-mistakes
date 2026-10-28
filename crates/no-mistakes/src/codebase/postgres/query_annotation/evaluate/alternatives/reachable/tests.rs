@@ -2,6 +2,86 @@ use super::*;
 use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 
 #[test]
+fn reachability_entrypoints_resolve_observer_once_each() {
+    use crate::diagnostics::{with_observer, InvocationObserver};
+
+    let current_lookup_count = crate::diagnostics::context::tests::current_lookup_count;
+
+    let scopes: [Scope; 0] = [];
+    let objects = ArgumentObjects::default();
+    let extras = FxHashMap::default();
+    let mapped = FxHashMap::default();
+    let captured = CapturedBindings::default();
+    let arena = Arena {
+        objects: &objects,
+        extras: &extras,
+    };
+    for observer in [
+        None,
+        Some(InvocationObserver::new(false)),
+        Some(InvocationObserver::new(true)),
+    ] {
+        with_observer(observer.clone(), || {
+            let before = current_lookup_count();
+            collect_from_roots(
+                &scopes,
+                RootSeeds::default(),
+                &[],
+                arena,
+                &mapped,
+                &captured,
+            );
+            assert_eq!(current_lookup_count() - before, 1, "ordinary walk");
+
+            let before = current_lookup_count();
+            collect_warm_from_roots(
+                &scopes,
+                RootSeeds::default(),
+                &[],
+                arena,
+                &mapped,
+                &captured,
+            );
+            assert_eq!(current_lookup_count() - before, 1, "warm walk");
+
+            let mut prefix = Prefix::default();
+            let before = current_lookup_count();
+            collect_cached(
+                &scopes,
+                RootSeeds::default(),
+                &[],
+                arena,
+                &mapped,
+                &captured,
+                (&mut prefix, 0),
+            );
+            assert_eq!(current_lookup_count() - before, 1, "cached walk");
+        });
+        if let Some(observer) = observer {
+            let snapshot = observer.snapshot();
+            assert_eq!(
+                snapshot.work.get("postgres.annotation.reachability_walks"),
+                observer.verbose().then_some(&3),
+            );
+            assert_eq!(
+                snapshot.timings.len(),
+                if observer.detailed() { 1 } else { 0 }
+            );
+            if observer.detailed() {
+                assert_eq!(
+                    snapshot.timings[0].label,
+                    "postgres.annotation.reachability_walk"
+                );
+                assert_eq!(
+                    snapshot.timings[0].kind,
+                    crate::diagnostics::TimingKind::Parallel
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn shared_containers_are_visited_once_per_reachability_collection() {
     let mut value = Value::Possible(
         vec![

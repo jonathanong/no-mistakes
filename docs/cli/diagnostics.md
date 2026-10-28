@@ -126,6 +126,7 @@ timing history. Repeated registry initialization across roots remains visible.
 Detailed observation (`--verbose-timings` or `--progress`) also aggregates
 elapsed time under fixed labels, without file paths or offsets in timing history:
 
+<!-- postgres-annotation-phase-timings:start -->
 - `postgres.annotation.root`: one root's evaluator run, including module
   initialization and speculative replay of its entrypoints.
 - `postgres.annotation.module`: initialization on a module-cache miss, including
@@ -152,6 +153,7 @@ elapsed time under fixed labels, without file paths or offsets in timing history
   and builder identities from branch-state roots, including prefix-cache refresh
   and cached direct-edge reads. Covers ordinary, warm-edge and prefix-cached
   collection paths.
+<!-- postgres-annotation-phase-timings:end -->
 
 These durations are inclusive: nested modules, arms, and heap walks can appear
 inside enclosing roots, modules, entrypoints or snapshot phases. Repeated labels

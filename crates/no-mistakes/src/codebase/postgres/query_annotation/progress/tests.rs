@@ -76,6 +76,48 @@ fn disabled_timing_does_not_read_the_clock() {
 }
 
 #[test]
+fn timed_reachability_counts_only_for_detailed_observation() {
+    const LABEL: &str = "postgres.annotation.reachability_walk";
+    const COUNTER: &str = "postgres.annotation.reachability_walks";
+    let lookups = crate::diagnostics::context::tests::current_lookup_count;
+    with_observer(None, || {
+        let before = lookups();
+        assert!(timing_and_count(LABEL, COUNTER).is_none());
+        assert_eq!(lookups() - before, 1);
+    });
+    let disabled = InvocationObserver::new(false);
+    with_observer(Some(disabled.clone()), || {
+        let before = lookups();
+        assert!(timing_and_count(LABEL, COUNTER).is_none());
+        assert_eq!(lookups() - before, 1);
+    });
+    assert!(disabled.snapshot().timings.is_empty());
+    assert!(disabled.snapshot().work.is_empty());
+
+    let observer = InvocationObserver::new(true);
+    with_observer(Some(observer.clone()), || {
+        let before = lookups();
+        let _timing = timing_and_count(LABEL, COUNTER).expect("verbose timing");
+        assert_eq!(lookups() - before, 1);
+        assert_eq!(observer.snapshot().work[COUNTER], 1);
+    });
+    let snapshot = observer.snapshot();
+    assert_eq!(snapshot.work[COUNTER], 1);
+    assert_eq!(snapshot.timings.len(), 1);
+    assert_eq!(snapshot.timings[0].label, LABEL);
+    assert_eq!(snapshot.timings[0].kind, TimingKind::Parallel);
+
+    let progress = InvocationObserver::with_progress(false, true);
+    with_observer(Some(progress.clone()), || {
+        let _timing = timing_and_count(LABEL, COUNTER).expect("progress timing");
+    });
+    let snapshot = progress.snapshot();
+    assert!(snapshot.work.is_empty());
+    assert_eq!(snapshot.timings.len(), 1);
+    assert_eq!(snapshot.timings[0].label, LABEL);
+}
+
+#[test]
 fn progress_only_records_fixed_timings_without_work_counters() {
     let observer = InvocationObserver::with_progress(false, true);
     with_observer(Some(observer.clone()), || {

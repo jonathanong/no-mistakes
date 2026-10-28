@@ -13,8 +13,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "root.mts",
-          "line": 9,
-          "message": "root.mts:9: query execution must start with a /* name */ annotation",
+          "line": 15,
+          "message": "root.mts:15: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "read(sql`SELECT 2`) // unsafe-query",
           "target": "annotation"

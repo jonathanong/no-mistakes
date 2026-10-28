@@ -9,6 +9,17 @@ pub(super) fn timing(label: &'static str) -> Option<Timing> {
     start(crate::diagnostics::current(), label, Instant::now)
 }
 
+/// Count a timed walk through the same observer that owns its duration.
+/// Inline the disabled path so this wrapper adds no call per reachability walk.
+#[inline(always)]
+pub(super) fn timing_and_count(label: &'static str, counter: &'static str) -> Option<Timing> {
+    let timing = timing(label);
+    if let Some(timing) = &timing {
+        timing.observer.increment(counter, 1);
+    }
+    timing
+}
+
 pub(super) struct Timing {
     observer: Arc<InvocationObserver>,
     label: &'static str,

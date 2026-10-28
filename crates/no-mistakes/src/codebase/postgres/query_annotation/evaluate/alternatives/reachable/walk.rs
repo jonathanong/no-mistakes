@@ -9,12 +9,10 @@ pub(super) fn collect<const WARM: bool>(
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     captured: &CapturedBindings,
 ) -> Reachable {
-    let _timing = crate::codebase::postgres::query_annotation::progress::timing(
+    let _timing = crate::codebase::postgres::query_annotation::progress::timing_and_count(
         "postgres.annotation.reachability_walk",
+        "postgres.annotation.reachability_walks",
     );
-    if let Some(observer) = crate::diagnostics::current() {
-        observer.increment("postgres.annotation.reachability_walks", 1);
-    }
     let mut found = Reachable::default();
     found.pending_env.extend(roots.environments.iter().copied());
     found.pending_args.extend(roots.arguments.iter().copied());
