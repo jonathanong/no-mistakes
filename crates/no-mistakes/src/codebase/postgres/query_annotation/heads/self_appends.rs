@@ -7,7 +7,7 @@ mod collect;
 pub(super) struct Syntax {
     pub roots: FxHashMap<Span, Root>,
     writes: FxHashMap<Span, Write>,
-    reads: FxHashMap<Span, Span>,
+    pub(super) reads: FxHashMap<Span, Span>,
 }
 pub(super) struct Root {
     pub tag: Span,

@@ -8,6 +8,7 @@ use crate::fx::{FxHashMap, FxHashSet};
 mod prefix;
 mod proof;
 mod record_scope;
+mod self_append_wanted;
 mod wanted;
 pub(super) struct Bindings<'a> {
     module: Option<&'a crate::codebase::ts_source::module_facts::TypeScriptModuleFacts>,
@@ -57,16 +58,15 @@ impl<'a> Bindings<'a> {
         }) else {
             return index;
         };
-        // Closed roots need exact ownership for every runtime reference.
+        let executors = executor_calls.collect::<FxHashSet<_>>();
+        index.trusted_imports = super::trusted_append::import_ids(module);
+        let native = &index.trusted_imports;
+        self_append_wanted::extend(syntax, module, &executors, native, &mut wanted);
         let finite_declarations = super::finite_comments::declarations(syntax);
         for binding in &module.bindings {
             if syntax
                 .append_tags
                 .contains_key(&(binding.span.start, binding.span.end))
-                || syntax
-                    .self_appends
-                    .roots
-                    .contains_key(&(binding.span.start, binding.span.end))
                 || finite_declarations.contains(&(binding.span.start, binding.span.end))
             {
                 wanted.extend(
@@ -80,7 +80,6 @@ impl<'a> Bindings<'a> {
         }
         index.gaps = Some(Gaps::new(module));
         index.module = Some(module);
-        index.trusted_imports = super::trusted_append::import_ids(module);
         // Index owners first so trusted roots use the same ambiguity and gap proof.
         for binding in &module.bindings {
             for usage in binding.references.iter().filter(|usage| usage.runtime) {
@@ -94,7 +93,6 @@ impl<'a> Bindings<'a> {
                 }
             }
         }
-        let executors = executor_calls.collect::<FxHashSet<_>>();
         index.trusted_roots = index.trusted_roots(syntax);
         let effects = super::effects::prepare(syntax, &index, module, &index.trusted_roots);
         index.effects = effects;
