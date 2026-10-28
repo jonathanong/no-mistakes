@@ -90,6 +90,17 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
         .chain(syntax.return_sinks.iter().copied())
         .chain(
             syntax
+                .returned_param_roots
+                .values()
+                .flat_map(|root| [root.callee, root.tag]),
+        )
+        .chain(syntax.returned_params.values().flat_map(|candidate| {
+            [candidate.allowed_parameter, candidate.default_tag]
+                .into_iter()
+                .chain(candidate.allowed_alias.iter().copied())
+        }))
+        .chain(
+            syntax
                 .finite_returns
                 .values()
                 .flat_map(|value| value.references()),

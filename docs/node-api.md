@@ -87,6 +87,9 @@ in the same file or through one direct source import, including local export
 aliases and concise arrow bodies. Opaque append suffixes preserve the prefix
 only for the trusted `sql-template-strings` tag. Unsupported helper or
 mutation shapes remain unanalyzable.
+They also include an exact directly imported helper that returns an immutable
+append alias of one fresh tagged builder argument, with an inert native default
+and a closed paired `.text`/`.values` executor read.
 An exact top-level namespace destructure can follow unique explicit source
 reexports to a fixed-head helper through the same prepared check projection;
 other namespace shapes remain unresolved. At low effort, a helper's own

@@ -1,8 +1,8 @@
 //! Low annotation head facts from the original prepared program.
 use super::{
     bindings, callback_heads, effects, finite_comments, helper_heads, helper_records,
-    literal_helpers, loop_carried, namespace_heads, syntax, trusted_append, AnnotationHeads,
-    HeadCallSpans, HeadProof, PreparedLoopHeads, Span,
+    literal_helpers, loop_carried, namespace_heads, returned_params, syntax, trusted_append,
+    AnnotationHeads, HeadCallSpans, HeadProof, PreparedLoopHeads, Span,
 };
 use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
@@ -125,6 +125,16 @@ pub(crate) fn collect_prepared(
         } else {
             Default::default()
         };
+    let (exported_returned_params, pending_returned_params) = if include_all_calls {
+        returned_params::module_projection(
+            &syntax,
+            &bindings,
+            ts.module_bindings.as_deref(),
+            &executor_calls,
+        )
+    } else {
+        Default::default()
+    };
     let pending_namespaces = if include_all_calls {
         namespace_heads::pending(
             &syntax,
@@ -139,6 +149,8 @@ pub(crate) fn collect_prepared(
         exported_helpers,
         exported_values,
         exported_records,
+        exported_returned_params,
+        pending_returned_params,
         exported_callbacks,
         pending_callbacks,
         pending_imports,

@@ -23,6 +23,8 @@ pub(super) struct Syntax {
     pub collect_helper_heads: bool,
     pub helper_returns: FxHashMap<Span, super::helper_heads::Summary>,
     pub record_returns: FxHashMap<Span, super::helper_records::Summary>,
+    pub returned_params: FxHashMap<Span, super::returned_params::Candidate>,
+    pub returned_param_roots: FxHashMap<Span, super::returned_params::Root>,
     pub finite_returns: FxHashMap<Span, super::finite_returns::Candidate>,
     pub record_initializers: FxHashMap<Span, (Span, Span)>,
     pub record_destructures: FxHashMap<Span, destructure::Destructure>,

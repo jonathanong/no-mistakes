@@ -14,6 +14,9 @@ impl Syntax {
         if let Some(summary) = super::super::helper_records::function(value) {
             self.record_returns.insert(declaration, summary);
         }
+        if let Some(candidate) = super::super::returned_params::function(value) {
+            self.returned_params.insert(declaration, candidate);
+        }
         if let Some(summary) = super::super::effects::function(value) {
             self.effect_functions.insert(declaration, summary);
         }

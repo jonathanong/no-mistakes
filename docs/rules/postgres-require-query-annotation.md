@@ -268,6 +268,13 @@ are still unresolved.
 Direct source imports of those helpers follow one exact export through the
 prepared request resolver. This direct-import form leaves re-exports and
 unresolved package implementations unanalyzable.
+One directly imported synchronous helper may also return the same first native
+builder argument after a single immutable append alias and a final return.
+The caller must pass one fresh tagged argument with a fixed head, then read the
+closed result's paired `.text` and `.values` at a configured executor. Only an
+omitted optional extra argument and an inert no-hole native tag default qualify;
+an extra object, another return path, escaped alias, or unresolved import stays
+unanalyzable. This proves the leading head, not the full statement.
 An exact top-level `const` destructure of a runtime namespace import may also
 resolve a fixed-head helper through unique explicit reexports and an imported
 default binding. It uses the prepared resolver and source helper proof; dynamic
