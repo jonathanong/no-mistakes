@@ -55,6 +55,18 @@ pub(crate) fn project(
             };
             completed.push((path.clone(), pending.span, proof));
         }
+        for pending in &heads.pending_returned_params {
+            let Some(target) = resolve(&pending.specifier, path) else {
+                continue;
+            };
+            let proven = files
+                .get(&target)
+                .and_then(|target| target.query_annotation_heads.as_deref())
+                .is_some_and(|heads| heads.exported_returned_params.contains(&pending.imported));
+            if proven {
+                completed.push((path.clone(), pending.span, pending.proof));
+            }
+        }
         for pending in &heads.pending_namespaces {
             if let Some(proof) = super::namespace_heads::project(files, &resolve, path, pending) {
                 completed.push((path.clone(), pending.span, proof));
