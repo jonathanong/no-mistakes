@@ -34,7 +34,14 @@ fn immutable_scope_scan_work_is_initial_plus_changed_bindings() {
         );
         assert_eq!(found.environments.len(), 128);
     }
-    let work = observer.snapshot().work;
+    let snapshot = observer.snapshot();
+    let timing = snapshot
+        .timings
+        .iter()
+        .find(|timing| timing.label == "postgres.annotation.reachability_walk")
+        .expect("prefix-cached heap walks must contribute timing");
+    assert_eq!(timing.kind, crate::diagnostics::TimingKind::Parallel);
+    let work = snapshot.work;
     assert_eq!(work["postgres.annotation.prefix_scope_scans"], 129);
     assert_eq!(
         work["postgres.annotation.prefix_binding_scans"],

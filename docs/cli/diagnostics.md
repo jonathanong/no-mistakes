@@ -123,6 +123,43 @@ offset or legacy prefix-comparison arm. `postgres.annotation.completed_activitie
 counts these coarse spans, without per-binding activities or completed location
 timing history. Repeated registry initialization across roots remains visible.
 
+Detailed observation (`--verbose-timings` or `--progress`) also aggregates
+elapsed time under fixed labels, without file paths or offsets in timing history:
+
+- `postgres.annotation.root`: one root's evaluator run, including module
+  initialization and speculative replay of its entrypoints.
+- `postgres.annotation.module`: initialization on a module-cache miss, including
+  recursively initialized dependencies. Cache hits do not contribute.
+- `postgres.annotation.snapshot`: pruning before the root snapshot; this label
+  does **not** measure snapshot cloning.
+- `postgres.annotation.snapshot_clone`: cloning initialized root state for replay.
+- `postgres.annotation.snapshot_restore`: restoring that state and rebuilding its
+  derived binding index before each speculative call or entrypoint.
+- `postgres.annotation.entrypoint`: evaluating one speculative function body.
+- `postgres.annotation.unmodeled_call`: evaluating one speculative unmodeled call.
+- `postgres.annotation.alternatives_snapshot`: saving incoming branch state and
+  preparing joins, including builder baselines and module snapshot setup. The
+  read-only alternative fast path skips this phase.
+- `postgres.annotation.alternatives_snapshot_restore`: restoring incoming state
+  and derived indexes before each full-join arm.
+- `postgres.annotation.alternative_arm`: evaluating one full-join arm expression;
+  it excludes that arm's surrounding restore, join and compaction work.
+- `postgres.annotation.alternatives_join`: joining each evaluated arm's effects,
+  objects and bindings, including frame compaction and index remapping.
+- `postgres.annotation.alternatives_finish`: installing joined state, final frame
+  compaction and pruning after all full-join arms complete.
+- `postgres.annotation.reachability_walk`: collecting reachable frames, arguments
+  and builder identities from branch-state roots, including prefix-cache refresh
+  and cached direct-edge reads. Covers ordinary, warm-edge and prefix-cached
+  collection paths.
+
+These durations are inclusive: nested modules, arms, and heap walks can appear
+inside enclosing roots, modules, entrypoints or snapshot phases. Repeated labels
+sum elapsed durations across calls and parallel workers. They are parallel work
+measurements, not disjoint wall-clock shares; do not add them or subtract them
+from wall time to infer unmeasured costs. Location-bearing progress activities
+remain live-only. Disabled detailed observation reads no clocks for these labels.
+
 `--verbose-timings` counts roots started/completed, module initializations,
 prefix comparisons, visited nodes and container visits. `postgres.annotation.prefix_compare`,
 `prefix_walks` and `prefix_walks_completed` retain exact comparison counts, collected

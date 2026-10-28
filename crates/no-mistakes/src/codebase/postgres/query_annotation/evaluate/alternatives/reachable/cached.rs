@@ -11,6 +11,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     captured: &CapturedBindings,
     cached: (&mut Prefix, usize),
 ) -> Reachable {
+    let _timing = crate::codebase::postgres::query_annotation::progress::timing(
+        "postgres.annotation.reachability_walk",
+    );
     if let Some(observer) = crate::diagnostics::current() {
         observer.increment("postgres.annotation.reachability_walks", 1);
     }

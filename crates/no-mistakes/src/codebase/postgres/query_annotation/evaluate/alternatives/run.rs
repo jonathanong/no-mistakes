@@ -1,5 +1,5 @@
-use super::super::{ArgumentObjects, Environment, Evaluator, Value};
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
+use super::super::super::progress::timing as start_timing;
+use super::super::{ArgumentObjects, Environment, Evaluator, Scope, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashSet;
 use std::path::Path;
@@ -17,6 +17,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             return value;
         }
         let precise_records = self.files[path].facts.precise_records;
+        let timing = start_timing("postgres.annotation.alternatives_snapshot");
         let scopes = self.scopes.clone();
         let seen = self.active_callback_functions.clone();
         let executions = self.active_callback_executions.clone();
@@ -54,7 +55,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut final_live = None;
         let mut prefix_roots = super::reachable::Prefix::default();
         let mut changed = FxHashSet::default();
+        drop(timing);
         for (arm_index, arm) in arms.iter().enumerate() {
+            let timing = start_timing("postgres.annotation.alternatives_snapshot_restore");
             self.untrusted_array_intrinsics = untrusted;
             // Keep arm-created frames alive for callbacks returned from helpers.
             self.scopes[..scopes.len()].clone_from_slice(&scopes);
@@ -81,11 +84,14 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 self.argument_objects.insert(*id, slots.clone());
             }
             self.restore_alternative_modules();
-            // Existing frames retain their capture origins. Only frames made by
-            // an arm (including restored module initials) need reader updates.
+            // Only arm-created frames and restored module initials need reader updates.
             self.add_alternative_captured_readers(scopes.len());
             self.rebuild_compacted_binding_indexes(false);
+            drop(timing);
+            let timing = start_timing("postgres.annotation.alternative_arm");
             returned.push(self.expr(arm, path, env, depth, generic));
+            drop(timing);
+            let timing = start_timing("postgres.annotation.alternatives_join");
             self.join_builder_updates(&mut joined_updates, &baselines, original_ids, path);
             joined_untrusted |= self.untrusted_array_intrinsics;
             deleted_changed.extend(self.deleted_argument_slots.iter().copied());
@@ -187,13 +193,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             {
                 final_live = Some((indices.arguments, indices.identities));
             }
+            drop(timing);
         }
-        // Keep the final snapshot moves in this lexical scope and their original order.
-        // Splitting their text adds no context struct, clones, or retained evaluator fields.
         include!("run_finish.inc")
     }
 }
-
-#[cfg(test)]
-#[path = "run/capture_prefix_tests.rs"]
-mod capture_prefix_tests;

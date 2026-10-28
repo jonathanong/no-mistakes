@@ -42,3 +42,7 @@ mod reference_binding_tests;
 
 #[cfg(test)]
 pub(super) mod value_equality_test_support;
+
+#[cfg(test)]
+#[path = "alternatives/run/capture_prefix_tests.rs"]
+mod capture_prefix_tests;

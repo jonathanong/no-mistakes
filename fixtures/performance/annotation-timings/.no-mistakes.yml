@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@data-stores/psql'
+      effort: max
+      unanalyzableSql: ignore

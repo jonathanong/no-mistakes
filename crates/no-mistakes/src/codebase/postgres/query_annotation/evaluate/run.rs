@@ -19,6 +19,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         });
         let env = self.modules[&self.module_ids().id(path)];
         let unmodeled = &file.facts.unmodeled_calls;
+        let timing = super::super::progress::timing("postgres.annotation.snapshot_clone");
         let scopes = self.scopes.clone();
         let modules = self.modules.clone();
         let invalidated = self.invalidated_builders.clone();
@@ -36,6 +37,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let captured_binding_readers = self.captured_binding_readers.clone();
         let mapped_argument_owners = self.mapped_argument_owners.clone();
         let mapped_parameter_indices = self.mapped_parameter_indices.clone();
+        drop(timing);
         for call in unmodeled {
             if file.facts.precise_records
                 && matches!(call, Expr::Call { start, end, .. } if file.facts.branch_calls.contains(&(*start, *end)))
@@ -44,6 +46,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
             if matches!(call, Expr::Call { start, end, .. } if !file.executors.contains(&(*start, *end)))
             {
+                let timing = super::super::progress::timing("postgres.annotation.snapshot_restore");
                 self.scopes.clone_from(&scopes);
                 self.modules.clone_from(&modules);
                 self.invalidated_builders.clone_from(&invalidated);
@@ -65,7 +68,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .clone_from(&mapped_argument_owners);
                 self.mapped_parameter_indices
                     .clone_from(&mapped_parameter_indices);
+                drop(timing);
+                let timing = super::super::progress::timing("postgres.annotation.unmodeled_call");
                 self.expr(call, path, &env, 16, false);
+                drop(timing);
             }
         }
         // Function declarations describe possible entrypoints; contextual
@@ -108,6 +114,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             for function in functions {
                 // Speculative entrypoints share initialized facts, never effects
                 // from an unrelated function considered earlier in name order.
+                let timing = super::super::progress::timing("postgres.annotation.snapshot_restore");
                 self.scopes.clone_from(&scopes);
                 self.modules.clone_from(&modules);
                 self.invalidated_builders.clone_from(&invalidated);
@@ -129,6 +136,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .clone_from(&mapped_argument_owners);
                 self.mapped_parameter_indices
                     .clone_from(&mapped_parameter_indices);
+                drop(timing);
                 let mut values: FxHashMap<String, Value> = function
                     .params
                     .iter()
