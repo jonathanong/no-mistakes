@@ -11,6 +11,35 @@ struct IndexedCallableAssignment {
     completed_at: u32,
 }
 
+fn index_import_bindings(
+    file: &crate::codebase::ts_source::facts::TsFileFacts,
+) -> (
+    FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
+    FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
+) {
+    let mut runtime = fx_map();
+    let mut all = fx_map();
+    for binding in &file.imported_bindings {
+        all.insert(binding.local.clone(), binding.clone());
+        if !binding.is_type_only {
+            runtime.insert(binding.local.clone(), binding.clone());
+        }
+    }
+    for binding in &file.value_flow.commonjs_imported_bindings {
+        runtime.insert(binding.local.clone(), binding.clone());
+    }
+    (runtime, all)
+}
+
+fn index_export_bindings(
+    file: &crate::codebase::ts_source::facts::TsFileFacts,
+) -> FxHashMap<String, crate::codebase::dependencies::extract::ExportedBinding> {
+    file.exported_bindings
+        .iter()
+        .map(|binding| (binding.exported.clone(), binding.clone()))
+        .collect()
+}
+
 fn index_class_members_by_id(
     members: &[(
         crate::codebase::dependencies::extract::CallableId,
@@ -71,32 +100,71 @@ fn index_closed_callable_assignments(
     if file.value_flow.callable_assignments().is_empty() {
         return fx_map();
     }
-    let Some(replacements) = file.value_flow.replacements.as_ref()
-        .filter(|facts| facts.requires_receiver_proof()) else { return fx_map(); };
-    let mut grouped: FxHashMap<(usize, String), Vec<&crate::codebase::dependencies::extract::CallableAssignment>> = fx_map();
+    let Some(replacements) = file
+        .value_flow
+        .replacements
+        .as_ref()
+        .filter(|facts| facts.requires_receiver_proof())
+    else {
+        return fx_map();
+    };
+    let mut grouped: FxHashMap<
+        (usize, String),
+        Vec<&crate::codebase::dependencies::extract::CallableAssignment>,
+    > = fx_map();
     for write in file.value_flow.callable_assignments() {
-        grouped.entry((write.scope, write.name.clone())).or_default().push(write);
+        grouped
+            .entry((write.scope, write.name.clone()))
+            .or_default()
+            .push(write);
     }
     let scopes: FxHashMap<_, _> = file.callable_scope_ids.iter().cloned().collect();
     index_scoped_names(grouped.into_iter().filter_map(|((scope, name), writes)| {
-        let [write] = writes.as_slice() else { return None; };
+        let [write] = writes.as_slice() else {
+            return None;
+        };
         let id = write.callable?;
-        if scope != 0 || write.owner.is_some() || !write.guaranteed
+        if scope != 0
+            || write.owner.is_some()
+            || !write.guaranteed
             || file.value_flow.callable_assignment_is_used(scope, &name)
-            || file.exported_bindings.iter().any(|binding| binding.local == name)
-            || file.callable_bindings.iter().any(|(binding_scope, binding, bound_id)| {
-                *bound_id == id && file.value_flow.callable_value_uses.as_ref()
-                    .and_then(|uses| uses.get(binding_scope))
-                    .is_some_and(|uses| uses.contains(binding))
+            || file
+                .exported_bindings
+                .iter()
+                .any(|binding| binding.local == name)
+            || file
+                .callable_bindings
+                .iter()
+                .any(|(binding_scope, binding, bound_id)| {
+                    *bound_id == id
+                        && file
+                            .value_flow
+                            .callable_value_uses
+                            .as_ref()
+                            .and_then(|uses| uses.get(binding_scope))
+                            .is_some_and(|uses| uses.contains(binding))
+                })
+            || file.function_calls.iter().any(|call| {
+                call.callee_binding_scope == Some(scope)
+                    && call.callee == name
+                    && call.caller_id.is_some()
             })
-            || file.function_calls.iter().any(|call| call.callee_binding_scope == Some(scope)
-                && call.callee == name && call.caller_id.is_some())
-            || !write.region_start.is_some_and(|start| replacements.regions.iter()
-                .any(|region| region.start == start && region.owner.is_none() && region.may_repeat))
-        { return None; }
-        Some(((scope, name), IndexedCallableAssignment {
-            scope: scopes.get(&id)?.clone(), id, completed_at: write.completed_at,
-        }))
+            || !write.region_start.is_some_and(|start| {
+                replacements.regions.iter().any(|region| {
+                    region.start == start && region.owner.is_none() && region.may_repeat
+                })
+            })
+        {
+            return None;
+        }
+        Some((
+            (scope, name),
+            IndexedCallableAssignment {
+                scope: scopes.get(&id)?.clone(),
+                id,
+                completed_at: write.completed_at,
+            },
+        ))
     }))
 }
 

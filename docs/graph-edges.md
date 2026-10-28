@@ -11,6 +11,8 @@ bindings project calls through the existing imported module/export targets.
 Their lexical owner keeps shadowed locals separate. This adds no edge kind;
 unsupported or unresolved loads remain uncertain rather than gaining guessed
 targets. See [live repository scans](rules/test-no-live-repository-scan.md).
+CommonJS binding facts remain separate from ES-import facts until call indexing,
+so other checks retain their distinct `require` and static-import projections.
 
 Class-base and constructor analysis can demand package declaration facts through
 the request-owned source store. These facts add canonical `Extends` targets,

@@ -96,6 +96,73 @@ fn many_require_routes_index_fact_rows_and_edges_once() {
 }
 
 #[test]
+fn mixed_import_and_require_routes_keep_typed_targets() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../test-cases/rules/postgres-no-mutable-sql-registry/fixture/mixed-import-require",
+        ),
+    );
+    let writer = root.join("src/mutate.ts");
+    let esm = root.join("src/esm.ts");
+    let common = root.join("src/common.ts");
+    let files = vec![writer.clone(), esm.clone(), common.clone()];
+    let collected = collect_ts_facts(
+        &files,
+        TsFactPlan {
+            imports: true,
+            function_calls: true,
+            value_flow: true,
+            ..Default::default()
+        },
+    );
+    let mut facts = CheckFactMap {
+        files,
+        ..Default::default()
+    };
+    for (file, ts) in collected {
+        facts.ts.insert(
+            file,
+            CheckFileFacts {
+                ts: Arc::new(ts),
+                ..Default::default()
+            }
+            .into(),
+        );
+    }
+    let writer_facts = facts.get_ts_facts(&writer).unwrap();
+    assert_eq!(writer_facts.imported_bindings.len(), 1);
+    assert_eq!(writer_facts.imported_bindings[0].local, "esm");
+    assert_eq!(writer_facts.value_flow.commonjs_imported_bindings.len(), 1);
+    assert_eq!(
+        writer_facts.value_flow.commonjs_imported_bindings[0].local,
+        "cjs"
+    );
+    let graph = from_typed_maps(
+        root,
+        [(
+            NodeId::file(&writer),
+            vec![
+                (NodeId::file(&esm), EdgeKind::Import),
+                (NodeId::file(&common), EdgeKind::Require),
+            ],
+        )]
+        .into_iter()
+        .collect(),
+        Default::default(),
+    );
+    let routes = RegistryRoutes::new(&facts);
+    for _ in 0..2 {
+        for (local, producer) in [("esm", &esm), ("cjs", &common)] {
+            let result = registry_route(&graph, &routes, &writer, local, &["tables".into()])
+                .unwrap_or_else(|| panic!("missing {local} typed route"));
+            assert_eq!(&result.producer, producer);
+            assert_eq!(result.exported, "tables");
+        }
+        assert_eq!(routes.work.get()[2], 2, "each edge kind projects once");
+    }
+}
+
+#[test]
 fn ordinary_esm_lookup_does_not_build_require_or_export_indexes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

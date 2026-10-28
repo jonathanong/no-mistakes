@@ -112,13 +112,15 @@ impl ImportCollector {
                 .entry(self.current_lexical_scope_id())
                 .or_default()
                 .insert(local.to_string());
-            self.call_import_bindings.push(ImportedBinding {
-                specifier: specifier.to_string(),
-                local: local.to_string(),
-                imported: imported.to_string(),
-                kind,
-                is_type_only: false,
-            });
+            self.value_flow
+                .commonjs_imported_bindings
+                .push(ImportedBinding {
+                    specifier: specifier.to_string(),
+                    local: local.to_string(),
+                    imported: imported.to_string(),
+                    kind,
+                    is_type_only: false,
+                });
         } else {
             self.commonjs_bindings
                 .entry(self.current_lexical_scope_id())
