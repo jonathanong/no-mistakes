@@ -28,6 +28,7 @@ pub(crate) fn prepare_rule_sql_facts(
         "postgres-explicit-columns",
         "postgres-required-predicates",
         "postgres-no-transformed-uuid-predicates",
+        "postgres-no-test-state-mutation",
     ];
     let low_sql = low_ids.iter().any(|id| {
         rule_ids.contains(id)

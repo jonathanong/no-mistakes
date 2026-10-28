@@ -64,10 +64,19 @@ pub(super) fn collect(
     let typed = typed_executor_types_by_profile(root, path, plan)
         .into_iter()
         .collect::<std::collections::BTreeMap<_, _>>();
-    let mut facts = if typed.is_empty() {
+    let recover_helpers = plan.sql_identifier_profiles.values().any(|scans| {
+        scans
+            .iter()
+            .any(|scan| scan.includes(root, path) && scan.rule != "postgres-no-test-state-mutation")
+    });
+    let mut facts = if recover_helpers && typed.is_empty() {
         sql_identifier_syntax::collect(program, ts, source, &profiles)
-    } else {
+    } else if recover_helpers {
         sql_identifier_syntax::collect_with_types(program, ts, source, &profiles, &typed)
+    } else {
+        sql_identifier_syntax::collect_with_types_and_demand(
+            program, ts, source, &profiles, &typed, false,
+        )
     };
     register(root, path, plan, &mut facts);
     facts

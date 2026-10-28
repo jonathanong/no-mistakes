@@ -19,6 +19,20 @@ pub(crate) fn collect_with_types(
         Vec<crate::config::v2::schema::EffectTargetConfig>,
     >,
 ) -> FileFacts {
+    collect_with_types_and_demand(program, ts, source, profiles, declared_types, true)
+}
+
+pub(crate) fn collect_with_types_and_demand(
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    source: &str,
+    profiles: &[EmbeddedSqlOptions],
+    declared_types: &std::collections::BTreeMap<
+        EmbeddedSqlOptions,
+        Vec<crate::config::v2::schema::EffectTargetConfig>,
+    >,
+    recover_helpers: bool,
+) -> FileFacts {
     let Some(module) = ts.module_bindings.as_deref() else {
         return FileFacts::default();
     };
@@ -38,7 +52,12 @@ pub(crate) fn collect_with_types(
         .collect::<Vec<_>>();
     let mut syntax = Syntax {
         source,
-        recovery_bindings: helper_recovery::lower::Bindings::new(module),
+        recovery_bindings: if recover_helpers {
+            helper_recovery::lower::Bindings::new(module)
+        } else {
+            Default::default()
+        },
+        recover_helpers,
         metadata: metadata::Metadata::new(module, &selections),
         template_binds: template_binds::TemplateBinds::new(module, source),
         loose_query: profiles.iter().any(|profile| {
@@ -123,7 +142,9 @@ pub(crate) fn collect_with_types(
         syntax.recovery.sinks.insert(profile.clone(), trusted);
         output.profiles.push((profile.clone(), calls));
     }
-    syntax.recovery.validate(&syntax.template_binds);
+    if recover_helpers {
+        syntax.recovery.validate(&syntax.template_binds);
+    }
     output.recovery = syntax.recovery;
     output
 }

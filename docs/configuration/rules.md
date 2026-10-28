@@ -199,6 +199,9 @@ and [`postgres-required-predicates`](../rules/postgres-required-predicates.md#ef
 Unsupported shapes follow shared `options.unanalyzable` (`report`, `advise`, or
 `ignore`); legacy `unanalyzableSql: fail` means `report`. Selected `.sql` files
 keep their existing analysis. See the [bounded helper contract](../postgres-facts/low-helper-recovery.md).
+[`postgres-no-test-state-mutation`](../rules/postgres-no-test-state-mutation.md#effort)
+also supports `low` within its explicit test and helper globs. A complete
+banned statement before unknown SQL remains a finding.
 
 [`finite-set-consistency`](../rules/finite-set-consistency.md#effort) supports
 `low` for `yaml-sequence`, `yaml-string-selector`, and `path-regex-capture`.

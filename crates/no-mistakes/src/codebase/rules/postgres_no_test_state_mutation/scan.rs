@@ -13,13 +13,12 @@ pub(super) fn scan(
     sources: &SourceStore,
     facts: &dyn SqlFactContext,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
-    let prepared = facts.prepared();
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     for path in files {
         let rel = relative_slash_path(root, path);
-        let embedded = prepared.embedded_sql(path, &options.embedded)?;
-        let statements = prepared.postgres_statements(path, Some(&options.embedded))?;
+        let embedded = facts.embedded_sql(path, &options.embedded)?;
+        let statements = facts.postgres_statements(path, Some(&options.embedded))?;
         if facts.wants_sql_verdicts() {
             crate::codebase::postgres::record_sql_policy_verdicts(
                 crate::codebase::postgres::SqlPolicyVerdictContext {

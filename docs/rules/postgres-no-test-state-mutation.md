@@ -79,6 +79,23 @@ policy. The legacy `unanalyzableSql` alias also accepts `fail` as `report`.
 Definite violations remain findings under every policy. `message` customizes
 the rule application's finding text. There is no autofix.
 
+### Effort
+
+`max` is the default. `low` uses the prepared syntax and SQL facts for configured
+test files and helper roots, without the maximum-effort executor and builder
+walk. A direct named executor import can receive a SQL literal or one local
+`const` initialized with a literal. Helper-produced SQL remains unanalyzable
+at low, including when another low SQL rule recovers the same helper in a
+shared request.
+
+A complete SQL statement before an opaque template interpolation is still
+checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the
+`DROP TABLE` and retains an unresolved tail. An incomplete statement, imported
+SQL value, executor alias, unsupported helper, or invalid SQL remains
+unanalyzable under the configured policy. Put a complete literal at the
+configured executor or select `max` to use broader analysis. Low keeps the
+same `testGlobs`, `helperRoots`, and `include`/`exclude` boundaries.
+
 ## What it catches
 
 The rule rejects these statements in executed SQL from selected tests or

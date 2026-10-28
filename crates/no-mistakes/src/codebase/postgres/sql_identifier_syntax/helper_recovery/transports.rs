@@ -25,6 +25,9 @@ pub(super) fn project(
         }
         let models = &file.sql_identifier_syntax.recovery;
         for application in file.sql_identifier_syntax.application_keys() {
+            if application.rule == "postgres-no-test-state-mutation" {
+                continue;
+            }
             let profile = &application.profile;
             let Some(calls) = file.sql_identifier_syntax.calls_for(&application) else {
                 continue;

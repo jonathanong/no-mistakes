@@ -74,6 +74,7 @@ struct Syntax<'source> {
     namespace_targets: FxHashMap<Span, FxHashSet<String>>,
     typed_targets: FxHashSet<Span>,
     loose_query: bool,
+    recover_helpers: bool,
     calls: Vec<Call>,
     constants: FxHashMap<Span, Input>,
     env_references: FxHashMap<String, Span>,
@@ -117,8 +118,7 @@ mod selection;
 mod typed;
 use selection::Selection;
 mod project;
-pub(crate) use project::collect;
-pub(crate) use project::collect_with_types;
+pub(crate) use project::{collect, collect_with_types, collect_with_types_and_demand};
 
 mod invalid;
 pub(crate) use invalid::collect_invalid;

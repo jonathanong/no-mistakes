@@ -156,6 +156,9 @@ subset and `unanalyzable` policy as the CLI. See the
 [explicit-columns](rules/postgres-explicit-columns.md#effort) and
 [required-predicates](rules/postgres-required-predicates.md#effort) Effort
 sections.
+[`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md#effort)
+also supports `low` in `check()` and `analyzeProject()` for configured test SQL;
+opaque tails retain the shared unanalyzable policy.
 
 For `finite-set-consistency`, `low` evaluates YAML sequences, YAML string
 selectors, and path-regex captures. Other extractor kinds use the same
