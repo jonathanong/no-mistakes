@@ -187,3 +187,6 @@ mod builder_facts;
 mod captured_facts;
 #[path = "head_calls_only_tests/relative_pending_tests.rs"]
 mod relative_pending;
+
+#[path = "head_calls_only_tests/callback_export_payload_tests.rs"]
+mod callback_export_payload_tests;
