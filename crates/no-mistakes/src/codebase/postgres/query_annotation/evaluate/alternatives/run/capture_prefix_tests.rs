@@ -1,4 +1,4 @@
-use super::super::super::{ArgumentObjects, Evaluator, Scope, Value};
+use super::super::{ArgumentObjects, Evaluator, Scope, Value};
 use crate::codebase::dependencies::extract::{ExtractedImport, ImportKind};
 use crate::codebase::postgres::query_annotation::evaluate::captures::CapturedOrigins;
 use crate::codebase::postgres::query_annotation::evaluate::File as QueryFile;

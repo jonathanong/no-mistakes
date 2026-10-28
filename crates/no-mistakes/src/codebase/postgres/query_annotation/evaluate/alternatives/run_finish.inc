@@ -1,4 +1,5 @@
 {
+        let _timing = start_timing("postgres.annotation.alternatives_finish");
         self.scopes[..scopes.len()].clone_from_slice(&scopes);
         self.active_callback_functions = joined_seen;
         self.modules = modules;

@@ -1,5 +1,39 @@
 //! Opt-in locations for long-running annotation evaluation.
+use crate::diagnostics::{InvocationObserver, TimingKind};
 use std::path::Path;
+use std::sync::Arc;
+use std::time::Instant;
+
+/// Bracket lexical state saves/restores without moving their local bindings.
+pub(super) fn timing(label: &'static str) -> Option<Timing> {
+    start(crate::diagnostics::current(), label, Instant::now)
+}
+
+pub(super) struct Timing {
+    observer: Arc<InvocationObserver>,
+    label: &'static str,
+    started: Instant,
+}
+
+fn start(
+    observer: Option<Arc<InvocationObserver>>,
+    label: &'static str,
+    now: impl FnOnce() -> Instant,
+) -> Option<Timing> {
+    let observer = observer.filter(|observer| observer.detailed())?;
+    Some(Timing {
+        observer,
+        label,
+        started: now(),
+    })
+}
+
+impl Drop for Timing {
+    fn drop(&mut self) {
+        self.observer
+            .record_duration(self.label, self.started.elapsed(), TimingKind::Parallel);
+    }
+}
 
 pub(super) fn trace<T>(
     label: &'static str,
@@ -20,6 +54,7 @@ fn located<T>(
     else {
         return operation();
     };
+    let _timing = start(Some(observer.clone()), label, Instant::now);
     observer.increment(label, 1);
     let result = if observer.progress_enabled() {
         let location = match location {

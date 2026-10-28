@@ -145,3 +145,13 @@ fn case<'a>(
         rules_path(RULE, "configs", config),
     )
 }
+
+#[test]
+fn postgres_annotation_timings_check_json_snapshot() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/performance/annotation-timings");
+    assert_saved_fixture(
+        "postgres_annotation_timings",
+        &[("max_effort", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}
