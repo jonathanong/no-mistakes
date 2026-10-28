@@ -188,3 +188,44 @@ fn mixed_low_sql_preserves_other_helper_recovery_without_proving_test_state() {
         }
     }
 }
+
+#[test]
+fn standalone_low_entrypoint_matches_prepared_rule_application() {
+    let root = fixture().join("effort-low");
+    let path = root.join("tests/mutation.test.ts");
+    let files = vec![path.clone()];
+    let unprepared =
+        crate::config::v2::load_v2_config(&root, Some(&root.join("report.yml"))).unwrap();
+    let sources = super::super::super::source_store_for_files(&files);
+    let mut prepared = unprepared.clone();
+    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+        &root,
+        &mut prepared,
+        &files,
+        &sources,
+    )
+    .unwrap();
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        &root,
+        &files,
+        Arc::clone(&sources),
+        &prepared,
+        &[RULE_ID],
+    )
+    .unwrap();
+    let expected =
+        check_with_files_sources_and_facts(&root, &prepared, &files, &sources, &facts).unwrap();
+    let actual = check_with_files(&root, &unprepared, &files).unwrap();
+    assert_eq!(actual, expected);
+    let source = std::fs::read_to_string(&path).unwrap();
+    let helper_line = source
+        .lines()
+        .position(|line| line.contains("mixed helper remains unproved"))
+        .unwrap()
+        + 1;
+    assert!(
+        actual.iter().any(|finding| finding.line == helper_line
+            && finding.target.as_deref() == Some("unanalyzable-sql")),
+        "{actual:?}"
+    );
+}
