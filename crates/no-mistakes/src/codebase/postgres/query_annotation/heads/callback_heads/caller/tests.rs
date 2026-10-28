@@ -5,6 +5,42 @@ use crate::codebase::ts_source::facts::{
 use crate::fx::FxHashSet;
 
 #[test]
+fn caller_projection_requires_an_exact_inline_executor_and_trusted_payload() {
+    let path = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("callback-heads/src/query-caller-shapes.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    crate::ast::with_program(&path, &source, |program, _| {
+        let facts = collect_file_facts_from_program(
+            &path,
+            TsFactPlan {
+                imports: true,
+                module_bindings: true,
+                ..Default::default()
+            },
+            &TsFactContext::default(),
+            &source,
+            program,
+            None,
+            None,
+        );
+        let module = facts.module_bindings.as_ref().unwrap();
+        assert!(module.diagnostics.is_empty());
+        let calls = crate::codebase::postgres::extract_embedded_sql_from_program(
+            &path,
+            program,
+            &source,
+            &crate::codebase::postgres::EmbeddedSqlOptions::configured("@bench/db", &[]),
+        );
+        assert_eq!(calls.call_spans.len(), 6);
+        let projected = pending(program, module, &calls.call_spans.into_iter().collect());
+        assert_eq!(projected.len(), 2);
+        assert_eq!(projected[0].payloads, [true, false]);
+        assert_eq!(projected[1].payloads, [false, false]);
+    })
+    .unwrap();
+}
+
+#[test]
 fn callback_import_indexes_are_demanded_once_after_many_ordinary_calls() {
     let path = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
         .join("callback-heads/src/query-many.mts");
