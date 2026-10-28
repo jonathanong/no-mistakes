@@ -3,9 +3,11 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::Expression;
 mod append_visits;
+mod async_visits;
 mod collect;
 pub(super) use collect::collect_with_helpers;
 mod const_visits;
+mod context;
 mod destructure;
 mod field_visits;
 mod finite_visits;
@@ -21,6 +23,9 @@ pub(super) struct Call {
 #[derive(Default)]
 pub(super) struct Syntax {
     pub collect_helper_heads: bool,
+    pub async_returns: FxHashMap<Span, super::async_returns::Candidate>,
+    pub async_callers: Vec<super::async_returns::Caller>,
+    pub async_awaits: Vec<Span>,
     pub helper_returns: FxHashMap<Span, super::helper_heads::Summary>,
     pub record_returns: FxHashMap<Span, super::helper_records::Summary>,
     pub returned_params: FxHashMap<Span, super::returned_params::Candidate>,

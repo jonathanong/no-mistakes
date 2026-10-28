@@ -1024,3 +1024,8 @@ They also share the low proof for an uninitialized local `let` assigned a fresh
 native builder in each exhaustive adjacent arm and then read only by the next
 configured executor. Both missing heads remain a finding; mixed or escaped
 forms remain unresolved.
+
+PostgreSQL annotation low effort shares the bounded awaited fresh native builder
+return-origin proof across CLI, Rust checks and asynchronous Node checks. Exact
+prepared imported append-effect obligations must all resolve; unsupported return,
+await, alias or effect paths keep the existing unanalyzable policy.

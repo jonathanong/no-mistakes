@@ -51,6 +51,7 @@ impl<'a> Bindings<'a> {
                 || !syntax.helper_returns.is_empty()
                 || !syntax.record_returns.is_empty()
                 || !syntax.returned_params.is_empty()
+                || !syntax.async_returns.is_empty()
                 || !syntax.finite_returns.is_empty()
                 || !syntax.effect_functions.is_empty()
                 || !syntax.string_constants.is_empty()
