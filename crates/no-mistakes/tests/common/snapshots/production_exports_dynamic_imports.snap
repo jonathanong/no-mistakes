@@ -7,11 +7,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [
         {
+          "file": "src/assigned-consumer.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: symbol consumers of `Assigned` include an unknown import selector: src/assigned-consumer.mts:4 `./assigned-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const stored = retry(() => import(\"./assigned-target.mjs\"));",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/mixed-line.mts",
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `shared` include an unknown import selector: src/mixed-line.mts:3 `./mixed-line-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const both = [import(\"./mixed-line-target.mjs\").then((mod) => mod.shared), import(\"./mixed-line-target.mjs\")];",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/paren-consumer.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: symbol consumers of `Paren` include an unknown import selector: src/paren-consumer.mts:4 `./paren-target.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const parenthesized = (retry(() => import(\"./paren-target.mjs\")) as Promise<unknown>).then((mod: any) => mod.Paren);",
           "target": "unanalyzable"
         },
         {

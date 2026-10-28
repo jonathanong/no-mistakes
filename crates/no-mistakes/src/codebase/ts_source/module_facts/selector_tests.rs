@@ -1,14 +1,13 @@
 use super::*;
 use std::path::PathBuf;
 
-#[test]
-fn dynamic_import_selectors_record_only_proven_forms() {
+fn selectors(file: &str) -> Vec<Vec<String>> {
     let result = analyze_typescript_modules(&TypeScriptModulesOptions {
         root: Some(
             PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                 .join("../../fixtures/typescript-module-facts"),
         ),
-        files: vec![PathBuf::from("dynamic-selectors.ts")],
+        files: vec![PathBuf::from(file)],
     })
     .unwrap();
     let facts = &result.modules[0].facts;
@@ -19,7 +18,21 @@ fn dynamic_import_selectors_record_only_proven_forms() {
     );
     let mut proven = facts.dynamic_import_selectors.clone();
     proven.sort_by_key(|(start, _)| *start);
-    let names: Vec<_> = proven.into_iter().map(|(_, names)| names).collect();
+    proven.into_iter().map(|(_, names)| names).collect()
+}
+
+#[test]
+fn loader_default_in_jsx_is_proven_and_mixed_use_is_not() {
+    // Jsx, the attribute and child loaders, `.then` (Name), then the bare loader.
+    assert_eq!(
+        selectors("dynamic-selectors-jsx.tsx"),
+        [["default"], ["default"], ["default"], ["Name"], ["default"]]
+    );
+}
+
+#[test]
+fn dynamic_import_selectors_record_only_proven_forms() {
+    let names = selectors("dynamic-selectors.ts");
     let expected: Vec<Vec<&str>> = vec![
         vec!["A"],
         vec!["A"],
@@ -28,10 +41,13 @@ fn dynamic_import_selectors_record_only_proven_forms() {
         vec!["default"],
         vec!["default"],
         vec!["default"],
+        vec!["default"],
+        vec!["default"],
+        vec!["default"],
+        vec!["default"],
+        vec!["default"],
         vec!["E", "F"],
         vec!["G"],
     ];
     assert_eq!(names, expected);
-    // Every `import("./a")` is still a recorded load; unproven ones stay unknown.
-    assert!(facts.loads.len() > expected.len() * 2);
 }

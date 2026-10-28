@@ -1,6 +1,8 @@
 use super::*;
 use oxc_syntax::node::NodeId;
 
+mod loader;
+
 type Parent<'a> = (NodeId, AstKind<'a>);
 
 /// Export names a dynamic `import()` provably consumes, or `None` when the
@@ -15,7 +17,7 @@ pub(super) fn proven(node: NodeId, semantic: &Semantic<'_>) -> Option<Vec<String
             then_callback(member.span, id, semantic)
         }
         AstKind::AwaitExpression(_) => awaited(id, semantic),
-        AstKind::ArrowFunctionExpression(function) => loader_default(id, function, semantic),
+        AstKind::ArrowFunctionExpression(function) => loader::default(id, function, semantic),
         _ => None,
     }
 }
@@ -36,35 +38,6 @@ fn parent<'a>(node: NodeId, semantic: &Semantic<'a>) -> Option<Parent<'a>> {
             )
         })
         .map(|n| (n.id(), n.kind()))
-}
-
-/// `dynamic(() => import("x"))`: only an arrow passed directly as a call
-/// argument is a loader whose result is the default export. A stored loader
-/// (`const load = () => import("x")`) can be read in any way, so it is unproven.
-fn loader_default(
-    arrow: NodeId,
-    function: &ArrowFunctionExpression<'_>,
-    semantic: &Semantic<'_>,
-) -> Option<Vec<String>> {
-    let (call_id, AstKind::CallExpression(call)) = parent(arrow, semantic)? else {
-        return None;
-    };
-    // The wrapper's own result may be unwrapped or chained (`retry(...).then`,
-    // `await wrap(...)`, `outer(wrap(...))`), so the module is not its default.
-    if matches!(
-        parent(call_id, semantic)?.1,
-        AstKind::StaticMemberExpression(_)
-            | AstKind::ComputedMemberExpression(_)
-            | AstKind::PrivateFieldExpression(_)
-            | AstKind::ChainExpression(_)
-            | AstKind::AwaitExpression(_)
-            | AstKind::CallExpression(_)
-            | AstKind::NewExpression(_)
-    ) {
-        return None;
-    }
-    (function.is_expression() && call.arguments.iter().any(|a| a.span() == function.span))
-        .then(|| vec!["default".to_string()])
 }
 
 /// `import("x").then(cb)` where `cb` is `(m) => m.Name` or `({ Name }) => ...`.
