@@ -182,8 +182,8 @@ binding gaps remain unanalyzable. This proof applies only to low effort and
 does not infer complete SQL or execute closures.
 
 A discarded call to a same-file or direct imported function declaration may
-also preserve that trusted local builder's prefix. The helper must receive the
-builder as its first argument, and every use of that parameter must be a
+also preserve that trusted local builder's prefix. Imported helpers receive
+the builder as their first argument, and every use of that parameter must be a
 discarded, static `.append(oneExpression)` chain. The helper may choose a
 suffix at runtime. A nested callback may also use that exact parameter as
 the receiver of discarded static appends. The callback may run later or more
@@ -195,8 +195,16 @@ Defaults, aliases, used append results, and other parameter uses leave the
 later read unanalyzable. Direct imported helpers qualify only when their
 prepared source file exports the proven function; unresolved and re-exported
 helpers remain unanalyzable.
+An exact same-file helper with two plain parameters may instead receive the
+builder as its second argument. Its call must be a discarded direct call with
+two ordinary arguments. Every use of the second parameter must satisfy the
+same append-only census; defaults, aliases, writes, returned builders, used
+append results, and unknown calls abstain. A factory may return its fresh
+native builder after these proven effects, retaining only its fixed head.
+An unannotated local builder returned through effects remains unresolved; a
+direct unannotated native tag still reports a missing-name violation.
 One helper may call another proven same-file append-only helper with the same
-first parameter as a complete expression statement. This composition is
+builder parameter as a complete expression statement. This composition is
 bounded to four local edges and requires exact lexical call bindings; cycles,
 used call results, aliases, and nested helper calls remain unresolved. A helper
 may also `return query.append(suffix)` when that entire static append chain

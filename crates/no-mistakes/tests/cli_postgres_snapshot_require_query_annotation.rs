@@ -151,6 +151,8 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("append_effects_ignore", "append-effects", "append-effects-ignore.yml"),
         case("append_effect_composition_report", "low-heads", "append-effect-composition-report.yml"),
         case("append_effect_composition_ignore", "low-heads", "append-effect-composition-ignore.yml"),
+        // A same-file helper can append through its second parameter without changing the factory's head.
+        case("second_argument_effects_report", "low-heads", "second-argument-effects-report.yml"),
         case("effect_defaults_report", "effect-defaults", "effect-defaults-report.yml"),
         // Captured callbacks may add suffixes even if replayed; escaping the builder still advises.
         case("captured_append_effects_report", "low-heads", "captured-append-effects-report.yml"),

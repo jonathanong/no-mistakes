@@ -17,3 +17,15 @@ fn captured_parameter_appends_keep_only_the_fixed_prefix() {
     let (source, _, heads) = fixture_with_effects("captured-append-effects.mts");
     assert_eq!(assert_markers(&source, &heads), 13);
 }
+
+#[test]
+fn discarded_local_second_argument_effects_keep_factory_heads() {
+    let (source, _, heads) = fixture_with_effects("second-argument-effects.mts");
+    assert_eq!(assert_markers(&source, &heads), 15);
+    let (source, _, heads) = fixture_with_effects("second-argument-unsafe.mts");
+    assert_eq!(assert_markers(&source, &heads), 8);
+    let (source, _, heads) = fixture_with_effects("second-argument-dynamic.mts");
+    assert_eq!(assert_markers(&source, &heads), 1);
+    let (source, _, heads) = fixture_with_effects("second-argument-duplicate.mts");
+    assert_eq!(assert_markers(&source, &heads), 1);
+}
