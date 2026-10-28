@@ -12,7 +12,8 @@ use std::sync::Arc;
 
 #[test]
 fn irrelevant_arguments_keep_skeletons_and_references_without_full_ir() {
-    let path = super::tests::fixture().join("src/model-demand.mts");
+    let path = crate::test_support::rule_fixture_root("postgres-no-offset")
+        .join("low-model-demand/src/model-demand.mts");
     let source = std::fs::read_to_string(&path).unwrap();
     crate::ast::with_program(&path, &source, |program, _| {
         let ts = collect_file_facts_from_program(
