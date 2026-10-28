@@ -58,6 +58,7 @@ pub(super) struct Syntax {
     pub record_result_calls: FxHashSet<Span>,
     pub record_options_calls: FxHashSet<Span>,
     pub assignments: super::assignments::Assignments,
+    pub branch_assignments: Vec<super::branch_assignments::Candidate>,
     pub append_receivers: FxHashSet<Span>,
     pub discarded_appends: FxHashSet<Span>,
     pub prefix_discarded_appends: FxHashSet<Span>,

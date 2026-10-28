@@ -257,6 +257,15 @@ A captured native builder can keep that proof inside a closure when its complete
 binding-reference census contains only paired executor field reads and safe
 discarded appends. Closure timing does not change the leading head; an alias,
 write, unknown method, or other captured use still makes it unresolved.
+An uninitialized local `let` also qualifies after one adjacent `if`/`else`
+whose two simple arms each discard exactly one assignment of a fresh native
+`sql-template-strings` builder. Both arms must have a decisive literal head;
+bind interpolations are allowed because they do not determine that head. The
+same local binding must reach the configured executor without other reads,
+writes, aliases, captures, exports, semantic gaps, or intervening statements.
+The condition may be dynamic because either arm establishes a fresh head.
+Missing heads are decisive only when both arms lack the annotation; mixed,
+custom-tagged, incomplete, or otherwise escaped forms stay unresolved.
 An exact fresh-builder helper result can be stored in one local `const`, passed
 to an executor after discarded static appends, or appended directly at the
 executor. The helper's source must prove a trusted builder return; a plain
