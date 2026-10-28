@@ -105,6 +105,6 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn builder_local_proo
     }
     match super::source_proof(syntax, bindings, owner)? {
         summary @ Summary::Builder { .. } => Some(summary),
-        Summary::Plain(_) | Summary::ReturnedLocal { .. } => None,
+        Summary::Plain(_) | Summary::PlainLocal { .. } | Summary::ReturnedLocal { .. } => None,
     }
 }

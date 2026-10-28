@@ -1,19 +1,20 @@
 import sql from 'sql-template-strings';
 import { read } from '@bench/db';
-import { add, addMore, returned, aliased, defaulted, captured, forwarded } from './helpers.mjs';
+import { add, addMore, returned, composed, aliased, defaulted, captured, forwarded } from './helpers.mjs';
 
 function safe(tail) {
   const q = sql`/* imported */ SELECT 1`;
   add(q, tail);
   addMore(q, tail);
+  composed(q, tail);
   read(q); // accepted
   read(q.append(tail)); // accepted
 }
-function unresolved(tail) {
+function discardedReturnedEffect(tail) {
   const q = sql`/* unknown */ SELECT 1`;
   add(q, tail);
   returned(q, tail);
-  read(q); // unanalyzable
+  read(q); // accepted
 }
 function usedResult(tail) {
   const q = sql`/* result */ SELECT 1`;

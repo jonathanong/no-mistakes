@@ -8,13 +8,28 @@ use oxc_ast::ast::{
 };
 use oxc_ast_visit::{walk, Visit};
 mod builders;
+mod destructure;
 mod source;
 pub(super) use builders::{append_callee, builder_candidate, builder_local_proof, confirmed_reads};
+pub(super) use destructure::{
+    candidate as destructure_candidate, local_proof as destructure_local_proof,
+};
 pub(super) use source::source_proof;
+
+pub(super) fn local_result_proof(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    call: &super::syntax::Call,
+) -> Option<Summary> {
+    local_proof(syntax, bindings, call)
+        .or_else(|| builder_local_proof(syntax, bindings, call))
+        .or_else(|| destructure_local_proof(syntax, bindings, call))
+}
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) enum Summary {
     Plain(HeadProof),
+    PlainLocal { reference: Span },
     Builder { proof: HeadProof, tag: Span },
     ReturnedLocal { reference: Span },
 }
@@ -22,12 +37,12 @@ impl Summary {
     pub(super) fn proof(self) -> HeadProof {
         match self {
             Self::Plain(proof) | Self::Builder { proof, .. } => proof,
-            Self::ReturnedLocal { .. } => HeadProof::Unproven,
+            Self::PlainLocal { .. } | Self::ReturnedLocal { .. } => HeadProof::Unproven,
         }
     }
     pub(super) fn tag(self) -> Option<Span> {
         match self {
-            Self::Plain(_) => None,
+            Self::Plain(_) | Self::PlainLocal { .. } => None,
             Self::Builder { tag, .. } => Some(tag),
             Self::ReturnedLocal { .. } => None,
         }
@@ -89,20 +104,22 @@ fn returned(body: &FunctionBody<'_>) -> Option<Summary> {
         match key.as_ref() {
             "text" if text.is_none() => {
                 let value = unwrap_ts_wrappers(&property.value);
-                if !matches!(
-                    value,
-                    Expression::StringLiteral(_) | Expression::TemplateLiteral(_)
-                ) {
-                    return None;
-                }
-                text = Some(super::syntax::head(value).proof(false));
+                text = Some(match value {
+                    Expression::StringLiteral(_) | Expression::TemplateLiteral(_) => {
+                        Summary::Plain(super::syntax::head(value).proof(false))
+                    }
+                    Expression::Identifier(id) => Summary::PlainLocal {
+                        reference: (id.span.start, id.span.end),
+                    },
+                    _ => return None,
+                });
             }
             "values" if !values => values = true,
             "text" | "values" | "__proto__" => return None,
             _ => {}
         }
     }
-    Some(Summary::Plain(text.filter(|_| values)?))
+    text.filter(|_| values)
 }
 struct Returns(usize);
 impl<'a> Visit<'a> for Returns {

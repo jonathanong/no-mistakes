@@ -71,9 +71,7 @@ pub(crate) fn collect_prepared(
             .iter()
             .filter(|call| executor_calls.contains(&call.span))
         {
-            if let Some(summary) = helper_records::local_proof(&syntax, &bindings, call)
-                .or_else(|| helper_records::builder_local_proof(&syntax, &bindings, call))
-            {
+            if let Some(summary) = helper_records::local_result_proof(&syntax, &bindings, call) {
                 calls.insert(call.span, summary.proof());
             }
         }

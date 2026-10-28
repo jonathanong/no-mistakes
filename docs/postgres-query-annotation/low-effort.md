@@ -171,6 +171,16 @@ suffix at runtime. Defaults, aliases, captured parameters, used append results,
 and other parameter uses leave the later read unanalyzable. Direct imported
 helpers qualify only when their prepared source file exports the proven
 function; unresolved and re-exported helpers remain unanalyzable.
+One helper may call another proven same-file append-only helper with the same
+first parameter as a complete expression statement. This composition is
+bounded to four local edges and requires exact lexical call bindings; cycles,
+used call results, aliases, and nested captures remain unresolved. A helper
+may also `return query.append(suffix)` when that entire static append chain
+is rooted at its first parameter and its caller discards the helper result.
+The returned builder does not become a general value-flow proof.
+Secondary parameters may use a direct object destructure with static keys and
+plain bindings. Defaults, computed keys, and an argument expression that
+captures or passes the caller's builder still leave the read unresolved.
 
 For ordinary const tracing, its declaration and uses must stay in the same
 function. The closed captured-root proof above is the narrow exception. Before the executor call,
@@ -228,12 +238,18 @@ A stable synchronous helper may also return one fresh `{ text, values }` record
 or one fresh trusted `sql-template-strings` builder. The helper must have a
 single final return. A record needs an own, ordinary `text` property whose
 string literal or template starts with a decidable head, plus an own `values`
-property. Getters, spreads, computed or duplicate fields, and parameter-derived
-text remain unresolved. A trusted builder return uses its exact imported tag.
+property. The `text` property may instead read a same-function immutable local
+string literal or template with a fixed leading head. Getters, spreads,
+computed or duplicate fields, mutable text, and parameter-derived text remain
+unresolved. A trusted builder return uses its exact imported tag.
 
 One local `const` can hold that helper result for exactly the paired
 `query(result.text, result.values)` read. Repeated calls, aliases, captures,
 exports, writes, optional calls or fields, and additional uses remain unresolved.
+A fresh plain record can also be extracted with exactly
+`const { text, values } = helper(args)` and passed once as `query(text, values)`
+in the same function and loop iteration. Renamed or extra fields, other uses,
+and builder results remain unresolved in this form.
 For a helper proven to return a fresh trusted builder, low effort also accepts
 `const result = helper(args); query(result)` and
 `query(helper(args).append(suffix))`. The local result may receive discarded

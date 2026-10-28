@@ -24,6 +24,12 @@ read(typeOnly.text, typeOnly.values)
   read(shadow.text, shadow.values)
 }
 
-import { pureRecord } from './plain-only.mjs'
+import { pureRecord, localText, destructured, builderOnly } from './plain-only.mjs'
 const pure = pureRecord(5)
 read(pure.text, pure.values)
+const local = localText(6)
+read(local.text, local.values)
+const { text, values } = destructured(7)
+read(text, values)
+const { text: wrongText, values: wrongValues } = builderOnly(8)
+read(wrongText, wrongValues)

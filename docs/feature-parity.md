@@ -107,6 +107,8 @@ reuses prepared module facts and resolver identity for CLI and async Node checks
 Captured append-only closures also preserve a trusted builder's head at its
 own helper return when every exact-binding use is closed. Low and mixed-demand
 checks share this proof without composing SQL variants.
+The same APIs also share bounded same-file append-only helper composition and
+an exact returned parameter append chain when the helper result is discarded.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
@@ -991,6 +993,8 @@ Low-effort PostgreSQL query annotation also projects the fixed head of an exact 
 
 Low PostgreSQL annotation checks also project fixed heads from fresh source
 helper records or trusted builder results through one local paired field read.
+Plain record text may come from an immutable local template, and an exact
+`{ text, values }` extraction may feed one configured executor call.
 Fresh trusted builder helper results may also flow through one safe local SQL
 binding or a direct append at the executor; CLI and async checks share this
 prepared source proof.

@@ -30,7 +30,7 @@ function unsafe(tail) {
   read(a); // low: false
   const b = sql`/* b */ SELECT 1`;
   returnedResult(b, tail);
-  read(b); // low: false
+  read(b); // low: true
   const c = sql`/* c */ SELECT 1`;
   passedResult(c, tail);
   read(c); // low: false

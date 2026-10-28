@@ -24,6 +24,30 @@ impl Bindings<'_> {
             && self.trusted_import(tag_owner.id)
             && self.append_safety.accepts(declaration, reference)
     }
+    /// A same-function primitive text binding has a fixed leading head.
+    pub(in crate::codebase::postgres::query_annotation::heads) fn plain_text_prefix(
+        &self,
+        syntax: &Syntax,
+        reference: Span,
+    ) -> Option<super::super::HeadProof> {
+        use super::super::HeadProof;
+        let owner = self.owner(reference).filter(|owner| !owner.imported)?;
+        let declaration = (owner.span.start, owner.span.end);
+        let context = syntax.contexts.get(&declaration).copied().flatten()?;
+        if syntax.contexts.get(&reference).copied().flatten() != Some(context)
+            || declaration.1 >= reference.0
+            || !syntax.string_constants.contains(&declaration)
+            || owner.references.iter().any(|usage| {
+                let span = (usage.span.start, usage.span.end);
+                syntax.assignments.writes.contains_key(&span)
+                    || syntax.assignments.unsupported_writes.contains(&span)
+            })
+        {
+            return None;
+        }
+        let proof = self.constants.get(&declaration)?.proof(false);
+        (proof != HeadProof::Unproven).then_some(proof)
+    }
     pub(in crate::codebase::postgres::query_annotation::heads) fn conditional_prefix(
         &self,
         head: Head,

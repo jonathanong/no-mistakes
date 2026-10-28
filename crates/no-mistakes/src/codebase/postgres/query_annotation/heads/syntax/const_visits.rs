@@ -8,6 +8,9 @@ impl Syntax {
         for declaration in &value.declarations {
             self.finite_const(declaration);
             self.namespace_declaration(declaration);
+            if self.collect_helper_heads {
+                self.record_destructure(declaration);
+            }
             if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
                 if let Some(Expression::ArrowFunctionExpression(arrow)) = self
                     .collect_helper_heads

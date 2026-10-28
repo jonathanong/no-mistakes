@@ -10,6 +10,7 @@ pub(crate) enum Kind {
     Helper,
     Value,
     Record,
+    PlainRecord,
     Builder,
 }
 
@@ -144,6 +145,26 @@ pub(crate) fn module_projection(
         };
         pending.push(Pending {
             kind: Kind::Record,
+            span: call.span,
+            specifier: specifier.to_string(),
+            imported: imported.to_string(),
+        });
+    }
+    for call in syntax
+        .calls
+        .iter()
+        .filter(|call| executors.contains(&call.span))
+    {
+        let Some(owner) = helper_records::destructure_candidate(syntax, bindings, call)
+            .filter(|owner| owner.imported)
+        else {
+            continue;
+        };
+        let Some((specifier, imported)) = imports.get(&owner.id).copied().flatten() else {
+            continue;
+        };
+        pending.push(Pending {
+            kind: Kind::PlainRecord,
             span: call.span,
             specifier: specifier.to_string(),
             imported: imported.to_string(),

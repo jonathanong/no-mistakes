@@ -20,6 +20,9 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn source_proof(
         return super::super::finite_returns::builder_summary(syntax, bindings, owner);
     };
     let summary = match *recorded {
+        Summary::PlainLocal { reference } => {
+            Summary::Plain(bindings.plain_text_prefix(syntax, reference)?)
+        }
         Summary::ReturnedLocal { reference } => {
             let proof = bindings.returned_local_prefix(syntax, reference)?;
             let local = bindings.owner(reference)?;

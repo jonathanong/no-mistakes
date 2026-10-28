@@ -204,6 +204,10 @@ A discarded call to a same-file or directly imported append-only function can
 preserve that trusted local builder's fixed prefix. Its first parameter may
 only appear as the receiver of discarded static append chains; defaults,
 aliases, captured parameters, and used append results abstain.
+The helper may compose up to four exact same-file append-only calls on that
+parameter. It may return a static parameter-rooted append chain only when the
+caller discards the result. Nested captures, aliases, cycles, and used helper
+results remain unresolved.
 A captured local trusted builder keeps its fixed head when every reference to
 its exact binding is a discarded static append, a configured executor read, or
 a proven local append-only effect. Closure execution order does not change this
@@ -255,6 +259,11 @@ captured append-only closures. Every exact-binding use must be a discarded
 static append, a proven local append-only effect, or the helper's own direct
 return. Captured returns, aliases, writes, unknown effects, and dynamic lexical
 access remain unanalyzable; this return proof does not change max effort.
+For a fresh plain record, the helper may return an immutable local string
+template as its `text` property. A caller may also extract exactly
+`const { text, values } = helper(args)` and pass those bindings once to a
+configured executor. The text binding needs a fixed leading name; renamed,
+mutable, or parameter-derived text remains unresolved.
 An inline callback that forwards its parameter directly to a configured
 executor can also retain a fixed named head supplied through a direct imported
 source helper. The helper must prove every callback invocation's payload from

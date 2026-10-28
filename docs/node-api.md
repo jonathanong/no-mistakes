@@ -93,6 +93,8 @@ closures when every binding use is proven safe.
 Captured trusted local builders also qualify when every exact-binding use is a
 discarded append, a configured executor read, or a proven local append-only
 effect. This preserves only the fixed head, even across arbitrary closure order.
+The shared low proof also accepts bounded same-file append-only helper calls
+and a returned parameter-rooted append chain when the caller discards it.
 For `nextjs-redirect-destinations`, `low` keeps
 [literal arrays and objects](rules/nextjs-redirect-destinations.md#effort) and
 routes every other destination construction through the same unanalyzable
@@ -437,6 +439,8 @@ For PostgreSQL query annotation checks, low effort recognizes direct `.text`/`.v
 
 The async query-annotation check shares low's bounded fresh helper-result proof
 for paired `.text`/`.values` reads; it does not run the annotation evaluator.
+The same prepared proof covers an immutable local record text template and
+one exact `{ text, values }` extraction from a fresh plain record.
 It also accepts an exact fresh trusted builder returned into one local `const`
 or directly appended at the executor, with the same one-hop prepared import
 and escape guards as CLI checks.
