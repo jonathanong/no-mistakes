@@ -45,17 +45,21 @@ statement.append(sql` WHERE id = ${id}`);
 query(statement);
 ```
 
-Low also follows a same-file function declaration or `const` arrow when its
-body has exactly one return, in final top-level position, with a decidable
-literal head. Tagged returns must use the `sql-template-strings` default or
+Low also follows a same-file function declaration or `const` arrow with a
+single returned expression and a decidable literal head. A block body must
+have exactly one return in final top-level position; a concise arrow body is
+itself the returned expression. Tagged returns must use the
+`sql-template-strings` default or
 named `sql` import. A direct trusted tagged return can append an unknown suffix;
-the fixed leading comment remains visible. Async and generator helpers, other
-return paths, reassigned or shadowed callees, and optional or spread helper
-calls remain unresolved. A directly imported helper from another prepared
-source file also qualifies when that file directly exports the same fixed
-return summary. The request's resolver checks the exact import and export;
-re-exports, unavailable package implementations, and returned local variables
-remain unresolved.
+the fixed leading comment remains visible. An unknown append through another
+tag stays unresolved, and does not make a later read of that `const` builder safe.
+Async and generator helpers, other return paths, reassigned or shadowed
+callees, and optional or spread helper calls remain unresolved. A directly
+imported helper from another prepared source file also qualifies when that
+file directly exports the same fixed return summary, including through a
+one-hop local export alias such as `export { helper as publicHelper }`. The
+request's resolver checks the exact import and export; re-exports, unavailable
+package implementations, and returned local variables remain unresolved.
 For a configured relative factory or executor type, the helper head is used
 only after the request resolver confirms that the executor import belongs to
 the configured package. An unconfirmed relative call cannot make a local

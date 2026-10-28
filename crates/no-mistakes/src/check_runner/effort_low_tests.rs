@@ -88,6 +88,10 @@ fn low_observer_is_optional_and_does_not_prepare_annotation_profiles() {
     };
     assert_eq!(without.rules, with.rules);
     assert_eq!(without.advisories, with.advisories);
+    assert_no_annotation_evaluation(&observer);
+}
+
+fn assert_no_annotation_evaluation(observer: &no_mistakes::diagnostics::InvocationObserver) {
     let snapshot = observer.snapshot();
     assert!(
         snapshot.timings.iter().all(|timing| {
@@ -120,6 +124,36 @@ fn low_observer_is_optional_and_does_not_prepare_annotation_profiles() {
     ] {
         assert_eq!(work.get(key).copied().unwrap_or(0), 0, "{key}: {work:#?}");
     }
+}
+
+#[test]
+fn concise_helpers_and_consumed_appends_use_the_low_check_path_without_evaluation() {
+    let root = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("helper-arrow-heads");
+    let config = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/helper-arrow-heads-report.yml");
+    let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let report = {
+        let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
+        crate::test_support::without_hygiene_advisories(
+            run_all_with_sql_verdicts(root.clone(), Some(config), None, false, false, false)
+                .unwrap(),
+        )
+    };
+    for file in ["src/query.mts", "src/append.mts"] {
+        let source = std::fs::read_to_string(root.join(file)).unwrap();
+        assert_eq!(
+            call_lines(&report.rules, file),
+            marked_lines(&source, "// low: false")
+        );
+    }
+    assert!(call_lines(&report.rules, "src/imports.mts").is_empty());
+    assert!(report.advisories.is_empty(), "{:?}", report.advisories);
+    assert_no_annotation_evaluation(&observer);
 }
 
 #[path = "effort_low_tests/policy.rs"]

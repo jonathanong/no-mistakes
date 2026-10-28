@@ -83,8 +83,12 @@ For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
 unanalyzable policy in both APIs; it omits annotation evaluator preparation.
 These proofs include trusted builder append prefixes and fixed-return helpers
-in the same file or through one direct source import. Unsupported helper or
-mutation shapes remain unanalyzable.
+in the same file or through one direct source import, including a one-hop
+local export alias. Concise arrow bodies are supported as single returned
+expressions when they satisfy the fixed-head proof. An opaque appended suffix preserves
+the prefix only for the trusted `sql-template-strings` tag; other tags and
+subsequent reads after their opaque append remain unanalyzable. Unsupported
+helper or mutation shapes remain unanalyzable.
 For `nextjs-redirect-destinations`, `low` keeps
 [literal arrays and objects](rules/nextjs-redirect-destinations.md#effort) and
 routes every other destination construction through the same unanalyzable

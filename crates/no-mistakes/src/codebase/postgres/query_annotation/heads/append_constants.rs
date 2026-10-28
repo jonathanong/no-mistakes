@@ -1,5 +1,8 @@
 //! Per-binding first unsafe use; later escapes cannot invalidate an earlier call.
-use super::{syntax::Syntax, Span};
+use super::{
+    syntax::{Head, Syntax},
+    Span,
+};
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::{FxHashMap, FxHashSet};
 
@@ -21,7 +24,17 @@ impl Safety {
             .calls
             .iter()
             .filter(|call| executors.contains(&call.span))
+            .filter(|call| !matches!(call.head, Head::AppendPrefixReference(_)))
             .filter_map(|call| call.head.reference())
+            .collect::<FxHashSet<_>>();
+        let prefix_allowed = syntax
+            .calls
+            .iter()
+            .filter(|call| executors.contains(&call.span))
+            .filter_map(|call| match call.head {
+                Head::AppendPrefixReference(reference) => Some(reference),
+                _ => None,
+            })
             .collect::<FxHashSet<_>>();
         let mut result = Self {
             repeated_calls: syntax.repeated_calls.clone(),
@@ -80,6 +93,8 @@ impl Safety {
                 } else if !syntax.discarded_appends.contains(&span)
                     && !(trusted_root && syntax.prefix_discarded_appends.contains(&span))
                     && !allowed.contains(&span)
+                    // Only a trusted append method preserves the receiver prefix.
+                    && !(trusted_root && prefix_allowed.contains(&span))
                 {
                     limit = limit.min(span.0);
                 }

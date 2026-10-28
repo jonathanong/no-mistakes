@@ -48,10 +48,10 @@ pub(super) fn arrow(value: &ArrowFunctionExpression<'_>) -> Option<Summary> {
     if value.r#async {
         return None;
     }
-    let ArrowFunctionBody::FunctionBody(body) = &value.body else {
-        return None;
-    };
-    returned(body)
+    match &value.body {
+        ArrowFunctionBody::FunctionBody(body) => returned(body),
+        expression => expression.as_expression().and_then(return_expression),
+    }
 }
 
 fn returned(body: &FunctionBody<'_>) -> Option<Summary> {
@@ -63,7 +63,10 @@ fn returned(body: &FunctionBody<'_>) -> Option<Summary> {
     if counter.0 != 1 {
         return None;
     }
-    let expression = last.argument.as_ref()?;
+    return_expression(last.argument.as_ref()?)
+}
+
+fn return_expression(expression: &Expression<'_>) -> Option<Summary> {
     let head = super::syntax::head(expression);
     match head {
         Head::Literal => Some(Summary { head, tag: None }),
