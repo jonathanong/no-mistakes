@@ -3,7 +3,7 @@ use super::Root;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::Expression;
 
-pub(super) fn root(mut expression: &Expression<'_>) -> Option<Root> {
+pub(in super::super) fn root(mut expression: &Expression<'_>) -> Option<Root> {
     let mut appends = 0;
     loop {
         let Expression::CallExpression(call) = unwrap_ts_wrappers(expression) else {
@@ -36,10 +36,10 @@ pub(super) fn root(mut expression: &Expression<'_>) -> Option<Root> {
         };
         // The factory appends before returning, even without outer append links.
         let proof = super::super::syntax::head(call.arguments[0].as_expression()?).proof(true);
-        (proof != super::super::HeadProof::Unproven).then_some(Root {
+        return (proof != super::super::HeadProof::Unproven).then_some(Root {
             callee: (callee.span.start, callee.span.end),
             tag: (tag.span.start, tag.span.end),
             proof,
-        })
+        });
     }
 }
