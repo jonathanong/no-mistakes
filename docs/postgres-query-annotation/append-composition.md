@@ -18,10 +18,14 @@ annotation profiles skip full SQL composition; a shared profile requested by max
 analysis or another SQL rule retains full recovery. See the
 [low-effort binding and escape rules](low-effort.md).
 
-This makes low intentionally stricter about nonliteral and helper-produced
-appends: those shapes can stay unresolved at low even when max recovers their
-values and proves the leading head. Choose the effort level with that difference
-in mind when selecting the unresolved-SQL policy.
+At low effort, one opaque suffix is allowed per static append link when a
+direct, exact `sql-template-strings` default or named `sql` import tags a template with a
+fixed head. A complete missing head remains a rule finding; an incomplete
+comment or transaction prefix remains unresolved. Custom and unbound tags do
+not establish the prefix proof. Other nonliteral and helper-produced appends can stay
+unresolved even when max recovers their values and proves the leading head.
+A local const initialized by that trusted tag also permits later statement
+appends with one opaque suffix when its uses remain safe and in order.
 
 When full SQL recovery encounters independent conditional appends, it explores
 all-off first, then each singleton, then pairs, and larger combinations in that

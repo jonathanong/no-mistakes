@@ -4,6 +4,10 @@ mod append_tests;
 mod failures;
 #[path = "gap_tests.rs"]
 mod gap_tests;
+#[path = "helper_fallback_tests.rs"]
+mod helper_fallback_tests;
+#[path = "helper_heads_tests.rs"]
+mod helper_heads_tests;
 #[path = "missing_append_tests.rs"]
 mod missing_append_tests;
 #[path = "missing_tests.rs"]

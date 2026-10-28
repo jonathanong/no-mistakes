@@ -7,6 +7,7 @@ use oxc_ast::ast::Expression;
 pub(super) struct TextHead {
     pub tagged: bool,
     pub appended: bool,
+    pub opaque: bool,
     pub current: HeadProof,
     pub continued: HeadProof,
 }
@@ -15,6 +16,7 @@ pub(super) fn head<'a>(
     expression: &'a Expression<'a>,
     continued: bool,
     appended: bool,
+    opaque: bool,
 ) -> Option<TextHead> {
     let (text, tagged, interpolated) = match expression {
         Expression::StringLiteral(value) => (crate::ast::js_literal(value), false, false),
@@ -43,6 +45,7 @@ pub(super) fn head<'a>(
     Some(TextHead {
         tagged: tagged || appended,
         appended,
+        opaque,
         current: if continued || interpolated || appended {
             continued_proof
         } else {

@@ -25,6 +25,15 @@ pub(super) fn literal_receiver<'a>(call: &'a CallExpression<'a>) -> Option<&'a E
     receiver(call)
 }
 
+/// A suffix can be opaque when only a trusted tagged root's prefix is needed.
+pub(super) fn prefix_receiver<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a>> {
+    let [argument] = call.arguments.as_slice() else {
+        return None;
+    };
+    argument.as_expression()?;
+    receiver(call)
+}
+
 /// An append chain used as a statement cannot expose the returned builder alias.
 pub(super) fn reference<'a>(mut expression: &'a Expression<'a>) -> Option<super::Span> {
     let mut appended = false;
@@ -34,6 +43,23 @@ pub(super) fn reference<'a>(mut expression: &'a Expression<'a>) -> Option<super:
             break;
         };
         expression = literal_receiver(call)?;
+        appended = true;
+    }
+    match expression {
+        Expression::Identifier(id) if appended => Some((id.span.start, id.span.end)),
+        _ => None,
+    }
+}
+
+/// Candidate only; binding ownership decides whether opaque appends are safe.
+pub(super) fn prefix_reference<'a>(mut expression: &'a Expression<'a>) -> Option<super::Span> {
+    let mut appended = false;
+    loop {
+        expression = unwrap_ts_wrappers(expression);
+        let Expression::CallExpression(call) = expression else {
+            break;
+        };
+        expression = prefix_receiver(call)?;
         appended = true;
     }
     match expression {

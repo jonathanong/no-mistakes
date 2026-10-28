@@ -1,10 +1,12 @@
 use super::{
     diagnostics::Gaps,
     syntax::{Head, Syntax},
-    HeadProof, Span,
+    Span,
 };
 use crate::codebase::ts_source::{facts::TsFileFacts, module_facts::ModuleBinding};
 use crate::fx::{FxHashMap, FxHashSet};
+mod prefix;
+mod proof;
 pub(super) struct Bindings<'a> {
     owners: FxHashMap<Span, Option<&'a ModuleBinding>>,
     constants: &'a FxHashMap<Span, Head>,
@@ -12,6 +14,7 @@ pub(super) struct Bindings<'a> {
     safe_tags: FxHashSet<Span>,
     mutable: super::assignments::Proofs,
     append_safety: super::append_constants::Safety,
+    trusted_imports: FxHashSet<usize>,
 }
 impl<'a> Bindings<'a> {
     pub fn new(
@@ -49,6 +52,8 @@ impl<'a> Bindings<'a> {
                         .flatten()
                         .map(|call| call.reference),
                 )
+                .chain(syntax.helper_arguments.values().copied())
+                .chain(syntax.helper_returns.values().filter_map(|value| value.tag))
                 .collect::<FxHashSet<_>>();
         let mut index = Self {
             owners: FxHashMap::default(),
@@ -57,22 +62,18 @@ impl<'a> Bindings<'a> {
             safe_tags: FxHashSet::default(),
             mutable: super::assignments::Proofs::default(),
             append_safety: Default::default(),
+            trusted_imports: Default::default(),
         };
-        let Some(module) = ts.module_bindings.as_deref().filter(|_| !wanted.is_empty()) else {
+        let Some(module) = ts
+            .module_bindings
+            .as_deref()
+            .filter(|_| !wanted.is_empty() || !syntax.helper_returns.is_empty())
+        else {
             return index;
         };
         index.gaps = Some(Gaps::new(module));
-        let executors = executor_calls.collect::<FxHashSet<_>>();
-        index.append_safety = super::append_constants::Safety::new(syntax, module, &executors);
-        index.safe_tags = super::tag_constants::safe(syntax, module, executors.iter().copied());
-        index.mutable = super::assignments::Proofs::new(
-            syntax,
-            module,
-            &executors,
-            index.gaps.as_ref().unwrap(),
-        );
-        // Index every possible owner once, retaining only relevant references.
-        // A duplicate is ambiguous even if the other owner is invalid.
+        index.trusted_imports = super::trusted_append::import_ids(module);
+        // Index owners first so trusted roots use the same ambiguity and gap proof.
         for binding in &module.bindings {
             for usage in binding.references.iter().filter(|usage| usage.runtime) {
                 let span = (usage.span.start, usage.span.end);
@@ -85,6 +86,17 @@ impl<'a> Bindings<'a> {
                 }
             }
         }
+        let executors = executor_calls.collect::<FxHashSet<_>>();
+        let trusted_roots = index.trusted_roots(syntax);
+        index.append_safety =
+            super::append_constants::Safety::new(syntax, module, &executors, &trusted_roots);
+        index.safe_tags = super::tag_constants::safe(syntax, module, executors.iter().copied());
+        index.mutable = super::assignments::Proofs::new(
+            syntax,
+            module,
+            &executors,
+            index.gaps.as_ref().unwrap(),
+        );
         index
     }
     pub(super) fn owner(&self, span: Span) -> Option<&ModuleBinding> {
@@ -94,6 +106,9 @@ impl<'a> Bindings<'a> {
             && !gaps.overlaps(span)
             && !gaps.overlaps((owner.span.start, owner.span.end)))
         .then_some(owner)
+    }
+    pub(super) fn declaration_safe(&self, span: Span) -> bool {
+        self.gaps.as_ref().is_some_and(|gaps| !gaps.overlaps(span))
     }
     pub(super) fn valid_mutable_call(&self, reference: Span) -> bool {
         self.mutable.calls.contains_key(&reference)
@@ -142,46 +157,6 @@ impl<'a> Bindings<'a> {
                 }
             })
             .collect()
-    }
-    pub fn proof(&self, head: Head, call: Span) -> HeadProof {
-        match head {
-            Head::Reference(span) | Head::AppendReference(span) => {
-                let Some(owner) = self.owner(span).filter(|owner| !owner.imported) else {
-                    return HeadProof::Unproven;
-                };
-                let declaration = (owner.span.start, owner.span.end);
-                let Some(value) = self.constants.get(&declaration).copied() else {
-                    return self
-                        .mutable
-                        .calls
-                        .get(&span)
-                        .copied()
-                        .unwrap_or(HeadProof::Unproven);
-                };
-                if matches!(head, Head::AppendReference(_))
-                    || value.appended()
-                    || (value.tagged() && self.append_safety.touched(declaration))
-                {
-                    return if self.append_safety.accepts(declaration, call) {
-                        value.proof(
-                            matches!(head, Head::AppendReference(_))
-                                || self.append_safety.continued(declaration, call),
-                        )
-                    } else {
-                        HeadProof::Unproven
-                    };
-                }
-                if value.tagged()
-                    && !self.safe_tags.contains(&declaration)
-                    && !self.append_safety.accepts(declaration, call)
-                {
-                    HeadProof::Unproven
-                } else {
-                    value.proof(false)
-                }
-            }
-            value => value.proof(false),
-        }
     }
 }
 fn inside(outer: Span, inner: Span) -> bool {

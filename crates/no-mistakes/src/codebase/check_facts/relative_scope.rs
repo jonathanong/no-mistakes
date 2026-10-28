@@ -10,6 +10,7 @@ use crate::fx::PathSet;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+mod head_helpers;
 mod imported_sql;
 mod setup;
 use setup::{tsconfig_for, workspace_for};
@@ -34,9 +35,11 @@ pub(super) fn project_relative_executor_scopes(
     let annotation = files
         .into_iter()
         .any(|(_, file)| !file.query_annotation.is_empty());
+    let head_helpers = head_helpers::has_candidates(files);
     if !low_helpers
         && !has_relative_candidates(files)
         && !annotation
+        && !head_helpers
         && !imported_sql::has_candidates(files)
     {
         return finish_unproven(files);
@@ -73,7 +76,7 @@ pub(super) fn project_relative_executor_scopes(
         }
     }
     let imported = imported_sql::has_candidates(files);
-    if imported || annotation || low_helpers {
+    if imported || annotation || low_helpers || head_helpers {
         // Compatibility collectors lack a boundary catalog, but still reuse
         // their supplied inventory, sources and workspace. Prepared entrypoints
         // always pass their existing catalog, preserving forced-config semantics.
@@ -94,6 +97,9 @@ pub(super) fn project_relative_executor_scopes(
             }
         };
         let resolver = ScopedImportResolver::new_in_session(catalog, &visible, session);
+        if head_helpers {
+            head_helpers::project(files, &resolver, &workspace, &visible);
+        }
         if imported {
             // A pnpm workspace package name resolves through the workspace
             // map, as it does for every other import-following analysis.

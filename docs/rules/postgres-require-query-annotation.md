@@ -193,9 +193,23 @@ with member access or calls may over-report because their branches join independ
 `effort: max` is the default and preserves helper, branch, builder, and imported
 value inference. At `effort: low`, a leading named literal at the executor call
 or through one local const qualifies, including tagged templates and safe local
-`.append()` chains. The evaluator does not run. Decidable missing annotations
+`.append()` chains. A direct template tagged by an exact `sql-template-strings`
+default or named `sql` import also retains a fixed named head through a static `.append()`
+with one opaque suffix expression. The same proof applies to one safe local
+const holding that chain, or a trusted local tagged builder followed by safe
+statement appends. The evaluator does not run. Decidable missing annotations
 remain failing findings under every policy; unresolved shapes follow
 `unanalyzable`. Complete literal transaction commands retain their exemption.
+One same-file function declaration or `const` arrow also qualifies when it has
+one final top-level return with a fixed leading comment, and its callable is
+lexically owned and unchanged. A returned tagged builder must use the exact
+`sql-template-strings` import; an unknown appended suffix after its fixed head
+is allowed. A fixed missing head returned by such a helper is a failing finding.
+Early returns, async/generator helpers, optional or spread calls, and returned
+local variables remain unresolved at low effort.
+Direct source imports of those helpers follow one exact export through the
+prepared request resolver. Re-exports and unresolved package implementations
+remain unanalyzable.
 See [low-effort examples, rewrites, and suppressions](../postgres-query-annotation/low-effort.md).
 See [append composition and bounded alternatives](../postgres-query-annotation/append-composition.md)
 for the SQL text model, truncation, and invalid-SQL advisories.

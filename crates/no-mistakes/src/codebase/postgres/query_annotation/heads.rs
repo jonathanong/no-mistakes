@@ -7,6 +7,8 @@ mod append_constants;
 mod assignments;
 mod bindings;
 mod diagnostics;
+mod helper_heads;
+mod import_projection;
 mod literal_helpers;
 mod loop_carried;
 mod syntax;
@@ -27,11 +29,16 @@ pub(crate) enum HeadProof {
 #[derive(Clone, Debug, Default)]
 pub(crate) struct AnnotationHeads {
     pub(crate) calls: BTreeMap<Span, HeadProof>,
+    pub(crate) exported_helpers: BTreeMap<String, HeadProof>,
+    pub(crate) pending_helpers: Vec<helper_heads::Pending>,
     pub(crate) loop_carried_missing: BTreeMap<Span, Vec<Option<String>>>,
     helper_calls: Option<BTreeMap<Span, (String, HeadProof)>>,
     pub(crate) trusted_append_calls: crate::fx::FxHashSet<Span>,
 }
 impl AnnotationHeads {
+    pub(crate) fn has_pending_imports(&self) -> bool {
+        !self.pending_helpers.is_empty()
+    }
     pub(crate) fn helper(&self, span: Span, helpers: &[String]) -> Option<HeadProof> {
         if helpers.is_empty() {
             return None;
@@ -62,7 +69,7 @@ pub(crate) fn prepare_loop_heads(
     if !has_loop_word(source) {
         return None;
     }
-    let syntax = syntax::collect_with_helpers(program, append, helpers);
+    let syntax = syntax::collect_with_helpers(program, append, helpers, false);
     (!syntax.loop_candidates.is_empty() || append || helpers).then_some(PreparedLoopHeads(syntax))
 }
 
@@ -91,26 +98,54 @@ pub(crate) fn collect_prepared(
     if ts.parse_error.is_some() || ts.operational_error.is_some() || ts.fatal_parse_error {
         return AnnotationHeads::default();
     }
-    let syntax = prepared
-        .map(|prepared| prepared.0)
-        .unwrap_or_else(|| syntax::collect_with_helpers(program, !candidates.is_empty(), helpers));
-    let bindings = bindings::Bindings::new(&syntax, ts, executor_calls);
+    let mut syntax = prepared.map(|prepared| prepared.0).unwrap_or_else(|| {
+        syntax::collect_with_helpers(program, !candidates.is_empty(), helpers, include_all_calls)
+    });
+    let executor_calls = executor_calls.collect::<crate::fx::FxHashSet<_>>();
+    syntax
+        .helper_arguments
+        .retain(|call, _| executor_calls.contains(call));
+    let bindings = bindings::Bindings::new(&syntax, ts, executor_calls.iter().copied());
     let loop_carried_missing = loop_carried::proofs(&syntax, &bindings);
-    let calls = syntax
+    let mut calls: BTreeMap<_, _> = syntax
         .calls
         .iter()
         .filter(|call| include_all_calls || candidates.contains(&call.span))
-        .map(|call| (call.span, bindings.proof(call.head, call.span)))
+        .map(|call| {
+            (
+                call.span,
+                include_all_calls
+                    .then(|| helper_heads::proof(&syntax, &bindings, call.span))
+                    .flatten()
+                    .unwrap_or_else(|| bindings.proof(call.head, call.span)),
+            )
+        })
         .collect();
-    let trusted_append_calls = trusted_append::proofs(&syntax, &bindings, &calls, ts, candidates);
+    // Only low publishes the opaque-prefix proof; max keeps its legacy fallback.
+    let (trusted_append_calls, trusted_prefix_calls) =
+        trusted_append::proofs(&syntax, &bindings, &calls, candidates);
+    if include_all_calls {
+        for (span, proof) in trusted_prefix_calls {
+            calls.insert(span, proof);
+        }
+    }
     let helper_calls = literal_helpers::proofs(&syntax, &bindings, ts);
+    let (exported_helpers, pending_helpers) = if include_all_calls {
+        helper_heads::module_projection(&syntax, &bindings, ts.module_bindings.as_deref())
+    } else {
+        Default::default()
+    };
     AnnotationHeads {
+        exported_helpers,
+        pending_helpers,
         helper_calls,
         loop_carried_missing,
         calls,
         trusted_append_calls,
     }
 }
+
+pub(crate) use import_projection::project;
 
 #[cfg(test)]
 mod literal_helper_tests;

@@ -7,12 +7,22 @@ fn prepared(
     profile: &EmbeddedSqlOptions,
     selected: &EmbeddedSqlOptions,
 ) -> crate::codebase::check_facts::CheckFileFacts {
+    prepared_with_low(name, profile, selected, false)
+}
+
+fn prepared_with_low(
+    name: &str,
+    profile: &EmbeddedSqlOptions,
+    selected: &EmbeddedSqlOptions,
+    low: bool,
+) -> crate::codebase::check_facts::CheckFileFacts {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded")
         .join(name);
     let source = std::fs::read_to_string(&path).unwrap();
     let plan = CheckFactPlan {
         query_annotation: true,
+        query_annotation_heads: low,
         query_annotation_options: Some(vec![selected.clone()]),
         embedded_sql_options: vec![profile.clone()],
         ..Default::default()
@@ -29,6 +39,33 @@ fn prepared(
         )
     })
     .unwrap()
+}
+
+#[test]
+fn low_prefix_demand_does_not_publish_a_max_append_fallback() {
+    let profile = EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
+    let max = prepared("annotation-mixed-opaque-append.mts", &profile, &profile);
+    let mixed = prepared_with_low(
+        "annotation-mixed-opaque-append.mts",
+        &profile,
+        &profile,
+        true,
+    );
+    assert_eq!(
+        format!("{:?}", max.embedded_sql[0].1.calls),
+        format!("{:?}", mixed.embedded_sql[0].1.calls)
+    );
+    let heads = mixed.query_annotation_heads.as_ref().unwrap();
+    assert!(mixed.embedded_sql[0]
+        .1
+        .call_spans
+        .iter()
+        .all(|span| !heads.accepts_trusted_append(*span)));
+    assert!(mixed.embedded_sql[0]
+        .1
+        .call_spans
+        .iter()
+        .all(|span| heads.accepts(*span)));
 }
 
 #[test]

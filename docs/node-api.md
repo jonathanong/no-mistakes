@@ -82,6 +82,9 @@ uncertainty. See [the rule contract](rules/shellcheck-runner.md#what-it-catchesr
 For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
 unanalyzable policy in both APIs; it omits annotation evaluator preparation.
+These proofs include trusted builder append prefixes and fixed-return helpers
+in the same file or through one direct source import. Unsupported helper or
+mutation shapes remain unanalyzable.
 For `nextjs-redirect-destinations`, `low` keeps
 [literal arrays and objects](rules/nextjs-redirect-destinations.md#effort) and
 routes every other destination construction through the same unanalyzable

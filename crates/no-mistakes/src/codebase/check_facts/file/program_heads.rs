@@ -8,7 +8,7 @@ pub(super) fn candidates(
     plan: &CheckFactPlan,
     embedded: &[(EmbeddedSqlOptions, EmbeddedSqlFileFacts)],
 ) -> FxHashSet<(u32, u32)> {
-    if !plan.query_annotation {
+    if !plan.query_annotation && !plan.query_annotation_heads {
         return Default::default();
     }
     embedded
@@ -19,14 +19,17 @@ pub(super) fn candidates(
                 .is_none_or(|profiles| profiles.contains(profile))
         })
         .flat_map(|(_, file)| file.calls.iter().zip(&file.call_spans))
+        // Full SQL demand may compose variants for the same calls. Low's
+        // original-AST proof needs every configured executor regardless.
         .filter(|(call, _)| {
-            call.kind == EmbeddedSqlKind::Composed
-                && call.variants.is_empty()
-                && call
-                    .sql_text
-                    .as_deref()
-                    .and_then(crate::codebase::postgres::leading_query_annotation)
-                    .is_some()
+            plan.query_annotation_heads
+                || (call.kind == EmbeddedSqlKind::Composed
+                    && call.variants.is_empty()
+                    && call
+                        .sql_text
+                        .as_deref()
+                        .and_then(crate::codebase::postgres::leading_query_annotation)
+                        .is_some())
         })
         .map(|(_, span)| *span)
         .collect()

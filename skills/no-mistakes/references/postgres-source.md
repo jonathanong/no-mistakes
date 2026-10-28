@@ -7,10 +7,14 @@ Inspect unanalyzable findings before using `unanalyzable: ignore` (or its
 legacy alias `unanalyzableSql: ignore`); a static
 leading `/* name */` can establish the annotation even when later appends are opaque.
 
-At `effort: low`, annotation checking skips the helper evaluator. Keep the
-leading name literal at the executor call or in one same-file local const
-passed directly; explicitly configured trusted-tag templates qualify in both
-positions. Other shapes use `unanalyzable: report | advise | ignore`.
+At `effort: low`, annotation checking skips the annotation evaluator. It proves
+literal heads at the executor call or in one local const, trusted
+`sql-template-strings` append prefixes, and fixed-return helpers in the same
+file or through one direct source import. See the
+[bounded syntax shapes](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-query-annotation/low-effort.md).
+Other helper, alias, and mutation shapes use
+`unanalyzable: report | advise | ignore`. `trustedSqlTags` is deprecated and
+ignored for this rule at low effort.
 
 Use the async Node `parsePostgresSql({ sql, fileName })` export for migration
 text and schema-authoring facts. Pass an array for a source batch. It needs no

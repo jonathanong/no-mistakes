@@ -6,6 +6,12 @@ use crate::codebase::ts_source::facts::{
 };
 use std::path::PathBuf;
 pub(super) fn fixture(name: &str) -> (String, TsFileFacts, AnnotationHeads) {
+    fixture_with_append_candidates(name, false)
+}
+pub(super) fn fixture_with_append_candidates(
+    name: &str,
+    append_candidates: bool,
+) -> (String, TsFileFacts, AnnotationHeads) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-require-query-annotation/fixture/low-heads")
         .join(name);
@@ -25,14 +31,13 @@ pub(super) fn fixture(name: &str) -> (String, TsFileFacts, AnnotationHeads) {
             None,
         );
         assert!(ts.module_bindings.is_some());
-        let heads = collect_with_helpers(
-            program,
-            &ts,
-            executors(&path, &source, program).into_iter(),
-            &Default::default(),
-            true,
-            false,
-        );
+        let calls = executors(&path, &source, program);
+        let candidates = if append_candidates {
+            calls.iter().copied().collect()
+        } else {
+            Default::default()
+        };
+        let heads = collect_with_helpers(program, &ts, calls.into_iter(), &candidates, true, false);
         (ts, heads)
     })
     .unwrap();

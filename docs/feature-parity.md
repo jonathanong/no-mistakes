@@ -82,6 +82,9 @@ low effort and compose text for full SQL consumers, with interpolations treated
 as value placeholders. Conditional appends use bounded breadth-first alternatives;
 loops retain zero/one previews and an unknown remainder. These behaviors share
 Rust, CLI and async Node evidence; see [append composition](postgres-query-annotation/append-composition.md).
+Low annotation checks also prove fixed literal return heads in local helpers
+and one-hop source imports from the prepared inventory, without running the
+annotation evaluator. This prefix proof does not establish complete SQL.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
