@@ -40,7 +40,7 @@ pub(in super::super) fn function(value: &Function<'_>) -> Option<Candidate> {
             } else {
                 current
                     .effects
-                    .push(effects::call(&statement.expression)?.builder);
+                    .push(effects::call(&statement.expression)[0]?.builder);
             }
             continue;
         }
