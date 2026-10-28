@@ -66,7 +66,7 @@ pub(super) fn proofs(
         .filter(|item| item.specifier.is_none())
         .map(|item| item.local.as_str())
         .collect::<FxHashSet<_>>();
-    let mut pending = pending::PendingUses::new(syntax, bindings);
+    let mut pending = pending::PendingUses::new(syntax, bindings, executors);
     let pending_references = std::mem::take(&mut pending.references);
     let mut result = Proofs::default();
     let mut owners = 0;

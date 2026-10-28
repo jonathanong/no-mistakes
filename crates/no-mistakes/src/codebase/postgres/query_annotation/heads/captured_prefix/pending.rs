@@ -1,6 +1,6 @@
 //! A pending effect still needs the exact stable runtime callee at its use site.
 use super::{Bindings, Span, Syntax};
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
 
 pub(super) struct PendingUses {
     pub references: FxHashMap<Span, Span>,
@@ -9,14 +9,22 @@ pub(super) struct PendingUses {
     visits: u64,
 }
 impl PendingUses {
-    pub fn new(syntax: &Syntax, bindings: &Bindings<'_>) -> Self {
+    pub fn new(syntax: &Syntax, bindings: &Bindings<'_>, executors: &FxHashSet<Span>) -> Self {
         let mut result = Self {
             references: FxHashMap::default(),
             callees: FxHashMap::default(),
             stable: FxHashMap::default(),
             visits: 0,
         };
-        if bindings.effects().pending.is_empty() {
+        // Generic effect candidates include confirmed executor statements too.
+        // They already have a sink proof and must not demand an effect index.
+        let mut pending = bindings
+            .effects()
+            .pending
+            .iter()
+            .filter(|pending| !executors.contains(&pending.span))
+            .peekable();
+        if pending.peek().is_none() {
             return result;
         }
         let calls = syntax
@@ -25,7 +33,7 @@ impl PendingUses {
             .filter(|call| call.position == 0)
             .map(|call| (call.span, call))
             .collect::<FxHashMap<_, _>>();
-        for pending in &bindings.effects().pending {
+        for pending in pending {
             let Some(call) = calls
                 .get(&pending.span)
                 .filter(|call| call.builder == pending.builder)
