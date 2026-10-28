@@ -109,10 +109,7 @@ pub(super) fn function(value: &Function<'_>) -> Option<Candidate> {
 
 fn append_chain<'a>(mut expression: &'a Expression<'a>) -> Option<(&'a str, Span)> {
     let mut appends = 0;
-    loop {
-        let Expression::CallExpression(call) = unwrap_ts_wrappers(expression) else {
-            break;
-        };
+    while let Expression::CallExpression(call) = unwrap_ts_wrappers(expression) {
         if appends == 8 {
             return None;
         }
