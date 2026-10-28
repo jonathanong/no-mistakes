@@ -1,8 +1,8 @@
 //! Bounded same-file composition of prefix-preserving parameter effects.
-use super::{CallSyntax, FunctionSyntax, Span};
+use super::{CallSyntax, FunctionSyntax, Signature, Span};
 use crate::codebase::postgres::query_annotation::heads::{bindings::Bindings, syntax::Syntax};
 use crate::codebase::ts_source::module_facts::ModuleBinding;
-use crate::fx::{FxHashMap, FxHashSet};
+use crate::fx::FxHashMap;
 
 struct Input<'a> {
     summary: &'a FunctionSyntax,
@@ -14,7 +14,7 @@ pub(super) fn proven(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     declarations: &FxHashMap<Span, Option<&ModuleBinding>>,
-) -> FxHashSet<usize> {
+) -> FxHashMap<usize, Signature> {
     let calls = syntax
         .effect_calls
         .iter()
@@ -22,7 +22,7 @@ pub(super) fn proven(
         .collect::<FxHashMap<_, _>>();
     let mut dynamic_refs = syntax.dynamic_refs.clone();
     dynamic_refs.sort_unstable();
-    let mut candidates: FxHashMap<usize, Option<Vec<usize>>> = FxHashMap::default();
+    let mut candidates: FxHashMap<usize, Option<(Signature, Vec<usize>)>> = FxHashMap::default();
     for (&declaration, summary) in &syntax.effect_functions {
         let Some(callable) = declarations.get(&declaration).copied().flatten() else {
             continue;
@@ -44,17 +44,23 @@ pub(super) fn proven(
         candidates
             .entry(callable.id)
             .and_modify(|entry| *entry = None)
-            .or_insert(dependencies);
+            .or_insert(dependencies.map(|required| (summary.signature, required)));
     }
-    let mut proven = FxHashSet::default();
+    let mut proven = FxHashMap::default();
     // Four local edges are enough for the inventoried helper chain. A cycle
     // cannot seed itself, and deeper or imported call graphs stay unresolved.
     for _ in 0..=4 {
         let next = candidates
             .iter()
-            .filter_map(|(&id, deps)| {
-                (!proven.contains(&id) && deps.as_ref()?.iter().all(|dep| proven.contains(dep)))
-                    .then_some(id)
+            .filter_map(|(&id, candidate)| {
+                let (signature, deps) = candidate.as_ref()?;
+                (!proven.contains_key(&id)
+                    && deps.iter().all(|dep| {
+                        proven
+                            .get(dep)
+                            .is_some_and(|known: &Signature| known.plain())
+                    }))
+                .then_some((id, *signature))
             })
             .collect::<Vec<_>>();
         if next.is_empty() {

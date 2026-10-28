@@ -1,11 +1,11 @@
-use super::{CallSyntax, Span};
+use super::{CallShape, CallSyntax, Signature, Span};
 use crate::codebase::postgres::query_annotation::heads::{
     bindings::Bindings,
     syntax::{Head, Syntax},
 };
 use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFacts};
 use crate::fx::{FxHashMap, FxHashSet};
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Pending {
@@ -13,13 +13,14 @@ pub(crate) struct Pending {
     pub builder: Span,
     pub specifier: String,
     pub imported: String,
+    pub shape: CallShape,
 }
 
 #[derive(Default)]
 pub(in crate::codebase::postgres::query_annotation::heads) struct Prepared {
     pub(crate) allowed: FxHashSet<Span>,
     pub(crate) pending: Vec<Pending>,
-    pub(crate) exported: BTreeSet<String>,
+    pub(crate) exported: BTreeMap<String, Signature>,
 }
 
 pub(in crate::codebase::postgres::query_annotation::heads) fn prepare(
@@ -59,7 +60,7 @@ fn classify_call(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     trusted_roots: &FxHashSet<Span>,
-    proven: &FxHashSet<usize>,
+    proven: &FxHashMap<usize, Signature>,
     imports: &FxHashMap<usize, Option<(&str, &str)>>,
     out: &mut Prepared,
 ) {
@@ -87,8 +88,12 @@ fn classify_call(
             builder: call.builder,
             specifier: specifier.to_string(),
             imported: imported.to_string(),
+            shape: call.shape,
         });
-    } else if proven.contains(&callee.id) {
+    } else if proven
+        .get(&callee.id)
+        .is_some_and(|signature| signature.accepts(call.shape))
+    {
         out.allowed.insert(call.builder);
     }
 }
@@ -110,7 +115,10 @@ fn imports(module: &TypeScriptModuleFacts) -> FxHashMap<usize, Option<(&str, &st
     result
 }
 
-fn exported(module: &TypeScriptModuleFacts, proven: &FxHashSet<usize>) -> BTreeSet<String> {
+fn exported(
+    module: &TypeScriptModuleFacts,
+    proven: &FxHashMap<usize, Signature>,
+) -> BTreeMap<String, Signature> {
     let roots = module
         .scopes
         .iter()
@@ -130,7 +138,7 @@ fn exported(module: &TypeScriptModuleFacts, proven: &FxHashSet<usize>) -> BTreeS
     }
     let mut seen = FxHashSet::default();
     let mut ambiguous = FxHashSet::default();
-    let mut result = BTreeSet::new();
+    let mut result = BTreeMap::new();
     for export in module
         .exports
         .iter()
@@ -140,15 +148,18 @@ fn exported(module: &TypeScriptModuleFacts, proven: &FxHashSet<usize>) -> BTreeS
             result.remove(export.exported.as_str());
             ambiguous.insert(export.exported.as_str());
         }
-        if !ambiguous.contains(export.exported.as_str())
-            && locals
-                .get(export.local.as_str())
-                .copied()
-                .flatten()
-                .is_some_and(|id| proven.contains(&id))
-        {
-            result.insert(export.exported.clone());
+        if ambiguous.contains(export.exported.as_str()) {
+            continue;
         }
+        let Some(signature) = locals
+            .get(export.local.as_str())
+            .copied()
+            .flatten()
+            .and_then(|id| proven.get(&id).copied())
+        else {
+            continue;
+        };
+        result.insert(export.exported.clone(), signature);
     }
     result
 }
