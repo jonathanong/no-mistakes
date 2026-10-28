@@ -165,3 +165,7 @@ impl<'a, 'm, 'b> Visit<'a> for Caller<'a, 'm, 'b> {
 #[cfg(test)]
 #[path = "caller/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "caller/coverage_tests.rs"]
+mod coverage_tests;

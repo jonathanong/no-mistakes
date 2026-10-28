@@ -17,3 +17,6 @@ fn captured_parameter_appends_keep_only_the_fixed_prefix() {
     let (source, _, heads) = fixture_with_effects("captured-append-effects.mts");
     assert_eq!(assert_markers(&source, &heads), 13);
 }
+
+#[path = "branch_default_coverage_tests.rs"]
+mod coverage_tests;
