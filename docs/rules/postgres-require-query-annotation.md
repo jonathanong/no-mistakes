@@ -200,16 +200,51 @@ const holding that chain, or a trusted local tagged builder followed by safe
 statement appends. The evaluator does not run. Decidable missing annotations
 remain failing findings under every policy; unresolved shapes follow
 `unanalyzable`. Complete literal transaction commands retain their exemption.
+A discarded call to a same-file or directly imported append-only function can
+preserve that trusted local builder's fixed prefix. Its first parameter may
+only appear as the receiver of discarded static append chains; defaults,
+aliases, captured parameters, and used append results abstain.
+A captured local trusted builder keeps its fixed head when every reference to
+its exact binding is a discarded static append, a configured executor read, or
+a proven local append-only effect. Closure execution order does not change this
+prefix. Exports, aliases, stores, used append results, property writes, other
+members, and semantic gaps stay unresolved. This is a low-effort prefix proof;
+it does not infer complete SQL.
 One same-file function declaration or `const` arrow also qualifies when it has
 one final top-level return with a fixed leading comment, and its callable is
 lexically owned and unchanged. A returned tagged builder must use the exact
 `sql-template-strings` import; an unknown appended suffix after its fixed head
 is allowed. A fixed missing head returned by such a helper is a failing finding.
-Early returns, async/generator helpers, optional or spread calls, and returned
-local variables remain unresolved at low effort.
+One local const returned by a helper qualifies when its trusted named tag
+keeps a fixed prefix through append-only uses until the single final return.
+Finite conditional literals qualify only when every arm has a complete named
+head; tagged arms retain mutable-builder escape checks. A function declaration
+also qualifies with explicit early `if` returns and a final top-level return,
+or a final `switch` whose every case returns the same proven head and whose
+default throws directly or calls an exact stable same-file throw-only helper.
+Every returning path must agree on named or missing. Only fresh trusted builder
+returns on every path permit later `.append`. A switch without a default,
+fallthrough, mixed or unknown returns, async/generator helpers, optional or
+spread calls, and unsafe returned locals remain unresolved at low effort.
+A local const holding a trusted tagged SQL builder also permits a direct `.text`
+read at an executor, including a paired `.values` read. The builder must keep its
+fixed head through only safe appends; escapes, writes, optional or computed field
+reads, arbitrary object fields, and caller-supplied SQL remain unresolved.
+An exact fresh-builder helper result can be stored in one local `const`, passed
+to an executor after discarded static appends, or appended directly at the
+executor. The helper's source must prove a trusted builder return; a plain
+record or string return cannot inherit `.append` trust. Aliases, mutation,
+capture, and unresolved imports remain advisory under the configured policy.
 Direct source imports of those helpers follow one exact export through the
 prepared request resolver. Re-exports and unresolved package implementations
 remain unanalyzable.
+An inline callback that forwards its parameter directly to a configured
+executor can also retain a fixed named head supplied through a direct imported
+source helper. The helper must prove every callback invocation's payload from
+one fresh trusted builder argument or a fixed named template.
+A direct imported immutable string constant has the same fixed-head proof when
+its source file is prepared and the import/export identity is exact. Re-exports,
+mutable values, and missing source files remain unresolved.
 See [low-effort examples, rewrites, and suppressions](../postgres-query-annotation/low-effort.md).
 See [append composition and bounded alternatives](../postgres-query-annotation/append-composition.md)
 for the SQL text model, truncation, and invalid-SQL advisories.
@@ -245,6 +280,11 @@ query(`SELECT id FROM posts ORDER BY id DESC`);
 
 Add a short operation identifier as the first block comment inside the SQL
 string passed to the configured executor.
+
+Low's bounded helper proofs also cover one fresh literal `{ text, values }`
+return or trusted tagged builder read through one local const and exactly paired
+`.text`/`.values` executor arguments. Mutated, escaped, optional, or opaque helper
+results remain unresolved; see the [low-effort contract](../postgres-query-annotation/low-effort.md).
 
 ## Suppression
 

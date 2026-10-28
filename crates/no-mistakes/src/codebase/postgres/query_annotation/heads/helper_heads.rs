@@ -11,7 +11,8 @@ use oxc_ast::ast::{
 };
 use oxc_ast_visit::{walk, Visit};
 mod imports;
-pub(crate) use imports::{module_projection, Pending};
+mod values;
+pub(crate) use imports::{module_projection, Kind, Pending};
 
 #[derive(Clone, Copy)]
 pub(super) struct Summary {
@@ -66,6 +67,7 @@ fn returned(body: &FunctionBody<'_>) -> Option<Summary> {
     let expression = last.argument.as_ref()?;
     let head = super::syntax::head(expression);
     match head {
+        Head::Reference(_) => Some(Summary { head, tag: None }),
         Head::Literal => Some(Summary { head, tag: None }),
         Head::Text(value) if !value.tagged && !value.appended => Some(Summary { head, tag: None }),
         Head::Tag | Head::AppendTag | Head::AppendPrefixTag | Head::Text(_) => {
@@ -107,7 +109,9 @@ pub(super) fn summary_proof(
     if !bindings.declaration_safe(declaration) {
         return None;
     }
-    let summary = syntax.helper_returns.get(&declaration)?;
+    let Some(summary) = syntax.helper_returns.get(&declaration) else {
+        return super::finite_returns::head_proof(syntax, bindings, owner);
+    };
     // A callable changed through an assignment, update or unsupported write is not stable.
     if owner.references.iter().any(|usage| {
         let span = (usage.span.start, usage.span.end);
@@ -121,6 +125,9 @@ pub(super) fn summary_proof(
         if !tag_owner.imported || !bindings.trusted_import(tag_owner.id) {
             return None;
         }
+    }
+    if let Head::Reference(reference) = summary.head {
+        return bindings.returned_local_prefix(syntax, reference);
     }
     Some(match summary.head {
         Head::AppendPrefixTag => HeadProof::Literal,

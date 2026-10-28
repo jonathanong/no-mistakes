@@ -45,21 +45,62 @@ statement.append(sql` WHERE id = ${id}`);
 query(statement);
 ```
 
+A local `const` initialized by the exact `sql-template-strings` default or
+named `sql` tag can pass its `.text` to an executor with its `.values` as the
+second argument. The leading name is proven from that trusted builder and
+survives safe appends. Both fields must be direct, non-optional reads; a
+computed field, escaped or overwritten builder, arbitrary object with a `text`
+field, or caller-supplied SQL remains unresolved.
+
 Low also follows a same-file function declaration or `const` arrow when its
-body has exactly one return, in final top-level position, with a decidable
+body has exactly one return, in final top-level position, with a fixed named
 literal head. Tagged returns must use the `sql-template-strings` default or
 named `sql` import. A direct trusted tagged return can append an unknown suffix;
-the fixed leading comment remains visible. Async and generator helpers, other
+the fixed leading comment remains visible. Async and generator helpers, unproven
 return paths, reassigned or shadowed callees, and optional or spread helper
 calls remain unresolved. A directly imported helper from another prepared
 source file also qualifies when that file directly exports the same fixed
 return summary. The request's resolver checks the exact import and export;
-re-exports, unavailable package implementations, and returned local variables
-remain unresolved.
-For a configured relative factory or executor type, the helper head is used
-only after the request resolver confirms that the executor import belongs to
-the configured package. An unconfirmed relative call cannot make a local
-builder's later use safe.
+re-exports and unavailable package implementations remain unresolved. A helper
+may also return one local `const` initialized from the trusted default SQL tag
+when that binding has only prefix-preserving `.append(...)` uses before the
+single final return. Aliases, captures, property writes, and passing the
+builder to another helper keep the return unresolved.
+
+A same-file function declaration may also have explicit early `if` returns
+followed by a final top-level return. A final `switch` qualifies when every
+case returns a fixed head and its default either throws directly or calls an
+exact, stable same-file synchronous function whose body consists of one throw.
+All returning paths must prove the same named or missing result. A caller may
+append to the returned value only when every path returns a fresh builder from
+the trusted SQL tag, including safe returned locals. A switch without a
+default, a falling-through case, an unknown or mixed return, and async or
+generator functions remain unresolved. A directly imported exported function
+can carry this finite proof through the prepared one-hop projection.
+
+One direct source import of an exported immutable string constant also qualifies when
+its literal or template first segment has a complete fixed named head. A
+complete missing head remains a finding. The prepared resolver follows the
+exact import/export binding one hop; mutable exports, re-exports, unavailable
+packages, ambiguous exports, and names formed by interpolation remain
+unresolved. This value proof does not treat the constant as a callable helper.
+
+Low can follow one exact source import when a helper calls an inline executor
+callback with a proven SQL head. The helper directly exports a source-visible
+function; its callback parameter may only be called with the same fresh
+trusted `sql-template-strings` builder supplied by the caller, after static
+`.append(oneExpression)` calls, or with a fixed named literal template. The
+caller passes a direct inline `statement => read(statement)` or equivalent
+configured executor callback. Every callback invocation must use the proven
+payload. Unknown calls, aliases, writes, defaults, escapes, spreads, optional
+calls, and source re-exports remain unresolved. Each caller is checked
+separately.
+
+A local `const` selecting between finite conditional arms qualifies when every
+arm starts with a complete named literal comment. Tagged arms retain the
+mutable-builder lifetime checks, including escapes before execution. An
+unknown, partial, or missing arm remains unanalyzable; the syntax pass does
+not evaluate the condition or combine SQL text.
 
 These are deliberately narrow low-effort syntax proofs. Low does not run the
 helper/value evaluator, so other helper-produced heads can remain unresolved
@@ -78,14 +119,32 @@ while its use remains in the same function and is neither captured nor passed
 to another helper. References to the builder inside a suffix expression count
 as an unsafe use.
 
-To follow appends through a const, its declaration and uses must stay in the
-same function. Before the executor call,
+A captured local builder also keeps its fixed named head when **every** runtime
+reference to its exact binding is closed: a discarded static one-argument
+`.append(...)`, a configured executor read, or a proven local append-only
+effect. The closure may run before, after, or repeatedly; each permitted use
+preserves the head. Exports, aliases, stores, returns, used append results,
+property writes, other member reads, defaults that expose the builder, and
+binding gaps remain unanalyzable. This proof applies only to low effort and
+does not infer complete SQL or execute closures.
+
+A discarded call to a same-file or direct imported function declaration may
+also preserve that trusted local builder's prefix. The helper must receive the
+builder as its first argument, and every use of that parameter must be a
+discarded, static `.append(oneExpression)` chain. The helper may choose a
+suffix at runtime. Defaults, aliases, captured parameters, used append results,
+and other parameter uses leave the later read unanalyzable. Direct imported
+helpers qualify only when their prepared source file exports the proven
+function; unresolved and re-exported helpers remain unanalyzable.
+
+For ordinary const tracing, its declaration and uses must stay in the same
+function. The closed captured-root proof above is the narrow exception. Before the executor call,
 its uses may only append supported literals or pass it directly to prepared
 executors. An opaque suffix is supported for the trusted tagged initializer
 or the trusted local builder described above. Other opaque appends make later
 reads unanalyzable. Repeated
 executor reads qualify. Reassignment, property writes, other receiver methods,
-helper escapes, aliases, returns, stores, and exports make it unanalyzable
+helper escapes, aliases, unsupported returns, stores, and exports make it unanalyzable
 because a const binding does not make its builder immutable. An escape after
 an executor call does not invalidate that earlier call.
 A const holding a plain literal string retains its head when passed elsewhere;
@@ -108,8 +167,8 @@ literal `BEGIN`, `COMMIT`, and `ROLLBACK` commands are exempt at both effort
 levels. A transaction keyword at the end of a head followed by an unknown
 suffix remains unresolved: the suffix could turn `BEGIN` into `BEGINNING`.
 
-Other helper returns, conditional heads, escaped builders, and
-unsupported shapes remain unanalyzable. Rewrite them as a leading named
+Other helper returns, conditional arms without proven heads, escaped builders, and
+other unsupported shapes remain unanalyzable. Rewrite them as a leading named
 literal at the executor call or as one local const initialized with that head
 and passed directly.
 
@@ -130,6 +189,34 @@ File and same-line directives also work. A helper-line suppression does not
 suppress a low-effort call-site diagnostic. Other applications that remain at
 `max` can still request evaluator work in the same invocation.
 
+A stable synchronous helper may also return one fresh `{ text, values }` record
+or one fresh trusted `sql-template-strings` builder. The helper must have a
+single final return. A record needs an own, ordinary `text` property whose
+string literal or template starts with a decidable head, plus an own `values`
+property. Getters, spreads, computed or duplicate fields, and parameter-derived
+text remain unresolved. A trusted builder return uses its exact imported tag.
+
+One local `const` can hold that helper result for exactly the paired
+`query(result.text, result.values)` read. Repeated calls, aliases, captures,
+exports, writes, optional calls or fields, and additional uses remain unresolved.
+For a helper proven to return a fresh trusted builder, low effort also accepts
+`const result = helper(args); query(result)` and
+`query(helper(args).append(suffix))`. The local result may receive discarded
+static one-argument appends before the executor; every other use, mutation,
+capture, or export makes this projection unresolved. A plain `{ text, values }`
+record or string result does not gain builder append behavior. The helper may
+return one safe local trusted builder with a fixed head after append-only uses.
+The same proof can follow one direct prepared source import; re-exports and
+unavailable implementations remain unresolved. A definite missing annotation
+still fails under every unanalyzable policy. This syntax proof does not request
+the annotation evaluator or change max's append fallback. For unresolved results,
+put a named literal at the executor instead of passing an opaque `.text` field.
+
+For a configured relative factory or executor type, the helper head is used
+only after the request resolver confirms that the executor import belongs to
+the configured package. An unconfirmed relative call cannot make a local
+builder's later use safe.
+
 ## Mutable literal bindings
 
 At `low`, a decidable literal head is checked before the unanalyzable policy.
@@ -146,8 +233,7 @@ query(statement); // The same definite violation.
 
 A complete literal transaction command keeps the transaction exemption. An
 incomplete head, such as ``query(`/* ${name} */ SELECT 1`)``, stays
-unanalyzable. Unsupported helper returns and conditional heads also remain
-unanalyzable. A same-function `let` or `var` used as the executor
+unanalyzable. Helper returns and conditional heads outside the bounded forms above also remain unanalyzable. A same-function `let` or `var` used as the executor
 argument can be decided when every direct assignment that may reach that call
 is a literal string, no-substitution template, or tag without interpolations. Every such value
 must have a known head: if all are named, the call passes; if any is missing

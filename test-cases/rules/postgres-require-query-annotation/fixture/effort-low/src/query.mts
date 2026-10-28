@@ -12,8 +12,8 @@ query(statement); // EXPECT_ACCEPTED
 
 read(helper("/* helper argument */ SELECT 1")); // EXPECT_REPORT_HELPER
 read(sql`/* configured tag */ SELECT 1`); // EXPECT_ACCEPTED_TAG
-read(flag ? "/* conditional a */ SELECT 1" : "/* conditional b */ SELECT 2"); // EXPECT_REPORT_CONDITIONAL
-read(importedSql); // EXPECT_REPORT_IMPORT
+read(flag ? "/* conditional a */ SELECT 1" : "/* conditional b */ SELECT 2"); // EXPECT_ACCEPTED_CONDITIONAL (both runtime arms have named literal heads)
+read(importedSql); // EXPECT_ACCEPTED_IMPORT (one source-owned immutable literal)
 read(buildSql()); // EXPECT_REPORT_CALL_SITE (helper-only suppression does not apply)
 let mutable = "/* mutable */ SELECT 1";
 read(mutable); // EXPECT_REPORT_MUTABLE

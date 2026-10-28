@@ -85,6 +85,9 @@ unanalyzable policy in both APIs; it omits annotation evaluator preparation.
 These proofs include trusted builder append prefixes and fixed-return helpers
 in the same file or through one direct source import. Unsupported helper or
 mutation shapes remain unanalyzable.
+Captured trusted local builders also qualify when every exact-binding use is a
+discarded append, a configured executor read, or a proven local append-only
+effect. This preserves only the fixed head, even across arbitrary closure order.
 For `nextjs-redirect-destinations`, `low` keeps
 [literal arrays and objects](rules/nextjs-redirect-destinations.md#effort) and
 routes every other destination construction through the same unanalyzable
@@ -354,6 +357,11 @@ See [Effect alternatives](node-api/effect-alternatives.md).
 
 `check()` and `analyzeProject()` also honor low effort for [`postgres-no-unbounded-sql-identifier`](rules/postgres-no-unbounded-sql-identifier.md#effort). Import the exported `PostgresNoUnboundedSqlIdentifierOptions` type for its configuration. Unsupported syntax uses the same report/advisory/ignore policy in CLI and async Node reports.
 
+For `postgres-require-query-annotation`, these async reports share the CLI's
+low-effort finite conditional heads, finite explicit helper returns, and safe returned-local builder proofs;
+unsupported arms and escaped builders retain the configured `unanalyzable`
+policy. See [low-effort annotation](postgres-query-annotation/low-effort.md).
+
 The `postgres-no-mutable-sql-registry` check accepts the exported
 `PostgresNoMutableSqlRegistryOptions` configuration type. Its
 [`effort: "low"` tier](rules/postgres-no-mutable-sql-registry.md#effort)
@@ -400,3 +408,13 @@ forbidden lint ID, `*` for a selected blanket disable, or the explicitly enabled
 TypeScript directive name. No additional runtime export is required.
 
 Configured [`production-exports-only-used-by-tests`](rules/production-exports-only-used-by-tests.md) applications run through the existing async `check()` → `checkJson` binding and `analyzeProject()` check reports. `ProductionExportsOnlyUsedByTestsOptions` exports its explicit production/test/helper scope and shared uncertainty policy; results use ordinary check findings and advisories.
+
+For PostgreSQL query annotation checks, low effort recognizes direct `.text`/`.values` reads from a safe local builder tagged by the exact `sql-template-strings` import. The asynchronous check API also projects one direct immutable string export through the prepared resolver.
+
+The async query-annotation check shares low's bounded fresh helper-result proof
+for paired `.text`/`.values` reads; it does not run the annotation evaluator.
+It also accepts an exact fresh trusted builder returned into one local `const`
+or directly appended at the executor, with the same one-hop prepared import
+and escape guards as CLI checks.
+The same prepared facts project an exact imported helper's fixed callback SQL
+head to a direct inline configured executor callback, independently per call.
