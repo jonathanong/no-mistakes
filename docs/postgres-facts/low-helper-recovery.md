@@ -5,8 +5,8 @@ JavaScript helpers. This is analysis of the helper body, not an exemption for a
 typed parameter. It applies to `postgres-no-offset`,
 `postgres-no-unbounded-sql-identifier`, `postgres-no-mutable-sql-registry`, and
 `postgres-no-transformed-uuid-predicates`, `postgres-explicit-columns`, and
-`postgres-required-predicates`. The annotation rule and maximum-effort
-analysis keep their existing behavior.
+`postgres-required-predicates` and `postgres-no-test-state-mutation`.
+The annotation rule and maximum-effort analysis keep their existing behavior.
 
 ## Supported shapes
 
@@ -45,6 +45,28 @@ value, passing it to an unknown call, or calling it with unknown SQL retains an
 unanalyzable diagnostic. A known violation remains a finding even if another
 path is unknown, including with `unanalyzable: ignore`.
 
+Literal-return switches can use a source-proven throwing default. This proves
+which SQL values can reach the requesting executor; it does not certify that
+exception construction is pure. Source-visible selected SQL in the throw
+argument or its callees retains uncertainty. Executor transport separately
+checks argument effects, including executor escape through an exception.
+An async throwing helper is not a synchronous throwing default.
+
+Strict comparisons against string literals retain their correlation across
+local boolean bindings. Finite builders can therefore reuse a predicate without
+inventing combinations excluded by earlier comparisons. Loose equality does
+not establish this narrowing, and TypeScript unions never supply a runtime set.
+
+Unwritten, unexported local `const` operands can follow dependent consts and
+own-property reads when every use is a closed read at the same executor call.
+Passing the value to an opaque call or another executor call, changing a property,
+or using dynamic lexical scope prevents that proof. Raw templates may splice
+finite own-property text; their holes cannot call opaque code or expose the map.
+Direct inline Vitest
+`it.each`/`test.each` callbacks can select a local SQL map from an inline array
+of literal string rows. Runner aliases, writes, escapes, and inherited keys
+remain uncertain; an imported binding's spelling alone is not proof.
+
 ## Limits and remaining uncertainty
 
 Each site has deterministic limits: eight helper levels, sixteen alternatives,
@@ -52,12 +74,14 @@ Each site has deterministic limits: eight helper levels, sixteen alternatives,
 the same semantic cost as uncached results. Cycles or exhausted limits remain
 uncertain; they are never assumed safe.
 
-This subset does not infer ordinary captured globals, including objects declared
-with `const` or `as const`. It does not model generators, loops, switch statements,
-callback bodies, mutation of caller-owned builders, rest/spread arguments,
-computed object keys, unknown await behavior, or unresolved/ambiguous exports. Imported
+This subset does not infer mutable, exported, or opaque captured globals.
+It does not model generators, loops, arbitrary switches or callback bodies,
+mutation of caller-owned builders, rest/spread arguments, computed object
+definitions, unknown await behavior, or unresolved/ambiguous exports. Imported
 helpers must already have facts in the selected low-effort scope; analysis does
 not broaden the file selection or parse excluded files as a fallback.
+For test-state checks, source-visible callees may be elsewhere in the declared
+rule application. Reported sinks remain in its test and helper globs.
 
 Helpers that receive a SQL object, directly or nested inside an argument, keep
 returned SQL read-only because it may alias that input. Such results can be

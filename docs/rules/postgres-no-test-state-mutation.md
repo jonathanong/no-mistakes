@@ -84,9 +84,26 @@ the rule application's finding text. There is no autofix.
 `max` is the default. `low` uses the prepared syntax and SQL facts for configured
 test files and helper roots, without the maximum-effort executor and builder
 walk. A direct named executor import can receive a SQL literal or one local
-`const` initialized with a literal. Helper-produced SQL remains unanalyzable
-at low, including when another low SQL rule recovers the same helper in a
-shared request.
+`const` initialized with a literal. Low also checks complete SQL returned by
+bounded source-visible helpers in the declared rule application, including
+fresh tagged builders and finite static alternatives. The helper must be
+resolvable through the prepared source catalog; recovery stops at its depth,
+work, SQL-size, or alternative-count limit. A helper that escapes, reads
+mutable or external SQL, or has an unproved return remains unanalyzable.
+An always throwing branch can close a helper's return alternatives, while SQL
+executed inside the throw argument remains a separate obligation. Known selected
+SQL in that argument retains uncertainty; executor transport also checks opaque
+effects and exception escape.
+For a callback passed directly to the imported Vitest `it.each` or `test.each`,
+low can also check a local SQL map selected by a literal row value. The rows
+must be an inline array of at most 16 unescaped strings, and the map and
+callback parameter must stay unchanged and unescaped. Unknown rows, inherited
+object keys, writes, and runner aliases retain the configured uncertainty
+policy.
+An `executorFactoryNames` entry also accepts an exact `effects.postgres.returnedExecutors`
+module/export identity when the factory is imported from another specifier.
+The factory result must be kept in an immutable local binding; a same-spelled
+undeclared import, shadowed name, or reassigned result is not proof.
 
 A complete SQL statement before an opaque template interpolation is still
 checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the
@@ -94,10 +111,11 @@ checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the
 SQL value, executor alias, unsupported helper, or invalid SQL remains
 unanalyzable under the configured policy. Put a complete literal at the
 configured executor or select `max` to use broader analysis. Low keeps the
-same `testGlobs`, `helperRoots`, and `include`/`exclude` boundaries.
-The shared SQL extractor parses PostgreSQL `ANALYZE` relation lists with
-`VERBOSE` and per-relation column lists; malformed lists and parenthesized
-option lists remain unanalyzable.
+same `testGlobs` and `helperRoots` report boundaries. Helper source must remain
+inside the application's `include`/`exclude` boundaries. The shared SQL
+extractor parses PostgreSQL `ANALYZE` relation lists with `VERBOSE` and
+per-relation column lists; malformed lists and parenthesized option lists
+remain unanalyzable.
 
 At `max`, finite helper returns, direct throwing branches, literal iterator
 domains, and local Set guards use bounded full-SQL proofs. Annotation `low`

@@ -8,6 +8,8 @@ use crate::codebase::{
     ts_source::{module_facts::TypeScriptModuleFacts, FileIdMap},
 };
 use std::path::{Path, PathBuf};
+mod abrupt;
+mod locals;
 
 pub(super) struct PreparedCatalog<'a> {
     pub files: &'a FileIdMap<CheckFileFacts>,
@@ -102,6 +104,12 @@ impl PreparedCatalog<'_> {
     }
 }
 impl Catalog for PreparedCatalog<'_> {
+    fn value_throw(&self, from: &Path, argument: super::super::Span) -> bool {
+        self.throw_has_no_selected_sql(from, argument, &mut Vec::new(), &mut 0)
+    }
+    fn local(&self, from: &Path, binding: usize, site: super::Span) -> Option<&Lowered> {
+        self.local_model(from, binding, site)
+    }
     fn function(&self, key: &Key) -> Option<&Lowered> {
         self.module(&key.file)?;
         self.files

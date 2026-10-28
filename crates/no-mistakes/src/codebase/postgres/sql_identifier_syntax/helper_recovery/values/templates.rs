@@ -10,13 +10,30 @@ impl Engine<'_> {
         &mut self,
         pieces: &[RecoveredSql],
         holes: &[(Expr, Mark)],
-        state: State,
+        mut state: State,
         binds: bool,
     ) -> Option<Vec<(State, Value)>> {
         if pieces.len() != holes.len() + 1 {
             return None;
         }
         let file = self.file()?.to_path_buf();
+        if binds {
+            for (expr, _) in holes {
+                if let Expr::Ident(name) = expr {
+                    let executor = name
+                        .strip_prefix("binding:")
+                        .and_then(|id| id.parse().ok())
+                        .is_some_and(|id| self.catalog.sink(&file, id));
+                    // Reading an imported value has no property access or call.
+                    // This tag binds that value; it never splices its SQL text.
+                    state.env.entry(name.clone()).or_insert(if executor {
+                        Value::Executor
+                    } else {
+                        Value::Scalar
+                    });
+                }
+            }
+        }
         let expressions = holes.iter().map(|(expr, _)| expr).collect::<Vec<_>>();
         let mut out = Vec::new();
         'states: for (mut state, values) in self.all(&expressions, state)? {

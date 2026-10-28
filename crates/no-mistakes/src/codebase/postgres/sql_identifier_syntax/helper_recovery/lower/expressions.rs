@@ -51,15 +51,10 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
             Box::new(scope.expression(&value.object)),
             value.property.name.to_string(),
         ),
-        Expression::ComputedMemberExpression(value) if !value.optional => {
-            let Expression::StringLiteral(key) = unwrap_ts_wrappers(&value.expression) else {
-                return Expr::Opaque;
-            };
-            Expr::Member(
-                Box::new(scope.expression(&value.object)),
-                crate::ast::js_literal(key).into_owned(),
-            )
-        }
+        Expression::ComputedMemberExpression(value) if !value.optional => Expr::ComputedMember(
+            Box::new(scope.expression(&value.object)),
+            Box::new(scope.expression(&value.expression)),
+        ),
         Expression::ObjectExpression(_)
         | Expression::ArrayExpression(_)
         | Expression::ConditionalExpression(_)

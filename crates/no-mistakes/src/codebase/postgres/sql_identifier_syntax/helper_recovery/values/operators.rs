@@ -2,6 +2,7 @@ use super::{Engine, State, Value};
 use crate::codebase::postgres::embedded::helpers::program::Expr;
 mod binary;
 mod logical;
+mod refine;
 impl Engine<'_> {
     pub(super) fn operator(
         &mut self,

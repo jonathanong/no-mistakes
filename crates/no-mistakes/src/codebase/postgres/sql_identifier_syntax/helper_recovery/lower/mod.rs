@@ -4,6 +4,7 @@ mod expressions;
 mod forms;
 mod parameters;
 mod statements;
+mod switch;
 mod templates;
 use super::super::{span, template_binds::TemplateBinds, Span};
 use crate::codebase::postgres::embedded::helpers::program::{Expr, Mark, Program, Stmt};
@@ -58,6 +59,13 @@ struct Scope<'a> {
     references: Vec<(usize, Span)>,
 }
 impl Scope<'_> {
+    fn raise(&mut self, argument: &Expression<'_>) -> Expr {
+        let at = argument.span();
+        Expr::Call(
+            format!("operation:throw:{}:{}", at.start, at.end),
+            vec![self.expression(argument)],
+        )
+    }
     fn mark(&self, at: oxc_span::Span) -> Mark {
         Mark {
             line: byte_offset_to_line(self.ctx.source, at.start as usize),
@@ -88,6 +96,32 @@ pub(crate) fn function(function: &Function<'_>, ctx: &Context<'_>) -> Option<Low
         &mut scope,
         &function.body.as_ref()?.statements,
     )?);
+    Some(Lowered {
+        program: Program { params, body },
+        asynchronous: function.r#async,
+        tags: scope.tags,
+        references: scope.references,
+    })
+}
+
+pub(crate) fn arrow(
+    function: &oxc_ast::ast::ArrowFunctionExpression<'_>,
+    ctx: &Context<'_>,
+) -> Option<Lowered> {
+    if function.params.rest.is_some() {
+        return None;
+    }
+    let oxc_ast::ast::ArrowFunctionBody::FunctionBody(block) = &function.body else {
+        return None;
+    };
+    let mut scope = Scope {
+        ctx,
+        tags: FxHashSet::default(),
+        work: 1,
+        references: Vec::new(),
+    };
+    let (params, mut body) = parameters::lower(&mut scope, &function.params)?;
+    body.extend(statements::block(&mut scope, &block.statements)?);
     Some(Lowered {
         program: Program { params, body },
         asynchronous: function.r#async,

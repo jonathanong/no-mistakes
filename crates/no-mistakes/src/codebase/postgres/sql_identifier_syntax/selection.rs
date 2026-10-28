@@ -12,6 +12,31 @@ pub(super) struct Selection {
     pub advisory_receivers: FxHashSet<usize>,
 }
 impl Selection {
+    pub fn add_declared_factories(
+        &mut self,
+        profile: &EmbeddedSqlOptions,
+        module: &TypeScriptModuleFacts,
+        declared: &[crate::config::v2::schema::EffectTargetConfig],
+    ) {
+        for import in &module.imports {
+            if import.type_only {
+                continue;
+            }
+            for binding in &import.bindings {
+                if binding.type_only
+                    || binding.kind != "named"
+                    || !profile.executor_factory_names.contains(&binding.imported)
+                    || !declared.iter().any(|target| {
+                        target.module == import.specifier && target.export == binding.imported
+                    })
+                {
+                    continue;
+                }
+                self.factories.insert(binding.binding_id);
+                self.unsupported.insert(binding.binding_id);
+            }
+        }
+    }
     pub fn new(profile: &EmbeddedSqlOptions, module: &TypeScriptModuleFacts) -> Self {
         let mut selected = FxHashSet::default();
         let mut namespaces = FxHashSet::default();

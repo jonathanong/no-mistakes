@@ -76,6 +76,8 @@ pub(crate) enum Expr {
     /// A trusted-tag template: interpolations are binds or inlined fragments.
     Sql(Vec<RecoveredSql>, Vec<(Expr, Mark)>, bool),
     Member(Box<Expr>, String),
+    /// A runtime key must resolve to a literal own-property name before use.
+    ComputedMember(Box<Expr>, Box<Expr>),
     Object(Vec<Entry>),
     Array(Vec<Expr>),
     Cond(Box<Expr>, Box<Expr>, Box<Expr>),

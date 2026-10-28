@@ -87,3 +87,31 @@ fn typed_executor_demand_sorts_and_deduplicates_module_export_identity() {
         [another, duplicate].into_iter().collect::<Vec<_>>()
     );
 }
+
+#[test]
+fn declared_factory_demand_is_profiled_and_file_scoped() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+        .join("effort-low");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
+    let factory = EffectTargetConfig {
+        module: "../db/index".into(),
+        export: "beginTransaction".into(),
+        category: None,
+    };
+    let matching = SqlIdentifierScan::new(&root, &config, rule, 0, &["src/query.ts".into()], &[])
+        .unwrap()
+        .with_declared_factories(&[factory.clone(), factory.clone()]);
+    let excluded =
+        SqlIdentifierScan::new(&root, &config, rule, 1, &["src/other.ts".into()], &[]).unwrap();
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[])
+        .with_scoped_executors(&["beginTransaction".into()], &[]);
+    let mut plan = CheckFactPlan::default();
+    plan.sql_identifier_profiles
+        .insert(profile.clone(), vec![matching, excluded]);
+    assert_eq!(
+        declared_factories_by_profile(&root, &root.join("src/query.ts"), &plan),
+        vec![(profile, vec![factory])]
+    );
+    assert!(declared_factories_by_profile(&root, &root.join("src/other.ts"), &plan).is_empty());
+}

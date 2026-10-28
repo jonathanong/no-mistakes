@@ -51,6 +51,7 @@ impl Engine<'_> {
             .collect::<Vec<_>>();
         self.effects = true;
         self.root_file = Some(file.to_path_buf());
+        self.site = Some(call.span);
         if self.run(&key, &args).is_none() {
             self.failures += 1;
         }

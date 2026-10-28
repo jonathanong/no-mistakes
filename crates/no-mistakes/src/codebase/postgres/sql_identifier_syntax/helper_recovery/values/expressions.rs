@@ -29,15 +29,19 @@ impl Engine<'_> {
             Expr::Undefined => vec![(state, Value::Undefined)],
             Expr::Num => vec![(state, Value::Scalar)],
             Expr::Ident(name) => {
-                let value = state.env.get(name).cloned().or_else(|| {
+                if let Some(value) = state.env.get(name).cloned() {
+                    vec![(state, value)]
+                } else {
                     let id = name.strip_prefix("binding:")?.parse().ok()?;
-                    self.catalog
-                        .sink(self.file()?, id)
-                        .then_some(Value::Executor)
-                })?;
-                vec![(state, value)]
+                    if self.catalog.sink(self.file()?, id) {
+                        vec![(state, Value::Executor)]
+                    } else {
+                        self.local_value(id, state)?
+                    }
+                }
             }
             Expr::Member(object, name) => self.member(object, name, state)?,
+            Expr::ComputedMember(object, key) => self.computed_member(object, key, state)?,
 
             Expr::Object(entries) => self.object_values(entries, state)?,
             Expr::Array(items) => self.array_values(items, state)?,

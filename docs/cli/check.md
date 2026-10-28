@@ -87,7 +87,8 @@ also support `low` with the bounded SQL helper subset. Unsupported shapes follow
 the shared unanalyzable policy; selected `.sql` files retain their existing
 analysis. See the [bounded helper contract](../postgres-facts/low-helper-recovery.md).
 [`postgres-no-test-state-mutation`](../rules/postgres-no-test-state-mutation.md#effort)
-also supports `low` for selected test SQL. Complete banned statements before
+also supports `low` for selected test SQL, bounded source helpers, and finite
+inline Vitest row selections. Complete banned statements before
 opaque SQL remain findings; unresolved tails follow `unanalyzable`.
 A rule application with `severity: advisory` reports its findings under
 `advisories` and does not affect the exit code; see

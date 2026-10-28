@@ -29,7 +29,7 @@ query(`SELECT 'DROP TABLE hidden;'; ${opaque}`); // quoted semicolon stays safe
 query(`SELECT 1 /* DROP TABLE hidden; */; ${opaque}`); // commented semicolon stays safe
 query(`CREATE TABLE unfinished (id integer; ${opaque}`); // invalid prefix template
 function offsetSql(): string { return 'SELECT id FROM app.users OFFSET 9'; }
-query(offsetSql()); // mixed helper remains unproved for test-state
+query(offsetSql()); // mixed helper is recovered for both rules
 query(`DROP\x20TABLE app.escaped; ${opaque}`); // escaped prefix stays unproved
 query(`SELECT 1;
 DROP TABLE app.multiline;

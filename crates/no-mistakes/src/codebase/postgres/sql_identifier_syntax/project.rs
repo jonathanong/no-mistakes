@@ -1,4 +1,8 @@
 use super::*;
+type Declared = std::collections::BTreeMap<
+    EmbeddedSqlOptions,
+    Vec<crate::config::v2::schema::EffectTargetConfig>,
+>;
 
 pub(crate) fn collect(
     program: &Program<'_>,
@@ -14,12 +18,28 @@ pub(crate) fn collect_with_types(
     ts: &TsFileFacts,
     source: &str,
     profiles: &[EmbeddedSqlOptions],
-    declared_types: &std::collections::BTreeMap<
-        EmbeddedSqlOptions,
-        Vec<crate::config::v2::schema::EffectTargetConfig>,
-    >,
+    declared_types: &Declared,
 ) -> FileFacts {
     collect_with_types_and_demand(program, ts, source, profiles, declared_types, true)
+}
+
+pub(crate) fn collect_with_declarations(
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    source: &str,
+    profiles: &[EmbeddedSqlOptions],
+    declared_types: &Declared,
+    declared_factories: &Declared,
+) -> FileFacts {
+    collect_with_declarations_and_demand(
+        program,
+        ts,
+        source,
+        profiles,
+        declared_types,
+        declared_factories,
+        true,
+    )
 }
 
 pub(crate) fn collect_with_types_and_demand(
@@ -27,10 +47,27 @@ pub(crate) fn collect_with_types_and_demand(
     ts: &TsFileFacts,
     source: &str,
     profiles: &[EmbeddedSqlOptions],
-    declared_types: &std::collections::BTreeMap<
-        EmbeddedSqlOptions,
-        Vec<crate::config::v2::schema::EffectTargetConfig>,
-    >,
+    declared_types: &Declared,
+    recover_helpers: bool,
+) -> FileFacts {
+    collect_with_declarations_and_demand(
+        program,
+        ts,
+        source,
+        profiles,
+        declared_types,
+        &Default::default(),
+        recover_helpers,
+    )
+}
+
+fn collect_with_declarations_and_demand(
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    source: &str,
+    profiles: &[EmbeddedSqlOptions],
+    declared_types: &Declared,
+    declared_factories: &Declared,
     recover_helpers: bool,
 ) -> FileFacts {
     let Some(module) = ts.module_bindings.as_deref() else {
@@ -40,6 +77,13 @@ pub(crate) fn collect_with_types_and_demand(
         .iter()
         .map(|profile| {
             let mut selection = Selection::new(profile, module);
+            selection.add_declared_factories(
+                profile,
+                module,
+                declared_factories
+                    .get(profile)
+                    .map_or(&[][..], Vec::as_slice),
+            );
             let types = declared_types.get(profile).map_or(&[][..], Vec::as_slice);
             let (typed, unsupported, runtime, transports) =
                 typed::collect(program, module, profile, &selection, types);
@@ -148,6 +192,7 @@ pub(crate) fn collect_with_types_and_demand(
     }
     if recover_helpers {
         syntax.recovery.validate(&syntax.template_binds);
+        syntax.recovery.iterators = helper_recovery::iterator::collect(program, module, source);
     }
     output.recovery = syntax.recovery;
     output

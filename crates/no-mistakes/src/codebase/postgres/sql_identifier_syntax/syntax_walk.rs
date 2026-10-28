@@ -8,6 +8,23 @@ use oxc_syntax::scope::ScopeFlags;
 mod recovery;
 
 impl<'a> Visit<'a> for Syntax<'_> {
+    fn visit_with_statement(&mut self, value: &oxc_ast::ast::WithStatement<'a>) {
+        self.recovery.dynamic_scope = true;
+        walk::walk_with_statement(self, value);
+    }
+    fn visit_variable_declaration(&mut self, value: &oxc_ast::ast::VariableDeclaration<'a>) {
+        if self.recover_helpers {
+            self.recovery.local(
+                value,
+                &helper_recovery::lower::Context {
+                    source: self.source,
+                    bindings: &self.recovery_bindings,
+                    tags: &self.template_binds,
+                },
+            );
+        }
+        walk::walk_variable_declaration(self, value);
+    }
     fn visit_expression(&mut self, value: &Expression<'a>) {
         if !matches!(
             unwrap_ts_wrappers(value),
@@ -165,9 +182,10 @@ impl<'a> Visit<'a> for Syntax<'_> {
         self.recover_function(value, flags);
     }
     fn visit_arrow_function_expression(&mut self, value: &ArrowFunctionExpression<'a>) {
-        self.opaque_metadata(|this| walk::walk_arrow_function_expression(this, value));
+        self.recover_arrow(value);
     }
     fn visit_new_expression(&mut self, value: &NewExpression<'a>) {
+        self.recover_constructor(value);
         let previous = self.metadata.enter_call(None, Some(span(value.span)), None);
         walk::walk_new_expression(self, value);
         self.metadata.restore(previous);
@@ -179,13 +197,6 @@ impl<'a> Visit<'a> for Syntax<'_> {
         self.metadata.restore(previous);
     }
     fn visit_template_literal(&mut self, value: &TemplateLiteral<'a>) {
-        for quasi in &value.quasis {
-            self.visit_template_element(quasi);
-        }
-        for expression in &value.expressions {
-            let previous = self.metadata.bind_expression();
-            self.visit_expression(expression);
-            self.metadata.restore(previous);
-        }
+        self.template_literal(value);
     }
 }

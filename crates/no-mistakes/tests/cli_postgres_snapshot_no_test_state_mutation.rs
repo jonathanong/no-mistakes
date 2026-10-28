@@ -147,3 +147,40 @@ fn postgres_no_test_state_mutation_low_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_no_test_state_mutation_helper_proofs_check_json_snapshot() {
+    let root = fixture().join("effort-proofs");
+    assert_saved_fixture(
+        "postgres_no_test_state_mutation_helper_proofs",
+        &[
+            ("low", root.clone(), root.join("low.yml")),
+            ("max", root.clone(), root.join("max.yml")),
+        ],
+    );
+}
+
+#[test]
+fn postgres_no_test_state_mutation_iterator_check_json_snapshot() {
+    let root = fixture().join("effort-iterator");
+    assert_saved_fixture(
+        "postgres_no_test_state_mutation_iterator",
+        &[
+            ("low", root.clone(), root.join("low.yml")),
+            ("max", root.clone(), root.join("max.yml")),
+        ],
+    );
+}
+
+#[test]
+fn postgres_no_test_state_mutation_declared_factory_check_json_snapshot() {
+    let root = fixture().join("effort-factory");
+    assert_saved_fixture(
+        "postgres_no_test_state_mutation_declared_factory",
+        &[
+            ("low", root.clone(), root.join("low.yml")),
+            ("no_opt_in", root.clone(), root.join("no-opt-in.yml")),
+            ("excluded", root.clone(), root.join("excluded.yml")),
+        ],
+    );
+}

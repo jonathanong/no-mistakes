@@ -1,7 +1,10 @@
 use super::*;
 
+mod factory;
+mod iterator;
 mod low;
 mod prefix_policy;
+mod proofs;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use std::sync::Arc;
 

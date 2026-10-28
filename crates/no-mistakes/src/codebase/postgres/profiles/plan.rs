@@ -17,7 +17,6 @@ pub fn assign_prepared_embedded_sql_options(
 }
 
 include!("plan/head_calls.rs");
-
 /// Declare SQL projections before the shared request fact pass.
 pub fn configure_prepared_postgres_plan(
     root: &Path,
@@ -50,12 +49,15 @@ pub fn configure_prepared_postgres_plan(
                 &options.executor_type_names,
             )
             .with_trusted_sql_tags(&options.trusted_sql_tags);
-            let typed_executor_types = config
-                .effects
-                .get("postgres")
+            let postgres_effects = config.effects.get("postgres");
+            let typed_executor_types = postgres_effects
                 .map(|effects| effects.typed_executors.as_slice())
                 .unwrap_or_default();
-            let include = super::scans::include(&rule.rule, &options);
+            let declared_factories = postgres_effects
+                .map(|effects| effects.returned_executors.as_slice())
+                .unwrap_or_default();
+            // Report in test/helper scope; collect callees across the declared application.
+            let include = options.include.clone();
             let scan =
                 crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan::new(
                     root,
@@ -65,7 +67,8 @@ pub fn configure_prepared_postgres_plan(
                     &include,
                     &options.exclude,
                 )?
-                .with_typed_executor_types(typed_executor_types);
+                .with_typed_executor_types(typed_executor_types)
+                .with_declared_factories(declared_factories);
             plan.sql_identifier_profiles
                 .entry(profile)
                 .or_default()

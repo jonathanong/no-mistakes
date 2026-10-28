@@ -158,7 +158,8 @@ subset and `unanalyzable` policy as the CLI. See the
 sections.
 [`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md#effort)
 also supports `low` in `check()` and `analyzeProject()` for configured test SQL;
-opaque tails retain the shared unanalyzable policy.
+bounded source helpers and finite inline Vitest rows use the same prepared
+proofs as the CLI. Opaque tails retain the shared unanalyzable policy.
 
 For `finite-set-consistency`, `low` evaluates YAML sequences, YAML string
 selectors, and path-regex captures. Other extractor kinds use the same
