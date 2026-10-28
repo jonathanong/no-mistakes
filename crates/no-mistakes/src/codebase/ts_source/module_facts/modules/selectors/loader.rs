@@ -12,7 +12,10 @@ pub(super) fn default(
     let (call_id, AstKind::CallExpression(call)) = parent(arrow, semantic)? else {
         return None;
     };
-    if !function.is_expression() || !call.arguments.iter().any(|a| a.span() == function.span) {
+    if !function.is_expression()
+        || !call.arguments.iter().any(|a| a.span() == function.span)
+        || mock_factory(call)
+    {
         return None;
     }
     // Allow-list: the wrapper's result may be unwrapped, chained or forwarded by
@@ -60,4 +63,18 @@ fn non_consuming(kind: AstKind<'_>) -> bool {
         AstKind::UnaryExpression(unary) => unary.operator == UnaryOperator::Typeof,
         _ => false,
     }
+}
+
+/// `vi.mock(path, async () => import("x"))` returns the whole module as the
+/// replacement, a namespace use. It is not a lazy component wrapper, so it must
+/// not be recorded as a use of `default`.
+fn mock_factory(call: &CallExpression<'_>) -> bool {
+    matches!(
+        call.callee.get_inner_expression(),
+        Expression::StaticMemberExpression(member)
+            if matches!(
+                member.property.name.as_str(),
+                "mock" | "doMock" | "unstable_mockModule"
+            )
+    )
 }

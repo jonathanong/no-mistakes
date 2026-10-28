@@ -72,13 +72,18 @@ consumer of the exports it provably reads. These forms are recognized:
 | Form | Consumed export |
 | --- | --- |
 | `import("./x").then((m) => m.Name)` (also a `function` callback with a sole `return m.Name`) | `Name` |
+| `import("./x").then((m) => ({ default: m.Name }))` (the `next/dynamic` idiom; expression or sole-`return` block body, `m["Name"]` also accepted) | `Name` |
 | `import("./x").then(({ Name, Other: o }) => ...)` | `Name`, `Other` |
 | `const X = dynamic(() => import("./x"))`, `export default lazy(() => import("./x"))`, a wrapper call as a bare statement or directly inside a JSX expression container (an expression-bodied arrow passed directly as a call argument whose wrapper call sits only in one of those places, or in a `const` binding whose every reference is a JSX element name, a `typeof` or type query, or an export specifier) | `default` |
 | `const m = await import("./x")` where every use of `m` is `m.Name` | `Name` |
 | `const { Name } = await import("./x")` | `Name` |
 
 Everything else keeps the "unknown import selector" advisory: computed or
-optional member reads (`m[key]`, `m?.Name`), a rest element or computed key in a
+optional member reads (`m[key]`, `m?.Name`), an object literal with any key other
+than a sole `default` (`({ default: m.X, other: 1 })`, `({ ...m })`,
+`({ [k]: m.X })`), a mock factory returning a whole module
+(`vi.mock(path, async () => import("./x"))`, a namespace use that is never
+recorded as `default`), a rest element or computed key in a
 destructuring pattern, a namespace that escapes (passed to a call, exported, or
 reassigned), a callback passed by reference, a stored loader
 (`const load = () => import("./x")`), a loader whose wrapper result is chained or
