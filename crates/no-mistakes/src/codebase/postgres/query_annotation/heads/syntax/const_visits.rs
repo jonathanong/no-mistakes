@@ -1,11 +1,12 @@
 use super::{head, span, Head, Syntax};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{BindingPattern, Expression, VariableDeclaration};
+use oxc_ast::ast::{BindingPattern, Expression, VariableDeclaration, VariableDeclarator};
 use oxc_span::GetSpan;
 
 impl Syntax {
     pub(super) fn const_declaration(&mut self, value: &VariableDeclaration<'_>) {
         for declaration in &value.declarations {
+            self.namespace_declaration(declaration);
             if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
                 if let Some(Expression::ArrowFunctionExpression(arrow)) = self
                     .collect_helper_heads
@@ -49,5 +50,42 @@ impl Syntax {
                 }
             }
         }
+    }
+}
+
+impl Syntax {
+    fn namespace_declaration(&mut self, declaration: &VariableDeclarator<'_>) {
+        if !self.collect_helper_heads || self.current_function.is_some() {
+            return;
+        }
+        let BindingPattern::ObjectPattern(object) = &declaration.id else {
+            return;
+        };
+        if object.rest.is_some() {
+            return;
+        }
+        let Some(Expression::Identifier(namespace)) =
+            declaration.init.as_ref().map(unwrap_ts_wrappers)
+        else {
+            return;
+        };
+        let mut candidates = Vec::new();
+        for property in &object.properties {
+            if property.computed {
+                return;
+            }
+            let Some(exported) = crate::ast::property_key_name(&property.key) else {
+                return;
+            };
+            let BindingPattern::BindingIdentifier(local) = &property.value else {
+                return;
+            };
+            candidates.push(super::super::namespace_heads::Candidate {
+                local: span(local.span),
+                namespace: span(namespace.span),
+                exported: exported.into_owned(),
+            });
+        }
+        self.namespace_destructures.extend(candidates);
     }
 }

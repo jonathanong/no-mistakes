@@ -3,6 +3,7 @@ use super::{AnnotationHeads, HeadProof, Span};
 impl AnnotationHeads {
     pub(crate) fn has_pending_imports(&self) -> bool {
         !self.pending_imports.is_empty()
+            || !self.pending_namespaces.is_empty()
             || !self.pending_effects.is_empty()
             || !self.pending_callbacks.is_empty()
     }

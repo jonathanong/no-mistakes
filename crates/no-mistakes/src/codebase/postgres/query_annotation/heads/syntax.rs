@@ -1,10 +1,11 @@
 use super::Span;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::{FxHashMap, FxHashSet};
-use oxc_ast::ast::{Expression, Program};
-use oxc_ast_visit::Visit;
+use oxc_ast::ast::Expression;
 mod append_visits;
+mod collect;
 mod const_visits;
+pub(super) use collect::collect_with_helpers;
 mod field_visits;
 mod helper_visits;
 mod literals;
@@ -26,6 +27,7 @@ pub(super) struct Syntax {
     pub repeated_append_refs: FxHashSet<Span>,
     pub optional_calls: FxHashSet<Span>,
     pub helper_arguments: FxHashMap<Span, Span>,
+    pub namespace_destructures: Vec<super::namespace_heads::Candidate>,
     pub effect_functions: FxHashMap<Span, super::effects::FunctionSyntax>,
     pub effect_calls: Vec<super::effects::CallSyntax>,
     pub dynamic_refs: Vec<Span>,
@@ -179,22 +181,4 @@ pub(super) fn bounded_head<'a>(mut expression: &'a Expression<'a>, depth: u8) ->
     }
     super::text::head(expression, concatenated, appended, opaque_append)
         .map_or(Head::Unproven, Head::Text)
-}
-pub(super) fn collect_with_helpers(
-    program: &Program<'_>,
-    collect_append_tags: bool,
-    helpers: bool,
-    collect_helper_heads: bool,
-) -> Syntax {
-    if let Some(observer) = crate::diagnostics::current() {
-        observer.increment("postgres.annotation.head_syntax_visits", 1);
-    }
-    let mut syntax = Syntax {
-        collect_append_tags,
-        collect_helper_heads,
-        literal_helpers: helpers.then(Vec::new),
-        ..Default::default()
-    };
-    syntax.visit_program(program);
-    syntax
 }

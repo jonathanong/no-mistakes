@@ -29,8 +29,11 @@ impl Bindings<'_> {
         let owner = self.owner(reference).filter(|owner| !owner.imported)?;
         let declaration = (owner.span.start, owner.span.end);
         let context = syntax.contexts.get(&declaration).copied().flatten()?;
+        let closed_return = self.returned_prefix_roots.contains(&declaration)
+            && syntax.return_sinks.contains(&reference)
+            && declaration.1 < reference.0;
         if syntax.contexts.get(&reference).copied().flatten() != Some(context)
-            || !self.append_safety.accepts(declaration, reference)
+            || !(closed_return || self.append_safety.accepts(declaration, reference))
         {
             return None;
         }

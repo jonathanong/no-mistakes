@@ -211,13 +211,10 @@ prefix. Exports, aliases, stores, used append results, property writes, other
 members, and semantic gaps stay unresolved. This is a low-effort prefix proof;
 it does not infer complete SQL.
 One same-file function declaration or `const` arrow also qualifies when it has
-a single returned expression with a fixed leading comment, and its callable
-is lexically owned and unchanged. A block body must have one final top-level
-return; a concise arrow body is itself the returned expression. A returned
-tagged builder must use the exact
+one final top-level return with a fixed leading comment, and its callable is
+lexically owned and unchanged. A returned tagged builder must use the exact
 `sql-template-strings` import; an unknown appended suffix after its fixed head
-is allowed only for that trusted tag. An unknown append through another tag
-does not establish a safe prefix or make later reads of that builder safe. A fixed missing head returned by such a helper is a failing finding.
+is allowed. A fixed missing head returned by such a helper is a failing finding.
 One local const returned by a helper qualifies when its trusted named tag
 keeps a fixed prefix through append-only uses until the single final return.
 Finite conditional literals qualify only when every arm has a complete named
@@ -239,8 +236,18 @@ executor. The helper's source must prove a trusted builder return; a plain
 record or string return cannot inherit `.append` trust. Aliases, mutation,
 capture, and unresolved imports remain advisory under the configured policy.
 Direct source imports of those helpers follow one exact export through the
-prepared request resolver, including one-hop local export aliases. Re-exports and unresolved package implementations
+prepared request resolver. This direct-import form leaves re-exports and
+unresolved package implementations unanalyzable.
+An exact top-level `const` destructure of a runtime namespace import may also
+resolve a fixed-head helper through unique explicit reexports and an imported
+default binding. It uses the prepared resolver and source helper proof; dynamic
+keys, defaults, rest, mutable bindings, ambiguous exports, cycles, and `export *`
 remain unanalyzable.
+One trusted local returned by a helper can retain its fixed head through
+captured append-only closures. Every exact-binding use must be a discarded
+static append, a proven local append-only effect, or the helper's own direct
+return. Captured returns, aliases, writes, unknown effects, and dynamic lexical
+access remain unanalyzable; this return proof does not change max effort.
 An inline callback that forwards its parameter directly to a configured
 executor can also retain a fixed named head supplied through a direct imported
 source helper. The helper must prove every callback invocation's payload from

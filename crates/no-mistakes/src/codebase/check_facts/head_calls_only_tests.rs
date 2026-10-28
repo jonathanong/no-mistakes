@@ -10,6 +10,10 @@ use crate::diagnostics::{with_observer, InvocationObserver};
 
 #[path = "head_calls_only_tests/callback_head_tests.rs"]
 mod callback_head_tests;
+#[path = "head_calls_only_tests/namespace_fact_tests.rs"]
+mod namespace_fact_tests;
+#[path = "head_calls_only_tests/returned_prefix_fact_tests.rs"]
+mod returned_prefix_fact_tests;
 
 fn config(efforts: &[&str]) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
@@ -42,7 +46,6 @@ fn plan(root: &std::path::Path, config: &NoMistakesConfig) -> CheckFactPlan {
     assign_prepared_embedded_sql_options(config, &mut plan).unwrap();
     plan
 }
-
 #[test]
 fn configured_low_annotation_skips_composition_in_the_real_shared_fact_pass() {
     let saved = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
@@ -102,7 +105,6 @@ fn configured_low_annotation_skips_composition_in_the_real_shared_fact_pass() {
         }
     }
 }
-
 #[test]
 fn different_profile_full_sql_demand_preserves_the_low_profile_fast_path() {
     let mut config = config(&["low"]);

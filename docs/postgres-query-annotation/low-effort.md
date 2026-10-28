@@ -53,17 +53,16 @@ computed field, escaped or overwritten builder, arbitrary object with a `text`
 field, or caller-supplied SQL remains unresolved.
 
 Low also follows a same-file function declaration or `const` arrow when its
-returned expression has a fixed named literal head. A block body must have
-exactly one final top-level return; a concise arrow body is itself the
-returned expression. Tagged returns must use the `sql-template-strings` default or
+body has exactly one return, in final top-level position, with a fixed named
+literal head. Tagged returns must use the `sql-template-strings` default or
 named `sql` import. A direct trusted tagged return can append an unknown suffix;
-the fixed leading comment remains visible. An unknown append through another
-tag does not establish a safe prefix or make later reads safe. Async and generator helpers, unproven
+the fixed leading comment remains visible. Async and generator helpers, unproven
 return paths, reassigned or shadowed callees, and optional or spread helper
 calls remain unresolved. A directly imported helper from another prepared
 source file also qualifies when that file directly exports the same fixed
-return summary, including a one-hop local export alias. The request's resolver checks the exact import and export;
-re-exports and unavailable package implementations remain unresolved. A helper
+return summary. The request's resolver checks the exact import and export;
+For direct helper imports, re-exports and unavailable package implementations
+remain unresolved. A helper
 may also return one local `const` initialized from the trusted default SQL tag
 when that binding has only prefix-preserving `.append(...)` uses before the
 single final return. Aliases, captures, property writes, and passing the
@@ -79,6 +78,27 @@ the trusted SQL tag, including safe returned locals. A switch without a
 default, a falling-through case, an unknown or mixed return, and async or
 generator functions remain unresolved. A directly imported exported function
 can carry this finite proof through the prepared one-hop projection.
+
+One exact namespace destructure is also supported: a top-level `const`
+unpacks a static property from a runtime `import * as services` binding, and
+the local callable is used directly at configured executors. The prepared
+resolver may follow explicit unique named reexports and a barrel's imported
+default binding to a source-visible fixed-head helper. Its helper and builder
+safety checks still apply. Computed keys, defaults, rest, mutable or escaped
+namespace/local bindings, ambiguous exports, cycles, `export *`, missing
+targets, and custom getter objects remain unresolved. Other reexport and
+namespace forms do not gain this proof.
+
+A trusted local builder returned by a helper also keeps its fixed head when a
+captured closure may append suffixes before or after the return. The proof
+requires every reference to that exact local binding to be a discarded static
+one-argument append, a proven local append-only helper effect, or a direct
+return from the binding's own function. Closure order and repeated calls do
+not change the leading comment. Returning the builder from the captured
+closure, using an append result, passing it to an unknown helper, aliasing or
+writing it, or dynamic `eval`/`arguments` access leaves the return unresolved.
+This proof applies only at the helper's own return; it does not make an escaped
+builder safe at arbitrary executor reads.
 
 One direct source import of an exported immutable string constant also qualifies when
 its literal or template first segment has a complete fixed named head. A
@@ -103,10 +123,6 @@ arm starts with a complete named literal comment. Tagged arms retain the
 mutable-builder lifetime checks, including escapes before execution. An
 unknown, partial, or missing arm remains unanalyzable; the syntax pass does
 not evaluate the condition or combine SQL text.
-For a configured relative factory or executor type, the helper head is used
-only after the request resolver confirms that the executor import belongs to
-the configured package. An unconfirmed relative call cannot make a local
-builder's later use safe.
 
 These are deliberately narrow low-effort syntax proofs. Low does not run the
 helper/value evaluator, so other helper-produced heads can remain unresolved

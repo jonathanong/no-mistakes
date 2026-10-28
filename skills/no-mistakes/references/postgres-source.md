@@ -13,6 +13,11 @@ literal heads at the executor call or in one local const, trusted
 and fixed-return helpers (including total finite returns and one safe returned tagged local) in the same
 file or through one direct source import. See the
 [bounded syntax shapes](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-query-annotation/low-effort.md).
+An exact top-level namespace destructure can follow a unique explicit source
+barrel export to that helper; dynamic keys and ambiguous exports abstain.
+A helper may return one trusted local builder even when captured closures only
+append suffixes; every reference must be a discarded append, proven append-only
+effect, or direct return from that helper.
 Other helper, alias, and mutation shapes use
 `unanalyzable: report | advise | ignore`. `trustedSqlTags` is deprecated and
 ignored for this rule at low effort.
