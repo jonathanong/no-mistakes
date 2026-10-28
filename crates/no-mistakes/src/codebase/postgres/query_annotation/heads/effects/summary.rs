@@ -4,6 +4,9 @@ use crate::codebase::postgres::query_annotation::heads::{bindings::Bindings, syn
 use crate::codebase::ts_source::module_facts::ModuleBinding;
 use crate::fx::FxHashMap;
 
+type EffectId = (usize, u8);
+type Candidate = Option<(Signature, Vec<EffectId>)>;
+
 struct Input<'a> {
     summary: &'a FunctionSyntax,
     callable: &'a ModuleBinding,
@@ -14,7 +17,7 @@ pub(super) fn proven(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
     declarations: &FxHashMap<Span, Option<&ModuleBinding>>,
-) -> FxHashMap<(usize, u8), Signature> {
+) -> FxHashMap<EffectId, Signature> {
     let calls = syntax
         .effect_calls
         .iter()
@@ -22,8 +25,7 @@ pub(super) fn proven(
         .collect::<FxHashMap<_, _>>();
     let mut dynamic_refs = syntax.dynamic_refs.clone();
     dynamic_refs.sort_unstable();
-    let mut candidates: FxHashMap<(usize, u8), Option<(Signature, Vec<(usize, u8)>)>> =
-        FxHashMap::default();
+    let mut candidates: FxHashMap<EffectId, Candidate> = FxHashMap::default();
     for (&declaration, summaries) in &syntax.effect_functions {
         let Some(callable) = declarations.get(&declaration).copied().flatten() else {
             continue;
@@ -80,7 +82,7 @@ fn dependencies(
     input: Input<'_>,
     dynamic_refs: &[Span],
     calls: &FxHashMap<Span, &CallSyntax>,
-) -> Option<Vec<(usize, u8)>> {
+) -> Option<Vec<EffectId>> {
     let Input {
         summary,
         callable,
