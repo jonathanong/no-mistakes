@@ -78,6 +78,8 @@ fn uncertain_permissions_follow_unanalyzable_policy() {
         ("types.yml", "unknown-scope"),
         ("malformed.yml", "unanalyzable"),
         ("jobs-shape.yml", "unanalyzable"),
+        ("missing-jobs.yml", "unanalyzable"),
+        ("empty-jobs.yml", "unanalyzable"),
         ("root-null.yml", "unanalyzable"),
         ("root-invalid-access.yml", "unanalyzable"),
         ("root-unknown-scope.yml", "unanalyzable"),
