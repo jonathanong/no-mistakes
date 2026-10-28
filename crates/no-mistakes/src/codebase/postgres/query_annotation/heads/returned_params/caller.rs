@@ -3,7 +3,7 @@ use super::Root;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::Expression;
 
-pub(in super::super) fn root(mut expression: &Expression<'_>) -> Option<Root> {
+pub(in super::super) fn root<'a>(mut expression: &'a Expression<'a>) -> Option<Root> {
     let mut appends = 0;
     loop {
         let Expression::CallExpression(call) = unwrap_ts_wrappers(expression) else {
