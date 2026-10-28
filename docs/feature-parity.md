@@ -82,8 +82,8 @@ low effort and compose text for full SQL consumers, with interpolations treated
 as value placeholders. Conditional appends use bounded breadth-first alternatives;
 loops retain zero/one previews and an unknown remainder. These behaviors share
 Rust, CLI and async Node evidence; see [append composition](postgres-query-annotation/append-composition.md).
-Low annotation checks also prove fixed literal return heads in local helpers, including
-concise arrow bodies and local export aliases, and one-hop source imports from the prepared inventory, without running the
+Low annotation checks also prove fixed literal return heads in local helpers
+and one-hop source imports from the prepared inventory, without running the
 annotation evaluator. This prefix proof does not establish complete SQL.
 An exact source helper may forward a proven head into a direct inline
 configured executor callback, with each imported call checked separately.
@@ -98,8 +98,12 @@ produce fresh trusted builders before callers may append to the result.
 The low-effort prefix proof also accepts a captured local trusted builder when
 all of its exact-binding uses preserve the named head, regardless of closure
 execution order. CLI, async Node, and the Rust library share this evidence.
-An opaque appended suffix preserves a prefix only for the trusted
-`sql-template-strings` tag; other tags and later reads remain unresolved.
+The same low check follows an exact runtime namespace destructure through
+unique explicit source exports and a barrel's imported default helper. It
+reuses prepared module facts and resolver identity for CLI and async Node checks.
+Captured append-only closures also preserve a trusted builder's head at its
+own helper return when every exact-binding use is closed. Low and mixed-demand
+checks share this proof without composing SQL variants.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes

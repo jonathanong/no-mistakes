@@ -83,12 +83,13 @@ For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
 unanalyzable policy in both APIs; it omits annotation evaluator preparation.
 These proofs include trusted builder append prefixes and fixed-return helpers
-in the same file or through one direct source import, including a one-hop
-local export alias. Concise arrow bodies are supported as single returned
-expressions when they satisfy the fixed-head proof. An opaque appended suffix preserves
-the prefix only for the trusted `sql-template-strings` tag; other tags and
-subsequent reads after their opaque append remain unanalyzable. Unsupported
-helper or mutation shapes remain unanalyzable.
+in the same file or through one direct source import. Unsupported helper or
+mutation shapes remain unanalyzable.
+An exact top-level namespace destructure can follow unique explicit source
+reexports to a fixed-head helper through the same prepared check projection;
+other namespace shapes remain unresolved. At low effort, a helper's own
+returned trusted builder may keep its fixed head through captured append-only
+closures when every binding use is proven safe.
 Captured trusted local builders also qualify when every exact-binding use is a
 discarded append, a configured executor read, or a proven local append-only
 effect. This preserves only the fixed head, even across arbitrary closure order.

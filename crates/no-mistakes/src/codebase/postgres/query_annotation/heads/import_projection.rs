@@ -48,6 +48,11 @@ pub(crate) fn project(
             };
             completed.push((path.clone(), pending.span, proof));
         }
+        for pending in &heads.pending_namespaces {
+            if let Some(proof) = super::namespace_heads::project(files, &resolve, path, pending) {
+                completed.push((path.clone(), pending.span, proof));
+            }
+        }
         for pending in &heads.pending_callbacks {
             let Some(target) = resolve(&pending.specifier, path) else {
                 continue;

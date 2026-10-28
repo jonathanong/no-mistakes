@@ -20,6 +20,7 @@ pub(super) struct Bindings<'a> {
     trusted_imports: FxHashSet<usize>,
     effects: super::effects::Prepared,
     trusted_roots: FxHashSet<Span>,
+    returned_prefix_roots: FxHashSet<Span>,
 }
 impl<'a> Bindings<'a> {
     pub fn new(
@@ -43,6 +44,7 @@ impl<'a> Bindings<'a> {
             trusted_imports: Default::default(),
             effects: Default::default(),
             trusted_roots: Default::default(),
+            returned_prefix_roots: Default::default(),
         };
         let Some(module) = ts.module_bindings.as_deref().filter(|_| {
             !wanted.is_empty()
@@ -90,6 +92,10 @@ impl<'a> Bindings<'a> {
         index.trusted_roots = index.trusted_roots(syntax);
         let effects = super::effects::prepare(syntax, &index, module, &index.trusted_roots);
         index.effects = effects;
+        if low {
+            index.returned_prefix_roots =
+                super::captured_prefix::return_proofs(syntax, module, &index);
+        }
         let closed = if low {
             super::captured_prefix::proofs(syntax, module, &index, &executors)
         } else {
