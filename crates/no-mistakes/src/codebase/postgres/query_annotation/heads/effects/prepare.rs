@@ -35,48 +35,7 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn prepare(
             .and_modify(|owner| *owner = None)
             .or_insert(Some(binding));
     }
-    let mut dynamic_refs = syntax.dynamic_refs.clone();
-    dynamic_refs.sort_unstable();
-    let proven = syntax
-        .effect_functions
-        .iter()
-        .filter_map(|(&declaration, summary)| {
-            let callable = declarations.get(&declaration).copied().flatten()?;
-            let parameter = declarations.get(&summary.parameter).copied().flatten()?;
-            if !callable.runtime
-                || callable.imported
-                || !parameter.runtime
-                || parameter.imported
-                || !bindings.declaration_safe(declaration)
-                || !bindings.declaration_safe(summary.parameter)
-                || dynamic_refs
-                    .get(dynamic_refs.partition_point(|span| span.0 < summary.body.0))
-                    .is_some_and(|span| span.0 < summary.body.1)
-                || callable.references.iter().any(|usage| {
-                    let span = (usage.span.start, usage.span.end);
-                    !bindings.declaration_safe(span)
-                        || syntax.assignments.writes.contains_key(&span)
-                        || syntax.assignments.unsupported_writes.contains(&span)
-                })
-                || parameter
-                    .references
-                    .iter()
-                    .filter(|usage| usage.runtime)
-                    .any(|usage| {
-                        let span = (usage.span.start, usage.span.end);
-                        !bindings.declaration_safe(span)
-                            || syntax.contexts.get(&span).copied().flatten()
-                                != Some(summary.function)
-                            || !(syntax.discarded_appends.contains(&span)
-                                || syntax.prefix_discarded_appends.contains(&span))
-                    })
-            {
-                None
-            } else {
-                Some(callable.id)
-            }
-        })
-        .collect::<FxHashSet<_>>();
+    let proven = super::summary::proven(syntax, bindings, &declarations);
     let imports = imports(module);
     let mut result = Prepared::default();
     for call in &syntax.effect_calls {

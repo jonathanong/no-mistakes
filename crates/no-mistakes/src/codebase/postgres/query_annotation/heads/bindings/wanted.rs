@@ -52,6 +52,18 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
         .chain(syntax.builder_direct_calls.values().copied())
         .chain(
             syntax
+                .destructure_calls
+                .values()
+                .flat_map(|(text, values)| [*text, *values]),
+        )
+        .chain(
+            syntax
+                .record_destructures
+                .values()
+                .map(|source| source.callee),
+        )
+        .chain(
+            syntax
                 .record_initializers
                 .values()
                 .map(|(callee, _)| *callee),
@@ -68,7 +80,8 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
                 .record_returns
                 .values()
                 .filter_map(|value| match value {
-                    super::super::helper_records::Summary::ReturnedLocal { reference } => {
+                    super::super::helper_records::Summary::PlainLocal { reference }
+                    | super::super::helper_records::Summary::ReturnedLocal { reference } => {
                         Some(*reference)
                     }
                     _ => None,
