@@ -203,10 +203,13 @@ remain failing findings under every policy; unresolved shapes follow
 A discarded call to a same-file or directly imported append-only function can
 preserve that trusted local builder's fixed prefix. Its first parameter may
 only appear as the receiver of discarded static append chains; defaults,
-aliases, captured parameters, and used append results abstain.
+aliases and used append results abstain. Captured uses qualify only when they
+are discarded static appends on the exact parameter; callbacks may run later
+or repeatedly without changing the head. Captured returns, implicit arrow
+append results, and nested helper calls stay unresolved.
 The helper may compose up to four exact same-file append-only calls on that
 parameter. It may return a static parameter-rooted append chain only when the
-caller discards the result. Nested captures, aliases, cycles, and used helper
+caller discards the result. Nested helper calls, aliases, cycles, and used helper
 results remain unresolved.
 A captured local trusted builder keeps its fixed head when every reference to
 its exact binding is a discarded static append, a configured executor read, or

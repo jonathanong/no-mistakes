@@ -102,8 +102,15 @@ fn dependencies(
         .filter(|usage| usage.runtime)
         .all(|usage| {
             let span = (usage.span.start, usage.span.end);
+            let context = syntax.contexts.get(&span).copied().flatten();
+            let own_context = context == Some(summary.function);
+            let captured_context = context.is_some_and(|function| {
+                function != summary.function
+                    && summary.body.0 <= function.0
+                    && function.1 <= summary.body.1
+            });
             if !bindings.declaration_safe(span)
-                || syntax.contexts.get(&span).copied().flatten() != Some(summary.function)
+                || !(own_context || captured_context)
                 || syntax.assignments.writes.contains_key(&span)
                 || syntax.assignments.unsupported_writes.contains(&span)
             {
@@ -111,8 +118,16 @@ fn dependencies(
             }
             if syntax.discarded_appends.contains(&span)
                 || syntax.prefix_discarded_appends.contains(&span)
-                || syntax.returned_effect_appends.contains(&span)
             {
+                return true;
+            }
+            // A captured callback may run later, but a discarded append can
+            // only add a suffix. Its returned builder or a helper call could
+            // escape the parameter, so those stay in the owning function.
+            if !own_context {
+                return false;
+            }
+            if syntax.returned_effect_appends.contains(&span) {
                 return true;
             }
             let Some(call) = calls.get(&span) else {

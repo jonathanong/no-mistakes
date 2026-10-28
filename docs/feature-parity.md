@@ -111,6 +111,9 @@ own helper return when every exact-binding use is closed. Low and mixed-demand
 checks share this proof without composing SQL variants.
 The same APIs also share bounded same-file append-only helper composition and
 an exact returned parameter append chain when the helper result is discarded.
+They also preserve that parameter's fixed head through captured callbacks
+whose only parameter uses are discarded static appends, regardless of when
+those callbacks run.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
