@@ -109,16 +109,126 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "tests/analyze.test.ts",
-          "line": 7,
-          "message": "tests/analyze.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "line": 11,
+          "message": "tests/analyze.test.ts:11: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query('ANALYZE households,');",
           "target": "unanalyzable-sql"
         },
         {
           "file": "tests/analyze.test.ts",
-          "line": 8,
-          "message": "tests/analyze.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "line": 12,
+          "message": "tests/analyze.test.ts:12: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE VERBOSE households(), users');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 13,
+          "message": "tests/analyze.test.ts:13: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE households(id), users DROP TABLE users');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 14,
+          "message": "tests/analyze.test.ts:14: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE (UNKNOWN_OPTION) households, users');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 15,
+          "message": "tests/analyze.test.ts:15: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE (VERBOSE) households, users');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 17,
+          "message": "tests/analyze.test.ts:17: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE VERBOSE households(id), household_members(user_id); DROP TABLE users');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 18,
+          "message": "tests/analyze.test.ts:18: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE users');",
+          "target": "DROP TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "analyze_relation_list_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 11,
+          "message": "tests/analyze.test.ts:11: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: invalid-sql",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE households,');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 12,
+          "message": "tests/analyze.test.ts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: invalid-sql",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE VERBOSE households(), users');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 13,
+          "message": "tests/analyze.test.ts:13: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: invalid-sql",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE households(id), users DROP TABLE users');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 14,
+          "message": "tests/analyze.test.ts:14: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: invalid-sql",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE (UNKNOWN_OPTION) households, users');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 15,
+          "message": "tests/analyze.test.ts:15: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: invalid-sql",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE (VERBOSE) households, users');",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 17,
+          "message": "tests/analyze.test.ts:17: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE VERBOSE households(id), household_members(user_id); DROP TABLE users');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 18,
+          "message": "tests/analyze.test.ts:18: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "query('DROP TABLE users');",
           "target": "DROP TABLE"

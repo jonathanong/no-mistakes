@@ -113,7 +113,9 @@ and production migrations outside the declared test scope, stay out of this
 rule. Fixed SQL switch arms with a source-visible, proven throwing default
 are checked through the shared prepared helper projection in both interfaces.
 Finite local builder assignments also retain their reachable alternatives
-when a branch ends in a direct throw.
+when a branch ends in a direct throw. Its shared PostgreSQL SQL parser accepts
+`ANALYZE VERBOSE a, b` and per-relation columns such as `ANALYZE a(col), b`;
+malformed lists and parenthesized `ANALYZE` option lists remain unanalyzable.
 
 The opt-in `postgres-json-relation-ids` check inspects selected migration SQL
 and executed embedded SQL for JSON identifier keys without a same-row foreign

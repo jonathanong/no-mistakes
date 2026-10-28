@@ -6,6 +6,10 @@ const ACCEPTED: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../fixtures/postgres-facts/source/analyze-list/accepted.sql"
 ));
+const EXTENDED: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../fixtures/postgres-facts/source/analyze-list/extended.sql"
+));
 const MALFORMED: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../fixtures/postgres-facts/source/analyze-list/malformed.sql"
@@ -56,4 +60,49 @@ fn following_mutation_remains_visible_after_a_valid_list() {
         .statement_kinds
         .iter()
         .any(|item| item.kind == "DROP TABLE"));
+}
+
+#[test]
+fn verbose_and_column_lists_preserve_every_target_and_column() {
+    let statements = parse_postgres_sql(EXTENDED).expect("PostgreSQL ANALYZE targets");
+    let targets: Vec<_> = statements
+        .iter()
+        .map(|statement| {
+            let Statement::Analyze(analyze) = statement else {
+                panic!("expected ANALYZE")
+            };
+            (
+                analyze.table_name.as_ref().map(ToString::to_string),
+                analyze
+                    .columns
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect();
+    // Exact targets catch rewrites that drop later relations or their columns.
+    let expected = [
+        (Some("a"), vec![]),
+        (Some("public.b"), vec![]),
+        (Some("a"), vec!["col"]),
+        (Some("b"), vec![]),
+        (Some("public.a"), vec!["first_col", "\"Mixed\""]),
+        (Some("\"Schema\".\"Table\""), vec!["\"Quoted\""]),
+        (Some("c"), vec!["last_col"]),
+        (Some("\"VERBOSE\""), vec!["id"]),
+        (Some("public.\"VERBOSE\""), vec![]),
+        (Some("single_table"), vec!["id"]),
+        (None, vec![]),
+    ]
+    .into_iter()
+    .map(|(table, columns)| {
+        (
+            table.map(str::to_owned),
+            columns.into_iter().map(str::to_owned).collect::<Vec<_>>(),
+        )
+    })
+    .collect::<Vec<_>>();
+    assert_eq!(targets, expected);
+    assert!(!extract_sql_statement_facts(EXTENDED).parse_failed);
 }
