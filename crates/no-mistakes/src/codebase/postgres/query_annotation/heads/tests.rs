@@ -123,3 +123,6 @@ pub(super) fn collect_with_helpers(
         None,
     )
 }
+
+#[path = "effect_boundary_coverage_tests.rs"]
+mod effect_boundary_coverage_tests;
