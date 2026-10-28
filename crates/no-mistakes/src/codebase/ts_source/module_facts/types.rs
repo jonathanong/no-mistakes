@@ -81,6 +81,14 @@ pub struct ModuleLoad {
     pub specifier: String,
     pub span: ModuleSpan,
 }
+#[derive(Debug, Clone)]
+pub(crate) struct RequireBinding {
+    pub local: String,
+    pub load_start: u32,
+    pub scope_id: usize,
+    /// A statically named destructured export; `None` means a module value.
+    pub imported: Option<String>,
+}
 #[derive(Debug, Clone, Serialize)]
 pub struct ModuleDiagnostic {
     pub kind: String,
@@ -89,6 +97,9 @@ pub struct ModuleDiagnostic {
 }
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct TypeScriptModuleFacts {
+    /// Locals initialized directly from a recognized static CommonJS load.
+    #[serde(skip)]
+    pub(crate) require_bindings: Vec<RequireBinding>,
     #[serde(skip)]
     pub(crate) mock_import_spans: Vec<ModuleSpan>,
     /// Start offset and export names of dynamic imports with proven selectors.

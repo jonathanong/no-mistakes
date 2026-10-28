@@ -2,7 +2,7 @@
 use super::config::Enumerator;
 use crate::codebase::dependencies::graph::{KnownCallTargetRef, ResolvedCallSite};
 
-pub(super) const FS_MODULES: &[&str] = &["fs", "fs/promises"];
+pub(super) const FS_MODULES: &[&str] = &["fs", "fs/promises", "fs-extra"];
 const FS_ENUMERATORS: &[&str] = &[
     "readdir",
     "readdirSync",
@@ -40,6 +40,13 @@ pub(super) enum Scan {
 }
 
 pub(super) fn scan_of(site: &ResolvedCallSite, extra: &[Enumerator]) -> Option<Scan> {
+    // Only the language's import.meta receiver has this unshadowable spelling.
+    if matches!(
+        site.source_callee.as_str(),
+        "import.meta.glob" | "import.meta.globEager"
+    ) {
+        return Some(Scan::Resolved);
+    }
     if site.targets().any(|candidate| match candidate.target {
         KnownCallTargetRef::ModuleExport {
             specifier,
@@ -69,4 +76,33 @@ pub(super) fn enumerates(specifier: &str, export_path: &str, extra: &[Enumerator
             extra.module.strip_prefix("node:").unwrap_or(&extra.module) == module
                 && extra.export.as_deref().is_none_or(|export| export == path)
         })
+}
+
+/// An unresolved CommonJS binding can still expose a scanner through a child.
+/// Only exports known to be plain reads or pattern helpers are safe to omit.
+pub(super) fn may_enumerate_export(
+    specifier: &str,
+    export_path: &str,
+    extra: &[Enumerator],
+) -> bool {
+    let module = specifier.strip_prefix("node:").unwrap_or(specifier);
+    if extra.iter().any(|configured| {
+        configured
+            .module
+            .strip_prefix("node:")
+            .unwrap_or(&configured.module)
+            == module
+            && configured.export.as_deref().is_none_or(|export| {
+                export == export_path
+                    || export
+                        .strip_prefix(export_path)
+                        .is_some_and(|tail| tail.starts_with('.'))
+            })
+    }) {
+        return true;
+    }
+    if FS_MODULES.contains(&module) {
+        return !matches!(export_path, "readFile" | "readFileSync");
+    }
+    !(GLOB_MODULES.contains(&module) && GLOB_PURE.contains(&export_path))
 }

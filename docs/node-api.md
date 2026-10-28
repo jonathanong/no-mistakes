@@ -435,6 +435,12 @@ through the existing asynchronous `check()` and `analyzeProject()` APIs; it adds
 no new entrypoint. Type its options with `TestNoLiveRepositoryScanOptions`,
 exported from `no-mistakes/types`.
 
+The reports share CommonJS binding provenance with the canonical call graph,
+retain unresolved computed loads, and distinguish shared temporary roots from
+owned `mkdtemp` directories. Direct `import.meta.glob` and `fs-extra` scans follow
+the same rule contract. CLI and compiled CJS, ESM, and prepared API reports are
+locked by saved-fixture snapshots.
+
 ## PostgreSQL query annotation
 
 For PostgreSQL query annotation checks, low effort recognizes direct `.text`/`.values` reads from a safe local builder tagged by the exact `sql-template-strings` import. The asynchronous check API also projects one direct immutable string export through the prepared resolver.

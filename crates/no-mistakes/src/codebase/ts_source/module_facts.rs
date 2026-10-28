@@ -87,13 +87,25 @@ pub(crate) fn extract_from_semantic(
         })
         .collect();
     modules::collect(semantic, &mut facts);
-    if collect && facts.diagnostics.is_empty() {
+    if collect && facts.diagnostics.iter().all(argument_safe_diagnostic) {
+        modules::collect_require_bindings(semantic, &mut facts);
         if let Some(observer) = crate::diagnostics::current() {
             observer.increment("facts.call_arguments.collections", 1);
         }
         facts.call_arguments = Some(std::sync::Arc::new(arguments::collect(semantic, &facts)));
     }
     facts
+}
+
+pub(crate) fn argument_safe_diagnostic(diagnostic: &ModuleDiagnostic) -> bool {
+    diagnostic.kind == "unsupported"
+        && matches!(
+            diagnostic.message.as_str(),
+            "Non-literal dynamic import specifier"
+                | "Shadowed require is not a module loader"
+                | "Non-literal or unsupported require specifier"
+                | "Indirect require reference is unsupported"
+        )
 }
 
 #[cfg(test)]

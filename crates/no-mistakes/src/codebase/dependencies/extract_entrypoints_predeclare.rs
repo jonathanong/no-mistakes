@@ -6,6 +6,19 @@ fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, progra
         predeclare_program_statement_binding(collector, statement);
     }
     predeclare_hoisted_var_bindings(collector, &program.body);
+    for statement in &program.body {
+        match statement {
+            Statement::VariableDeclaration(declaration) => {
+                collector.record_static_commonjs_bindings(declaration, true);
+            }
+            Statement::ExportDeclaration(export) => {
+                if let Declaration::VariableDeclaration(declaration) = &export.declaration {
+                    collector.record_static_commonjs_bindings(declaration, true);
+                }
+            }
+            _ => {}
+        }
+    }
     scan_program_namespaces(collector, program);
 }
 
@@ -114,7 +127,8 @@ fn predeclare_import_bindings(collector: &mut ImportCollector, import: &ImportDe
         let local = match specifier {
             ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
                 if specifier.import_kind.is_type() {
-                    collector.hoisted_non_nullable_type_import |= specifier.local.name == "NonNullable";
+                    collector.hoisted_non_nullable_type_import |=
+                        specifier.local.name == "NonNullable";
                     continue;
                 }
                 &specifier.local

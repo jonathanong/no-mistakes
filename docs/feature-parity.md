@@ -16,6 +16,14 @@ query and `query-reached-per-item` rule support opt-in module/export selectors w
 resolver while retaining spelling-based string configuration. CLI, async Node,
 and batched `analyzeProject` queries share this behavior.
 
+Statically named top-level `const` CommonJS namespace, destructured, and member
+bindings use the same canonical imported-call projection. Shadowed bindings stay
+separate, and unsupported loads retain the
+[`test-no-live-repository-scan`](rules/test-no-live-repository-scan.md) unresolved
+fallback. That rule also recognizes direct `import.meta.glob` calls and `fs-extra`
+enumerators, and distinguishes the shared temporary directory from an owned
+`mkdtemp` result.
+
 TS/JS `unconstructed-error-class` uses canonical class ancestry for imported
 bases, including conservatively resolved package type declarations and
 tsconfig-visible ambient modules, including export-equals namespaces. Positive

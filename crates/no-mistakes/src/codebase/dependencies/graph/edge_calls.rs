@@ -80,6 +80,7 @@ impl CallableFileIndex {
         );
         let invocation_offsets =
             invocation_offsets_from_bindings(&callable_bindings, &file.function_calls);
+        let (imported, type_imported) = index_import_bindings(file);
         Self {
             values: FlowFileIndex::new(
                 &file.value_flow,
@@ -91,22 +92,9 @@ impl CallableFileIndex {
             exported_scopes: file.exported_functions.iter().cloned().collect(),
             class_scopes,
             callable_bindings,
-            imported: file
-                .imported_bindings
-                .iter()
-                .filter(|binding| !binding.is_type_only)
-                .map(|binding| (binding.local.clone(), binding.clone()))
-                .collect(),
-            type_imported: file
-                .imported_bindings
-                .iter()
-                .map(|binding| (binding.local.clone(), binding.clone()))
-                .collect(),
-            exported: file
-                .exported_bindings
-                .iter()
-                .map(|binding| (binding.exported.clone(), binding.clone()))
-                .collect(),
+            imported,
+            type_imported,
+            exported: index_export_bindings(file),
             aliases: index_callable_aliases(&file.callable_aliases),
             binding_declared_at: index_binding_declared_at(&file.callable_binding_declared_at),
             invocation_offsets,

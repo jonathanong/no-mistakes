@@ -66,11 +66,27 @@ fn public_check_preserves_delegated_suppression() {
 #[cfg(feature = "test-instrumentation")]
 #[test]
 fn delegated_check_parses_each_config_once_for_both_sections_and_channels() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/nextjs-redirect-destinations/fixture/low-path-alias")
         .canonicalize()
         .unwrap();
+    // Counters include Rayon workers, so isolate paths from parallel fixture consumers.
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
     no_mistakes::ast::begin_parse_count(&root);
+    // Another request using the saved fixture must not inflate this request's counts.
+    std::thread::scope(|scope| {
+        scope
+            .spawn(|| {
+                check_json_impl(crate::napi_api::options::test_json_arg(
+                    json!({ "root": source, "config": source.join(".no-mistakes-low-advise.yml") })
+                        .to_string(),
+                ))
+                .unwrap();
+            })
+            .join()
+            .unwrap();
+    });
     let options = json!({ "root": root, "config": root.join(".no-mistakes-low-advise.yml") });
     let report: serde_json::Value = serde_json::from_str(
         &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),

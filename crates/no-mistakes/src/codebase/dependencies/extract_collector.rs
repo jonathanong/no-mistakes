@@ -51,7 +51,8 @@ struct ImportCollector {
     /// Saved and restored around body traversal; absent for ordinary bodies.
     unreachable_value_binding_after: Option<u32>,
     value_binding_indexes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
-    parameter_call_origins: Option<std::sync::Arc<extract_value_flow::parameter_call_origins::ParameterCallOrigins>>,
+    parameter_call_origins:
+        Option<std::sync::Arc<extract_value_flow::parameter_call_origins::ParameterCallOrigins>>,
     receiver_escapes: extract_value_flow::receiver_escapes::Side,
     parameter_default_origins: Option<extract_value_flow::DefaultOriginIndex>,
     value_reference_links: Option<extract_value_flow::ReferenceLinks>,
@@ -62,7 +63,8 @@ struct ImportCollector {
     destructuring_phase_owner: Option<Option<CallableId>>,
     assignment_rhs_frame: Option<Box<extract_value_flow::assignment_rhs_frame::AssignmentRhsFrame>>,
     deferred_mutable_writes: Option<Box<extract_value_flow::mutable_deferred::DeferredMutations>>,
-    forward_receiver_writes: Option<Box<extract_value_flow::forward_receiver_writes::ForwardWrites>>,
+    forward_receiver_writes:
+        Option<Box<extract_value_flow::forward_receiver_writes::ForwardWrites>>,
     receiver_root_phases: Option<Box<extract_value_flow::root_phase_capture::RootPhaseCapture>>,
     destructuring_phase_receipts: Option<extract_value_flow::phase_receipts::PhaseReceipts>,
     /// Present only while the normal visitor records this exact assignment leaf.
@@ -140,6 +142,10 @@ struct ImportCollector {
     predeclared_imported_bindings: FxHashSet<String>,
     hoisted_non_nullable_type_import: bool,
     call_import_bindings: Vec<ImportedBinding>,
+    /// Recognized immutable CommonJS locals, keyed by their lexical owner.
+    commonjs_bindings: FxHashMap<usize, FxHashSet<String>>,
+    /// Top-level loads visible to function bodies visited before initialization.
+    predeclared_commonjs_bindings: FxHashMap<usize, FxHashSet<String>>,
     call_export_bindings: Vec<ExportedBinding>,
     callable_aliases: Vec<CallableAliasBinding>,
     callable_alias_index: Vec<FxHashMap<String, usize>>,

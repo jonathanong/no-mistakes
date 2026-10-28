@@ -94,6 +94,59 @@ fn invalid_semantic_identity_does_not_publish_literal_argument_proofs() {
 }
 
 #[test]
+fn computed_load_does_not_erase_independent_path_proofs() {
+    let facts = read_fixture(
+        "test-no-live-repository-scan",
+        "tests/require-mixed.test.ts",
+        true,
+    );
+    assert!(!facts.diagnostics.is_empty());
+    assert!(facts.diagnostics.iter().all(argument_safe_diagnostic));
+    let calls = facts
+        .call_arguments
+        .expect("load uncertainty is not a binding error");
+    for segment in ["docs", "src", "packages"] {
+        assert!(
+            calls.values().any(|call| {
+                call.path.as_ref().is_some_and(|path| {
+                    path.anchor == arguments::PathAnchor::Relative && path.segments == [segment]
+                })
+            }),
+            "missing independent {segment} proof"
+        );
+    }
+}
+
+#[test]
+fn imported_require_factory_is_not_a_commonjs_load() {
+    for file in ["imported-require.test.ts", "imported-require-late.test.ts"] {
+        let facts = read_fixture(
+            "test-no-live-repository-scan",
+            &format!("tests/{file}"),
+            true,
+        );
+        assert!(facts.loads.iter().all(|load| load.kind != "require"));
+        assert!(facts.require_bindings.is_empty());
+    }
+}
+
+#[test]
+fn erased_type_import_keeps_runtime_require_load() {
+    let path = crate::test_support::rule_fixture_root("test-no-live-repository-scan")
+        .join("helpers/type-only-require.ts");
+    let source = std::fs::read_to_string(path).unwrap();
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let facts = extract_with_arguments(&parsed.program, true);
+    assert!(facts
+        .loads
+        .iter()
+        .any(|load| { load.kind == "require" && load.specifier == "node:fs" }));
+    assert!(facts.call_arguments.is_some());
+}
+
+#[test]
 fn literal_argument_and_static_key_identities_remain_distinct() {
     let facts = read_fixture("forbidden-calls/literal-identity", "repro.mjs", true);
     assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);

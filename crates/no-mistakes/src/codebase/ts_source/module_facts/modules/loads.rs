@@ -96,9 +96,10 @@ pub(super) fn has_runtime_binding(
     reference: &oxc_semantic::Reference,
     semantic: &Semantic<'_>,
 ) -> bool {
-    reference
-        .symbol_id()
-        .is_some_and(|id| !semantic.scoping().symbol_flags(id).is_ambient())
+    reference.symbol_id().is_some_and(|id| {
+        let flags = semantic.scoping().symbol_flags(id);
+        !flags.is_ambient() && !flags.is_type_import()
+    })
 }
 
 pub(super) fn unwrapped_parent<'a>(

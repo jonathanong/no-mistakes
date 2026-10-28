@@ -24,6 +24,7 @@ fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<Stri
     let object = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.object) {
         Expression::Identifier(object) => object.name.to_string(),
         Expression::ThisExpression(_) => "this".to_string(),
+        Expression::ImportMeta(_) => "import.meta".to_string(),
         Expression::StaticMemberExpression(object) => simple_static_member_name(object)?,
         Expression::ComputedMemberExpression(object) => simple_computed_member_name(object)?,
         _ => "<unknown>".to_string(),
@@ -50,18 +51,17 @@ fn has_dynamic_static_member_receiver(expr: &Expression<'_>) -> bool {
 fn simple_computed_member_name(
     member: &oxc_ast::ast::ComputedMemberExpression<'_>,
 ) -> Option<String> {
-    let Expression::Identifier(object) =
-        crate::codebase::ts_source::unwrap_ts_wrappers(&member.object)
-    else {
-        return None;
+    let object = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.object) {
+        Expression::Identifier(object) => object.name.as_str(),
+        Expression::ImportMeta(_) => "import.meta",
+        _ => return None,
     };
     let property = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression) {
         Expression::StringLiteral(property) => crate::ast::js_literal(property),
         _ => return None,
     };
-    Some(format!("{}.{property}", object.name.as_str()))
+    Some(format!("{object}.{property}"))
 }
-
 fn jsx_element_reference_name(name: &oxc_ast::ast::JSXElementName<'_>) -> Option<String> {
     match name {
         oxc_ast::ast::JSXElementName::Identifier(id) => Some(id.name.to_string()),

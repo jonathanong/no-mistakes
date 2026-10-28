@@ -34,6 +34,9 @@ pub(super) fn classify(origin: Option<&PathOrigin>, fixture_dirs: &[&str]) -> Ve
             Verdict::Live("a relative path resolved against the working directory")
         }
         PathAnchor::Absolute => Verdict::Live("an absolute path outside any fixtures directory"),
+        PathAnchor::SharedTemp => {
+            Verdict::Live("the shared temporary directory, which the test does not own")
+        }
         PathAnchor::Temp | PathAnchor::Unknown => Verdict::Unresolved(
             "the root is a parameter, mutable binding, or expression this analysis cannot follow",
         ),

@@ -45,6 +45,7 @@ fn default_policy_json_snapshot() {
         ("exclude_roots", "exclude-roots.yml"),
         ("import_only_file_root", "file-root.yml"),
         ("extra_enumerator", "enumerators.yml"),
+        ("container_exports", "containers.yml"),
         ("severity_advisory", "advisory.yml"),
     ]
     .into_iter()
@@ -78,6 +79,21 @@ fn rejects_scans_reachable_from_vitest_roots_and_allows_bounded_input() {
         "tests/path-forms.test.ts:21",
         "tests/path-forms.test.ts:28",
         "tests/path-forms.test.ts:29",
+        "tests/require-mixed.test.ts:4",
+        "tests/require-mixed.test.ts:5",
+        "tests/require-mixed.test.ts:10",
+        "tests/require-boundaries.test.ts:3",
+        "tests/require-boundaries.test.ts:5",
+        "tests/require-boundaries.test.ts:9",
+        "tests/require-bindings.test.ts:7",
+        "tests/require-bindings.test.ts:8",
+        "tests/require-bindings.test.ts:9",
+        "tests/require-forward.test.ts:3",
+        "tests/require-provenance.test.ts:3",
+        "tests/require-provenance.test.ts:6",
+        "tests/require-provenance.test.ts:9",
+        "tests/require-container.test.ts:10",
+        "helpers/type-only-require.ts:4",
     ] {
         assert!(
             findings.contains(&expected.to_string()),
@@ -104,9 +120,18 @@ fn rejects_scans_reachable_from_vitest_roots_and_allows_bounded_input() {
         "tests/path-edge.test.ts:11",
         "tests/path-edge.test.ts:19",
         "tests/path-edge.test.ts:22",
-        "tests/require-bindings.test.ts:3",
-        "tests/require-bindings.test.ts:4",
-        "tests/require-bindings.test.ts:5",
+        "tests/require-computed-only.test.ts:3",
+        "tests/require-container.test.ts:2",
+        "tests/require-container.test.ts:6",
+        "tests/require-mixed.test.ts:14",
+        "tests/require-boundaries.test.ts:27",
+        "tests/require-shadowed-load.test.ts:5",
+        "tests/require-unmodeled-patterns.test.ts:4",
+        "tests/require-unmodeled-patterns.test.ts:5",
+        "tests/require-unmodeled-patterns.test.ts:6",
+        "tests/require-unmodeled-patterns.test.ts:7",
+        "tests/require-unmodeled-patterns.test.ts:8",
+        "tests/require-before-init.test.ts:2",
         "tests/unresolved-receiver.test.ts:3",
         "tests/unresolved-root.test.ts:8",
     ] {
@@ -118,6 +143,71 @@ fn rejects_scans_reachable_from_vitest_roots_and_allows_bounded_input() {
     // A CommonJS global and cwd-less glob options are live, not unresolved.
     assert!(findings.contains(&"tests/path-edge.test.ts:15".to_string()));
     assert!(findings.contains(&"tests/path-edge.test.ts:20".to_string()));
+    // The plain binding's resolved scans have independent roots; its require
+    // declaration does not also need an unresolved advisory.
+    assert!(!advisories.contains(&"tests/require-mixed.test.ts:8".to_string()));
+    for absent in [2, 11, 16, 23, 24] {
+        assert!(!findings.contains(&format!("tests/require-boundaries.test.ts:{absent}")));
+        assert!(
+            !advisories.contains(&format!("tests/require-boundaries.test.ts:{absent}")),
+            "duplicate or suppressed require: {advisories:?}"
+        );
+    }
+    assert_eq!(
+        advisories
+            .iter()
+            .filter(|entry| *entry == "tests/require-boundaries.test.ts:27")
+            .count(),
+        1,
+        "direct require scan must have one advisory: {advisories:?}"
+    );
+    for bounded in [4, 7, 10] {
+        let location = format!("tests/require-provenance.test.ts:{bounded}");
+        assert!(!findings.contains(&location), "bounded scan: {findings:?}");
+        assert!(
+            !advisories.contains(&location),
+            "bounded scan: {advisories:?}"
+        );
+    }
+    // Unknown exports keep a load advisory without inventing a live call target.
+    let numeric = "tests/require-unmodeled-patterns.test.ts:6".to_string();
+    assert!(!findings.contains(&numeric) && advisories.contains(&numeric));
+    for recognized in [2, 5, 8] {
+        assert!(
+            !advisories.contains(&format!("tests/require-provenance.test.ts:{recognized}")),
+            "recognized binding should not produce a duplicate advisory: {advisories:?}"
+        );
+    }
+    assert!(
+        !findings.contains(&"tests/require-forward.test.ts:6".to_string()),
+        "forward fixture root: {findings:?}"
+    );
+    assert!(
+        !advisories.contains(&"tests/require-forward.test.ts:6".to_string()),
+        "forward fixture root: {advisories:?}"
+    );
+    for list in [&findings, &advisories] {
+        assert!(
+            list.iter()
+                .all(|item| !item.starts_with("tests/imported-require")),
+            "imported factory is not a CommonJS load: {list:?}"
+        );
+        for line in [11, 12, 13] {
+            assert!(!list.contains(&format!("tests/require-container.test.ts:{line}")));
+        }
+    }
+}
+
+#[test]
+fn configured_children_keep_commonjs_containers_visible() {
+    let (_, report) = check("containers.yml");
+    // An explicit module-wide override also includes its normally pure helpers.
+    assert!(located(&report["rules"]).contains(&"tests/require-container.test.ts:13".to_string()));
+    let advisories = located(&report["advisories"]);
+    for line in [2, 5] {
+        let expected = format!("tests/require-custom-container.test.ts:{line}");
+        assert!(advisories.contains(&expected), "{expected}: {advisories:?}");
+    }
 }
 
 #[test]

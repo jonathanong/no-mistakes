@@ -172,6 +172,8 @@ pub struct ValueFlowFacts {
     pub possible_receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub replacements: Option<std::sync::Arc<replacements::ValueReplacementFacts>>,
     pub bindings: Vec<ValueBinding>,
+    /// Static CommonJS locals projected only into the canonical call index.
+    pub(crate) commonjs_imported_bindings: Vec<ImportedBinding>,
     /// Iterable source for const loop/destructuring bindings, for provenance only. These are
     /// not runtime element values and never enter ordinary value resolution.
     pub iteration_bindings: Vec<ValueBinding>,

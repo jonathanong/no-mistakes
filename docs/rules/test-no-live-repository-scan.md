@@ -1,4 +1,5 @@
 # `test-no-live-repository-scan`
+<!-- cspell:ignore fdir -->
 
 Rejects directory enumeration of the live repository that a Vitest root runs.
 A test that lists `.github/workflows` at module load and then reads and parses
@@ -38,7 +39,7 @@ At each reached call it reports a directory enumeration whose root is not
 bounded:
 
 - `readdir`, `readdirSync`, `opendir`, `opendirSync`, `glob`, and `globSync` from
-  `fs` and `fs/promises` (with or without the `node:` prefix), including
+  `fs`, `fs/promises` (with or without the `node:` prefix), and `fs-extra`, including
   `fs.promises.readdir`.
 - Any call into the glob packages `glob`, `fast-glob`, `tinyglobby`, and
   `globby`, other than their pattern helpers (`escapePath`, `isDynamicPattern`,
@@ -47,6 +48,17 @@ bounded:
   imports, an imported helper module, and a wrapper around that helper all
   resolve through the same graph, so the finding is reported at the enumeration
   call wherever it lives.
+- Direct `import.meta.glob` and `import.meta.globEager` calls, including static
+  bracket access such as `import.meta["glob"]`. Literal patterns are relative
+  to the module. Dynamic patterns and pattern arrays produce an unresolved-root
+  advisory when their boundedness cannot be established.
+
+The built-in matcher does not cover `fdir` builder chains or enumeration through
+subprocess commands such as `git ls-files`. These are outside its current scope;
+use a dedicated static CI check for them. `enumerators` can add ordinary imported
+enumeration functions, but does not interpret subprocess command arguments or
+arbitrary builder chains. Aliases of `import.meta.glob` are also outside the
+direct-call matcher; keep the API call direct so this rule can inspect it.
 
 The enumeration is the trigger, not the later `readFileSync`: a scan that is
 never read is still a scan, and every file it yields is covered by the finding
@@ -57,9 +69,15 @@ on the enumeration. A `readFileSync` of a fixed literal path is not reported.
 An enumeration passes when its root is provably bounded:
 
 - Any path segment equals a `fixtureDirs` entry (`fixtures` or `__fixtures__` by
-  default), such as `join(import.meta.dirname, "fixtures", name)`.
-- The root is anchored at `os.tmpdir()` or at the result of `mkdtemp`/
+  default), such as `join(import.meta.dirname, "fixtures", name)`. This includes
+  `.github/fixtures`; the directory name is the boundary, regardless of depth.
+- The root is anchored at the result of `mkdtemp`/
   `mkdtempSync`, held directly or through a `const`.
+
+`readdirSync(tmpdir())` and a predictable child such as
+`readdirSync(join(tmpdir(), "policy"))` are reported: the shared temporary
+directory is not owned by the test. Create a fresh directory with `mkdtemp`
+instead. A matching `fixtureDirs` segment remains an explicit allowance.
 
 ## Unresolved roots
 
@@ -71,10 +89,24 @@ resolved. These go to the non-failing `advisories` list by default. Set
 `unresolvedRoot: report` to fail on them; the rule's `severity: advisory` still
 demotes them.
 
-A CommonJS `require` of `fs`, `fs/promises`, a glob package, or a configured
-enumerator that no call in the same file resolves to (a renamed destructure such
-as `const { readdirSync: ls } = require("fs")`, `require("fs").readdirSync`, or
-`require("glob").sync`) is reported on the `require` line as an unresolved root.
+Statically recognized top-level `const` CommonJS bindings participate in path
+provenance, including namespace bindings and renamed destructured bindings.
+The loader must be the global runtime `require`. Runtime imports named
+`require` are separate bindings; erased type-only imports do not shadow the loader.
+Nested, mutable, or otherwise unsupported bindings retain the unresolved fallback.
+A resolved scan through one binding
+does not suppress an unresolved load of the same module through another binding
+in that file. Each scan remains a distinct occurrence.
+
+A CommonJS `require` of `fs`, `fs/promises`, `fs-extra`, a glob package, or a
+configured enumerator whose uses cannot be followed is reported on its `require`
+line as an unresolved root. A computed `require(moduleName)` is also reported:
+the module could expose enumeration, so it cannot pass silently. These fallback
+diagnostics are replaced by a resolved direct scan through a recognized static
+binding. An unknown direct member scan at the load's own offset is reported once.
+Unknown export containers, including `fs.promises`, retain the fallback until
+their enumeration uses are accounted for. Configured descendant exports also
+keep their container visible.
 
 Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 `dirname`, `fileURLToPath`, `new URL(..., import.meta.url)`, `import.meta.dirname`,
