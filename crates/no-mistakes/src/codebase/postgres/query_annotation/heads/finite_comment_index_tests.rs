@@ -1,5 +1,5 @@
 //! Construction counters lock joins to one file pass and one domain per helper.
-use super::support::{assert_markers, fixture_with_effects};
+use super::super::support::{assert_markers, fixture_with_effects};
 use crate::diagnostics::{with_observer, InvocationObserver};
 #[test]
 fn finite_comment_indexes_do_not_rescan_calls_or_helpers_for_each_root() {
