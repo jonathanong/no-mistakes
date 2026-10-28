@@ -72,23 +72,16 @@ fn branch_assignment_heads_are_stable_when_max_demand_is_added() {
         .collect::<Vec<_>>();
     assert_eq!(mixed, low);
     let max_config = config(&["max"]);
-    let observer = InvocationObserver::new(true);
-    let max = with_observer(Some(observer.clone()), || {
-        collect_check_facts(root, vec![path.clone()], plan(root, &max_config))
-    });
+    let max = collect_check_facts(root, vec![path.clone()], plan(root, &max_config));
     let max_file = max.ts.get(&path).unwrap();
+    assert!(max_file.query_annotation_heads.is_none());
     assert_eq!(
         max_file.embedded_sql[0].1.call_spans,
         file.embedded_sql[0].1.call_spans
     );
-    assert!(
-        observer
-            .snapshot()
-            .work
-            .get("postgres.sql.variants_composed")
-            .copied()
-            .unwrap_or(0)
-            > 0
+    assert_eq!(
+        format!("{:?}", max_file.embedded_sql[0].1.calls),
+        format!("{:?}", file.embedded_sql[0].1.calls)
     );
     assert_eq!(decisions(root), low);
 }
