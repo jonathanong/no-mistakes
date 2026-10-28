@@ -120,8 +120,13 @@ function; its callback parameter may only be called with the same fresh
 trusted `sql-template-strings` builder supplied by the caller, after static
 `.append(oneExpression)` calls, or with a fixed named literal template. The
 caller passes a direct inline `statement => read(statement)` or equivalent
-configured executor callback. Every callback invocation must use the proven
-payload. Unknown calls, aliases, writes, defaults, escapes, spreads, optional
+configured executor callback. A callback may be async and use a block when a
+full reference census proves its SQL parameter reaches one configured executor
+after only discarded static appends and exact same-file append-only helpers.
+A same-file stable source helper may supply a fresh trusted builder with a
+fixed named head. For that fresh builder, the executor may also receive one
+ordinary options object after the SQL argument. Every callback invocation must
+use the proven payload. Unknown calls, aliases, writes, defaults, escapes, spreads, optional
 calls, and source re-exports remain unresolved. Each caller is checked
 separately.
 

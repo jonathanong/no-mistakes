@@ -89,6 +89,8 @@ Opaque append suffixes preserve a prefix only for the trusted
 `sql-template-strings` tag; other tags and their later reads remain unresolved.
 An exact source helper may forward a proven head into a direct inline
 configured executor callback, with each imported call checked separately.
+The same prepared low proof also covers a source-proven same-file callback
+helper and an async inline callback with an exact SQL parameter reference census.
 They also accept finite conditional expressions whose every arm has a named
 literal head, plus one returned local trusted builder with append-only uses
 before its final return. Tagged arms and returned builders retain the existing
