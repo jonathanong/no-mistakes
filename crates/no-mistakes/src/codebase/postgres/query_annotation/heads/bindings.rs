@@ -104,7 +104,7 @@ impl<'a> Bindings<'a> {
         let closed = if low {
             super::captured_prefix::proofs(syntax, module, &index, &executors)
         } else {
-            FxHashSet::default()
+            Default::default()
         };
         index.append_safety = super::append_constants::Safety::new(
             syntax,

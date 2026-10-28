@@ -21,3 +21,6 @@ fn dynamic_eval_gap_prevents_closed_capture_proof() {
     let (source, _, heads) = fixture_with_effects("../captured-prefix/gap.mts");
     assert_eq!(assert_markers(&source, &heads), 1);
 }
+
+#[path = "captured_import_tests.rs"]
+mod imported;

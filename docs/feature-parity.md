@@ -1035,3 +1035,8 @@ PostgreSQL annotation low effort shares the bounded awaited fresh native builder
 return-origin proof across CLI, Rust checks and asynchronous Node checks. Exact
 prepared imported append-effect obligations must all resolve; unsupported return,
 await, alias or effect paths keep the existing unanalyzable policy.
+
+PostgreSQL annotation low effort combines closed captured native builder lifetimes
+with direct prepared imported append effects in CLI, Rust and async Node checks.
+Unresolved obligations and escaping callback results preserve the shared
+unanalyzable policy; max retains its existing behavior.

@@ -478,3 +478,8 @@ The async `check()` and `analyzeProject()` annotation reports also share low's
 It uses the same prepared source/effect projections and requires exact awaited
 `const` consumption by the immediately next configured executor. No API option,
 report field or max-effort contract changes.
+
+Annotation reports from async `check()` and `analyzeProject()` also share low's
+[closed captured-builder/imported-effect proof](postgres-query-annotation/low-effort.md#captured-builders-with-imported-append-effects).
+It resolves every prepared imported obligation before accepting affected reads;
+no Node option, public type or report field changes.

@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [src/query.mts, src/effects.mts, src/gap.mts, src/mutable.mts, src/mutable.cjs]
+    options:
+      importSpecifier: '@bench/db'
+      executorNames: [read, write]
+      effort: low
+      unanalyzable: report
