@@ -76,7 +76,7 @@ pub(super) fn function(value: &Function<'_>) -> Option<FunctionSyntax> {
             || !defaults::plain_parameter(
                 index,
                 &param.pattern,
-                param.initializer.as_ref(),
+                param.initializer.as_deref(),
                 &mut signature,
             )
         {

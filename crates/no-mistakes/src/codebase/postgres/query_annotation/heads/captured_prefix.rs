@@ -25,7 +25,11 @@ pub(super) fn proofs(
     }
     let mut reads = FxHashSet::default();
     let mut paired = FxHashSet::default();
-    for call in syntax.calls.iter().filter(|call| executors.contains(&call.span)) {
+    for call in syntax
+        .calls
+        .iter()
+        .filter(|call| executors.contains(&call.span))
+    {
         match call.head {
             Head::Reference(span) => {
                 reads.insert(span);
@@ -37,9 +41,12 @@ pub(super) fn proofs(
             _ => {}
         }
     }
-    reads.extend(syntax.value_reads.iter().filter_map(|(reference, call)| {
-        paired.contains(call).then_some(*reference)
-    }));
+    reads.extend(
+        syntax
+            .value_reads
+            .iter()
+            .filter_map(|(reference, call)| paired.contains(call).then_some(*reference)),
+    );
     let module_scopes = module
         .scopes
         .iter()
