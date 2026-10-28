@@ -206,6 +206,8 @@ mod value_facts;
 #[path = "head_calls_only_tests/record_fact_tests.rs"]
 mod record_facts;
 
+#[path = "head_calls_only_tests/branch_assignment_fact_tests.rs"]
+mod branch_assignment_facts;
 #[path = "head_calls_only_tests/builder_fact_tests.rs"]
 mod builder_facts;
 #[path = "head_calls_only_tests/captured_fact_tests.rs"]

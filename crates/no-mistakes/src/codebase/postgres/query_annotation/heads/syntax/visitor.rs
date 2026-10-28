@@ -18,6 +18,10 @@ impl Syntax {
     }
 }
 impl<'a> Visit<'a> for Syntax {
+    fn visit_function_body(&mut self, value: &FunctionBody<'a>) {
+        super::super::branch_assignments::collect(self, value);
+        walk::walk_function_body(self, value);
+    }
     fn visit_class(&mut self, value: &Class<'a>) {
         let prior = self.current_function.replace(span(value.span));
         walk::walk_class(self, value);

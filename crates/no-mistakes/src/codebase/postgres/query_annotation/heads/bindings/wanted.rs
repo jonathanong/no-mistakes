@@ -30,6 +30,12 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
                 .map(|call| call.reference),
         )
         .chain(syntax.helper_arguments.values().copied())
+        .chain(
+            syntax
+                .branch_assignments
+                .iter()
+                .flat_map(|value| value.references()),
+        )
         .chain(syntax.finite_templates.iter().map(|value| value.reference))
         .chain(
             syntax

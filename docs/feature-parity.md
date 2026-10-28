@@ -1025,3 +1025,7 @@ Fresh trusted builder helper results may also flow through one safe local SQL
 binding or a direct append at the executor; CLI and async checks share this
 prepared source proof.
 The CLI and async Node check use the same prepared facts.
+They also share the low proof for an uninitialized local `let` assigned a fresh
+native builder in each exhaustive adjacent arm and then read only by the next
+configured executor. Both missing heads remain a finding; mixed or escaped
+forms remain unresolved.
