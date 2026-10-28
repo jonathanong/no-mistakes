@@ -87,6 +87,10 @@ in the same file or through one direct source import, including local export
 aliases and concise arrow bodies. Opaque append suffixes preserve the prefix
 only for the trusted `sql-template-strings` tag. Unsupported helper or
 mutation shapes remain unanalyzable.
+The same prepared proof joins two adjacent exhaustive assignments to one local
+`let` when each arm creates a fresh native tagged builder and the only later
+use is its immediate configured executor read. It retains missing-head findings
+and unresolved mixed or escaped forms without running the annotation evaluator.
 They also include an exact directly imported helper that returns an immutable
 append alias of one fresh tagged builder argument, with an inert native default
 and a closed paired `.text`/`.values` executor read.

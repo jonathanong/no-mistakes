@@ -236,6 +236,14 @@ TypeScript assertions do not add indirection. The const must resolve to the same
 file's lexical declaration; a second alias, import, or destructured binding
 does not qualify. Mutable bindings need the additional proof below.
 
+One uninitialized local `let`, an adjacent exhaustive `if`/`else`, and an
+immediately following executor call also qualify when each arm assigns one
+fresh native tagged builder. The exact binding may have only those two writes
+and that executor read. Bind holes preserve the head; custom tags, aliases,
+captures, other writes, and semantic gaps stay unresolved. Both named heads
+qualify, both missing heads produce a finding, and mixed results stay unresolved.
+The condition runs before either fresh builder exists and may be dynamic.
+
 Decidable literal heads without an annotation are violations at `low`, including
 `query("SELECT 1")`, unnamed tagged templates, and one supported local const.
 They remain failing findings under `report`, `advise`, and `ignore`. Complete
