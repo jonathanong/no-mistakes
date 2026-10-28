@@ -4,6 +4,8 @@ use crate::codebase::ts_source::{module_facts::TypeScriptModuleFacts, unwrap_ts_
 use crate::fx::FxHashSet;
 use oxc_ast::ast::{self, BindingPattern, Expression, Program};
 use oxc_ast_visit::{walk, Visit};
+mod index;
+use index::Imports;
 
 pub(super) fn pending(
     program: &Program<'_>,
@@ -13,7 +15,7 @@ pub(super) fn pending(
     let mut visitor = Caller {
         module,
         executors,
-        trusted_tags: trusted_append::import_ids(module),
+        imports: None,
         pending: Vec::new(),
     };
     visitor.visit_program(program);
@@ -23,41 +25,12 @@ pub(super) fn pending(
 struct Caller<'m> {
     module: &'m TypeScriptModuleFacts,
     executors: &'m FxHashSet<Span>,
-    trusted_tags: FxHashSet<usize>,
+    imports: Option<Imports<'m>>,
     pending: Vec<Pending>,
 }
 
 impl Caller<'_> {
-    fn imported(&self, span: Span) -> Option<(&str, &str)> {
-        let mut owners = self.module.bindings.iter().filter(|binding| {
-            binding.imported
-                && binding.runtime
-                && binding.references.iter().any(|reference| {
-                    reference.runtime && (reference.span.start, reference.span.end) == span
-                })
-        });
-        let owner = owners.next()?;
-        if owners.next().is_some() {
-            return None;
-        }
-        let mut imports = self
-            .module
-            .imports
-            .iter()
-            .filter(|import| !import.type_only)
-            .flat_map(|import| {
-                import.bindings.iter().filter_map(move |binding| {
-                    (!binding.type_only
-                        && binding.binding_id == owner.id
-                        && binding.imported != "*")
-                        .then_some((import.specifier.as_str(), binding.imported.as_str()))
-                })
-            });
-        let result = imports.next()?;
-        imports.next().is_none().then_some(result)
-    }
-
-    fn trusted_payload(&self, value: &Expression<'_>) -> bool {
+    fn trusted_payload(imports: &Imports<'_>, value: &Expression<'_>) -> bool {
         if !matches!(
             syntax::head(value),
             syntax::Head::Tag | syntax::Head::AppendTag | syntax::Head::AppendPrefixTag
@@ -67,20 +40,10 @@ impl Caller<'_> {
         let Some(tag) = trusted_append::tag(value) else {
             return false;
         };
-        let mut owners = self.module.bindings.iter().filter(|binding| {
-            binding.imported
-                && binding.runtime
-                && binding.references.iter().any(|reference| {
-                    reference.runtime && (reference.span.start, reference.span.end) == tag
-                })
-        });
-        let Some(owner) = owners.next() else {
-            return false;
-        };
-        owners.next().is_none() && self.trusted_tags.contains(&owner.id)
+        imports.trusted_tag(tag)
     }
 
-    fn candidate(&self, call: &ast::CallExpression<'_>) -> Option<Pending> {
+    fn candidate(&mut self, call: &ast::CallExpression<'_>) -> Option<Pending> {
         if call.optional
             || call.arguments.len() > 8
             || call
@@ -93,7 +56,6 @@ impl Caller<'_> {
         let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) else {
             return None;
         };
-        let (specifier, imported) = self.imported((callee.span.start, callee.span.end))?;
         let callbacks = call
             .arguments
             .iter()
@@ -102,12 +64,16 @@ impl Caller<'_> {
         if !callbacks.iter().any(Option::is_some) {
             return None;
         }
+        let imports = self
+            .imports
+            .get_or_insert_with(|| Imports::new(self.module));
+        let (specifier, imported) = imports.imported((callee.span.start, callee.span.end))?;
         let payloads = call
             .arguments
             .iter()
             .map(|arg| {
                 arg.as_expression()
-                    .is_some_and(|arg| self.trusted_payload(arg))
+                    .is_some_and(|arg| Self::trusted_payload(imports, arg))
             })
             .collect();
         Some(Pending {
@@ -158,3 +124,7 @@ fn inline_executor(value: &Expression<'_>, executors: &FxHashSet<Span>) -> Optio
     let span = (call.span.start, call.span.end);
     (arg.name == param.name && executors.contains(&span)).then_some(span)
 }
+
+#[cfg(test)]
+#[path = "caller/tests.rs"]
+mod tests;
