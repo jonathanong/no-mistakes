@@ -93,7 +93,9 @@ fn span(value: oxc_span::Span) -> super::super::Span {
     (value.start, value.end)
 }
 
-fn root(mut expression: &Expression<'_>) -> Option<(super::super::Span, super::super::HeadProof)> {
+fn root<'a>(
+    mut expression: &'a Expression<'a>,
+) -> Option<(super::super::Span, super::super::HeadProof)> {
     for _ in 0..=8 {
         match unwrap_ts_wrappers(expression) {
             Expression::CallExpression(call) => expression = append::prefix_receiver(call)?,
@@ -109,7 +111,7 @@ fn root(mut expression: &Expression<'_>) -> Option<(super::super::Span, super::s
     None
 }
 
-fn discarded(mut expression: &Expression<'_>) -> Option<super::super::Span> {
+fn discarded<'a>(mut expression: &'a Expression<'a>) -> Option<super::super::Span> {
     for depth in 0..=8 {
         match unwrap_ts_wrappers(expression) {
             Expression::CallExpression(call) => expression = append::prefix_receiver(call)?,
