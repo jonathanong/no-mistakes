@@ -211,6 +211,12 @@ The helper may compose up to four exact same-file append-only calls on that
 parameter. It may return a static parameter-rooted append chain only when the
 caller discards the result. Nested helper calls, aliases, cycles, and used helper
 results remain unresolved.
+Inert Boolean or string defaults on later helper parameters can preserve the
+same fixed prefix. A defaulted object destructure may use an empty `{}` outer
+default and requires an exact caller object with only static primitive data properties;
+omitting that argument is also safe for the empty default. Getters, spreads,
+computed keys, `__proto__`, calls in defaults, and builder-parameter defaults
+remain unanalyzable. Type annotations do not establish runtime values.
 A captured local trusted builder keeps its fixed head when every reference to
 its exact binding is a discarded static append, a configured executor read, or
 a proven local append-only effect. Closure execution order does not change this

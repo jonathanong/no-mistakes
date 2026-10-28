@@ -116,6 +116,8 @@ an exact returned parameter append chain when the helper result is discarded.
 They also preserve that parameter's fixed head through captured callbacks
 whose only parameter uses are discarded static appends, regardless of when
 those callbacks run.
+CLI and async Node checks share the same inert later-parameter default proof
+and exact closed-object gate for a defaulted helper destructure.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes

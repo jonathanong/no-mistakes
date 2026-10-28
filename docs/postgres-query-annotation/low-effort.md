@@ -197,8 +197,15 @@ may also `return query.append(suffix)` when that entire static append chain
 is rooted at its first parameter and its caller discards the helper result.
 The returned builder does not become a general value-flow proof.
 Secondary parameters may use a direct object destructure with static keys and
-plain bindings. Defaults, computed keys, and an argument expression that
+plain bindings. Dynamic defaults, computed keys, and an argument expression that
 captures or passes the caller's builder still leave the read unresolved.
+An inert Boolean or string literal default on a later parameter also qualifies.
+One later object destructure may use Boolean or string literal property defaults
+and may have an empty `{}` outer default when the call supplies a closed object literal
+with only static primitive data properties, or omits that argument for the empty
+default. Spreads, getters, methods, computed keys, `__proto__`, call-valued
+defaults, and a default on the builder parameter remain unresolved. The proof
+does not use TypeScript types as runtime bounds or infer complete SQL.
 
 For ordinary const tracing, its declaration and uses must stay in the same
 function. The closed captured-root proof above is the narrow exception. Before the executor call,
