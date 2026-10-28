@@ -1,7 +1,7 @@
 //! Saved identity-write lifetimes, with original max facts kept separate.
 use super::{collect_check_facts, config, plan};
 use crate::codebase::postgres::query_annotation::heads::HeadProof;
-use crate::diagnostics::{with_observer, InvocationObserver};
+use crate::diagnostics::{InvocationObserver, with_observer};
 fn saved() -> tempfile::TempDir {
     let root = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
         .join("low-heads");
@@ -34,9 +34,11 @@ fn self_append_lifetimes_are_low_only_with_zero_evaluator_work() {
             HeadProof::Missing
         ]
     );
-    assert!(decisions[4..decisions.len() - 1]
-        .iter()
-        .all(|proof| *proof != HeadProof::Literal));
+    assert!(
+        decisions[4..decisions.len() - 1]
+            .iter()
+            .all(|proof| *proof != HeadProof::Literal)
+    );
     assert_eq!(decisions.last(), Some(&HeadProof::Literal));
     assert!(file.query_annotation.is_empty());
     assert_eq!(
@@ -100,12 +102,14 @@ fn self_append_positive_and_negative_owner_censuses_are_memoized() {
         });
         let file = facts.ts.get(&path).unwrap();
         assert_eq!(file.embedded_sql[0].1.call_spans.len(), 64);
-        assert!(file.embedded_sql[0].1.call_spans.iter().all(|span| file
-            .query_annotation_heads
-            .as_ref()
-            .unwrap()
-            .calls[span]
-            == expected));
+        assert!(
+            file.embedded_sql[0].1.call_spans.iter().all(|span| file
+                .query_annotation_heads
+                .as_ref()
+                .unwrap()
+                .calls[span]
+                == expected)
+        );
         let work = observer.snapshot().work;
         assert_eq!(
             work.get("postgres.annotation.self_append_owner_censuses")
@@ -240,5 +244,49 @@ fn unconfigured_reads_do_not_construct_self_append_demand_lookup() {
         "postgres.annotation.self_append_wanted_lookup_visits",
     ] {
         assert_eq!(work.get(metric).copied().unwrap_or(0), 0);
+    }
+}
+
+#[test]
+fn max_candidates_do_not_expand_low_only_self_append_bindings() {
+    let fixture = saved();
+    let root = fixture.path();
+    let path = root.join("self-append-assignment-max-only.mts");
+    let observer = InvocationObserver::new(true);
+    let plan = plan(root, &config(&["max"]));
+    assert!(!plan.query_annotation_heads);
+    let facts = with_observer(Some(observer.clone()), || {
+        collect_check_facts(root, vec![path.clone()], plan)
+    });
+    let file = facts.ts.get(&path).unwrap();
+    let embedded = &file.embedded_sql[0].1;
+    assert_eq!(embedded.call_spans.len(), 2);
+    assert!(embedded.calls.iter().any(|call| {
+        call.kind == crate::codebase::postgres::EmbeddedSqlKind::Composed
+            && call.variants.is_empty()
+            && call
+                .sql_text
+                .as_deref()
+                .and_then(crate::codebase::postgres::leading_query_annotation)
+                .is_some()
+    }));
+    assert_eq!(
+        observer
+            .snapshot()
+            .work
+            .get("postgres.annotation.head_binding_indexes")
+            .copied(),
+        Some(1),
+        "the max composed candidate must exercise prepared head collection"
+    );
+    assert!(file.query_annotation_heads.is_some());
+    let work = observer.snapshot().work;
+    for metric in [
+        "postgres.annotation.self_append_wanted_owner_visits",
+        "postgres.annotation.self_append_wanted_reference_visits",
+        "postgres.annotation.self_append_wanted_lookup_visits",
+        "postgres.annotation.self_append_owner_censuses",
+    ] {
+        assert_eq!(work.get(metric).copied().unwrap_or(0), 0, "{metric}");
     }
 }

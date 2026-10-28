@@ -3,6 +3,19 @@ use super::{Span, Syntax};
 use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFacts};
 use crate::fx::{FxHashMap, FxHashSet};
 
+pub(super) fn extend_if_low(
+    low: bool,
+    syntax: &Syntax,
+    module: &TypeScriptModuleFacts,
+    executors: &FxHashSet<Span>,
+    bindings: &super::Bindings<'_>,
+    wanted: &mut FxHashSet<Span>,
+) {
+    if low {
+        extend(syntax, module, executors, &bindings.trusted_imports, wanted);
+    }
+}
+
 pub(super) fn extend(
     syntax: &Syntax,
     module: &TypeScriptModuleFacts,

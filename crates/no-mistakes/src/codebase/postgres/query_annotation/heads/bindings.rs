@@ -1,7 +1,7 @@
 use super::{
+    Span,
     diagnostics::Gaps,
     syntax::{Head, Syntax},
-    Span,
 };
 use crate::codebase::ts_source::{facts::TsFileFacts, module_facts::ModuleBinding};
 use crate::fx::{FxHashMap, FxHashSet};
@@ -9,6 +9,7 @@ mod prefix;
 mod proof;
 mod record_scope;
 mod self_append_wanted;
+use self_append_wanted::extend_if_low;
 mod wanted;
 pub(super) struct Bindings<'a> {
     module: Option<&'a crate::codebase::ts_source::module_facts::TypeScriptModuleFacts>,
@@ -60,8 +61,7 @@ impl<'a> Bindings<'a> {
         };
         let executors = executor_calls.collect::<FxHashSet<_>>();
         index.trusted_imports = super::trusted_append::import_ids(module);
-        let native = &index.trusted_imports;
-        self_append_wanted::extend(syntax, module, &executors, native, &mut wanted);
+        extend_if_low(low, syntax, module, &executors, &index, &mut wanted);
         let finite_declarations = super::finite_comments::declarations(syntax);
         for binding in &module.bindings {
             if syntax
