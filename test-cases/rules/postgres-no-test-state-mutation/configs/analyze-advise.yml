@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - tests/analyze.test.ts
+    options:
+      testGlobs: ["tests/**/*.test.ts"]
+      importSpecifier: "@example/db"
+      unanalyzableSql: advise

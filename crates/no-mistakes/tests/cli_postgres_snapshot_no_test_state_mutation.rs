@@ -25,6 +25,11 @@ fn postgres_no_test_state_mutation_check_json_snapshot() {
                 root.clone(),
                 config("analyze-test.yml"),
             ),
+            (
+                "analyze_relation_list_advise",
+                root.clone(),
+                config("analyze-advise.yml"),
+            ),
             // Targets that must remain: DROP TABLE, CREATE TABLE, CREATE TABLE,
             // ALTER TABLE, CREATE VIEW, DROP VIEW, CREATE VIEW, ALTER SYSTEM,
             // session_replication_role, pg_sleep, pg_sleep, TRUNCATE.

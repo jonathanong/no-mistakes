@@ -97,8 +97,11 @@ enclosed function call. `EXPLAIN ANALYZE` and `EXPLAIN (ANALYZE true/on)` do.
 SQL printed in an assertion message, stored in a snapshot, or compared as data
 (for example `pg_indexes.indexdef`) does not reach an executor and is not
 reported. Ordinary DML in test setup is allowed by this rule.
-PostgreSQL `ANALYZE` with a comma-separated relation list is also allowed.
-The complete list is parsed; malformed lists remain unanalyzable.
+PostgreSQL `ANALYZE` with a comma-separated relation list is also allowed,
+including the legacy `VERBOSE` modifier and a column list on an individual
+relation, as in `ANALYZE VERBOSE a, b` and `ANALYZE a(col), b`. The complete
+list is parsed; malformed lists remain unanalyzable. Parenthesized `ANALYZE`
+option lists, such as `ANALYZE (VERBOSE) a, b`, remain unanalyzable.
 
 `SELECT ... INTO` is not flagged, including forms that create a new table.
 The rule does not classify that statement as one of the mutations listed above.
@@ -150,8 +153,9 @@ whose exception is intentional, with a reason in the adjacent comment.
 ## Effort
 
 This rule supports `max` effort. Selecting `low` falls back to `max` with a
-configuration warning. Complete PostgreSQL `ANALYZE` relation lists are parsed
-by the shared SQL extractor; malformed lists remain unanalyzable.
+configuration warning. The shared SQL extractor parses PostgreSQL `ANALYZE`
+relation lists with `VERBOSE` and per-relation column lists; malformed lists
+and parenthesized option lists remain unanalyzable.
 Finite helper returns, direct throwing branches, literal iterator domains, and
 local Set guards use bounded full-SQL proofs. Annotation `low` requests skip
 these proofs and do not invoke the annotation evaluator.
