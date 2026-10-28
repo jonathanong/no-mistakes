@@ -106,18 +106,17 @@ pub(super) fn proofs(
             let usage_context = syntax.contexts.get(&span)?;
             captured |= usage_context != context;
             read |= reads.contains(&span);
-            if let Some(effect) = pending_references.get(&span) {
-                required.insert(*effect);
-                if required.len() > 8 {
-                    return None;
-                }
-                continue;
-            }
-            if !(syntax.discarded_appends.contains(&span)
+            // Generic effect candidates also contain imported executor calls.
+            // Confirmed reads and already-proven uses need no new obligation.
+            if syntax.discarded_appends.contains(&span)
                 || syntax.prefix_discarded_appends.contains(&span)
                 || reads.contains(&span)
-                || bindings.allowed_effect(span))
+                || bindings.allowed_effect(span)
             {
+                continue;
+            }
+            required.insert(*pending_references.get(&span)?);
+            if required.len() > 8 {
                 return None;
             }
         }
