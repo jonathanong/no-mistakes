@@ -465,6 +465,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "await query(`/* recordTag */ ${selected.sql}`);",
           "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/finite-iterator-targets.test.ts",
+          "line": 14,
+          "message": "tests/finite-iterator-targets.test.ts:14: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`/* assignmentIn */ ${selected.sql}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/finite-iterator-targets.test.ts",
+          "line": 8,
+          "message": "tests/finite-iterator-targets.test.ts:8: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(`/* assignmentOf */ ${selected.sql}`);",
+          "target": "unanalyzable-sql"
         }
       ],
       "warnings": []
@@ -514,6 +530,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "tests/finite-set-enclosing-var.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "return query(sql`/* enclosingVarConstructor */ SELECT 1 FROM `.append(table));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/finite-set-enum.test.ts",
+          "line": 7,
+          "message": "tests/finite-set-enum.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* constructorBinding */ SELECT 1 FROM `.append(table));",
           "target": "unanalyzable-sql"
         },
         {
@@ -653,11 +677,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable-sql"
         },
         {
+          "file": "tests/finite-set-import-equals.test.ts",
+          "line": 7,
+          "message": "tests/finite-set-import-equals.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* constructorBinding */ SELECT 1 FROM `.append(table));",
+          "target": "unanalyzable-sql"
+        },
+        {
           "file": "tests/finite-set-imported.test.ts",
           "line": 7,
           "message": "tests/finite-set-imported.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "return query(sql`/* importedConstructor */ SELECT 1 FROM `.append(table));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/finite-set-namespace.test.ts",
+          "line": 7,
+          "message": "tests/finite-set-namespace.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* constructorBinding */ SELECT 1 FROM `.append(table));",
           "target": "unanalyzable-sql"
         }
       ],

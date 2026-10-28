@@ -60,7 +60,9 @@ inferred only from TypeScript types remain unanalyzable.
 A same-function `const` literal `Set` can bound an appended SQL identifier when
 an exact negated `.has(value)` guard immediately throws before the executor.
 The guarded parameter must be the appended value, and the Set must stay local
-and unmodified. This proof covers up to 16 fixed strings. Shadowed constructors,
+and unmodified. Repeated uses retain the same runtime choice. This proof covers
+up to 16 fixed strings. Shadowed constructors, including runtime TypeScript
+bindings,
 member overrides, escaped sets, reassigned arguments, caught throws, and
 TypeScript-only unions stay unanalyzable.
 

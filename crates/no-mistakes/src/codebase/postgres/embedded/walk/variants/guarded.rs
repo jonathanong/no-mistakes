@@ -10,7 +10,7 @@ pub(super) fn recover(
     expression: &Expression<'_>,
     id: &IdentifierReference<'_>,
 ) -> Option<Vec<Recovered>> {
-    let values = visitor.guarded_cases.last()?.values(
+    let (values, decision) = visitor.guarded_cases.last()?.values(
         id.name.as_str(),
         visitor.function_scopes.len(),
         id.span.start,
@@ -28,9 +28,7 @@ pub(super) fn recover(
         value.sql = sql.clone();
         value.origins = vec![id.span.start; sql.len()];
         value.positions = positions.clone();
-        value
-            .choices
-            .push((u64::from(id.span.start) | (1u64 << 61), index as u32));
+        value.choices.push((decision, index as u32));
         value.enumerated = true;
         recovered.push(value);
     }

@@ -12,6 +12,7 @@ pub(super) struct GuardedCase {
     values: Vec<String>,
     sink: (u32, u32),
     depth: usize,
+    decision: u64,
 }
 impl GuardedCase {
     pub(super) fn from_function(function: &ast::Function<'_>, depth: usize) -> Option<Self> {
@@ -57,11 +58,12 @@ impl GuardedCase {
             values: set.values,
             sink: (sink.span().start, sink.span().end),
             depth,
+            decision: u64::from(guard.span.start) | (1u64 << 61),
         })
     }
-    pub(super) fn values(&self, name: &str, depth: usize, span: u32) -> Option<&[String]> {
+    pub(super) fn values(&self, name: &str, depth: usize, span: u32) -> Option<(&[String], u64)> {
         (self.name == name && self.depth == depth && self.sink.0 <= span && span < self.sink.1)
-            .then_some(self.values.as_slice())
+            .then_some((self.values.as_slice(), self.decision))
     }
 }
 struct Uses<'a> {

@@ -70,3 +70,28 @@ fn selected_records_cannot_escape_as_method_or_tag_receivers() {
     assert!(facts.calls[1].variants.is_empty(), "tag receiver escaped");
     assert_eq!(super::texts(&facts.calls[2]), ["/* recordBind */ SELECT 1"]);
 }
+
+#[test]
+fn for_loop_assignment_targets_cannot_replace_selected_sql() {
+    let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
+        .join("tests/finite-iterator-targets.test.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let facts = extract_embedded_sql_from_source(
+        &path,
+        &source,
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
+    );
+    assert_eq!(facts.calls.len(), 3);
+    assert!(
+        facts.calls[0].variants.is_empty(),
+        "for-of target wrote SQL"
+    );
+    assert!(
+        facts.calls[1].variants.is_empty(),
+        "for-in target wrote SQL"
+    );
+    assert_eq!(
+        super::texts(&facts.calls[2]),
+        ["/* independentIteration */ SELECT 1"]
+    );
+}

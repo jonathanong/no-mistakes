@@ -12,6 +12,11 @@ rules:
       - tests/finite-set-forward-var.test.ts
       - tests/finite-set-enclosing-var.test.ts
       - tests/finite-set-type-only.test.ts
+      - tests/finite-set-import-equals.test.ts
+      - tests/finite-set-enum.test.ts
+      - tests/finite-set-namespace.test.ts
+      - tests/finite-set-ambient-namespace.test.ts
+      - tests/finite-set-correlated.test.ts
     options:
       testGlobs: ["tests/**/*.test.ts"]
       importSpecifier: "@example/db"

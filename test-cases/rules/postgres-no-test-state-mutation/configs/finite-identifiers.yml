@@ -5,6 +5,7 @@ rules:
     include:
       - tests/finite-identifiers.test.ts
       - tests/finite-iterator-receiver.test.ts
+      - tests/finite-iterator-targets.test.ts
     options:
       testGlobs: ["tests/**/*.test.ts"]
       importSpecifier: "@example/db"

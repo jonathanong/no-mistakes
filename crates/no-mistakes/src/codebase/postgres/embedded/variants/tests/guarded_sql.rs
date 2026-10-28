@@ -141,3 +141,6 @@ fn sloppy_arguments_alias_invalidates_a_guarded_parameter() {
     assert_eq!(negative_facts.calls.len(), 1);
     assert!(negative_facts.calls[0].variants.is_empty());
 }
+
+#[path = "guarded_sql/review.rs"]
+mod review;

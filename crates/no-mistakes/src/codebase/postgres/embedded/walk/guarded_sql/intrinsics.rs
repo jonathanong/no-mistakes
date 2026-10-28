@@ -67,6 +67,33 @@ impl<'a> Visit<'a> for Intrinsics {
             }
         }
     }
+    fn visit_ts_import_equals_declaration(&mut self, import: &ast::TSImportEqualsDeclaration<'a>) {
+        if import.import_kind == ImportOrExportKind::Type {
+            return;
+        }
+        if import.id.name == "Set" {
+            self.safe = false;
+        }
+        walk::walk_ts_import_equals_declaration(self, import);
+    }
+    fn visit_ts_enum_declaration(&mut self, value: &ast::TSEnumDeclaration<'a>) {
+        if value.declare {
+            return;
+        }
+        if value.id.name == "Set" {
+            self.safe = false;
+        }
+        walk::walk_ts_enum_declaration(self, value);
+    }
+    fn visit_ts_namespace_declaration(&mut self, value: &ast::TSNamespaceDeclaration<'a>) {
+        if value.declare {
+            return;
+        }
+        if value.id.name == "Set" {
+            self.safe = false;
+        }
+        walk::walk_ts_namespace_declaration(self, value);
+    }
     fn visit_new_expression(&mut self, new: &ast::NewExpression<'a>) {
         if let Expression::Identifier(id) = &new.callee {
             if id.name == "Set" {

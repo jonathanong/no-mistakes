@@ -72,6 +72,12 @@ impl<'a> Visit<'a> for Uses<'_> {
     fn visit_assignment_expression(&mut self, _: &AssignmentExpression<'a>) {
         self.valid = false;
     }
+    fn visit_for_statement_left(&mut self, left: &oxc_ast::ast::ForStatementLeft<'a>) {
+        if left.as_assignment_target().is_some() {
+            self.valid = false;
+        }
+        walk::walk_for_statement_left(self, left);
+    }
     fn visit_update_expression(&mut self, _: &UpdateExpression<'a>) {
         self.valid = false;
     }
