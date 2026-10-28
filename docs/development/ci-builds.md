@@ -87,6 +87,11 @@ unrounded percentages with the existing line, function, and region floors.
 Missing or malformed totals fail the check. This avoids the extra table and
 full JSON passes performed by native `--fail-under-*` flags; LCOV generation
 for CRAP and Codecov retains its existing settings.
+After LCOV is generated, CI checks that the merged workspace profile exists,
+then moves only root-level `.profraw` inputs to a run-specific directory under
+`RUNNER_TEMP`. This keeps later summary exports from merging those profiles
+again, avoids collisions in the cached Cargo target directory, and leaves the
+merged profile available to `cargo llvm-cov report`.
 
 The lint and package job has a 30-minute aggregate deadline; its existing
 step deadlines remain in place, including ten minutes for Cargo package

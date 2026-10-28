@@ -775,7 +775,12 @@ jobs:
 
       - name: Preserve merged Rust coverage profiles
         timeout-minutes: 1
-        run: node .github/scripts/preserve-rust-profiles.cjs target target/no-mistakes.profdata
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          node .github/scripts/preserve-rust-profiles.cjs \
+            "$CARGO_LLVM_COV_TARGET_DIR" "$GITHUB_WORKSPACE" \
+            "$RUNNER_TEMP/no-mistakes-profraw-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
       - name: Enforce Rust coverage floors
         timeout-minutes: 5
