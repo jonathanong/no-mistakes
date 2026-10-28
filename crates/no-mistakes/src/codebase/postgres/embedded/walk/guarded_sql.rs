@@ -16,7 +16,14 @@ pub(super) struct GuardedCase {
 }
 impl GuardedCase {
     pub(super) fn from_function(function: &ast::Function<'_>, depth: usize) -> Option<Self> {
-        if function.generator || function.params.rest.is_some() {
+        if function.generator
+            || function.params.rest.is_some()
+            || function.params.items.iter().any(|parameter| {
+                parameter.initializer.is_some()
+                    || !parameter.decorators.is_empty()
+                    || !matches!(parameter.pattern, ast::BindingPattern::BindingIdentifier(_))
+            })
+        {
             return None;
         }
         let body = function.body.as_ref()?;

@@ -704,6 +704,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "finite_set_parameter_default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/finite-set-default-capture.test.ts",
+          "line": 6,
+          "message": "tests/finite-set-default-capture.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(statement);",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "helper_roots_explicit": {
     "exitCode": 1,
     "report": {

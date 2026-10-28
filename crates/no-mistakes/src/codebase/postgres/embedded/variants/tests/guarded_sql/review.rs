@@ -49,3 +49,13 @@ fn repeated_guarded_values_keep_one_correlated_runtime_choice() {
         assert_eq!(texts(&facts.calls[index]), expected);
     }
 }
+
+#[test]
+fn parameter_defaults_cannot_capture_and_change_guarded_parameters() {
+    let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
+        .join("tests/finite-set-default-capture.test.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let facts = extract_embedded_sql_from_source(&path, &source, &tagged_options());
+    assert_eq!(facts.calls.len(), 1);
+    assert!(facts.calls[0].variants.is_empty());
+}

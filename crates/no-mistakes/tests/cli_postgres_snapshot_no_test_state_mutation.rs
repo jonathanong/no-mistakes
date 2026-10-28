@@ -102,6 +102,12 @@ fn postgres_no_test_state_mutation_check_json_snapshot() {
                 root.clone(),
                 config("finite-set-guard.yml"),
             ),
+            // A parameter initializer can create a closure over the guarded value.
+            (
+                "finite_set_parameter_default",
+                root.clone(),
+                config("finite-set-default-capture.yml"),
+            ),
             // CommonJS arguments aliasing invalidates a guarded parameter.
             ("finite_set_cjs", root.clone(), config("finite-set-cjs.yml")),
             // CREATE TABLE, session_replication_role, and pg_sleep remain.

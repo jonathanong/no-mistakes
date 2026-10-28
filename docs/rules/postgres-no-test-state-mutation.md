@@ -63,7 +63,7 @@ The guarded parameter must be the appended value, and the Set must stay local
 and unmodified. Repeated uses retain the same runtime choice. This proof covers
 up to 16 fixed strings. Shadowed constructors, including runtime TypeScript
 bindings,
-member overrides, escaped sets, reassigned arguments, caught throws, and
+member overrides, escaped sets, parameter defaults, reassigned arguments, caught throws, and
 TypeScript-only unions stay unanalyzable.
 
 `importSpecifier` defaults to empty, so configure an executor module or inherit
