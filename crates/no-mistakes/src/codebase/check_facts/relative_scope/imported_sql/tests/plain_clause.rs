@@ -85,3 +85,22 @@ fn prepared_plain_clause_joins_only_complete_literal_switch_paths() {
         "{tagged:#?}"
     );
 }
+
+#[test]
+fn plain_clause_arguments_admit_inert_templates_but_reject_spreads() {
+    let files = run("prepared-clause-arguments");
+    let calls = caller_calls(&files);
+    let static_template = at(&calls, 13);
+    assert!(
+        static_template
+            .sql_text
+            .as_deref()
+            .is_some_and(|text| text.contains("orders"))
+            || static_template
+                .variants
+                .iter()
+                .any(|variant| variant.sql_text.contains("orders"))
+    );
+    assert!(!static_template.is_unanalyzable());
+    assert!(at(&calls, 18).is_unanalyzable());
+}
