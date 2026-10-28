@@ -41,6 +41,9 @@ fn prepared_imported_record_heads_keep_low_proofs_under_mixed_effort() {
                 Some(HeadProof::Unproven),
                 Some(HeadProof::Unproven),
                 Some(HeadProof::Literal),
+                Some(HeadProof::Literal),
+                Some(HeadProof::Literal),
+                Some(HeadProof::Unproven),
             ]
         );
         if let Some(low_proofs) = &low_proofs {

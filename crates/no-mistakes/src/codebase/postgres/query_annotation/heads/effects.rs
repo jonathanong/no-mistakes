@@ -4,6 +4,7 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BindingPattern, Expression, Function, FunctionType};
 
 mod prepare;
+mod summary;
 pub(crate) use prepare::Pending;
 pub(super) use prepare::{prepare, Prepared};
 
@@ -35,10 +36,10 @@ pub(super) fn function(value: &Function<'_>) -> Option<FunctionSyntax> {
     let params = &value.params;
     if params.rest.is_some()
         || params.items.is_empty()
-        || params.items.iter().any(|param| {
+        || params.items.iter().enumerate().any(|(index, param)| {
             param.initializer.is_some()
                 || !param.decorators.is_empty()
-                || !matches!(param.pattern, BindingPattern::BindingIdentifier(_))
+                || !plain_parameter(index, &param.pattern)
         })
     {
         return None;
@@ -51,6 +52,21 @@ pub(super) fn function(value: &Function<'_>) -> Option<FunctionSyntax> {
         function: (value.span.start, value.span.end),
         body: (body.span.start, body.span.end),
     })
+}
+
+fn plain_parameter(index: usize, pattern: &BindingPattern<'_>) -> bool {
+    match pattern {
+        BindingPattern::BindingIdentifier(_) => true,
+        BindingPattern::ObjectPattern(object) if index > 0 && object.rest.is_none() => {
+            object.properties.iter().all(|property| {
+                !property.computed
+                    && crate::ast::property_key_name(&property.key)
+                        .is_some_and(|name| name != "__proto__")
+                    && matches!(property.value, BindingPattern::BindingIdentifier(_))
+            })
+        }
+        _ => false,
+    }
 }
 
 pub(super) fn call(expression: &Expression<'_>) -> Option<CallSyntax> {

@@ -35,6 +35,13 @@ pub(crate) fn project(
                         .exported_records
                         .get(&pending.imported)
                         .map(|summary| summary.proof()),
+                    super::helper_heads::Kind::PlainRecord => heads
+                        .exported_records
+                        .get(&pending.imported)
+                        .and_then(|summary| match summary {
+                            super::helper_records::Summary::Plain(proof) => Some(*proof),
+                            _ => None,
+                        }),
                     super::helper_heads::Kind::Builder => heads
                         .exported_records
                         .get(&pending.imported)

@@ -33,6 +33,9 @@ impl<'a> Visit<'a> for Syntax {
         }
         self.append_call(value);
         self.field_call(value);
+        if self.collect_helper_heads {
+            self.destructure_call(value);
+        }
         if let Some(reference) = self
             .collect_helper_heads
             .then(|| value.arguments.first())
@@ -98,6 +101,18 @@ impl<'a> Visit<'a> for Syntax {
         let previous = std::mem::replace(&mut self.assignments.discarded_assignment, discarded);
         walk::walk_expression_statement(self, value);
         self.assignments.discarded_assignment = previous;
+    }
+    fn visit_return_statement(&mut self, value: &ReturnStatement<'a>) {
+        if self.collect_helper_heads {
+            if let Some(reference) = value
+                .argument
+                .as_ref()
+                .and_then(super::super::append::prefix_reference)
+            {
+                self.returned_effect_appends.insert(reference);
+            }
+        }
+        walk::walk_return_statement(self, value);
     }
     fn visit_simple_assignment_target(&mut self, value: &SimpleAssignmentTarget<'a>) {
         self.assignments.target(value);

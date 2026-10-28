@@ -28,6 +28,9 @@ ignored for this rule at low effort.
 Captured local trusted builders retain their named prefix when every use of the
 same binding is a discarded append, configured executor read, or proven local
 append-only effect. Closure order does not establish complete SQL.
+Discarded helper calls may compose through exact same-file append-only helpers;
+a returned parameter append chain qualifies only when its caller discards the
+result. Used aliases and nested captures stay unanalyzable.
 
 Use the async Node `parsePostgresSql({ sql, fileName })` export for migration
 text and schema-authoring facts. Pass an array for a source batch. It needs no

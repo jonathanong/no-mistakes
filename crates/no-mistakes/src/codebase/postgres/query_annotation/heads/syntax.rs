@@ -4,10 +4,12 @@ use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::Expression;
 mod append_visits;
 mod collect;
-mod const_visits;
 pub(super) use collect::collect_with_helpers;
+mod const_visits;
+mod destructure;
 mod field_visits;
 mod finite_visits;
+mod head_kind;
 mod helper_visits;
 pub(super) mod literals;
 mod visitor;
@@ -23,6 +25,8 @@ pub(super) struct Syntax {
     pub record_returns: FxHashMap<Span, super::helper_records::Summary>,
     pub finite_returns: FxHashMap<Span, super::finite_returns::Candidate>,
     pub record_initializers: FxHashMap<Span, (Span, Span)>,
+    pub record_destructures: FxHashMap<Span, destructure::Destructure>,
+    pub destructure_calls: FxHashMap<Span, (Span, Span)>,
     pub builder_direct_calls: FxHashMap<Span, Span>,
     pub confirmed_builder_reads: FxHashSet<Span>,
     pub repeated_append_refs: FxHashSet<Span>,
@@ -38,6 +42,7 @@ pub(super) struct Syntax {
     pub namespace_destructures: Vec<super::namespace_heads::Candidate>,
     pub effect_functions: FxHashMap<Span, super::effects::FunctionSyntax>,
     pub effect_calls: Vec<super::effects::CallSyntax>,
+    pub returned_effect_appends: FxHashSet<Span>,
     pub dynamic_refs: Vec<Span>,
     pub return_sinks: FxHashSet<Span>,
     pub append_tags: FxHashMap<Span, Span>,
@@ -72,41 +77,6 @@ pub(super) enum Head {
     AppendReference(Span),
     AppendPrefixReference(Span),
     Unproven,
-}
-impl Head {
-    pub fn is_constant(self) -> bool {
-        matches!(
-            self,
-            Self::Literal | Self::Tag | Self::AppendTag | Self::AppendPrefixTag
-        ) || matches!(self, Self::Text(value) if value.current != super::HeadProof::Unproven)
-    }
-    pub fn tagged(self) -> bool {
-        matches!(self, Self::Tag | Self::AppendTag | Self::AppendPrefixTag)
-            || matches!(self, Self::Text(value) if value.tagged)
-    }
-    pub fn appended(self) -> bool {
-        matches!(self, Self::AppendTag | Self::AppendPrefixTag)
-            || matches!(self, Self::Text(value) if value.appended)
-    }
-    pub fn proof(self, continued: bool) -> super::HeadProof {
-        match self {
-            Self::Literal | Self::Tag | Self::AppendTag => super::HeadProof::Literal,
-            Self::AppendPrefixTag => super::HeadProof::Unproven,
-            Self::Text(value) if value.opaque => super::HeadProof::Unproven,
-            Self::Text(value) if continued => value.continued,
-            Self::Text(value) => value.current,
-            _ => super::HeadProof::Unproven,
-        }
-    }
-    pub fn reference(self) -> Option<Span> {
-        match self {
-            Self::Reference(span)
-            | Self::FieldReference(span)
-            | Self::AppendReference(span)
-            | Self::AppendPrefixReference(span) => Some(span),
-            _ => None,
-        }
-    }
 }
 pub(super) fn head<'a>(expression: &'a Expression<'a>) -> Head {
     bounded_head(expression, 8)
