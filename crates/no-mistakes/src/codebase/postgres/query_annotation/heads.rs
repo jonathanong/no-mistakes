@@ -22,6 +22,7 @@ mod lookup;
 mod loop_carried;
 mod loop_word;
 mod namespace_heads;
+mod primitive_results;
 mod returned_params;
 pub(crate) use loop_word::{prepare_loop_heads, PreparedLoopHeads};
 mod syntax;

@@ -31,6 +31,9 @@ impl Syntax {
             self.helper_returns.insert(declaration, summary);
         }
         if let Some(candidate) = super::super::finite_returns::function(value) {
+            if super::super::finite_returns::plain_params(value) {
+                self.primitive_functions.insert(declaration);
+            }
             self.return_sinks.extend(candidate.returned_locals());
             self.finite_returns.insert(declaration, candidate);
         }

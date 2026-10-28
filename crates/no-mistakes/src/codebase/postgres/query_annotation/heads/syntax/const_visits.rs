@@ -40,8 +40,12 @@ impl Syntax {
                         }
                     }
                     if let Some(init) = declaration.init.as_ref() {
-                        if let Some(reference) = super::super::helper_heads::callee(init)
-                            .or_else(|| super::super::helper_records::append_callee(init))
+                        let direct = super::super::helper_heads::callee(init);
+                        if direct.is_some() {
+                            self.primitive_initializers.insert(span(binding.span));
+                        }
+                        if let Some(reference) =
+                            direct.or_else(|| super::super::helper_records::append_callee(init))
                         {
                             self.record_initializers
                                 .insert(span(binding.span), (reference, span(init.span())));

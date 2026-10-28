@@ -210,6 +210,13 @@ used call results, aliases, and nested helper calls remain unresolved. A helper
 may also `return query.append(suffix)` when that entire static append chain
 is rooted at its first parameter and its caller discards the helper result.
 The returned builder does not become a general value-flow proof.
+One immutable local may also hold the result of a direct same-file helper that
+returns only plain string literals or ordinary templates without interpolation.
+Every explicit path must have the same fixed leading-name verdict; a default
+path must return such a string or call an exact stable throw-only helper. The
+local must have one confirmed executor read in its own function and no other
+runtime use, write, alias, capture, or export. Tagged builders and TypeScript
+type unions do not establish primitive return identity or switch exhaustiveness.
 Secondary parameters may use a direct object destructure with static keys and
 plain bindings. Dynamic defaults, computed keys, and an argument expression that
 captures or passes the caller's builder still leave the read unresolved.

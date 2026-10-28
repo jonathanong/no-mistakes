@@ -298,6 +298,10 @@ The local effect helper may take that builder as its second of two plain
 parameters when its direct call is discarded and every exact parameter use
 only appends a suffix. Imported effect helpers retain their first-argument
 contract. This proves the returned builder's leading name only.
+At low effort, one local const may also hold a proven same-file helper result
+when every return is a plain literal string or no-hole ordinary template and
+the local has one exact executor read. The proof rejects mutable builders,
+aliases, writes, captures, and incomplete switch paths.
 For a fresh plain record, the helper may return an immutable local string
 template as its `text` property. A caller may also extract exactly
 `const { text, values } = helper(args)` and pass those bindings once to a
