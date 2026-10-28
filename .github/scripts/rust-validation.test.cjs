@@ -164,6 +164,45 @@ test("CI Clippy also builds default-feature test targets", () => {
   );
 });
 
+test("packaging has its own bounded job and remains in the required aggregate", () => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  const body = (job) => workflow.split(`\n  ${job}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
+  const packages = body("packages");
+  assert.ok(packages, "package verification must not share the lint job budget");
+  assert.match(packages, /timeout-minutes: 15/);
+  assert.match(packages, /run: cargo publish --dry-run --locked -p no-mistakes\n/);
+  assert.match(packages, /run: pnpm run pack:check\n/);
+  assert.doesNotMatch(body("quality"), /cargo publish|pnpm run pack:check/);
+  const gate = body("tests-gate");
+  assert.match(gate, /name: Tests with coverage/);
+  assert.match(gate, /\n      - packages\n/);
+  assert.match(gate, /PACKAGES_RESULT: \$\{\{ needs\.packages\.result \}\}/);
+});
+
+test("the actual required aggregate rejects every unsuccessful package result", () => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  const gate = workflow.split("\n  tests-gate:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const script = gate.split("        run: |\n")[1].replace(/^          /gm, "");
+  const successful = {
+    QUALITY_RESULT: "success",
+    PACKAGES_RESULT: "success",
+    JAVASCRIPT_RESULT: "success",
+    NATIVE_RESULT: "success",
+    RUST_RESULT: "success",
+    STANDALONE_RESULT: "success",
+    CHANGE_RESULT: "success",
+    BROWSER_CHANGED: "false",
+    BROWSER_RESULT: "skipped",
+  };
+  for (const result of ["success", "failure", "cancelled", "skipped"]) {
+    const output = spawnSync("bash", ["-eu", "-c", script], {
+      encoding: "utf8",
+      env: { ...process.env, ...successful, PACKAGES_RESULT: result },
+    });
+    assert.equal(output.status, result === "success" ? 0 : 1, output.stderr);
+  }
+});
+
 test("pre-push Clippy uses the workflow scope", () => {
   const hook = readFileSync(path.join(root, ".husky/pre-push"), "utf8");
   assert.match(

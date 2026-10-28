@@ -21,6 +21,13 @@ Release job environment overrides enforce the same symbol-free
 profiles for those historical manifests. The tooling checkout never replaces the tagged Rust source or becomes Cargo's
 working directory.
 
+CI runs lint/source checks and package verification in separate 15-minute jobs.
+The package job retains the locked Cargo publish dry run and npm pack dry run;
+neither publishes an artifact. The required `Tests with coverage` aggregate
+requires both jobs to succeed, including rejecting cancelled or skipped package
+validation. This keeps packaging independent of the several Rust validation
+profiles that previously consumed the same lint-job budget.
+
 The real-addon API steps load `inline-owned-member-api.test.js` through
 `real-napi-api.test.js` on Linux, macOS, and Windows with
 `NO_MISTAKES_TEST_NAPI_ADDON_PATH` pointing to the compiled addon. This exercises async CJS/ESM method-acquisition parity; ordinary
