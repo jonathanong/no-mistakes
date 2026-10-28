@@ -140,6 +140,11 @@ fn many_executor_reads_share_one_closed_owner_and_pending_callee_census() {
         Some(owner.references.len() as u64)
     );
     assert_eq!(
+        work.get("postgres.annotation.captured_pending_call_indexes")
+            .copied(),
+        Some(1)
+    );
+    assert_eq!(
         work.get("postgres.annotation.captured_pending_callee_censuses")
             .copied(),
         Some(1)
@@ -157,15 +162,23 @@ fn ordinary_literal_input_needs_no_capture_or_pending_owner_census() {
         .join("captured-import-effects");
     let fixture = crate::test_support::materialize_saved_fixture(&saved);
     let root = fixture.path();
-    let observer = InvocationObserver::new(true);
-    with_observer(Some(observer.clone()), || {
-        collect_check_facts(
-            root,
-            vec![root.join("src/ordinary.mts")],
-            plan(root, &config(&["low"])),
-        )
-    });
-    let work = observer.snapshot().work;
-    assert!(!work.contains_key("postgres.annotation.captured_lifetime_censuses"));
-    assert!(!work.contains_key("postgres.annotation.captured_pending_callee_censuses"));
+    for name in ["ordinary.mts", "native.mts"] {
+        let observer = InvocationObserver::new(true);
+        let facts = with_observer(Some(observer.clone()), || {
+            collect_check_facts(
+                root,
+                vec![root.join("src").join(name)],
+                plan(root, &config(&["low"])),
+            )
+        });
+        let file = facts.ts.get(&root.join("src").join(name)).unwrap();
+        let span = file.embedded_sql[0].1.call_spans[0];
+        assert!(file.query_annotation_heads.as_ref().unwrap().accepts(span));
+        let work = observer.snapshot().work;
+        if name == "ordinary.mts" {
+            assert!(!work.contains_key("postgres.annotation.captured_lifetime_censuses"));
+        }
+        assert!(!work.contains_key("postgres.annotation.captured_pending_call_indexes"));
+        assert!(!work.contains_key("postgres.annotation.captured_pending_callee_censuses"));
+    }
 }
