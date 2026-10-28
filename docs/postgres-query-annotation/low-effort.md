@@ -397,3 +397,30 @@ Only continuation-safe leading heads qualify: appending can change `BEGIN` to
 unknown continuations retain the configured advisory/report/ignore policy. The
 proof inspects the existing AST/facts and never composes full SQL variants. Max
 effort keeps its existing evaluation behavior.
+
+### Captured builders with imported append effects
+
+A fresh named native builder can retain its low-effort head through both captured
+append statements and direct imported append-only helpers. Every reference to the
+exact local binding must be a discarded append, a confirmed executor read
+(including paired text/values reads), a proven local effect, or an exact pending
+imported effect. All imported obligations must resolve through prepared source
+exports before any affected executor read gains a head proof; one unknown or
+unsafe import keeps the read unanalyzable. The captured proof admits at most eight
+distinct pending call sites per builder and stays unresolved beyond that bound.
+
+```ts
+const query = sql`/* capturedFilters */ SELECT 1`
+items.forEach(item => { query.append(item) })
+appendFilters(query, filters)
+await read(query)
+```
+
+The callback body must discard each append result. An expression such as
+`item => query.append(item)` exposes the returned builder and remains unresolved;
+the method name `forEach` does not establish a trusted callback contract. Aliases,
+returns, property mutation, unconfigured reads, exports, dynamic binding gaps,
+custom tags and replaced helper bindings also retain the advisory. Keep the
+builder private and use explicit append statements to make that lifetime visible.
+The proof shares the original source/binding pass and existing imported-effect
+projection, does not evaluate SQL values, and leaves max behavior unchanged.

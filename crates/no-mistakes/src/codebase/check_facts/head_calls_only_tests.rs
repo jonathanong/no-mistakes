@@ -170,6 +170,8 @@ mod variant_parity;
 
 #[path = "head_calls_only_tests/captured_effect_fact_tests.rs"]
 mod captured_effect_facts;
+#[path = "head_calls_only_tests/captured_import_fact_tests.rs"]
+mod captured_import_fact_tests;
 #[path = "head_calls_only_tests/effect_composition_fact_tests.rs"]
 mod effect_composition_facts;
 #[path = "head_calls_only_tests/effect_default_fact_tests.rs"]

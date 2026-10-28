@@ -13,7 +13,7 @@ pub(super) struct Safety {
     repeated_calls: FxHashSet<Span>,
     conditional_limits: FxHashMap<Span, u32>,
     pending_by_declaration: FxHashMap<Span, Vec<(u32, Span)>>,
-    closed_prefix: FxHashSet<Span>,
+    closed_prefix: super::captured_prefix::Proofs,
 }
 impl Safety {
     pub fn new(
@@ -22,7 +22,7 @@ impl Safety {
         executors: &FxHashSet<Span>,
         trusted_roots: &FxHashSet<Span>,
         effects: &super::effects::Prepared,
-        closed_prefix: FxHashSet<Span>,
+        closed_prefix: super::captured_prefix::Proofs,
     ) -> Self {
         let allowed = uses::collect(syntax, executors, effects);
         let pending = effects
@@ -142,7 +142,7 @@ impl Safety {
             .is_some_and(|first| *first < call.0 || self.repeated_calls.contains(&call))
     }
     pub fn accepts(&self, declaration: Span, call: Span) -> bool {
-        if self.closed_prefix.contains(&declaration) {
+        if self.closed_prefix.unconditional.contains(&declaration) {
             return declaration.1 < call.0;
         }
         declaration.1 < call.0
@@ -151,7 +151,7 @@ impl Safety {
             })
     }
     pub fn closed_prefix(&self, declaration: Span) -> bool {
-        self.closed_prefix.contains(&declaration)
+        self.closed_prefix.unconditional.contains(&declaration)
     }
     pub fn accepts_legacy(&self, declaration: Span, call: Span) -> bool {
         declaration.1 < call.0
@@ -160,6 +160,10 @@ impl Safety {
             })
     }
     pub fn conditional(&self, declaration: Span, call: Span) -> Option<Vec<Span>> {
+        // A complete captured lifetime requires every imported effect, in any order.
+        if let Some(required) = self.closed_prefix.required.get(&declaration) {
+            return (declaration.1 < call.0).then(|| required.clone());
+        }
         let limit = *self.conditional_limits.get(&declaration)?;
         let repeated = self.repeated_calls.contains(&call);
         if declaration.1 >= call.0 || call.1 > limit || (repeated && limit != u32::MAX) {

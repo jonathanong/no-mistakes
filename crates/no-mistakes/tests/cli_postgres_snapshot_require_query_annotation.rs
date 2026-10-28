@@ -156,6 +156,7 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("effect_defaults_report", "effect-defaults", "effect-defaults-report.yml"),
         // Captured callbacks may add suffixes even if replayed; escaping the builder still advises.
         case("captured_append_effects_report", "low-heads", "captured-append-effects-report.yml"),
+        case("captured_import_effects_report", "captured-import-effects", "captured-import-effects-report.yml"),
         case("captured_prefix_report", "captured-prefix", "captured-prefix-report.yml"),
         case("captured_prefix_ignore", "captured-prefix", "captured-prefix-ignore.yml"),
         // Field and imported value projections retain named, missing, and advisory cases.

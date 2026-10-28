@@ -411,3 +411,10 @@ are proven append-only effects followed by its sole terminal return. Consume tha
 result in one `const` immediately passed as the configured executor's sole
 argument. Missing awaits, extra uses, unresolved effects and alternate return
 paths remain unanalyzable; see [awaited return origins](../postgres-query-annotation/low-effort.md#awaited-fresh-native-return-origins).
+
+Low effort also combines a closed captured native builder lifetime with direct
+imported append-effect obligations. Every obligation must resolve before the
+head is accepted; callback append results must be discarded. Expression-bodied
+callbacks returning the builder remain unanalyzable. See
+[captured builders with imported effects](../postgres-query-annotation/low-effort.md#captured-builders-with-imported-append-effects)
+for the bounded contract and a static rewrite.
