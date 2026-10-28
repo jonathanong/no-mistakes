@@ -30,6 +30,8 @@ mod missing_append_tests;
 mod missing_tests;
 #[path = "returned_captured_tests.rs"]
 mod returned_captured_tests;
+#[path = "returned_param_tests.rs"]
+mod returned_param_tests;
 #[path = "support.rs"]
 mod support;
 #[path = "tags_tests.rs"]

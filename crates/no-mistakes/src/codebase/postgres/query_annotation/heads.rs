@@ -20,6 +20,7 @@ mod lookup;
 mod loop_carried;
 mod loop_word;
 mod namespace_heads;
+mod returned_params;
 pub(crate) use loop_word::{prepare_loop_heads, PreparedLoopHeads};
 mod syntax;
 mod tag_constants;
@@ -55,6 +56,8 @@ pub(crate) struct AnnotationHeads {
     pub(crate) pending_effects: Vec<effects::Pending>,
     pub(crate) exported_callbacks: BTreeMap<String, callback_heads::Summary>,
     pub(crate) pending_callbacks: Vec<callback_heads::Pending>,
+    pub(crate) exported_returned_params: std::collections::BTreeSet<String>,
+    pub(crate) pending_returned_params: Vec<returned_params::Pending>,
     pub(crate) conditional_effects: Vec<effects::Conditional>,
     pub(crate) loop_carried_missing: BTreeMap<Span, Vec<Option<String>>>,
     helper_calls: Option<BTreeMap<Span, (String, HeadProof)>>,
