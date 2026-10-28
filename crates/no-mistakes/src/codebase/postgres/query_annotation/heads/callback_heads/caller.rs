@@ -12,15 +12,6 @@ mod inline;
 mod local_payloads;
 use index::Imports;
 
-#[cfg(test)]
-pub(super) fn pending(
-    program: &Program<'_>,
-    module: &TypeScriptModuleFacts,
-    executors: &FxHashSet<Span>,
-) -> Vec<Pending> {
-    visit(program, module, executors, &FxHashMap::default(), None).0
-}
-
 pub(super) fn project(
     program: &Program<'_>,
     module: &TypeScriptModuleFacts,
