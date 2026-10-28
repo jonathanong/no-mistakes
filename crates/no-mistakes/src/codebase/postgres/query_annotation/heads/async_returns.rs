@@ -16,7 +16,7 @@ pub(super) struct Candidate {
     declaration: Span,
     tag: Span,
     returned: Span,
-    allocated: u32,
+    initializer_start: u32,
     proof: HeadProof,
     appends: Vec<Span>,
     effects: Vec<Span>,

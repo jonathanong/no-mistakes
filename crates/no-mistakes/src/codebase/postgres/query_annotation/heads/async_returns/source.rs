@@ -52,7 +52,10 @@ fn prove(
                 || syntax.assignments.unsupported_writes.contains(&span)
         })
         || events.dynamic_in(candidate.body)
-        || inside(&events.awaits, (candidate.allocated, candidate.body.1))
+        || inside(
+            &events.awaits,
+            (candidate.initializer_start, candidate.body.1),
+        )
     {
         return None;
     }
