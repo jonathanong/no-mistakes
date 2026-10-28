@@ -77,26 +77,7 @@ pub(crate) fn collect_prepared(
         }
         // Source-proven helper results are low-only endpoints. Legacy max
         // append fallback above must see the original call-head proofs.
-        let mut primitive_memo = primitive_results::Memo::default();
-        let clean_module = ts
-            .module_bindings
-            .as_deref()
-            .is_some_and(|module| module.diagnostics.is_empty());
-        for call in syntax
-            .calls
-            .iter()
-            .filter(|call| executor_calls.contains(&call.span))
-        {
-            if let Some(summary) = helper_records::local_result_proof(&syntax, &bindings, call) {
-                calls.insert(call.span, summary.proof());
-            } else if clean_module {
-                if let Some(proof) =
-                    primitive_results::proof(&syntax, &bindings, call, &mut primitive_memo)
-                {
-                    calls.insert(call.span, proof);
-                }
-            }
-        }
+        primitive_results::apply(&syntax, &bindings, ts, &executor_calls, &mut calls);
         for (span, proof) in finite_comments::proofs(
             &syntax,
             &bindings,
