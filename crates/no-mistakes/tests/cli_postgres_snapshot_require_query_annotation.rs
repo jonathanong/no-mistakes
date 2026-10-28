@@ -185,6 +185,7 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("returned_captured_prefix_ignore", "low-heads", "returned-captured-prefix-ignore.yml"),
         case("finite_comment_names_report", "low-heads", "finite-comment-names-report.yml"),
         case("finite_comment_names_ignore", "low-heads", "finite-comment-names-ignore.yml"),
+        case("two_arm_assignment_report", "low-heads", "two-arm-assignment-report.yml"),
         case("callback_more_report", "callback-more", "callback-more-report.yml"),
     ];
     assert_saved_fixture("postgres_require_query_annotation", &cases);
