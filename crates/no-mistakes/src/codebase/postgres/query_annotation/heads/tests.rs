@@ -123,3 +123,6 @@ pub(super) fn collect_with_helpers(
         None,
     )
 }
+
+#[path = "scalar_comment_tests.rs"]
+mod scalar_comment_tests;

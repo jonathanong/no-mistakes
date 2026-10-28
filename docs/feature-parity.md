@@ -95,6 +95,10 @@ They also accept finite conditional expressions whose every arm has a named
 literal head, plus one returned local trusted builder with append-only uses
 before its final return. Tagged arms and returned builders retain the existing
 escape checks.
+Private helpers may also append a finite literal scalar name between a native
+opening-comment tag and a closing fragment of the same native constructor.
+CLI and async Node checks require all direct calls and complete label/builder/
+constructor ownership; tagged bind holes never stand in for the raw name.
 Function declarations with explicit early returns or a total final switch
 also join identical named or missing heads. The switch default must throw
 directly or call a stable same-file throw-only function. All return paths must

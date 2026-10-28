@@ -87,6 +87,11 @@ in the same file or through one direct source import, including local export
 aliases and concise arrow bodies. Opaque append suffixes preserve the prefix
 only for the trusted `sql-template-strings` tag. Unsupported helper or
 mutation shapes remain unanalyzable.
+The same CLI and async Node proof also closes a native opening comment through
+one scalar label append and a native closing fragment. It requires a private
+helper's complete bounded literal caller set, exact argument counts, and closed
+label, builder, and constructor ownership. Unknown names or early opaque/bind
+fragments remain unresolved without SQL evaluation.
 The same prepared proof joins two adjacent exhaustive assignments to one local
 `let` when each arm creates a fresh native tagged builder and the only later
 use is its immediate configured executor read. It retains missing-head findings

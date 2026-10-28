@@ -1,0 +1,8 @@
+import sql from 'sql-template-strings'
+import { read } from '@bench/db'
+sql.SQLStatement.prototype.append = opaque
+async function rejected(label, a, b, c) {
+  const query = sql`/* `.append(label).append(sql` */ SELECT 1`)
+  read(query) // proof: Unproven
+}
+rejected('known', 1, 2, 3)

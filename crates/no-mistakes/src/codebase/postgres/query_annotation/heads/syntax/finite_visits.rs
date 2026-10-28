@@ -75,6 +75,12 @@ impl Syntax {
             declaration: span(id.span),
             body: span(value.span),
             parameter: span(parameter.span),
+            count: value.params.items.len(),
+            scalar_plain: value
+                .params
+                .items
+                .iter()
+                .all(|param| param.decorators.is_empty()),
         });
     }
     pub(super) fn finite_const(&mut self, value: &VariableDeclarator<'_>) {
@@ -121,5 +127,28 @@ impl Syntax {
             enclosing,
             parameter: span(parameter.span),
         });
+    }
+}
+
+impl Syntax {
+    pub(super) fn finite_tag(&mut self, value: &oxc_ast::ast::TaggedTemplateExpression<'_>) {
+        if self.collect_finite {
+            if let Expression::Identifier(tag) =
+                crate::codebase::ts_source::unwrap_ts_wrappers(&value.tag)
+            {
+                self.finite_tags.insert(span(tag.span));
+            }
+        }
+    }
+    pub(super) fn returned_append(&mut self, value: &oxc_ast::ast::ReturnStatement<'_>) {
+        if self.collect_helper_heads {
+            if let Some(reference) = value
+                .argument
+                .as_ref()
+                .and_then(super::super::append::prefix_reference)
+            {
+                self.returned_effect_appends.insert(reference);
+            }
+        }
     }
 }

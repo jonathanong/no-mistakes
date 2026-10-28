@@ -35,6 +35,7 @@ pub(super) struct Syntax {
     pub optional_calls: FxHashSet<Span>,
     pub helper_arguments: FxHashMap<Span, Span>,
     pub collect_finite: bool,
+    pub finite_tags: FxHashSet<Span>,
     pub finite_calls: Vec<super::finite_comments::CallSite>,
     pub finite_templates: Vec<super::finite_comments::TemplateUse>,
     pub finite_roots: Vec<super::finite_comments::Root>,

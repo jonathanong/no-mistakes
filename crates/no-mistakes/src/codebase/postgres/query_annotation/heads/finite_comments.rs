@@ -4,6 +4,10 @@ use crate::fx::FxHashSet;
 mod domain;
 mod grammar;
 mod proof;
+pub(super) mod scalar;
+mod scalar_domain;
+mod scalar_grammar;
+mod scalar_ownership;
 pub(super) use grammar::{loop_domain, root, template};
 pub(super) use proof::proofs;
 
@@ -27,11 +31,14 @@ pub(super) struct Root {
     pub tag: Span,
     pub before: String,
     pub after: String,
+    pub scalar: Option<Span>,
 }
 pub(super) struct Function {
     pub declaration: Span,
     pub body: Span,
     pub parameter: Span,
+    pub count: usize,
+    pub scalar_plain: bool,
 }
 pub(super) struct Select {
     pub declaration: Span,

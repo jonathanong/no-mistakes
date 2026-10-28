@@ -240,6 +240,27 @@ helper may also receive at most 16 direct literal names through a closed
 trusted SQL builder. Each runtime name must close the first named comment;
 unknown names, aliases, extra calls, and tagged bind interpolations remain
 unanalyzable under the selected policy.
+A private helper with plain parameters may instead append its first scalar
+label between an exact native `sql` opening comment and a closing native
+fragment. Every one of at most 16 direct calls must supply a literal label and
+the exact argument count. For example:
+
+```ts
+async function recipients(label, value) {
+  const statement = sql`/* `.append(label).append(sql` */ SELECT ${value}`);
+  return query(statement);
+}
+recipients("recipients/first", first);
+recipients("recipients/second", second);
+```
+
+All labels must make a nonempty first comment and contain no comment delimiters.
+The label has one exact use; the helper and native constructor cannot escape,
+be exported, or be reassigned. The builder has only same-function discarded
+appends and configured executor reads. Opaque suffixes are allowed after the
+comment closes; bind holes or opaque fragments before closure, custom closing
+tags, unknown callers, defaults, rest/spread/optional calls, and aliases remain
+unresolved. This proof neither composes SQL nor runs the evaluator.
 Finite conditional literals qualify only when every arm has a complete named
 head; tagged arms retain mutable-builder escape checks. A function declaration
 also qualifies with explicit early `if` returns and a final top-level return,

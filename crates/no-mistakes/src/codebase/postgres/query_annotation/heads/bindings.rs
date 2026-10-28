@@ -60,6 +60,7 @@ impl<'a> Bindings<'a> {
         // A closed captured root needs ownership for every runtime reference,
         // including uses that are not executor or append candidates.
         let finite_declarations = super::finite_comments::declarations(syntax);
+        super::finite_comments::scalar::extend_wanted(syntax, module, &mut wanted);
         for binding in &module.bindings {
             if syntax
                 .append_tags

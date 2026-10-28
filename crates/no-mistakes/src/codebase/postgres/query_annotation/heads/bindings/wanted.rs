@@ -37,12 +37,11 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
                 .flat_map(|value| value.references()),
         )
         .chain(syntax.finite_templates.iter().map(|value| value.reference))
-        .chain(
-            syntax
-                .finite_roots
-                .iter()
-                .flat_map(|value| [value.reference, value.tag]),
-        )
+        .chain(syntax.finite_roots.iter().flat_map(|value| {
+            [Some(value.reference), Some(value.tag), value.scalar]
+                .into_iter()
+                .flatten()
+        }))
         .chain(syntax.finite_calls.iter().flat_map(|call| {
             std::iter::once(call.callee).chain(match &call.first {
                 super::super::finite_comments::Argument::Reference(span) => Some(*span),

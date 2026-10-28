@@ -107,16 +107,12 @@ impl<'a> Visit<'a> for Syntax {
         self.assignments.discarded_assignment = previous;
     }
     fn visit_return_statement(&mut self, value: &ReturnStatement<'a>) {
-        if self.collect_helper_heads {
-            if let Some(reference) = value
-                .argument
-                .as_ref()
-                .and_then(super::super::append::prefix_reference)
-            {
-                self.returned_effect_appends.insert(reference);
-            }
-        }
+        self.returned_append(value);
         walk::walk_return_statement(self, value);
+    }
+    fn visit_tagged_template_expression(&mut self, value: &TaggedTemplateExpression<'a>) {
+        self.finite_tag(value);
+        walk::walk_tagged_template_expression(self, value);
     }
     fn visit_simple_assignment_target(&mut self, value: &SimpleAssignmentTarget<'a>) {
         self.assignments.target(value);

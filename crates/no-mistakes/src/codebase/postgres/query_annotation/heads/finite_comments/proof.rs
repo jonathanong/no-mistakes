@@ -35,7 +35,12 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
             found.insert(candidate.call, HeadProof::Literal);
         }
     }
-    for root in &syntax.finite_roots {
+    found.extend(super::scalar::proofs(syntax, bindings, module, executors));
+    for root in syntax
+        .finite_roots
+        .iter()
+        .filter(|root| root.scalar.is_none())
+    {
         if !syntax.calls.iter().any(|call| {
             executors.contains(&call.span)
                 && matches!(call.head, Head::Reference(reference)
@@ -88,7 +93,7 @@ fn direct(
         )
 }
 
-fn all_named(before: &str, after: &str, values: &[String]) -> bool {
+pub(super) fn all_named(before: &str, after: &str, values: &[String]) -> bool {
     !values.is_empty()
         && values.len() <= 16
         && values

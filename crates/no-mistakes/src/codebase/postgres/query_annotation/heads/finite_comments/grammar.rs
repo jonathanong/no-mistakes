@@ -95,11 +95,7 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn template(
     ))
 }
 
-pub(in crate::codebase::postgres::query_annotation::heads) fn root(
-    declaration: Span,
-    function: Span,
-    init: &Expression<'_>,
-) -> Option<Root> {
+fn template_root(declaration: Span, function: Span, init: &Expression<'_>) -> Option<Root> {
     let Expression::CallExpression(call) = unwrap_ts_wrappers(init) else {
         return None;
     };
@@ -131,5 +127,15 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn root(
         tag: (tag.span.start, tag.span.end),
         before,
         after,
+        scalar: None,
     })
+}
+
+pub(in crate::codebase::postgres::query_annotation::heads) fn root(
+    declaration: Span,
+    function: Span,
+    init: &Expression<'_>,
+) -> Option<Root> {
+    super::scalar_grammar::root(declaration, function, init)
+        .or_else(|| template_root(declaration, function, init))
 }

@@ -172,6 +172,15 @@ while its use remains in the same function and is neither captured nor passed
 to another helper. References to the builder inside a suffix expression count
 as an unsafe use.
 
+A private helper with plain parameters may also assemble its first comment as
+`` sql`/* `.append(label).append(sql` */ SELECT 1`) ``. Its first parameter has
+one exact scalar use and every direct caller (at most 16) supplies a literal
+name with the exact parameter count. Native constructor identity and the
+builder's complete append/executor-only lifetime must stay closed. Empty names,
+comment delimiters, unknown/spread/optional callers, aliases, exports, mutation,
+and holes or opaque text before comment closure stay unresolved. Opaque suffixes
+after closure do not need evaluation.
+
 A captured local builder also keeps its fixed named head when **every** runtime
 reference to its exact binding is closed: a discarded static one-argument
 `.append(...)`, a configured executor read, or a proven local append-only
