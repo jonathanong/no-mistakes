@@ -252,3 +252,66 @@ test("native API timeout leaves startup and teardown room after the observed Win
   const linux = workflow.split("\n  native-tests:\n")[0];
   assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 2\n/);
 });
+
+const workflowJob = (name) => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  const job = workflow.split(`\n  ${name}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
+  assert.ok(job, `workflow must retain the ${name} job`);
+  return job;
+};
+const jobBudgetSeconds = (job) => Number(job.match(/\n    timeout-minutes: (\d+)\n/)[1]) * 60;
+const stepBudgetSeconds = (job, name) => {
+  const step = job.split(`      - name: ${name}\n`)[1];
+  assert.ok(step, `job must retain ${name}`);
+  return Number(step.match(/\s+timeout-minutes: (\d+)/)[1]) * 60;
+};
+
+test("quality job leaves bounded package verification and cleanup time after observed checks", () => {
+  const observed = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/rust-validation/fixture/quality-job-timing.json"),
+      "utf8",
+    ),
+  );
+  const job = workflowJob("quality");
+  const elapsed =
+    (Date.parse(observed.cargoPublishStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
+  const publish = stepBudgetSeconds(job, "Check Cargo packages");
+  const npm = stepBudgetSeconds(job, "Check npm packages");
+  const diagnostics = stepBudgetSeconds(job, "Diagnose Rust disk usage after failure");
+  assert.equal(observed.conclusion, "cancelled");
+  assert.deepEqual([publish, npm, diagnostics], [600, 120, 120]);
+  assert.match(job, /run: cargo publish --dry-run --locked -p no-mistakes/);
+  assert.match(job, /run: pnpm run pack:check/);
+  assert.ok(
+    jobBudgetSeconds(job) >= elapsed + publish + npm + diagnostics,
+    "job budget must leave package and diagnostic steps their existing bounded time",
+  );
+  assert.ok(jobBudgetSeconds(job) <= 1800, "retain a job deadline of at most thirty minutes");
+});
+
+test("coverage job reserves bounded post-cache time after completed tests and gates", () => {
+  const observed = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/rust-validation/fixture/rust-coverage-job-timing.json"),
+      "utf8",
+    ),
+  );
+  const job = workflowJob("tests");
+  const elapsed =
+    (Date.parse(observed.postCacheStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
+  assert.equal(observed.conclusion, "cancelled");
+  assert.equal(observed.completedRustTests, 14669);
+  assert.ok(
+    jobBudgetSeconds(job) >= elapsed + observed.postCacheReserveSeconds,
+    "job budget must include cache cleanup after tests, reports and uploads finish",
+  );
+  assert.ok(jobBudgetSeconds(job) <= 1800, "retain a job deadline of at most thirty minutes");
+  assert.equal(stepBudgetSeconds(job, "Enforce Rust coverage floors"), 300);
+  assert.match(job, /cargo llvm-cov report --json --summary-only/);
+  assert.match(job, /node \.github\/scripts\/rust-coverage-floors\.cjs/);
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  for (const dimension of ["LINES", "FUNCTIONS", "REGIONS"]) {
+    assert.match(workflow, new RegExp(`RUST_COVERAGE_FAIL_UNDER_${dimension}: "98"`));
+  }
+});

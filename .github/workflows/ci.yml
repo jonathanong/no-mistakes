@@ -97,7 +97,8 @@ jobs:
   quality:
     name: Lint and package checks
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Compilation checks, package verification and cleanup share this budget.
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -640,7 +641,8 @@ jobs:
   tests:
     name: Rust tests and coverage
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Include coverage exports, uploads and post-job cache cleanup after tests.
+    timeout-minutes: 25
     permissions:
       id-token: write
     steps:

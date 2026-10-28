@@ -74,7 +74,22 @@ The checker sums covered and total counts across export records and compares
 unrounded percentages with the existing line, function, and region floors.
 Missing or malformed totals fail the check. This avoids the extra table and
 full JSON passes performed by native `--fail-under-*` flags; LCOV generation
-for CRAP and Codecov and the job deadline retain their existing settings.
+for CRAP and Codecov retains its existing settings.
+
+The lint and package job has a 30-minute aggregate deadline; its existing
+step deadlines remain in place, including ten minutes for Cargo package
+verification. An observed run spent about twelve minutes on setup and checks
+before reaching that verification, leaving too little of the former
+15-minute job budget for packaging, npm checks, and cleanup.
+
+The Rust coverage job has a 25-minute aggregate deadline. In the same observed
+run, all 14,669 Rust tests, documentation tests, snapshot auditing, and coverage
+quality gates passed, and Codecov upload finished about 19 minutes 48 seconds
+after the first runner log. The former 20-minute job deadline then cancelled
+post-job cache cleanup. Those completed checks passed, but the aggregate job
+was still cancelled. The extra budget reserves cleanup time; step deadlines,
+98% coverage floors, and failure behavior are unchanged. These observations
+are censored job outcomes, not completed-job timing guarantees.
 
 ## Hosted measurement
 
