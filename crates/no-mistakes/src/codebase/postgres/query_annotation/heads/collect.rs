@@ -1,8 +1,8 @@
 //! Low annotation head facts from the original prepared program.
 use super::{
     bindings, callback_heads, effects, finite_comments, helper_heads, helper_records,
-    literal_helpers, loop_carried, namespace_heads, returned_params, syntax, trusted_append,
-    AnnotationHeads, HeadCallSpans, HeadProof, PreparedLoopHeads, Span,
+    literal_helpers, loop_carried, namespace_heads, primitive_results, returned_params, syntax,
+    trusted_append, AnnotationHeads, HeadCallSpans, HeadProof, PreparedLoopHeads, Span,
 };
 use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
@@ -72,6 +72,11 @@ pub(crate) fn collect_prepared(
         }
         // Source-proven helper results are low-only endpoints. Legacy max
         // append fallback above must see the original call-head proofs.
+        let mut primitive_memo = crate::fx::FxHashMap::default();
+        let clean_module = ts
+            .module_bindings
+            .as_deref()
+            .is_some_and(|module| module.diagnostics.is_empty());
         for call in syntax
             .calls
             .iter()
@@ -79,6 +84,12 @@ pub(crate) fn collect_prepared(
         {
             if let Some(summary) = helper_records::local_result_proof(&syntax, &bindings, call) {
                 calls.insert(call.span, summary.proof());
+            } else if clean_module {
+                if let Some(proof) =
+                    primitive_results::proof(&syntax, &bindings, call, &mut primitive_memo)
+                {
+                    calls.insert(call.span, proof);
+                }
             }
         }
         for (span, proof) in finite_comments::proofs(

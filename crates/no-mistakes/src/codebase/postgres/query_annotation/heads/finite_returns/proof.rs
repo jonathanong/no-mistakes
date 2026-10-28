@@ -16,6 +16,21 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn head_proof(
     join(syntax, bindings, owner).map(|(proof, _)| proof)
 }
 
+pub(in crate::codebase::postgres::query_annotation::heads) fn primitive_head_proof(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    owner: &ModuleBinding,
+) -> Option<HeadProof> {
+    let span = (owner.span.start, owner.span.end);
+    let Candidate::Returns { heads, .. } = syntax.finite_returns.get(&span)? else {
+        return None;
+    };
+    if !heads.iter().all(|head| head.primitive) {
+        return None;
+    }
+    join(syntax, bindings, owner).map(|(proof, _)| proof)
+}
+
 pub(in crate::codebase::postgres::query_annotation::heads) fn builder_summary(
     syntax: &Syntax,
     bindings: &Bindings<'_>,

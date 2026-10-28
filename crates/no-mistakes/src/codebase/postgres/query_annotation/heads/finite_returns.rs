@@ -1,10 +1,10 @@
 //! Explicit total return paths, without evaluating helper arguments or SQL.
 use super::{syntax::Head, Span};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{Function, ReturnStatement, Statement};
+use oxc_ast::ast::{BindingPattern, Function, ReturnStatement, Statement};
 use oxc_ast_visit::{walk, Visit};
 mod proof;
-pub(super) use proof::{builder_summary, head_proof};
+pub(super) use proof::{builder_summary, head_proof, primitive_head_proof};
 
 #[derive(Clone)]
 pub(super) enum Candidate {
@@ -18,6 +18,7 @@ pub(super) enum Candidate {
 pub(super) struct Return {
     pub head: Head,
     pub tag: Option<Span>,
+    pub primitive: bool,
 }
 impl Candidate {
     pub fn references(&self) -> Vec<Span> {
@@ -101,6 +102,14 @@ pub(super) fn function(value: &Function<'_>) -> Option<Candidate> {
     count.visit_function_body(body);
     (count.0 == heads.len() + abrupt.len()).then_some(Candidate::Returns { heads, abrupt })
 }
+pub(super) fn plain_params(value: &Function<'_>) -> bool {
+    value.params.rest.is_none()
+        && value.params.items.iter().all(|item| {
+            item.initializer.is_none()
+                && item.decorators.is_empty()
+                && matches!(item.pattern, BindingPattern::BindingIdentifier(_))
+        })
+}
 
 fn collect_if(value: &oxc_ast::ast::IfStatement<'_>, heads: &mut Vec<Return>) -> Option<()> {
     // Guard conditions and non-return branch bodies are intentionally ignored: only literal, tag,
@@ -127,6 +136,11 @@ fn branch_return(value: &Statement<'_>) -> Option<Option<Return>> {
 }
 fn return_head(value: &ReturnStatement<'_>) -> Option<Return> {
     let expression = unwrap_ts_wrappers(value.argument.as_ref()?);
+    let primitive = match expression {
+        oxc_ast::ast::Expression::StringLiteral(_) => true,
+        oxc_ast::ast::Expression::TemplateLiteral(template) => template.expressions.is_empty(),
+        _ => false,
+    };
     let head = super::syntax::head(expression);
     let tag = match head {
         Head::Reference(_) | Head::Literal => None,
@@ -136,7 +150,11 @@ fn return_head(value: &ReturnStatement<'_>) -> Option<Return> {
         }
         _ => return None,
     };
-    Some(Return { head, tag })
+    Some(Return {
+        head,
+        tag,
+        primitive,
+    })
 }
 struct Returns(usize);
 impl<'a> Visit<'a> for Returns {
