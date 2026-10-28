@@ -36,3 +36,9 @@ fn opaque_text_fields_keep_missing_and_transaction_boundary_proofs_distinct() {
         );
     }
 }
+
+#[test]
+fn returned_builder_text_with_third_options_keeps_exact_ownership() {
+    let (source, _, heads) = fixture("text-field-third.mts");
+    assert_eq!(assert_markers(&source, &heads), 10);
+}

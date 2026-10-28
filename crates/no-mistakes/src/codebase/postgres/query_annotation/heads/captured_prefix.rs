@@ -23,15 +23,23 @@ pub(super) fn proofs(
     {
         return FxHashSet::default();
     }
-    let reads = syntax
-        .calls
-        .iter()
-        .filter(|call| executors.contains(&call.span))
-        .filter_map(|call| match call.head {
-            Head::Reference(span) => Some(span),
-            _ => None,
-        })
-        .collect::<FxHashSet<_>>();
+    let mut reads = FxHashSet::default();
+    let mut paired = FxHashSet::default();
+    for call in syntax.calls.iter().filter(|call| executors.contains(&call.span)) {
+        match call.head {
+            Head::Reference(span) => {
+                reads.insert(span);
+            }
+            Head::FieldReference(span) if syntax.record_result_calls.contains(&call.span) => {
+                reads.insert(span);
+                paired.insert(call.span);
+            }
+            _ => {}
+        }
+    }
+    reads.extend(syntax.value_reads.iter().filter_map(|(reference, call)| {
+        paired.contains(call).then_some(*reference)
+    }));
     let module_scopes = module
         .scopes
         .iter()

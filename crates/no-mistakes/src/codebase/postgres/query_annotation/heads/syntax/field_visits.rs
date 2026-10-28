@@ -33,7 +33,12 @@ impl Syntax {
         if let Some((value_name, reference)) = field(second, "values") {
             if name == value_name {
                 self.value_reads.insert(reference, span(call.span));
-                if self.collect_helper_heads && !call.optional && call.arguments.len() == 2 {
+                if self.collect_helper_heads
+                    && !call.optional
+                    && (call.arguments.len() == 2
+                        || (call.arguments.len() == 3
+                            && call.arguments[2].as_expression().is_some()))
+                {
                     self.record_result_calls.insert(span(call.span));
                 }
             }

@@ -14,6 +14,8 @@ mod callback_head_tests;
 mod callback_more_tests;
 #[path = "head_calls_only_tests/finite_comment_fact_tests.rs"]
 mod finite_comment_fact_tests;
+#[path = "head_calls_only_tests/text_field_fact_tests.rs"]
+mod text_field_fact_tests;
 #[path = "head_calls_only_tests/namespace_fact_tests.rs"]
 mod namespace_fact_tests;
 #[path = "head_calls_only_tests/returned_prefix_fact_tests.rs"]

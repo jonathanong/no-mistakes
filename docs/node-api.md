@@ -445,6 +445,11 @@ For PostgreSQL query annotation checks, low effort recognizes direct `.text`/`.v
 
 The async query-annotation check shares low's bounded fresh helper-result proof
 for paired `.text`/`.values` reads; it does not run the annotation evaluator.
+The pair may be followed by one options argument when its builder result has a
+closed source-visible origin.
+The same low proof accepts a native builder's paired fields in a nested closure
+only when every reference preserves its fixed head, even if that closure runs
+later or more than once.
 The same prepared proof covers an immutable local record text template and
 one exact `{ text, values }` extraction from a fresh plain record.
 It also accepts an exact fresh trusted builder returned into one local `const`

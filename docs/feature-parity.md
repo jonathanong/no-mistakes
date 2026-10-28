@@ -1002,6 +1002,11 @@ Low-effort PostgreSQL query annotation also projects the fixed head of an exact 
 
 Low PostgreSQL annotation checks also project fixed heads from fresh source
 helper records or trusted builder results through one local paired field read.
+That pair may precede one executor options argument without changing the
+already-read SQL text head.
+A native builder's paired fields may also be read by a captured closure when
+all uses of that builder preserve its fixed prefix; CLI and async Node checks
+share the same prepared binding census.
 Plain record text may come from an immutable local template, and an exact
 `{ text, values }` extraction may feed one configured executor call.
 Fresh trusted builder helper results may also flow through one safe local SQL
