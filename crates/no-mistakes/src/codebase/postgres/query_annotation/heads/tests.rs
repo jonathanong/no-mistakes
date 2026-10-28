@@ -1,17 +1,35 @@
 #[path = "append_tests.rs"]
 mod append_tests;
+#[path = "captured_prefix_tests.rs"]
+mod captured_prefix_tests;
+#[path = "conditional_return_tests.rs"]
+mod conditional_return_tests;
+#[path = "effects_tests.rs"]
+mod effects_tests;
 #[path = "failures.rs"]
 mod failures;
+#[path = "field_tests.rs"]
+mod field_tests;
+#[path = "finite_comment_tests.rs"]
+mod finite_comment_tests;
+#[path = "finite_return_tests.rs"]
+mod finite_return_tests;
 #[path = "gap_tests.rs"]
 mod gap_tests;
+#[path = "helper_binding_tests.rs"]
+mod helper_binding_tests;
 #[path = "helper_fallback_tests.rs"]
 mod helper_fallback_tests;
 #[path = "helper_heads_tests.rs"]
 mod helper_heads_tests;
+#[path = "helper_record_tests.rs"]
+mod helper_record_tests;
 #[path = "missing_append_tests.rs"]
 mod missing_append_tests;
 #[path = "missing_tests.rs"]
 mod missing_tests;
+#[path = "returned_captured_tests.rs"]
+mod returned_captured_tests;
 #[path = "support.rs"]
 mod support;
 #[path = "tags_tests.rs"]

@@ -8,6 +8,15 @@ use crate::config::v2::{
 };
 use crate::diagnostics::{with_observer, InvocationObserver};
 
+#[path = "head_calls_only_tests/callback_head_tests.rs"]
+mod callback_head_tests;
+#[path = "head_calls_only_tests/finite_comment_fact_tests.rs"]
+mod finite_comment_fact_tests;
+#[path = "head_calls_only_tests/namespace_fact_tests.rs"]
+mod namespace_fact_tests;
+#[path = "head_calls_only_tests/returned_prefix_fact_tests.rs"]
+mod returned_prefix_fact_tests;
+
 fn config(efforts: &[&str]) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     for effort in efforts {
@@ -39,7 +48,6 @@ fn plan(root: &std::path::Path, config: &NoMistakesConfig) -> CheckFactPlan {
     assign_prepared_embedded_sql_options(config, &mut plan).unwrap();
     plan
 }
-
 #[test]
 fn configured_low_annotation_skips_composition_in_the_real_shared_fact_pass() {
     let saved = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
@@ -99,7 +107,6 @@ fn configured_low_annotation_skips_composition_in_the_real_shared_fact_pass() {
         }
     }
 }
-
 #[test]
 fn different_profile_full_sql_demand_preserves_the_low_profile_fast_path() {
     let mut config = config(&["low"]);
@@ -151,7 +158,8 @@ fn direct_imported_helper_heads_project_from_prepared_source_facts() {
             (11, Some(HeadProof::Missing)),
             (12, Some(HeadProof::Unproven)),
             (13, Some(HeadProof::Unproven)),
-            (14, Some(HeadProof::Unproven)),
+            // Both explicit return paths now carry a fixed named head.
+            (14, Some(HeadProof::Literal)),
             (15, Some(HeadProof::Unproven)),
             (16, Some(HeadProof::Unproven)),
             (17, Some(HeadProof::Unproven)),
@@ -174,7 +182,23 @@ fn direct_imported_helper_heads_project_from_prepared_source_facts() {
     );
 }
 
-#[path = "head_calls_only_tests/relative_pending_tests.rs"]
-mod relative_pending;
 #[path = "head_calls_only_tests/variant_parity_tests.rs"]
 mod variant_parity;
+
+#[path = "head_calls_only_tests/effect_composition_fact_tests.rs"]
+mod effect_composition_facts;
+#[path = "head_calls_only_tests/effect_fact_tests.rs"]
+mod effect_facts;
+
+#[path = "head_calls_only_tests/value_fact_tests.rs"]
+mod value_facts;
+
+#[path = "head_calls_only_tests/record_fact_tests.rs"]
+mod record_facts;
+
+#[path = "head_calls_only_tests/builder_fact_tests.rs"]
+mod builder_facts;
+#[path = "head_calls_only_tests/captured_fact_tests.rs"]
+mod captured_facts;
+#[path = "head_calls_only_tests/relative_pending_tests.rs"]
+mod relative_pending;

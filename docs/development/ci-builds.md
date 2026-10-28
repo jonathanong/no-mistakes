@@ -103,6 +103,12 @@ was still cancelled. The extra budget reserves cleanup time; step deadlines,
 98% coverage floors, and failure behavior are unchanged. These observations
 are censored job outcomes, not completed-job timing guarantees.
 
+After LCOV is generated, CI checks that the merged workspace profile exists,
+then moves only root-level raw coverage inputs to a run-specific directory under
+`RUNNER_TEMP`. This keeps later summary exports from merging those profiles
+again, avoids collisions in the cached Cargo target directory, and leaves the
+merged profile available to `cargo llvm-cov report`.
+
 ## Hosted measurement
 
 [Run 38332918032](https://github.com/jonathanong/no-mistakes/actions/runs/38332918032)

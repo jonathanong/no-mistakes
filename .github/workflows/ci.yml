@@ -178,7 +178,7 @@ jobs:
 
       - name: Check Rust validation parity
         timeout-minutes: 2
-        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs
+        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs
 
       - name: Check formatting
         timeout-minutes: 5
@@ -665,7 +665,8 @@ jobs:
         timeout-minutes: 5
         uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
-          tool: cargo-llvm-cov
+          # The profile-reuse helper depends on the 0.9.0 report glob and reuse behavior.
+          tool: cargo-llvm-cov@0.9.0
 
       - name: Start isolated PostgreSQL for catalog fixtures
         timeout-minutes: 5
@@ -771,6 +772,15 @@ jobs:
         # Without LCOV, optimistic coverage makes CRAP equal cyclomatic complexity.
         # Include workspace source even when coverage omits it (such as src/tests/).
         run: cargo crap --workspace --missing optimistic --fail-above --threshold 30 --summary
+
+      - name: Preserve merged Rust coverage profiles
+        timeout-minutes: 1
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          node .github/scripts/preserve-rust-profiles.cjs \
+            "$CARGO_LLVM_COV_TARGET_DIR" "$GITHUB_WORKSPACE" \
+            "$RUNNER_TEMP/no-mistakes-profraw-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
       - name: Enforce Rust coverage floors
         timeout-minutes: 5

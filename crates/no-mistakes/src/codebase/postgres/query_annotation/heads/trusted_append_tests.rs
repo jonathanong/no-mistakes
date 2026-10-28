@@ -145,3 +145,24 @@ fn trusted_tagged_builder_origins_are_required_for_composed_head_proofs() {
         );
     }
 }
+
+#[test]
+fn low_text_field_proof_does_not_expand_max_legacy_append() {
+    let profile = EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
+    let max = prepared("annotation-field-max-parity.mts", &profile, &profile);
+    let mixed = prepared_with_low("annotation-field-max-parity.mts", &profile, &profile, true);
+    assert_eq!(
+        format!("{:?}", max.embedded_sql[0].1.calls),
+        format!("{:?}", mixed.embedded_sql[0].1.calls)
+    );
+    let max_heads = max.query_annotation_heads.as_ref();
+    let mixed_heads = mixed.query_annotation_heads.as_ref().unwrap();
+    let spans = &mixed.embedded_sql[0].1.call_spans;
+    assert_eq!(spans.len(), 2);
+    assert!(mixed_heads.accepts(spans[0]));
+    assert_eq!(
+        max_heads.is_some_and(|heads| heads.accepts_trusted_append(spans[1])),
+        mixed_heads.accepts_trusted_append(spans[1]),
+    );
+    assert!(!mixed_heads.accepts_trusted_append(spans[1]));
+}

@@ -42,7 +42,8 @@ function early(flag: boolean) {
   if (flag) return sql`/* early */ SELECT 1`;
   return sql`/* early */ SELECT 2`;
 }
-read(early(true)); // low: false
+// Every reachable return has the same named head, regardless of the argument.
+read(early(true)); // low: true
 
 async function asynchronous() {
   return sql`/* async */ SELECT 1`;

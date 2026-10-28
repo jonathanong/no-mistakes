@@ -9,12 +9,28 @@ leading `/* name */` can establish the annotation even when later appends are op
 
 At `effort: low`, annotation checking skips the annotation evaluator. It proves
 literal heads at the executor call or in one local const, trusted
-`sql-template-strings` append prefixes, and fixed-return helpers in the same
+`sql-template-strings` append prefixes, finite all-named conditional arms,
+and fixed-return helpers (including total finite returns and one safe returned tagged local) in the same
 file or through one direct source import. See the
 [bounded syntax shapes](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-query-annotation/low-effort.md).
+An exact top-level namespace destructure can follow a unique explicit source
+barrel export to that helper; dynamic keys and ambiguous exports abstain.
+A helper may return one trusted local builder even when captured closures only
+append suffixes; every reference must be a discarded append, proven append-only
+effect, or direct return from that helper.
+Low also proves a first ordinary comment name from up to 16 direct string
+tuples in a `for-of` loop or from a closed set of direct literal calls through
+one local select closure into a same-file helper. Unknown names and tagged
+bind interpolation remain unanalyzable.
 Other helper, alias, and mutation shapes use
 `unanalyzable: report | advise | ignore`. `trustedSqlTags` is deprecated and
 ignored for this rule at low effort.
+Captured local trusted builders retain their named prefix when every use of the
+same binding is a discarded append, configured executor read, or proven local
+append-only effect. Closure order does not establish complete SQL.
+Discarded helper calls may compose through exact same-file append-only helpers;
+a returned parameter append chain qualifies only when its caller discards the
+result. Used aliases and nested captures stay unanalyzable.
 
 Use the async Node `parsePostgresSql({ sql, fileName })` export for migration
 text and schema-authoring facts. Pass an array for a source batch. It needs no
@@ -147,3 +163,7 @@ an unanalyzable diagnostic under `report` (or an advisory under `advise`).
 cross-file registry path needs inspection; see the rule's Effort section.
 
 For annotation checks, configure `sqlLiteralHelpers: [pg-copy-streams#from]` to unwrap a direct imported helper with one string or interpolation-free template literal at low and max effort. Put the SQL name comment inside the literal. Other argument shapes remain unanalyzable; unannotated static literals remain definite findings under every policy. This option is separate from deprecated `trustedSqlTags`.
+
+Low-effort annotation checks can read `.text`/`.values` from a safe local `sql-template-strings` builder and follow one direct imported immutable string constant with a fixed literal head; re-exports and mutable values remain unresolved.
+They can also follow one fresh trusted builder returned by a source-visible helper into a local `const` used only by a configured executor and discarded static appends, or through a direct `helper().append(...)` executor argument. Plain records and strings do not acquire builder trust.
+An exact imported source helper may forward a fixed named head to a direct inline configured executor callback; unknown callback uses remain under the configured uncertainty policy.

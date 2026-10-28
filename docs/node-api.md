@@ -83,12 +83,20 @@ For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
 unanalyzable policy in both APIs; it omits annotation evaluator preparation.
 These proofs include trusted builder append prefixes and fixed-return helpers
-in the same file or through one direct source import, including a one-hop
-local export alias. Concise arrow bodies are supported as single returned
-expressions when they satisfy the fixed-head proof. An opaque appended suffix preserves
-the prefix only for the trusted `sql-template-strings` tag; other tags and
-subsequent reads after their opaque append remain unanalyzable. Unsupported
-helper or mutation shapes remain unanalyzable.
+in the same file or through one direct source import, including local export
+aliases and concise arrow bodies. Opaque append suffixes preserve the prefix
+only for the trusted `sql-template-strings` tag. Unsupported helper or
+mutation shapes remain unanalyzable.
+An exact top-level namespace destructure can follow unique explicit source
+reexports to a fixed-head helper through the same prepared check projection;
+other namespace shapes remain unresolved. At low effort, a helper's own
+returned trusted builder may keep its fixed head through captured append-only
+closures when every binding use is proven safe.
+Captured trusted local builders also qualify when every exact-binding use is a
+discarded append, a configured executor read, or a proven local append-only
+effect. This preserves only the fixed head, even across arbitrary closure order.
+The shared low proof also accepts bounded same-file append-only helper calls
+and a returned parameter-rooted append chain when the caller discards it.
 For `nextjs-redirect-destinations`, `low` keeps
 [literal arrays and objects](rules/nextjs-redirect-destinations.md#effort) and
 routes every other destination construction through the same unanalyzable
@@ -358,6 +366,13 @@ See [Effect alternatives](node-api/effect-alternatives.md).
 
 `check()` and `analyzeProject()` also honor low effort for [`postgres-no-unbounded-sql-identifier`](rules/postgres-no-unbounded-sql-identifier.md#effort). Import the exported `PostgresNoUnboundedSqlIdentifierOptions` type for its configuration. Unsupported syntax uses the same report/advisory/ignore policy in CLI and async Node reports.
 
+For `postgres-require-query-annotation`, these async reports share the CLI's
+low-effort finite conditional heads, finite explicit helper returns, safe
+returned-local builder proofs, and bounded literal names from direct tuple
+loops and closed local helper calls. Unsupported arms and escaped builders
+retain the configured `unanalyzable`
+policy. See [low-effort annotation](postgres-query-annotation/low-effort.md).
+
 The `postgres-no-mutable-sql-registry` check accepts the exported
 `PostgresNoMutableSqlRegistryOptions` configuration type. Its
 [`effort: "low"` tier](rules/postgres-no-mutable-sql-registry.md#effort)
@@ -419,3 +434,17 @@ Configured [`production-exports-only-used-by-tests`](rules/production-exports-on
 through the existing asynchronous `check()` and `analyzeProject()` APIs; it adds
 no new entrypoint. Type its options with `TestNoLiveRepositoryScanOptions`,
 exported from `no-mistakes/types`.
+
+## PostgreSQL query annotation
+
+For PostgreSQL query annotation checks, low effort recognizes direct `.text`/`.values` reads from a safe local builder tagged by the exact `sql-template-strings` import. The asynchronous check API also projects one direct immutable string export through the prepared resolver.
+
+The async query-annotation check shares low's bounded fresh helper-result proof
+for paired `.text`/`.values` reads; it does not run the annotation evaluator.
+The same prepared proof covers an immutable local record text template and
+one exact `{ text, values }` extraction from a fresh plain record.
+It also accepts an exact fresh trusted builder returned into one local `const`
+or directly appended at the executor, with the same one-hop prepared import
+and escape guards as CLI checks.
+The same prepared facts project an exact imported helper's fixed callback SQL
+head to a direct inline configured executor callback, independently per call.

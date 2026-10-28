@@ -200,21 +200,80 @@ const holding that chain, or a trusted local tagged builder followed by safe
 statement appends. The evaluator does not run. Decidable missing annotations
 remain failing findings under every policy; unresolved shapes follow
 `unanalyzable`. Complete literal transaction commands retain their exemption.
-One same-file function declaration or `const` arrow also qualifies when it has
-a single returned expression with a fixed leading comment, and its callable
-is lexically owned and unchanged. A block body must have one final top-level
-return; a concise arrow body is itself the returned expression. A returned
-tagged builder must use the exact
+A discarded call to a same-file or directly imported append-only function can
+preserve that trusted local builder's fixed prefix. Its first parameter may
+only appear as the receiver of discarded static append chains; defaults,
+aliases, captured parameters, and used append results abstain.
+The helper may compose up to four exact same-file append-only calls on that
+parameter. It may return a static parameter-rooted append chain only when the
+caller discards the result. Nested captures, aliases, cycles, and used helper
+results remain unresolved.
+A captured local trusted builder keeps its fixed head when every reference to
+its exact binding is a discarded static append, a configured executor read, or
+a proven local append-only effect. Closure execution order does not change this
+prefix. Exports, aliases, stores, used append results, property writes, other
+members, and semantic gaps stay unresolved. This is a low-effort prefix proof;
+it does not infer complete SQL.
+One same-file function declaration or `const` arrow also qualifies when its
+single returned expression has a fixed leading comment and its callable is
+lexically owned and unchanged. A block body needs one final top-level return;
+a concise arrow body is itself the returned expression. A returned tagged builder must use the exact
 `sql-template-strings` import; an unknown appended suffix after its fixed head
-is allowed only for that trusted tag. An unknown append through another tag
-does not establish a safe prefix or make later reads of that `const` builder safe. A
-fixed missing head returned by such a helper is a failing finding. Early
-returns, async/generator helpers, optional or spread calls, and returned local
-variables remain unresolved at low effort.
+is allowed only for that trusted tag. An opaque append through another tag
+does not establish a safe prefix or make later reads of that builder safe.
+A fixed missing head returned by such a helper is a failing finding.
+One local const returned by a helper qualifies when its trusted named tag
+keeps a fixed prefix through append-only uses until the single final return.
+At low effort, an ordinary leading comment template may use one exact
+read-only loop name drawn from at most 16 direct literal tuple rows. A local
+helper may also receive at most 16 direct literal names through a closed
+`select(name)` call set before appending that ordinary template to an empty
+trusted SQL builder. Each runtime name must close the first named comment;
+unknown names, aliases, extra calls, and tagged bind interpolations remain
+unanalyzable under the selected policy.
+Finite conditional literals qualify only when every arm has a complete named
+head; tagged arms retain mutable-builder escape checks. A function declaration
+also qualifies with explicit early `if` returns and a final top-level return,
+or a final `switch` whose every case returns the same proven head and whose
+default throws directly or calls an exact stable same-file throw-only helper.
+Every returning path must agree on named or missing. Only fresh trusted builder
+returns on every path permit later `.append`. A switch without a default,
+fallthrough, mixed or unknown returns, async/generator helpers, optional or
+spread calls, and unsafe returned locals remain unresolved at low effort.
+A local const holding a trusted tagged SQL builder also permits a direct `.text`
+read at an executor, including a paired `.values` read. The builder must keep its
+fixed head through only safe appends; escapes, writes, optional or computed field
+reads, arbitrary object fields, and caller-supplied SQL remain unresolved.
+An exact fresh-builder helper result can be stored in one local `const`, passed
+to an executor after discarded static appends, or appended directly at the
+executor. The helper's source must prove a trusted builder return; a plain
+record or string return cannot inherit `.append` trust. Aliases, mutation,
+capture, and unresolved imports remain advisory under the configured policy.
 Direct source imports of those helpers follow one exact export through the
-prepared request resolver; a one-hop local export alias
-(`export { helper as publicHelper }`) is supported. Re-exports and unresolved
-package implementations remain unanalyzable.
+prepared request resolver. This direct-import form leaves re-exports and
+unresolved package implementations unanalyzable.
+An exact top-level `const` destructure of a runtime namespace import may also
+resolve a fixed-head helper through unique explicit reexports and an imported
+default binding. It uses the prepared resolver and source helper proof; dynamic
+keys, defaults, rest, mutable bindings, ambiguous exports, cycles, and `export *`
+remain unanalyzable.
+One trusted local returned by a helper can retain its fixed head through
+captured append-only closures. Every exact-binding use must be a discarded
+static append, a proven local append-only effect, or the helper's own direct
+return. Captured returns, aliases, writes, unknown effects, and dynamic lexical
+access remain unanalyzable; this return proof does not change max effort.
+For a fresh plain record, the helper may return an immutable local string
+template as its `text` property. A caller may also extract exactly
+`const { text, values } = helper(args)` and pass those bindings once to a
+configured executor. The text binding needs a fixed leading name; renamed,
+mutable, or parameter-derived text remains unresolved.
+An inline callback that forwards its parameter directly to a configured
+executor can also retain a fixed named head supplied through a direct imported
+source helper. The helper must prove every callback invocation's payload from
+one fresh trusted builder argument or a fixed named template.
+A direct imported immutable string constant has the same fixed-head proof when
+its source file is prepared and the import/export identity is exact. Re-exports,
+mutable values, and missing source files remain unresolved.
 See [low-effort examples, rewrites, and suppressions](../postgres-query-annotation/low-effort.md).
 See [append composition and bounded alternatives](../postgres-query-annotation/append-composition.md)
 for the SQL text model, truncation, and invalid-SQL advisories.
@@ -250,6 +309,11 @@ query(`SELECT id FROM posts ORDER BY id DESC`);
 
 Add a short operation identifier as the first block comment inside the SQL
 string passed to the configured executor.
+
+Low's bounded helper proofs also cover one fresh literal `{ text, values }`
+return or trusted tagged builder read through one local const and exactly paired
+`.text`/`.values` executor arguments. Mutated, escaped, optional, or opaque helper
+results remain unresolved; see the [low-effort contract](../postgres-query-annotation/low-effort.md).
 
 ## Suppression
 
