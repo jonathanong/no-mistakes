@@ -1,3 +1,4 @@
+use super::refine::Refinement;
 use super::*;
 impl Engine<'_> {
     pub(super) fn binary(
@@ -13,11 +14,11 @@ impl Engine<'_> {
                 return None;
             };
             let state = match self.refine_strict(expression, a, b, left, right, state) {
-                Ok(refined) => {
+                Refinement::Applied(refined) => {
                     out.extend(refined);
                     continue;
                 }
-                Err(state) => state,
+                Refinement::Unchanged(state) => state,
             };
             let value = match expression {
                 Expr::Add(..) => match self.concatenate(left, right) {

@@ -271,12 +271,7 @@ fn mixed_low_sql_shares_bounded_helper_recovery_with_test_state() {
             .iter()
             .find(|call| call.line == mixed_line)
             .unwrap();
-        if key.rule == RULE_ID {
-            assert!(matches!(
-                call.input,
-                crate::codebase::postgres::sql_identifier_syntax::Input::Recovered(_)
-            ));
-        } else if key.rule == "postgres-no-offset" {
+        if key.rule == RULE_ID || key.rule == "postgres-no-offset" {
             assert!(matches!(
                 call.input,
                 crate::codebase::postgres::sql_identifier_syntax::Input::Recovered(_)

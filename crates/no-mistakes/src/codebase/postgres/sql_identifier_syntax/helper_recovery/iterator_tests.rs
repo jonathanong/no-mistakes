@@ -41,7 +41,7 @@ fn collects_rows_for_a_named_vitest_runner_and_inline_block_arrow() {
     let (source, sites) = fixture("iterator-positive.mts");
     assert_eq!(sites.len(), 1);
     let (callback, rows) = sites.iter().next().unwrap();
-    assert!((rows[0].origins[0] as usize) < (*callback).0 as usize);
+    assert!((rows[0].origins[0] as usize) < callback.0 as usize);
     assert_eq!(
         rows.iter().map(|row| row.sql.as_str()).collect::<Vec<_>>(),
         ["placement_id", "image_id", "binding_family"]
