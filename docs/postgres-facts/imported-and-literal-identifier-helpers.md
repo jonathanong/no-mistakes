@@ -108,7 +108,7 @@ Each call runs the model against the call site's arguments:
   inside an untagged template can supply finite literal strings when every
   path returns a string and the surrounding caller SQL is complete. The
   prepared projection may resolve a throwing default through an exact import
-  or re-export. Calls with effectful arguments, shadowed or aliased helpers,
+  or re-export. Calls with arguments that have side effects, shadowed or aliased helpers,
   unresolved defaults, and tagged-template bind substitutions do not become
   identifier text.
 - **`??`.** A bound scalar `??` fallback stays a bind, so a string constant
