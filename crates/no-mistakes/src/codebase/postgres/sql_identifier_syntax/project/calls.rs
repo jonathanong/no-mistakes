@@ -2,6 +2,7 @@ use super::*;
 use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFacts};
 
 type Owners<'a> = FxHashMap<Span, &'a ModuleBinding>;
+mod member;
 pub(super) fn project(
     profile: &EmbeddedSqlOptions,
     selection: &Selection,
@@ -62,16 +63,14 @@ fn direct_calls(
             && (parts.len() == 1
                 || (parts.len() == 2 && parts[1] == "query")
                 || input::indirect_executor_call(parts));
-        // Broad member selection has no positive receiver ownership proof.
-        let loose = parts.len() > 1
-            && parts.last().is_some_and(|name| name == "query")
-            && profile.executor_names.iter().any(|name| name == "query")
-            && (profile.import_specifier.is_empty()
-                || (call.unproven_member
-                    && owner.is_some_and(|binding| {
-                        selection.advisory_receivers.contains(&binding.id)
-                    })
-                    && !(named || alias || namespace || typed)));
+        let loose = member::unproved_receiver(
+            profile,
+            selection,
+            call,
+            owner,
+            parts,
+            named || alias || namespace || typed,
+        );
         if !(named || alias || namespace || loose || typed) {
             continue;
         }
