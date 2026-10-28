@@ -103,6 +103,8 @@ pub(super) fn function(value: &Function<'_>) -> Option<Candidate> {
 }
 
 fn collect_if(value: &oxc_ast::ast::IfStatement<'_>, heads: &mut Vec<Return>) -> Option<()> {
+    // Guard conditions and non-return branch bodies are intentionally ignored: only literal, tag,
+    // or append-safe local heads are proven, and the return-count check rejects hidden returns.
     if let Some(head) = branch_return(&value.consequent)? {
         heads.push(head);
     }
