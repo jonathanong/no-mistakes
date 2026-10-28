@@ -50,6 +50,7 @@ impl<'a> Bindings<'a> {
             !wanted.is_empty()
                 || !syntax.helper_returns.is_empty()
                 || !syntax.record_returns.is_empty()
+                || !syntax.returned_params.is_empty()
                 || !syntax.finite_returns.is_empty()
                 || !syntax.effect_functions.is_empty()
                 || !syntax.string_constants.is_empty()
