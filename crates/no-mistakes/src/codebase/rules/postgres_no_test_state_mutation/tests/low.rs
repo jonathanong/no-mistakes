@@ -1,6 +1,62 @@
 use super::*;
 
 #[test]
+fn imported_member_argument_shapes_only_advise_on_a_direct_sql_text_field() {
+    let root = fixture().join("effort-member-args");
+    let path = root.join("tests/member.test.ts");
+    let files = vec![path.clone()];
+    let source = std::fs::read_to_string(&path).unwrap();
+    let sources = super::super::super::source_store_for_files(&files);
+    let mut config = crate::config::v2::load_v2_config(&root, Some(&root.join("low.yml"))).unwrap();
+    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+        &root,
+        &mut config,
+        &files,
+        &sources,
+    )
+    .unwrap();
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        &root,
+        &files,
+        Arc::clone(&sources),
+        &config,
+        &[RULE_ID],
+    )
+    .unwrap()
+    .with_fresh_sql_verdicts();
+    let findings =
+        check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
+    assert!(
+        findings.is_empty(),
+        "advisory-only member gained a finding: {findings:?}"
+    );
+    let lines = facts
+        .sql_verdicts()
+        .iter()
+        .filter(|row| row.advisory && row.file == "tests/member.test.ts")
+        .map(|row| crate::codebase::ts_source::byte_offset_to_line(&source, row.span.0 as usize))
+        .collect::<Vec<_>>();
+    let quoted = source
+        .lines()
+        .position(|line| line.contains("quoted text key stays advisory"))
+        .unwrap() as u32
+        + 1;
+    assert_eq!(lines, vec![quoted]);
+}
+
+#[test]
+fn standalone_low_preparation_reports_invalid_legacy_policy() {
+    let root = fixture().join("effort-member-args");
+    let files = vec![root.join("tests/member.test.ts")];
+    let config = crate::config::v2::load_v2_config(&root, Some(&root.join("invalid.yml"))).unwrap();
+    let sources = super::super::super::source_store_for_files(&files);
+    let error = check_with_files_and_sources(&root, &config, &files, &sources).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("invalid options.unanalyzableSql"));
+}
+
+#[test]
 fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
     let root = fixture().join("effort-low");
     let path = root.join("tests/mutation.test.ts");
