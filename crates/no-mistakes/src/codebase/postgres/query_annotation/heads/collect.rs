@@ -72,7 +72,7 @@ pub(crate) fn collect_prepared(
         }
         // Source-proven helper results are low-only endpoints. Legacy max
         // append fallback above must see the original call-head proofs.
-        let mut primitive_memo = crate::fx::FxHashMap::default();
+        let mut primitive_memo = primitive_results::Memo::default();
         let clean_module = ts
             .module_bindings
             .as_deref()

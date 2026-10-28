@@ -8,6 +8,7 @@ use crate::fx::{FxHashMap, FxHashSet};
 mod prefix;
 mod proof;
 mod record_scope;
+pub(super) use record_scope::ExportIndex;
 mod wanted;
 pub(super) struct Bindings<'a> {
     module: Option<&'a crate::codebase::ts_source::module_facts::TypeScriptModuleFacts>,
