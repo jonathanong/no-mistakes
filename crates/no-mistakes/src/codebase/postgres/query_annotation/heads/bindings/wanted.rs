@@ -30,6 +30,19 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
                 .map(|call| call.reference),
         )
         .chain(syntax.helper_arguments.values().copied())
+        .chain(syntax.finite_templates.iter().map(|value| value.reference))
+        .chain(
+            syntax
+                .finite_roots
+                .iter()
+                .flat_map(|value| [value.reference, value.tag]),
+        )
+        .chain(syntax.finite_calls.iter().flat_map(|call| {
+            std::iter::once(call.callee).chain(match &call.first {
+                super::super::finite_comments::Argument::Reference(span) => Some(*span),
+                _ => None,
+            })
+        }))
         .chain(
             syntax
                 .namespace_destructures

@@ -1,5 +1,5 @@
 use oxc_ast::ast::Expression;
-pub(super) fn named(text: &str) -> bool {
+pub(in crate::codebase::postgres::query_annotation::heads) fn named(text: &str) -> bool {
     // Inspect only the FIRST block comment; a later named comment cannot repair
     // an empty first one. Decoded/cooked text determines runtime string bytes.
     text.trim_start()

@@ -27,6 +27,7 @@ impl<'a> Visit<'a> for Syntax {
         self.record_reference(value);
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
+        self.finite_call(value);
         if value.optional {
             self.optional_calls.insert(span(value.span));
         }
@@ -114,6 +115,7 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_assignment_expression(self, value);
     }
     fn visit_function(&mut self, value: &Function<'a>, flags: ScopeFlags) {
+        self.finite_function(value);
         self.collect_function_heads(value);
         let prior = self.current_function.replace(span(value.span));
         self.context(

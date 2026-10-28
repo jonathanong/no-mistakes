@@ -77,7 +77,18 @@ impl Syntax {
         });
         // The iterable executes once; an outer loop can still repeat it.
         self.visit_expression(&value.right);
+        let finite = self
+            .collect_finite
+            .then(|| super::super::super::finite_comments::loop_domain(value))
+            .flatten();
+        let pushed = finite.is_some();
+        if let Some(domain) = finite {
+            self.active_domains.push(domain);
+        }
         self.repeating(value.span, |this| this.visit_statement(&value.body));
+        if pushed {
+            self.active_domains.pop();
+        }
         self.leave_scope();
         self.leave_node(kind);
     }

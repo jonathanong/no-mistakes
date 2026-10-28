@@ -98,6 +98,9 @@ produce fresh trusted builders before callers may append to the result.
 The low-effort prefix proof also accepts a captured local trusted builder when
 all of its exact-binding uses preserve the named head, regardless of closure
 execution order. CLI, async Node, and the Rust library share this evidence.
+They also share bounded literal names in a direct `for-of` tuple loop or a
+closed same-file helper/select call chain. Only the first ordinary comment
+template is substituted; SQL suffixes and tagged bind values are not composed.
 The same low check follows an exact runtime namespace destructure through
 unique explicit source exports and a barrel's imported default helper. It
 reuses prepared module facts and resolver identity for CLI and async Node checks.

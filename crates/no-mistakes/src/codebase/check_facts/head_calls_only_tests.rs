@@ -10,6 +10,8 @@ use crate::diagnostics::{with_observer, InvocationObserver};
 
 #[path = "head_calls_only_tests/callback_head_tests.rs"]
 mod callback_head_tests;
+#[path = "head_calls_only_tests/finite_comment_fact_tests.rs"]
+mod finite_comment_fact_tests;
 #[path = "head_calls_only_tests/namespace_fact_tests.rs"]
 mod namespace_fact_tests;
 #[path = "head_calls_only_tests/returned_prefix_fact_tests.rs"]

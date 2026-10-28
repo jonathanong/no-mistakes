@@ -217,6 +217,13 @@ lexically owned and unchanged. A returned tagged builder must use the exact
 is allowed. A fixed missing head returned by such a helper is a failing finding.
 One local const returned by a helper qualifies when its trusted named tag
 keeps a fixed prefix through append-only uses until the single final return.
+At low effort, an ordinary leading comment template may use one exact
+read-only loop name drawn from at most 16 direct literal tuple rows. A local
+helper may also receive at most 16 direct literal names through a closed
+`select(name)` call set before appending that ordinary template to an empty
+trusted SQL builder. Each runtime name must close the first named comment;
+unknown names, aliases, extra calls, and tagged bind interpolations remain
+unanalyzable under the selected policy.
 Finite conditional literals qualify only when every arm has a complete named
 head; tagged arms retain mutable-builder escape checks. A function declaration
 also qualifies with explicit early `if` returns and a final top-level return,
