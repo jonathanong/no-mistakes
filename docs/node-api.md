@@ -96,7 +96,9 @@ Captured trusted local builders also qualify when every exact-binding use is a
 discarded append, a configured executor read, or a proven local append-only
 effect. This preserves only the fixed head, even across arbitrary closure order.
 The shared low proof also accepts bounded same-file append-only helper calls
-and a returned parameter-rooted append chain when the caller discards it.
+and a returned parameter-rooted append chain when the caller discards it. An
+append-only helper's captured callback may make discarded static appends to
+its exact parameter, including after or between executor reads.
 For `nextjs-redirect-destinations`, `low` keeps
 [literal arrays and objects](rules/nextjs-redirect-destinations.md#effort) and
 routes every other destination construction through the same unanalyzable
