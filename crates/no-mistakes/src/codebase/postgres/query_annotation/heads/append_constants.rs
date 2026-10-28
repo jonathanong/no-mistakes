@@ -25,6 +25,11 @@ impl Safety {
         closed_prefix: FxHashSet<Span>,
     ) -> Self {
         let allowed = uses::collect(syntax, executors, effects);
+        let pending = effects
+            .pending
+            .iter()
+            .map(|call| (call.builder, call.span))
+            .collect::<FxHashMap<_, _>>();
         let mut result = Self {
             repeated_calls: syntax.repeated_calls.clone(),
             closed_prefix,

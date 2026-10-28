@@ -52,6 +52,10 @@ survives safe appends. Both fields must be direct, non-optional reads; a
 computed field, escaped or overwritten builder, arbitrary object with a `text`
 field, or caller-supplied SQL remains unresolved.
 
+A configured relative factory or executor type must first resolve to the
+configured package. An unconfirmed relative call cannot make a local builder's
+later use safe.
+
 Low also follows a same-file function declaration or `const` arrow with one
 returned expression and a fixed named literal head. A block body must have
 one final top-level return; a concise arrow body is the returned expression.
