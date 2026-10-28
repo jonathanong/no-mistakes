@@ -21,6 +21,7 @@ pub(super) struct Call {
 #[derive(Default)]
 pub(super) struct Syntax {
     pub collect_helper_heads: bool,
+    pub self_appends: super::self_appends::Syntax,
     pub helper_returns: FxHashMap<Span, super::helper_heads::Summary>,
     pub record_returns: FxHashMap<Span, super::helper_records::Summary>,
     pub returned_params: FxHashMap<Span, super::returned_params::Candidate>,

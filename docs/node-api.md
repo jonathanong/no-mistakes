@@ -87,6 +87,17 @@ in the same file or through one direct source import, including local export
 aliases and concise arrow bodies. Opaque append suffixes preserve the prefix
 only for the trusted `sql-template-strings` tag. Unsupported helper or
 mutation shapes remain unanalyzable.
+
+Low effort also proves a function-local native `let` builder whose every write is
+an unused plain `query = query.append(...)` assignment to the same exact binding.
+Each assignment has at most eight nonoptional, single-argument append links.
+The complete lifetime permits only those identity writes, discarded appends and
+configured direct executor reads in the same nonrepeating function context.
+The initial SQL head must remain valid under continuation; aliases, escapes,
+other writes, custom tags, diagnostic gaps and unresolved effects retain an
+advisory. This uses the prepared syntax and binding facts without SQL evaluation;
+max effort keeps its existing behavior. CLI and async Node APIs share the proof.
+
 The same prepared proof joins two adjacent exhaustive assignments to one local
 `let` when each arm creates a fresh native tagged builder and the only later
 use is its immediate configured executor read. It retains missing-head findings

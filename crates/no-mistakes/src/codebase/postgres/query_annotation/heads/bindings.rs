@@ -57,13 +57,16 @@ impl<'a> Bindings<'a> {
         }) else {
             return index;
         };
-        // A closed captured root needs ownership for every runtime reference,
-        // including uses that are not executor or append candidates.
+        // Closed roots need exact ownership for every runtime reference.
         let finite_declarations = super::finite_comments::declarations(syntax);
         for binding in &module.bindings {
             if syntax
                 .append_tags
                 .contains_key(&(binding.span.start, binding.span.end))
+                || syntax
+                    .self_appends
+                    .roots
+                    .contains_key(&(binding.span.start, binding.span.end))
                 || finite_declarations.contains(&(binding.span.start, binding.span.end))
             {
                 wanted.extend(
@@ -159,8 +162,7 @@ impl<'a> Bindings<'a> {
             .map(|&reference| {
                 let owner = self.owner(reference)?;
                 let declaration = (owner.span.start, owner.span.end);
-                // Called closures can write outside the loop's lexical span;
-                // retain exact function ownership instead of assuming locality.
+                // Called closures may write outside the loop: retain function ownership.
                 let function = syntax
                     .contexts
                     .get(&reference)

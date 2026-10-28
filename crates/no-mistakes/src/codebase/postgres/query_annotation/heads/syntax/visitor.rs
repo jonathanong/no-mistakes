@@ -74,11 +74,7 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_call_expression(self, value);
     }
     fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
-        if value.kind.is_const() {
-            self.const_declaration(value);
-        } else {
-            self.assignments.declaration(value);
-        }
+        self.variable_declaration(value);
         walk::walk_variable_declaration(self, value);
     }
     fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
@@ -130,7 +126,7 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_assignment_target_property_identifier(self, value);
     }
     fn visit_assignment_expression(&mut self, value: &AssignmentExpression<'a>) {
-        self.assignments.assignment(value);
+        self.self_append_assignment(value);
         walk::walk_assignment_expression(self, value);
     }
     fn visit_function(&mut self, value: &Function<'a>, flags: ScopeFlags) {

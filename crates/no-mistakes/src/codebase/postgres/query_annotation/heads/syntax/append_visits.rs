@@ -11,6 +11,9 @@ impl Syntax {
         }
     }
     pub(super) fn append_call(&mut self, value: &CallExpression<'_>) {
+        if self.collect_helper_heads {
+            self.self_appends.call(value);
+        }
         if self.collect_append_tags {
             if let Some(tag) = value
                 .arguments

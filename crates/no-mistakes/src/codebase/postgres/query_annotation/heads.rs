@@ -22,6 +22,7 @@ mod loop_carried;
 mod loop_word;
 mod namespace_heads;
 mod returned_params;
+mod self_appends;
 pub(crate) use loop_word::{prepare_loop_heads, PreparedLoopHeads};
 mod syntax;
 mod tag_constants;

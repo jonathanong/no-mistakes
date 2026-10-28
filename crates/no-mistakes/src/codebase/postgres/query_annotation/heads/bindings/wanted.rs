@@ -10,6 +10,7 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
         .chain(syntax.constants.values().copied())
         .filter_map(|head| head.reference())
         .chain(syntax.append_tags.values().copied())
+        .chain(syntax.self_appends.roots.values().map(|root| root.tag))
         .chain(
             syntax
                 .loop_candidates

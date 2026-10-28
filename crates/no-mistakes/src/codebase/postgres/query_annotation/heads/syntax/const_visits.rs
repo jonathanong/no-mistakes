@@ -100,3 +100,30 @@ impl Syntax {
         self.namespace_destructures.extend(candidates);
     }
 }
+
+impl Syntax {
+    pub(super) fn variable_declaration(&mut self, value: &VariableDeclaration<'_>) {
+        if self.collect_helper_heads {
+            self.self_appends
+                .declaration(value, self.assignments.context);
+        }
+        if value.kind.is_const() {
+            self.const_declaration(value);
+        } else {
+            self.assignments.declaration(value);
+        }
+    }
+    pub(super) fn self_append_assignment(
+        &mut self,
+        value: &oxc_ast::ast::AssignmentExpression<'_>,
+    ) {
+        if self.collect_helper_heads {
+            self.self_appends.assignment(
+                value,
+                self.assignments.context,
+                self.assignments.discarded_assignment,
+            );
+        }
+        self.assignments.assignment(value);
+    }
+}

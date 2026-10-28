@@ -1008,6 +1008,17 @@ Low PostgreSQL annotation checks also project fixed heads from fresh source
 helper records or trusted builder results through one local paired field read.
 That pair may precede one executor options argument without changing the
 already-read SQL text head.
+
+Low effort also proves a function-local native `let` builder whose every write is
+an unused plain `query = query.append(...)` assignment to the same exact binding.
+Each assignment has at most eight nonoptional, single-argument append links.
+The complete lifetime permits only those identity writes, discarded appends and
+configured direct executor reads in the same nonrepeating function context.
+The initial SQL head must remain valid under continuation; aliases, escapes,
+other writes, custom tags, diagnostic gaps and unresolved effects retain an
+advisory. This uses the prepared syntax and binding facts without SQL evaluation;
+max effort keeps its existing behavior. CLI and async Node APIs share the proof.
+
 A native builder's paired fields may also be read by a captured closure when
 all uses of that builder preserve its fixed prefix; CLI and async Node checks
 share the same prepared binding census.

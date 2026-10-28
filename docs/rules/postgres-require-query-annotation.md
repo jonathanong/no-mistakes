@@ -257,6 +257,17 @@ A captured native builder can keep that proof inside a closure when its complete
 binding-reference census contains only paired executor field reads and safe
 discarded appends. Closure timing does not change the leading head; an alias,
 write, unknown method, or other captured use still makes it unresolved.
+
+Low effort also proves a function-local native `let` builder whose every write is
+an unused plain `query = query.append(...)` assignment to the same exact binding.
+Each assignment has at most eight nonoptional, single-argument append links.
+The complete lifetime permits only those identity writes, discarded appends and
+configured direct executor reads in the same nonrepeating function context.
+The initial SQL head must remain valid under continuation; aliases, escapes,
+other writes, custom tags, diagnostic gaps and unresolved effects retain an
+advisory. This uses the prepared syntax and binding facts without SQL evaluation;
+max effort keeps its existing behavior. CLI and async Node APIs share the proof.
+
 An uninitialized local `let` also qualifies after one adjacent `if`/`else`
 whose two simple arms each discard exactly one assignment of a fresh native
 `sql-template-strings` builder. Both arms must have a decisive literal head;
