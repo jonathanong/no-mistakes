@@ -6,6 +6,8 @@ use super::{
 };
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::FxHashSet;
+mod returned;
+pub(super) use returned::proofs as return_proofs;
 
 pub(super) fn proofs(
     syntax: &Syntax,

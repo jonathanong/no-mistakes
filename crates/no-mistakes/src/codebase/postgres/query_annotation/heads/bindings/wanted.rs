@@ -30,6 +30,12 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
                 .map(|call| call.reference),
         )
         .chain(syntax.helper_arguments.values().copied())
+        .chain(
+            syntax
+                .namespace_destructures
+                .iter()
+                .map(|value| value.namespace),
+        )
         .chain(syntax.builder_direct_calls.values().copied())
         .chain(
             syntax
