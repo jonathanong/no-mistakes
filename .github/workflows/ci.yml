@@ -285,7 +285,8 @@ jobs:
   javascript-tests:
     name: JavaScript tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Native build, both test phases, reporting and cache cleanup share this budget.
+    timeout-minutes: 12
     permissions:
       contents: read
       id-token: write
