@@ -114,6 +114,12 @@ reuses prepared module facts and resolver identity for CLI and async Node checks
 Captured append-only closures also preserve a trusted builder's head at its
 own helper return when every exact-binding use is closed. Low and mixed-demand
 checks share this proof without composing SQL variants.
+The shared low-effort helper proof can carry one direct source import inside
+up to four same-file effect edges. Every required direct named export must
+prove a plain, closed append effect before the CLI or async Node API publishes
+a dependent query proof. This does not follow another imported dependency or
+reexport, and it preserves the outer caller's signature requirements.
+
 The same APIs also share bounded same-file append-only helper composition and
 an exact returned parameter append chain when the helper result is discarded.
 They also preserve that parameter's fixed head through captured callbacks

@@ -2,7 +2,6 @@
 use super::{AnnotationHeads, HeadProof, Span};
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::ts_source::FileIdMap;
-use crate::fx::{FxHashMap, FxHashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -11,7 +10,7 @@ pub(crate) fn project(
     resolve: impl Fn(&str, &Path) -> Option<PathBuf>,
 ) {
     let mut completed: Vec<(PathBuf, Span, HeadProof)> = Vec::new();
-    let mut effects: FxHashMap<PathBuf, FxHashSet<Span>> = FxHashMap::default();
+    let effects = super::effects::projection::approved(files, &resolve);
     let mut callbacks = Vec::new();
     for (path, file) in files.iter() {
         let Some(heads) = file.query_annotation_heads.as_deref() else {
@@ -85,22 +84,6 @@ pub(crate) fn project(
             };
             if let Some(span) = pending.proven_executor(summary) {
                 callbacks.push((path.clone(), span));
-            }
-        }
-        for pending in &heads.pending_effects {
-            let Some(target) = resolve(&pending.specifier, path) else {
-                continue;
-            };
-            let proven = files
-                .get(&target)
-                .and_then(|target| target.query_annotation_heads.as_deref())
-                .and_then(|heads| heads.exported_effects.get(&pending.imported))
-                .is_some_and(|signature| signature.accepts(pending.shape));
-            if proven {
-                effects
-                    .entry(path.clone())
-                    .or_default()
-                    .insert(pending.span);
             }
         }
     }

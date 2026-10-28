@@ -54,6 +54,7 @@ pub(crate) struct AnnotationHeads {
     pub(crate) exported_records: BTreeMap<String, helper_records::Summary>,
     pub(crate) pending_imports: Vec<helper_heads::Pending>,
     pub(crate) pending_namespaces: Vec<namespace_heads::Pending>,
+    pub(crate) exported_closed_effects: std::collections::BTreeSet<String>,
     pub(crate) exported_effects: BTreeMap<String, effects::Signature>,
     pub(crate) pending_effects: Vec<effects::Pending>,
     pub(crate) exported_callbacks: BTreeMap<String, callback_heads::Summary>,

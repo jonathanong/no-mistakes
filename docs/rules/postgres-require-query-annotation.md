@@ -207,6 +207,27 @@ aliases and used append results abstain. Captured uses qualify only when they
 are discarded static appends on the exact parameter; callbacks may run later
 or repeatedly without changing the head. Captured returns, implicit arrow
 append results, and nested helper calls stay unresolved.
+A local helper may additionally carry exactly one direct named-import
+append-effect obligation. The request resolves that obligation against the
+prepared source file's direct named export before accepting any dependent
+executor read. The imported target must have a plain parameter signature and a
+complete append-only reference census; reexports, imported dependencies in that
+target, extra imported calls, and unknown exports remain unresolved. The outer
+helper still checks its own parameter defaults against its actual caller.
+Aliases, captures, returned parameters, reassignment, optional/spread calls,
+cycles, and helper chains beyond four local edges do not establish this proof.
+
+```ts
+import { appendPrivacy } from "./filters.mjs";
+function appendFilters(statement, user) {
+  appendPrivacy(statement, user); // Direct source export must prove append-only.
+  statement.append(" AND active = true");
+}
+const statement = sql`/* accounts/list */ SELECT id FROM accounts WHERE `;
+appendFilters(statement, user);
+query(statement);
+```
+
 The helper may compose up to four exact same-file append-only calls on that
 parameter. It may return a static parameter-rooted append chain only when the
 caller discards the result. Nested helper calls, aliases, cycles, and used helper

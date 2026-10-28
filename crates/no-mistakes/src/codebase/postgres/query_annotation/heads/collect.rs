@@ -162,6 +162,7 @@ pub(crate) fn collect_prepared(
         Default::default()
     };
     AnnotationHeads {
+        exported_closed_effects: bindings.effects().closed_exports.clone(),
         exported_async_returns,
         pending_async_returns,
         exported_helpers,
