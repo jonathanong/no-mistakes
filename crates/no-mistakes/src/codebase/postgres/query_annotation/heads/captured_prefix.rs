@@ -66,7 +66,7 @@ pub(super) fn proofs(
         .filter(|item| item.specifier.is_none())
         .map(|item| item.local.as_str())
         .collect::<FxHashSet<_>>();
-    let mut pending = pending::PendingUses::new(syntax, bindings, executors);
+    let mut pending = pending::PendingUses::new(bindings, executors);
     let pending_references = std::mem::take(&mut pending.references);
     let mut result = Proofs::default();
     let mut owners = 0;
@@ -88,7 +88,7 @@ pub(super) fn proofs(
         }
         let context = syntax.contexts.get(&declaration)?;
         owners += 1;
-        let mut required = FxHashSet::default();
+        let mut required = FxHashMap::default();
         let mut captured = false;
         let mut read = false;
         for usage in &binding.references {
@@ -115,7 +115,13 @@ pub(super) fn proofs(
             {
                 continue;
             }
-            required.insert(*pending_references.get(&span)?);
+            let effect = *pending_references.get(&span)?;
+            if required
+                .insert(effect, span)
+                .is_some_and(|other| other != span)
+            {
+                return None;
+            }
             if required.len() > 8 {
                 return None;
             }
@@ -128,11 +134,11 @@ pub(super) fn proofs(
         } else {
             if !required
                 .iter()
-                .all(|span| pending.accepts(*span, syntax, bindings))
+                .all(|(span, reference)| pending.accepts(*span, *reference, syntax, bindings))
             {
                 continue;
             }
-            let mut required = required.into_iter().collect::<Vec<_>>();
+            let mut required = required.into_keys().collect::<Vec<_>>();
             required.sort_unstable();
             result.required.insert(declaration, required);
         }

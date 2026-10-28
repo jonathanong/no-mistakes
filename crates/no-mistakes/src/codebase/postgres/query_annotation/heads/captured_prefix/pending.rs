@@ -4,56 +4,54 @@ use crate::fx::{FxHashMap, FxHashSet};
 
 pub(super) struct PendingUses {
     pub references: FxHashMap<Span, Span>,
-    callees: FxHashMap<Span, Span>,
+    calls: Option<FxHashMap<Span, (Span, Span)>>,
     stable: FxHashMap<usize, bool>,
     visits: u64,
 }
 impl PendingUses {
-    pub fn new(syntax: &Syntax, bindings: &Bindings<'_>, executors: &FxHashSet<Span>) -> Self {
+    pub fn new(bindings: &Bindings<'_>, executors: &FxHashSet<Span>) -> Self {
         let mut result = Self {
             references: FxHashMap::default(),
-            callees: FxHashMap::default(),
+            calls: None,
             stable: FxHashMap::default(),
             visits: 0,
         };
-        // Generic effect candidates include confirmed executor statements too.
-        // They already have a sink proof and must not demand an effect index.
-        let mut pending = bindings
+        // Confirmed sinks already have a proof; do not index them as effects.
+        result.references = bindings
             .effects()
             .pending
             .iter()
             .filter(|pending| !executors.contains(&pending.span))
-            .peekable();
-        if pending.peek().is_none() {
-            return result;
-        }
-        let calls = syntax
-            .effect_calls
-            .iter()
-            .filter(|call| call.position == 0)
-            .map(|call| (call.span, call))
-            .collect::<FxHashMap<_, _>>();
-        for pending in pending {
-            let Some(call) = calls
-                .get(&pending.span)
-                .filter(|call| call.builder == pending.builder)
-            else {
-                continue;
-            };
-            result.references.insert(pending.builder, pending.span);
-            result.callees.insert(pending.span, call.callee);
-        }
+            .map(|pending| (pending.builder, pending.span))
+            .collect();
         result
     }
-    pub fn accepts(&mut self, span: Span, syntax: &Syntax, bindings: &Bindings<'_>) -> bool {
+    pub fn accepts(
+        &mut self,
+        span: Span,
+        reference: Span,
+        syntax: &Syntax,
+        bindings: &Bindings<'_>,
+    ) -> bool {
         if !bindings.declaration_safe(span) {
             return false;
         }
-        let Some(owner) = self
-            .callees
+        // Build once only after a captured owner's complete census succeeds.
+        let calls = self.calls.get_or_insert_with(|| {
+            syntax
+                .effect_calls
+                .iter()
+                .filter(|call| call.position == 0)
+                .map(|call| (call.span, (call.callee, call.builder)))
+                .collect()
+        });
+        let Some((callee, _)) = calls
             .get(&span)
-            .and_then(|callee| bindings.owner(*callee))
+            .filter(|(_, builder)| *builder == reference)
         else {
+            return false;
+        };
+        let Some(owner) = bindings.owner(*callee) else {
             return false;
         };
         let visits = &mut self.visits;
@@ -68,6 +66,9 @@ impl PendingUses {
         })
     }
     pub fn report(&self, observer: &crate::diagnostics::InvocationObserver) {
+        if self.calls.is_some() {
+            observer.increment("postgres.annotation.captured_pending_call_indexes", 1);
+        }
         if self.stable.is_empty() {
             return;
         }
