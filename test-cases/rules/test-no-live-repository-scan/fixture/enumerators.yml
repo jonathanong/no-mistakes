@@ -8,3 +8,4 @@ rules:
       enumerators:
         - module: node:fs
           export: cpSync
+        - module: walker

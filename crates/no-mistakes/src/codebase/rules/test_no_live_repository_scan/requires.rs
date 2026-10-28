@@ -62,10 +62,12 @@ impl Sites {
     ) -> Vec<RuleFinding> {
         let mut found = Vec::new();
         for (file, sites) in &self.0 {
-            let Some(ts) = facts.get_ts_facts(file) else {
-                continue;
-            };
-            for import in ts.imports.iter().filter(|i| i.kind == ImportKind::Require) {
+            let requires = facts
+                .get_ts_facts(file)
+                .into_iter()
+                .flat_map(|ts| ts.imports.iter())
+                .filter(|i| i.kind == ImportKind::Require);
+            for import in requires {
                 let module = plain(&import.specifier);
                 if import.computed
                     || !is_enumerator_module(module, extra)

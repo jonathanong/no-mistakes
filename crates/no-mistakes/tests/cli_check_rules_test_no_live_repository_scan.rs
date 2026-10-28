@@ -42,6 +42,7 @@ fn default_policy_json_snapshot() {
         ("unresolved_report", "report.yml"),
         ("custom_fixture_dirs", "fixture-dirs.yml"),
         ("glob_root", "glob-root.yml"),
+        ("exclude_roots", "exclude-roots.yml"),
         ("import_only_file_root", "file-root.yml"),
         ("extra_enumerator", "enumerators.yml"),
         ("severity_advisory", "advisory.yml"),
@@ -95,21 +96,28 @@ fn rejects_scans_reachable_from_vitest_roots_and_allows_bounded_input() {
         );
     }
     // Unresolved provenance is advisory by default, so it never passes silently.
-    assert_eq!(
-        located(&report["advisories"]),
-        [
-            "helpers/list-files.ts:4",
-            "tests/path-forms.test.ts:23",
-            "tests/path-forms.test.ts:24",
-            "tests/path-forms.test.ts:25",
-            "tests/path-forms.test.ts:26",
-            "tests/path-forms.test.ts:27",
-            "tests/require-bindings.test.ts:3",
-            "tests/require-bindings.test.ts:4",
-            "tests/require-bindings.test.ts:5",
-            "tests/unresolved-root.test.ts:8",
-        ]
-    );
+    let advisories = located(&report["advisories"]);
+    for expected in [
+        "helpers/list-files.ts:4",
+        "tests/path-forms.test.ts:23",
+        "tests/path-forms.test.ts:27",
+        "tests/path-edge.test.ts:11",
+        "tests/path-edge.test.ts:19",
+        "tests/path-edge.test.ts:22",
+        "tests/require-bindings.test.ts:3",
+        "tests/require-bindings.test.ts:4",
+        "tests/require-bindings.test.ts:5",
+        "tests/unresolved-receiver.test.ts:3",
+        "tests/unresolved-root.test.ts:8",
+    ] {
+        assert!(
+            advisories.contains(&expected.to_string()),
+            "{expected}: {advisories:?}"
+        );
+    }
+    // A CommonJS global and cwd-less glob options are live, not unresolved.
+    assert!(findings.contains(&"tests/path-edge.test.ts:15".to_string()));
+    assert!(findings.contains(&"tests/path-edge.test.ts:20".to_string()));
 }
 
 #[test]

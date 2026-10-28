@@ -16,6 +16,96 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         },
         {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 21,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ...base }); // spread options",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 22,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", loose); // options in a mutable binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 11,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(new URL(\"x\")); // URL without a base",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 12,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(dirname()); // dirname without an argument",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 13,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"a\" + \"b\"); // binary expression",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 14,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync((() => \"x\")()); // callee that is not a name",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 16,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(picked); // destructured binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 17,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(importedDir); // import binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 18,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(make()); // call of an unknown function",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 19,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "for (const each of [\"a\", \"b\"]) readdirSync(each); // declarator without init",
+          "target": "unresolved root"
+        },
+        {
           "file": "tests/path-forms.test.ts",
           "import": "readdirSync",
           "line": 23,
@@ -85,6 +175,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "fs.readdirSync",
+          "line": 6,
+          "message": "unresolved root: `fs.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "fs.readdirSync(path.join(__dirname, \"fixtures\"));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const fs = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/unresolved-receiver.test.ts",
+          "import": "client.readdirSync",
+          "line": 3,
+          "message": "unresolved root: `client.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return client.readdirSync(\".\");",
           "target": "unresolved root"
         },
         {
@@ -220,6 +337,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "live repository scan"
         },
         {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 20,
+          "message": "live repository scan: `globSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ignore: [\"x\"] }); // options without cwd",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 15,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(__dirname); // unbound CommonJS global",
+          "target": "live repository scan"
+        },
+        {
           "file": "tests/path-forms.test.ts",
           "import": "globSync",
           "line": 21,
@@ -336,6 +471,96 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         },
         {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 21,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ...base }); // spread options",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 22,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", loose); // options in a mutable binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 11,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(new URL(\"x\")); // URL without a base",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 12,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(dirname()); // dirname without an argument",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 13,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"a\" + \"b\"); // binary expression",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 14,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync((() => \"x\")()); // callee that is not a name",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 16,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(picked); // destructured binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 17,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(importedDir); // import binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 18,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(make()); // call of an unknown function",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 19,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "for (const each of [\"a\", \"b\"]) readdirSync(each); // declarator without init",
+          "target": "unresolved root"
+        },
+        {
           "file": "tests/path-forms.test.ts",
           "import": "readdirSync",
           "line": 23,
@@ -405,6 +630,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "fs.readdirSync",
+          "line": 6,
+          "message": "unresolved root: `fs.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "fs.readdirSync(path.join(__dirname, \"fixtures\"));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const fs = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/unresolved-receiver.test.ts",
+          "import": "client.readdirSync",
+          "line": 3,
+          "message": "unresolved root: `client.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return client.readdirSync(\".\");",
           "target": "unresolved root"
         },
         {
@@ -522,6 +774,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "live repository scan"
         },
         {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 20,
+          "message": "live repository scan: `globSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ignore: [\"x\"] }); // options without cwd",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 15,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(__dirname); // unbound CommonJS global",
+          "target": "live repository scan"
+        },
+        {
           "file": "tests/path-forms.test.ts",
           "import": "globSync",
           "line": 21,
@@ -597,6 +867,146 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude_roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "helpers/list-files.ts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(dir);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"glob\")",
+          "line": 5,
+          "message": "unresolved root: `require(\"glob\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"glob\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const g = require(\"glob\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const { readdirSync: ls } = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-bindings.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 4,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "fs.readdirSync",
+          "line": 6,
+          "message": "unresolved root: `fs.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "fs.readdirSync(path.join(__dirname, \"fixtures\"));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const fs = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/unresolved-receiver.test.ts",
+          "import": "client.readdirSync",
+          "line": 3,
+          "message": "unresolved root: `client.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return client.readdirSync(\".\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/unresolved-root.test.ts",
+          "import": "readdirSync",
+          "line": 8,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(moving);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/policy-scan.ts",
+          "import": "readdirSync",
+          "line": 5,
+          "message": "live repository scan: `readdirSync` enumerates a path under process.cwd(), and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(join(process.cwd(), \".github\"));",
+          "target": "live repository scan"
+        },
+        {
+          "file": "helpers/scan-on-import.ts",
+          "import": "readdirSync",
+          "line": 3,
+          "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "export const names = readdirSync(\"../../.github\");",
+          "target": "live repository scan"
+        },
+        {
+          "file": "helpers/workflows.ts",
+          "import": "readdirSync",
+          "line": 7,
+          "message": "live repository scan: `readdirSync` enumerates a path under process.cwd(), and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root).map((name) => readFileSync(join(root, name), \"utf8\"));",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/direct-module-scope.test.ts",
+          "import": "readdirSync",
+          "line": 7,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const entries = readdirSync(workflows).map((name) => readFileSync(join(workflows, name), \"utf8\"));",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/glob-package.test.ts",
+          "import": "fg.sync",
+          "line": 6,
+          "message": "live repository scan: `fg.sync` enumerates a path under process.cwd(), and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "fg.sync(\"src/**/*.ts\", { cwd: process.cwd() });",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/glob-package.test.ts",
+          "import": "globSync",
+          "line": 5,
+          "message": "live repository scan: `globSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\".github/workflows/*.yml\");",
+          "target": "live repository scan"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "extra_enumerator": {
     "exitCode": 1,
     "report": {
@@ -608,6 +1018,96 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(dir);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 21,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ...base }); // spread options",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 22,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", loose); // options in a mutable binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 11,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(new URL(\"x\")); // URL without a base",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 12,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(dirname()); // dirname without an argument",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 13,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"a\" + \"b\"); // binary expression",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 14,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync((() => \"x\")()); // callee that is not a name",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 16,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(picked); // destructured binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 17,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(importedDir); // import binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 18,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(make()); // call of an unknown function",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 19,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "for (const each of [\"a\", \"b\"]) readdirSync(each); // declarator without init",
           "target": "unresolved root"
         },
         {
@@ -680,6 +1180,42 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "fs.readdirSync",
+          "line": 6,
+          "message": "unresolved root: `fs.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "fs.readdirSync(path.join(__dirname, \"fixtures\"));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const fs = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "require(\"walker\")",
+          "line": 4,
+          "message": "unresolved root: `require(\"walker\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"walker\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const walker = require(\"walker\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/unresolved-receiver.test.ts",
+          "import": "client.readdirSync",
+          "line": 3,
+          "message": "unresolved root: `client.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return client.readdirSync(\".\");",
           "target": "unresolved root"
         },
         {
@@ -803,6 +1339,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `globSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "globSync(\".github/workflows/*.yml\");",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 20,
+          "message": "live repository scan: `globSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ignore: [\"x\"] }); // options without cwd",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 15,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(__dirname); // unbound CommonJS global",
           "target": "live repository scan"
         },
         {
@@ -1088,6 +1642,114 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "live repository scan"
         },
         {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 20,
+          "message": "live repository scan: `globSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ignore: [\"x\"] }); // options without cwd",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 21,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ...base }); // spread options",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 22,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", loose); // options in a mutable binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 11,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(new URL(\"x\")); // URL without a base",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 12,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(dirname()); // dirname without an argument",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 13,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"a\" + \"b\"); // binary expression",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 14,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync((() => \"x\")()); // callee that is not a name",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 15,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(__dirname); // unbound CommonJS global",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 16,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(picked); // destructured binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 17,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(importedDir); // import binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 18,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(make()); // call of an unknown function",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 19,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "for (const each of [\"a\", \"b\"]) readdirSync(each); // declarator without init",
+          "target": "unresolved root"
+        },
+        {
           "file": "tests/path-forms.test.ts",
           "import": "globSync",
           "line": 21,
@@ -1229,6 +1891,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "fs.readdirSync",
+          "line": 6,
+          "message": "unresolved root: `fs.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "fs.readdirSync(path.join(__dirname, \"fixtures\"));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const fs = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/unresolved-receiver.test.ts",
+          "import": "client.readdirSync",
+          "line": 3,
+          "message": "unresolved root: `client.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return client.readdirSync(\".\");",
           "target": "unresolved root"
         },
         {
@@ -1367,6 +2056,114 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "live repository scan"
         },
         {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 20,
+          "message": "live repository scan: `globSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ignore: [\"x\"] }); // options without cwd",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 21,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", { ...base }); // spread options",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "globSync",
+          "line": 22,
+          "message": "unresolved root: `globSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "globSync(\"*.yml\", loose); // options in a mutable binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 11,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(new URL(\"x\")); // URL without a base",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 12,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(dirname()); // dirname without an argument",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 13,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(\"a\" + \"b\"); // binary expression",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 14,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync((() => \"x\")()); // callee that is not a name",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 15,
+          "message": "live repository scan: `readdirSync` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(__dirname); // unbound CommonJS global",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 16,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(picked); // destructured binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 17,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(importedDir); // import binding",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 18,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "readdirSync(make()); // call of an unknown function",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/path-edge.test.ts",
+          "import": "readdirSync",
+          "line": 19,
+          "message": "unresolved root: `readdirSync` enumerates a directory, but the root is a parameter, mutable binding, or expression this analysis cannot follow, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "for (const each of [\"a\", \"b\"]) readdirSync(each); // declarator without init",
+          "target": "unresolved root"
+        },
+        {
           "file": "tests/path-forms.test.ts",
           "import": "globSync",
           "line": 21,
@@ -1508,6 +2305,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "const read = require(\"node:fs\").readdirSync;",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "fs.readdirSync",
+          "line": 6,
+          "message": "unresolved root: `fs.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "fs.readdirSync(path.join(__dirname, \"fixtures\"));",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/require-plain.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 3,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: import it with a plain `import { readdirSync } from \"node:fs\"`, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "const fs = require(\"node:fs\");",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/unresolved-receiver.test.ts",
+          "import": "client.readdirSync",
+          "line": 3,
+          "message": "unresolved root: `client.readdirSync` enumerates a directory, but the receiver of this call is not resolved, so it cannot be shown to be bounded. Fix: use a `const` path under a fixtures directory or from mkdtemp, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return client.readdirSync(\".\");",
           "target": "unresolved root"
         },
         {
