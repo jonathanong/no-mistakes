@@ -94,7 +94,7 @@ fn returned_parameter_export_aliases_share_positive_and_negative_source_censuses
         )
     });
     let source = facts.ts.get(&helper).unwrap();
-    let module = source.module_bindings.as_ref().unwrap();
+    let module = source.ts.module_bindings.as_ref().unwrap();
     let expected_visits = module
         .bindings
         .iter()
