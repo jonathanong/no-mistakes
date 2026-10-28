@@ -68,6 +68,8 @@ pub(super) fn module_projection(
         values
     };
     let mut exported = BTreeSet::new();
+    // Export aliases share one exact owner proof, including failed censuses.
+    let mut source_proofs = FxHashMap::default();
     let mut seen = FxHashSet::default();
     let mut ambiguous = FxHashSet::default();
     for export in module.exports.iter().filter(|item| !item.type_only) {
@@ -85,7 +87,10 @@ pub(super) fn module_projection(
         let Some(candidate) = syntax.returned_params.get(&declaration) else {
             continue;
         };
-        if source_proof(syntax, bindings, owner, candidate, &dynamic) {
+        if *source_proofs
+            .entry(owner.id)
+            .or_insert_with(|| source_proof(syntax, bindings, owner, candidate, &dynamic))
+        {
             exported.insert(export.exported.clone());
         }
     }
