@@ -111,7 +111,7 @@ export function repeatedUnknown(enabled: boolean) {
 export function compoundAssignment() {
   let statement = "/* named */ SELECT 20";
   statement += " WHERE active";
-  read(statement); // EXPECT_UNKNOWN_COMPOUND
+  read(statement); // EXPECT_ACCEPTED_COMPOUND: primitive suffix preserves the complete named head.
 }
 
 export function iterationTarget(values: string[]) {
