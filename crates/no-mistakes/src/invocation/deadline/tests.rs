@@ -3,6 +3,9 @@ use rayon::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
+#[path = "tests/cli.rs"]
+mod cli;
+
 #[path = "tests/worker_process.rs"]
 mod worker_process;
 
@@ -88,6 +91,7 @@ fn replaced_deadline_lets_the_watchdog_return() {
         expires_at,
         Duration::from_secs(1),
         None,
+        crate::invocation::CliErrorOutput::new(false),
     );
 }
 

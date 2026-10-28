@@ -68,6 +68,14 @@ main run can finish and upload Rust coverage when another merge lands. GitHub's
 default concurrency queue can still replace an older pending main run before
 its jobs start.
 
+Rust coverage floors use one `cargo llvm-cov report --json --summary-only`
+export and [a totals checker](../../.github/scripts/rust-coverage-floors.cjs).
+The checker sums covered and total counts across export records and compares
+unrounded percentages with the existing line, function, and region floors.
+Missing or malformed totals fail the check. This avoids the extra table and
+full JSON passes performed by native `--fail-under-*` flags; LCOV generation
+for CRAP and Codecov and the job deadline retain their existing settings.
+
 ## Hosted measurement
 
 [Run 38332918032](https://github.com/jonathanong/no-mistakes/actions/runs/38332918032)

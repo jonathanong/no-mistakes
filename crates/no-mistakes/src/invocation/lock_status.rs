@@ -18,14 +18,15 @@ pub enum LockState {
 pub struct LockStatus {
     pub state: LockState,
     pub lock_file: String,
-    /// Present only while the lock is held; stale records are never reported.
+    /// Best-effort metadata while held; a handoff can briefly expose the prior holder.
     pub holder: Option<LockHolder>,
 }
 
 /// Report whether another invocation currently holds the lock, and who.
 ///
 /// The probe takes a shared advisory lock for an instant and releases it, so it
-/// never waits and never changes the holder record.
+/// never waits or changes the holder record. A simultaneous fail-fast exclusive
+/// acquisition can observe this brief probe as contention.
 pub fn lock_status() -> Result<LockStatus> {
     status_at(&lock_path()?)
 }

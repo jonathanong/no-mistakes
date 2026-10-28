@@ -1,0 +1,6 @@
+[
+  {"args":["private/no-mistakes","check","--config","sensitive-option-value","--query=private-positional-value"],"command":"no-mistakes"},
+  {"args":["private/program with spaces","sensitive-option-value"],"command":"program with spaces"},
+  {"args":[],"command":""},
+  {"args":["/"],"command":""}
+]

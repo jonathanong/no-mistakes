@@ -56,6 +56,15 @@ fn acquisition_records_this_process_as_the_holder() {
     );
     assert!(holder.started_at_ms > 0);
     assert!(holder.age_seconds.is_some());
+    // Cargo's filter and test flags must not become holder option values.
+    let program = std::env::args_os().next().unwrap();
+    assert_eq!(
+        holder.command,
+        std::path::Path::new(&program)
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+    );
 }
 
 #[test]

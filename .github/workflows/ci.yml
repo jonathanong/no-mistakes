@@ -22,7 +22,7 @@ env:
   RUSTFLAGS: "-D warnings"
   # Quote "no": a bare YAML no is a boolean. Snapshot tests must fail on drift.
   INSTA_UPDATE: "no"
-  # cargo llvm-cov fail-under percentages. Keep codecov.yml rust `target` in sync.
+  # Rust coverage floor percentages. Keep codecov.yml rust `target` in sync.
   RUST_COVERAGE_FAIL_UNDER_LINES: "98"
   RUST_COVERAGE_FAIL_UNDER_FUNCTIONS: "98"
   RUST_COVERAGE_FAIL_UNDER_REGIONS: "98"
@@ -177,7 +177,7 @@ jobs:
 
       - name: Check Rust validation parity
         timeout-minutes: 2
-        run: node --test .github/scripts/rust-validation.test.cjs
+        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs
 
       - name: Check formatting
         timeout-minutes: 5
@@ -774,10 +774,14 @@ jobs:
         run: |
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
-          cargo llvm-cov report \
-            --fail-under-lines "${RUST_COVERAGE_FAIL_UNDER_LINES}" \
-            --fail-under-functions "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}" \
-            --fail-under-regions "${RUST_COVERAGE_FAIL_UNDER_REGIONS}"
+          # Native --fail-under flags render a table and then export full JSON again.
+          # Summary totals preserve the same gate without both expensive passes.
+          cargo llvm-cov report --json --summary-only \
+            --output-path target/llvm-cov/summary.json
+          node .github/scripts/rust-coverage-floors.cjs target/llvm-cov/summary.json \
+            "${RUST_COVERAGE_FAIL_UNDER_LINES}" \
+            "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}" \
+            "${RUST_COVERAGE_FAIL_UNDER_REGIONS}"
 
       # Codecov is reporting only; the floors above gate coverage, so an outage must not block merges.
       - name: Upload Rust coverage to Codecov

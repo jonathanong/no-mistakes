@@ -41,8 +41,10 @@ rg -n 'addUrl\(|skipCreatedEvents' backend/
 
 Exit codes: `75` means another invocation holds the lock (`--fail-on-lock` or
 `--lock-timeout`; retry later or run `no-mistakes lock status --format json` to
-see the holder's pid, cwd, command, and age); `124` means the analysis deadline
-elapsed. Under `--format json` lock failures, and deadlines caught at the invocation boundary (a `--timeout` firing mid-command exits 124 with stderr only), write `{"error":{"kind":"lock_busy" |
+see the holder's pid, cwd, executable basename, and age); `124` means the
+analysis deadline elapsed. Under parsed `--format json` / `--json` options,
+lock failures and deadlines (including a `--timeout` firing mid-command) write
+`{"error":{"kind":"lock_busy" |
 "lock_timeout" | "deadline","phase":...,"holder":{...}}}` to stdout, so an empty
 stdout no longer means a hang. Do not treat exit `75` as "no impact"; wait and
 retry.

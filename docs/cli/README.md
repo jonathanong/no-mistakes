@@ -68,26 +68,36 @@ lock per repository is intentionally not offered.
 Errors are written to stderr. Lock messages name the holder:
 
 ```text
-error: another no-mistakes invocation is already running (held by pid 264 (cwd /work/repo, command `no-mistakes check`, held for 12s))
+error: another no-mistakes invocation is already running (held by pid 264 (cwd /work/repo, command `no-mistakes`, held for 12s))
 ```
 
-The holder records its pid, working directory, command line, and start time in
-an `invocation.lock.holder` file beside the lock file.
+The holder records its pid, working directory, executable basename, and start
+time in an `invocation.lock.holder` file beside the lock file. It does not
+record arguments, which may contain sensitive option or positional values. The
+sidecar is best-effort: it remains after normal release or a crash, and may
+briefly describe the previous holder while a new holder is acquiring the lock.
+Readers report it only when the lock is held. Older records with a full command
+line remain readable, so their command value may still contain arguments. New
+records are replaced atomically using a unique temporary file (`0600` on Unix).
 
-When `--format json` (or `--json`) is set, a lock failure, or a deadline
-detected at the invocation boundary (lock acquisition and the checks before and
-after a command runs), also writes one JSON object to stdout instead of leaving
-it empty. A `--timeout` that fires in the watchdog while a command is running
-still exits `124` with stderr only:
+When `--format json` or the `--json` flag is parsed as an output-format option,
+a lock failure or deadline also writes one JSON object to stdout instead of
+leaving it empty. This includes deadlines detected at the invocation boundary
+and by the watchdog while a command is running. A `--json` token consumed as
+another option's value does not select JSON output:
 
 ```json
-{"error":{"kind":"lock_busy","phase":"invocation.lock","message":"another no-mistakes invocation is already running (held by pid 264 ...)","exitCode":75,"holder":{"pid":264,"cwd":"/work/repo","command":"no-mistakes check","startedAtMs":1700000000000,"ageSeconds":12}}}
+{"error":{"kind":"lock_busy","phase":"invocation.lock","message":"another no-mistakes invocation is already running (held by pid 264 ...)","exitCode":75,"holder":{"pid":264,"cwd":"/work/repo","command":"no-mistakes","startedAtMs":1700000000000,"ageSeconds":12}}}
 ```
 
 `phase` is the running phase (`invocation.lock`, or for deadlines the active
 phase such as `check.prepare`); `holder` is present for lock failures when the
 holder record is readable. Successful structured output keeps its existing
-schema. Use [`lock status`](lock.md) to inspect the holder without waiting.
+schema. Use [`lock status`](lock-status.md) to inspect the holder without
+waiting.
+
+Watchdog JSON delivery is best-effort when stdout is blocked or closed: it
+must not delay child cleanup or prevent exit `124`.
 
 Global `--timings` prints invocation phase durations to stderr.
 `--verbose-timings` implies timings and adds deterministic work counters.

@@ -64,11 +64,19 @@ fn lockfile_git_discovery_timeout_does_not_render_partial_output() {
         .expect("no-mistakes should run");
 
     assert_eq!(output.status.code(), Some(124));
-    assert!(
-        output.stdout.is_empty(),
-        "timed-out discovery must not render a partial result: {}",
-        stdout(&output)
-    );
+    // The default lockfile format is JSON. Parse the whole stdout so a duplicate
+    // watchdog/boundary error or any partial command payload fails this test.
+    let report: serde_json::Value =
+        serde_json::from_slice(&output.stdout).unwrap_or_else(|error| {
+            panic!(
+                "one timeout document expected: {error}: {}",
+                stdout(&output)
+            )
+        });
+    assert_eq!(report.as_object().unwrap().len(), 1);
+    assert_eq!(report["error"]["kind"], "deadline");
+    assert_eq!(report["error"]["exitCode"], 124);
+    assert!(report["error"]["phase"].is_null() || report["error"]["phase"] == "command");
     // The watcher reports "timed out". The child-wait path reports "deadline
     // elapsed" and can win the race. Either diagnostic is the timeout.
     let error = stderr(&output);

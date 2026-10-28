@@ -4,10 +4,14 @@
 mod acquisition;
 #[path = "invocation/child.rs"]
 mod child;
+#[path = "invocation/cli_output.rs"]
+mod cli_output;
 #[path = "invocation/clock.rs"]
 mod clock;
 #[path = "invocation/deadline.rs"]
 mod deadline;
+#[doc(hidden)]
+pub use cli_output::CliErrorOutput;
 #[path = "invocation/error.rs"]
 mod error;
 #[path = "invocation/holder.rs"]
