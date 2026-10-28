@@ -44,13 +44,10 @@ fn stored_unconsumed(
         semantic.nodes().kind(declaration),
         AstKind::VariableDeclaration(d) if d.kind == VariableDeclarationKind::Const
     );
-    let Some(symbol) = binding.symbol_id.get() else {
-        return false;
-    };
     is_const
         && semantic
             .scoping()
-            .get_resolved_references(symbol)
+            .get_resolved_references(binding.symbol_id())
             .all(|reference| non_consuming(semantic.nodes().parent_kind(reference.node_id())))
 }
 
