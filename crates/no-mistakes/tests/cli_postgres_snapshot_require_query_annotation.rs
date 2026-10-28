@@ -158,6 +158,8 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("captured_prefix_ignore", "captured-prefix", "captured-prefix-ignore.yml"),
         // Field and imported value projections retain named, missing, and advisory cases.
         case("text_field_report", "low-heads", "text-field-report.yml"),
+        case("text_field_third_report", "low-heads", "text-field-third-report.yml"),
+        case("captured_text_field_report", "low-heads", "captured-text-field-report.yml"),
         case("imported_string_heads_report", "imported-string-heads", "imported-string-heads-report.yml"),
         case("helper_records_report", "low-heads", "helper-records-report.yml"),
         case("record_text_report", "low-heads", "record-text-report.yml"),

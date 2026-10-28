@@ -253,11 +253,18 @@ A local const holding a trusted tagged SQL builder also permits a direct `.text`
 read at an executor, including a paired `.values` read. The builder must keep its
 fixed head through only safe appends; escapes, writes, optional or computed field
 reads, arbitrary object fields, and caller-supplied SQL remain unresolved.
+A captured native builder can keep that proof inside a closure when its complete
+binding-reference census contains only paired executor field reads and safe
+discarded appends. Closure timing does not change the leading head; an alias,
+write, unknown method, or other captured use still makes it unresolved.
 An exact fresh-builder helper result can be stored in one local `const`, passed
 to an executor after discarded static appends, or appended directly at the
 executor. The helper's source must prove a trusted builder return; a plain
 record or string return cannot inherit `.append` trust. Aliases, mutation,
 capture, and unresolved imports remain advisory under the configured policy.
+For a paired `result.text, result.values` read, one later options argument is
+allowed; optional/computed fields, spread arguments, and unknown builder origin
+are still unresolved.
 Direct source imports of those helpers follow one exact export through the
 prepared request resolver. This direct-import form leaves re-exports and
 unresolved package implementations unanalyzable.
