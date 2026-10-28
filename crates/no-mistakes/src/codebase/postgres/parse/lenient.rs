@@ -10,7 +10,7 @@ pub(super) use chunks::{next_non_ws, skip_ws};
 mod create_compat;
 mod fallback;
 mod pg_ast;
-mod pg_ident;
+pub(super) mod pg_ident;
 mod query_compat;
 mod recover;
 pub(super) mod rewrite;

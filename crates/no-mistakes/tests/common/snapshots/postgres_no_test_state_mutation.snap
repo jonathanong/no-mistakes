@@ -98,6 +98,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "analyze_relation_list": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 7,
+          "message": "tests/analyze.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('ANALYZE households,');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/analyze.test.ts",
+          "line": 8,
+          "message": "tests/analyze.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE users');",
+          "target": "DROP TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "definite_variant_mutation": {
     "exitCode": 1,
     "report": {

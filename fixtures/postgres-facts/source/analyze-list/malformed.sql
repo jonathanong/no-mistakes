@@ -1,0 +1,10 @@
+ANALYZE households,;
+ANALYZE households, DROP TABLE users;
+ANALYZE households, SELECT;
+ANALYZE households, WHERE;
+ANALYZE households, public.;
+ANALYZE households, public.'not_identifier';
+ANALYZE households, 123;
+ANALYZE households, pg_sleep(1);
+ANALYZE households, "";
+ANALYZE households,,users;

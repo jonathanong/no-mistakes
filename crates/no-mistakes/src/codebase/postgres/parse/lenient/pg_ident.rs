@@ -2,7 +2,7 @@
 use super::recover::failure::keywords;
 use sqlparser::tokenizer::Token;
 
-pub(super) fn col_id(token: &Token) -> bool {
+pub(in crate::codebase::postgres::parse) fn col_id(token: &Token) -> bool {
     matches!(token, Token::Word(word) if !word.value.is_empty()
         && (word.quote_style == Some('"')
             || (word.quote_style.is_none() && !keywords::reserved(&word.value))))

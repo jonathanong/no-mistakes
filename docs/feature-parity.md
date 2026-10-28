@@ -822,6 +822,7 @@ Rust library and async Node ESM/CJS APIs, with typed metadata, original spans,
 and malformed-source recovery; see [PostgreSQL source API](postgres-source-api.md).
 
 PostgreSQL bounded-statement analysis recognizes `TABLE ONLY name` query arms and retains quoted relation identity across strict and lenient parsing.
+Executed PostgreSQL SQL checks accept a comma-separated `ANALYZE` relation list as complete SQL; malformed lists still produce an unanalyzable result.
 It also recognizes `INSERT INTO target TABLE ONLY source`, including target aliases and identity overrides, while retaining the original source-token locations.
 It also analyzes standalone `TABLE name` and `TABLE ONLY name` statements, including an explicit inheritance `*` suffix, with the same catalog and temporary-relation semantics as a corresponding `SELECT * FROM name`.
 Three-arm set operations with a middle `TABLE` and a following `SELECT` retain all arms and quoted relation identities.
