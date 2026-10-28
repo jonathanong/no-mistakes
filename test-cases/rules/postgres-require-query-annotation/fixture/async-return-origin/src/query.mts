@@ -1,5 +1,5 @@
 import { read } from '@bench/db'
-import { disposal, getterEscape, secondPosition, named, namedAlias, missing, early, finallyOverride, postAwait, escape, unresolved, cyclic, alias, captured, customTag, begin, comment, reassigned, defaulted, deep, budget } from './helpers.mjs'
+import { initializerAwait, taggedAwait, disposal, getterEscape, secondPosition, named, namedAlias, missing, early, finallyOverride, postAwait, escape, unresolved, cyclic, alias, captured, customTag, begin, comment, reassigned, defaulted, deep, budget } from './helpers.mjs'
 import * as ns from './helpers.mjs'
 
 export async function run(user, options) {
@@ -46,6 +46,10 @@ export async function run(user, options) {
   await read(position) // Unproven
   const resource = await disposal()
   await read(resource) // Unproven
+  const initializer = await initializerAwait()
+  await read(initializer) // Unproven
+  const tagged = await taggedAwait()
+  await read(tagged) // Unproven
   const noAwait = named(user, options)
   await read(noAwait) // Unproven
   const namespaced = await ns.named(user, options)

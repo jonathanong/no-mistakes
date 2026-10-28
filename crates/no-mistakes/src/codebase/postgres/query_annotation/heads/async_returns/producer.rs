@@ -77,7 +77,7 @@ pub(in super::super) fn function(value: &Function<'_>) -> Option<Candidate> {
                     declaration: span(id.span),
                     tag,
                     returned: span(returned.span),
-                    allocated: init.span().end,
+                    initializer_start: init.span().start,
                     proof,
                     appends: Vec::new(),
                     effects: Vec::new(),

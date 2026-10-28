@@ -387,7 +387,7 @@ await read(query)
 
 The result must be one local `const` used only as the immediately next configured
 executor's sole argument. A missing `await`, optional or chained call, another
-result use, escaping builder, early return, `try`/`finally`, postallocation await,
+result use, escaping builder, early return, `try`/`finally`, await anywhere inside the builder initializer or afterward,
 unknown effect, custom tag, source gap or unresolved import leaves the call
 unanalyzable. Keep the fresh builder private, move awaited setup before allocation,
 and expose append-only source effects to make the contract inspectable.

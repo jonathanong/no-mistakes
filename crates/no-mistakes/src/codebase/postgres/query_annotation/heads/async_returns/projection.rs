@@ -51,11 +51,19 @@ pub(in super::super) fn collect(
         awaits,
         pending_effects,
     };
+    let mut exported_ids = FxHashSet::default();
+    let mut export_visits = 0;
     let mut memo = FxHashMap::default();
     let mut exports = BTreeMap::new();
     let mut names = FxHashSet::default();
     let mut ambiguous = FxHashSet::default();
     for export in module.exports.iter().filter(|e| !e.type_only) {
+        export_visits += 1;
+        if export.specifier.is_none() {
+            if let Some(owner) = locals.get(export.local.as_str()).copied().flatten() {
+                exported_ids.insert(owner.id);
+            }
+        }
         if !names.insert(export.exported.as_str()) {
             exports.remove(&export.exported);
             ambiguous.insert(export.exported.as_str());
@@ -78,6 +86,12 @@ pub(in super::super) fn collect(
         if let Some(proof) = proof {
             exports.insert(export.exported.clone(), proof.clone());
         }
+    }
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment(
+            "postgres.annotation.async_export_index_visits",
+            export_visits,
+        );
     }
     let mut imports = FxHashMap::default();
     for import in module.imports.iter().filter(|i| !i.type_only) {
@@ -106,10 +120,7 @@ pub(in super::super) fn collect(
             continue;
         };
         if (owner.span.start, owner.span.end) != caller.declaration
-            || module
-                .exports
-                .iter()
-                .any(|e| !e.type_only && e.local == owner.name)
+            || exported_ids.contains(&owner.id)
             || owner.references.iter().filter(|u| u.runtime).count() != 1
             || syntax.assignments.writes.contains_key(&caller.reference)
             || syntax
