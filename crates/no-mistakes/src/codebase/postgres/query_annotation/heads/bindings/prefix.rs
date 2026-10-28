@@ -2,6 +2,46 @@ use super::{Bindings, Head, Span, Syntax};
 use crate::fx::FxHashSet;
 
 impl Bindings<'_> {
+    pub(in crate::codebase::postgres::query_annotation::heads) fn conditional_prefix(
+        &self,
+        head: Head,
+        call: Span,
+    ) -> Option<Vec<Span>> {
+        let reference = head.reference()?;
+        let owner = self.owner(reference).filter(|owner| !owner.imported)?;
+        let declaration = (owner.span.start, owner.span.end);
+        if !self.trusted_roots.contains(&declaration)
+            || !matches!(
+                self.constants.get(&declaration),
+                Some(Head::Tag | Head::AppendTag | Head::AppendPrefixTag)
+            )
+        {
+            return None;
+        }
+        self.append_safety.conditional(declaration, call)
+    }
+    pub(in crate::codebase::postgres::query_annotation::heads) fn returned_local_prefix(
+        &self,
+        syntax: &Syntax,
+        reference: Span,
+    ) -> Option<super::super::HeadProof> {
+        use super::super::HeadProof;
+        let owner = self.owner(reference).filter(|owner| !owner.imported)?;
+        let declaration = (owner.span.start, owner.span.end);
+        let context = syntax.contexts.get(&declaration).copied().flatten()?;
+        if syntax.contexts.get(&reference).copied().flatten() != Some(context)
+            || !self.append_safety.accepts(declaration, reference)
+        {
+            return None;
+        }
+        let root = *self.constants.get(&declaration)?;
+        if !matches!(root, Head::Tag | Head::AppendTag | Head::AppendPrefixTag) {
+            return None;
+        }
+        let tag = *syntax.append_tags.get(&declaration)?;
+        let tag_owner = self.owner(tag)?;
+        (tag_owner.imported && self.trusted_import(tag_owner.id)).then_some(HeadProof::Literal)
+    }
     pub(in crate::codebase::postgres::query_annotation::heads) fn trusted_import(
         &self,
         id: usize,
@@ -23,6 +63,7 @@ impl Bindings<'_> {
         &self,
         head: Head,
         call: Span,
+        legacy: bool,
     ) -> Option<super::super::HeadProof> {
         use super::super::HeadProof;
         match head {
@@ -31,7 +72,12 @@ impl Bindings<'_> {
             Head::Reference(reference) | Head::AppendPrefixReference(reference) => {
                 let owner = self.owner(reference).filter(|owner| !owner.imported)?;
                 let declaration = (owner.span.start, owner.span.end);
-                if !self.append_safety.accepts(declaration, call) {
+                let accepts = if legacy {
+                    self.append_safety.accepts_legacy(declaration, call)
+                } else {
+                    self.append_safety.accepts(declaration, call)
+                };
+                if !accepts {
                     return None;
                 }
                 let root = *self.constants.get(&declaration)?;

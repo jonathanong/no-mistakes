@@ -8,6 +8,9 @@ use crate::config::v2::{
 };
 use crate::diagnostics::{with_observer, InvocationObserver};
 
+#[path = "head_calls_only_tests/callback_head_tests.rs"]
+mod callback_head_tests;
+
 fn config(efforts: &[&str]) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     for effort in efforts {
@@ -151,7 +154,8 @@ fn direct_imported_helper_heads_project_from_prepared_source_facts() {
             (11, Some(HeadProof::Missing)),
             (12, Some(HeadProof::Unproven)),
             (13, Some(HeadProof::Unproven)),
-            (14, Some(HeadProof::Unproven)),
+            // Both explicit return paths now carry a fixed named head.
+            (14, Some(HeadProof::Literal)),
             (15, Some(HeadProof::Unproven)),
             (16, Some(HeadProof::Unproven)),
             (17, Some(HeadProof::Unproven)),
@@ -174,7 +178,21 @@ fn direct_imported_helper_heads_project_from_prepared_source_facts() {
     );
 }
 
-#[path = "head_calls_only_tests/relative_pending_tests.rs"]
-mod relative_pending;
 #[path = "head_calls_only_tests/variant_parity_tests.rs"]
 mod variant_parity;
+
+#[path = "head_calls_only_tests/effect_fact_tests.rs"]
+mod effect_facts;
+
+#[path = "head_calls_only_tests/value_fact_tests.rs"]
+mod value_facts;
+
+#[path = "head_calls_only_tests/record_fact_tests.rs"]
+mod record_facts;
+
+#[path = "head_calls_only_tests/builder_fact_tests.rs"]
+mod builder_facts;
+#[path = "head_calls_only_tests/captured_fact_tests.rs"]
+mod captured_facts;
+#[path = "head_calls_only_tests/relative_pending_tests.rs"]
+mod relative_pending;

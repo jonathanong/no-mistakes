@@ -144,6 +144,31 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         // Relative factory/type calls join only after resolver confirmation.
         case("relative_helper_heads_report", "relative-helper-heads", "relative-helper-heads-report.yml"),
         case("relative_helper_heads_ignore", "relative-helper-heads", "relative-helper-heads-ignore.yml"),
+        // Finite local returns and prepared append effects keep their low heads.
+        case("conditional_return_local_report", "low-heads", "conditional-return-local-report.yml"),
+        case("conditional_return_local_ignore", "low-heads", "conditional-return-local-ignore.yml"),
+        case("append_effects_report", "append-effects", "append-effects-report.yml"),
+        case("append_effects_ignore", "append-effects", "append-effects-ignore.yml"),
+        case("captured_prefix_report", "captured-prefix", "captured-prefix-report.yml"),
+        case("captured_prefix_ignore", "captured-prefix", "captured-prefix-ignore.yml"),
+        // Field and imported value projections retain named, missing, and advisory cases.
+        case("text_field_report", "low-heads", "text-field-report.yml"),
+        case("imported_string_heads_report", "imported-string-heads", "imported-string-heads-report.yml"),
+        case("helper_records_report", "low-heads", "helper-records-report.yml"),
+        case("helper_records_ignore", "low-heads", "helper-records-ignore.yml"),
+        case("imported_helper_records_report", "imported-helper-records", "imported-helper-records-report.yml"),
+        case("imported_helper_records_ignore", "imported-helper-records", "imported-helper-records-ignore.yml"),
+        case("helper_bindings_report", "low-heads", "helper-bindings-report.yml"),
+        case("helper_bindings_ignore", "low-heads", "helper-bindings-ignore.yml"),
+        case("imported_helper_bindings_report", "imported-helper-bindings", "imported-helper-bindings-report.yml"),
+        case("imported_helper_bindings_ignore", "imported-helper-bindings", "imported-helper-bindings-ignore.yml"),
+        // Every return path must agree; only fresh trusted builders support append projection.
+        case("finite_helper_returns_local", "low-heads", "finite-helper-returns-local-report.yml"),
+        case("finite_helper_returns_imported_report", "finite-helper-returns", "finite-helper-returns-report.yml"),
+        case("finite_helper_returns_imported_ignore", "finite-helper-returns", "finite-helper-returns-ignore.yml"),
+        // Only exact imported callback paths clear; unknown paths retain their findings.
+        case("callback_heads_report", "callback-heads", "callback-heads-low-report.yml"),
+        case("callback_heads_ignore", "callback-heads", "callback-heads-low-ignore.yml"),
     ];
     assert_saved_fixture("postgres_require_query_annotation", &cases);
 }

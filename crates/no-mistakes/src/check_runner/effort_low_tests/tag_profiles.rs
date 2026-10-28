@@ -5,10 +5,7 @@ fn low_tag_heads_are_identical_across_saved_profiles() {
     let source = std::fs::read_to_string(root().join("src/query.mts")).unwrap();
     let expected = marked_lines(&source, "EXPECT_REPORT_");
     // These explicit oracles retain unsupported heads while accepting every tag identity.
-    assert_eq!(
-        expected,
-        vec![13, 15, 16, 17, 19, 21, 22, 42, 43, 46, 48, 53]
-    );
+    assert_eq!(expected, vec![13, 17, 19, 21, 22, 42, 43, 46, 48, 53]);
     assert_eq!(
         marked_lines(&source, "EXPECT_ACCEPTED_TAG"),
         vec![14, 32, 33, 35, 37, 38, 39, 40, 41, 50]
