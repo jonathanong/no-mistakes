@@ -214,11 +214,14 @@ a proven local append-only effect. Closure execution order does not change this
 prefix. Exports, aliases, stores, used append results, property writes, other
 members, and semantic gaps stay unresolved. This is a low-effort prefix proof;
 it does not infer complete SQL.
-One same-file function declaration or `const` arrow also qualifies when it has
-one final top-level return with a fixed leading comment, and its callable is
-lexically owned and unchanged. A returned tagged builder must use the exact
+One same-file function declaration or `const` arrow also qualifies when its
+single returned expression has a fixed leading comment and its callable is
+lexically owned and unchanged. A block body needs one final top-level return;
+a concise arrow body is itself the returned expression. A returned tagged builder must use the exact
 `sql-template-strings` import; an unknown appended suffix after its fixed head
-is allowed. A fixed missing head returned by such a helper is a failing finding.
+is allowed only for that trusted tag. An opaque append through another tag
+does not establish a safe prefix or make later reads of that builder safe.
+A fixed missing head returned by such a helper is a failing finding.
 One local const returned by a helper qualifies when its trusted named tag
 keeps a fixed prefix through append-only uses until the single final return.
 At low effort, an ordinary leading comment template may use one exact

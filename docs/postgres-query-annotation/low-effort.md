@@ -52,15 +52,18 @@ survives safe appends. Both fields must be direct, non-optional reads; a
 computed field, escaped or overwritten builder, arbitrary object with a `text`
 field, or caller-supplied SQL remains unresolved.
 
-Low also follows a same-file function declaration or `const` arrow when its
-body has exactly one return, in final top-level position, with a fixed named
-literal head. Tagged returns must use the `sql-template-strings` default or
+Low also follows a same-file function declaration or `const` arrow with one
+returned expression and a fixed named literal head. A block body must have
+one final top-level return; a concise arrow body is the returned expression.
+Tagged returns must use the `sql-template-strings` default or
 named `sql` import. A direct trusted tagged return can append an unknown suffix;
-the fixed leading comment remains visible. Async and generator helpers, unproven
+the fixed leading comment remains visible. An opaque append through another
+tag does not establish a safe prefix or make later reads of that builder safe.
+Async and generator helpers, unproven
 return paths, reassigned or shadowed callees, and optional or spread helper
 calls remain unresolved. A directly imported helper from another prepared
 source file also qualifies when that file directly exports the same fixed
-return summary. The request's resolver checks the exact import and export;
+return summary, including a one-hop local export alias. The request's resolver checks the exact import and export;
 For direct helper imports, re-exports and unavailable package implementations
 remain unresolved. A helper
 may also return one local `const` initialized from the trusted default SQL tag

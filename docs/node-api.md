@@ -83,7 +83,9 @@ For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
 unanalyzable policy in both APIs; it omits annotation evaluator preparation.
 These proofs include trusted builder append prefixes and fixed-return helpers
-in the same file or through one direct source import. Unsupported helper or
+in the same file or through one direct source import, including local export
+aliases and concise arrow bodies. Opaque append suffixes preserve the prefix
+only for the trusted `sql-template-strings` tag. Unsupported helper or
 mutation shapes remain unanalyzable.
 An exact top-level namespace destructure can follow unique explicit source
 reexports to a fixed-head helper through the same prepared check projection;
