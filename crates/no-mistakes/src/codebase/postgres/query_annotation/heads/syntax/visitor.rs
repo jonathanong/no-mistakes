@@ -1,6 +1,5 @@
 use super::{head, span, Call, Head, Syntax};
 use crate::codebase::postgres::query_annotation::heads::assignments::Context;
-use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::{ast::*, AstKind};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
@@ -28,6 +27,7 @@ impl<'a> Visit<'a> for Syntax {
         self.record_reference(value);
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
+        self.native_values.call(value);
         self.finite_call(value);
         if value.optional {
             self.optional_calls.insert(span(value.span));
@@ -79,28 +79,31 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_variable_declaration(self, value);
     }
     fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
-        if self.collect_helper_heads {
-            let effects = super::super::effects::call(&value.expression);
-            self.effect_calls.extend(effects.into_iter().flatten());
-        }
-        let literal = super::super::append::reference(&value.expression);
-        if let Some(reference) = literal {
-            self.discarded_appends.insert(reference);
-        }
-        if let Some(reference) = literal
-            .is_none()
-            .then(|| super::super::append::prefix_reference(&value.expression))
-            .flatten()
-        {
-            self.prefix_discarded_appends.insert(reference);
-        }
-        let discarded = match unwrap_ts_wrappers(&value.expression) {
-            Expression::AssignmentExpression(value) => Some(span(value.span)),
-            _ => None,
-        };
-        let previous = std::mem::replace(&mut self.assignments.discarded_assignment, discarded);
-        walk::walk_expression_statement(self, value);
-        self.assignments.discarded_assignment = previous;
+        self.walk_statement_facts(value);
+    }
+    fn visit_static_member_expression(&mut self, value: &StaticMemberExpression<'a>) {
+        self.native_values.member(value);
+        walk::walk_static_member_expression(self, value);
+    }
+    fn visit_computed_member_expression(&mut self, value: &ComputedMemberExpression<'a>) {
+        self.native_values.index(value);
+        walk::walk_computed_member_expression(self, value);
+    }
+    fn visit_unary_expression(&mut self, value: &UnaryExpression<'a>) {
+        self.native_values.unary(value);
+        walk::walk_unary_expression(self, value);
+    }
+    fn visit_new_expression(&mut self, value: &NewExpression<'a>) {
+        self.native_values.new_call(value);
+        walk::walk_new_expression(self, value);
+    }
+    fn visit_tagged_template_expression(&mut self, value: &TaggedTemplateExpression<'a>) {
+        self.native_values.tag(value);
+        walk::walk_tagged_template_expression(self, value);
+    }
+    fn visit_chain_expression(&mut self, value: &ChainExpression<'a>) {
+        self.native_values.block(value.span);
+        walk::walk_chain_expression(self, value);
     }
     fn visit_return_statement(&mut self, value: &ReturnStatement<'a>) {
         if self.collect_helper_heads {
@@ -115,6 +118,7 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_return_statement(self, value);
     }
     fn visit_simple_assignment_target(&mut self, value: &SimpleAssignmentTarget<'a>) {
+        self.native_values.target(value);
         self.assignments.target(value);
         walk::walk_simple_assignment_target(self, value);
     }
@@ -126,6 +130,7 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_assignment_target_property_identifier(self, value);
     }
     fn visit_assignment_expression(&mut self, value: &AssignmentExpression<'a>) {
+        self.native_values.assignment(value);
         self.assignments.assignment(value);
         walk::walk_assignment_expression(self, value);
     }

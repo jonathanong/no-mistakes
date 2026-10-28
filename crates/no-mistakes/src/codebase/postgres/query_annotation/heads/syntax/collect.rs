@@ -15,6 +15,9 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn collect_with_helpe
     let mut syntax = Syntax {
         collect_append_tags,
         collect_helper_heads,
+        native_values: super::super::native_values::Facts::new(
+            collect_helper_heads && program.source_text.contains(".values"),
+        ),
         collect_finite: collect_helper_heads
             && program.source_text.contains("/*")
             && program.source_text.contains("${"),

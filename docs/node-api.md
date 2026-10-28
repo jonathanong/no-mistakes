@@ -79,6 +79,12 @@ Other launcher errors, such as permission denied, are hard errors. The default
 is `report`; `advise` returns a non-failing advisory and `ignore` skips that
 uncertainty. See [the rule contract](rules/shellcheck-runner.md#what-it-catchesrequires).
 
+The shared low head facts also allow exact native builder value observations
+(`q.values.length`, indexed reads and one-argument `.at` calls) under a complete
+same-function ownership census. This preserves only the SQL head; returned
+values and read effects remain unknown. CLI and async Node reports use the same
+prepared proof and unchanged native constructor/append protocol contract.
+
 For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
 unanalyzable policy in both APIs; it omits annotation evaluator preparation.

@@ -166,6 +166,18 @@ see [SQL verdicts](../postgres-sql-verdicts.md).
 
 ### Effort
 
+Low effort also preserves a continuation-safe named head through exact local
+`q.values.length`, `q.values[index]`, and one-argument `q.values.at(index)` reads.
+This requires a fresh trusted native builder inside one function, a complete
+binding census, discarded appends and direct configured executor uses. Other
+query references, captures, aliases, writes, optional reads and constructor
+escapes remain unproven. The proof uses the native constructor's separate fresh
+strings and values arrays and the existing unchanged native protocol contract.
+Index coercion, getters and `.at` can execute code and return arbitrary values;
+this proof neither predicts those values nor asserts purity or bounds. It proves
+only that those effects cannot reach the private SQL strings through the allowed
+references. Low effort performs no SQL evaluation.
+
 Maximum effort also recognizes a direct loop-carried literal reassignment in
 `for...of`, `for...in`, `while`, `do...while`, and simple `for` loops: an
 unconditional executor call followed by a missing-annotation literal assignment

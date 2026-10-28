@@ -28,6 +28,8 @@ mod helper_record_tests;
 mod missing_append_tests;
 #[path = "missing_tests.rs"]
 mod missing_tests;
+#[path = "native_value_tests.rs"]
+mod native_value_tests;
 #[path = "returned_captured_tests.rs"]
 mod returned_captured_tests;
 #[path = "returned_param_tests.rs"]

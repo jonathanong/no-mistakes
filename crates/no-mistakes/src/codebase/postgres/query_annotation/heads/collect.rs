@@ -61,6 +61,7 @@ pub(crate) fn collect_prepared(
     let (trusted_append_calls, trusted_prefix_calls) =
         trusted_append::proofs(&syntax, &bindings, &calls, candidates, low_candidates);
     if include_all_calls {
+        super::native_values::apply(&syntax, &bindings, ts, &executor_calls, &mut calls);
         for (span, proof) in super::branch_assignments::proofs(&syntax, &bindings, &executor_calls)
         {
             if matches!(calls.get(&span), Some(HeadProof::Unproven)) {

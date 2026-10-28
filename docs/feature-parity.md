@@ -1029,3 +1029,8 @@ PostgreSQL annotation low effort shares the bounded awaited fresh native builder
 return-origin proof across CLI, Rust checks and asynchronous Node checks. Exact
 prepared imported append-effect obligations must all resolve; unsupported return,
 await, alias or effect paths keep the existing unanalyzable policy.
+
+Low-effort PostgreSQL annotation checks share native value-read head separation
+between Rust, CLI and async Node. Exact length, index and one-argument `.at`
+observations require a closed function-local native builder and unchanged trusted
+native protocol. This does not predict values or declare reads pure.

@@ -14,6 +14,7 @@ mod finite_visits;
 mod head_kind;
 mod helper_visits;
 pub(super) mod literals;
+mod statement_visits;
 mod visitor;
 pub(super) struct Call {
     pub span: Span,
@@ -23,6 +24,7 @@ pub(super) struct Call {
 #[derive(Default)]
 pub(super) struct Syntax {
     pub collect_helper_heads: bool,
+    pub native_values: super::native_values::Facts,
     pub async_returns: FxHashMap<Span, super::async_returns::Candidate>,
     pub async_callers: Vec<super::async_returns::Caller>,
     pub async_awaits: Vec<Span>,
