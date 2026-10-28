@@ -148,6 +148,9 @@ whose exception is intentional, with a reason in the adjacent comment.
 This rule supports `max` effort. Selecting `low` falls back to `max` with a
 configuration warning. Complete PostgreSQL `ANALYZE` relation lists are parsed
 by the shared SQL extractor; malformed lists remain unanalyzable.
+Finite helper returns, direct throwing branches, literal iterator domains, and
+local Set guards use bounded full-SQL proofs. Annotation `low` requests skip
+these proofs and do not invoke the annotation evaluator.
 
 ## Related rules
 
