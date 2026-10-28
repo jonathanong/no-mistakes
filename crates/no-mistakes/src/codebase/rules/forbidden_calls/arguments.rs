@@ -1,7 +1,7 @@
 use super::config::{ArgumentConditions, ArgumentPredicate, Literal};
 use crate::codebase::ts_source::module_facts::arguments::{ArgumentValue, ArgumentValues};
 
-pub(super) fn for_call(
+pub(crate) fn for_call(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     offset: u32,
 ) -> Option<&ArgumentValues> {

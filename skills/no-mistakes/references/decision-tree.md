@@ -226,3 +226,5 @@ legacy workflow-file-to-Rust-binary Cargo relationship.
 For configured coverage producers, enable `coverage-producer-assertion-owner` with exact function roots, assertion module/export identities, and genuine callback/process contracts; run `check --root <root> --format json`. Dynamic dispatch and traversal bounds follow `unanalyzable`, never assertion proof.
 
 For production exports retained only by tests, configure `production-exports-only-used-by-tests` with explicit `productionRoots` and `testGlobs`/`testHelperRoots`, then run `check --root <root> --format json`. Follow the reported symbol through aliases/re-exports before removing the export or moving its implementation to test helpers.
+
+For tests that enumerate the live repository (module-scope or test-body `readdirSync`/`glob` over workflow, config, or source trees), configure `test-no-live-repository-scan` with `severity: advisory` first, then run `check --root <root> --format json`. Move the repository-wide check to a static CI command and keep Vitest for bounded fixtures or `mkdtemp` roots; findings labelled `unresolved root` need a `const` fixture path or a suppression, never silence.

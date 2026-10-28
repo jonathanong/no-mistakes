@@ -17,7 +17,7 @@ pub(super) fn allowed_invocations(configured: &[Invocation]) -> Vec<InvocationKi
     }
 }
 
-pub(super) fn site_source_node(site: &ResolvedCallSite) -> NodeId {
+pub(crate) fn site_source_node(site: &ResolvedCallSite) -> NodeId {
     site.caller.as_deref().map_or_else(
         || NodeId::file(&site.file),
         |symbol| {

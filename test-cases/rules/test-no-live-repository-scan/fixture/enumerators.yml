@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      enumerators:
+        - module: node:fs
+          export: cpSync

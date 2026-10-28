@@ -89,6 +89,10 @@ fn graph_plan_with_forbidden(
         plan.include(forbidden_plan);
         needed = true;
     }
+    if let Some(scan_plan) = super::super::test_no_live_repository_scan::graph_plan(config) {
+        plan.include(scan_plan);
+        needed = true;
+    }
     if let Some(unconstructed_plan) = unconstructed_error_class::graph_plan(config) {
         plan.include(unconstructed_plan);
         needed = true;
@@ -115,6 +119,7 @@ pub fn canonical_graph_requires_full_file_universe(
         || required_entrypoint_reachability::graph_plan(config).is_some()
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)
         || config.rule_configured(FORBIDDEN_CALLS)
+        || config.rule_configured(super::super::test_no_live_repository_scan::RULE_ID)
         || config.rule_configured(UNCONSTRUCTED_ERROR_CLASS)
         || config.rule_configured(super::super::production_exports_test_only::RULE_ID)
 }

@@ -14,6 +14,7 @@ pub(super) fn known_rule(rule: &str) -> bool {
             REQUIRE_STORYBOOK_STORIES,
             REQUIRED_ENTRYPOINT_REACHABILITY,
             SERVER_ROUTE_CLIENT_BOUNDARY,
+            TEST_NO_LIVE_REPOSITORY_SCAN,
             TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
             UNCONSTRUCTED_ERROR_CLASS,
             "assert-no-fetch",

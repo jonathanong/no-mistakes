@@ -49,7 +49,7 @@ impl Projector<'_, '_> {
     }
 
     // Cache failures too: a popular alias never repeats an unbounded reference scan.
-    fn immutable_binding(&mut self, symbol: SymbolId) -> bool {
+    pub(super) fn immutable_binding(&mut self, symbol: SymbolId) -> bool {
         if let Some(&known) = self.immutable.entries.get(&symbol) {
             return known;
         }

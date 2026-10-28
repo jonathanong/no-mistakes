@@ -59,6 +59,23 @@ pub(super) fn graph_rule_findings(
             )
         })?);
     }
+    if rule_enabled(
+        config,
+        crate::codebase::rules::test_no_live_repository_scan::RULE_ID,
+    ) {
+        let diagnostics = crate::perf_trace::trace("rules.test_no_live_repository_scan", || {
+            crate::codebase::rules::test_no_live_repository_scan::check_with_graph(
+                root,
+                config,
+                dependency_graph.expect("test-no-live-repository-scan requires canonical graph"),
+                prepared_vitest_projects,
+                shared.graph_file_universe(),
+                shared,
+            )
+        })?;
+        findings.extend(diagnostics.findings);
+        advisories.extend(diagnostics.advisories);
+    }
     if rule_enabled(config, FORBIDDEN_DEPENDENCIES) {
         findings.extend(crate::perf_trace::trace(
             "rules.forbidden_dependencies",

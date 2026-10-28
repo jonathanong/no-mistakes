@@ -15,6 +15,7 @@ fn prepared_failure_entries_never_prove_a_predicate() {
                 ArgumentValues {
                     values: vec![ArgumentValue::Scalar(json!(1))],
                     spread_from: None,
+                    path: None,
                 },
             )]
             .into_iter()

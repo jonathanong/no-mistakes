@@ -266,6 +266,10 @@ blocking under every policy. Rust syntax failures are reported only when
 `rust-no-inline-allows` sees the substring `allow`, or `rust-no-inline-tests`
 sees both substrings `cfg` and `test`; otherwise those AST checks skip parsing.
 
+[`test-no-live-repository-scan`](../rules/test-no-live-repository-scan.md) reports
+unresolved scan roots as advisories by default; `options.unresolvedRoot: report`
+makes them blocking.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

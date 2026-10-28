@@ -9,6 +9,7 @@ pub(crate) fn expand_roots(
     files: &[PathBuf],
 ) -> anyhow::Result<Vec<crate::codebase::dependencies::graph::NodeId>> {
     roots::expand(roots::ExpandRequest {
+        rule: super::super::RULE_ID,
         root,
         options,
         graph,

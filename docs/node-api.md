@@ -400,3 +400,10 @@ forbidden lint ID, `*` for a selected blanket disable, or the explicitly enabled
 TypeScript directive name. No additional runtime export is required.
 
 Configured [`production-exports-only-used-by-tests`](rules/production-exports-only-used-by-tests.md) applications run through the existing async `check()` → `checkJson` binding and `analyzeProject()` check reports. `ProductionExportsOnlyUsedByTestsOptions` exports its explicit production/test/helper scope and shared uncertainty policy; results use ordinary check findings and advisories.
+
+## `test-no-live-repository-scan`
+
+[`test-no-live-repository-scan`](rules/test-no-live-repository-scan.md) runs
+through the existing asynchronous `check()` and `analyzeProject()` APIs; it adds
+no new entrypoint. Type its options with `TestNoLiveRepositoryScanOptions`,
+exported from `no-mistakes/types`.

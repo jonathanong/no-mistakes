@@ -1,0 +1,6 @@
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      roots:
+        - glob: tests/wrapped-helper.test.ts

@@ -176,6 +176,7 @@ fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bo
         || crate::playwright::rules::configured(config)
         || rule_enabled(config, FORBIDDEN_DEPENDENCIES)
         || rule_enabled(config, FORBIDDEN_CALLS)
+        || rule_enabled(config, super::test_no_live_repository_scan::RULE_ID)
         || rule_enabled(config, REQUIRED_ENTRYPOINT_REACHABILITY)
         || rule_enabled(config, UNCONSTRUCTED_ERROR_CLASS)
         || config.rule_configured(super::production_exports_test_only::RULE_ID)

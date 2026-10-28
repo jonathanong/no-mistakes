@@ -7,6 +7,7 @@ require("./api-tests/declarations-unbounded");
 require("./api-tests/declarations-export-invariants");
 require("./api-tests/declarations-mutable");
 require("./api-tests/declarations-test-state-mutation");
+require("./api-tests/declarations-live-repository-scan");
 require("./api-tests/declarations-postgres");
 require("./api-tests/declarations-graph");
 require("./api-tests/declarations-executor-diagnostics");
