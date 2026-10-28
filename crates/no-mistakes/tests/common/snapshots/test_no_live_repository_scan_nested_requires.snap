@@ -1,0 +1,27 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "nested": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/nested.test.ts",
+          "import": "require(\"node:fs\")",
+          "line": 4,
+          "message": "unresolved root: `require(\"node:fs\")` binds a directory enumerator under a name this analysis cannot follow, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "require(\"node:fs\"),",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
