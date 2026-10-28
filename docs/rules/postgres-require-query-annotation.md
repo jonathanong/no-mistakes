@@ -274,6 +274,11 @@ An inline callback that forwards its parameter directly to a configured
 executor can also retain a fixed named head supplied through a direct imported
 source helper. The helper must prove every callback invocation's payload from
 one fresh trusted builder argument or a fixed named template.
+An exact stable same-file helper can also supply a fresh trusted named builder.
+An async inline callback may append to its parameter through direct static
+appends or a source-proven append-only helper before one configured executor
+call. Aliases, writes, escaping parameters, or unknown helper effects remain
+unanalyzable.
 A direct imported immutable string constant has the same fixed-head proof when
 its source file is prepared and the import/export identity is exact. Re-exports,
 mutable values, and missing source files remain unresolved.

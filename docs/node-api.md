@@ -450,3 +450,5 @@ or directly appended at the executor, with the same one-hop prepared import
 and escape guards as CLI checks.
 The same prepared facts project an exact imported helper's fixed callback SQL
 head to a direct inline configured executor callback, independently per call.
+The async API shares low's same-file fixed-builder callback proof and exact
+async callback parameter census without invoking the annotation evaluator.

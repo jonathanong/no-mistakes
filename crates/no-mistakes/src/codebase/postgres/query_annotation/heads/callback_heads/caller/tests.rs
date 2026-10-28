@@ -77,6 +77,10 @@ fn callback_import_indexes_are_demanded_once_after_many_ordinary_calls() {
             .snapshot()
             .work
             .contains_key("postgres.annotation.callback_import_indexes"));
+        assert!(!idle
+            .snapshot()
+            .work
+            .contains_key("postgres.annotation.callback_local_reference_visits"));
 
         let active = crate::diagnostics::InvocationObserver::new(true);
         let found = crate::diagnostics::with_observer(Some(active.clone()), || {
@@ -104,6 +108,24 @@ fn callback_import_indexes_are_demanded_once_after_many_ordinary_calls() {
         assert_eq!(
             work["postgres.annotation.callback_import_reference_visits"], references as u64,
             "reference scan runs once across two callbacks and twelve ordinary imported calls"
+        );
+        let roots = module
+            .scopes
+            .iter()
+            .filter(|scope| scope.parent_id.is_none())
+            .map(|scope| scope.id)
+            .collect::<FxHashSet<_>>();
+        let local_references = module
+            .bindings
+            .iter()
+            .filter(|binding| {
+                binding.runtime && !binding.imported && roots.contains(&binding.scope_id)
+            })
+            .flat_map(|binding| binding.references.iter().filter(|usage| usage.runtime))
+            .count();
+        assert_eq!(
+            work["postgres.annotation.callback_local_reference_visits"],
+            local_references as u64
         );
 
         let callee = source.rfind("page(sql").unwrap() as u32;
