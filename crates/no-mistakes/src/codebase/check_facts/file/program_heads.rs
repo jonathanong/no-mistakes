@@ -2,6 +2,30 @@ use super::super::super::CheckFactPlan;
 use crate::codebase::postgres::{EmbeddedSqlFileFacts, EmbeddedSqlKind, EmbeddedSqlOptions};
 use crate::fx::FxHashSet;
 
+pub(super) fn call_spans(
+    plan: &CheckFactPlan,
+    embedded: &[(EmbeddedSqlOptions, EmbeddedSqlFileFacts)],
+) -> crate::codebase::postgres::query_annotation::heads::HeadCallSpans {
+    let confirmed = embedded
+        .iter()
+        .flat_map(|(_, file)| file.call_spans.iter().copied())
+        .collect();
+    let pending = if plan.query_annotation_heads {
+        embedded
+            .iter()
+            .filter(|(profile, _)| {
+                plan.query_annotation_options
+                    .as_ref()
+                    .is_none_or(|profiles| profiles.contains(profile))
+            })
+            .flat_map(|(_, file)| file.pending_relative.call_spans.values().copied())
+            .collect()
+    } else {
+        Default::default()
+    };
+    crate::codebase::postgres::query_annotation::heads::HeadCallSpans { confirmed, pending }
+}
+
 /// Inspect already prepared call metadata before requesting a lexical index.
 /// Max-only files without a named composed call pay no head visitor/index cost.
 pub(super) fn candidates(

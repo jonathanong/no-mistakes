@@ -174,5 +174,7 @@ fn direct_imported_helper_heads_project_from_prepared_source_facts() {
     );
 }
 
+#[path = "head_calls_only_tests/relative_pending_tests.rs"]
+mod relative_pending;
 #[path = "head_calls_only_tests/variant_parity_tests.rs"]
 mod variant_parity;

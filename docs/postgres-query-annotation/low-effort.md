@@ -56,6 +56,10 @@ source file also qualifies when that file directly exports the same fixed
 return summary. The request's resolver checks the exact import and export;
 re-exports, unavailable package implementations, and returned local variables
 remain unresolved.
+For a configured relative factory or executor type, the helper head is used
+only after the request resolver confirms that the executor import belongs to
+the configured package. An unconfirmed relative call cannot make a local
+builder's later use safe.
 
 These are deliberately narrow low-effort syntax proofs. Low does not run the
 helper/value evaluator, so other helper-produced heads can remain unresolved

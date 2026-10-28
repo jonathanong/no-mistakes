@@ -20,6 +20,12 @@ mod trusted_append;
 #[cfg(test)]
 mod trusted_append_tests;
 pub(super) type Span = (u32, u32);
+/// Provisional executor calls supply helper heads but never safe builder uses.
+#[derive(Default)]
+pub(crate) struct HeadCallSpans {
+    pub(crate) confirmed: crate::fx::FxHashSet<Span>,
+    pub(crate) pending: crate::fx::FxHashSet<Span>,
+}
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum HeadProof {
     Literal,
@@ -89,7 +95,7 @@ fn has_loop_word(source: &str) -> bool {
 pub(crate) fn collect_prepared(
     program: &Program<'_>,
     ts: &TsFileFacts,
-    executor_calls: impl Iterator<Item = Span>,
+    executor_calls: HeadCallSpans,
     candidates: &crate::fx::FxHashSet<Span>,
     include_all_calls: bool,
     helpers: bool,
@@ -101,11 +107,10 @@ pub(crate) fn collect_prepared(
     let mut syntax = prepared.map(|prepared| prepared.0).unwrap_or_else(|| {
         syntax::collect_with_helpers(program, !candidates.is_empty(), helpers, include_all_calls)
     });
-    let executor_calls = executor_calls.collect::<crate::fx::FxHashSet<_>>();
-    syntax
-        .helper_arguments
-        .retain(|call, _| executor_calls.contains(call));
-    let bindings = bindings::Bindings::new(&syntax, ts, executor_calls.iter().copied());
+    syntax.helper_arguments.retain(|call, _| {
+        executor_calls.confirmed.contains(call) || executor_calls.pending.contains(call)
+    });
+    let bindings = bindings::Bindings::new(&syntax, ts, executor_calls.confirmed.iter().copied());
     let loop_carried_missing = loop_carried::proofs(&syntax, &bindings);
     let mut calls: BTreeMap<_, _> = syntax
         .calls

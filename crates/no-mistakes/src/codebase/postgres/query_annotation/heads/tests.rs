@@ -91,7 +91,10 @@ pub(super) fn collect_with_helpers(
     super::collect_prepared(
         program,
         ts,
-        executor_calls,
+        super::HeadCallSpans {
+            confirmed: executor_calls.collect(),
+            pending: Default::default(),
+        },
         candidates,
         include_all_calls,
         helpers,

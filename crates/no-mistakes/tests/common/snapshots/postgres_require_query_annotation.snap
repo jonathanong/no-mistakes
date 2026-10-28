@@ -6683,6 +6683,58 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "relative_helper_heads_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/db/src/query.mts",
+          "line": 12,
+          "message": "packages/db/src/query.mts:12: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "tx.query(missing()); // missing",
+          "target": "annotation"
+        }
+      ],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  },
+  "relative_helper_heads_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/db/src/query.mts",
+          "line": 12,
+          "message": "packages/db/src/query.mts:12: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "tx.query(missing()); // missing",
+          "target": "annotation"
+        },
+        {
+          "file": "packages/db/src/query.mts",
+          "line": 20,
+          "message": "packages/db/src/query.mts:20: query annotation is unanalyzable at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(q); // unanalyzable",
+          "target": "annotation"
+        }
+      ],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  },
   "returned_callbacks_ignore": {
     "exitCode": 1,
     "report": {
