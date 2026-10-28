@@ -1,0 +1,22 @@
+{
+  "source": "PR #2918 Test CI, 2026-10-28",
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/40751264148",
+  "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/40751264148/job/123038266067",
+  "jobId": 123038266067,
+  "headSha": "7e9027ec756c253c31942e38b5bb904fe9df83b2",
+  "jobStartedAt": "2026-10-28T19:06:23Z",
+  "firstRunnerLogAt": "2026-10-28T19:06:24.6009047Z",
+  "platformTestsStartedAt": "2026-10-28T19:15:42.2246269Z",
+  "platformTestsTimedOutAt": "2026-10-28T19:25:49.7645496Z",
+  "jobConclusion": "cancelled",
+  "platformStepConclusion": "failure",
+  "completedSnapshotTests": {
+    "postgres": 42,
+    "markdownRustFiles": 10,
+    "packageConfig": { "passed": 11, "selected": 18 }
+  },
+  "remainingSnapshotReserveSeconds": 180,
+  "postJobReserveSeconds": 120,
+  "earlierPassingWindowsJobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/40745432042/job/123017830849",
+  "note": "The platform step was cancelled with passing partial progress and no test or compiler failure. Its observed duration is censored; reserves provide bounded capacity, not a completed-runtime guarantee."
+}

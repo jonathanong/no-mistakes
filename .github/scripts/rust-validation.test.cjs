@@ -248,7 +248,119 @@ test("native API timeout leaves startup and teardown room after the observed Win
   );
   assert.ok(minutes * 60 >= required, "native API step must include launcher/teardown reserve");
   assert.ok(minutes <= 5, "keep the correction bounded rather than removing its deadline");
-  assert.match(native, /\n    timeout-minutes: 20\n/);
+  assert.match(native, /\n    timeout-minutes: 30\n/);
   const linux = workflow.split("\n  native-tests:\n")[0];
   assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 2\n/);
+});
+
+const workflowJob = (name) => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  const job = workflow.split(`\n  ${name}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
+  assert.ok(job, `workflow must retain the ${name} job`);
+  return job;
+};
+const jobBudgetSeconds = (job) => Number(job.match(/\n    timeout-minutes: (\d+)\n/)[1]) * 60;
+const stepBudgetSeconds = (job, name) => {
+  const step = job.split(`      - name: ${name}\n`)[1];
+  assert.ok(step, `job must retain ${name}`);
+  return Number(step.match(/\s+timeout-minutes: (\d+)/)[1]) * 60;
+};
+
+test("quality job leaves bounded package verification and cleanup time after observed checks", () => {
+  const observed = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/rust-validation/fixture/quality-job-timing.json"),
+      "utf8",
+    ),
+  );
+  const job = workflowJob("quality");
+  const elapsed =
+    (Date.parse(observed.cargoPublishStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
+  const publish = stepBudgetSeconds(job, "Check Cargo packages");
+  const npm = stepBudgetSeconds(job, "Check npm packages");
+  const diagnostics = stepBudgetSeconds(job, "Diagnose Rust disk usage after failure");
+  assert.equal(observed.conclusion, "cancelled");
+  assert.deepEqual([publish, npm, diagnostics], [600, 120, 120]);
+  assert.match(job, /run: cargo publish --dry-run --locked -p no-mistakes/);
+  assert.match(job, /run: pnpm run pack:check/);
+  assert.ok(
+    jobBudgetSeconds(job) >= elapsed + publish + npm + diagnostics,
+    "job budget must leave package and diagnostic steps their existing bounded time",
+  );
+  assert.ok(jobBudgetSeconds(job) <= 1800, "retain a job deadline of at most thirty minutes");
+});
+
+test("coverage job reserves bounded post-cache time after completed tests and gates", () => {
+  const observed = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/rust-validation/fixture/rust-coverage-job-timing.json"),
+      "utf8",
+    ),
+  );
+  const job = workflowJob("tests");
+  const elapsed =
+    (Date.parse(observed.postCacheStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
+  assert.equal(observed.conclusion, "cancelled");
+  assert.equal(observed.completedRustTests, 14669);
+  assert.ok(
+    jobBudgetSeconds(job) >= elapsed + observed.postCacheReserveSeconds,
+    "job budget must include cache cleanup after tests, reports and uploads finish",
+  );
+  assert.ok(jobBudgetSeconds(job) <= 1800, "retain a job deadline of at most thirty minutes");
+  assert.equal(stepBudgetSeconds(job, "Enforce Rust coverage floors"), 300);
+  assert.match(job, /cargo llvm-cov report --json --summary-only/);
+  assert.match(job, /node \.github\/scripts\/rust-coverage-floors\.cjs/);
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  for (const dimension of ["LINES", "FUNCTIONS", "REGIONS"]) {
+    assert.match(workflow, new RegExp(`RUST_COVERAGE_FAIL_UNDER_${dimension}: "98"`));
+  }
+});
+
+test("native Rust and aggregate deadlines retain room after censored Windows snapshot progress", () => {
+  const observed = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/rust-validation/fixture/windows-native-platform-timing.json"),
+      "utf8",
+    ),
+  );
+  const job = workflowJob("native-tests");
+  const elapsedBeforeRust =
+    (Date.parse(observed.platformTestsStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
+  const elapsedRust =
+    (Date.parse(observed.platformTestsTimedOutAt) - Date.parse(observed.platformTestsStartedAt)) /
+    1000;
+  const rust = stepBudgetSeconds(job, "Run platform-specific Rust tests");
+  const api = stepBudgetSeconds(job, "Run real N-API API test");
+  assert.equal(observed.platformStepConclusion, "failure");
+  assert.ok(
+    observed.completedSnapshotTests.packageConfig.passed <
+      observed.completedSnapshotTests.packageConfig.selected,
+  );
+  assert.ok(
+    rust >= elapsedRust + observed.remainingSnapshotReserveSeconds,
+    "platform step must leave room for remaining snapshots after the censored passing progress",
+  );
+  assert.ok(rust <= 900, "keep the native Rust step bounded to fifteen minutes");
+  assert.equal(api, 300, "retain the existing native API step deadline");
+  const required =
+    elapsedBeforeRust +
+    elapsedRust +
+    observed.remainingSnapshotReserveSeconds +
+    api +
+    observed.postJobReserveSeconds;
+  assert.ok(
+    jobBudgetSeconds(job) >= required,
+    "native aggregate deadline must include setup, Rust progress, remaining snapshots, API and cleanup",
+  );
+  assert.ok(jobBudgetSeconds(job) <= 1800, "retain a job deadline of at most thirty minutes");
+  for (const command of [
+    "--test windows_job_object -- --exact --test-threads=1",
+    "--test macos_invocation",
+    "--test suite_cli_postgres cli_postgres_snapshot_",
+    "--test suite_cli_postgres cli_mrf_snapshot_",
+    "--test suite_cli_package_config cli_pkgcfg_snapshot_",
+    "--test suite_cli_package_config cli_rrb_snapshot_",
+  ]) {
+    assert.ok(job.includes(command), `retain native validation ${command}`);
+  }
 });

@@ -11,6 +11,9 @@ use no_mistakes::invocation::{command_output, install_test_deadline};
 use std::process::Command;
 use std::time::Duration;
 
+#[path = "windows_job_object/deadline_console.rs"]
+mod deadline_console;
+
 #[test]
 fn command_output_resumes_child_after_job_assignment() {
     let _guard = install_test_deadline(Duration::from_secs(5)).unwrap();

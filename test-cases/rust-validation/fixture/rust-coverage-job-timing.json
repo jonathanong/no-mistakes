@@ -1,0 +1,24 @@
+{
+  "source": "PR #2918 Test CI, 2026-10-28",
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/40745432042",
+  "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/40745432042/job/123017830605",
+  "jobId": 123017830605,
+  "headSha": "6f4eb429eb576cbc3c93e97d7871229723ac109b",
+  "jobStartedAt": "2026-10-28T18:28:26Z",
+  "job": "tests",
+  "conclusion": "cancelled",
+  "firstRunnerLogAt": "2026-10-28T18:28:27.564Z",
+  "postCacheStartedAt": "2026-10-28T18:48:15.9618706Z",
+  "cancelledAt": "2026-10-28T18:48:28.2398965Z",
+  "completedRustTests": 14669,
+  "completedChecks": [
+    "documentation tests",
+    "snapshot audit",
+    "CRAP",
+    "complexity",
+    "coverage floors",
+    "Codecov upload"
+  ],
+  "postCacheReserveSeconds": 120,
+  "note": "Tests and gates passed; cancellation during post-job cache cleanup still failed the aggregate job."
+}

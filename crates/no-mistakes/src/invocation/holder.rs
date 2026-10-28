@@ -83,6 +83,8 @@ impl LockHolder {
         let sidecar = sidecar_path(lock);
         // NamedTempFile creates a unique file (0600 on Unix), so a
         // leftover staging file cannot broaden permissions or expose arguments.
+        // A killed process may leave a `.tmp*` sibling; reads and acquisitions
+        // ignore abandoned staging files.
         let mut staged = tempfile::NamedTempFile::new_in(lock.parent().unwrap_or(Path::new(".")))?;
         serde_json::to_writer(staged.as_file_mut(), self)?;
         staged.persist(sidecar).map_err(|error| error.error)?;

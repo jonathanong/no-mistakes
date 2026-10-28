@@ -49,6 +49,10 @@ lock failures and deadlines (including a `--timeout` firing mid-command) write
 stdout no longer means a hang. Do not treat exit `75` as "no impact"; wait and
 retry.
 
+If a process is killed while writing holder metadata, `.tmp*` staging files can
+remain beside the lock. They are ignored by lock status and do not mean the
+invocation lock is held.
+
 Use `--verbose-timings` to retain published work counts on a CLI hard timeout.
 The bounded stderr snapshot labels its timings and counters `PARTIAL`; counts
 are lower bounds because unfinished work may not have published local counters.

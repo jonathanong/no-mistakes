@@ -1,0 +1,15 @@
+{
+  "source": "PR #2918 Test CI, 2026-10-28",
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/40745432042",
+  "jobUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/40745432042/job/123017830919",
+  "jobId": 123017830919,
+  "headSha": "6f4eb429eb576cbc3c93e97d7871229723ac109b",
+  "jobStartedAt": "2026-10-28T18:28:26Z",
+  "job": "quality",
+  "conclusion": "cancelled",
+  "firstRunnerLogAt": "2026-10-28T18:28:27.7680637Z",
+  "cargoPublishStartedAt": "2026-10-28T18:40:33.0595241Z",
+  "cancelledAt": "2026-10-28T18:43:41.0695471Z",
+  "lastOperation": "cargo publish --dry-run package verification",
+  "note": "Publish duration is censored by the aggregate job deadline, not its ten-minute step limit."
+}

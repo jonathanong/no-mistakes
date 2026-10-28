@@ -97,7 +97,8 @@ jobs:
   quality:
     name: Lint and package checks
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Compilation checks, package verification and cleanup share this budget.
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -434,7 +435,8 @@ jobs:
   native-tests:
     name: Native tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    # Native builds, snapshot replay, API tests and cleanup share this budget.
+    timeout-minutes: 30
     permissions:
       contents: read
       actions: read
@@ -531,7 +533,7 @@ jobs:
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
 
       - name: Run platform-specific Rust tests
-        timeout-minutes: 10
+        timeout-minutes: 15
         shell: bash
         env:
           # Match the preceding build's N-API setting; Cargo may still
@@ -546,7 +548,7 @@ jobs:
           fi
           # Compare the same committed JSON snapshots on both native platforms.
           # Markdown, Rust, and file-rule snapshots live in this suite so native
-          # jobs do not compile suite_cli_rules inside the ten-minute step.
+          # jobs do not compile suite_cli_rules inside this bounded native step.
           cargo test --locked -p no-mistakes --test suite_cli_postgres cli_postgres_snapshot_
           cargo test --locked -p no-mistakes --test suite_cli_postgres cli_mrf_snapshot_
           cargo test --locked -p no-mistakes --test suite_cli_package_config cli_pkgcfg_snapshot_
@@ -640,7 +642,8 @@ jobs:
   tests:
     name: Rust tests and coverage
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Include coverage exports, uploads and post-job cache cleanup after tests.
+    timeout-minutes: 25
     permissions:
       id-token: write
     steps:

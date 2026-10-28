@@ -79,6 +79,8 @@ briefly describe the previous holder while a new holder is acquiring the lock.
 Readers report it only when the lock is held. Older records with a full command
 line remain readable, so their command value may still contain arguments. New
 records are replaced atomically using a unique temporary file (`0600` on Unix).
+Interruption during staging can leave `.tmp*` files in the lock directory;
+acquisition and status ignore these leftovers.
 
 When `--format json` or the `--json` flag is parsed as an output-format option,
 a lock failure or deadline also writes one JSON object to stdout instead of
@@ -98,6 +100,11 @@ waiting.
 
 Watchdog JSON delivery is best-effort when stdout is blocked or closed: it
 must not delay child cleanup or prevent exit `124`.
+If its writer thread cannot start, the publication claim is released so the
+ordinary error boundary can retry within the bounded output grace period.
+The watchdog bypasses Rust's stdout buffer, so ordering relative to buffered
+output is not guaranteed. Windows consoles receive Unicode console writes;
+redirected files and pipes keep UTF-8 JSON.
 
 Global `--timings` prints invocation phase durations to stderr.
 `--verbose-timings` implies timings and adds deterministic work counters.

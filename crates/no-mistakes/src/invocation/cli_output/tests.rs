@@ -1,4 +1,4 @@
-use super::CliErrorOutput;
+use super::{CliErrorOutput, State};
 use crate::invocation::{InvocationError, InvocationErrorKind};
 
 fn deadline() -> anyhow::Error {
@@ -55,7 +55,7 @@ fn boundary_waits_for_claimed_watchdog_output_completion() {
     assert!(output.report(&deadline()).is_some());
     // Keep the boundary from spending its grace period before the parent is
     // scheduled to observe it. Production never holds this mutex during I/O.
-    let mut pending = output.0.as_ref().unwrap().completed.lock().unwrap();
+    let mut pending = output.0.as_ref().unwrap().state.lock().unwrap();
     let (started, starting) = mpsc::channel();
     let (finished, finishing) = mpsc::channel();
     std::thread::scope(|scope| {
@@ -69,7 +69,7 @@ fn boundary_waits_for_claimed_watchdog_output_completion() {
         // Hold acknowledgement until after the boundary has had a chance to
         // lose the claim. The boundary must not immediately terminate the run.
         assert!(finishing.recv_timeout(Duration::from_millis(5)).is_err());
-        *pending = true;
+        *pending = State::Complete;
         drop(pending);
         output.complete();
         finishing.recv_timeout(Duration::from_secs(1)).unwrap();
@@ -96,7 +96,7 @@ fn unrelated_errors_and_disabled_output_do_not_wait_on_completion() {
     let output = CliErrorOutput::new(true);
     assert!(output.report_or_wait(&deadline()).is_some());
     let claim = output.0.as_ref().unwrap();
-    let _pending = claim.completed.lock().unwrap();
+    let _pending = claim.state.lock().unwrap();
     // Non-invocation errors and disabled JSON must never wait for a writer.
     assert!(output
         .report_or_wait(&anyhow::anyhow!("unrelated error"))
@@ -104,4 +104,49 @@ fn unrelated_errors_and_disabled_output_do_not_wait_on_completion() {
     assert!(CliErrorOutput::new(false)
         .report_or_wait(&deadline())
         .is_none());
+}
+
+#[test]
+fn failed_spawn_release_never_reopens_a_completed_or_unclaimed_request() {
+    let disabled = CliErrorOutput::new(false);
+    disabled.release_and_wait();
+    disabled.complete();
+    let output = CliErrorOutput::new(true);
+    output.release_and_wait();
+    assert!(output.report(&deadline()).is_some());
+    output.complete();
+    output.release_and_wait();
+    assert!(output.report_or_wait(&deadline()).is_none());
+}
+
+#[test]
+fn failed_spawn_release_wakes_a_ready_boundary_for_retry() {
+    let output = CliErrorOutput::new(true);
+    assert!(output.report(&deadline()).is_some());
+    let pending = output.0.as_ref().unwrap().state.lock().unwrap();
+    let ready = std::sync::Barrier::new(3);
+    std::thread::scope(|scope| {
+        let boundary_output = output.clone();
+        let boundary_ready = &ready;
+        let boundary = scope.spawn(move || {
+            boundary_ready.wait();
+            let report = boundary_output.report_or_wait(&deadline()).unwrap();
+            boundary_output.complete();
+            report
+        });
+        let retry_output = output.clone();
+        let retry_ready = &ready;
+        let retry = scope.spawn(move || {
+            retry_ready.wait();
+            retry_output.release_and_wait();
+        });
+        // Both actors are ready before either can acquire the state lock;
+        // thread creation cannot consume the bounded output grace period.
+        ready.wait();
+        drop(pending);
+        let report = boundary.join().unwrap();
+        assert_eq!(report["error"]["kind"], "deadline");
+        retry.join().unwrap();
+    });
+    assert!(output.report_or_wait(&deadline()).is_none());
 }

@@ -41,8 +41,20 @@ markdown, Rust, file-rule, and package-config JSON snapshots without updating
 them; each case compares normalized output at `--jobs 1` and `--jobs 2`. The
 markdown, Rust, and file-rule modules are registered in the postgres suite, and
 the `cli_rrb_snapshot_` subset in the package-config suite, so
-those jobs do not also compile `suite_cli_rules` inside the ten-minute step.
+those jobs do not also compile `suite_cli_rules` inside the bounded native step.
 Linux runs the same cases in the full Rust coverage suite.
+
+Native macOS and Windows jobs have a 30-minute aggregate deadline and a
+15-minute platform Rust step; the real-addon API step retains its five-minute
+limit. One observed Windows run spent about nine minutes eighteen seconds on
+setup and builds, then reached the former ten-minute Rust-step limit after
+42 PostgreSQL and ten markdown/Rust/file snapshots passed, with eleven of
+eighteen package-config snapshots complete. The step and aggregate job were
+cancelled without a test or compiler failure. An earlier Windows run passed,
+so this censored observation shows hosted timing variation rather than a
+completed-runtime guarantee. The additional bounded capacity retains every
+native test command and allows room for remaining snapshots, API checks, and
+cleanup.
 
 Compiled Vitest workers use independent invocation locks. Linux keeps a private
 `XDG_RUNTIME_DIR`; macOS and Windows use the existing Cargo test marker
@@ -74,7 +86,22 @@ The checker sums covered and total counts across export records and compares
 unrounded percentages with the existing line, function, and region floors.
 Missing or malformed totals fail the check. This avoids the extra table and
 full JSON passes performed by native `--fail-under-*` flags; LCOV generation
-for CRAP and Codecov and the job deadline retain their existing settings.
+for CRAP and Codecov retains its existing settings.
+
+The lint and package job has a 30-minute aggregate deadline; its existing
+step deadlines remain in place, including ten minutes for Cargo package
+verification. An observed run spent about twelve minutes on setup and checks
+before reaching that verification, leaving too little of the former
+15-minute job budget for packaging, npm checks, and cleanup.
+
+The Rust coverage job has a 25-minute aggregate deadline. In the same observed
+run, all 14,669 Rust tests, documentation tests, snapshot auditing, and coverage
+quality gates passed, and Codecov upload finished about 19 minutes 48 seconds
+after the first runner log. The former 20-minute job deadline then cancelled
+post-job cache cleanup. Those completed checks passed, but the aggregate job
+was still cancelled. The extra budget reserves cleanup time; step deadlines,
+98% coverage floors, and failure behavior are unchanged. These observations
+are censored job outcomes, not completed-job timing guarantees.
 
 ## Hosted measurement
 
