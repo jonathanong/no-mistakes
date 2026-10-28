@@ -58,14 +58,48 @@ fn namespace_helper_heads_use_only_prepared_exact_export_bindings() {
         low_proofs = Some(proofs);
         if efforts == ["low"] {
             assert!(file.query_annotation.is_empty());
+            let work = observer.snapshot().work;
             assert_eq!(
-                observer
-                    .snapshot()
-                    .work
-                    .get("postgres.sql.variants_composed")
+                work.get("postgres.sql.variants_composed")
                     .copied()
                     .unwrap_or(0),
                 0
+            );
+            assert_eq!(work["postgres.annotation.namespace_index_builds"], 1);
+            assert!(
+                file.query_annotation_heads
+                    .as_ref()
+                    .unwrap()
+                    .pending_namespaces
+                    .len()
+                    >= 3,
+                "fixture exercises multiple namespace candidates in one file"
+            );
+            let module = file.ts.module_bindings.as_ref().unwrap();
+            assert_eq!(
+                work["postgres.annotation.namespace_import_declarations_scanned"],
+                module.imports.len() as u64
+            );
+            assert_eq!(
+                work["postgres.annotation.namespace_import_bindings_scanned"],
+                module
+                    .imports
+                    .iter()
+                    .filter(|import| !import.type_only)
+                    .map(|import| import.bindings.len())
+                    .sum::<usize>() as u64
+            );
+            assert_eq!(
+                work["postgres.annotation.namespace_module_bindings_scanned"],
+                module.bindings.len() as u64
+            );
+            assert_eq!(
+                work["postgres.annotation.namespace_exports_scanned"],
+                module.exports.len() as u64
+            );
+            assert_eq!(
+                work["postgres.annotation.namespace_helper_arguments_scanned"],
+                file.embedded_sql[0].1.call_spans.len() as u64
             );
         }
     }

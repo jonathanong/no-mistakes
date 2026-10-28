@@ -3,6 +3,7 @@ use super::{bindings::Bindings, syntax::Syntax, Span};
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::FxHashSet;
 mod export;
+mod index;
 pub(super) use export::project;
 
 #[derive(Clone)]
@@ -24,15 +25,13 @@ pub(super) fn pending(
     module: Option<&TypeScriptModuleFacts>,
     executors: &FxHashSet<Span>,
 ) -> Vec<Pending> {
+    if syntax.namespace_destructures.is_empty() {
+        return Vec::new();
+    }
     let Some(module) = module else {
         return Vec::new();
     };
-    let roots = module
-        .scopes
-        .iter()
-        .filter(|scope| scope.parent_id.is_none())
-        .map(|scope| scope.id)
-        .collect::<FxHashSet<_>>();
+    let indexes = index::NamespaceIndexes::build(syntax, module, executors);
     let mut pending = Vec::new();
     for candidate in &syntax.namespace_destructures {
         let Some(namespace) = bindings
@@ -47,35 +46,14 @@ pub(super) fn pending(
         {
             continue;
         }
-        let mut imports = module
-            .imports
-            .iter()
-            .filter(|import| !import.type_only)
-            .flat_map(|import| import.bindings.iter().map(move |binding| (import, binding)))
-            .filter(|(_, binding)| {
-                binding.binding_id == namespace.id
-                    && !binding.type_only
-                    && binding.kind == "namespace"
-                    && binding.imported == "*"
-            });
-        let Some((import, _)) = imports.next() else {
+        let Some(import) = indexes.namespace_import(namespace.id) else {
             continue;
         };
-        if imports.next().is_some() {
-            continue;
-        }
-        let mut locals = module.bindings.iter().filter(|owner| {
-            !owner.imported
-                && owner.runtime
-                && roots.contains(&owner.scope_id)
-                && (owner.span.start, owner.span.end) == candidate.local
-        });
-        let Some(local) = locals.next() else {
+        let Some(local) = indexes.top_level_local(candidate.local) else {
             continue;
         };
-        if locals.next().is_some()
-            || !bindings.declaration_safe(candidate.local)
-            || bindings.exported(local)
+        if !bindings.declaration_safe(candidate.local)
+            || indexes.local_is_exported(&local.name)
             || local.references.is_empty()
         {
             continue;
@@ -89,27 +67,23 @@ pub(super) fn pending(
                     .is_some_and(|owner| owner.id == local.id)
                 && !syntax.assignments.writes.contains_key(&span)
                 && !syntax.assignments.unsupported_writes.contains(&span)
-                && syntax.helper_arguments.iter().any(|(call, reference)| {
-                    executors.contains(call)
-                        && *reference == span
-                        && !syntax.optional_calls.contains(call)
-                })
+                && indexes.helper_calls.contains_key(&span)
         }) {
             continue;
         }
-        for (&call, &reference) in &syntax.helper_arguments {
-            if !executors.contains(&call) || syntax.optional_calls.contains(&call) {
-                continue;
-            }
+        for usage in &local.references {
+            let reference = ref_span(usage);
             if bindings
                 .owner(reference)
                 .is_some_and(|owner| owner.id == local.id)
             {
-                pending.push(Pending {
-                    span: call,
-                    specifier: import.specifier.clone(),
-                    exported: candidate.exported.clone(),
-                });
+                for &call in indexes.helper_calls.get(&reference).into_iter().flatten() {
+                    pending.push(Pending {
+                        span: call,
+                        specifier: import.to_string(),
+                        exported: candidate.exported.clone(),
+                    });
+                }
             }
         }
     }
