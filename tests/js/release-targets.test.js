@@ -307,10 +307,13 @@ test("native CI omits debug metadata without weakening runtime checks", () => {
   for (const [, stepEnv] of stepEnvs) {
     assert.doesNotMatch(stepEnv, /CARGO_PROFILE_(?:DEV|TEST)_DEBUG:/);
   }
-  for (const name of ["Build native CLI and N-API addon", "Run platform-specific Rust tests"]) {
+  for (const [name, minutes] of [
+    ["Build native CLI and N-API addon", 10],
+    ["Run platform-specific Rust tests", 15],
+  ]) {
     const step = body.split(`- name: ${name}\n`)[1]?.split("\n      - name:")[0];
     assert.ok(step, `${name} must remain enabled`);
-    assert.match(step, /^ {8}timeout-minutes: 10$/m);
+    assert.match(step, new RegExp(`^ {8}timeout-minutes: ${minutes}$`, "m"));
   }
 });
 
