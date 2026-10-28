@@ -1,4 +1,4 @@
-use super::super::{collect_check_facts, config, plan};
+use super::{collect_check_facts, config, plan};
 use crate::codebase::postgres::query_annotation::heads::HeadProof;
 use crate::diagnostics::{with_observer, InvocationObserver};
 

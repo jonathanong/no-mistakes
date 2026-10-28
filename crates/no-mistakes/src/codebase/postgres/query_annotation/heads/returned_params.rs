@@ -39,22 +39,26 @@ pub(super) fn function(value: &Function<'_>) -> Option<Candidate> {
     {
         return None;
     }
-    let [first, extra, from] = params.items.as_slice() else {
+    let [first, extra_parameter, from_parameter] = params.items.as_slice() else {
         return None;
     };
     let (
         BindingPattern::BindingIdentifier(parameter),
         BindingPattern::BindingIdentifier(extra),
         BindingPattern::BindingIdentifier(from),
-    ) = (&first.pattern, &extra.pattern, &from.pattern)
+    ) = (
+        &first.pattern,
+        &extra_parameter.pattern,
+        &from_parameter.pattern,
+    )
     else {
         return None;
     };
-    if first.initializer.is_some() || extra.initializer.is_some() {
+    if first.initializer.is_some() || extra_parameter.initializer.is_some() {
         return None;
     }
     let Expression::TaggedTemplateExpression(default) =
-        unwrap_ts_wrappers(from.initializer.as_ref()?)
+        unwrap_ts_wrappers(from_parameter.initializer.as_ref()?)
     else {
         return None;
     };
