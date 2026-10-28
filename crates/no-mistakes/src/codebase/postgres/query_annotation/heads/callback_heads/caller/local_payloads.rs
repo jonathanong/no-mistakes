@@ -24,6 +24,18 @@ pub(super) fn references(
         .filter(|call| append_helpers.contains(&call.callee))
         .map(|call| call.builder)
         .collect::<FxHashSet<_>>();
+    let roots = module
+        .scopes
+        .iter()
+        .filter(|scope| scope.parent_id.is_none())
+        .map(|scope| scope.id)
+        .collect::<FxHashSet<_>>();
+    let exports = module
+        .exports
+        .iter()
+        .filter(|export| !export.type_only && export.specifier.is_none())
+        .map(|export| export.local.as_str())
+        .collect::<FxHashSet<_>>();
     let mut binding_visits = 0;
     for binding in module
         .bindings
@@ -32,7 +44,8 @@ pub(super) fn references(
     {
         binding_visits += 1;
         let declaration = (binding.span.start, binding.span.end);
-        if !bindings.trusted_root(declaration)
+        if (roots.contains(&binding.scope_id) && exports.contains(binding.name.as_str()))
+            || !bindings.trusted_root(declaration)
             || !matches!(
                 syntax.constants.get(&declaration),
                 Some(Head::Tag | Head::AppendTag)
