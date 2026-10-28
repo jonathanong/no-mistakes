@@ -1,0 +1,17 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@bench/db'
+      executorNames: [read]
+      effort: low
+      unanalyzable: advise
+      include: ['src/query.mts']
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@bench/db'
+      executorNames: [read]
+      effort: max
+      unanalyzable: advise
+      include: ['src/helpers.mts']

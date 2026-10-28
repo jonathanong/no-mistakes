@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read]
+      executorFactoryNames: [openTransaction]
+      executorTypeNames: [TxExecutor]
+      effort: low
+      unanalyzable: report

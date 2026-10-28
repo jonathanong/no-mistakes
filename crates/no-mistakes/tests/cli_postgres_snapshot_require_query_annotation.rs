@@ -130,6 +130,17 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("provenance_advice_helper", "provenance-advice-helper", "provenance-advise-helper.yml"),
         // rules line 7 must remain. sqlVerdicts are absent from check JSON and stay in the unit test.
         case("untrusted_tag_append", "verdict-invalid-append", "verdict-invalid-append.yml"),
+        // Named trusted roots remain clear despite opaque suffixes; custom tags and escaped builders advise.
+        case("append_opaque_prefix", "append-opaque-prefix", "append-opaque-prefix.yml"),
+        // One fixed helper clears; a fixed missing head fails under both policies.
+        case("helper_heads_report", "helper-heads", "helper-heads-report.yml"),
+        case("helper_heads_ignore", "helper-heads", "helper-heads-ignore.yml"),
+        // Direct source imports use prepared exported heads; unknown links advise or report.
+        case("imported_helper_heads_report", "imported-helper-heads", "imported-helper-heads-report.yml"),
+        case("imported_helper_heads_ignore", "imported-helper-heads", "imported-helper-heads-ignore.yml"),
+        // Relative factory/type calls join only after resolver confirmation.
+        case("relative_helper_heads_report", "relative-helper-heads", "relative-helper-heads-report.yml"),
+        case("relative_helper_heads_ignore", "relative-helper-heads", "relative-helper-heads-ignore.yml"),
     ];
     assert_saved_fixture("postgres_require_query_annotation", &cases);
 }

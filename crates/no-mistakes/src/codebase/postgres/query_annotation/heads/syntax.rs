@@ -13,6 +13,9 @@ pub(super) struct Call {
 }
 #[derive(Default)]
 pub(super) struct Syntax {
+    pub collect_helper_heads: bool,
+    pub helper_returns: FxHashMap<Span, super::helper_heads::Summary>,
+    pub helper_arguments: FxHashMap<Span, Span>,
     pub append_tags: FxHashMap<Span, Span>,
     pub collect_append_tags: bool,
     pub literal_helpers: Option<Vec<super::literal_helpers::Candidate>>,
@@ -22,6 +25,7 @@ pub(super) struct Syntax {
     pub assignments: super::assignments::Assignments,
     pub append_receivers: FxHashSet<Span>,
     pub discarded_appends: FxHashSet<Span>,
+    pub prefix_discarded_appends: FxHashSet<Span>,
     pub contexts: FxHashMap<Span, Option<Span>>,
     current_function: Option<Span>,
     pub repeated_calls: FxHashSet<Span>,
@@ -54,26 +58,33 @@ pub(super) enum Head {
     Literal,
     Tag,
     AppendTag,
+    AppendPrefixTag,
     Text(super::text::TextHead),
     Reference(Span),
     AppendReference(Span),
+    AppendPrefixReference(Span),
     Unproven,
 }
 impl Head {
     pub fn is_constant(self) -> bool {
-        matches!(self, Self::Literal | Self::Tag | Self::AppendTag)
-            || matches!(self, Self::Text(value) if value.current != super::HeadProof::Unproven)
+        matches!(
+            self,
+            Self::Literal | Self::Tag | Self::AppendTag | Self::AppendPrefixTag
+        ) || matches!(self, Self::Text(value) if value.current != super::HeadProof::Unproven)
     }
     pub fn tagged(self) -> bool {
-        matches!(self, Self::Tag | Self::AppendTag)
+        matches!(self, Self::Tag | Self::AppendTag | Self::AppendPrefixTag)
             || matches!(self, Self::Text(value) if value.tagged)
     }
     pub fn appended(self) -> bool {
-        matches!(self, Self::AppendTag) || matches!(self, Self::Text(value) if value.appended)
+        matches!(self, Self::AppendTag | Self::AppendPrefixTag)
+            || matches!(self, Self::Text(value) if value.appended)
     }
     pub fn proof(self, continued: bool) -> super::HeadProof {
         match self {
             Self::Literal | Self::Tag | Self::AppendTag => super::HeadProof::Literal,
+            Self::AppendPrefixTag => super::HeadProof::Unproven,
+            Self::Text(value) if value.opaque => super::HeadProof::Unproven,
             Self::Text(value) if continued => value.continued,
             Self::Text(value) => value.current,
             _ => super::HeadProof::Unproven,
@@ -81,7 +92,9 @@ impl Head {
     }
     pub fn reference(self) -> Option<Span> {
         match self {
-            Self::Reference(span) | Self::AppendReference(span) => Some(span),
+            Self::Reference(span)
+            | Self::AppendReference(span)
+            | Self::AppendPrefixReference(span) => Some(span),
             _ => None,
         }
     }
@@ -90,10 +103,17 @@ impl Head {
 pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
     let mut concatenated = false;
     let mut appended = false;
+    let mut opaque_append = false;
     loop {
         expression = unwrap_ts_wrappers(expression);
         if let Expression::CallExpression(call) = expression {
             if let Some(receiver) = super::append::literal_receiver(call) {
+                appended = true;
+                expression = receiver;
+                continue;
+            }
+            if let Some(receiver) = super::append::prefix_receiver(call) {
+                opaque_append = true;
                 appended = true;
                 expression = receiver;
                 continue;
@@ -109,6 +129,9 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
         break;
     }
     if literal(expression) {
+        if opaque_append {
+            return Head::Unproven;
+        }
         return if appended {
             Head::AppendTag
         } else {
@@ -117,6 +140,9 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
     }
     if !concatenated {
         if let Expression::Identifier(id) = expression {
+            if opaque_append {
+                return Head::AppendPrefixReference(span(id.span));
+            }
             return if appended {
                 Head::AppendReference(span(id.span))
             } else {
@@ -134,21 +160,30 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
             .is_some_and(|text| named(&text))
         {
             // Low effort judges the literal head, independently of the tag.
-            return if appended { Head::AppendTag } else { Head::Tag };
+            return if opaque_append {
+                Head::AppendPrefixTag
+            } else if appended {
+                Head::AppendTag
+            } else {
+                Head::Tag
+            };
         }
     }
-    super::text::head(expression, concatenated, appended).map_or(Head::Unproven, Head::Text)
+    super::text::head(expression, concatenated, appended, opaque_append)
+        .map_or(Head::Unproven, Head::Text)
 }
 pub(super) fn collect_with_helpers(
     program: &Program<'_>,
     collect_append_tags: bool,
     helpers: bool,
+    collect_helper_heads: bool,
 ) -> Syntax {
     if let Some(observer) = crate::diagnostics::current() {
         observer.increment("postgres.annotation.head_syntax_visits", 1);
     }
     let mut syntax = Syntax {
         collect_append_tags,
+        collect_helper_heads,
         literal_helpers: helpers.then(Vec::new),
         ..Default::default()
     };

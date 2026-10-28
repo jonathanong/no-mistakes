@@ -145,9 +145,7 @@ pub(crate) fn collect_file_facts_from_program(
             crate::codebase::postgres::query_annotation::heads::collect_prepared(
                 program,
                 &ts,
-                embedded_sql
-                    .iter()
-                    .flat_map(|(_, file)| file.call_spans.iter().copied()),
+                heads::call_spans(plan, &embedded_sql),
                 &head_candidates,
                 plan.query_annotation_heads,
                 helpers,

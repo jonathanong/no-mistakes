@@ -45,15 +45,45 @@ statement.append(sql` WHERE id = ${id}`);
 query(statement);
 ```
 
+Low also follows a same-file function declaration or `const` arrow when its
+body has exactly one return, in final top-level position, with a decidable
+literal head. Tagged returns must use the `sql-template-strings` default or
+named `sql` import. A direct trusted tagged return can append an unknown suffix;
+the fixed leading comment remains visible. Async and generator helpers, other
+return paths, reassigned or shadowed callees, and optional or spread helper
+calls remain unresolved. A directly imported helper from another prepared
+source file also qualifies when that file directly exports the same fixed
+return summary. The request's resolver checks the exact import and export;
+re-exports, unavailable package implementations, and returned local variables
+remain unresolved.
+For a configured relative factory or executor type, the helper head is used
+only after the request resolver confirms that the executor import belongs to
+the configured package. An unconfirmed relative call cannot make a local
+builder's later use safe.
+
 These are deliberately narrow low-effort syntax proofs. Low does not run the
-helper/value evaluator, so a helper-produced head or nonliteral append argument
-can remain unresolved even when `effort: max` can recover it. The configured
+helper/value evaluator, so other helper-produced heads can remain unresolved
+when `effort: max` can recover them. A direct template tagged with an exact
+default import (or its named `sql` import) from `sql-template-strings` keeps its fixed named head through
+static `.append(...)` links with one opaque suffix expression. One local const
+holding that chain also qualifies when its uses pass the builder safely to an
+executor. Custom tags, optional or spread appends, and unknown leading heads
+stay unresolved. The configured
 `unanalyzable` policy applies to that low-effort uncertainty.
+
+A local const initialized directly from that trusted named tag can also receive
+later statement `.append(opaqueSuffix)` calls. The resulting builder qualifies
+at later executor reads, including `query(statement.append(opaqueSuffix))`,
+while its use remains in the same function and is neither captured nor passed
+to another helper. References to the builder inside a suffix expression count
+as an unsafe use.
 
 To follow appends through a const, its declaration and uses must stay in the
 same function. Before the executor call,
 its uses may only append supported literals or pass it directly to prepared
-executors. A nonliteral append argument makes later reads unanalyzable. Repeated
+executors. An opaque suffix is supported for the trusted tagged initializer
+or the trusted local builder described above. Other opaque appends make later
+reads unanalyzable. Repeated
 executor reads qualify. Reassignment, property writes, other receiver methods,
 helper escapes, aliases, returns, stores, and exports make it unanalyzable
 because a const binding does not make its builder immutable. An escape after
@@ -78,8 +108,8 @@ literal `BEGIN`, `COMMIT`, and `ROLLBACK` commands are exempt at both effort
 levels. A transaction keyword at the end of a head followed by an unknown
 suffix remains unresolved: the suffix could turn `BEGIN` into `BEGINNING`.
 
-Helper returns, conditional heads, escaped builders, and
-other unsupported shapes remain unanalyzable. Rewrite them as a leading named
+Other helper returns, conditional heads, escaped builders, and
+unsupported shapes remain unanalyzable. Rewrite them as a leading named
 literal at the executor call or as one local const initialized with that head
 and passed directly.
 
@@ -116,7 +146,8 @@ query(statement); // The same definite violation.
 
 A complete literal transaction command keeps the transaction exemption. An
 incomplete head, such as ``query(`/* ${name} */ SELECT 1`)``, stays
-unanalyzable. Helper returns and conditional heads also remain unanalyzable. A same-function `let` or `var` used as the executor
+unanalyzable. Unsupported helper returns and conditional heads also remain
+unanalyzable. A same-function `let` or `var` used as the executor
 argument can be decided when every direct assignment that may reach that call
 is a literal string, no-substitution template, or tag without interpolations. Every such value
 must have a known head: if all are named, the call passes; if any is missing

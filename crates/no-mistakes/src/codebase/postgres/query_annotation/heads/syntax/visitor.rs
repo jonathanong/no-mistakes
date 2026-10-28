@@ -31,6 +31,15 @@ impl<'a> Visit<'a> for Syntax {
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
         self.append_call(value);
+        if let Some(reference) = self
+            .collect_helper_heads
+            .then(|| value.arguments.first())
+            .flatten()
+            .and_then(|argument| argument.as_expression())
+            .and_then(super::super::helper_heads::callee)
+        {
+            self.helper_arguments.insert(span(value.span), reference);
+        }
         if let Some(candidates) = &mut self.literal_helpers {
             if let Some(candidate) = super::super::literal_helpers::candidate(value) {
                 candidates.push(candidate);
@@ -48,6 +57,15 @@ impl<'a> Visit<'a> for Syntax {
         if value.kind.is_const() {
             for declaration in &value.declarations {
                 if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
+                    if let Some(Expression::ArrowFunctionExpression(arrow)) = self
+                        .collect_helper_heads
+                        .then(|| declaration.init.as_ref().map(unwrap_ts_wrappers))
+                        .flatten()
+                    {
+                        if let Some(summary) = super::super::helper_heads::arrow(arrow) {
+                            self.helper_returns.insert(span(binding.span), summary);
+                        }
+                    }
                     self.append_declaration(binding, declaration.init.as_ref());
                     let head = declaration.init.as_ref().map_or(Head::Unproven, head);
                     if head.is_constant() {
@@ -61,8 +79,16 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_variable_declaration(self, value);
     }
     fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
-        if let Some(reference) = super::super::append::reference(&value.expression) {
+        let literal = super::super::append::reference(&value.expression);
+        if let Some(reference) = literal {
             self.discarded_appends.insert(reference);
+        }
+        if let Some(reference) = literal
+            .is_none()
+            .then(|| super::super::append::prefix_reference(&value.expression))
+            .flatten()
+        {
+            self.prefix_discarded_appends.insert(reference);
         }
         let discarded = match unwrap_ts_wrappers(&value.expression) {
             Expression::AssignmentExpression(value) => Some(span(value.span)),
@@ -88,6 +114,13 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_assignment_expression(self, value);
     }
     fn visit_function(&mut self, value: &Function<'a>, flags: ScopeFlags) {
+        if self.collect_helper_heads && value.r#type == FunctionType::FunctionDeclaration {
+            if let (Some(id), Some(summary)) =
+                (&value.id, super::super::helper_heads::function(value))
+            {
+                self.helper_returns.insert(span(id.span), summary);
+            }
+        }
         let prior = self.current_function.replace(span(value.span));
         self.context(
             Context {
