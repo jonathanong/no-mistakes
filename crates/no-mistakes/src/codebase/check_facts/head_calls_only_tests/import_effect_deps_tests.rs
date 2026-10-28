@@ -140,3 +140,6 @@ fn unprojected_local_summaries_never_publish_provisional_effect_proofs() {
         .any(|pending| pending.require_plain));
     assert!(!heads.exported_effects.contains_key("positive"));
 }
+
+#[path = "import_effect_integration_tests.rs"]
+mod integration;

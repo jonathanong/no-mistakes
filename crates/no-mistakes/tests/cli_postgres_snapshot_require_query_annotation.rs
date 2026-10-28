@@ -169,6 +169,7 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("helper_records_ignore", "low-heads", "helper-records-ignore.yml"),
         case("imported_helper_records_report", "imported-helper-records", "imported-helper-records-report.yml"),
         case("imported_helper_records_ignore", "imported-helper-records", "imported-helper-records-ignore.yml"),
+        case("import_effect_integration_report", "import-effect-integration", "import-effect-integration-report.yml"),
         case("import_effect_deps_report", "import-effect-deps", "import-effect-deps-report.yml"),
         case("async_return_origin_report", "async-return-origin", "async-return-origin-report.yml"),
         case("returned_params_report", "returned-params", "returned-params-report.yml"),

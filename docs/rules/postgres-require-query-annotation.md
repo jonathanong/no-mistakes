@@ -214,6 +214,11 @@ executor read. The imported target must have a plain parameter signature and a
 complete append-only reference census; reexports, imported dependencies in that
 target, extra imported calls, and unknown exports remain unresolved. The outer
 helper still checks its own parameter defaults against its actual caller.
+These imported obligations retain their plain/closed-export requirement when a
+fresh native async factory returns the builder or a closed local owner is read
+inside a captured callback. A target that captures or returns its parameter,
+or requires a defaulted object shape, does not satisfy this composed proof;
+ordinary direct imported effects retain their existing caller-shape contract.
 Aliases, captures, returned parameters, reassignment, optional/spread calls,
 cycles, and helper chains beyond four local edges do not establish this proof.
 

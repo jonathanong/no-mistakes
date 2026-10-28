@@ -107,6 +107,9 @@ one direct named-import dependency. Its plain, closed append-only source export
 must prove before dependent executor reads are accepted. Unknown/reexported
 exports, multiple imported edges, and incompatible outer defaults stay
 unresolved; this proof does not run the SQL evaluator.
+The imported target's plain, closed-export obligation also survives an async
+factory return or a captured builder lifetime. The async and ordinary source
+projection paths apply the same gate before publishing a dependent head.
 
 The shared low proof also accepts bounded same-file append-only helper calls
 and a returned parameter-rooted append chain when the caller discards it. An
