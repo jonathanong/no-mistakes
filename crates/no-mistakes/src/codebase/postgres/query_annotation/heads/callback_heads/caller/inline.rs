@@ -5,6 +5,9 @@ use crate::fx::FxHashSet;
 use oxc_ast::ast::{self, BindingPattern, Expression, ObjectPropertyKind, PropertyKind};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
+mod endpoint;
+mod preflight;
+pub(super) use preflight::may_execute;
 
 pub(super) fn executor(
     value: &Expression<'_>,
@@ -80,13 +83,14 @@ impl<'a> Visit<'a> for Census<'_> {
         {
             let span = (call.span.start, call.span.end);
             if self.executors.contains(&span) && call.arguments.len() <= 2 {
-                let needs_fresh = call.arguments.len() == 2;
-                if !needs_fresh || options(call.arguments[1].as_expression().unwrap()) {
+                if let Some((span, needs_fresh)) =
+                    endpoint::matching(call, self.name, self.executors)
+                {
                     self.count += 1;
                     self.endpoint = Some((span, needs_fresh));
                     self.allowed.insert(arg.span.start);
                 } else {
-                    self.valid = false
+                    self.valid = false;
                 }
             } else if let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) {
                 if self

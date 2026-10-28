@@ -107,24 +107,28 @@ fn ordinary_executor_read_skips_callback_payload_indexes() {
         .join("callback-more");
     let fixture = crate::test_support::materialize_saved_fixture(&saved);
     let root = fixture.path();
-    let path = root.join("src/ordinary.mts");
-    let observer = InvocationObserver::new(true);
-    let facts = with_observer(Some(observer.clone()), || {
-        collect_check_facts(root, vec![path.clone()], plan(root, &config(&["low"])))
-    });
-    assert!(facts
-        .ts
-        .get(&path)
-        .unwrap()
-        .query_annotation_heads
-        .is_some());
-    let work = observer.snapshot().work;
-    for key in [
-        "postgres.annotation.callback_append_helper_indexes",
-        "postgres.annotation.callback_local_payload_indexes",
-        "postgres.annotation.callback_append_helper_binding_visits",
-        "postgres.annotation.callback_local_payload_binding_visits",
-    ] {
-        assert!(!work.contains_key(key), "{key}");
+    for name in ["ordinary.mts", "ordinary-arrow.mts", "ordinary-vitest.mts"] {
+        let path = root.join("src").join(name);
+        let observer = InvocationObserver::new(true);
+        let facts = with_observer(Some(observer.clone()), || {
+            collect_check_facts(root, vec![path.clone()], plan(root, &config(&["low"])))
+        });
+        let file = facts.ts.get(&path).unwrap();
+        let heads = file.query_annotation_heads.as_ref().unwrap();
+        assert_eq!(file.embedded_sql[0].1.call_spans.len(), 1, "{name}");
+        let span = file.embedded_sql[0].1.call_spans[0];
+        assert_eq!(heads.calls[&span], HeadProof::Literal, "{name}");
+        let work = observer.snapshot().work;
+        for key in [
+            "postgres.annotation.callback_append_helper_indexes",
+            "postgres.annotation.callback_local_payload_indexes",
+            "postgres.annotation.callback_append_helper_binding_visits",
+            "postgres.annotation.callback_local_payload_binding_visits",
+            "postgres.annotation.callback_import_indexes",
+            "postgres.annotation.callback_import_reference_visits",
+            "postgres.annotation.callback_local_reference_visits",
+        ] {
+            assert!(!work.contains_key(key), "{name}: {key}");
+        }
     }
 }
