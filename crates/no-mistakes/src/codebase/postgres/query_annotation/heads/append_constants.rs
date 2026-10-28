@@ -42,14 +42,20 @@ impl Safety {
             .filter(|export| export.specifier.is_none())
             .map(|export| export.local.as_str())
             .collect::<FxHashSet<_>>();
+        let finite_roots = syntax
+            .finite_roots
+            .iter()
+            .map(|root| root.declaration)
+            .collect::<FxHashSet<_>>();
         for binding in &module.bindings {
             let declaration = (binding.span.start, binding.span.end);
             if !binding.runtime
                 || binding.imported
-                || !syntax
-                    .constants
-                    .get(&declaration)
-                    .is_some_and(|head| head.is_constant())
+                || !(finite_roots.contains(&declaration)
+                    || syntax
+                        .constants
+                        .get(&declaration)
+                        .is_some_and(|head| head.is_constant()))
             {
                 continue;
             }

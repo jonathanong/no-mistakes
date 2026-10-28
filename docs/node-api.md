@@ -363,8 +363,10 @@ See [Effect alternatives](node-api/effect-alternatives.md).
 `check()` and `analyzeProject()` also honor low effort for [`postgres-no-unbounded-sql-identifier`](rules/postgres-no-unbounded-sql-identifier.md#effort). Import the exported `PostgresNoUnboundedSqlIdentifierOptions` type for its configuration. Unsupported syntax uses the same report/advisory/ignore policy in CLI and async Node reports.
 
 For `postgres-require-query-annotation`, these async reports share the CLI's
-low-effort finite conditional heads, finite explicit helper returns, and safe returned-local builder proofs;
-unsupported arms and escaped builders retain the configured `unanalyzable`
+low-effort finite conditional heads, finite explicit helper returns, safe
+returned-local builder proofs, and bounded literal names from direct tuple
+loops and closed local helper calls. Unsupported arms and escaped builders
+retain the configured `unanalyzable`
 policy. See [low-effort annotation](postgres-query-annotation/low-effort.md).
 
 The `postgres-no-mutable-sql-registry` check accepts the exported

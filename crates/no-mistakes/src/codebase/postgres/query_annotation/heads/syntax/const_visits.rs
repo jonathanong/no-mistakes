@@ -6,6 +6,7 @@ use oxc_span::GetSpan;
 impl Syntax {
     pub(super) fn const_declaration(&mut self, value: &VariableDeclaration<'_>) {
         for declaration in &value.declarations {
+            self.finite_const(declaration);
             self.namespace_declaration(declaration);
             if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
                 if let Some(Expression::ArrowFunctionExpression(arrow)) = self

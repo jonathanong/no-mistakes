@@ -1,8 +1,8 @@
 //! Low annotation head facts from the original prepared program.
 use super::{
-    bindings, callback_heads, effects, helper_heads, helper_records, literal_helpers, loop_carried,
-    namespace_heads, syntax, trusted_append, AnnotationHeads, HeadCallSpans, HeadProof,
-    PreparedLoopHeads, Span,
+    bindings, callback_heads, effects, finite_comments, helper_heads, helper_records,
+    literal_helpers, loop_carried, namespace_heads, syntax, trusted_append, AnnotationHeads,
+    HeadCallSpans, HeadProof, PreparedLoopHeads, Span,
 };
 use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
@@ -75,6 +75,16 @@ pub(crate) fn collect_prepared(
                 .or_else(|| helper_records::builder_local_proof(&syntax, &bindings, call))
             {
                 calls.insert(call.span, summary.proof());
+            }
+        }
+        for (span, proof) in finite_comments::proofs(
+            &syntax,
+            &bindings,
+            ts.module_bindings.as_deref(),
+            &executor_calls,
+        ) {
+            if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
+                calls.insert(span, proof);
             }
         }
     }

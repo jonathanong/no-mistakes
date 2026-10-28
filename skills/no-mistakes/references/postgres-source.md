@@ -18,6 +18,10 @@ barrel export to that helper; dynamic keys and ambiguous exports abstain.
 A helper may return one trusted local builder even when captured closures only
 append suffixes; every reference must be a discarded append, proven append-only
 effect, or direct return from that helper.
+Low also proves a first ordinary comment name from up to 16 direct string
+tuples in a `for-of` loop or from a closed set of direct literal calls through
+one local select closure into a same-file helper. Unknown names and tagged
+bind interpolation remain unanalyzable.
 Other helper, alias, and mutation shapes use
 `unanalyzable: report | advise | ignore`. `trustedSqlTags` is deprecated and
 ignored for this rule at low effort.

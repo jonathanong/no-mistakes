@@ -7,8 +7,9 @@ mod collect;
 mod const_visits;
 pub(super) use collect::collect_with_helpers;
 mod field_visits;
+mod finite_visits;
 mod helper_visits;
-mod literals;
+pub(super) mod literals;
 mod visitor;
 pub(super) struct Call {
     pub span: Span,
@@ -27,6 +28,13 @@ pub(super) struct Syntax {
     pub repeated_append_refs: FxHashSet<Span>,
     pub optional_calls: FxHashSet<Span>,
     pub helper_arguments: FxHashMap<Span, Span>,
+    pub collect_finite: bool,
+    pub finite_calls: Vec<super::finite_comments::CallSite>,
+    pub finite_templates: Vec<super::finite_comments::TemplateUse>,
+    pub finite_roots: Vec<super::finite_comments::Root>,
+    pub finite_functions: Vec<super::finite_comments::Function>,
+    pub finite_selects: Vec<super::finite_comments::Select>,
+    pub active_domains: Vec<super::finite_comments::Domain>,
     pub namespace_destructures: Vec<super::namespace_heads::Candidate>,
     pub effect_functions: FxHashMap<Span, super::effects::FunctionSyntax>,
     pub effect_calls: Vec<super::effects::CallSyntax>,
