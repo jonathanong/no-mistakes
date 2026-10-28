@@ -4,6 +4,7 @@ mod append;
 mod append_constants;
 mod assignments;
 mod bindings;
+mod branch_assignments;
 mod callback_heads;
 mod captured_prefix;
 mod collect;
