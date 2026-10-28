@@ -38,6 +38,10 @@ command ignores `--timeout`, `--invocation-timeout-ms`, `--lock-timeout`, and
   and omit arguments to avoid persisting option or positional values. Older
   records may contain a full command line. A holder that predates holder records
   is reported with only `pid` set; `cwd` is `null` and `command` is empty.
+- Holder records are replaced atomically using an owner-only temporary file
+  (`0600` on Unix). A process killed while writing can leave `.tmp*` staging
+  files in the lock directory. They are not holder records, do not affect lock
+  acquisition or status, and can remain until manually removed.
 - `ageSeconds` is computed when read; it is `null` when the start time is
   unknown.
 

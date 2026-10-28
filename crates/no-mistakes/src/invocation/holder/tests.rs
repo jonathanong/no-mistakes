@@ -81,3 +81,18 @@ fn failed_atomic_replacement_cleans_up_staging_and_keeps_acquisition_available()
     assert!(LockHolder::read(&lock).is_none());
     assert_eq!(entry_count(directory.path()), 2);
 }
+
+#[test]
+fn abandoned_staging_file_does_not_affect_lock_acquisition() {
+    let directory = crate::test_support::materialize_saved_fixture(&fixture("abandoned-staging"));
+    let lock = directory.path().join("invocation.lock");
+    let abandoned = directory.path().join(".tmp-holder-partial");
+    let before = std::fs::read(&abandoned).unwrap();
+
+    let _held = acquire_lock(&lock, None, false).unwrap();
+
+    assert_eq!(std::fs::read(&abandoned).unwrap(), before);
+    let holder = LockHolder::read(&lock).expect("acquisition records a complete holder");
+    assert_eq!(holder.pid, std::process::id());
+    assert_eq!(entry_count(directory.path()), 3);
+}

@@ -209,5 +209,8 @@ sidecar is best-effort and remains after release or a crash, so a held lock may
 briefly be reported with the previous holder during acquisition. New sidecars
 store only the executable basename in `command`, not arguments; older sidecars
 can still contain a full command line. New records are replaced atomically with
-owner-only Unix permissions (`0600`). The `LockStatus`, `LockHolder`, `InvocationErrorKind`,
-`InvocationErrorDetails`, and `InvocationError` types are exported.
+owner-only Unix permissions (`0600`). A process killed while writing may leave
+`.tmp*` staging files in the lock directory; holder reads and acquisition ignore
+them, and they can remain until manually removed. The `LockStatus`, `LockHolder`,
+`InvocationErrorKind`, `InvocationErrorDetails`, and `InvocationError` types are
+exported.
