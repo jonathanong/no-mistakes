@@ -82,12 +82,24 @@ low effort and compose text for full SQL consumers, with interpolations treated
 as value placeholders. Conditional appends use bounded breadth-first alternatives;
 loops retain zero/one previews and an unknown remainder. These behaviors share
 Rust, CLI and async Node evidence; see [append composition](postgres-query-annotation/append-composition.md).
-Low annotation checks also prove fixed literal return heads in local helpers,
-including concise arrow bodies, and one-hop source imports from the prepared
-inventory, including local export aliases, without running the annotation
-evaluator. Re-exports remain outside this helper proof. An opaque appended
-suffix preserves a prefix only for the trusted `sql-template-strings` tag.
-This prefix proof does not establish complete SQL.
+Low annotation checks also prove fixed literal return heads in local helpers, including
+concise arrow bodies and local export aliases, and one-hop source imports from the prepared inventory, without running the
+annotation evaluator. This prefix proof does not establish complete SQL.
+An exact source helper may forward a proven head into a direct inline
+configured executor callback, with each imported call checked separately.
+They also accept finite conditional expressions whose every arm has a named
+literal head, plus one returned local trusted builder with append-only uses
+before its final return. Tagged arms and returned builders retain the existing
+escape checks.
+Function declarations with explicit early returns or a total final switch
+also join identical named or missing heads. The switch default must throw
+directly or call a stable same-file throw-only function. All return paths must
+produce fresh trusted builders before callers may append to the result.
+The low-effort prefix proof also accepts a captured local trusted builder when
+all of its exact-binding uses preserve the named head, regardless of closure
+execution order. CLI, async Node, and the Rust library share this evidence.
+An opaque appended suffix preserves a prefix only for the trusted
+`sql-template-strings` tag; other tags and later reads remain unresolved.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
@@ -967,3 +979,12 @@ Configured file globs, exact rule IDs, literal rule prefixes, and opt-in blanket
 or TypeScript directive bans have the same finding locations and targets.
 
 TS/JS production export consumers can be checked with explicit test/helper scope through [`production-exports-only-used-by-tests`](rules/production-exports-only-used-by-tests.md), available through CLI and async Node check reports. Static named aliases and re-exports preserve symbol ownership; dynamic or unresolved relationships follow the shared uncertainty policy. Next.js projects exempt the framework-consumed names on App Router, Pages Router, `proxy`, and `instrumentation-client` files. Identical star-reexport origins stay one symbol, and a tsconfig `paths` pattern match decides alias ownership.
+
+Low-effort PostgreSQL query annotation also projects the fixed head of an exact trusted local SQL builder through direct `.text` executor reads, with paired `.values` reads, in CLI and asynchronous Node checks. Direct immutable string exports follow one prepared source import.
+
+Low PostgreSQL annotation checks also project fixed heads from fresh source
+helper records or trusted builder results through one local paired field read.
+Fresh trusted builder helper results may also flow through one safe local SQL
+binding or a direct append at the executor; CLI and async checks share this
+prepared source proof.
+The CLI and async Node check use the same prepared facts.

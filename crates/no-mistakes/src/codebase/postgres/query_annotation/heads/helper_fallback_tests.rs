@@ -8,7 +8,7 @@ fn duplicate_export_names_and_local_owners_do_not_publish_helper_proofs() {
     let (source, original, heads) = fixture(FIXTURE);
     assert_eq!(assert_markers(&source, &heads), 2);
     assert_eq!(heads.exported_helpers.len(), 2);
-    assert_eq!(heads.pending_helpers.len(), 1);
+    assert_eq!(heads.pending_imports.len(), 1);
 
     let mut duplicate_export = original.clone();
     let module = Arc::make_mut(duplicate_export.module_bindings.as_mut().unwrap());
@@ -41,7 +41,7 @@ fn duplicate_export_names_and_local_owners_do_not_publish_helper_proofs() {
 #[test]
 fn duplicate_import_binding_does_not_project_an_arbitrary_helper() {
     let (_, mut ts, heads) = fixture(FIXTURE);
-    assert_eq!(heads.pending_helpers.len(), 1);
+    assert_eq!(heads.pending_imports.len(), 1);
     let module = Arc::make_mut(ts.module_bindings.as_mut().unwrap());
     let import = module
         .imports
@@ -50,6 +50,6 @@ fn duplicate_import_binding_does_not_project_an_arbitrary_helper() {
         .unwrap();
     import.bindings.push(import.bindings[0].clone());
     let heads = recollect(FIXTURE, &ts);
-    assert!(heads.pending_helpers.is_empty());
+    assert!(heads.pending_imports.is_empty());
     assert!(heads.exported_helpers.contains_key("stable"));
 }

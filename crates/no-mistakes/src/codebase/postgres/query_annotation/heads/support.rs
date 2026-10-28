@@ -12,6 +12,16 @@ pub(super) fn fixture_with_append_candidates(
     name: &str,
     append_candidates: bool,
 ) -> (String, TsFileFacts, AnnotationHeads) {
+    fixture_with_modes(name, append_candidates, false)
+}
+pub(super) fn fixture_with_effects(name: &str) -> (String, TsFileFacts, AnnotationHeads) {
+    fixture_with_modes(name, false, true)
+}
+fn fixture_with_modes(
+    name: &str,
+    append_candidates: bool,
+    collect_helper_heads: bool,
+) -> (String, TsFileFacts, AnnotationHeads) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-require-query-annotation/fixture/low-heads")
         .join(name);
@@ -37,7 +47,14 @@ pub(super) fn fixture_with_append_candidates(
         } else {
             Default::default()
         };
-        let heads = collect_with_helpers(program, &ts, calls.into_iter(), &candidates, true, false);
+        let heads = collect_with_helpers(
+            program,
+            &ts,
+            calls.into_iter(),
+            &candidates,
+            true,
+            collect_helper_heads,
+        );
         (ts, heads)
     })
     .unwrap();
