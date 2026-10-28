@@ -268,7 +268,7 @@ sees both substrings `cfg` and `test`; otherwise those AST checks skip parsing.
 
 [`test-no-live-repository-scan`](../rules/test-no-live-repository-scan.md) reports
 unresolved scan roots as advisories by default; `options.unresolvedRoot: report`
-makes them blocking.
+makes them blocking unless the rule sets `severity: advisory`.
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the

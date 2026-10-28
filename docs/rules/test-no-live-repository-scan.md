@@ -68,7 +68,8 @@ reason `unresolved root` instead of passing silently. This covers a function
 parameter, a `let` binding, an environment value, a call this analysis does not
 model, a spread argument, and an enumeration call whose receiver is not
 resolved. These go to the non-failing `advisories` list by default. Set
-`unresolvedRoot: report` to fail on them.
+`unresolvedRoot: report` to fail on them; the rule's `severity: advisory` still
+demotes them.
 
 Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 `dirname`, `fileURLToPath`, `new URL(..., import.meta.url)`, `import.meta.dirname`,
@@ -77,8 +78,8 @@ immutable `const` aliases, including a `const` glob options object with a `cwd`.
 Parent traversal is resolved, so `fixtures/../src` is a live path, not a fixture
 path. A generic helper such as
 `listFiles(dir: string)` is therefore an unresolved root at its enumeration even
-when every caller passes a fixture; pass a `const` fixture path at the call site
-or suppress the helper.
+when every caller passes a fixture; enumerate with a path the helper builds
+itself from a fixture root, or suppress the helper.
 
 ## Options
 
