@@ -245,6 +245,12 @@ head; tagged arms retain mutable-builder escape checks. A function declaration
 also qualifies with explicit early `if` returns and a final top-level return,
 or a final `switch` whose every case returns the same proven head and whose
 default throws directly or calls an exact stable same-file throw-only helper.
+An early branch block may contain ordinary prefix statements and end with
+`return query`, including conditional appends to that exact native builder.
+Every same-function return must still be one of the collected alternatives;
+hidden earlier or nested branch returns cannot be skipped. Nested function
+returns are counted separately, while aliases, captures that escape or mutate
+the builder, and unsafe writes still reject its returned-local proof.
 Every returning path must agree on named or missing. Only fresh trusted builder
 returns on every path permit later `.append`. A switch without a default,
 fallthrough, mixed or unknown returns, async/generator helpers, optional or

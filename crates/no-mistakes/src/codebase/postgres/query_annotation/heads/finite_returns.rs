@@ -118,8 +118,10 @@ fn collect_if(value: &oxc_ast::ast::IfStatement<'_>, heads: &mut Vec<Return>) ->
 fn branch_return(value: &Statement<'_>) -> Option<Option<Return>> {
     match value {
         Statement::ReturnStatement(value) => Some(Some(return_head(value)?)),
-        Statement::BlockStatement(block) if block.body.len() == 1 => match &block.body[0] {
-            Statement::ReturnStatement(value) => Some(Some(return_head(value)?)),
+        // Prefix statements cannot hide a return: function() compares every
+        // same-function return against the collected terminal alternatives.
+        Statement::BlockStatement(block) => match block.body.last() {
+            Some(Statement::ReturnStatement(value)) => Some(Some(return_head(value)?)),
             _ => Some(None),
         },
         _ => Some(None),

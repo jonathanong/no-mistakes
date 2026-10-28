@@ -96,7 +96,10 @@ literal head, plus one returned local trusted builder with append-only uses
 before its final return. Tagged arms and returned builders retain the existing
 escape checks.
 Function declarations with explicit early returns or a total final switch
-also join identical named or missing heads. The switch default must throw
+also join identical named or missing heads. Early branch blocks can end in a
+return after ordinary prefix statements, provided the complete same-function
+return count is still accounted for and returned native builders retain their
+exact ownership and closed lifetime. The switch default must throw
 directly or call a stable same-file throw-only function. All return paths must
 produce fresh trusted builders before callers may append to the result.
 The low-effort prefix proof also accepts a captured local trusted builder when

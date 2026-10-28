@@ -123,3 +123,6 @@ pub(super) fn collect_with_helpers(
         None,
     )
 }
+
+#[path = "terminal_block_return_tests.rs"]
+mod terminal_block_return_tests;

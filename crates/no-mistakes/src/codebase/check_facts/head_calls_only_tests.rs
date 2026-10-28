@@ -190,3 +190,6 @@ mod relative_pending;
 
 #[path = "head_calls_only_tests/callback_export_payload_tests.rs"]
 mod callback_export_payload_tests;
+
+#[path = "head_calls_only_tests/terminal_block_return_tests.rs"]
+mod terminal_block_return_tests;
