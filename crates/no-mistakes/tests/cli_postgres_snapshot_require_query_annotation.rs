@@ -138,6 +138,9 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         // Direct source imports use prepared exported heads; unknown links advise or report.
         case("imported_helper_heads_report", "imported-helper-heads", "imported-helper-heads-report.yml"),
         case("imported_helper_heads_ignore", "imported-helper-heads", "imported-helper-heads-ignore.yml"),
+        // Concise arrows and one-hop export aliases prove heads; consumed custom appends abstain.
+        case("helper_arrow_heads_report", "helper-arrow-heads", "helper-arrow-heads-report.yml"),
+        case("helper_arrow_heads_ignore", "helper-arrow-heads", "helper-arrow-heads-ignore.yml"),
         // Relative factory/type calls join only after resolver confirmation.
         case("relative_helper_heads_report", "relative-helper-heads", "relative-helper-heads-report.yml"),
         case("relative_helper_heads_ignore", "relative-helper-heads", "relative-helper-heads-ignore.yml"),

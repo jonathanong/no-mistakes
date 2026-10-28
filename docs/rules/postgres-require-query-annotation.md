@@ -201,15 +201,20 @@ statement appends. The evaluator does not run. Decidable missing annotations
 remain failing findings under every policy; unresolved shapes follow
 `unanalyzable`. Complete literal transaction commands retain their exemption.
 One same-file function declaration or `const` arrow also qualifies when it has
-one final top-level return with a fixed leading comment, and its callable is
-lexically owned and unchanged. A returned tagged builder must use the exact
+a single returned expression with a fixed leading comment, and its callable
+is lexically owned and unchanged. A block body must have one final top-level
+return; a concise arrow body is itself the returned expression. A returned
+tagged builder must use the exact
 `sql-template-strings` import; an unknown appended suffix after its fixed head
-is allowed. A fixed missing head returned by such a helper is a failing finding.
-Early returns, async/generator helpers, optional or spread calls, and returned
-local variables remain unresolved at low effort.
+is allowed only for that trusted tag. An unknown append through another tag
+does not establish a safe prefix or make later reads of that `const` builder safe. A
+fixed missing head returned by such a helper is a failing finding. Early
+returns, async/generator helpers, optional or spread calls, and returned local
+variables remain unresolved at low effort.
 Direct source imports of those helpers follow one exact export through the
-prepared request resolver. Re-exports and unresolved package implementations
-remain unanalyzable.
+prepared request resolver; a one-hop local export alias
+(`export { helper as publicHelper }`) is supported. Re-exports and unresolved
+package implementations remain unanalyzable.
 See [low-effort examples, rewrites, and suppressions](../postgres-query-annotation/low-effort.md).
 See [append composition and bounded alternatives](../postgres-query-annotation/append-composition.md)
 for the SQL text model, truncation, and invalid-SQL advisories.

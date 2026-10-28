@@ -81,3 +81,70 @@ fn imported_helper_head_is_independent_of_another_applications_full_sql_demand()
     assert_eq!(mixed.0, 0);
     assert_eq!(low.1, mixed.1);
 }
+
+#[test]
+fn concise_helper_and_consumed_append_heads_survive_mixed_full_sql_demand() {
+    use super::{with_observer, InvocationObserver};
+    let saved = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("helper-arrow-heads");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = fixture.path();
+    let mut low_proofs = None;
+    for efforts in [vec!["low"], vec!["low", "max"]] {
+        let observer = InvocationObserver::new(true);
+        let paths = ["query.mts", "append.mts", "helpers.mts", "imports.mts"]
+            .map(|name| root.join("src").join(name));
+        let facts = with_observer(Some(observer.clone()), || {
+            collect_check_facts(root, paths.to_vec(), plan(root, &config(&efforts)))
+        });
+        let mut proofs = Vec::new();
+        for name in ["query.mts", "append.mts"] {
+            let file = facts.ts.get(&root.join("src").join(name)).unwrap();
+            let heads = file.query_annotation_heads.as_ref().unwrap();
+            proofs.push(
+                file.embedded_sql[0]
+                    .1
+                    .call_spans
+                    .iter()
+                    .map(|span| heads.calls.get(span).copied())
+                    .collect::<Vec<_>>(),
+            );
+            if efforts == ["low"] {
+                assert!(file.query_annotation.is_empty());
+                assert!(file.embedded_sql[0]
+                    .1
+                    .calls
+                    .iter()
+                    .all(|call| call.variants.is_empty()));
+            }
+        }
+        assert_eq!(&proofs[0][..5], &[Some(HeadProof::Literal); 5]);
+        assert_eq!(proofs[0][5..8], [Some(HeadProof::Missing); 3]);
+        assert_eq!(
+            proofs[1],
+            vec![
+                Some(HeadProof::Literal),
+                Some(HeadProof::Unproven),
+                Some(HeadProof::Unproven),
+                Some(HeadProof::Literal),
+                Some(HeadProof::Literal),
+                Some(HeadProof::Unproven),
+                Some(HeadProof::Literal)
+            ]
+        );
+        if let Some(low_proofs) = &low_proofs {
+            assert_eq!(&proofs, low_proofs);
+        } else {
+            assert_eq!(
+                observer
+                    .snapshot()
+                    .work
+                    .get("postgres.sql.variants_composed")
+                    .copied()
+                    .unwrap_or(0),
+                0
+            );
+            low_proofs = Some(proofs);
+        }
+    }
+}
