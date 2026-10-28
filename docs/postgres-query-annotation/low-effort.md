@@ -51,6 +51,12 @@ second argument. The leading name is proven from that trusted builder and
 survives safe appends. Both fields must be direct, non-optional reads; a
 computed field, escaped or overwritten builder, arbitrary object with a `text`
 field, or caller-supplied SQL remains unresolved.
+For a closed native builder, a nested closure may read the same exact
+`.text`/`.values` pair at a configured executor. Every canonical reference to
+the builder must be that pair or a discarded prefix-preserving append or
+proven append-only effect. The closure may run later or repeatedly; aliases,
+unknown methods, writes, dynamic lexical access, and unmatched field reads
+remain unresolved.
 
 A configured relative factory or executor type must first resolve to the
 configured package. An unconfirmed relative call cannot make a local builder's
@@ -271,6 +277,9 @@ unresolved. A trusted builder return uses its exact imported tag.
 One local `const` can hold that helper result for exactly the paired
 `query(result.text, result.values)` read. Repeated calls, aliases, captures,
 exports, writes, optional calls or fields, and additional uses remain unresolved.
+The same paired first two arguments may be followed by one options argument;
+the `.text` string is read before that argument is evaluated. The helper result
+still needs the exact trusted source and closed local lifetime proof.
 A fresh plain record can also be extracted with exactly
 `const { text, values } = helper(args)` and passed once as `query(text, values)`
 in the same function and loop iteration. Renamed or extra fields, other uses,
