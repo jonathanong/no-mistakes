@@ -131,6 +131,23 @@ mutable-builder lifetime checks, including escapes before execution. An
 unknown, partial, or missing arm remains unanalyzable; the syntax pass does
 not evaluate the condition or combine SQL text.
 
+Conditional chains and balanced trees share a limit of 255 conditional nodes
+per head proof. This admits a twelve-way selector whose arms each contain a
+complete literal annotation followed by the same SQL body. An arbitrary
+selector value is safe for this head proof when even the final fallback has
+a complete named comment. Exceeding the limit, or adding any unknown or
+missing arm, keeps the call unresolved. The same bounded head classifier is
+also available to maximum effort's existing syntax fallback.
+
+Proving a name does not prove the entire statement. A named builder may keep
+its annotation while appending a nullable privacy-filter helper result, and
+a named template may interpolate fields from a frozen, own-key-checked
+registry. Those complete SQL values can still be unresolved for other rules.
+This annotation proof does not infer helper-produced identifiers, establish
+registry membership, or remove those other rules' advisories. Keep the
+fixed name at the executor and use each rule's documented static SQL form
+when its full-statement proof is incomplete.
+
 Low also accepts a first comment name supplied by a bounded runtime string
 set. A synchronous `for (const [name, other] of [["one", "x"], ...])` may
 capture the exact read-only `name` binding in a callback when every direct

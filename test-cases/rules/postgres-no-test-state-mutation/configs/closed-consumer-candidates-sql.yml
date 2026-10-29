@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - '*.mts'
+    options:
+      effort: low
+      unanalyzable: advise
+      testGlobs: ['**/*.mts']
+      helperRoots: ['**']
+      importSpecifier: '@bench/db'
+      trustedSqlTags: [{ module: 'sql-template-strings', name: sql }]

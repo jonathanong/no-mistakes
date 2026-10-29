@@ -1,5 +1,5 @@
 import { read } from "@bench/db";
-// Variant count is irrelevant to original low-effort head syntax.
+// Literal heads do not consume the full-SQL evaluator's 16-variant budget.
 const choices16 = flag0
   ? "/* branch 0 */ SELECT 0"
   : flag1
@@ -31,7 +31,7 @@ const choices16 = flag0
                             : flag14
                               ? "/* branch 14 */ SELECT 14"
                               : "/* branch 15 */ SELECT 15";
-read(choices16); // low: false
+read(choices16); // low: true
 read("/* literal head */ " + choices16); // low: true
 const choices17 = flag0
   ? "/* branch 0 */ SELECT 0"
@@ -66,5 +66,5 @@ const choices17 = flag0
                               : flag15
                                 ? "/* branch 15 */ SELECT 15"
                                 : "/* branch 16 */ SELECT 16";
-read(choices17); // low: false
+read(choices17); // low: true
 read("/* literal head */ " + choices17); // low: true
