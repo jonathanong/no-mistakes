@@ -25,6 +25,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn piece(
         ImportedSite {
             local: name.to_string(),
             member: Some(member.property.name.to_string()),
+            kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
             args: Vec::new(),
             value_used: true,
             line: byte_offset_to_line(visitor.source, member.span.start as usize),

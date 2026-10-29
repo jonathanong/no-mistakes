@@ -237,6 +237,7 @@ test("CI installs Chromium only on the path-filtered browser job", () => {
       env: {
         ...process.env,
         QUALITY_RESULT: "success",
+        PACKAGES_RESULT: "success",
         JAVASCRIPT_RESULT: "success",
         NATIVE_RESULT: "success",
         RUST_RESULT: "success",

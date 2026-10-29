@@ -149,6 +149,7 @@ fn site_arguments_decide_which_summary_shapes_may_fill_a_hole() {
     let site = |args: Vec<SiteArg>| ImportedSite {
         local: "helper".into(),
         member: None,
+        kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
         args,
         value_used: false,
         line: 1,

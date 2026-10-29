@@ -95,9 +95,9 @@ jobs:
             node .github/scripts/timeout-policy-browser-scope.cjs >> "$GITHUB_OUTPUT"
 
   quality:
-    name: Lint and package checks
+    name: Lint and source checks
     runs-on: ubuntu-latest
-    # Compilation checks, package verification and cleanup share this budget.
+    # Compilation checks and cleanup retain their existing aggregate budget.
     timeout-minutes: 30
 
     steps:
@@ -270,6 +270,47 @@ jobs:
             AGENTS.md
           fail: true
 
+      - name: Diagnose Rust disk usage after failure
+        if: ${{ failure() || cancelled() }}
+        timeout-minutes: 2
+        run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
+
+  packages:
+    name: Package checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
+      - name: Cache Rust build artifacts
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        with:
+          key: packages
+
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
       - name: Check Cargo packages
         timeout-minutes: 10
         run: cargo publish --dry-run --locked -p no-mistakes
@@ -281,7 +322,7 @@ jobs:
       - name: Diagnose Rust disk usage after failure
         if: ${{ failure() || cancelled() }}
         timeout-minutes: 2
-        run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
+        run: bash .github/scripts/rust-disk-usage.sh "package job failure"
 
   javascript-tests:
     name: JavaScript tests
@@ -817,6 +858,7 @@ jobs:
     needs:
       - changes
       - quality
+      - packages
       - javascript-tests
       - timeout-policy-browser-tests
       - native-tests
@@ -831,6 +873,7 @@ jobs:
         timeout-minutes: 1
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
+          PACKAGES_RESULT: ${{ needs.packages.result }}
           JAVASCRIPT_RESULT: ${{ needs.javascript-tests.result }}
           NATIVE_RESULT: ${{ needs.native-tests.result }}
           RUST_RESULT: ${{ needs.tests.result }}
@@ -839,8 +882,8 @@ jobs:
           BROWSER_CHANGED: ${{ needs.changes.outputs.timeout-policy-browser }}
           BROWSER_RESULT: ${{ needs.timeout-policy-browser-tests.result }}
         run: |
-          if [[ "$QUALITY_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$NATIVE_RESULT" != "success" || "$RUST_RESULT" != "success" || "$STANDALONE_RESULT" != "success" ]]; then
-            echo "Quality checks, JavaScript tests, native tests, standalone library tests, or Rust coverage failed." >&2
+          if [[ "$QUALITY_RESULT" != "success" || "$PACKAGES_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$NATIVE_RESULT" != "success" || "$RUST_RESULT" != "success" || "$STANDALONE_RESULT" != "success" ]]; then
+            echo "Quality checks, package checks, JavaScript tests, native tests, standalone library tests, or Rust coverage failed." >&2
             exit 1
           fi
 

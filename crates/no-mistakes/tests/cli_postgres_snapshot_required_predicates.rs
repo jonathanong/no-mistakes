@@ -206,6 +206,11 @@ fn postgres_required_predicates_check_json_snapshot() {
             "variant-merged-suppression",
             "variant-merged.yml",
         ),
+        (
+            "prepared_plain_clause",
+            rules_path(RULE, "variants", "prepared-plain-clause"),
+            rules_path(RULE, "variants", "prepared-plain-clause/.no-mistakes.yml"),
+        ),
     ];
     assert_saved_fixture("postgres_required_predicates", &cases);
 }

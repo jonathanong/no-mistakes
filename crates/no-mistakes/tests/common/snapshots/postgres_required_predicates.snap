@@ -1068,6 +1068,84 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "prepared_plain_clause": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/caller.mts",
+          "import": "orders.account_id",
+          "line": 9,
+          "message": "src/caller.mts:9: SELECT on orders does not constrain required column account_id; UPDATE on orders does not constrain required column account_id; DELETE on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "case \"one\": return \"orders\";",
+          "target": "orders"
+        },
+        {
+          "file": "src/caller.mts",
+          "line": 39,
+          "message": "src/caller.mts:39: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "return read(`SELECT id FROM ${returningDefault(family)} WHERE id = $1`, [1]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/caller.mts",
+          "line": 49,
+          "message": "src/caller.mts:49: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "return read(`SELECT id FROM ${unresolvedDefault(family)} WHERE id = $1`, [1]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/caller.mts",
+          "line": 54,
+          "message": "src/caller.mts:54: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "return read(`SELECT id FROM ${table(next())} WHERE id = $1`, [1]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/caller.mts",
+          "line": 57,
+          "message": "src/caller.mts:57: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "return read(`SELECT id FROM ${table(family)} WHERE id = $1`, [1]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/caller.mts",
+          "line": 61,
+          "message": "src/caller.mts:61: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "return read(`SELECT id FROM ${alias(family)} WHERE id = $1`, [1]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/caller.mts",
+          "line": 91,
+          "message": "src/caller.mts:91: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "return read(`SELECT id FROM ${tooMany(family)} WHERE id = $1`, [1]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/caller.mts",
+          "line": 96,
+          "message": "src/caller.mts:96: executed SQL is not statically recoverable for required predicates",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "return read(`SELECT id FROM ${table(undefined)} WHERE id = $1`, [1]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "qualified_partitions": {
     "exitCode": 1,
     "report": {

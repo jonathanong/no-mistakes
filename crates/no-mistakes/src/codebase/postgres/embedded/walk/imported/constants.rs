@@ -172,6 +172,7 @@ fn imported_hole(
         ImportedSite {
             local: name.to_string(),
             member: None,
+            kind: crate::codebase::postgres::embedded::helpers::SiteKind::Sql,
             args: Vec::new(),
             value_used: true,
             line,

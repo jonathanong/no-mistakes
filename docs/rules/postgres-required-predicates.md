@@ -271,6 +271,13 @@ Opaque method calls in a helper's throwing guard are not assumed inert; they
 retain the caller's unanalyzable diagnostic. Move such validation outside the
 SQL-producing helper or use a source-visible supported condition.
 
+At `max`, an ordinary template can insert finite literal-string returns of an
+exact same-file helper, including a switch whose default calls a resolved
+source-visible throwing helper. For example,
+``SELECT id FROM ${table(family)} WHERE id = $1`` is checked for every proven
+table name. A returning default, unresolved thrower, or helper alias keeps
+the query unanalyzable. Tagged substitutions remain bound values.
+
 Use `effort: max` to analyze shapes outside the bounded low subset. The default
 remains `max`.
 

@@ -98,11 +98,19 @@ Each call runs the model against the call site's arguments:
   a NUL, or a nested call past the depth cap leaves the call unanalyzable.
   `default` is proven only when the analyzer sees `throw`, or a
   source-visible callee whose body always throws. Imported callees must be
-  present in the prepared source scope and resolved by that projection; a function named `assertNever`
-  is not enough. A `switch` that is not this shape, including a `default` that
+  present in the prepared source scope and resolved by that projection; a
+  function named `assertNever` or typed `never` is not enough. A `switch` that
+  is not this shape, including a `default` that
   does not throw, stays `Dynamic` rather than keeping the known arms. At most
   **16** paths survive; past that the call stays `Dynamic` and the union is
   not truncated.
+- **Ordinary template identifiers.** A direct, stable same-file helper call
+  inside an untagged template can supply finite literal strings when every
+  path returns a string and the surrounding caller SQL is complete. The
+  prepared projection may resolve a throwing default through an exact import
+  or re-export. Calls with arguments that have side effects, shadowed or aliased helpers,
+  unresolved defaults, and tagged-template bind substitutions do not become
+  identifier text.
 - **`??`.** A bound scalar `??` fallback stays a bind, so a string constant
   there is not its own SQL alternative. `??` on a name the helper does not
   bind (it may be an SQL fragment) stays unknown and does not publish the

@@ -10,6 +10,7 @@ use super::CheckFileFacts;
 use crate::codebase::dependencies::extract::ImportedBindingKind;
 use crate::codebase::postgres::{
     Callee, Callees, EmbeddedSqlOptions, ImportedSite, Outcome, RecoveredSql, Ret, SiteArg,
+    SiteKind,
 };
 use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
@@ -72,6 +73,9 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         from: &Path,
         site: &ImportedSite,
     ) -> Option<RecoveredSql> {
+        if site.kind != SiteKind::Sql {
+            return None;
+        }
         let (origin, local) = self.find(from, &site.local, None)?;
         if origin == from {
             return None;
@@ -110,13 +114,28 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         let builder = site.args.iter().position(|arg| *arg == SiteArg::Builder);
         let mut texts = Vec::new();
         for outcome in outcomes {
-            let text = hole_text(outcome, builder, site.value_used)?;
+            let text = match site.kind {
+                SiteKind::Sql => hole_text(outcome, builder, site.value_used)?,
+                SiteKind::PlainClause => clause_text(outcome)?,
+            };
             if !texts.contains(&text) {
                 texts.push(text);
             }
         }
         (!texts.is_empty()).then_some(texts)
     }
+}
+
+/// An ordinary-template interpolation is text only after every helper path
+/// returns one source-mapped, marker-free string.
+fn clause_text(outcome: Outcome) -> Option<RecoveredSql> {
+    let Ret::Str(value, Some(text)) = outcome.ret else {
+        return None;
+    };
+    if text.sql != value || value.contains(['\n', '\r', '\0', '\u{10FFFE}', '\u{10FFFF}']) {
+        return None;
+    }
+    Some(text)
 }
 
 /// What fills the hole: the suffix appended to the caller's builder, or the
