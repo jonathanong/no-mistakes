@@ -46,5 +46,12 @@ rules:
         - { file: src/fs-io.mts, symbol: callLiteralArgument }
         - { file: src/fs-io.mts, symbol: callCallbackArgument }
         - { file: src/fs-io.mts, symbol: streamOptions }
+        - { file: src/fs-io.mts, symbol: mkdirOptions }
+        - { file: src/fs-io.mts, symbol: typedStreamOptions }
+        - { file: src/fs-io.mts, symbol: arrayOptions }
+        - { file: src/fs-io.mts, symbol: callObjectOptions }
+        - { file: src/fs-io.mts, symbol: applyObjectOptions }
+        - { file: src/fs-io.mts, symbol: applyArrayOptions }
+        - { file: src/fs-io.mts, symbol: ternaryOptions }
       assertions:
         - { module: 'node:assert/strict', export: equal }

@@ -12,6 +12,7 @@ pub(super) fn expression_is_literal(expression: Option<&Expression<'_>>) -> bool
     expression.is_some_and(|expression| {
         let expression = crate::codebase::ts_source::unwrap_ts_wrappers(expression);
         expression.is_literal()
+            || matches!(expression, Expression::ObjectExpression(_) | Expression::ArrayExpression(_))
             || matches!(expression, Expression::TemplateLiteral(template) if template.expressions.is_empty())
     })
 }

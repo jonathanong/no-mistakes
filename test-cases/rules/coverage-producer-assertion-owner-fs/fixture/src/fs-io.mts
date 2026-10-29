@@ -62,4 +62,11 @@ export function applyNullArguments() { fsNs.watch.apply(null, null); }
 export function applySpreadArguments(...callbacks: Array<() => void>) { fsNs.watch.apply(null, ['file', ...callbacks]); }
 export function callLiteralArgument() { fsNs.watch.call(null, 'file'); }
 export function callCallbackArgument(first: (() => void) | undefined, second: () => void) { fsNs.watch.call(null, 'file', first || second); }
-export function streamOptions() { fsNs.createReadStream('a', { encoding: 'utf8' }); equal(1, 1); }
+export function streamOptions() { equal(fsNs.createReadStream('a', { encoding: 'utf8' }).path, 'a'); }
+export function mkdirOptions() { equal(fsNs.mkdir('dir', { recursive: true }), undefined); }
+export function typedStreamOptions() { equal(fsNs.createReadStream('a', { encoding: 'utf8' } as const).path, 'a'); }
+export function arrayOptions() { equal(typeof fsNs.watch('a', []), 'object'); }
+export function callObjectOptions() { equal(fsNs.createReadStream.call(null, 'a', { encoding: 'utf8' }).path, 'a'); }
+export function applyObjectOptions() { equal(fsNs.createReadStream.apply(null, ['a', { encoding: 'utf8' }]).path, 'a'); }
+export function applyArrayOptions() { equal(typeof fsNs.watch.apply(null, ['a', []]), 'object'); }
+export function ternaryOptions(flag: boolean) { equal(fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }

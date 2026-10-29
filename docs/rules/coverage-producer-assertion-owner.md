@@ -126,7 +126,7 @@ Shapes outside the model stay unanalyzable, never passing: computed members
 (`fs[name](...)`), dynamic `require('node:fs')`, wrappers the call graph cannot
 follow, and a live `fs` call that hands a callback to be invoked later: an
 inline callback or promise continuation in the same callable
-(`readFile(path).then(cb)`), or any non-literal last argument of a callback-style
+(`readFile(path).then(cb)`), or a last argument whose syntax may be callable in a callback-style
 API such as `fs.readFile(path, done)`, `fs.readFile(path, flag ? first : second)`,
 or `fs.readFile(path, first || second)`. Such an argument may be a callback;
 its invocation is not a resolved call. For `.call` and literal-array `.apply`,
@@ -134,9 +134,12 @@ this classification uses the effective arguments after removing `thisArg` or
 expanding the array. `*Sync` and promise APIs
 take no callback. The model conservatively treats every other `fs` export as
 potentially callback-capable rather than maintaining a callback-signature
-allowlist that could omit an API. Non-literal options objects therefore also
-stay uncertain: even `fs.createReadStream(path, { encoding: 'utf8' })` followed
-by an assertion is unanalyzable. This deliberately favors recall over precision.
+allowlist that could omit an API. Scalar literals, object literals, array
+literals and templates without substitutions cannot be callbacks. Literal
+options such as `fs.createReadStream(path, { encoding: 'utf8' })` therefore
+remain modeled I/O; asserting the result passes. TypeScript wrappers preserve
+that classification. Identifiers, member reads, calls, conditional/logical
+expressions, dynamic templates and spread arguments remain uncertain.
 Other modules, such as `node:os` or `node:child_process`, remain
 unmodeled; use an ownership contract for process dispatch. Tip: set
 `unanalyzable: advise` while rolling out the rule to inspect uncertain results

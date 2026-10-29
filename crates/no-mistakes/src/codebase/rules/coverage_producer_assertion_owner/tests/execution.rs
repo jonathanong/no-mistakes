@@ -123,12 +123,27 @@ fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
         "applyCallbackArgument",
         "applySpreadArguments",
         "callCallbackArgument",
-        "streamOptions",
+        "ternaryOptions",
     ] {
         assert!(
             findings.iter().any(|finding| finding.rule == RULE_ID
                 && finding.target.as_deref() == Some(symbol)
                 && finding.message.contains("unanalyzable")),
+            "{symbol}: {findings:#?}"
+        );
+    }
+    for symbol in [
+        "streamOptions",
+        "mkdirOptions",
+        "typedStreamOptions",
+        "arrayOptions",
+        "callObjectOptions",
+        "applyObjectOptions",
+        "applyArrayOptions",
+    ] {
+        assert!(
+            !findings.iter().any(|finding| finding.rule == RULE_ID
+                && finding.target.as_deref() == Some(symbol)),
             "{symbol}: {findings:#?}"
         );
     }

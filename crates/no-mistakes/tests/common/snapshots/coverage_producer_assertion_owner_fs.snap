@@ -245,11 +245,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 65,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#streamOptions",
+          "line": 72,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#ternaryOptions",
           "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function streamOptions() { fsNs.createReadStream('a', { encoding: 'utf8' }); equal(1, 1); }",
-          "target": "streamOptions"
+          "sourceLine": "export function ternaryOptions(flag: boolean) { equal(fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }",
+          "target": "ternaryOptions"
         }
       ],
       "warnings": []
