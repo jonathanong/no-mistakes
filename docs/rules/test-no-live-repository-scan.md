@@ -250,7 +250,7 @@ The string `"constructor"` or `"__proto__"` anywhere in a file poisons, as does
 either name used as a property or binding key (destructuring, `Reflect.get`,
 property descriptors, a variable used as a key); only a class method named
 `constructor` is exempt. A key built through a variable with no such literal
-anywhere (for example `"con" + "structor"` held in a variable) is not followed.
+anywhere (for example a name assembled from two fragments held in a variable) is not followed.
 
 Test-runner helpers follow the same rule. Every reference to `vi` or `jest` (and
 to a local name it is imported as) must be the object of a direct, non-computed
