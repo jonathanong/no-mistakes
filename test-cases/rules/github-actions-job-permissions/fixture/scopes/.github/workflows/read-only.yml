@@ -1,0 +1,10 @@
+on: push
+permissions:
+  contents: read
+  models: read
+  repository-projects: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo read-only

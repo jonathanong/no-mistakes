@@ -63,6 +63,30 @@ fn explicit_job_permissions_and_read_only_or_unspecified_roots_are_clean() {
 }
 
 #[test]
+fn documented_scopes_keep_inherited_writes_definite_in_every_policy() {
+    let (root, mut config, files) = fixture("scopes");
+    let sources = source_store_for_files(&files);
+    for policy in ["report", "advise", "ignore"] {
+        config.rules[0].options = serde_yaml::from_str(&format!("unanalyzable: {policy}")).unwrap();
+        let output =
+            diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
+        assert!(
+            output.advisories.is_empty(),
+            "{policy}: {:?}",
+            output.advisories
+        );
+        assert_eq!(output.findings.len(), 2, "{policy}: {:?}", output.findings);
+        assert_eq!(
+            targets(&output.findings, "inherited.yml"),
+            ["build", "call"]
+        );
+        for finding in &output.findings {
+            assert!(finding.message.contains("repository-projects: write"));
+        }
+    }
+}
+
+#[test]
 fn uncertain_permissions_follow_unanalyzable_policy() {
     let (root, mut config, files) = fixture("unresolved");
     let sources = source_store_for_files(&files);

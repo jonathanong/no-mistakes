@@ -7,6 +7,7 @@ fn github_actions_job_permissions_json_matches_snapshot() {
     let default = rules_path(RULE, "configs", "default.yml");
     let mut cases: Vec<_> = [
         "pass",
+        "scopes",
         "fail",
         "flow",
         "suppression",
@@ -30,6 +31,8 @@ fn github_actions_job_permissions_json_matches_snapshot() {
         ("unresolved-ignore", "unresolved", "ignore"),
         ("mixed-advise", "mixed", "advise"),
         ("mixed-ignore", "mixed", "ignore"),
+        ("scopes-advise", "scopes", "advise"),
+        ("scopes-ignore", "scopes", "ignore"),
     ] {
         cases.push((
             label,

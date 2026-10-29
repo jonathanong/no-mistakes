@@ -365,6 +365,93 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "scopes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/inherited.yml",
+          "line": 10,
+          "message": ".github/workflows/inherited.yml:10: job `call` inherits workflow-level write permissions (repository-projects: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "call:",
+          "target": "call"
+        },
+        {
+          "file": ".github/workflows/inherited.yml",
+          "line": 6,
+          "message": ".github/workflows/inherited.yml:6: job `build` inherits workflow-level write permissions (repository-projects: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scopes-advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/inherited.yml",
+          "line": 10,
+          "message": ".github/workflows/inherited.yml:10: job `call` inherits workflow-level write permissions (repository-projects: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "call:",
+          "target": "call"
+        },
+        {
+          "file": ".github/workflows/inherited.yml",
+          "line": 6,
+          "message": ".github/workflows/inherited.yml:6: job `build` inherits workflow-level write permissions (repository-projects: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scopes-ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/inherited.yml",
+          "line": 10,
+          "message": ".github/workflows/inherited.yml:10: job `call` inherits workflow-level write permissions (repository-projects: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "call:",
+          "target": "call"
+        },
+        {
+          "file": ".github/workflows/inherited.yml",
+          "line": 6,
+          "message": ".github/workflows/inherited.yml:6: job `build` inherits workflow-level write permissions (repository-projects: write) without its own permissions. Move the write scopes to jobs that need them or declare explicit job permissions; inherited write access also flows to reusable workflows.",
+          "rule": "github-actions-job-permissions",
+          "sourceLine": "build:",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "suppression": {
     "exitCode": 1,
     "report": {
