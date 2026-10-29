@@ -105,9 +105,11 @@ An `executorFactoryNames` entry also accepts an exact `effects.postgres.returned
 module/export identity when the factory is imported from another specifier.
 The factory result must be kept in an immutable local binding; a same-spelled
 undeclared import, shadowed name, or reassigned result is not proof. Only named
-imports of the declared factory are selected; namespace member calls and default
-imports stay outside this scope. Rewrite those imports as named imports to
-enable this proof.
+imports establish this proof. Namespace calls to a declared factory export and
+default imports from a module with a selected declared factory retain the
+configured uncertainty policy at calls on the returned local executor. A default
+import does not establish the named export identity. Rewrite these forms as named
+imports to enable the proof.
 
 A complete SQL statement before an opaque template interpolation is still
 checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the

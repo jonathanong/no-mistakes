@@ -206,3 +206,100 @@ fn declared_factory_needs_rule_opt_in_and_selected_source() {
         );
     }
 }
+
+#[test]
+fn declared_namespace_and_default_factory_results_retain_uncertainty() {
+    let root = fixture().join("effort-factory");
+    let files = [
+        root.join("tests/import-forms.test.ts"),
+        root.join("tests/import-form-controls.test.ts"),
+        root.join("db/index.ts"),
+        root.join("other/index.ts"),
+    ];
+    let sources = super::super::super::source_store_for_files(&files);
+    let mut config = crate::config::v2::load_v2_config(&root, Some(&root.join("low.yml"))).unwrap();
+    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+        &root,
+        &mut config,
+        &files,
+        &sources,
+    )
+    .unwrap();
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        &root,
+        &files,
+        Arc::clone(&sources),
+        &config,
+        &[RULE_ID],
+    )
+    .unwrap()
+    .with_fresh_sql_verdicts();
+    let findings =
+        check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
+    let source = std::fs::read_to_string(&files[0]).unwrap();
+    let expected = source
+        .lines()
+        .enumerate()
+        .filter_map(|(index, line)| line.contains("ADVISE:").then_some(index + 1))
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(expected.len(), 3);
+    let ledger = facts.sql_verdicts();
+    let actual = ledger
+        .iter()
+        .filter(|row| {
+            row.file == "tests/import-forms.test.ts"
+                && row.status == crate::codebase::postgres::SqlVerdictStatus::Abstain
+        })
+        .map(|row| {
+            assert!(row.advisory, "{row:?}");
+            crate::codebase::ts_source::byte_offset_to_line(&source, row.span.0 as usize) as usize
+        })
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(actual, expected, "{ledger:?}");
+    assert!(
+        findings
+            .iter()
+            .any(|row| row.file == "tests/import-forms.test.ts"
+                && row.target.as_deref() == Some("DROP TABLE")
+                && source
+                    .lines()
+                    .nth(row.line - 1)
+                    .unwrap()
+                    .contains("named import is selected")),
+        "named factory proof lost: {findings:?}"
+    );
+    assert!(
+        !findings
+            .iter()
+            .any(|row| row.file == "tests/import-forms.test.ts" && expected.contains(&row.line)),
+        "uncertain result became proven: {findings:?}"
+    );
+    assert!(
+        !ledger
+            .iter()
+            .any(|row| row.file == "tests/import-form-controls.test.ts"),
+        "unselected factory gained SQL obligations: {ledger:?}"
+    );
+    for config_name in ["no-opt-in.yml", "excluded.yml"] {
+        let mut config =
+            crate::config::v2::load_v2_config(&root, Some(&root.join(config_name))).unwrap();
+        if config_name == "no-opt-in.yml" {
+            config.rules[0].include.clear();
+        }
+        let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+            &root,
+            &files,
+            Arc::clone(&sources),
+            &config,
+            &[RULE_ID],
+        )
+        .unwrap()
+        .with_fresh_sql_verdicts();
+        check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
+        assert!(
+            facts.sql_verdicts().is_empty(),
+            "{config_name}: {:?}",
+            facts.sql_verdicts()
+        );
+    }
+}

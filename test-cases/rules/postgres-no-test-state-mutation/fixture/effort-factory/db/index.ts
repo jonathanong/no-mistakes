@@ -3,3 +3,5 @@ export async function beginTransaction(): Promise<(sql: string) => unknown> {
 }
 
 export { beginTransaction as default };
+
+export const unrelatedFactory = beginTransaction;

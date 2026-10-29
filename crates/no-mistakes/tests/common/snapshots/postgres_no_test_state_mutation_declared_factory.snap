@@ -19,6 +19,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [
         {
+          "file": "tests/import-forms.test.ts",
+          "line": 10,
+          "message": "tests/import-forms.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await namespaceTx('DROP TABLE app.factory_namespace'); // ADVISE: namespace result is not a named-import proof",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/import-forms.test.ts",
+          "line": 13,
+          "message": "tests/import-forms.test.ts:13: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await computedTx('DROP TABLE app.factory_computed'); // ADVISE: literal namespace key",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/import-forms.test.ts",
+          "line": 16,
+          "message": "tests/import-forms.test.ts:16: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await defaultTx('DROP TABLE app.factory_default'); // ADVISE: default result is not a named-import proof",
+          "target": "test-state-mutation"
+        },
+        {
           "file": "tests/mutation.test.ts",
           "line": 7,
           "message": "tests/mutation.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
