@@ -118,7 +118,7 @@ fn unbounded_executor_reference_routes_unknowns_at_low_effort() {
             result
                 .rules
                 .iter()
-                .any(|row| row.rule == RULE && row.file == "src/selection.ts" && row.line == 6),
+                .any(|row| row.rule == RULE && row.file == "src/selection.ts" && row.line == 7),
             finding,
             "{config}"
         );
@@ -126,7 +126,7 @@ fn unbounded_executor_reference_routes_unknowns_at_low_effort() {
             result
                 .advisories
                 .iter()
-                .any(|row| row.rule == RULE && row.file == "src/selection.ts" && row.line == 6),
+                .any(|row| row.rule == RULE && row.file == "src/selection.ts" && row.line == 7),
             advice,
             "{config}"
         );
