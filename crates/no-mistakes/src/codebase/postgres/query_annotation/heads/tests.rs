@@ -12,6 +12,8 @@ mod failures;
 mod field_tests;
 #[path = "finite_comment_tests.rs"]
 mod finite_comment_tests;
+#[path = "finite_conditional_head_tests.rs"]
+mod finite_conditional_head_tests;
 #[path = "finite_return_tests.rs"]
 mod finite_return_tests;
 #[path = "gap_tests.rs"]

@@ -1,0 +1,190 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "annotation_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "privacy.mts",
+          "line": 28,
+          "message": "privacy.mts:28: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(query) // low: false",
+          "target": "leading-annotation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "complete_sql_low_fallback": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "privacy.mts",
+          "line": 12,
+          "message": "privacy.mts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readVisiblePosts */ SELECT id FROM posts WHERE\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(query)",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "privacy.mts",
+          "line": 21,
+          "message": "privacy.mts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readPostsWithUnsafeAlias */ SELECT id FROM posts WHERE\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(query)",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "privacy.mts",
+          "line": 28,
+          "message": "privacy.mts:28: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* overwritten */ SELECT id FROM posts\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(query) // low: false",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "retained-relations.mts",
+          "line": 40,
+          "message": "retained-relations.mts:40: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* insertRetainedOwner */ INSERT INTO sql_placeholder_1 (subject_id, id) VALUES ($1, $2)\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(`/* insertRetainedOwner */ INSERT INTO ${config.retainedTable} (subject_id, id) VALUES ($1, $2)`, ['subject', 'id'])",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "retained-relations.mts",
+          "line": 41,
+          "message": "retained-relations.mts:41: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* insertRetainedImpact */ INSERT INTO relation_impacts (sql_placeholder_1) VALUES ($1)\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(`/* insertRetainedImpact */ INSERT INTO relation_impacts (${config.integrityTargetColumn}) VALUES ($1)`, ['id'])",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "retained-relations.mts",
+          "line": 42,
+          "message": "retained-relations.mts:42: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readRetainedRelation */ SELECT id FROM sql_placeholder_1 WHERE sql_placeholder_2 = $1\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "retained-relations.mts",
+          "line": 46,
+          "message": "retained-relations.mts:46: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* countRetainedRelation */ SELECT COUNT(*) FROM sql_placeholder_1\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(`/* countRetainedRelation */ SELECT COUNT(*) FROM ${config.retainedTable}`)",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "retained-relations.mts",
+          "line": 51,
+          "message": "retained-relations.mts:51: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readRetainedRoot */ SELECT id FROM sql_placeholder_1 WHERE id = $1\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(`/* readRetainedRoot */ SELECT id FROM ${table} WHERE id = $1`, ['id'])",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "retained-relations.mts",
+          "line": 57,
+          "message": "retained-relations.mts:57: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readUnknownDefaultControl */ SELECT id FROM sql_placeholder_1 WHERE id = $1\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(`/* readUnknownDefaultControl */ SELECT id FROM ${table} WHERE id = $1`, ['id'])",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "retained-relations.mts",
+          "line": 63,
+          "message": "retained-relations.mts:63: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readUnsafeRetainedRelation */ SELECT id FROM sql_placeholder_1 WHERE id = $1\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "read(`/* readUnsafeRetainedRelation */ SELECT id FROM ${config.retainedTable} WHERE id = $1`, ['id'])",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "postgres-no-test-state-mutation: requested effort low; effective effort max because this rule has no low implementation"
+      ]
+    }
+  },
+  "finite_conditional_heads_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "finite-conditional-consumer.mts",
+          "line": 102,
+          "message": "finite-conditional-consumer.mts:102: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement); // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "finite-conditional-consumer.mts",
+          "line": 106,
+          "message": "finite-conditional-consumer.mts:106: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement); // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "finite-conditional-consumer.mts",
+          "line": 110,
+          "message": "finite-conditional-consumer.mts:110: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement); // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "finite-conditional-consumer.mts",
+          "line": 122,
+          "message": "finite-conditional-consumer.mts:122: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement); // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "finite-conditional-consumer.mts",
+          "line": 89,
+          "message": "finite-conditional-consumer.mts:89: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement); // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "finite-conditional-consumer.mts",
+          "line": 93,
+          "message": "finite-conditional-consumer.mts:93: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement); // low: false",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "finite-conditional-consumer.mts",
+          "line": 98,
+          "message": "finite-conditional-consumer.mts:98: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(statement); // low: false",
+          "target": "leading-annotation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

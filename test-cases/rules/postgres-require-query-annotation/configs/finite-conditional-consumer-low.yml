@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [finite-conditional-consumer.mts]
+    options:
+      importSpecifier: '@bench/db'
+      executorNames: [read]
+      effort: low
+      unanalyzable: advise

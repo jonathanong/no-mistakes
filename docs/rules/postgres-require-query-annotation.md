@@ -166,6 +166,13 @@ see [SQL verdicts](../postgres-sql-verdicts.md).
 
 ### Effort
 
+Low effort checks finite conditional heads with a shared bound of 255
+conditional nodes, so a twelve-way selector qualifies when every arm has a
+complete literal name, including its fallback. Unknown or missing arms and
+over-budget expressions remain unresolved. It does not infer the SQL body:
+a named privacy-filter append or frozen-registry lookup can retain separate
+full-SQL advisories from other rules. See the [bounded low-effort proofs](../postgres-query-annotation/low-effort.md).
+
 Maximum effort also recognizes a direct loop-carried literal reassignment in
 `for...of`, `for...in`, `while`, `do...while`, and simple `for` loops: an
 unconditional executor call followed by a missing-annotation literal assignment

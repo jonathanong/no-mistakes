@@ -156,6 +156,8 @@ fn concise_helpers_and_consumed_appends_use_the_low_check_path_without_evaluatio
     assert_no_annotation_evaluation(&observer);
 }
 
+#[path = "effort_low_tests/closed_candidates.rs"]
+mod closed_candidates;
 #[path = "effort_low_tests/policy.rs"]
 mod policy;
 #[path = "effort_low_tests/tag_profiles.rs"]

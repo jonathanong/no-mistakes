@@ -28,6 +28,8 @@ mod cli_postgres_snapshot_array_columns;
 mod cli_postgres_snapshot_bounded_statements;
 #[path = "cli_postgres_snapshot_bounded_statements_more.rs"]
 mod cli_postgres_snapshot_bounded_statements_more;
+#[path = "cli_postgres_snapshot_closed_candidates.rs"]
+mod cli_postgres_snapshot_closed_candidates;
 #[path = "cli_postgres_snapshot_column_naming.rs"]
 mod cli_postgres_snapshot_column_naming;
 #[path = "cli_postgres_snapshot_column_naming_more.rs"]
