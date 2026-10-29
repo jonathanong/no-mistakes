@@ -108,8 +108,10 @@ graph. Details:
 - When replacing an analyzer or graph pipeline, compare old and new behavior
   explicitly for public output shape, config fallback, rewrites, and route or
   selector index construction before opening a PR.
-- Add short comments to intentionally counterintuitive fixtures or tests so
-  reviewers and bots do not "simplify" away the invariant being protected.
+- Keep code comments rare. The why, goal, and expected outcome belong in docs
+  (`docs/rules/*`, `docs/*`). Comment only a non-obvious local invariant a
+  reader would otherwise break, such as an intentionally odd fixture: one line,
+  pointing to the doc when one exists. Prefer a regression test over a comment.
 - In coverage-gated code, run focused coverage early after adding defensive
   branches; prefer small helpers or refactors when they avoid hard-to-cover
   branches.

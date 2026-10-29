@@ -31,6 +31,10 @@ job map such as `contents: read` defines the job's own grant set. The rule does
 not compare those explicit job grants against a separate least-privilege
 policy.
 
+Broad grants that a job declares itself, such as job-level `permissions:
+write-all` or `id-token: write`, are out of scope. This is not parity with
+zizmor's `excessive-permissions`.
+
 The rule only reasons from permission declarations in the workflow. If neither
 the workflow nor a job declares permissions, it makes no claim about the
 effective `GITHUB_TOKEN` permissions: repository, organization, and event
@@ -139,14 +143,20 @@ or `ignore`. `report` returns unresolved cases as failing findings, `advise`
 returns them as non-failing advisories, and `ignore` omits those uncertainty
 diagnostics. Definite inherited writes remain findings under every policy.
 
+The permission scopes the rule accepts are a fixed list of GitHub's scopes. A
+scope GitHub adds later is reported as unresolved until the list is updated.
+This fails safe: the rule never treats an unknown scope as harmless.
+
 ## Suppression
 
 Use YAML comments with `no-mistakes-disable-line` or
 `no-mistakes-disable-next-line` to suppress a finding at its reported line, or
 `no-mistakes-disable-file` to suppress findings for the whole workflow file.
-Inherited-write findings are associated with the affected job; unresolved
-permission findings are associated with the relevant declaration when one is
-available.
+Inherited-write findings are reported on the job id line, so
+`no-mistakes-disable-line` only works on that line; a directive on the
+`runs-on:` line is reported as an unused directive. Otherwise put
+`no-mistakes-disable-next-line` above the job. Unresolved permission findings
+are associated with the relevant declaration when one is available.
 
 ```yaml
 permissions:
