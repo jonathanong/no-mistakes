@@ -35,7 +35,7 @@ pub(crate) fn invoked_reference<'e, 'a>(
 pub(crate) fn tag_references<'e, 'a>(tag: &'e Expression<'a>, out: &mut Vec<&'e Expression<'a>>) {
     match tag.get_inner_expression() {
         Expression::SequenceExpression(sequence) => {
-            if let Some(last) = sequence.expressions.last() {
+            for last in sequence.expressions.last() {
                 tag_references(last, out);
             }
         }

@@ -21,3 +21,5 @@ const tag = pool.query;
 tag`DROP TABLE tagged_alias_control`;
 (0, pool.query)`DROP TABLE tagged_sequence_control`;
 (Math.random() ? pool.query : pool.read)`DROP TABLE tagged_ternary_control`;
+(pool.query || pool.read)`DROP TABLE tagged_or_control`;
+(Math.random() && pool.write)`DROP TABLE tagged_and_control`;

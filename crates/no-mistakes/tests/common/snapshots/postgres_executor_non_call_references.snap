@@ -181,6 +181,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/calls.test.ts",
+          "line": 24,
+          "message": "tests/calls.test.ts:24: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "(pool.query || pool.read)`DROP TABLE tagged_or_control`;",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/calls.test.ts",
+          "line": 24,
+          "message": "tests/calls.test.ts:24: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "(pool.query || pool.read)`DROP TABLE tagged_or_control`;",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/calls.test.ts",
+          "line": 25,
+          "message": "tests/calls.test.ts:25: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "(Math.random() && pool.write)`DROP TABLE tagged_and_control`;",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/calls.test.ts",
           "line": 4,
           "message": "tests/calls.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
@@ -310,6 +334,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "tests/calls.test.ts:23: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "(Math.random() ? pool.query : pool.read)`DROP TABLE tagged_ternary_control`;",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/calls.test.ts",
+          "line": 24,
+          "message": "tests/calls.test.ts:24: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "(pool.query || pool.read)`DROP TABLE tagged_or_control`;",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/calls.test.ts",
+          "line": 24,
+          "message": "tests/calls.test.ts:24: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "(pool.query || pool.read)`DROP TABLE tagged_or_control`;",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/calls.test.ts",
+          "line": 25,
+          "message": "tests/calls.test.ts:25: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "(Math.random() && pool.write)`DROP TABLE tagged_and_control`;",
           "target": "test-state-mutation"
         },
         {
