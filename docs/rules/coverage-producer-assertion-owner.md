@@ -119,7 +119,7 @@ configured assertion passes; one that does not gets the usual no-owner finding.
 import { readFileSync } from 'node:fs';
 import { equal } from 'node:assert/strict';
 export function asserted() { equal(readFileSync('result', 'utf8'), 'x'); } // passes
-export function unasserted() { readFileSync('result', 'utf8'); } // no-owner finding
+export function withoutAssertion() { readFileSync('result', 'utf8'); } // no-owner finding
 ```
 
 Shapes outside the model stay unanalyzable, never passing: computed members
