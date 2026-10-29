@@ -127,22 +127,7 @@ pub(super) fn incomplete_sources(
             ));
             continue;
         }
-        if let Some(bindings) = &ts.module_bindings {
-            for diagnostic in bindings.diagnostics.iter().filter(|diagnostic| {
-                diagnostic
-                    .span
-                    .is_none_or(|span| !bindings.importer_safe.contains(&(span.start, span.end)))
-            }) {
-                let line = diagnostic.span.as_ref().zip(ts.source.as_deref()).map_or(
-                    1,
-                    |(span, source)| {
-                        crate::codebase::ts_source::byte_offset_to_line(source, span.start as usize)
-                            as usize
-                    },
-                );
-                incomplete.push((file.clone(), line, diagnostic.message.clone()));
-            }
-        }
+        super::selector_gaps::push_binding_gaps(file, ts, &mut incomplete);
         for import in ts.imports.iter().filter(|import| import.computed) {
             incomplete.push((file.clone(), import.line as usize,
                 "computed import target prevents complete per-symbol analysis; use a literal named import".to_owned()));

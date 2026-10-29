@@ -17,17 +17,22 @@ impl<'s, 'a> Collector<'s, 'a> {
         if !scoping.symbol_flags(symbol).is_const_variable() {
             return false;
         }
+        let nodes = self.semantic.nodes();
+        let declaration = scoping.symbol_declaration(symbol);
         let AstKind::VariableDeclarator(VariableDeclarator {
             id: BindingPattern::BindingIdentifier(_),
             init: Some(init),
             ..
-        }) = self
-            .semantic
-            .nodes()
-            .kind(scoping.symbol_declaration(symbol))
+        }) = nodes.kind(declaration)
         else {
             return false;
         };
+        if matches!(
+            nodes.parent_kind(nodes.parent_id(declaration)),
+            AstKind::ExportNamedDeclaration(_) | AstKind::ExportDeclaration(_)
+        ) {
+            return false;
+        }
         let Expression::CallExpression(created) = init.get_inner_expression() else {
             return false;
         };

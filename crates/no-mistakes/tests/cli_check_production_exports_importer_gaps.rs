@@ -57,9 +57,9 @@ fn accepted_shapes_keep_the_definite_finding_and_drop_the_advisory() {
 
 #[test]
 fn created_require_is_an_ordinary_require_selector() {
-    // The loader is no longer a shadowed `require`: `node:` specifiers are
-    // external, and the literal repository specifier is an ordinary unknown
-    // require selector attached to the module it names.
+    // For this rule `node:` specifiers are external, and the literal
+    // repository specifier is an ordinary unknown require selector attached
+    // to the module it names.
     let report = report("create-require");
     let advisories = report["advisories"].as_array().unwrap();
     assert_eq!(advisories.len(), 1, "{report}");
@@ -74,7 +74,17 @@ fn near_misses_keep_their_advisories() {
     for (case, files) in [
         (
             "ambient-modules-near-miss",
-            vec!["src/legacy.d.ts", "src/named.d.ts"],
+            vec![
+                "src/body-export-all.d.ts",
+                "src/body-export-from.d.ts",
+                // The import-equals form is also its own unsupported form.
+                "src/body-import-equals.d.ts",
+                "src/body-import-equals.d.ts",
+                "src/body-import-type.d.ts",
+                "src/body-import.d.ts",
+                "src/legacy.d.ts",
+                "src/named.d.ts",
+            ],
         ),
         (
             "asset-imports-near-miss",
@@ -136,8 +146,17 @@ fn near_misses_keep_their_advisories() {
             "create-require-near-miss",
             vec![
                 "tests/alias.test.mts",
+                "tests/alias.test.mts",
+                "tests/computed.test.mts",
                 "tests/computed.test.mts",
                 "tests/destructured.test.mts",
+                "tests/escape-alias.test.mts",
+                "tests/escape-argument.test.mts",
+                "tests/escape-call.test.mts",
+                "tests/escape-comma.test.mts",
+                "tests/escape-export-const.test.mts",
+                "tests/escape-export-default.test.mts",
+                "tests/escape-map.test.mts",
                 "tests/no-base.test.mts",
                 "tests/other-base.test.mts",
                 "tests/reassigned.test.mts",

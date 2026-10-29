@@ -120,3 +120,6 @@ mod argument_tests;
 
 #[cfg(test)]
 mod argument_matrix_tests;
+
+#[cfg(test)]
+mod created_require_tests;

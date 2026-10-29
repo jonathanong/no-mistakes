@@ -2,6 +2,34 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_symbols::ExportKind;
 use std::path::Path;
 
+/// Module-fact diagnostics that can hide an importer, minus the shapes the
+/// rule decides itself, plus created-loader uses it cannot follow.
+pub(super) fn push_binding_gaps(
+    file: &Path,
+    ts: &TsFileFacts,
+    incomplete: &mut Vec<(std::path::PathBuf, usize, String)>,
+) {
+    let Some(bindings) = &ts.module_bindings else {
+        return;
+    };
+    let line_at = |start: u32| {
+        ts.source.as_deref().map_or(1, |source| {
+            crate::codebase::ts_source::byte_offset_to_line(source, start as usize) as usize
+        })
+    };
+    for diagnostic in &bindings.diagnostics {
+        let span = diagnostic.span.as_ref();
+        if span.is_some_and(|span| bindings.importer_safe.contains(&(span.start, span.end))) {
+            continue;
+        }
+        let line = span.map_or(1, |span| line_at(span.start));
+        incomplete.push((file.to_path_buf(), line, diagnostic.message.clone()));
+    }
+    for (start, message) in &bindings.importer_unsafe {
+        incomplete.push((file.to_path_buf(), line_at(*start), (*message).to_owned()));
+    }
+}
+
 pub(super) fn module_gap_message(ts: &TsFileFacts, module: &str) -> (usize, String) {
     if let Some((resolved, symbol)) = module
         .rsplit_once('#')

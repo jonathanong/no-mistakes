@@ -28,6 +28,54 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [
         {
+          "file": "src/body-export-all.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-export-from.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-import-equals.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-import-equals.d.ts",
+          "line": 3,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import api = require(\"./api.cjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-import-type.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-import.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/legacy.d.ts",
           "line": 2,
           "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
@@ -310,6 +358,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "tests/alias.test.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const require = loader;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/alias.test.mts",
           "line": 6,
           "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
@@ -325,11 +381,75 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "tests/computed.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const dynamic = require(name);",
+          "target": "unanalyzable"
+        },
+        {
           "file": "tests/destructured.test.mts",
           "line": 5,
           "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const path = require(\"node:path\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-alias.test.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const alias = require;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-argument.test.mts",
+          "line": 7,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const loader = use(require);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-call.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const api = require.call(null, \"../src/api.mjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-comma.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const api = (0, require)(\"../src/api.mjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-export-const.test.mts",
+          "line": 5,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const api = require(\"../src/api.mjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-export-default.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default require;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-map.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const api = [require].map((load) => load(\"../src/api.mjs\"));",
           "target": "unanalyzable"
         },
         {

@@ -21,8 +21,20 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
         .map(|(index, _)| index)
         .collect::<Vec<_>>();
     inline_bindings.sort_unstable_by_key(|&index| facts.bindings[index].span.start);
+    let mut wildcards = Vec::new();
+    let mut references = Vec::new();
     for node in semantic.nodes().iter() {
         let root_module = matches!(semantic.nodes().parent_kind(node.id()), AstKind::Program(_));
+        if matches!(
+            node.kind(),
+            AstKind::ImportDeclaration(_)
+                | AstKind::ExportFromDeclaration(_)
+                | AstKind::ExportAllDeclaration(_)
+                | AstKind::TSImportType(_)
+                | AstKind::TSImportEqualsDeclaration(_)
+        ) {
+            references.push(node.kind().span().start);
+        }
         match node.kind() {
             AstKind::ImportDeclaration(value) if root_module => {
                 imports::collect(value, semantic, facts)
@@ -65,12 +77,14 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
             }
             AstKind::IdentifierReference(value) => {
                 loads::indirect(value, node.id(), semantic, facts);
+                loads::created_escape(value, node.id(), semantic, &mut node_loaders, facts);
                 exports::commonjs_reference(value, node.id(), semantic, &mut assignments, facts)
             }
             AstKind::TSExternalModuleDeclaration(value)
                 if root_module && value.declare && value.id.value.contains('*') =>
             {
-                unsupported_importer_safe(facts, value.span, UNSUPPORTED_FORM);
+                unsupported(facts, value.span, UNSUPPORTED_FORM);
+                wildcards.push(value.span);
             }
             AstKind::TSExternalModuleDeclaration(_)
             | AstKind::TSNamespaceDeclaration(_)
@@ -84,6 +98,14 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
         }
     }
     exports::finish_commonjs(assignments, facts);
+    for span in wildcards {
+        if !references
+            .iter()
+            .any(|at| span.start <= *at && *at < span.end)
+        {
+            facts.importer_safe.push((span.start, span.end));
+        }
+    }
 }
 
 pub(super) fn collect_require_bindings(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts) {

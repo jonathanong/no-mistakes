@@ -116,6 +116,14 @@ pub struct TypeScriptModuleFacts {
     /// They stay in `diagnostics` so module completeness is unchanged.
     #[serde(skip)]
     pub(crate) importer_safe: Vec<(u32, u32)>,
+    /// Literal loads through a `createRequire(import.meta.url)` binding. Only
+    /// the importer rule reads them; public `loads` is unchanged.
+    #[serde(skip)]
+    pub(crate) created_requires: Vec<ModuleLoad>,
+    /// Start offset and message of created-loader uses the importer rule
+    /// cannot follow (escaping references, non-literal specifiers).
+    #[serde(skip)]
+    pub(crate) importer_unsafe: Vec<(u32, &'static str)>,
     /// Start offset and export names of dynamic imports with proven selectors.
     #[serde(skip)]
     pub(crate) dynamic_import_selectors: Vec<(u32, Vec<String>)>,

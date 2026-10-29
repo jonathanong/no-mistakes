@@ -31,11 +31,15 @@ pub(super) fn require<'a>(
         );
         return;
     }
-    let created = has_runtime_binding(reference, semantic) && loaders.created_require(callee);
-    if callee.name != "require" && !created {
+    let bound = has_runtime_binding(reference, semantic);
+    if bound && loaders.created_require(callee) {
+        created_call(value, callee.name == "require", facts);
         return;
     }
-    if has_runtime_binding(reference, semantic) && !created {
+    if callee.name != "require" {
+        return;
+    }
+    if bound {
         unsupported(facts, value.span, "Shadowed require is not a module loader");
         return;
     }
@@ -56,6 +60,67 @@ pub(super) fn require<'a>(
             value.span,
             "Non-literal or unsupported require specifier",
         );
+    }
+}
+
+/// Public facts stay as on a shadowed `require`; the importer rule gets the
+/// literal load and the shadowed-require diagnostic is marked ignorable.
+fn created_call(value: &CallExpression<'_>, shadowed: bool, facts: &mut TypeScriptModuleFacts) {
+    if shadowed {
+        unsupported(facts, value.span, "Shadowed require is not a module loader");
+    }
+    let specifier = value
+        .arguments
+        .first()
+        .and_then(Argument::as_expression)
+        .and_then(static_import_specifier);
+    let Some(specifier) = specifier else {
+        let message = "Non-literal or unsupported require specifier";
+        facts.importer_unsafe.push((value.span.start, message));
+        return;
+    };
+    if shadowed {
+        facts.importer_safe.push((value.span.start, value.span.end));
+    }
+    facts.created_requires.push(ModuleLoad {
+        kind: "require".into(),
+        specifier,
+        span: value.span.into(),
+    });
+}
+
+/// A reference to a created loader that is neither a direct call nor
+/// `.resolve` can load anything, so the importer rule cannot follow it.
+pub(super) fn created_escape<'a>(
+    value: &IdentifierReference<'a>,
+    node_id: oxc_semantic::NodeId,
+    semantic: &Semantic<'_>,
+    loaders: &mut super::super::node_loaders::Collector<'_, 'a>,
+    facts: &mut TypeScriptModuleFacts,
+) {
+    let reference = semantic.scoping().get_reference(
+        value
+            .reference_id
+            .get()
+            .expect("semantic identifier reference"),
+    );
+    if !reference.is_value()
+        || reference.flags().is_value_as_type()
+        || !has_runtime_binding(reference, semantic)
+        || !loaders.created_require(value)
+    {
+        return;
+    }
+    let direct = match unwrapped_parent(node_id, semantic) {
+        Some(AstKind::CallExpression(call)) => {
+            matches!(call.callee.get_inner_expression(), Expression::Identifier(callee) if callee.span == value.span)
+        }
+        Some(AstKind::StaticMemberExpression(member)) => member.property.name == "resolve",
+        _ => false,
+    };
+    if !direct {
+        let message = "Created require loader escapes direct calls";
+        facts.importer_unsafe.push((value.span.start, message));
     }
 }
 

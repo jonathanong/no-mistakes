@@ -30,8 +30,7 @@ fn collect_created_require_selectors(
     let loads = file_facts
         .module_bindings
         .iter()
-        .flat_map(|module| module.loads.iter())
-        .filter(|load| load.kind == "require");
+        .flat_map(|module| module.created_requires.iter());
     for load in loads {
         let line = line_of(load.span.start);
         if !known.contains(&(load.specifier.as_str(), line)) {
