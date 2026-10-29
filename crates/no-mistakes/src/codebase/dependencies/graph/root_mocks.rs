@@ -85,7 +85,9 @@ impl DepGraph {
                         })
                 })
                 .collect();
-            boundaries.factories.extend(factories.iter().cloned());
+            if call.hoisted {
+                boundaries.factories.extend(factories.iter().cloned());
+            }
             let Some(target) = call
                 .specifier
                 .as_deref()

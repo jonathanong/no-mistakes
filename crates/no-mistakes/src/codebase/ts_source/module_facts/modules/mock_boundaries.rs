@@ -38,17 +38,19 @@ pub(super) fn collect(
         }
         _ => None,
     });
-    let full = method == "mock"
+    let hoisted = method == "mock";
+    let full = hoisted
+        && top_level(node, semantic)
         && !call.optional
         && !optional
         && specifier.is_some()
-        && top_level(node, semantic)
         && match call.arguments.len() {
             1 => true,
             2 => replacement.is_some_and(factory::isolated),
             _ => false,
         };
     facts.module_mock_calls.push(ModuleMockCall {
+        hoisted,
         specifier,
         factory_span,
         full,

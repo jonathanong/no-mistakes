@@ -288,6 +288,14 @@ fn forbidden_calls_mock_boundaries_json_matches_snapshot() {
         "external-factory",
         "external-value",
         "global-factory",
+        "registration-unused-module",
+        "registration-unused-function",
+        "registration-reachable-module",
+        "registration-reachable-function",
+        "registration-depth-limit",
+        "registration-depth-reached",
+        "registration-hoisted-module",
+        "registration-hoisted-function",
     ]
     .into_iter()
     .map(|name| {

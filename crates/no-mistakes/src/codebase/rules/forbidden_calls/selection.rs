@@ -3,7 +3,9 @@ use super::config::{self, Options, Traversal};
 use super::findings::finding_for_site_with_arguments;
 use super::roots;
 use super::RULE_ID;
-use crate::codebase::dependencies::graph::{CallTraversal, DepGraph, NodeId, ResolvedCallSite};
+use crate::codebase::dependencies::graph::{
+    CallTraversal, DepGraph, GraphBuildPlan, NodeId, ResolvedCallSite,
+};
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
 use crate::fx::{FxHashMap, FxHashSet};
@@ -14,17 +16,20 @@ mod invocations;
 use invocations::allowed_invocations;
 pub(crate) use invocations::site_source_node;
 
-pub(crate) fn graph_plan(
-    config: &NoMistakesConfig,
-) -> Option<crate::codebase::dependencies::graph::GraphBuildPlan> {
-    config
-        .rule_configured(RULE_ID)
-        .then(|| crate::codebase::dependencies::graph::GraphBuildPlan {
-            calls: true,
-            imports: true,
-            mock_boundaries: true,
-            ..Default::default()
-        })
+pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
+    let mock_boundaries = config.rule_applications(RULE_ID).iter().any(|application| {
+        application
+            .try_rule_options::<Options>()
+            .map_or(true, |options| {
+                matches!(options.traversal, Traversal::Transitive)
+            })
+    });
+    config.rule_configured(RULE_ID).then(|| GraphBuildPlan {
+        calls: true,
+        imports: mock_boundaries,
+        mock_boundaries,
+        ..Default::default()
+    })
 }
 pub(crate) fn check_with_graph(
     root: &Path,
@@ -105,7 +110,6 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         .any(|target| target.arguments().is_some())
         .then_some(facts)
         .flatten();
-    // This application's immutable policy must cache rejected paths as well.
     let mut path_matches: FxHashMap<&Path, bool> = FxHashMap::default();
     let findings = candidate_sites(graph, &roots, options, &path_filter)
         .into_iter()
@@ -180,17 +184,8 @@ fn reachable_source_nodes(
     if matches!(options.traversal, Traversal::File) {
         return nodes;
     }
-    let traversal = match options.traversal {
-        Traversal::Direct => CallTraversal::Direct,
-        Traversal::Transitive => CallTraversal::Transitive,
-        Traversal::File => unreachable!("file traversal returns the expanded roots"),
-    };
-    let cap = if traversal == CallTraversal::Direct {
-        1
-    } else {
-        options.max_depth.unwrap_or(usize::MAX)
-    };
-    for trace in graph.call_traces(roots, traversal, options.max_depth) {
+    let cap = 1;
+    for trace in graph.call_traces(roots, CallTraversal::Direct, options.max_depth) {
         if trace.nodes.len().saturating_sub(1) < cap {
             nodes.insert(trace.target);
         }

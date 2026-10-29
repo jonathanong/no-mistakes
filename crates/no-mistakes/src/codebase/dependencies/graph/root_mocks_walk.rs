@@ -16,17 +16,20 @@ impl DepGraph {
             groups.entry(root.as_file()).or_default().push(root.clone());
         }
         let mut selected = fx_set();
+        let mut ordinary = Vec::new();
         for (file, roots) in groups {
             let Some(boundaries) = file.and_then(|file| self.root_mock_boundaries.get(file)) else {
-                selected.extend(self.call_source_nodes(
-                    &roots,
-                    CallTraversal::Transitive,
-                    max_depth,
-                ));
+                ordinary.extend(roots);
                 continue;
             };
+            if boundaries.blocked.is_empty() {
+                ordinary.extend(roots);
+                ordinary.extend(boundaries.factories.iter().cloned());
+                continue;
+            }
             selected.extend(self.walk_with_mock_boundaries(&roots, max_depth, boundaries));
         }
+        selected.extend(self.call_source_nodes(&ordinary, CallTraversal::Transitive, max_depth));
         selected
     }
 

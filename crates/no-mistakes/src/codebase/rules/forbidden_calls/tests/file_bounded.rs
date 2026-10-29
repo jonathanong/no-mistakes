@@ -101,3 +101,68 @@ fn transitive_rule_uses_one_source_union_for_overlapping_roots() {
         "the production rule must select sources once, without per-root traces"
     );
 }
+
+#[test]
+fn graph_plan_requests_mock_projection_only_for_transitive_apps() {
+    use super::*;
+    use crate::codebase::dependencies::graph::GraphBuildPlan;
+    for traversal in ["", "traversal: direct\n", "traversal: file\n"] {
+        let config = NoMistakesConfig {
+            rules: vec![application(
+                "bounded",
+                &format!(
+                    "roots: [{{ file: src/entry.mts }}]\n{traversal}targets: [{{ global: setTimeout }}]"
+                ),
+            )],
+            ..Default::default()
+        };
+        let plan = graph_plan(&config).unwrap();
+        assert!(plan.calls);
+        assert!(!plan.imports && !plan.mock_boundaries, "{plan:?}");
+    }
+
+    let transitive = NoMistakesConfig {
+        rules: vec![application(
+            "transitive",
+            "roots: [{ file: src/entry.mts }]\ntraversal: transitive\ntargets: [{ global: setTimeout }]",
+        )],
+        ..Default::default()
+    };
+    let plan = graph_plan(&transitive).unwrap();
+    assert!(plan.imports && plan.mock_boundaries, "{plan:?}");
+
+    let mixed = NoMistakesConfig {
+        rules: vec![
+            application(
+                "direct",
+                "roots: [{ file: src/entry.mts }]\ntargets: [{ global: setTimeout }]",
+            ),
+            application(
+                "transitive",
+                "roots: [{ file: src/entry.mts }]\ntraversal: transitive\ntargets: [{ global: clearTimeout }]",
+            ),
+        ],
+        ..Default::default()
+    };
+    let plan = graph_plan(&mixed).unwrap();
+    assert!(plan.imports && plan.mock_boundaries, "{plan:?}");
+
+    let mut invalid = application(
+        "invalid",
+        "roots: [{ file: src/entry.mts }]\ntargets: [{ global: setTimeout }]",
+    );
+    invalid.options = serde_yaml::from_str(
+        "roots: [{ file: src/entry.mts }]\ntraversal: unsupported\ntargets: [{ global: setTimeout }]",
+    )
+    .unwrap();
+    assert!(invalid.try_rule_options::<Options>().is_err());
+    let config = NoMistakesConfig {
+        rules: vec![invalid],
+        ..Default::default()
+    };
+    let plan: GraphBuildPlan = graph_plan(&config).unwrap();
+    assert!(
+        plan.imports && plan.mock_boundaries,
+        "invalid config demand must remain conservative"
+    );
+}

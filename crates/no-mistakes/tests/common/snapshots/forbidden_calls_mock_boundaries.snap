@@ -526,6 +526,152 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "registration-depth-limit": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registration-depth-reached": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-reachable.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.doMock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-hoisted-function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-hoisted.mts",
+          "import": "forbidden",
+          "line": 5,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.mock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-hoisted-module": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-hoisted.mts",
+          "import": "forbidden",
+          "line": 5,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.mock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-reachable-function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-reachable.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.doMock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-reachable-module": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-reachable.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.doMock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-unused-function": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registration-unused-module": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "require-actual": {
     "exitCode": 1,
     "report": {

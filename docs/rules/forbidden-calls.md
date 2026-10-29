@@ -86,7 +86,8 @@ caps the selected traversal. `direct` always stops after one call hop. Call
 cycles are finite and each distinct reachable call occurrence is reported once.
 
 Transitive source selection shares one breadth-first traversal across expanded
-roots, without constructing per-root call traces. At `maxDepth: N`, only call
+roots with ordinary reachability, and groups mocked roots by their declaring
+file without constructing per-root call traces. At `maxDepth: N`, only call
 sites whose owners are fewer than N call hops from a root are selected.
 
 `traversal` defaults to `direct`, `unknownCalls` defaults to `finding`, and
@@ -139,7 +140,15 @@ walk at that file. A proven inline factory stops it there and adds the factory
 and replacement callables to the walk, so forbidden calls in the replacement
 still report. The mock applies only to the root file that declares it; another
 root still follows the real implementation. Suppressions apply at the reported
-source line as usual.
+source line as usual. Factories registered with `vi.mock` or `jest.mock` are
+always included for the declaring root, including registrations inside uncalled
+helpers: [`vi.mock` is hoisted regardless of its position](https://v4.vitest.dev/api/vi#vi-mock).
+Only top-level registrations can prove full replacement; a nested mock keeps
+the real implementation reachable. Other registrations, including `vi.doMock`, include their
+factories only when the registration owner is reachable, using the normal call
+graph and `maxDepth`. An uncalled helper containing `vi.doMock` therefore adds no
+factory findings for a module or function root. File roots intentionally select
+all callables in the file.
 
 Partial or uncertain mocks retain the real implementation: `importActual`,
 `requireActual`, `importOriginal`, dynamic specifiers, `vi.doMock`, conditional
