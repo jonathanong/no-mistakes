@@ -1,0 +1,717 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "ambient-modules": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `value` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const value = 1;",
+          "target": "value"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ambient-modules-near-miss": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/body-export-all.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-export-from.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-import-equals.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-import-equals.d.ts",
+          "line": 3,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import api = require(\"./api.cjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-import-type.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/body-import.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"*.css\" {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/legacy.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare namespace Legacy {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/named.d.ts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare module \"virtual-pkg\" {",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `value` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const value = 1;",
+          "target": "value"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "asset-imports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `value` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const value = 1;",
+          "target": "value"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "asset-imports-near-miss": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/code.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: unresolved module selector `./build/generated.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import { generated } from \"./build/generated.mjs\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/directory.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: unresolved module selector `./build` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import entry from \"./build\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/missing.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: unresolved module selector `./missing.wav` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import missing from \"./missing.wav\";",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: unresolved module selector `./build/clip.wav?raw` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import raw from \"./build/clip.wav?raw\";",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `value` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const value = 1;",
+          "target": "value"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "commonjs-exports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `value` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const value = 1;",
+          "target": "value"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "commonjs-exports-near-miss": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/alias.cjs",
+          "line": 2,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const target = module.exports;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/chained.cjs",
+          "line": 2,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const config = (module.exports = { first: 1 });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/compound.cjs",
+          "line": 2,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "exports.count += 1;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/computed.cjs",
+          "line": 3,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "exports[key] = 1;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/mixed.cjs",
+          "line": 2,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "module.exports = { first: 1 };",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/mixed.cjs",
+          "line": 3,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "exports.second = 2;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/mutated.cjs",
+          "line": 3,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "module.exports.extra = 1;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/nested.cjs",
+          "line": 3,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "module.exports = { ci: true };",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/optional.cjs",
+          "line": 2,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const target = module?.exports;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/rhs.cjs",
+          "line": 3,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "target = module.exports;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/twice.cjs",
+          "line": 2,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "module.exports = { first: 1 };",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/twice.cjs",
+          "line": 3,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "module.exports = { second: 2 };",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/whole.cjs",
+          "line": 2,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "exports = { first: 1 };",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `value` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const value = 1;",
+          "target": "value"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "create-require": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/loader.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: tests/loader.test.mts:6 `../src/api.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const api = require(\"../src/api.mjs\");",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "create-require-near-miss": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/alias.test.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const require = loader;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/alias.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const path = require(\"node:path\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/computed.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Non-literal or unsupported require specifier; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const dynamic = require(name);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/computed.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const dynamic = require(name);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/destructured.test.mts",
+          "line": 5,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const path = require(\"node:path\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-alias.test.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const alias = require;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-argument.test.mts",
+          "line": 7,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const loader = use(require);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-call.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const api = require.call(null, \"../src/api.mjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-comma.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const api = (0, require)(\"../src/api.mjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-export-const.test.mts",
+          "line": 5,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const api = require(\"../src/api.mjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-export-default.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default require;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/escape-map.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Created require loader escapes direct calls; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const api = [require].map((load) => load(\"../src/api.mjs\"));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/no-base.test.mts",
+          "line": 5,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const path = require(\"node:path\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/other-base.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const path = require(\"./local.cjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/reassigned.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const path = require(\"node:path\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/unknown-source.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Shadowed require is not a module loader; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const path = require(\"node:path\");",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `value` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const value = 1;",
+          "target": "value"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mock-type-assertions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `value` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const value = 1;",
+          "target": "value"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mock-type-assertions-near-miss": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/callback.test.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: symbol consumers of `callbackKey` include an unknown import selector: tests/callback.test.mts:2 `../src/callback.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const items = [1].map(() => ({}) as typeof import(\"../src/callback.mjs\"));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/local-vi.test.mts",
+          "line": 5,
+          "message": "cannot analyze production export importers: symbol consumers of `localViKey` include an unknown import selector: tests/local-vi.test.mts:5 `../src/local-vi.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "...((await importOriginal()) as typeof import(\"../src/local-vi.mjs\")),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/member-callee.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: symbol consumers of `memberKey` include an unknown import selector: tests/member-callee.test.mts:6 `../src/member-callee.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "...(await helpers.load<typeof import(\"../src/member-callee.mjs\")>()),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/not-a-factory.test.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: symbol consumers of `argKey` include an unknown import selector: tests/not-a-factory.test.mts:4 `../src/not-a-factory.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const stub = {} as typeof import(\"../src/not-a-factory.mjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/not-a-mock.test.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: symbol consumers of `plainKey` include an unknown import selector: tests/not-a-mock.test.mts:2 `../src/not-a-mock.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "...((await original()) as typeof import(\"../src/not-a-mock.mjs\")),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/other-module.test.mts",
+          "line": 5,
+          "message": "cannot analyze production export importers: symbol consumers of `otherKey` include an unknown import selector: tests/other-module.test.mts:5 `../src/other-module.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "...(await importOriginal<typeof import(\"../src/other-module.mjs\")>()),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/plain-assertion.test.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `stubKey` include an unknown import selector: tests/plain-assertion.test.mts:1 `../src/plain-assertion.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const stub = {} as typeof import(\"../src/plain-assertion.mjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/wrong-callee.test.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: symbol consumers of `calleeKey` include an unknown import selector: tests/wrong-callee.test.mts:6 `../src/wrong-callee.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "...(await other<typeof import(\"../src/wrong-callee.mjs\")>()),",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "picked-type-imports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/api.mts",
+          "line": 1,
+          "message": "production export `value` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const value = 1;",
+          "target": "value"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "picked-type-imports-near-miss": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/absent-key.test.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: unresolved symbol `absentKey` from `../src/absent-key.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Absent = Pick<typeof import(\"../src/absent-key.mjs\"), \"absentKey\">;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/bare.test.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `bareKey` include an unknown import selector: tests/bare.test.mts:1 `../src/bare.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Whole = typeof import(\"../src/bare.mjs\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/computed-key.test.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: symbol consumers of `computedKey` include an unknown import selector: tests/computed-key.test.mts:2 `../src/computed-key.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Dynamic = Pick<typeof import(\"../src/computed-key.mjs\"), Key>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/local-pick.test.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: symbol consumers of `localKey` include an unknown import selector: tests/local-pick.test.mts:3 `../src/local-pick.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Local = Pick<typeof import(\"../src/local-pick.mjs\"), \"localKey\">;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/mixed-union.test.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: symbol consumers of `mixedKey` include an unknown import selector: tests/mixed-union.test.mts:2 `../src/mixed-union.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Mixed = Pick<typeof import(\"../src/mixed-union.mjs\"), \"mixedKey\" | Key>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/numeric-key.test.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `numericKey` include an unknown import selector: tests/numeric-key.test.mts:1 `../src/numeric-key.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Numeric = Pick<typeof import(\"../src/numeric-key.mjs\"), 1>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/omit.test.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `omitKey` include an unknown import selector: tests/omit.test.mts:1 `../src/omit.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Rest = Omit<typeof import(\"../src/omit.mjs\"), \"omitKey\">;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/other-generic.test.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `genericKey` include an unknown import selector: tests/other-generic.test.mts:1 `../src/other-generic.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Wrapped = Promise<typeof import(\"../src/other-generic.mjs\")>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/qualified-pick.test.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare namespace Utils {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/qualified-pick.test.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: symbol consumers of `qualKey` include an unknown import selector: tests/qualified-pick.test.mts:4 `../src/qualified-pick.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Qualified = Utils.Pick<typeof import(\"../src/qualified-pick.mjs\"), \"qualKey\">;",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

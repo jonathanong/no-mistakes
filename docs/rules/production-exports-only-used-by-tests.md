@@ -154,6 +154,7 @@ Still unresolved (reported or advised per `unanalyzable`):
 
 ```ts
 export type Whole = typeof import("./shapes.mjs"); // bare module type, no member name
+export type Key = Pick<typeof import("./shapes.mjs"), Name>; // key is not a string literal
 import type * as Shapes from "./shapes.mjs";
 export type All = typeof Shapes; // namespace escapes as a whole
 export type Gone = Shapes.Absent; // member the module does not export
@@ -162,6 +163,30 @@ import type { Gone } from "./missing.mjs"; // module that does not resolve
 
 Rewrite these with explicit named type imports. An unused `import type * as ns`
 also stays unresolved because it names no member.
+
+## Shapes that are not importers
+
+These forms look like unresolved or dynamic importers but cannot reach a JS/TS
+export, so they add no advisory. Everything outside the exact shapes below
+keeps its advisory, and each shape has a saved accepted and near-miss fixture
+under `test-cases/rules/production-exports-only-used-by-tests/fixture/importer-gaps`.
+
+| Shape | Treated as |
+| --- | --- |
+| `declare module "*.css" { ... }` or `declare module "*.svg";` at the top level of a file | An ambient wildcard declaration: no runtime export and no importer, provided its body has no `import`, `export ... from`, `export *`, `import("...")` type or `import x = require(...)`. A body with any of those can name a production export and stays unsupported, as do a named module (`declare module "pkg"`), `declare namespace`, and a declaration without a `*` in its name. |
+| `import clip from "./clip.wav"`, also `.png`, `.svg`, `.css`, `.vue`, `.svelte` or any other file that is not JS/TS, when the relative `./` or `../` specifier names a file that exists on disk | An asset import. The only code test is the JS/TS extension list, so a `.vue` or `.svelte` file counts as an asset. This holds even when file discovery skipped the directory (`build/`, `dist/`). Only relative specifiers are checked: a tsconfig-alias import (`@assets/clip.wav`) of a file in a skipped directory keeps its advisory. A missing file, a directory, a query suffix (`./clip.wav?raw`) and an existing JS/TS file stay unanalyzable. |
+| `Pick<typeof import("./mod"), "a">` or `Pick<typeof import("./mod"), "a" \| "b">` with the global `Pick` | A type-only reference to exactly `a` and `b`, which follows [Type-only references](#type-only-references). A key that is not a string literal, a union containing one, `Omit`, a local `Pick`, and a bare `typeof import("./mod")` stay whole-module uses. |
+| `importOriginal<typeof import("./mod")>()` or `x as typeof import("./mod")` inside the factory of `vi.mock("./mod", factory)` with `vi` imported from `vitest` | An erased type assertion that selects nothing. The `importOriginal` call must use the factory's own first parameter, and the asserted module must be the mocked module. The factory's runtime handling is unchanged. |
+| A lone top-level `module.exports = value;`, or only top-level `exports.name = value;` statements | The file's own exports. They are not importers. `module.exports` mutated after assignment (`module.exports.x = 1`, `Object.assign(module.exports, ...)`), computed keys (`exports[key] = 1`), a second assignment, both forms in one file, an assignment that is conditional, nested or used as a value, and any other read of `module` or `exports` stay unsupported. |
+| `const require = createRequire(import.meta.url)` (any `const` name) where `createRequire` is imported from `module` or `node:module`, or is a member of an import of it | The ordinary `require`. Its literal specifiers are require selectors, and `node:` or package specifiers are external. Every use of the binding must be a direct call or `.resolve` (`require.resolve("x")` is accepted because it only resolves a path and loads nothing): passing it on, aliasing it, `.call`/`.apply`, `(0, require)(...)`, putting it in an array, or exporting it leaves the file unanalyzable, as does `export const require = createRequire(...)`. A `let` binding, an alias of the loader, a destructured binding, a `createRequire` from another module, a base other than `import.meta.url`, and a non-literal specifier also stay unanalyzable. |
+
+The ambient, CommonJS and `createRequire` shapes keep their `unsupported`
+diagnostics in the TypeScript module facts API (a `createRequire` named
+`require` still reports a shadowed `require`, and no `loads` entry is added),
+so public output and module completeness are unchanged. Only this rule
+ignores them and reads the created loads from rule-private facts. The `createRequire` recognizer is the one
+[`test-no-live-repository-scan`](test-no-live-repository-scan.md) uses for its
+Node loader findings.
 
 ## Options and defaults
 
@@ -245,8 +270,9 @@ diagnostic; it does not veto an export's known all-test consumer set. Only an
 unknown selector attached to that export or its re-export chain makes the
 export itself unanalyzable.
 
-CommonJS export assignments, TypeScript import-equals and export assignments,
-and unsupported module-binding forms are unanalyzable. Unresolved local aliases
+TypeScript import-equals and export assignments, CommonJS export objects outside
+the [accepted shapes](#shapes-that-are-not-importers), and unsupported
+module-binding forms are unanalyzable. Unresolved local aliases
 also report uncertainty; `baseUrl` resolution candidates are treated
 conservatively when the target cannot be resolved. Ordinary external packages
 and non-code assets are outside the production TS/JS export catalog.

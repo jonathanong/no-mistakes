@@ -123,6 +123,8 @@ fn selector_unknown(
             return;
         }
         NodeId::file_in(inputs.interner, target)
+    } else if existing_asset(inputs, source) {
+        return;
     } else if source.starts_with('.')
         || source.starts_with('/')
         || inputs

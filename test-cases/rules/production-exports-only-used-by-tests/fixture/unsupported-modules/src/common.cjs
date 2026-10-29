@@ -1,2 +1,2 @@
-// Unsupported CommonJS exports must produce uncertainty, never a clean check.
-module.exports = { value: 1 };
+// Mutating the export object is unsupported CommonJS and must produce uncertainty, never a clean check.
+Object.assign(module.exports, { value: 1 });

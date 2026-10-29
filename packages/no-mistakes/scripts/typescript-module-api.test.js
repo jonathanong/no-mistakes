@@ -141,6 +141,25 @@ test(
           .exports.map((entry) => entry.exported),
         ["rootValue"],
       );
+      const created = await api.analyzeTypeScriptModules({
+        root,
+        files: ["created-require.ts", "created-loader.ts"],
+      });
+      const shadowedCreated = created.modules.find((entry) =>
+        entry.fileName.endsWith("created-require.ts"),
+      );
+      const renamedCreated = created.modules.find((entry) =>
+        entry.fileName.endsWith("created-loader.ts"),
+      );
+      assert.equal(shadowedCreated.complete, false);
+      assert.deepEqual(shadowedCreated.loads, []);
+      assert.deepEqual(
+        shadowedCreated.diagnostics.map((entry) => entry.message),
+        ["Shadowed require is not a module loader"],
+      );
+      assert.equal(renamedCreated.complete, true);
+      assert.deepEqual(renamedCreated.loads, []);
+      assert.deepEqual(renamedCreated.diagnostics, []);
       const commonjs = await api.analyzeTypeScriptModules({
         root,
         files: [

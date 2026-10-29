@@ -166,5 +166,6 @@ fn collect_symbol_import_selectors_file(
             );
         }
     }
+    collect_created_require_selectors(&inputs, file_facts, &mut edges, &mut sites);
     (edges, sites)
 }
