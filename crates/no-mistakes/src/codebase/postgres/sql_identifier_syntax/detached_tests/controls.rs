@@ -50,3 +50,11 @@ fn nested_and_non_identifier_shapes_do_not_gain_low_trusted_sinks() {
             .all(|call| matches!(call.input, Input::Unknown)));
     });
 }
+
+#[test]
+fn binding_an_unselected_import_does_not_establish_an_sql_executor() {
+    fixture("format-bind.test.ts", &[profile()], |facts, _| {
+        assert!(facts.profiles[0].1.is_empty());
+        assert!(facts.recovery.sinks[&profile()].is_empty());
+    });
+}

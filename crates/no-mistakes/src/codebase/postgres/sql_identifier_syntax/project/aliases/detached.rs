@@ -150,18 +150,22 @@ fn evaluate(node: &Node, values: &FxHashMap<usize, Value>) -> Option<Value> {
     let (kind, valid) = match node.form {
         Form::Copy => (source.kind, true),
         Form::Query => (Kind::Executor, source.kind == Kind::Receiver),
-        Form::Bind(receiver, query) => (
-            Kind::Executor,
-            source.kind
-                == (if query {
-                    Kind::Receiver
-                } else {
-                    Kind::Executor
-                })
-                && receiver.and_then(|id| values.get(&id)).is_some_and(|this| {
+        Form::Bind(receiver, query) => {
+            let expected = if query {
+                Kind::Receiver
+            } else {
+                Kind::Executor
+            };
+            if source.kind != expected {
+                return None;
+            }
+            (
+                Kind::Executor,
+                receiver.and_then(|id| values.get(&id)).is_some_and(|this| {
                     this.kind == Kind::Receiver && this.origin == source.origin && this.exact
                 }),
-        ),
+            )
+        }
     };
     if matches!(node.form, Form::Query) && source.kind != Kind::Receiver {
         return None;
