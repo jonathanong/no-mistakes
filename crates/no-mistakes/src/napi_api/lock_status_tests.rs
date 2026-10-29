@@ -4,6 +4,26 @@ use serde_json::json;
 
 #[test]
 fn lock_status_reports_state_and_lock_file_and_rejects_unknown_options() {
+    const CHILD: &str = "NO_MISTAKES_LOCK_STATUS_TEST_CHILD";
+    if std::env::var_os(CHILD).is_none() {
+        // The test lock path uses this process's PID; parallel unit tests can hold it.
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "napi_api::lock_status_tests::lock_status_reports_state_and_lock_file_and_rejects_unknown_options",
+                "--nocapture",
+            ])
+            .env(CHILD, "1")
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "isolated lock status test failed: {}{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        return;
+    }
     let report: serde_json::Value =
         serde_json::from_str(&lock_status_json_impl(json!({})).unwrap()).unwrap();
     assert_eq!(report["state"], "free");

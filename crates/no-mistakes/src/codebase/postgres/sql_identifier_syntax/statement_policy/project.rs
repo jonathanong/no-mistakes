@@ -4,6 +4,8 @@ use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::postgres::{EmbeddedSqlCall, EmbeddedSqlKind, SqlStatementFileFacts};
 use std::path::Path;
 
+mod prefix;
+
 pub(super) fn build(
     file: &CheckFileFacts,
     facts: &CheckFactMap,
@@ -38,6 +40,7 @@ pub(super) fn build(
                 source_span,
                 text,
                 positions,
+                holes,
                 ..
             } => {
                 match literals
@@ -69,7 +72,30 @@ pub(super) fn build(
                         out.statements.push(statement);
                         projected
                     }
-                    None => calls::unknown(call),
+                    None => {
+                        if key.rule == "postgres-no-test-state-mutation" {
+                            if let Some((projected, mut statement)) = prefix::complete_statement(
+                                source,
+                                *source_span,
+                                text,
+                                holes,
+                                call.line,
+                            ) {
+                                crate::codebase::postgres::collect::dml::rebase_embedded_lines(
+                                    &mut statement,
+                                    &projected,
+                                    false,
+                                );
+                                locate(&mut statement, path, call.line, index, 0);
+                                out.statements.push(statement);
+                                projected
+                            } else {
+                                calls::unknown(call)
+                            }
+                        } else {
+                            calls::unknown(call)
+                        }
+                    }
                 }
             }
             Input::Recovered(proof) => {

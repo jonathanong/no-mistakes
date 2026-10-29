@@ -6,13 +6,22 @@ use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFa
 pub(super) fn collect(
     program: &Program<'_>,
     module: &TypeScriptModuleFacts,
-    selections: &[Selection],
+    selections: &mut [Selection],
     syntax: &mut Syntax,
 ) {
+    let advisory = selections
+        .iter()
+        .any(|selection| !selection.advisory_receivers.is_empty());
     let mut sources = FxHashMap::default();
+    let mut references = FxHashMap::default();
     let mut bindings = FxHashMap::default();
     for binding in &module.bindings {
         bindings.insert((binding.span.start, binding.span.end), binding);
+        if advisory {
+            for usage in binding.references.iter().filter(|usage| usage.runtime) {
+                references.insert((usage.span.start, usage.span.end), binding.id);
+            }
+        }
         if selections.iter().any(|selection| {
             selection.selected.contains(&binding.id) || selection.typed.contains(&binding.id)
         }) {
@@ -21,30 +30,70 @@ pub(super) fn collect(
             }
         }
     }
-    if sources.is_empty() {
+    if sources.is_empty() && !advisory {
         return;
     }
-    Aliases {
+    let mut aliases = Aliases {
         sources,
+        references,
         bindings,
         syntax,
+        advisory_edges: FxHashMap::default(),
+    };
+    aliases.visit_program(program);
+    for selection in selections {
+        let mut pending = selection
+            .advisory_receivers
+            .iter()
+            .copied()
+            .collect::<Vec<_>>();
+        while let Some(source) = pending.pop() {
+            for alias in aliases.advisory_edges.get(&source).into_iter().flatten() {
+                if selection.advisory_receivers.insert(*alias) {
+                    pending.push(*alias);
+                }
+            }
+        }
     }
-    .visit_program(program);
 }
 
 struct Aliases<'a, 'source> {
     sources: FxHashMap<Span, usize>,
+    references: FxHashMap<Span, usize>,
     bindings: FxHashMap<Span, &'a ModuleBinding>,
     syntax: &'a mut Syntax<'source>,
+    advisory_edges: FxHashMap<usize, Vec<usize>>,
+}
+
+impl Aliases<'_, '_> {
+    fn advisory_edge(&mut self, source: Span, alias: usize) {
+        if let Some(source_id) = self.references.get(&source) {
+            self.advisory_edges
+                .entry(*source_id)
+                .or_default()
+                .push(alias);
+        }
+    }
 }
 
 impl<'a> Visit<'a> for Aliases<'_, '_> {
     fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
-        if value.kind.is_const() {
-            for declaration in &value.declarations {
-                let Some((source, parts)) = declaration.init.as_ref().and_then(chain) else {
-                    continue;
-                };
+        for declaration in &value.declarations {
+            let Some((source, parts)) = declaration.init.as_ref().and_then(chain) else {
+                continue;
+            };
+            if parts.len() == 1 {
+                if let BindingPattern::BindingIdentifier(alias) = &declaration.id {
+                    if let Some(id) = self
+                        .bindings
+                        .get(&span(alias.span))
+                        .map(|binding| binding.id)
+                    {
+                        self.advisory_edge(source, id);
+                    }
+                }
+            }
+            if value.kind.is_const() {
                 let alias = match &declaration.id {
                     BindingPattern::BindingIdentifier(alias)
                         if parts.len() == 1 || (parts.len() == 2 && parts[1] == "query") =>

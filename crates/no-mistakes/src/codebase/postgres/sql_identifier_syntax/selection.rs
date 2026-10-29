@@ -9,12 +9,14 @@ pub(super) struct Selection {
     pub runtime: FxHashSet<Span>,
     pub typed: FxHashSet<usize>,
     pub unsupported: FxHashSet<usize>,
+    pub advisory_receivers: FxHashSet<usize>,
 }
 impl Selection {
     pub fn new(profile: &EmbeddedSqlOptions, module: &TypeScriptModuleFacts) -> Self {
         let mut selected = FxHashSet::default();
         let mut namespaces = FxHashSet::default();
         let mut unsupported = FxHashSet::default();
+        let mut advisory_receivers = FxHashSet::default();
         let mut factories = FxHashSet::default();
         for import in &module.imports {
             let exact =
@@ -27,6 +29,14 @@ impl Selection {
                 continue;
             }
             for binding in &import.bindings {
+                if exact
+                    && !profile.import_specifier.is_empty()
+                    && profile.executor_names.iter().any(|name| name == "query")
+                    && !import.type_only
+                    && !binding.type_only
+                {
+                    advisory_receivers.insert(binding.binding_id);
+                }
                 if !profile.import_specifier.is_empty()
                     && profile.executor_names.iter().any(|name| name == "query")
                     && binding.kind == "namespace"
@@ -70,6 +80,7 @@ impl Selection {
             typed: FxHashSet::default(),
             runtime: FxHashSet::default(),
             unsupported,
+            advisory_receivers,
         }
     }
 }

@@ -34,6 +34,7 @@ pub fn configure_prepared_postgres_plan(
                 "postgres-explicit-columns",
                 "postgres-required-predicates",
                 "postgres-no-transformed-uuid-predicates",
+                "postgres-no-test-state-mutation",
             ]
             .contains(&rule.rule.as_str())
             && config.rule_has_effective_target(rule)
@@ -54,13 +55,14 @@ pub fn configure_prepared_postgres_plan(
                 .get("postgres")
                 .map(|effects| effects.typed_executors.as_slice())
                 .unwrap_or_default();
+            let include = super::scans::include(&rule.rule, &options);
             let scan =
                 crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan::new(
                     root,
                     config,
                     rule,
                     index,
-                    &options.include,
+                    &include,
                     &options.exclude,
                 )?
                 .with_typed_executor_types(typed_executor_types);

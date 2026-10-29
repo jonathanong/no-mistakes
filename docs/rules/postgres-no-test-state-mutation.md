@@ -79,6 +79,40 @@ policy. The legacy `unanalyzableSql` alias also accepts `fail` as `report`.
 Definite violations remain findings under every policy. `message` customizes
 the rule application's finding text. There is no autofix.
 
+### Effort
+
+`max` is the default. `low` uses the prepared syntax and SQL facts for configured
+test files and helper roots, without the maximum-effort executor and builder
+walk. A direct named executor import can receive a SQL literal or one local
+`const` initialized with a literal. Helper-produced SQL remains unanalyzable
+at low, including when another low SQL rule recovers the same helper in a
+shared request.
+
+A complete SQL statement before an opaque template interpolation is still
+checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the
+`DROP TABLE` and retains an unresolved tail. An incomplete statement, imported
+SQL value, executor alias, unsupported helper, or invalid SQL remains
+unanalyzable under the configured policy. Put a complete literal at the
+configured executor or select `max` to use broader analysis. Low keeps the
+same `testGlobs`, `helperRoots`, and `include`/`exclude` boundaries.
+The shared SQL extractor parses PostgreSQL `ANALYZE` relation lists with
+`VERBOSE` and per-relation column lists; malformed lists and parenthesized
+option lists remain unanalyzable.
+
+At `max`, finite helper returns, direct throwing branches, literal iterator
+domains, and local Set guards use bounded full-SQL proofs. Annotation `low`
+requests skip these proofs and do not invoke the annotation evaluator.
+
+Member `.query` calls on runtime receivers imported from the exact configured
+module remain unresolved at low when the receiver has no declared executor
+type and the call has at least one argument. This includes indirect SQL
+arguments, local receiver alias chains, and awaited calls. Calls without
+arguments stay outside this fallback. With
+`unanalyzableSql: advise`, they produce advisories; they do not establish that
+the receiver executes PostgreSQL SQL. Unrelated local objects stay outside the
+configured executor scope. Declare the receiver type or call a configured
+executor directly to prove it.
+
 ## What it catches
 
 The rule rejects these statements in executed SQL from selected tests or
@@ -149,16 +183,6 @@ specific executed SQL call, or `// no-mistakes-disable-line
 postgres-no-test-state-mutation` on its line. Use
 `// no-mistakes-disable-file postgres-no-test-state-mutation` only for a file
 whose exception is intentional, with a reason in the adjacent comment.
-
-## Effort
-
-This rule supports `max` effort. Selecting `low` falls back to `max` with a
-configuration warning. The shared SQL extractor parses PostgreSQL `ANALYZE`
-relation lists with `VERBOSE` and per-relation column lists; malformed lists
-and parenthesized option lists remain unanalyzable.
-Finite helper returns, direct throwing branches, literal iterator domains, and
-local Set guards use bounded full-SQL proofs. Annotation `low` requests skip
-these proofs and do not invoke the annotation evaluator.
 
 ## Related rules
 

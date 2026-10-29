@@ -24,6 +24,11 @@ pub(super) const SUPPORT: &[RuleEffortSupport] = &[
         partner_scope: |_, _| false,
     },
     RuleEffortSupport {
+        rule: "postgres-no-test-state-mutation",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "postgres-no-transformed-uuid-predicates",
         partners: &[],
         partner_scope: |_, _| false,

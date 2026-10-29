@@ -20,7 +20,7 @@ fn postgres_closed_consumer_candidates_check_json_snapshot() {
                 rules_path(rule, "configs", "closed-consumer-candidates-low.yml"),
             ),
             (
-                "complete_sql_low_fallback",
+                "complete_sql_low",
                 root,
                 rules_path(
                     "postgres-no-test-state-mutation",

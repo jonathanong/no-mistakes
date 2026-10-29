@@ -19,7 +19,7 @@ mod observability;
 mod plain_returns;
 mod reference_escapes;
 pub(crate) mod resolve;
-mod scope;
+pub(crate) mod scope;
 mod scope_visits;
 mod state;
 mod undeclared;

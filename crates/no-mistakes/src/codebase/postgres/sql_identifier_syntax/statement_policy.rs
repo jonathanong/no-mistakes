@@ -17,7 +17,9 @@ pub(crate) type Projections = BTreeMap<ApplicationKey, Result<Projection, String
 pub(crate) fn supports(rule: &str) -> bool {
     matches!(
         rule,
-        "postgres-explicit-columns" | "postgres-required-predicates"
+        "postgres-explicit-columns"
+            | "postgres-required-predicates"
+            | "postgres-no-test-state-mutation"
     )
 }
 

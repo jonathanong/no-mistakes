@@ -15,6 +15,7 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 "postgres-explicit-columns",
                 "postgres-required-predicates",
                 "postgres-no-transformed-uuid-predicates",
+                "postgres-no-test-state-mutation",
             ]
             .contains(rule_id)
                 && config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low

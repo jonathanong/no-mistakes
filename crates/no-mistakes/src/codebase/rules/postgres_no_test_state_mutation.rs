@@ -83,6 +83,10 @@ pub(crate) fn check_with_files_and_sources(
     files: &[PathBuf],
     sources: &Arc<SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
+    let prepared_config = super::analysis_policy::prepare_requested_rule_config(
+        root, RULE_ID, config, files, sources,
+    )?;
+    let config = prepared_config.as_ref().unwrap_or(config);
     let facts = crate::codebase::postgres::prepare_rule_sql_facts(
         root,
         files,
@@ -109,17 +113,11 @@ pub(crate) fn check_with_files_sources_and_facts(
             .into_iter()
             .filter(|path| compiled.includes(root, path))
             .collect();
-        let view = facts.for_sql_application(index, rule.name.as_deref());
-        findings.extend(scan::scan(
-            root,
-            &compiled,
-            &files,
-            sources,
-            view.as_ref().map_or(
-                facts as &dyn crate::codebase::check_facts::SqlFactContext,
-                |view| view,
-            ),
-        )?);
+        let mut view = facts.for_sql_application_with_advice(index, rule.name.as_deref());
+        if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
+            view = view.with_low_sql(RULE_ID);
+        }
+        findings.extend(scan::scan(root, &compiled, &files, sources, &view)?);
     }
     Ok(findings.finish())
 }
