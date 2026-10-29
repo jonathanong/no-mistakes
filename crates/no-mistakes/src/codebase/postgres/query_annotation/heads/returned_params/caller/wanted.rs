@@ -12,7 +12,10 @@ pub(in super::super::super) fn extend(
     trusted: &FxHashSet<usize>,
     wanted: &mut FxHashSet<Span>,
 ) {
-    if syntax.returned_param_roots.is_empty() {
+    if syntax.returned_param_roots.is_empty()
+        || !syntax.dynamic_refs.is_empty()
+        || !module.diagnostics.is_empty()
+    {
         return;
     }
     let endpoints = syntax

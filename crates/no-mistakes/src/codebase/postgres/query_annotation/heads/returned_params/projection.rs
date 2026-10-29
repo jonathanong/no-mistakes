@@ -22,12 +22,32 @@ pub(in super::super) fn module_projection(
     module: Option<&TypeScriptModuleFacts>,
     executors: &FxHashSet<Span>,
 ) -> (BTreeSet<String>, Vec<Pending>) {
-    if syntax.returned_params.is_empty() && syntax.returned_param_roots.is_empty() {
+    if syntax.returned_params.is_empty()
+        && (syntax.returned_param_roots.is_empty() || !super::demanded(syntax, bindings, executors))
+    {
         return Default::default();
     }
     let Some(module) = module else {
         return Default::default();
     };
+    if syntax.returned_params.is_empty() {
+        if let Some(observer) = crate::diagnostics::current() {
+            observer.increment("postgres.annotation.returned_caller_module_indexes", 1);
+            observer.increment(
+                "postgres.annotation.returned_caller_module_index_entries",
+                (module.scopes.len()
+                    + module.bindings.len()
+                    + module.imports.len()
+                    + module
+                        .imports
+                        .iter()
+                        .filter(|item| !item.type_only)
+                        .map(|item| item.bindings.len())
+                        .sum::<usize>()
+                    + module.exports.len()) as u64,
+            );
+        }
+    }
     let roots = module
         .scopes
         .iter()

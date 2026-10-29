@@ -7,7 +7,7 @@ use oxc_ast::ast::{
 
 mod caller;
 mod projection;
-pub(super) use caller::{extend_wanted, projected, root};
+pub(super) use caller::{demanded, extend_wanted, projected, root};
 pub(super) use projection::{module_projection, Pending};
 
 pub(super) struct Root {

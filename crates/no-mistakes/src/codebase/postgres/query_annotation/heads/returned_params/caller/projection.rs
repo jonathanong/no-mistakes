@@ -13,6 +13,28 @@ struct Endpoint {
     values: Option<Span>,
     seen: bool,
 }
+pub(in super::super::super) fn demanded(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    executors: &FxHashSet<Span>,
+) -> bool {
+    if !syntax.dynamic_refs.is_empty() {
+        return false;
+    }
+    syntax.calls.iter().any(|call| {
+        executors.contains(&call.span)
+            && syntax.record_result_calls.contains(&call.span)
+            && match call.head {
+                Head::FieldReference(reference) => bindings.owner(reference).is_some_and(|owner| {
+                    !owner.imported
+                        && syntax
+                            .returned_param_roots
+                            .contains_key(&(owner.span.start, owner.span.end))
+                }),
+                _ => false,
+            }
+    })
+}
 pub(in super::super::super) fn projected(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
