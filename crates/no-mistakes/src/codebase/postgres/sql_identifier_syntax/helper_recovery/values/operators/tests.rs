@@ -202,3 +202,62 @@ fn helper_returned_sql_is_not_fresh_when_an_incoming_statement_can_alias_it() {
     }
     assert_eq!(checked, 6);
 }
+
+#[test]
+fn strict_refinement_exhaustion_never_publishes_a_partial_branch() {
+    use super::{refine::Refinement, State};
+    use crate::codebase::postgres::{
+        embedded::{helpers::program::Expr, walk::resolve::functions::provenance::RecoveredSql},
+        sql_identifier_syntax::helper_recovery::sql_text::SqlText,
+    };
+    let text = |sql: &str| {
+        Value::Text(SqlText::literal(RecoveredSql {
+            sql: sql.into(),
+            line: 1,
+            positions: Vec::new(),
+            origins: vec![0; sql.len()],
+        }))
+    };
+    let files = FileIdMap::default();
+    let catalog = PreparedCatalog {
+        files: &files,
+        application: None,
+        profile: None,
+        resolve: &|_, _| None,
+    };
+    let name = Expr::Ident("selector".into());
+    let literal = Expr::Opaque;
+    let equality = Expr::Eq(
+        Box::new(name.clone()),
+        Box::new(literal.clone()),
+        true,
+        false,
+    );
+    for copy_exhausted in [false, true] {
+        let mut state = State::default();
+        if copy_exhausted {
+            state
+                .env
+                .insert("retained".into(), text("long retained SQL"));
+        }
+        let mut cache = Cache::default();
+        let mut engine = Engine::new(
+            &catalog,
+            &mut cache,
+            Limits {
+                sql_bytes: 1,
+                ..Limits::default()
+            },
+        );
+        let result = engine.refine_strict(
+            &equality,
+            &name,
+            &literal,
+            &Value::Scalar,
+            &text(if copy_exhausted { "x" } else { "too long" }),
+            state,
+        );
+        assert!(matches!(result, Refinement::Applied(values) if values.is_empty()));
+        assert!(engine.residual());
+    }
+}

@@ -92,3 +92,88 @@ fn finite_switch_requires_source_proven_abrupt_default_and_literal_arms() {
     }
     assert_eq!(checked, 7);
 }
+
+#[test]
+fn switch_lowering_keeps_only_bounded_exclusive_arms() {
+    use crate::codebase::postgres::embedded::helpers::program::Stmt;
+
+    let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
+        .join("variants/coverage-proof-edges/switch-shapes.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let recovery = crate::ast::with_program(&path, &source, |program, _| {
+        let ts = collect_file_facts_from_program(
+            &path,
+            TsFactPlan {
+                module_bindings: true,
+                ..Default::default()
+            },
+            &TsFactContext::default(),
+            &source,
+            program,
+            None,
+            None,
+        );
+        super::super::collect(program, &ts, &source, &[profile()]).recovery
+    })
+    .unwrap();
+    let rejected = [
+        "badSelector",
+        "caseAfterDefault",
+        "nonStringCase",
+        "duplicateCase",
+        "nonReturnArm",
+        "fallThrough",
+        "noReturn",
+        "emptySwitch",
+        "nonCallDefault",
+        "breakDefault",
+        "optionalCallDefault",
+        "memberCallDefault",
+        "impureArgDefault",
+        "unknownCallDefault",
+    ];
+    for name in rejected {
+        let declaration = format!("function {name}(");
+        let model = recovery.functions.values().find(|model| {
+            source[model.span.0 as usize..model.span.1 as usize].starts_with(&declaration)
+        });
+        let model = model.unwrap_or_else(|| panic!("missing {name}"));
+        assert!(
+            model
+                .lowered
+                .program
+                .body
+                .iter()
+                .any(|stmt| matches!(stmt, Stmt::Opaque)),
+            "{name}"
+        );
+    }
+    for name in ["defaultAfterLabel", "safeThrow", "safeCall"] {
+        let declaration = format!("function {name}(");
+        let model = recovery
+            .functions
+            .values()
+            .find(|model| {
+                source[model.span.0 as usize..model.span.1 as usize].starts_with(&declaration)
+            })
+            .unwrap_or_else(|| panic!("missing {name}"));
+        assert!(
+            model
+                .lowered
+                .program
+                .body
+                .iter()
+                .any(|stmt| matches!(stmt, Stmt::If(_, _, _))),
+            "{name}"
+        );
+        assert!(
+            !model
+                .lowered
+                .program
+                .body
+                .iter()
+                .any(|stmt| matches!(stmt, Stmt::Opaque)),
+            "{name}"
+        );
+    }
+}

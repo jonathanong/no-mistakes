@@ -4,7 +4,7 @@ use crate::codebase::{
     postgres::embedded::walk::resolve::functions::provenance::RecoveredSql,
     ts_source::facts::{collect_file_facts_from_program, TsFactContext, TsFactPlan},
 };
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
 use std::path::PathBuf;
 
 fn fixture(file: &str) -> (String, FxHashMap<CallableId, Vec<RecoveredSql>>) {
@@ -34,6 +34,30 @@ fn fixture(file: &str) -> (String, FxHashMap<CallableId, Vec<RecoveredSql>>) {
 
 fn fixture_root() -> PathBuf {
     crate::test_support::rule_fixture_root("postgres-no-offset").join("low-helper-recovery/src")
+}
+
+fn edge_fixture(file: &str) -> (String, FxHashMap<CallableId, Vec<RecoveredSql>>) {
+    let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
+        .join("variants/coverage-proof-edges")
+        .join(file);
+    let source = std::fs::read_to_string(&path).unwrap();
+    let sites = crate::ast::with_program(&path, &source, |program, _| {
+        let ts = collect_file_facts_from_program(
+            &path,
+            TsFactPlan {
+                module_bindings: true,
+                ..Default::default()
+            },
+            &TsFactContext::default(),
+            &source,
+            program,
+            None,
+            None,
+        );
+        collect(program, ts.module_bindings.as_deref().unwrap(), &source)
+    })
+    .unwrap();
+    (source, sites)
 }
 
 #[test]
@@ -71,4 +95,58 @@ fn rejects_unbounded_rows_aliases_and_mutable_runner_methods() {
         let (_, sites) = fixture(file);
         assert!(sites.is_empty(), "{file}");
     }
+}
+
+#[test]
+fn only_inline_literal_rows_and_plain_block_callbacks_become_finite_inputs() {
+    let (source, sites) = edge_fixture("iterator-wrapped.mts");
+    let mut rows = sites
+        .values()
+        .flat_map(|values| values.iter().map(|value| value.sql.as_str()))
+        .collect::<Vec<_>>();
+    rows.sort_unstable();
+    assert_eq!(rows, ["non-null", "wrapped"]);
+    for values in sites.values() {
+        for value in values {
+            assert_eq!(
+                &source[value.origins[0] as usize..value.origins[0] as usize + value.sql.len()],
+                value.sql
+            );
+        }
+    }
+}
+
+#[test]
+fn unsupported_runner_uses_invalidate_the_whole_file() {
+    let (_, sites) = edge_fixture("iterator-shapes.mts");
+    assert!(sites.is_empty());
+}
+
+#[test]
+fn direct_eval_invalidates_even_otherwise_finite_rows() {
+    let (_, sites) = edge_fixture("iterator-eval.mts");
+    assert!(sites.is_empty());
+}
+
+#[test]
+fn dynamic_with_scope_invalidates_runner_proofs() {
+    use oxc_ast_visit::Visit;
+
+    let path = crate::test_support::rule_fixture_root("postgres-no-test-state-mutation")
+        .join("variants/coverage-proof-edges/iterator-with.cjs");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let unsafe_file = crate::ast::with_program(&path, &source, |program, _| {
+        let mut collector = super::collector::Collector {
+            source: &source,
+            slots: FxHashMap::default(),
+            runners: FxHashSet::default(),
+            sites: FxHashMap::default(),
+            runner_uses: FxHashSet::default(),
+            unsafe_file: false,
+        };
+        collector.visit_program(program);
+        collector.unsafe_file
+    })
+    .unwrap();
+    assert!(unsafe_file);
 }

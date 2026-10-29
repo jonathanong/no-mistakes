@@ -95,3 +95,6 @@ impl PreparedCatalog<'_> {
         true
     }
 }
+
+#[cfg(test)]
+mod tests;

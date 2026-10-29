@@ -158,3 +158,6 @@ fn bind_reads(lowered: &Lowered, slot: &str) -> bool {
     matches!(lowered.program.body.as_slice(), [Stmt::Return(Some(expr), _)]
         if template_read(expr, slot, false))
 }
+
+#[cfg(test)]
+mod tests;
