@@ -68,28 +68,7 @@ pub(in crate::codebase::postgres::sql_identifier_syntax::project) fn collect(
                 }
             }
         }
-        loop {
-            let mut changed = false;
-            let invalid_receivers = scope::uncertain_receivers(&nodes, &values);
-            for value in values.values_mut() {
-                if value.exact && invalid_receivers.contains(&value.origin) {
-                    value.exact = false;
-                    changed = true;
-                }
-            }
-            for node in &nodes {
-                let Some(previous) = values.get(&node.id).copied() else {
-                    continue;
-                };
-                if previous.exact && evaluate(node, &values).is_none_or(|value| !value.exact) {
-                    values.get_mut(&node.id).unwrap().exact = false;
-                    changed = true;
-                }
-            }
-            if !changed {
-                break;
-            }
-        }
+        propagate_uncertainty(&nodes, &mut values);
         for node in nodes.iter().filter(|node| values.contains_key(&node.id)) {
             if values[&node.id].exact {
                 selection
@@ -111,6 +90,31 @@ pub(in crate::codebase::postgres::sql_identifier_syntax::project) fn collect(
                 .detached_calls
                 .insert(at, exact && values[&id].exact);
             syntax.detached_calls.insert(at);
+        }
+    }
+}
+
+fn propagate_uncertainty(nodes: &[&Node], values: &mut FxHashMap<usize, Value>) {
+    loop {
+        let mut changed = false;
+        let invalid_receivers = scope::uncertain_receivers(nodes, values);
+        for value in values.values_mut() {
+            if value.exact && invalid_receivers.contains(&value.origin) {
+                value.exact = false;
+                changed = true;
+            }
+        }
+        for node in nodes {
+            let Some(previous) = values.get(&node.id).copied() else {
+                continue;
+            };
+            if previous.exact && evaluate(node, values).is_none_or(|value| !value.exact) {
+                values.get_mut(&node.id).unwrap().exact = false;
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
         }
     }
 }
