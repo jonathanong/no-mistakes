@@ -51,6 +51,12 @@ second argument. The leading name is proven from that trusted builder and
 survives safe appends. Both fields must be direct, non-optional reads; a
 computed field, escaped or overwritten builder, arbitrary object with a `text`
 field, or caller-supplied SQL remains unresolved.
+For a closed native builder, a nested closure may read the same exact
+`.text`/`.values` pair at a configured executor. Every canonical reference to
+the builder must be that pair or a discarded prefix-preserving append or
+proven append-only effect. The closure may run later or repeatedly; aliases,
+unknown methods, writes, dynamic lexical access, and unmatched field reads
+remain unresolved.
 
 A configured relative factory or executor type must first resolve to the
 configured package. An unconfirmed relative call cannot make a local builder's
@@ -120,8 +126,13 @@ function; its callback parameter may only be called with the same fresh
 trusted `sql-template-strings` builder supplied by the caller, after static
 `.append(oneExpression)` calls, or with a fixed named literal template. The
 caller passes a direct inline `statement => read(statement)` or equivalent
-configured executor callback. Every callback invocation must use the proven
-payload. Unknown calls, aliases, writes, defaults, escapes, spreads, optional
+configured executor callback. A callback may be async and use a block when a
+full reference census proves its SQL parameter reaches one configured executor
+after only discarded static appends and exact same-file append-only helpers.
+A same-file stable source helper may supply a fresh trusted builder with a
+fixed named head. For that fresh builder, the executor may also receive one
+ordinary options object after the SQL argument. Every callback invocation must
+use the proven payload. Unknown calls, aliases, writes, defaults, escapes, spreads, optional
 calls, and source re-exports remain unresolved. Each caller is checked
 separately.
 
@@ -171,23 +182,44 @@ binding gaps remain unanalyzable. This proof applies only to low effort and
 does not infer complete SQL or execute closures.
 
 A discarded call to a same-file or direct imported function declaration may
-also preserve that trusted local builder's prefix. The helper must receive the
-builder as its first argument, and every use of that parameter must be a
+also preserve that trusted local builder's prefix. Imported helpers receive
+the builder as their first argument, and every use of that parameter must be a
 discarded, static `.append(oneExpression)` chain. The helper may choose a
-suffix at runtime. Defaults, aliases, captured parameters, used append results,
-and other parameter uses leave the later read unanalyzable. Direct imported
-helpers qualify only when their prepared source file exports the proven
-function; unresolved and re-exported helpers remain unanalyzable.
+suffix at runtime. A nested callback may also use that exact parameter as
+the receiver of discarded static appends. The callback may run later or more
+than once because these uses only add suffixes. The callback may be stored or
+returned; its scheduling identity is irrelevant to the exact parameter uses.
+A nested return or implicit arrow result of `.append(...)` exposes the builder
+and stays unanalyzable.
+Defaults, aliases, used append results, and other parameter uses leave the
+later read unanalyzable. Direct imported helpers qualify only when their
+prepared source file exports the proven function; unresolved and re-exported
+helpers remain unanalyzable.
+An exact same-file helper with two plain parameters may instead receive the
+builder as its second argument. Its call must be a discarded direct call with
+two ordinary arguments. Every use of the second parameter must satisfy the
+same append-only census; defaults, aliases, writes, returned builders, used
+append results, and unknown calls abstain. A factory may return its fresh
+native builder after these proven effects, retaining only its fixed head.
+An unannotated local builder returned through effects remains unresolved; a
+direct unannotated native tag still reports a missing-name violation.
 One helper may call another proven same-file append-only helper with the same
-first parameter as a complete expression statement. This composition is
+builder parameter as a complete expression statement. This composition is
 bounded to four local edges and requires exact lexical call bindings; cycles,
-used call results, aliases, and nested captures remain unresolved. A helper
+used call results, aliases, and nested helper calls remain unresolved. A helper
 may also `return query.append(suffix)` when that entire static append chain
 is rooted at its first parameter and its caller discards the helper result.
 The returned builder does not become a general value-flow proof.
 Secondary parameters may use a direct object destructure with static keys and
-plain bindings. Defaults, computed keys, and an argument expression that
+plain bindings. Dynamic defaults, computed keys, and an argument expression that
 captures or passes the caller's builder still leave the read unresolved.
+An inert Boolean or string literal default on a later parameter also qualifies.
+One later object destructure may use Boolean or string literal property defaults
+and may have an empty `{}` outer default when the call supplies a closed object literal
+with only static primitive data properties, or omits that argument for the empty
+default. Spreads, getters, methods, computed keys, `__proto__`, call-valued
+defaults, and a default on the builder parameter remain unresolved. The proof
+does not use TypeScript types as runtime bounds or infer complete SQL.
 
 For ordinary const tracing, its declaration and uses must stay in the same
 function. The closed captured-root proof above is the narrow exception. Before the executor call,
@@ -211,6 +243,14 @@ The first complete block comment must contain a nonempty name. Parentheses and
 TypeScript assertions do not add indirection. The const must resolve to the same
 file's lexical declaration; a second alias, import, or destructured binding
 does not qualify. Mutable bindings need the additional proof below.
+
+One uninitialized local `let`, an adjacent exhaustive `if`/`else`, and an
+immediately following executor call also qualify when each arm assigns one
+fresh native tagged builder. The exact binding may have only those two writes
+and that executor read. Bind holes preserve the head; custom tags, aliases,
+captures, other writes, and semantic gaps stay unresolved. Both named heads
+qualify, both missing heads produce a finding, and mixed results stay unresolved.
+The condition runs before either fresh builder exists and may be dynamic.
 
 Decidable literal heads without an annotation are violations at `low`, including
 `query("SELECT 1")`, unnamed tagged templates, and one supported local const.
@@ -253,6 +293,9 @@ unresolved. A trusted builder return uses its exact imported tag.
 One local `const` can hold that helper result for exactly the paired
 `query(result.text, result.values)` read. Repeated calls, aliases, captures,
 exports, writes, optional calls or fields, and additional uses remain unresolved.
+The same paired first two arguments may be followed by one options argument;
+the `.text` string is read before that argument is evaluated. The helper result
+still needs the exact trusted source and closed local lifetime proof.
 A fresh plain record can also be extracted with exactly
 `const { text, values } = helper(args)` and passed once as `query(text, values)`
 in the same function and loop iteration. Renamed or extra fields, other uses,
@@ -326,3 +369,31 @@ elsewhere can expose the builder and remains unanalyzable. Rewrite
 unresolved shapes as a named literal at the call or as one local `const`
 initialized with that literal head and passed directly. Existing file and line
 suppressions apply to definite findings too.
+
+### Awaited fresh native return origins
+
+Low effort also follows one direct imported async function whose successful return
+is one fresh private `sql-template-strings` builder. Setup and awaited work must
+precede that allocation. The remaining body permits only discarded native appends,
+proven append-only calls with the builder in argument position zero, and its sole
+terminal return. Direct imported effects use the same prepared source resolver;
+their existing bounded same-file effect composition still applies. Every effect
+obligation must resolve before the caller gains a head proof.
+
+```ts
+const query = await buildQuery(userId, options)
+await read(query)
+```
+
+The result must be one local `const` used only as the immediately next configured
+executor's sole argument. A missing `await`, optional or chained call, another
+result use, escaping builder, early return, `try`/`finally`, await anywhere inside the builder initializer or afterward,
+unknown effect, custom tag, source gap or unresolved import leaves the call
+unanalyzable. Keep the fresh builder private, move awaited setup before allocation,
+and expose the append-only helper source so the check can prove the contract.
+
+Only continuation-safe leading heads qualify: appending can change `BEGIN` to
+`BEGINNING` or complete a partial comment. Stable missing heads remain findings;
+unknown continuations retain the configured advisory/report/ignore policy. The
+proof inspects the existing AST/facts and never composes full SQL variants. Max
+effort keeps its existing evaluation behavior.

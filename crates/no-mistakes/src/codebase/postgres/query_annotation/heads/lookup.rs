@@ -3,9 +3,11 @@ use super::{AnnotationHeads, HeadProof, Span};
 impl AnnotationHeads {
     pub(crate) fn has_pending_imports(&self) -> bool {
         !self.pending_imports.is_empty()
+            || !self.pending_async_returns.is_empty()
             || !self.pending_namespaces.is_empty()
             || !self.pending_effects.is_empty()
             || !self.pending_callbacks.is_empty()
+            || !self.pending_returned_params.is_empty()
     }
     pub(crate) fn helper(&self, span: Span, helpers: &[String]) -> Option<HeadProof> {
         if helpers.is_empty() {

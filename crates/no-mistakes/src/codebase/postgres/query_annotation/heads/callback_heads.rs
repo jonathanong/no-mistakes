@@ -16,6 +16,7 @@ use std::collections::BTreeMap;
 pub(crate) enum Payload {
     Parameter(usize),
     Fixed,
+    FixedBuilder,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -28,38 +29,60 @@ pub(crate) struct Summary {
 pub(crate) struct Pending {
     pub specifier: String,
     pub imported: String,
-    callbacks: Vec<Option<Span>>,
+    callbacks: Vec<Option<(Span, bool)>>,
     payloads: Vec<bool>,
 }
 
 impl Pending {
     pub(crate) fn proven_executor(&self, summary: &Summary) -> Option<Span> {
-        let span = self.callbacks.get(summary.callback).copied().flatten()?;
-        match summary.payload {
-            Payload::Fixed => Some(span),
-            Payload::Parameter(index) if self.payloads.get(index) == Some(&true) => Some(span),
-            _ => None,
-        }
+        projected(&self.callbacks, &self.payloads, summary)
+    }
+}
+
+fn projected(
+    callbacks: &[Option<(Span, bool)>],
+    payloads: &[bool],
+    summary: &Summary,
+) -> Option<Span> {
+    let (span, needs_fresh) = callbacks.get(summary.callback).copied().flatten()?;
+    if needs_fresh && summary.payload != Payload::FixedBuilder {
+        return None;
+    }
+    match summary.payload {
+        Payload::Fixed | Payload::FixedBuilder => Some(span),
+        Payload::Parameter(index) if payloads.get(index) == Some(&true) => Some(span),
+        _ => None,
     }
 }
 
 pub(super) fn collect(
+    enabled: bool,
     program: &Program<'_>,
     module: Option<&TypeScriptModuleFacts>,
     syntax: &Syntax,
+    bindings: &super::bindings::Bindings<'_>,
     executors: &FxHashSet<Span>,
+    calls: &mut BTreeMap<Span, super::HeadProof>,
 ) -> (BTreeMap<String, Summary>, Vec<Pending>) {
+    if !enabled {
+        return Default::default();
+    }
     let Some(module) = module.filter(|module| module.diagnostics.is_empty()) else {
         return Default::default();
     };
-    let exported = producer::exported(program, module, syntax);
+    let (exported, local) = producer::summaries(program, module, syntax, bindings);
     let has_callback_receiver = syntax.calls.iter().any(|call| {
         executors.contains(&call.span) && matches!(call.head, super::syntax::Head::Reference(_))
     });
-    let pending = if !has_callback_receiver {
-        Vec::new()
+    let (pending, completed) = if !has_callback_receiver {
+        Default::default()
     } else {
-        caller::pending(program, module, executors)
+        caller::project(program, module, syntax, bindings, executors, &local)
     };
+    calls.extend(
+        completed
+            .into_iter()
+            .map(|span| (span, super::HeadProof::Literal)),
+    );
     (exported, pending)
 }

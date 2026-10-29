@@ -55,6 +55,18 @@ pub(crate) fn project(
             };
             completed.push((path.clone(), pending.span, proof));
         }
+        for pending in &heads.pending_returned_params {
+            let Some(target) = resolve(&pending.specifier, path) else {
+                continue;
+            };
+            let proven = files
+                .get(&target)
+                .and_then(|target| target.query_annotation_heads.as_deref())
+                .is_some_and(|heads| heads.exported_returned_params.contains(&pending.imported));
+            if proven {
+                completed.push((path.clone(), pending.span, pending.proof));
+            }
+        }
         for pending in &heads.pending_namespaces {
             if let Some(proof) = super::namespace_heads::project(files, &resolve, path, pending) {
                 completed.push((path.clone(), pending.span, proof));
@@ -82,7 +94,8 @@ pub(crate) fn project(
             let proven = files
                 .get(&target)
                 .and_then(|target| target.query_annotation_heads.as_deref())
-                .is_some_and(|heads| heads.exported_effects.contains(&pending.imported));
+                .and_then(|heads| heads.exported_effects.get(&pending.imported))
+                .is_some_and(|signature| signature.accepts(pending.shape));
             if proven {
                 effects
                     .entry(path.clone())
@@ -91,6 +104,7 @@ pub(crate) fn project(
             }
         }
     }
+    super::async_returns::project(files, &resolve);
     for (path, span, proof) in completed {
         let Some(heads) = files
             .get_mut(&path)

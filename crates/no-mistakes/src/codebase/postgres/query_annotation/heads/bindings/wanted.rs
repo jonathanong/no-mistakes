@@ -30,6 +30,12 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
                 .map(|call| call.reference),
         )
         .chain(syntax.helper_arguments.values().copied())
+        .chain(
+            syntax
+                .branch_assignments
+                .iter()
+                .flat_map(|value| value.references()),
+        )
         .chain(syntax.finite_templates.iter().map(|value| value.reference))
         .chain(
             syntax
@@ -88,6 +94,29 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
                 }),
         )
         .chain(syntax.return_sinks.iter().copied())
+        .chain(
+            syntax
+                .async_returns
+                .values()
+                .flat_map(|value| value.references()),
+        )
+        .chain(
+            syntax
+                .async_callers
+                .iter()
+                .flat_map(|value| value.references()),
+        )
+        .chain(
+            syntax
+                .returned_param_roots
+                .values()
+                .flat_map(|root| [root.callee, root.tag]),
+        )
+        .chain(syntax.returned_params.values().flat_map(|candidate| {
+            [candidate.allowed_parameter, candidate.default_tag]
+                .into_iter()
+                .chain(candidate.allowed_alias.iter().copied())
+        }))
         .chain(
             syntax
                 .finite_returns

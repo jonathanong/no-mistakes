@@ -3,9 +3,11 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::Expression;
 mod append_visits;
+mod async_visits;
 mod collect;
 pub(super) use collect::collect_with_helpers;
 mod const_visits;
+mod context;
 mod destructure;
 mod field_visits;
 mod finite_visits;
@@ -21,8 +23,13 @@ pub(super) struct Call {
 #[derive(Default)]
 pub(super) struct Syntax {
     pub collect_helper_heads: bool,
+    pub async_returns: FxHashMap<Span, super::async_returns::Candidate>,
+    pub async_callers: Vec<super::async_returns::Caller>,
+    pub async_awaits: Vec<Span>,
     pub helper_returns: FxHashMap<Span, super::helper_heads::Summary>,
     pub record_returns: FxHashMap<Span, super::helper_records::Summary>,
+    pub returned_params: FxHashMap<Span, super::returned_params::Candidate>,
+    pub returned_param_roots: FxHashMap<Span, super::returned_params::Root>,
     pub finite_returns: FxHashMap<Span, super::finite_returns::Candidate>,
     pub record_initializers: FxHashMap<Span, (Span, Span)>,
     pub record_destructures: FxHashMap<Span, destructure::Destructure>,
@@ -40,7 +47,7 @@ pub(super) struct Syntax {
     pub finite_selects: Vec<super::finite_comments::Select>,
     pub active_domains: Vec<super::finite_comments::Domain>,
     pub namespace_destructures: Vec<super::namespace_heads::Candidate>,
-    pub effect_functions: FxHashMap<Span, super::effects::FunctionSyntax>,
+    pub effect_functions: FxHashMap<Span, [Option<super::effects::FunctionSyntax>; 2]>,
     pub effect_calls: Vec<super::effects::CallSyntax>,
     pub returned_effect_appends: FxHashSet<Span>,
     pub dynamic_refs: Vec<Span>,
@@ -54,7 +61,9 @@ pub(super) struct Syntax {
     pub string_constants: FxHashSet<Span>,
     pub value_reads: FxHashMap<Span, Span>,
     pub record_result_calls: FxHashSet<Span>,
+    pub record_options_calls: FxHashSet<Span>,
     pub assignments: super::assignments::Assignments,
+    pub branch_assignments: Vec<super::branch_assignments::Candidate>,
     pub append_receivers: FxHashSet<Span>,
     pub discarded_appends: FxHashSet<Span>,
     pub prefix_discarded_appends: FxHashSet<Span>,

@@ -93,10 +93,15 @@ Rust, CLI and async Node evidence; see [append composition](postgres-query-annot
 Low annotation checks also prove fixed literal return heads in local helpers,
 including concise arrow bodies and local export aliases, and one-hop source imports from the prepared inventory, without running the
 annotation evaluator. This prefix proof does not establish complete SQL.
+The same low proof recognizes a fresh native builder returned after exact
+same-file helpers append through their second of two plain parameters; CLI and
+async Node checks use the shared prepared facts and keep max behavior intact.
 Opaque append suffixes preserve a prefix only for the trusted
 `sql-template-strings` tag; other tags and their later reads remain unresolved.
 An exact source helper may forward a proven head into a direct inline
 configured executor callback, with each imported call checked separately.
+The same prepared low proof also covers a source-proven same-file callback
+helper and an async inline callback with an exact SQL parameter reference census.
 They also accept finite conditional expressions whose every arm has a named
 literal head, plus one returned local trusted builder with append-only uses
 before its final return. Tagged arms and returned builders retain the existing
@@ -119,6 +124,15 @@ own helper return when every exact-binding use is closed. Low and mixed-demand
 checks share this proof without composing SQL variants.
 The same APIs also share bounded same-file append-only helper composition and
 an exact returned parameter append chain when the helper result is discarded.
+They also preserve that parameter's fixed head through captured callbacks
+whose only parameter uses are discarded static appends, regardless of when
+those callbacks run.
+The same prepared low proof can follow one direct source import whose helper
+returns an immutable append alias of its first fresh tagged argument. It
+checks every parameter and alias reference and permits only an inert native
+default after the first argument; extra caller objects remain unresolved.
+CLI and async Node checks share the same inert later-parameter default proof
+and exact closed-object gate for a defaulted helper destructure.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
@@ -1003,9 +1017,23 @@ Low-effort PostgreSQL query annotation also projects the fixed head of an exact 
 
 Low PostgreSQL annotation checks also project fixed heads from fresh source
 helper records or trusted builder results through one local paired field read.
+That pair may precede one executor options argument without changing the
+already-read SQL text head.
+A native builder's paired fields may also be read by a captured closure when
+all uses of that builder preserve its fixed prefix; CLI and async Node checks
+share the same prepared binding census.
 Plain record text may come from an immutable local template, and an exact
 `{ text, values }` extraction may feed one configured executor call.
 Fresh trusted builder helper results may also flow through one safe local SQL
 binding or a direct append at the executor; CLI and async checks share this
 prepared source proof.
 The CLI and async Node check use the same prepared facts.
+They also share the low proof for an uninitialized local `let` assigned a fresh
+native builder in each exhaustive adjacent arm and then read only by the next
+configured executor. Both missing heads remain a finding; mixed or escaped
+forms remain unresolved.
+
+PostgreSQL annotation low effort shares the bounded awaited fresh native builder
+return-origin proof across CLI, Rust checks and asynchronous Node checks. Exact
+prepared imported append-effect obligations must all resolve; unsupported return,
+await, alias or effect paths keep the existing unanalyzable policy.

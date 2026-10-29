@@ -8,46 +8,29 @@ use crate::config::v2::{
 };
 use crate::diagnostics::{with_observer, InvocationObserver};
 
+#[path = "head_calls_only_tests/async_return_fact_tests.rs"]
+mod async_return_fact_tests;
 #[path = "head_calls_only_tests/callback_head_tests.rs"]
 mod callback_head_tests;
+#[path = "head_calls_only_tests/callback_more_tests.rs"]
+mod callback_more_tests;
 #[path = "head_calls_only_tests/finite_comment_fact_tests.rs"]
 mod finite_comment_fact_tests;
 #[path = "head_calls_only_tests/namespace_fact_tests.rs"]
 mod namespace_fact_tests;
+#[path = "head_calls_only_tests/returned_param_fact_tests.rs"]
+mod returned_param_fact_tests;
 #[path = "head_calls_only_tests/returned_prefix_fact_tests.rs"]
 mod returned_prefix_fact_tests;
+#[path = "head_calls_only_tests/second_effect_fact_tests.rs"]
+mod second_effect_fact_tests;
+#[path = "head_calls_only_tests/text_field_fact_tests.rs"]
+mod text_field_fact_tests;
 
-fn config(efforts: &[&str]) -> NoMistakesConfig {
-    let mut config = NoMistakesConfig::default();
-    for effort in efforts {
-        config.rules.push(RuleDef {
-            rule: "postgres-require-query-annotation".into(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(&format!(
-                "effort: {effort}\nimportSpecifier: '@bench/db'\nexecutorNames: [read]"
-            ))
-            .unwrap(),
-            ..Default::default()
-        });
-    }
-    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
-        std::path::Path::new("."),
-        &mut config,
-        &[],
-        &crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(
-            crate::codebase::ts_source::FileInventory::from_paths(&[]),
-        )),
-    )
-    .unwrap();
-    config
-}
+#[path = "head_calls_only_tests/support.rs"]
+mod support;
+use support::{config, plan};
 
-fn plan(root: &std::path::Path, config: &NoMistakesConfig) -> CheckFactPlan {
-    let mut plan = CheckFactPlan::default();
-    configure_prepared_postgres_plan(root, config, &mut plan).unwrap();
-    assign_prepared_embedded_sql_options(config, &mut plan).unwrap();
-    plan
-}
 #[test]
 fn configured_low_annotation_skips_composition_in_the_real_shared_fact_pass() {
     let saved = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
@@ -185,8 +168,12 @@ fn direct_imported_helper_heads_project_from_prepared_source_facts() {
 #[path = "head_calls_only_tests/variant_parity_tests.rs"]
 mod variant_parity;
 
+#[path = "head_calls_only_tests/captured_effect_fact_tests.rs"]
+mod captured_effect_facts;
 #[path = "head_calls_only_tests/effect_composition_fact_tests.rs"]
 mod effect_composition_facts;
+#[path = "head_calls_only_tests/effect_default_fact_tests.rs"]
+mod effect_default_facts;
 #[path = "head_calls_only_tests/effect_fact_tests.rs"]
 mod effect_facts;
 
@@ -196,9 +183,14 @@ mod value_facts;
 #[path = "head_calls_only_tests/record_fact_tests.rs"]
 mod record_facts;
 
+#[path = "head_calls_only_tests/branch_assignment_fact_tests.rs"]
+mod branch_assignment_facts;
 #[path = "head_calls_only_tests/builder_fact_tests.rs"]
 mod builder_facts;
 #[path = "head_calls_only_tests/captured_fact_tests.rs"]
 mod captured_facts;
 #[path = "head_calls_only_tests/relative_pending_tests.rs"]
 mod relative_pending;
+
+#[path = "head_calls_only_tests/callback_export_payload_tests.rs"]
+mod callback_export_payload_tests;

@@ -30,6 +30,8 @@ mod missing_append_tests;
 mod missing_tests;
 #[path = "returned_captured_tests.rs"]
 mod returned_captured_tests;
+#[path = "returned_param_tests.rs"]
+mod returned_param_tests;
 #[path = "support.rs"]
 mod support;
 #[path = "tags_tests.rs"]
@@ -37,6 +39,8 @@ mod tags_tests;
 use support::{assert_markers, fixture};
 #[path = "assignment_gap_tests.rs"]
 mod assignment_gap_tests;
+#[path = "branch_assignment_tests.rs"]
+mod branch_assignment_tests;
 
 #[test]
 fn original_ast_heads_accept_only_the_two_low_effort_shapes() {
@@ -119,3 +123,6 @@ pub(super) fn collect_with_helpers(
         None,
     )
 }
+
+#[path = "effect_boundary_coverage_tests.rs"]
+mod effect_boundary_coverage_tests;

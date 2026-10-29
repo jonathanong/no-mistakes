@@ -1,15 +1,18 @@
 use super::{uses::Uses, Summary};
-use crate::codebase::postgres::query_annotation::heads::syntax::Syntax;
+use crate::codebase::postgres::query_annotation::heads::{
+    bindings::Bindings, syntax::Syntax, Span,
+};
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{BindingPattern, Declaration, Function, Program, Statement};
 use std::collections::BTreeMap;
 
-pub(super) fn exported(
+pub(super) fn summaries(
     program: &Program<'_>,
     module: &TypeScriptModuleFacts,
     syntax: &Syntax,
-) -> BTreeMap<String, Summary> {
+    bindings: &Bindings<'_>,
+) -> (BTreeMap<String, Summary>, FxHashMap<Span, Summary>) {
     let roots = module
         .scopes
         .iter()
@@ -27,44 +30,69 @@ pub(super) fn exported(
             .and_modify(|value| *value = None)
             .or_insert(Some(export.exported.as_str()));
     }
-    let mut result = BTreeMap::new();
+    let mut owners = FxHashMap::default();
+    for binding in module
+        .bindings
+        .iter()
+        .filter(|binding| binding.runtime && !binding.imported && roots.contains(&binding.scope_id))
+    {
+        owners
+            .entry((binding.span.start, binding.span.end))
+            .and_modify(|owner| *owner = None)
+            .or_insert(Some(binding));
+    }
+    let trusted_tags = syntax
+        .append_tags
+        .values()
+        .filter(|&&tag| {
+            bindings
+                .owner(tag)
+                .is_some_and(|owner| owner.imported && bindings.trusted_import(owner.id))
+        })
+        .copied()
+        .collect::<FxHashSet<_>>();
+    let mut exported = BTreeMap::new();
+    let mut local = FxHashMap::default();
     for statement in &program.body {
-        let Statement::ExportDeclaration(export) = statement else {
-            continue;
-        };
-        let Declaration::FunctionDeclaration(function) = &export.declaration else {
-            continue;
+        let function = match statement {
+            Statement::FunctionDeclaration(function) => function,
+            Statement::ExportDeclaration(export) => {
+                let Declaration::FunctionDeclaration(function) = &export.declaration else {
+                    continue;
+                };
+                function
+            }
+            _ => continue,
         };
         let Some(id) = &function.id else {
             continue;
         };
-        let Some(exported) = exports.get(id.name.as_str()).copied().flatten() else {
+        let declaration = (id.span.start, id.span.end);
+        let Some(binding) = owners.get(&declaration).copied().flatten() else {
             continue;
         };
-        let Some(binding) = module.bindings.iter().find(|binding| {
-            binding.runtime
-                && !binding.imported
-                && roots.contains(&binding.scope_id)
-                && binding.span.start == id.span.start
-                && binding.span.end == id.span.end
-        }) else {
-            continue;
-        };
-        if binding.references.iter().any(|usage| {
-            let span = (usage.span.start, usage.span.end);
-            syntax.assignments.writes.contains_key(&span)
-                || syntax.assignments.unsupported_writes.contains(&span)
-        }) {
+        if !bindings.declaration_safe(declaration)
+            || binding.references.iter().any(|usage| {
+                let span = (usage.span.start, usage.span.end);
+                !bindings.declaration_safe(span)
+                    || syntax.assignments.writes.contains_key(&span)
+                    || syntax.assignments.unsupported_writes.contains(&span)
+            })
+        {
             continue;
         }
-        if let Some(summary) = summarize(function) {
-            result.insert(exported.to_string(), summary);
+        let Some(summary) = summarize(function, &trusted_tags) else {
+            continue;
+        };
+        local.insert(declaration, summary);
+        if let Some(name) = exports.get(id.name.as_str()).copied().flatten() {
+            exported.insert(name.to_string(), summary);
         }
     }
-    result
+    (exported, local)
 }
 
-fn summarize(function: &Function<'_>) -> Option<Summary> {
+fn summarize(function: &Function<'_>, trusted_tags: &FxHashSet<Span>) -> Option<Summary> {
     if function.generator || function.params.rest.is_some() {
         return None;
     }
@@ -87,7 +115,7 @@ fn summarize(function: &Function<'_>) -> Option<Summary> {
     let body = function.body.as_ref()?;
     let summaries = (0..names.len())
         .filter_map(|callback| {
-            Uses::inspect(body, names.clone(), callback)
+            Uses::inspect(body, names.clone(), callback, trusted_tags)
                 .map(|payload| Summary { callback, payload })
         })
         .collect::<Vec<_>>();

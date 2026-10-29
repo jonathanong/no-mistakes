@@ -87,6 +87,13 @@ in the same file or through one direct source import, including local export
 aliases and concise arrow bodies. Opaque append suffixes preserve the prefix
 only for the trusted `sql-template-strings` tag. Unsupported helper or
 mutation shapes remain unanalyzable.
+The same prepared proof joins two adjacent exhaustive assignments to one local
+`let` when each arm creates a fresh native tagged builder and the only later
+use is its immediate configured executor read. It retains missing-head findings
+and unresolved mixed or escaped forms without running the annotation evaluator.
+They also include an exact directly imported helper that returns an immutable
+append alias of one fresh tagged builder argument, with an inert native default
+and a closed paired `.text`/`.values` executor read.
 An exact top-level namespace destructure can follow unique explicit source
 reexports to a fixed-head helper through the same prepared check projection;
 other namespace shapes remain unresolved. At low effort, a helper's own
@@ -96,7 +103,11 @@ Captured trusted local builders also qualify when every exact-binding use is a
 discarded append, a configured executor read, or a proven local append-only
 effect. This preserves only the fixed head, even across arbitrary closure order.
 The shared low proof also accepts bounded same-file append-only helper calls
-and a returned parameter-rooted append chain when the caller discards it.
+and a returned parameter-rooted append chain when the caller discards it. An
+append-only helper's captured callback may make discarded static appends to
+its exact parameter, including after or between executor reads.
+The same prepared effect proof permits inert literal defaults on later helper
+parameters and closed object arguments for supported destructured defaults.
 For `nextjs-redirect-destinations`, `low` keeps
 [literal arrays and objects](rules/nextjs-redirect-destinations.md#effort) and
 routes every other destination construction through the same unanalyzable
@@ -447,6 +458,11 @@ For PostgreSQL query annotation checks, low effort recognizes direct `.text`/`.v
 
 The async query-annotation check shares low's bounded fresh helper-result proof
 for paired `.text`/`.values` reads; it does not run the annotation evaluator.
+The pair may be followed by one options argument when its builder result has a
+closed source-visible origin.
+The same low proof accepts a native builder's paired fields in a nested closure
+only when every reference preserves its fixed head, even if that closure runs
+later or more than once.
 The same prepared proof covers an immutable local record text template and
 one exact `{ text, values }` extraction from a fresh plain record.
 It also accepts an exact fresh trusted builder returned into one local `const`
@@ -454,3 +470,11 @@ or directly appended at the executor, with the same one-hop prepared import
 and escape guards as CLI checks.
 The same prepared facts project an exact imported helper's fixed callback SQL
 head to a direct inline configured executor callback, independently per call.
+The async API shares low's same-file fixed-builder callback proof and exact
+async callback parameter census without invoking the annotation evaluator.
+
+The async `check()` and `analyzeProject()` annotation reports also share low's
+[awaited fresh native return-origin proof](postgres-query-annotation/low-effort.md#awaited-fresh-native-return-origins).
+It uses the same prepared source/effect projections and requires exact awaited
+`const` consumption by the immediately next configured executor. No API option,
+report field or max-effort contract changes.

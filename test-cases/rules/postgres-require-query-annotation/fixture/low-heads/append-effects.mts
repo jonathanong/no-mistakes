@@ -8,6 +8,7 @@ function returnedResult(q, tail) { return q.append(tail); }
 function passedResult(q, tail) { opaque(q.append(tail)); }
 function defaultEscape(q, other = opaque(q)) { q.append(other); }
 function selfSuffix(q) { q.append(opaque(q)); }
+// The returned closure may run later, but its only q use adds a suffix.
 function captured(q, tail) { return () => { q.append(tail); }; }
 function forwarded(q) { opaque(q); }
 function optional(q, tail) { q?.append(tail); }
@@ -42,7 +43,7 @@ function unsafe(tail) {
   read(e); // low: false
   const f = sql`/* f */ SELECT 1`;
   captured(f, tail);
-  read(f); // low: false
+  read(f); // low: true
   const g = sql`/* g */ SELECT 1`;
   forwarded(g);
   read(g); // low: false

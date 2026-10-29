@@ -25,6 +25,13 @@ impl Syntax {
                     }
                 }
                 if self.collect_helper_heads {
+                    if let Some(root) = declaration
+                        .init
+                        .as_ref()
+                        .and_then(super::super::returned_params::root)
+                    {
+                        self.returned_param_roots.insert(span(binding.span), root);
+                    }
                     if let Some(Expression::ArrowFunctionExpression(arrow)) =
                         declaration.init.as_ref().map(unwrap_ts_wrappers)
                     {

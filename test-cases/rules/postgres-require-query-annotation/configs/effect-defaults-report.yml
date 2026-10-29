@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [src/query.mts, src/helpers.mts]
+    options:
+      importSpecifier: '@bench/db'
+      executorNames: [read]
+      effort: low
+      unanalyzable: report

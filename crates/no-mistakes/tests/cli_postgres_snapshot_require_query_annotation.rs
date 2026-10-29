@@ -151,16 +151,25 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("append_effects_ignore", "append-effects", "append-effects-ignore.yml"),
         case("append_effect_composition_report", "low-heads", "append-effect-composition-report.yml"),
         case("append_effect_composition_ignore", "low-heads", "append-effect-composition-ignore.yml"),
+        // A same-file helper can append through its second parameter without changing the factory's head.
+        case("second_argument_effects_report", "low-heads", "second-argument-effects-report.yml"),
+        case("effect_defaults_report", "effect-defaults", "effect-defaults-report.yml"),
+        // Captured callbacks may add suffixes even if replayed; escaping the builder still advises.
+        case("captured_append_effects_report", "low-heads", "captured-append-effects-report.yml"),
         case("captured_prefix_report", "captured-prefix", "captured-prefix-report.yml"),
         case("captured_prefix_ignore", "captured-prefix", "captured-prefix-ignore.yml"),
         // Field and imported value projections retain named, missing, and advisory cases.
         case("text_field_report", "low-heads", "text-field-report.yml"),
+        case("text_field_third_report", "low-heads", "text-field-third-report.yml"),
+        case("captured_text_field_report", "low-heads", "captured-text-field-report.yml"),
         case("imported_string_heads_report", "imported-string-heads", "imported-string-heads-report.yml"),
         case("helper_records_report", "low-heads", "helper-records-report.yml"),
         case("record_text_report", "low-heads", "record-text-report.yml"),
         case("helper_records_ignore", "low-heads", "helper-records-ignore.yml"),
         case("imported_helper_records_report", "imported-helper-records", "imported-helper-records-report.yml"),
         case("imported_helper_records_ignore", "imported-helper-records", "imported-helper-records-ignore.yml"),
+        case("async_return_origin_report", "async-return-origin", "async-return-origin-report.yml"),
+        case("returned_params_report", "returned-params", "returned-params-report.yml"),
         case("helper_bindings_report", "low-heads", "helper-bindings-report.yml"),
         case("helper_bindings_ignore", "low-heads", "helper-bindings-ignore.yml"),
         case("imported_helper_bindings_report", "imported-helper-bindings", "imported-helper-bindings-report.yml"),
@@ -179,6 +188,9 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("returned_captured_prefix_ignore", "low-heads", "returned-captured-prefix-ignore.yml"),
         case("finite_comment_names_report", "low-heads", "finite-comment-names-report.yml"),
         case("finite_comment_names_ignore", "low-heads", "finite-comment-names-ignore.yml"),
+        case("two_arm_assignment_report", "low-heads", "two-arm-assignment-report.yml"),
+        case("callback_export_payload_report", "callback-export-payload", "callback-export-payload-report.yml"),
+        case("callback_more_report", "callback-more", "callback-more-report.yml"),
     ];
     assert_saved_fixture("postgres_require_query_annotation", &cases);
 }

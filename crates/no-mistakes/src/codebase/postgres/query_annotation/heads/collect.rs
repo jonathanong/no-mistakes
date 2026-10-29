@@ -1,8 +1,8 @@
 //! Low annotation head facts from the original prepared program.
 use super::{
     bindings, callback_heads, effects, finite_comments, helper_heads, helper_records,
-    literal_helpers, loop_carried, namespace_heads, syntax, trusted_append, AnnotationHeads,
-    HeadCallSpans, HeadProof, PreparedLoopHeads, Span,
+    literal_helpers, loop_carried, namespace_heads, returned_params, syntax, trusted_append,
+    AnnotationHeads, HeadCallSpans, HeadProof, PreparedLoopHeads, Span,
 };
 use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
@@ -61,6 +61,12 @@ pub(crate) fn collect_prepared(
     let (trusted_append_calls, trusted_prefix_calls) =
         trusted_append::proofs(&syntax, &bindings, &calls, candidates, low_candidates);
     if include_all_calls {
+        for (span, proof) in super::branch_assignments::proofs(&syntax, &bindings, &executor_calls)
+        {
+            if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
+                calls.insert(span, proof);
+            }
+        }
         for (span, proof) in trusted_prefix_calls {
             calls.insert(span, proof);
         }
@@ -105,16 +111,15 @@ pub(crate) fn collect_prepared(
         Vec::new()
     };
     let helper_calls = literal_helpers::proofs(&syntax, &bindings, ts);
-    let (exported_callbacks, pending_callbacks) = if include_all_calls {
-        callback_heads::collect(
-            program,
-            ts.module_bindings.as_deref(),
-            &syntax,
-            &executor_calls,
-        )
-    } else {
-        Default::default()
-    };
+    let (exported_callbacks, pending_callbacks) = callback_heads::collect(
+        include_all_calls,
+        program,
+        ts.module_bindings.as_deref(),
+        &syntax,
+        &bindings,
+        &executor_calls,
+        &mut calls,
+    );
     let (exported_helpers, exported_values, exported_records, pending_imports) =
         if include_all_calls {
             helper_heads::module_projection(
@@ -126,6 +131,16 @@ pub(crate) fn collect_prepared(
         } else {
             Default::default()
         };
+    let (exported_returned_params, pending_returned_params) = if include_all_calls {
+        returned_params::module_projection(
+            &syntax,
+            &bindings,
+            ts.module_bindings.as_deref(),
+            &executor_calls,
+        )
+    } else {
+        Default::default()
+    };
     let pending_namespaces = if include_all_calls {
         namespace_heads::pending(
             &syntax,
@@ -136,10 +151,24 @@ pub(crate) fn collect_prepared(
     } else {
         Vec::new()
     };
+    let (exported_async_returns, pending_async_returns) = if include_all_calls {
+        super::async_returns::collect(
+            &syntax,
+            &bindings,
+            ts.module_bindings.as_deref(),
+            &executor_calls,
+        )
+    } else {
+        Default::default()
+    };
     AnnotationHeads {
+        exported_async_returns,
+        pending_async_returns,
         exported_helpers,
         exported_values,
         exported_records,
+        exported_returned_params,
+        pending_returned_params,
         exported_callbacks,
         pending_callbacks,
         pending_imports,

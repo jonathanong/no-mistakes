@@ -11,11 +11,18 @@ impl Syntax {
             return;
         };
         let declaration = span(id.span);
+        if let Some(candidate) = super::super::async_returns::function(value) {
+            self.async_returns.insert(declaration, candidate);
+        }
         if let Some(summary) = super::super::helper_records::function(value) {
             self.record_returns.insert(declaration, summary);
         }
-        if let Some(summary) = super::super::effects::function(value) {
-            self.effect_functions.insert(declaration, summary);
+        if let Some(candidate) = super::super::returned_params::function(value) {
+            self.returned_params.insert(declaration, candidate);
+        }
+        let effects = super::super::effects::function(value);
+        if effects.iter().any(Option::is_some) {
+            self.effect_functions.insert(declaration, effects);
         }
         if let Some(summary) = super::super::helper_heads::function(value) {
             if let Some(reference) = summary.head.reference() {

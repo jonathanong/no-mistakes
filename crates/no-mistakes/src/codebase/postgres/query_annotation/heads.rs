@@ -1,10 +1,11 @@
 //! Original syntax proofs for annotation low effort; no helper value evaluation.
 use std::collections::BTreeMap;
-use std::collections::BTreeSet;
 mod append;
 mod append_constants;
 mod assignments;
+mod async_returns;
 mod bindings;
+mod branch_assignments;
 mod callback_heads;
 mod captured_prefix;
 mod collect;
@@ -21,6 +22,7 @@ mod lookup;
 mod loop_carried;
 mod loop_word;
 mod namespace_heads;
+mod returned_params;
 pub(crate) use loop_word::{prepare_loop_heads, PreparedLoopHeads};
 mod syntax;
 mod tag_constants;
@@ -52,10 +54,14 @@ pub(crate) struct AnnotationHeads {
     pub(crate) exported_records: BTreeMap<String, helper_records::Summary>,
     pub(crate) pending_imports: Vec<helper_heads::Pending>,
     pub(crate) pending_namespaces: Vec<namespace_heads::Pending>,
-    pub(crate) exported_effects: BTreeSet<String>,
+    pub(crate) exported_effects: BTreeMap<String, effects::Signature>,
     pub(crate) pending_effects: Vec<effects::Pending>,
     pub(crate) exported_callbacks: BTreeMap<String, callback_heads::Summary>,
     pub(crate) pending_callbacks: Vec<callback_heads::Pending>,
+    pub(crate) exported_returned_params: std::collections::BTreeSet<String>,
+    pub(crate) exported_async_returns: BTreeMap<String, async_returns::Summary>,
+    pub(crate) pending_async_returns: Vec<async_returns::Pending>,
+    pub(crate) pending_returned_params: Vec<returned_params::Pending>,
     pub(crate) conditional_effects: Vec<effects::Conditional>,
     pub(crate) loop_carried_missing: BTreeMap<Span, Vec<Option<String>>>,
     helper_calls: Option<BTreeMap<Span, (String, HeadProof)>>,

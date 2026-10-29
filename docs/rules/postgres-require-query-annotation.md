@@ -203,11 +203,20 @@ remain failing findings under every policy; unresolved shapes follow
 A discarded call to a same-file or directly imported append-only function can
 preserve that trusted local builder's fixed prefix. Its first parameter may
 only appear as the receiver of discarded static append chains; defaults,
-aliases, captured parameters, and used append results abstain.
+aliases and used append results abstain. Captured uses qualify only when they
+are discarded static appends on the exact parameter; callbacks may run later
+or repeatedly without changing the head. Captured returns, implicit arrow
+append results, and nested helper calls stay unresolved.
 The helper may compose up to four exact same-file append-only calls on that
 parameter. It may return a static parameter-rooted append chain only when the
-caller discards the result. Nested captures, aliases, cycles, and used helper
+caller discards the result. Nested helper calls, aliases, cycles, and used helper
 results remain unresolved.
+Inert Boolean or string defaults on later helper parameters can preserve the
+same fixed prefix. A defaulted object destructure may use an empty `{}` outer
+default and requires an exact caller object with only static primitive data properties;
+omitting that argument is also safe for the empty default. Getters, spreads,
+computed keys, `__proto__`, calls in defaults, and builder-parameter defaults
+remain unanalyzable. Type annotations do not establish runtime values.
 A captured local trusted builder keeps its fixed head when every reference to
 its exact binding is a discarded static append, a configured executor read, or
 a proven local append-only effect. Closure execution order does not change this
@@ -244,14 +253,37 @@ A local const holding a trusted tagged SQL builder also permits a direct `.text`
 read at an executor, including a paired `.values` read. The builder must keep its
 fixed head through only safe appends; escapes, writes, optional or computed field
 reads, arbitrary object fields, and caller-supplied SQL remain unresolved.
+A captured native builder can keep that proof inside a closure when its complete
+binding-reference census contains only paired executor field reads and safe
+discarded appends. Closure timing does not change the leading head; an alias,
+write, unknown method, or other captured use still makes it unresolved.
+An uninitialized local `let` also qualifies after one adjacent `if`/`else`
+whose two simple arms each discard exactly one assignment of a fresh native
+`sql-template-strings` builder. Both arms must have a decisive literal head;
+bind interpolations are allowed because they do not determine that head. The
+same local binding must reach the configured executor without other reads,
+writes, aliases, captures, exports, semantic gaps, or intervening statements.
+The condition may be dynamic because either arm establishes a fresh head.
+Missing heads are decisive only when both arms lack the annotation; mixed,
+custom-tagged, incomplete, or otherwise escaped forms stay unresolved.
 An exact fresh-builder helper result can be stored in one local `const`, passed
 to an executor after discarded static appends, or appended directly at the
 executor. The helper's source must prove a trusted builder return; a plain
 record or string return cannot inherit `.append` trust. Aliases, mutation,
 capture, and unresolved imports remain advisory under the configured policy.
+For a paired `result.text, result.values` read, one later options argument is
+allowed; optional/computed fields, spread arguments, and unknown builder origin
+are still unresolved.
 Direct source imports of those helpers follow one exact export through the
 prepared request resolver. This direct-import form leaves re-exports and
 unresolved package implementations unanalyzable.
+One directly imported synchronous helper may also return the same first native
+builder argument after a single immutable append alias and a final return.
+The caller must pass one fresh tagged argument with a fixed head, then read the
+closed result's paired `.text` and `.values` at a configured executor. Only an
+omitted optional extra argument and an inert no-hole native tag default qualify;
+an extra object, another return path, escaped alias, or unresolved import stays
+unanalyzable. This proves the leading head, not the full statement.
 An exact top-level `const` destructure of a runtime namespace import may also
 resolve a fixed-head helper through unique explicit reexports and an imported
 default binding. It uses the prepared resolver and source helper proof; dynamic
@@ -262,6 +294,10 @@ captured append-only closures. Every exact-binding use must be a discarded
 static append, a proven local append-only effect, or the helper's own direct
 return. Captured returns, aliases, writes, unknown effects, and dynamic lexical
 access remain unanalyzable; this return proof does not change max effort.
+The local effect helper may take that builder as its second of two plain
+parameters when its direct call is discarded and every exact parameter use
+only appends a suffix. Imported effect helpers retain their first-argument
+contract. This proves the returned builder's leading name only.
 For a fresh plain record, the helper may return an immutable local string
 template as its `text` property. A caller may also extract exactly
 `const { text, values } = helper(args)` and pass those bindings once to a
@@ -270,7 +306,16 @@ mutable, or parameter-derived text remains unresolved.
 An inline callback that forwards its parameter directly to a configured
 executor can also retain a fixed named head supplied through a direct imported
 source helper. The helper must prove every callback invocation's payload from
-one fresh trusted builder argument or a fixed named template.
+one fresh trusted builder argument or a fixed named template. A local builder
+payload must be unexported: direct, aliased, and default runtime exports expose
+its mutable object to other modules, so a local reference census cannot prove
+a closed lifetime. An unrelated module export does not disqualify a private
+function-local binding with the same name.
+An exact stable same-file helper can also supply a fresh trusted named builder.
+An async inline callback may append to its parameter through direct static
+appends or a source-proven append-only helper before one configured executor
+call. Aliases, writes, escaping parameters, or unknown helper effects remain
+unanalyzable.
 A direct imported immutable string constant has the same fixed-head proof when
 its source file is prepared and the import/export identity is exact. Re-exports,
 mutable values, and missing source files remain unresolved.
@@ -363,3 +408,10 @@ report/advise/ignore policy. Rewrite them to a direct helper wrapping one static
 literal, or use the existing rule suppression directives documented above.
 `sqlLiteralHelpers` is independent of deprecated `trustedSqlTags` and does not
 add helper support to the general SQL extraction API.
+
+Low effort can also prove a direct awaited imported async factory's fresh native
+builder when all setup awaits precede allocation and all subsequent builder uses
+are proven append-only effects followed by its sole terminal return. Consume that
+result in one `const` immediately passed as the configured executor's sole
+argument. Missing awaits, extra uses, unresolved effects and alternate return
+paths remain unanalyzable; see [awaited return origins](../postgres-query-annotation/low-effort.md#awaited-fresh-native-return-origins).

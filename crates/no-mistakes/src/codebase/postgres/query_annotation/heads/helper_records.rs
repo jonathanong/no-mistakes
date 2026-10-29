@@ -22,6 +22,10 @@ pub(super) fn local_result_proof(
     call: &super::syntax::Call,
 ) -> Option<Summary> {
     local_proof(syntax, bindings, call)
+        .filter(|summary| {
+            !syntax.record_options_calls.contains(&call.span)
+                || matches!(summary, Summary::Builder { .. })
+        })
         .or_else(|| builder_local_proof(syntax, bindings, call))
         .or_else(|| destructure_local_proof(syntax, bindings, call))
 }
