@@ -7,8 +7,8 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod effort;
+use super::github_actions_workflow_files::job_lines;
 pub(super) use effort::partner_scope;
-mod job_lines;
 mod scan;
 mod step_comparison;
 mod step_sum;

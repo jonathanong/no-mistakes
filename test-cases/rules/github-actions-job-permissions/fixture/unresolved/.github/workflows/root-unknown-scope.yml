@@ -1,0 +1,8 @@
+on: push
+permissions:
+  imaginary-scope: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo unknown

@@ -1,0 +1,19 @@
+name: inherited write scopes
+on: push
+permissions:
+  id-token: write
+  contents: write
+  packages: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
+  call:
+    uses: ./.github/workflows/reusable.yml
+  explicit:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo explicit

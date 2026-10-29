@@ -1,0 +1,31 @@
+on: push
+permissions:
+  id-token: write
+jobs:
+  null-permissions:
+    permissions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo null
+  list-permissions:
+    permissions: [contents, read]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo list
+  expression-permissions:
+    permissions: ${{ inputs.job_permissions }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo expression
+  invalid-access:
+    permissions:
+      contents: admin
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo invalid
+  unknown-scope:
+    permissions:
+      imaginary-scope: read
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo unknown

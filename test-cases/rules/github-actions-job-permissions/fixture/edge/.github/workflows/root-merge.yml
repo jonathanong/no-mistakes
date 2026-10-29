@@ -1,0 +1,11 @@
+on: push
+base: &root
+  permissions: {}
+<<: *root
+permissions:
+  id-token: write
+jobs:
+  explicit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo explicit

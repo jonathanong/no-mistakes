@@ -1,0 +1,8 @@
+on: push
+permissions:
+  contents: admin
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo unknown

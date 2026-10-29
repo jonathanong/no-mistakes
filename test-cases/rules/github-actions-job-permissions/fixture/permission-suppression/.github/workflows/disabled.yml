@@ -1,0 +1,11 @@
+# no-mistakes-disable-file github-actions-job-permissions
+on: push
+permissions:
+  id-token: write
+jobs:
+  disabled:
+    permissions:
+      contents: admin
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo disabled

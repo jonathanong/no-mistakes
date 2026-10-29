@@ -34,6 +34,14 @@ mod docs_coverage_commands;
 mod docs_coverage_rules;
 
 #[test]
+fn github_actions_job_permissions_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_JOB_PERMISSIONS;
+    assert_eq!(rule, "github-actions-job-permissions");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
+}
+
+#[test]
 fn identifier_inventory_includes_root_and_agent_documents() {
     // Saved root/agent documents protect scan scope; ignored build output stays out.
     let source = repo_root().join("test-cases/docs/identifier-inventory/fixture");

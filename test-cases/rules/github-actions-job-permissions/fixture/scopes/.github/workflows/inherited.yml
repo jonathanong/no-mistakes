@@ -1,0 +1,18 @@
+on: push
+permissions:
+  models: read
+  repository-projects: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo inherited
+  call:
+    uses: ./.github/workflows/reusable.yml
+  explicit:
+    permissions:
+      models: read
+      repository-projects: read
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo explicit

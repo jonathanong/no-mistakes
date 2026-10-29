@@ -102,6 +102,12 @@ supported literal bound for that comparison; conditional and matrix steps
 count, while reusable-workflow calls and composite internals are not expanded.
 `allow` entries only adjust caps and cannot bypass the sum check.
 
+Use [`github-actions-job-permissions`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-job-permissions.md)
+to find jobs that inherit explicit workflow-level token write permissions,
+including `id-token: write` and reusable-workflow callers. The rule does not
+guess repository or organization defaults; unresolved permission declarations
+follow the shared `unanalyzable` policy.
+
 **Workaround:** `rg` for prose, comments, and file types with no graph domain.
 `importers` stays the fast TS/JS-only reverse static-import scan.
 

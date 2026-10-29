@@ -1,0 +1,15 @@
+on: push
+permissions:
+  id-token: write
+base: &base
+  permissions: {}
+jobs:
+  merged:
+    <<: *base
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo merge
+  explicit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo definite

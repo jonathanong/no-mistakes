@@ -1,0 +1,3 @@
+# no-mistakes-disable-file github-actions-job-permissions
+on: push
+ÿjobs: invalid

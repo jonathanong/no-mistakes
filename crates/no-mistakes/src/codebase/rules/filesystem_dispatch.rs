@@ -8,9 +8,10 @@ use super::{
     forbidden_workspace_closure, github_actions_action_timeout_pair,
     github_actions_checkout_credentials, github_actions_composite_step_schema,
     github_actions_docker_host_ports, github_actions_download_integrity,
-    github_actions_job_timeouts, github_actions_pinned_hash, github_actions_script_expressions,
-    github_actions_step_timeouts, github_actions_test_timeout_literals, integration_test_no_mocks,
-    lockfile_allowlist, markdown_child_links, markdown_eval_tests, markdown_link_display_text,
+    github_actions_job_permissions, github_actions_job_timeouts, github_actions_pinned_hash,
+    github_actions_script_expressions, github_actions_step_timeouts,
+    github_actions_test_timeout_literals, integration_test_no_mocks, lockfile_allowlist,
+    markdown_child_links, markdown_eval_tests, markdown_link_display_text,
     markdown_mermaid_validation, markdown_reachability, markdown_structure_budget,
     nextjs_redirect_destinations, no_empty_or_comments_only_files, no_git_identity_mutation,
     no_mistakes_config, no_raw_ephemeral_port, no_sparse_checkout, no_test_git_sha,
@@ -94,6 +95,7 @@ pub(super) const GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR: &str =
 pub(super) const GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA: &str =
     github_actions_composite_step_schema::RULE_ID;
 pub(super) const GITHUB_ACTIONS_JOB_TIMEOUTS: &str = github_actions_job_timeouts::RULE_ID;
+pub(super) const GITHUB_ACTIONS_JOB_PERMISSIONS: &str = github_actions_job_permissions::RULE_ID;
 pub(super) const GITHUB_ACTIONS_STEP_TIMEOUTS: &str = github_actions_step_timeouts::RULE_ID;
 pub(super) const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
 pub(super) const GITHUB_ACTIONS_SCRIPT_EXPRESSIONS: &str =

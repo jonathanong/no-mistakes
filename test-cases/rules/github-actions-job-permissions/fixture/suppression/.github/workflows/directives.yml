@@ -1,0 +1,17 @@
+on: push
+permissions:
+  id-token: write
+jobs:
+  # no-mistakes-disable-next-line github-actions-job-permissions
+  next-line:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo next
+  line: # no-mistakes-disable-line github-actions-job-permissions
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo line
+  visible:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo visible

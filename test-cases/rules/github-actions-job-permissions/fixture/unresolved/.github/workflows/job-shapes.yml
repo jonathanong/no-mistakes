@@ -1,0 +1,7 @@
+on: push
+permissions:
+  contents: write
+jobs:
+  scalar-job: ${{ inputs.job }}
+  null-job:
+  list-job: [runs-on, ubuntu-latest]

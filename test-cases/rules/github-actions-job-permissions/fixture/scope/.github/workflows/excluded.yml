@@ -1,0 +1,7 @@
+on: push
+permissions: write-all
+jobs:
+  excluded:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo excluded

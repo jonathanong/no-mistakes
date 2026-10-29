@@ -27,6 +27,14 @@ argument. The Node/N-API signature and report types are unchanged. A checkout
 can have separate credential and ref rows. See the
 [rule contract](rules/github-actions-checkout-credentials.md#analysis).
 
+The configured [`github-actions-job-permissions`](rules/github-actions-job-permissions.md)
+rule also runs through the existing asynchronous `check()` and
+`analyzeProject()` check-report APIs, with the same findings, advisories, and
+suppression behavior as CLI `check`. Its unresolved permission declarations
+use the shared `unanalyzable` policy; definite inherited write grants remain
+findings under every policy. The rule adds no function, option, or report
+type, so `check()` remains the runtime entrypoint.
+
 ```js
 const { analyzeProject } = require("no-mistakes");
 (async () => {

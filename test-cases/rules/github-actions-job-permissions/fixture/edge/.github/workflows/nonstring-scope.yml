@@ -1,0 +1,9 @@
+on: push
+permissions:
+  42: write
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
