@@ -84,7 +84,7 @@ impl<'a> Visit<'a> for Syntax<'_> {
             && callee.as_ref().is_some_and(|(_, parts)| {
                 parts.len() > 1 && parts.last().is_some_and(|name| name == "query")
             })
-            && input::sql_looking_member_call(value);
+            && !value.arguments.is_empty();
         let selected = callee.as_ref().is_some_and(|(root, parts)| {
             (parts.len() == 1 && (self.targets.contains(root) || self.aliases.contains_key(root)))
                 || (parts.len() == 2 && self.aliases.contains_key(root) && parts[1] == "query")

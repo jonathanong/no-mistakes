@@ -31,9 +31,9 @@ impl Selection {
             for binding in &import.bindings {
                 if exact
                     && !profile.import_specifier.is_empty()
+                    && profile.executor_names.iter().any(|name| name == "query")
                     && !import.type_only
                     && !binding.type_only
-                    && binding.kind != "namespace"
                 {
                     advisory_receivers.insert(binding.binding_id);
                 }

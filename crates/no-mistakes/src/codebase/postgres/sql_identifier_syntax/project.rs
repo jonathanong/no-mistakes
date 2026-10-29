@@ -36,7 +36,7 @@ pub(crate) fn collect_with_types_and_demand(
     let Some(module) = ts.module_bindings.as_deref() else {
         return FileFacts::default();
     };
-    let selections = profiles
+    let mut selections = profiles
         .iter()
         .map(|profile| {
             let mut selection = Selection::new(profile, module);
@@ -93,7 +93,7 @@ pub(crate) fn collect_with_types_and_demand(
             }
         }
     }
-    aliases::collect(program, module, &selections, &mut syntax);
+    aliases::collect(program, module, &mut selections, &mut syntax);
     syntax.visit_program(program);
     syntax.safe_parameterized = template_binds::safe_constants(module, &syntax.calls);
     let mut owners = FxHashMap::default();
