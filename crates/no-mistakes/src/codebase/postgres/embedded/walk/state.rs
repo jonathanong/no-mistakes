@@ -30,6 +30,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) head_calls_only: bool,
     pub(crate) source: &'a str,
     pub(crate) configured_module: String,
+    pub(super) executor_options: &'a super::super::EmbeddedSqlOptions,
     pub(crate) query_members: bool,
     pub(crate) query_binding: bool,
     pub(crate) bindings: &'a HashSet<String>,

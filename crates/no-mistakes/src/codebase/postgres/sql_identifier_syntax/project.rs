@@ -135,6 +135,7 @@ fn collect_with_declarations_and_demand(
             }
         }
     }
+    aliases::detached::collect(program, module, profiles, &mut selections, &mut syntax);
     aliases::collect(program, module, &mut selections, &mut syntax);
     syntax.visit_program(program);
     syntax.safe_parameterized = template_binds::safe_constants(module, &syntax.calls);
@@ -181,6 +182,7 @@ fn collect_with_declarations_and_demand(
                 .union(&selection.typed)
                 .filter(|id| !selection.unsupported.contains(id))
                 .copied()
+                .chain(selection.detached_executors.iter().copied())
                 .collect(),
         );
         let (calls, trusted) = calls::project(profile, selection, module, &syntax, &owners, source);

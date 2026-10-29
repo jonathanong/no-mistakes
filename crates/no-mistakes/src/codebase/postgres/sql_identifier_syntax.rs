@@ -1,5 +1,4 @@
 //! Low-effort SQL inputs from the request's parsed program and semantic bindings.
-//! This does not evaluate JavaScript or infer provenance through executor/value aliases.
 pub(crate) mod literal_projection;
 pub(crate) mod statement_policy;
 use super::EmbeddedSqlOptions;
@@ -77,6 +76,7 @@ struct Syntax<'source> {
     loose_query: bool,
     scoped_member_advisory: bool,
     recover_helpers: bool,
+    detached_calls: FxHashSet<Span>,
     calls: Vec<Call>,
     constants: FxHashMap<Span, Input>,
     env_references: FxHashMap<String, Span>,
@@ -145,5 +145,7 @@ mod escape_site_tests;
 #[cfg(test)]
 mod low_max_bind_parity_tests;
 
+#[cfg(test)]
+mod detached_tests;
 #[cfg(test)]
 mod typed_computed_parameter_tests;

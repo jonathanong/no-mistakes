@@ -1,31 +1,24 @@
 use super::ScopeVisitor;
-use oxc_ast::ast::{BindingPattern, VariableDeclarator};
+use oxc_ast::ast::VariableDeclarator;
 
 pub(in crate::codebase::postgres::embedded::walk) fn bind_query_property(
     declarator: &VariableDeclarator<'_>,
     is_const: bool,
     visitor: &mut ScopeVisitor<'_>,
 ) {
-    let (Some(init), BindingPattern::ObjectPattern(object)) = (&declarator.init, &declarator.id)
-    else {
+    let Some(init) = &declarator.init else {
         return;
     };
-    if !is_const || !visitor.namespace_expression(init) || !visitor.namespace_query_valid(init) {
+    if !visitor.detached_query_receiver(init) {
         return;
     }
-    for property in &object.properties {
-        if crate::ast::property_key_name(&property.key).as_deref() != Some("query") {
-            continue;
+    for (local, exact) in
+        crate::codebase::postgres::executor_detachment::query_bindings(&declarator.id)
+    {
+        if is_const && exact && visitor.detached_receiver_proven(init) {
+            visitor.note_query_capture(local.name.as_str(), init);
+        } else {
+            visitor.note_query_capture_with_certainty(local.name.as_str(), init, false);
         }
-        let BindingPattern::BindingIdentifier(local) = &property.value else {
-            continue;
-        };
-        if let Some(binding) = visitor
-            .current_scope()
-            .and_then(|scope| scope.get_mut(local.name.as_str()))
-        {
-            binding.executor_alias = Some(true);
-        }
-        visitor.note_query_capture(local.name.as_str(), init);
     }
 }

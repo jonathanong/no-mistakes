@@ -2,6 +2,9 @@ use super::*;
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 #[derive(Default)]
 pub(super) struct Selection {
+    pub detached_calls: FxHashMap<Span, bool>,
+    pub detached_initializers: FxHashSet<Span>,
+    pub detached_executors: FxHashSet<usize>,
     pub selected: FxHashSet<usize>,
     pub namespaces: FxHashSet<usize>,
     pub factories: FxHashSet<usize>,
@@ -129,6 +132,9 @@ impl Selection {
             }
         }
         Self {
+            detached_calls: FxHashMap::default(),
+            detached_initializers: FxHashSet::default(),
+            detached_executors: FxHashSet::default(),
             selected,
             namespaces,
             factories,

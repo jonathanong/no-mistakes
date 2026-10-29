@@ -121,6 +121,7 @@ impl ScopeVisitor<'_> {
     }
 
     pub(super) fn mark_dynamic(&mut self, name: &str) {
+        self.invalidate_query_capture(name);
         self.clear_undeclared_binding(name);
         self.forget_receiver_alias(name);
         for scope in self.scopes.iter_mut().rev() {

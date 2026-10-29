@@ -1,0 +1,10 @@
+import { pool, backup } from '@example/db';
+import { opaque } from '@opaque/helpers';
+let changing = pool;
+changing = backup;
+opaque(changing);
+changing = pool.query;
+const { query: first } = pool;
+first('DROP TABLE first_receiver_history');
+const { query: second } = backup;
+second('DROP TABLE second_receiver_history');

@@ -74,6 +74,33 @@ default to empty lists. Factories and types identify additional explicitly
 configured executor forms. A trusted tag entry names a named export from a
 module; it does not make unrelated strings executable SQL.
 
+When `query` is enabled for a configured executor module, the rule also follows
+immutable local copies of an imported receiver's `query` method:
+
+```ts
+import { pool } from "@example/db";
+
+const { query: run } = pool;
+const bound = pool.query.bind(pool);
+const alias = bound;
+run("DROP TABLE users");
+alias("TRUNCATE users");
+```
+
+Receiver and method aliases retain their imported identity. A known bind must
+use the same receiver and bind no arguments before invocation. Defaults, dynamic
+destructuring keys, mutable or escaped bindings, receiver overrides, and binds
+using another receiver or additional arguments retain
+uncertainty rather than disappearing. The configured `unanalyzable` policy
+controls that uncertainty; use `advise` to keep it as a non-failing advisory.
+Configured or standard named executor exports keep their function identity.
+A method assigned to an existing binding remains unanalyzable.
+SQL bound in advance is not replaced by the invocation's argument: these binds
+remain unanalyzable even if their caller passes `SELECT 1`.
+Full extraction distinguishes a method copied before a later receiver change
+from one copied after it. Rewrite an unclear binding as a direct named executor
+import or an immutable method copy so its origin can be checked.
+
 `unanalyzable` follows the shared `report` (default), `advise`, or `ignore`
 policy. The legacy `unanalyzableSql` alias also accepts `fail` as `report`.
 Definite violations remain findings under every policy. `message` customizes

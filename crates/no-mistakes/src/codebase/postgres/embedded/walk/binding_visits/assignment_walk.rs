@@ -66,6 +66,9 @@ impl<'a> ScopeVisitor<'a> {
             // Keep all may-alias origins: a branch or later callback may
             // observe any prior assignment, including an opaque replacement.
             self.set_receiver_alias_origins(ident.name.as_str(), alias_origins);
+            if assign.operator == ast::AssignmentOperator::Assign {
+                self.initialize_detached_value(ident.name.as_str(), &assign.right, false);
+            }
         } else {
             resolve::functions::reassigned::for_each_assigned_name(&assign.left, &mut |name| {
                 self.mark_dynamic(name);

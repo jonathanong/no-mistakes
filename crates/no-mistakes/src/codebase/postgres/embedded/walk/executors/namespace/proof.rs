@@ -1,9 +1,7 @@
 use super::super::ScopeVisitor;
 use super::identity::Origin;
-use super::MemberCall;
+use super::{captures::QueryCapture, MemberCall};
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind};
-use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{CallExpression, Expression};
 use std::collections::HashSet;
 
 fn uncertain(call: &MemberCall, proof: &super::MemberQueryProof) -> bool {
@@ -40,14 +38,14 @@ fn blocks(escape: &super::Escape, call: &MemberCall, origin: &Origin) -> bool {
     ordered_escape(ordered, escape, origin)
 }
 
-fn capture_blocks(escape: &super::Escape, call: &MemberCall, origin: &Origin) -> bool {
+fn capture_blocks(escape: &super::Escape, call: &MemberCall, _origin: &Origin) -> bool {
     // A top-level `const { query } = ns` copies the function during module
     // evaluation, before any function body runs. A later function does not
     // reach that copy. A copy inside a function is unordered with other
     // functions, and a loop still reaches backward. Function ids start at 1.
     let inside_function = call.owner != 0;
     let reaches = inside_function && (escape.owner != call.owner || escape.in_loop);
-    ordered_escape(escape.event < call.event || reaches, escape, origin)
+    escape.event < call.event || reaches
 }
 
 fn ordered_escape(ordered: bool, escape: &super::Escape, origin: &Origin) -> bool {
@@ -68,18 +66,6 @@ fn downgrade(call: &mut EmbeddedSqlCall) {
     call.recovered_placeholder_positions.clear();
 }
 
-pub(super) struct QueryCapture {
-    key: (u32, String),
-    origins: Vec<Origin>,
-    owner: u32,
-    event: u32,
-}
-
-pub(super) struct CapturedCall {
-    key: (u32, String),
-    span: (u32, u32),
-}
-
 fn captured_call(capture: &QueryCapture) -> MemberCall {
     MemberCall {
         sequence: 0,
@@ -92,58 +78,6 @@ fn captured_call(capture: &QueryCapture) -> MemberCall {
 }
 
 impl ScopeVisitor<'_> {
-    pub(in crate::codebase::postgres::embedded::walk) fn note_imported_alias_call(
-        &mut self,
-        call: &CallExpression<'_>,
-    ) {
-        let Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else {
-            return;
-        };
-        let Some(key) = self.capture_key(name.name.as_str()) else {
-            return;
-        };
-        self.member_query_proof.captured_calls.push(CapturedCall {
-            key,
-            span: (call.span.start, call.span.end),
-        });
-    }
-
-    fn capture_key(&self, name: &str) -> Option<(u32, String)> {
-        let (index, _) = self
-            .scopes
-            .iter()
-            .enumerate()
-            .rev()
-            .find(|(_, scope)| scope.contains_key(name))?;
-        Some((self.member_query_proof.scope_ids[index], name.to_string()))
-    }
-
-    /// The binding event is the call event. Escapes are applied after the walk,
-    /// so a later other-function or loop write still reaches this capture.
-    pub(in crate::codebase::postgres::embedded::walk) fn note_query_capture(
-        &mut self,
-        name: &str,
-        receiver: &Expression<'_>,
-    ) {
-        let Some(key) = self.capture_key(name) else {
-            return;
-        };
-        let owner = self
-            .member_query_proof
-            .function_ids
-            .last()
-            .copied()
-            .unwrap_or(0);
-        let origins = self.receiver_origins(receiver);
-        let event = self.member_query_proof.next_event;
-        self.member_query_proof.captures.push(QueryCapture {
-            key,
-            origins,
-            owner,
-            event,
-        });
-    }
-
     pub(in crate::codebase::postgres::embedded::walk) fn downgrade_escaped_member_calls(&mut self) {
         let blocked = self
             .member_query_proof
@@ -164,7 +98,9 @@ impl ScopeVisitor<'_> {
         let mut uncertain_keys = HashSet::new();
         for index in 0..captures {
             let call = captured_call(&self.member_query_proof.captures[index]);
-            if capture_uncertain(&call, &self.member_query_proof) {
+            if !self.member_query_proof.captures[index].trusted
+                || capture_uncertain(&call, &self.member_query_proof)
+            {
                 uncertain_keys.insert(self.member_query_proof.captures[index].key.clone());
             }
         }

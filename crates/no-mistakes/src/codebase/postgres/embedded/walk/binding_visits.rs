@@ -19,10 +19,15 @@ impl<'a> ScopeVisitor<'a> {
                             ast::Expression::Identifier(_)
                         )
                         && !self.receiver_origins(init).is_empty();
-                if (!tracked_alias && declaration.kind != ast::VariableDeclarationKind::Const)
-                    || (self.stable_executor_category(init).is_none()
-                        && self.relative_executor_proof(init).is_none()
-                        && !tracked_alias)
+                let copied_query =
+                    !crate::codebase::postgres::executor_detachment::query_bindings(&declarator.id)
+                        .is_empty()
+                        && self.detached_query_receiver(init);
+                if !copied_query
+                    && ((!tracked_alias && declaration.kind != ast::VariableDeclarationKind::Const)
+                        || (self.stable_executor_category(init).is_none()
+                            && self.relative_executor_proof(init).is_none()
+                            && !tracked_alias))
                 {
                     self.revoke_query_receiver(init);
                 }
@@ -30,11 +35,6 @@ impl<'a> ScopeVisitor<'a> {
         }
         resolve::initialize_vars(declaration, self);
         walk::walk_variable_declaration(self, declaration);
-        if declaration.kind == ast::VariableDeclarationKind::Const {
-            for declarator in &declaration.declarations {
-                resolve::bind_query_property(declarator, true, self);
-            }
-        }
         self.declaring_const = previous;
     }
 
@@ -132,6 +132,8 @@ impl<'a> ScopeVisitor<'a> {
         self.builder_reference_exemptions.truncate(exemptions);
         self.initialize_variants(declaration, variants);
         self.initialize_executor_alias(declaration, executor, namespace);
+        resolve::bind_query_property(declaration, self.declaring_const, self);
+        self.initialize_detached_query(declaration, self.declaring_const);
         if let ast::BindingPattern::BindingIdentifier(name) = &declaration.id {
             self.bind_undeclared_declaration(
                 name.name.as_str(),

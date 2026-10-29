@@ -31,6 +31,18 @@ pub struct EmbeddedSqlOptions {
 }
 
 impl EmbeddedSqlOptions {
+    pub(crate) fn is_callable_export(&self, name: &str) -> bool {
+        DEFAULT_EXECUTOR_NAMES.contains(&name)
+            || self
+                .executor_names
+                .iter()
+                .any(|candidate| candidate == name)
+            || self
+                .executor_factory_names
+                .iter()
+                .any(|candidate| candidate == name)
+    }
+
     pub(crate) fn selects_executors(&self) -> bool {
         !self.executor_names.is_empty()
             || !self.executor_factory_names.is_empty()

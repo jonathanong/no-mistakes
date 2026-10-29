@@ -100,30 +100,23 @@ impl<'a> Visit<'a> for Syntax<'_> {
                 parts.len() > 1 && parts.last().is_some_and(|name| name == "query")
             })
             && !value.arguments.is_empty();
-        let selected = callee.as_ref().is_some_and(|(root, parts)| {
-            (parts.len() == 1 && (self.targets.contains(root) || self.aliases.contains_key(root)))
-                || (parts.len() == 2 && self.aliases.contains_key(root) && parts[1] == "query")
-                || (self.typed_targets.contains(root) && input::indirect_executor_call(parts))
-                || (parts.len() == 2
-                    && self
-                        .namespace_targets
-                        .get(root)
-                        .is_some_and(|names| names.contains(&parts[1])))
-                || (self.loose_query
-                    && parts.len() > 1
-                    && parts.last().is_some_and(|name| name == "query"))
-        }) || unproven_member;
+        let selected = self.detached_calls.contains(&span(value.span))
+            || callee
+                .as_ref()
+                .is_some_and(|(root, parts)| self.selected_callee(root, parts))
+            || unproven_member;
         self.recover_call(value, selected);
         let root = selected.then(|| callee.as_ref().unwrap().0);
         if selected {
             self.calls.push(Call {
                 span: span(value.span),
-                input: if callee.as_ref().is_some_and(|(root, parts)| {
-                    (parts.len() == 1 && self.targets.contains(root))
-                        || (parts.len() == 2
-                            && parts[1] == "query"
-                            && self.typed_targets.contains(root))
-                }) {
+                input: if self.detached_calls.contains(&span(value.span))
+                    || callee.as_ref().is_some_and(|(root, parts)| {
+                        (parts.len() == 1 && self.targets.contains(root))
+                            || (parts.len() == 2
+                                && parts[1] == "query"
+                                && self.typed_targets.contains(root))
+                    }) {
                     value
                         .arguments
                         .first()

@@ -32,6 +32,7 @@ pub(crate) fn collect_calls<'a>(
         head_calls_only,
         source,
         configured_module: options.import_specifier.clone(),
+        executor_options: options,
         query_members: !options.import_specifier.is_empty()
             || options.executor_names.iter().any(|name| name == "query"),
         query_binding: options.executor_names.is_empty()

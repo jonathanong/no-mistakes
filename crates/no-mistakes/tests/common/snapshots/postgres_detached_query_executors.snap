@@ -1,0 +1,1211 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/after-copy.test.ts",
+          "line": 7,
+          "message": "tests/after-copy.test.ts:7: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE preserved_copy');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 10,
+          "message": "tests/exact.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bound('DROP TABLE detached_bound');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 12,
+          "message": "tests/exact.test.ts:12: executed test SQL uses ALTER TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "boundAlias('ALTER TABLE detached_bound ADD COLUMN value integer');",
+          "target": "ALTER TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 14,
+          "message": "tests/exact.test.ts:14: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "direct('DROP TABLE direct_control');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 17,
+          "message": "tests/exact.test.ts:17: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "method('DROP TABLE copied_member');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 19,
+          "message": "tests/exact.test.ts:19: executed test SQL uses DROP VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "rebound('DROP VIEW rebound_method');",
+          "target": "DROP VIEW"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 4,
+          "message": "tests/exact.test.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE detached_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 7,
+          "message": "tests/exact.test.ts:7: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('TRUNCATE detached_alias');",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "tests/local-bodies.test.ts",
+          "line": 5,
+          "message": "tests/local-bodies.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE local_detached_body');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/receiver-escaped-after.test.ts",
+          "line": 6,
+          "message": "tests/receiver-escaped-after.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE copied_before_receiver_escape');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/scopes.test.ts",
+          "line": 3,
+          "message": "tests/scopes.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE outer_before_shadow');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/scopes.test.ts",
+          "line": 8,
+          "message": "tests/scopes.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE outer_after_shadow');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 10,
+          "message": "tests/shape-forms.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bound('DROP TABLE template_bind');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 3,
+          "message": "tests/shape-forms.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bracket('DROP TABLE bracket_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 5,
+          "message": "tests/shape-forms.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "template('DROP TABLE template_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 8,
+          "message": "tests/shape-forms.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE declaration_chain');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/suppressed.test.ts",
+          "line": 6,
+          "message": "tests/suppressed.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE unsuppressed_control');",
+          "target": "DROP TABLE"
+        }
+      ],
+      "unprovenMemberQuerySql": 2,
+      "warnings": []
+    }
+  },
+  "low_current_policy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 10,
+          "message": "tests/assigned.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "copied('DROP TABLE assigned_copy');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 14,
+          "message": "tests/assigned.test.ts:14: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "last('DROP TABLE assigned_alias');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 17,
+          "message": "tests/assigned.test.ts:17: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "callback('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 20,
+          "message": "tests/assigned.test.ts:20: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "changing('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 22,
+          "message": "tests/assigned.test.ts:22: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run('DROP TABLE after_unrelated_reassignment');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 4,
+          "message": "tests/assigned.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run('DROP TABLE assigned_bound');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 7,
+          "message": "tests/assigned.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "initialized('DROP TABLE rebound_initializer');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/direct-member.test.ts",
+          "line": 2,
+          "message": "tests/direct-member.test.ts:2: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `pool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "pool.query('DROP TABLE direct_member_control');",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/direct-member.test.ts",
+          "line": 4,
+          "message": "tests/direct-member.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `receiver` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "receiver.query('DROP TABLE receiver_member_control');",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/escaped.test.ts",
+          "line": 5,
+          "message": "tests/escaped.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE escaped_executor');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/local-bodies.test.ts",
+          "line": 11,
+          "message": "tests/local-bodies.test.ts:11: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE local_uncertain_body');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 10,
+          "message": "tests/mixed-roles.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "reverse.query('DROP TABLE reverse_receiver');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 5,
+          "message": "tests/mixed-roles.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run.query('DROP TABLE mixed_receiver');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 6,
+          "message": "tests/mixed-roles.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run('DROP TABLE mixed_callable');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 9,
+          "message": "tests/mixed-roles.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "reverse('DROP TABLE reverse_callable');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutable.test.ts",
+          "line": 6,
+          "message": "tests/mutable.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE mutable_executor');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/prebound.test.ts",
+          "line": 5,
+          "message": "tests/prebound.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/receiver-escaped.test.ts",
+          "line": 6,
+          "message": "tests/receiver-escaped.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE escaped_receiver');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/receiver-history.test.ts",
+          "line": 8,
+          "message": "tests/receiver-history.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE escaped_receiver_history');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/receiver-origins.test.ts",
+          "line": 10,
+          "message": "tests/receiver-origins.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE second_receiver_history');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/receiver-origins.test.ts",
+          "line": 8,
+          "message": "tests/receiver-origins.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "first('DROP TABLE first_receiver_history');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/uncertain-shapes.test.ts",
+          "line": 4,
+          "message": "tests/uncertain-shapes.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "fallback('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/uncertain-shapes.test.ts",
+          "line": 6,
+          "message": "tests/uncertain-shapes.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "uncertain('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/uncertain.test.ts",
+          "line": 7,
+          "message": "tests/uncertain.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "changedAlias('DROP TABLE replaced_receiver');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/wrong-this.test.ts",
+          "line": 3,
+          "message": "tests/wrong-this.test.ts:3: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "wrongThis('DROP TABLE uncertain_receiver');",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/after-copy.test.ts",
+          "line": 7,
+          "message": "tests/after-copy.test.ts:7: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE preserved_copy');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 10,
+          "message": "tests/exact.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bound('DROP TABLE detached_bound');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 12,
+          "message": "tests/exact.test.ts:12: executed test SQL uses ALTER TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "boundAlias('ALTER TABLE detached_bound ADD COLUMN value integer');",
+          "target": "ALTER TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 14,
+          "message": "tests/exact.test.ts:14: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "direct('DROP TABLE direct_control');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 17,
+          "message": "tests/exact.test.ts:17: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "method('DROP TABLE copied_member');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 19,
+          "message": "tests/exact.test.ts:19: executed test SQL uses DROP VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "rebound('DROP VIEW rebound_method');",
+          "target": "DROP VIEW"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 4,
+          "message": "tests/exact.test.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE detached_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 7,
+          "message": "tests/exact.test.ts:7: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('TRUNCATE detached_alias');",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "tests/local-bodies.test.ts",
+          "line": 5,
+          "message": "tests/local-bodies.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE local_detached_body');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/receiver-escaped-after.test.ts",
+          "line": 6,
+          "message": "tests/receiver-escaped-after.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE copied_before_receiver_escape');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/scopes.test.ts",
+          "line": 3,
+          "message": "tests/scopes.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE outer_before_shadow');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/scopes.test.ts",
+          "line": 8,
+          "message": "tests/scopes.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE outer_after_shadow');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 10,
+          "message": "tests/shape-forms.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bound('DROP TABLE template_bind');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 3,
+          "message": "tests/shape-forms.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bracket('DROP TABLE bracket_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 5,
+          "message": "tests/shape-forms.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "template('DROP TABLE template_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 8,
+          "message": "tests/shape-forms.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE declaration_chain');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/suppressed.test.ts",
+          "line": 6,
+          "message": "tests/suppressed.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE unsuppressed_control');",
+          "target": "DROP TABLE"
+        }
+      ],
+      "unprovenMemberQuerySql": 2,
+      "warnings": [
+        "postgres-no-test-state-mutation: requested effort low; effective effort max because this rule has no low implementation"
+      ]
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 10,
+          "message": "tests/assigned.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "copied('DROP TABLE assigned_copy');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 14,
+          "message": "tests/assigned.test.ts:14: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "last('DROP TABLE assigned_alias');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 17,
+          "message": "tests/assigned.test.ts:17: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "callback('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 20,
+          "message": "tests/assigned.test.ts:20: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "changing('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 22,
+          "message": "tests/assigned.test.ts:22: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run('DROP TABLE after_unrelated_reassignment');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 4,
+          "message": "tests/assigned.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run('DROP TABLE assigned_bound');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 7,
+          "message": "tests/assigned.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "initialized('DROP TABLE rebound_initializer');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/direct-member.test.ts",
+          "line": 2,
+          "message": "tests/direct-member.test.ts:2: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `pool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "pool.query('DROP TABLE direct_member_control');",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/direct-member.test.ts",
+          "line": 4,
+          "message": "tests/direct-member.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `receiver` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "receiver.query('DROP TABLE receiver_member_control');",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/escaped.test.ts",
+          "line": 5,
+          "message": "tests/escaped.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE escaped_executor');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/local-bodies.test.ts",
+          "line": 11,
+          "message": "tests/local-bodies.test.ts:11: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE local_uncertain_body');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 10,
+          "message": "tests/mixed-roles.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "reverse.query('DROP TABLE reverse_receiver');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 5,
+          "message": "tests/mixed-roles.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run.query('DROP TABLE mixed_receiver');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 6,
+          "message": "tests/mixed-roles.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run('DROP TABLE mixed_callable');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 9,
+          "message": "tests/mixed-roles.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "reverse('DROP TABLE reverse_callable');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutable.test.ts",
+          "line": 6,
+          "message": "tests/mutable.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE mutable_executor');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/prebound.test.ts",
+          "line": 5,
+          "message": "tests/prebound.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/receiver-escaped.test.ts",
+          "line": 6,
+          "message": "tests/receiver-escaped.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE escaped_receiver');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/receiver-history.test.ts",
+          "line": 8,
+          "message": "tests/receiver-history.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE escaped_receiver_history');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/receiver-origins.test.ts",
+          "line": 10,
+          "message": "tests/receiver-origins.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE second_receiver_history');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/receiver-origins.test.ts",
+          "line": 8,
+          "message": "tests/receiver-origins.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "first('DROP TABLE first_receiver_history');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/uncertain-shapes.test.ts",
+          "line": 4,
+          "message": "tests/uncertain-shapes.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "fallback('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/uncertain-shapes.test.ts",
+          "line": 6,
+          "message": "tests/uncertain-shapes.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "uncertain('SELECT 1');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/uncertain.test.ts",
+          "line": 7,
+          "message": "tests/uncertain.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "changedAlias('DROP TABLE replaced_receiver');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/wrong-this.test.ts",
+          "line": 3,
+          "message": "tests/wrong-this.test.ts:3: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "wrongThis('DROP TABLE uncertain_receiver');",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/after-copy.test.ts",
+          "line": 7,
+          "message": "tests/after-copy.test.ts:7: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE preserved_copy');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 10,
+          "message": "tests/exact.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bound('DROP TABLE detached_bound');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 12,
+          "message": "tests/exact.test.ts:12: executed test SQL uses ALTER TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "boundAlias('ALTER TABLE detached_bound ADD COLUMN value integer');",
+          "target": "ALTER TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 14,
+          "message": "tests/exact.test.ts:14: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "direct('DROP TABLE direct_control');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 17,
+          "message": "tests/exact.test.ts:17: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "method('DROP TABLE copied_member');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 19,
+          "message": "tests/exact.test.ts:19: executed test SQL uses DROP VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "rebound('DROP VIEW rebound_method');",
+          "target": "DROP VIEW"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 4,
+          "message": "tests/exact.test.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE detached_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 7,
+          "message": "tests/exact.test.ts:7: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('TRUNCATE detached_alias');",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "tests/local-bodies.test.ts",
+          "line": 5,
+          "message": "tests/local-bodies.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE local_detached_body');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/receiver-escaped-after.test.ts",
+          "line": 6,
+          "message": "tests/receiver-escaped-after.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE copied_before_receiver_escape');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/scopes.test.ts",
+          "line": 3,
+          "message": "tests/scopes.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE outer_before_shadow');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/scopes.test.ts",
+          "line": 8,
+          "message": "tests/scopes.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE outer_after_shadow');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 10,
+          "message": "tests/shape-forms.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bound('DROP TABLE template_bind');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 3,
+          "message": "tests/shape-forms.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bracket('DROP TABLE bracket_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 5,
+          "message": "tests/shape-forms.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "template('DROP TABLE template_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 8,
+          "message": "tests/shape-forms.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE declaration_chain');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/suppressed.test.ts",
+          "line": 6,
+          "message": "tests/suppressed.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE unsuppressed_control');",
+          "target": "DROP TABLE"
+        }
+      ],
+      "unprovenMemberQuerySql": 2,
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/after-copy.test.ts",
+          "line": 7,
+          "message": "tests/after-copy.test.ts:7: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE preserved_copy');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 10,
+          "message": "tests/assigned.test.ts:10: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "copied('DROP TABLE assigned_copy');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 14,
+          "message": "tests/assigned.test.ts:14: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "last('DROP TABLE assigned_alias');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 17,
+          "message": "tests/assigned.test.ts:17: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "callback('SELECT 1');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 20,
+          "message": "tests/assigned.test.ts:20: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "changing('SELECT 1');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 22,
+          "message": "tests/assigned.test.ts:22: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run('DROP TABLE after_unrelated_reassignment');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 4,
+          "message": "tests/assigned.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run('DROP TABLE assigned_bound');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/assigned.test.ts",
+          "line": 7,
+          "message": "tests/assigned.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "initialized('DROP TABLE rebound_initializer');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/direct-member.test.ts",
+          "import": "@example/db",
+          "line": 2,
+          "message": "tests/direct-member.test.ts:2: receiver `pool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "pool.query('DROP TABLE direct_member_control');",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/direct-member.test.ts",
+          "import": "@example/db",
+          "line": 4,
+          "message": "tests/direct-member.test.ts:4: receiver `receiver` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "receiver.query('DROP TABLE receiver_member_control');",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/escaped.test.ts",
+          "line": 5,
+          "message": "tests/escaped.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE escaped_executor');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 10,
+          "message": "tests/exact.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bound('DROP TABLE detached_bound');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 12,
+          "message": "tests/exact.test.ts:12: executed test SQL uses ALTER TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "boundAlias('ALTER TABLE detached_bound ADD COLUMN value integer');",
+          "target": "ALTER TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 14,
+          "message": "tests/exact.test.ts:14: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "direct('DROP TABLE direct_control');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 17,
+          "message": "tests/exact.test.ts:17: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "method('DROP TABLE copied_member');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 19,
+          "message": "tests/exact.test.ts:19: executed test SQL uses DROP VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "rebound('DROP VIEW rebound_method');",
+          "target": "DROP VIEW"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 4,
+          "message": "tests/exact.test.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE detached_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/exact.test.ts",
+          "line": 7,
+          "message": "tests/exact.test.ts:7: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('TRUNCATE detached_alias');",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "tests/local-bodies.test.ts",
+          "line": 11,
+          "message": "tests/local-bodies.test.ts:11: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE local_uncertain_body');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/local-bodies.test.ts",
+          "line": 5,
+          "message": "tests/local-bodies.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE local_detached_body');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 10,
+          "message": "tests/mixed-roles.test.ts:10: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "reverse.query('DROP TABLE reverse_receiver');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 5,
+          "message": "tests/mixed-roles.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run.query('DROP TABLE mixed_receiver');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 6,
+          "message": "tests/mixed-roles.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "run('DROP TABLE mixed_callable');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/mixed-roles.test.ts",
+          "line": 9,
+          "message": "tests/mixed-roles.test.ts:9: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "reverse('DROP TABLE reverse_callable');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/mutable.test.ts",
+          "line": 6,
+          "message": "tests/mutable.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE mutable_executor');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/prebound.test.ts",
+          "line": 5,
+          "message": "tests/prebound.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('SELECT 1');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/receiver-escaped-after.test.ts",
+          "line": 6,
+          "message": "tests/receiver-escaped-after.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE copied_before_receiver_escape');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/receiver-escaped.test.ts",
+          "line": 6,
+          "message": "tests/receiver-escaped.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "alias('DROP TABLE escaped_receiver');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/receiver-history.test.ts",
+          "line": 8,
+          "message": "tests/receiver-history.test.ts:8: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE escaped_receiver_history');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/receiver-origins.test.ts",
+          "line": 10,
+          "message": "tests/receiver-origins.test.ts:10: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE second_receiver_history');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/receiver-origins.test.ts",
+          "line": 8,
+          "message": "tests/receiver-origins.test.ts:8: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "first('DROP TABLE first_receiver_history');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/scopes.test.ts",
+          "line": 3,
+          "message": "tests/scopes.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE outer_before_shadow');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/scopes.test.ts",
+          "line": 8,
+          "message": "tests/scopes.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE outer_after_shadow');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 10,
+          "message": "tests/shape-forms.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bound('DROP TABLE template_bind');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 3,
+          "message": "tests/shape-forms.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bracket('DROP TABLE bracket_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 5,
+          "message": "tests/shape-forms.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "template('DROP TABLE template_capture');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/shape-forms.test.ts",
+          "line": 8,
+          "message": "tests/shape-forms.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "second('DROP TABLE declaration_chain');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/suppressed.test.ts",
+          "line": 6,
+          "message": "tests/suppressed.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query('DROP TABLE unsuppressed_control');",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/uncertain-shapes.test.ts",
+          "line": 4,
+          "message": "tests/uncertain-shapes.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "fallback('SELECT 1');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/uncertain-shapes.test.ts",
+          "line": 6,
+          "message": "tests/uncertain-shapes.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "uncertain('SELECT 1');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/uncertain.test.ts",
+          "line": 7,
+          "message": "tests/uncertain.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "changedAlias('DROP TABLE replaced_receiver');",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/wrong-this.test.ts",
+          "line": 3,
+          "message": "tests/wrong-this.test.ts:3: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "wrongThis('DROP TABLE uncertain_receiver');",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "unprovenMemberQuerySql": 2,
+      "warnings": []
+    }
+  }
+}

@@ -51,19 +51,31 @@ pub(super) fn configured_values(
             continue;
         }
         for specifier in import.specifiers.iter().flatten() {
-            let ImportDeclarationSpecifier::ImportSpecifier(named) = specifier else {
-                continue;
+            let (local, imported) = match specifier {
+                ImportDeclarationSpecifier::ImportSpecifier(named)
+                    if named.import_kind != ImportOrExportKind::Type =>
+                {
+                    (
+                        named.local.name.as_str(),
+                        crate::ast::module_export_name(&named.imported).into_owned(),
+                    )
+                }
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(default)
+                    if !options.import_specifier.is_empty() =>
+                {
+                    (default.local.name.as_str(), "default".to_string())
+                }
+                _ => continue,
             };
-            if named.import_kind == ImportOrExportKind::Type
-                || !bindings.contains(named.local.name.as_str())
-            {
+            if options.import_specifier.is_empty() && !bindings.contains(local) {
                 continue;
             }
+            // Keep all configured export origins; see docs/rules/postgres-no-test-state-mutation.md.
             names.insert(
-                named.local.name.to_string(),
+                local.to_string(),
                 (
                     crate::ast::js_literal(&import.source).into_owned(),
-                    crate::ast::module_export_name(&named.imported).to_string(),
+                    imported,
                 ),
             );
         }

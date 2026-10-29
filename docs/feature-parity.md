@@ -181,6 +181,9 @@ Finite local builder assignments also retain their reachable alternatives
 when a branch ends in a direct throw. Its shared PostgreSQL SQL parser accepts
 `ANALYZE VERBOSE a, b` and per-relation columns such as `ANALYZE a(col), b`;
 malformed lists and parenthesized `ANALYZE` option lists remain unanalyzable.
+Destructured or bound `query` methods from configured imported receivers retain
+their executor origin through local aliases in both interfaces. Unproven or
+escaped bindings follow the existing unanalyzable policy.
 
 At low effort, test-state SQL can use bounded source helpers, literal-return
 switches with source-proven abrupt defaults, correlated strict predicates in

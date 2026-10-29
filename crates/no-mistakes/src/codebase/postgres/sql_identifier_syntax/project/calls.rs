@@ -50,12 +50,9 @@ fn direct_calls(
             continue;
         };
         let owner = owners.get(root).copied();
+        let detached = selection.detached_calls.get(&call.span).copied();
         let named = owner.is_some_and(|binding| selected.contains(&binding.id)) && parts.len() == 1;
-        let alias = (parts.len() == 1 || (parts.len() == 2 && parts[1] == "query"))
-            && syntax
-                .aliases
-                .get(root)
-                .is_some_and(|id| selected.contains(id) || typed.contains(id));
+        let alias = member::alias_target(syntax, selection, root, parts);
         let namespace = owner.is_some_and(|binding| namespaces.contains(&binding.id))
             && parts.len() == 2
             && parts[1] == "query";
@@ -69,14 +66,15 @@ fn direct_calls(
             call,
             owner,
             parts,
-            named || alias || namespace || typed,
+            named || alias || namespace || typed || detached.is_some(),
         );
-        if !(named || alias || namespace || loose || typed) {
+        if !(named || alias || namespace || loose || typed || detached.is_some()) {
             continue;
         }
         direct.insert(*root);
         let uncertain = gaps
-            || alias
+            || detached == Some(false)
+            || (alias && detached != Some(true))
             || (namespace && !typed)
             || loose
             || unsupported
@@ -138,6 +136,7 @@ fn append_escapes(
             // Type annotations and type queries are erased even when their
             // imported binding also denotes an unsupported runtime executor.
             if direct.contains(&at)
+                || selection.detached_initializers.contains(&at)
                 || !usage.runtime
                 || selection.transports.contains(&at)
                 || syntax
@@ -159,6 +158,7 @@ fn append_escapes(
     for (at, owner) in &syntax.aliases {
         if (selected.contains(owner) || typed.contains(owner))
             && !direct.contains(at)
+            && !selection.detached_initializers.contains(at)
             && !selection.transports.contains(at)
             && !syntax
                 .metadata
