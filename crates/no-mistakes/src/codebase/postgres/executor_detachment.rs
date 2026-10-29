@@ -31,6 +31,28 @@ pub(crate) fn invoked_reference<'e, 'a>(
     }
 }
 
+/// The expressions a tagged template can invoke: sequence tails and every conditional or logical branch.
+pub(crate) fn tag_references<'e, 'a>(tag: &'e Expression<'a>, out: &mut Vec<&'e Expression<'a>>) {
+    match tag.get_inner_expression() {
+        Expression::SequenceExpression(sequence) => {
+            if let Some(last) = sequence.expressions.last() {
+                tag_references(last, out);
+            }
+        }
+        Expression::ConditionalExpression(conditional) => {
+            tag_references(&conditional.consequent, out);
+            tag_references(&conditional.alternate, out);
+        }
+        Expression::LogicalExpression(logical) => {
+            if logical.operator != oxc_ast::ast::LogicalOperator::And {
+                tag_references(&logical.left, out);
+            }
+            tag_references(&logical.right, out);
+        }
+        inner => out.push(inner),
+    }
+}
+
 pub(crate) fn bind_callee<'e, 'a>(callee: &'e Expression<'a>) -> Option<&'e Expression<'a>> {
     let (method, name) = static_member(callee)?;
     (name == "bind").then_some(method)

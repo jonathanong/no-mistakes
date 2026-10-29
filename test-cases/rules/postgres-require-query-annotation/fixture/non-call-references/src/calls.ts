@@ -21,3 +21,4 @@ export function aliases(options: any = db) {
 db.query`SELECT 7`;
 const tag = db.query;
 tag`SELECT 8`;
+(0, db.query)`SELECT 9`;

@@ -1,7 +1,7 @@
 use super::ScopeVisitor;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind};
 use crate::codebase::postgres::executor_detachment::{
-    executor_bindings, executor_receiver, invoked_reference,
+    executor_bindings, executor_receiver, invoked_reference, tag_references,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
@@ -19,8 +19,12 @@ impl ScopeVisitor<'_> {
     }
 
     pub(super) fn note_invoked_tag(&mut self, tag: &Expression<'_>) {
-        let span = unwrap_ts_wrappers(tag).span();
-        self.executor_invoked_refs.insert((span.start, span.end));
+        let mut targets = Vec::new();
+        tag_references(tag, &mut targets);
+        for target in targets {
+            let span = unwrap_ts_wrappers(target).span();
+            self.executor_invoked_refs.insert((span.start, span.end));
+        }
     }
 
     pub(super) fn note_executor_member(&mut self, expression: &Expression<'_>) {

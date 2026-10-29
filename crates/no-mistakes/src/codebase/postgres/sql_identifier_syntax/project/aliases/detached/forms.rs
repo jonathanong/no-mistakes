@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::postgres::executor_detachment::{
-    bind_method, executor_bindings, executor_receiver, invoked_reference,
+    bind_method, executor_bindings, executor_receiver, invoked_reference, tag_references,
 };
 use oxc_ast::ast::BindingIdentifier;
 mod assignments;
@@ -132,10 +132,12 @@ impl<'a> Visit<'a> for Collector<'_> {
         &mut self,
         tagged: &oxc_ast::ast::TaggedTemplateExpression<'a>,
     ) {
-        self.invoked
-            .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(
-                &tagged.tag,
-            ))));
+        let mut targets = Vec::new();
+        tag_references(&tagged.tag, &mut targets);
+        for target in targets {
+            self.invoked
+                .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(target))));
+        }
         walk::walk_tagged_template_expression(self, tagged);
     }
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
