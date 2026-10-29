@@ -1,3 +1,4 @@
+import { unrelatedFactory } from '../db/index';
 import * as declaredNamespace from '../db/index';
 import * as foreignNamespace from '../other/index';
 import foreignDefault from '../other/index';
@@ -6,7 +7,13 @@ import type erasedDefault from '../db/index';
 import shadowedDefault from '../db/index';
 import * as shadowedNamespace from '../db/index';
 
-export async function outside() {
+export async function outside(foreignMethod: string) {
+  const unrelatedTx = await unrelatedFactory();
+  await unrelatedTx('DROP TABLE app.factory_undeclared_named'); // OUTSIDE: undeclared named export
+  const computedForeignTx = await foreignNamespace[foreignMethod]();
+  await computedForeignTx('DROP TABLE app.factory_dynamic_foreign'); // OUTSIDE: computed foreign module
+  const nestedForeignTx = await foreignNamespace.factoryGroup.beginTransaction();
+  await nestedForeignTx('DROP TABLE app.factory_nested_foreign'); // OUTSIDE: nested foreign receiver
   const otherTx = await declaredNamespace.unrelatedFactory();
   await otherTx('DROP TABLE app.factory_wrong_export'); // OUTSIDE: undeclared export
   const foreignTx = await foreignNamespace.beginTransaction();
