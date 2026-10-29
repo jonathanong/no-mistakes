@@ -12,6 +12,16 @@ pub(super) struct Selection {
     pub advisory_receivers: FxHashSet<usize>,
 }
 impl Selection {
+    pub fn retains_recovery(&self) -> bool {
+        !self.selected.is_empty()
+            || !self.namespaces.is_empty()
+            || !self.factories.is_empty()
+            || !self.transports.is_empty()
+            || !self.runtime.is_empty()
+            || !self.typed.is_empty()
+            || !self.unsupported.is_empty()
+            || !self.advisory_receivers.is_empty()
+    }
     pub fn add_declared_factories(
         &mut self,
         profile: &EmbeddedSqlOptions,

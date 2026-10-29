@@ -169,7 +169,7 @@ fn collect_with_declarations_and_demand(
         );
     }
     let mut output = FileFacts::default();
-    for (profile, selection) in profiles.iter().zip(selections) {
+    for (profile, selection) in profiles.iter().zip(&selections) {
         if !profile.selects_executors() {
             output.profiles.push((profile.clone(), Vec::new()));
             continue;
@@ -183,18 +183,14 @@ fn collect_with_declarations_and_demand(
                 .copied()
                 .collect(),
         );
-        let (calls, trusted) =
-            calls::project(profile, &selection, module, &syntax, &owners, source);
+        let (calls, trusted) = calls::project(profile, selection, module, &syntax, &owners, source);
         syntax.recovery.sinks.insert(profile.clone(), trusted);
         output.profiles.push((profile.clone(), calls));
     }
-    if recover_helpers {
-        syntax.recovery.validate(&syntax.template_binds);
-        syntax.recovery.iterators = helper_recovery::iterator::collect(program, module, source);
-    }
-    output.recovery = syntax.recovery;
+    syntax.finish(module, &selections, &mut output, program, source);
     output
 }
 
 mod aliases;
 mod calls;
+mod demand;

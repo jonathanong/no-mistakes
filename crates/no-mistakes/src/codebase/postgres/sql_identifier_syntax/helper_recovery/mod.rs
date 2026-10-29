@@ -164,6 +164,8 @@ mod coverage_tests;
 
 #[cfg(test)]
 mod model_demand_tests;
+#[cfg(test)]
+mod module_demand_tests;
 
 #[cfg(test)]
 #[path = "tests/abrupt.rs"]
