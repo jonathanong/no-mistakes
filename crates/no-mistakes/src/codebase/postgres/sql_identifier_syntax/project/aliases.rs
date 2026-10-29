@@ -65,26 +65,35 @@ struct Aliases<'a, 'source> {
     advisory_edges: FxHashMap<usize, Vec<usize>>,
 }
 
+impl Aliases<'_, '_> {
+    fn advisory_edge(&mut self, source: Span, alias: usize) {
+        if let Some(source_id) = self.references.get(&source) {
+            self.advisory_edges
+                .entry(*source_id)
+                .or_default()
+                .push(alias);
+        }
+    }
+}
+
 impl<'a> Visit<'a> for Aliases<'_, '_> {
     fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
-        if value.kind.is_const() {
-            for declaration in &value.declarations {
-                let Some((source, parts)) = declaration.init.as_ref().and_then(chain) else {
-                    continue;
-                };
-                if parts.len() == 1 {
-                    if let BindingPattern::BindingIdentifier(alias) = &declaration.id {
-                        if let (Some(source_id), Some(binding)) = (
-                            self.references.get(&source),
-                            self.bindings.get(&span(alias.span)),
-                        ) {
-                            self.advisory_edges
-                                .entry(*source_id)
-                                .or_default()
-                                .push(binding.id);
-                        }
+        for declaration in &value.declarations {
+            let Some((source, parts)) = declaration.init.as_ref().and_then(chain) else {
+                continue;
+            };
+            if parts.len() == 1 {
+                if let BindingPattern::BindingIdentifier(alias) = &declaration.id {
+                    if let Some(id) = self
+                        .bindings
+                        .get(&span(alias.span))
+                        .map(|binding| binding.id)
+                    {
+                        self.advisory_edge(source, id);
                     }
                 }
+            }
+            if value.kind.is_const() {
                 let alias = match &declaration.id {
                     BindingPattern::BindingIdentifier(alias)
                         if parts.len() == 1 || (parts.len() == 2 && parts[1] == "query") =>
