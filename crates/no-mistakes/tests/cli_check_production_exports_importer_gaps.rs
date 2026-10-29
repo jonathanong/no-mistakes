@@ -95,11 +95,16 @@ fn near_misses_keep_their_advisories() {
                 "tests/mixed-union.test.mts",
                 "tests/numeric-key.test.mts",
                 "tests/omit.test.mts",
+                "tests/other-generic.test.mts",
+                // The local namespace declaration is its own unsupported form.
+                "tests/qualified-pick.test.mts",
+                "tests/qualified-pick.test.mts",
             ],
         ),
         (
             "mock-type-assertions-near-miss",
             vec![
+                "tests/callback.test.mts",
                 "tests/local-vi.test.mts",
                 "tests/member-callee.test.mts",
                 "tests/not-a-factory.test.mts",
@@ -120,6 +125,7 @@ fn near_misses_keep_their_advisories() {
                 "src/mixed.cjs",
                 "src/mutated.cjs",
                 "src/nested.cjs",
+                "src/optional.cjs",
                 "src/rhs.cjs",
                 "src/twice.cjs",
                 "src/twice.cjs",

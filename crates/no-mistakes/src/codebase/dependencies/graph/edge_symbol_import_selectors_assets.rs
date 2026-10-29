@@ -19,10 +19,7 @@ fn collect_created_require_selectors(
     edges: &mut Vec<Edge>,
     sites: &mut SelectorImportSites,
 ) {
-    let (Some(module), Some(source)) = (&file_facts.module_bindings, file_facts.source.as_deref())
-    else {
-        return;
-    };
+    let source = file_facts.source.as_deref().unwrap_or_default();
     let line_of = |start: u32| crate::codebase::ts_source::byte_offset_to_line(source, start as usize);
     let known: FxHashSet<_> = file_facts
         .imports
@@ -30,17 +27,19 @@ fn collect_created_require_selectors(
         .filter(|import| import.kind == ImportKind::Require)
         .map(|import| (import.specifier.as_str(), import.line))
         .collect();
-    for load in module.loads.iter().filter(|load| load.kind == "require") {
-        let line = line_of(load.span.start);
-        if !known.contains(&(load.specifier.as_str(), line)) {
-            selector_unknown(
-                inputs,
-                &load.specifier,
-                line as usize,
-                "dynamic or require selector",
-                edges,
-                sites,
-            );
+    for module in &file_facts.module_bindings {
+        for load in module.loads.iter().filter(|load| load.kind == "require") {
+            let line = line_of(load.span.start);
+            if !known.contains(&(load.specifier.as_str(), line)) {
+                selector_unknown(
+                    inputs,
+                    &load.specifier,
+                    line as usize,
+                    "dynamic or require selector",
+                    edges,
+                    sites,
+                );
+            }
         }
     }
 }

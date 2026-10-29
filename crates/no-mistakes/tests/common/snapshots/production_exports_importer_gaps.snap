@@ -226,6 +226,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "src/optional.cjs",
+          "line": 2,
+          "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "const target = module?.exports;",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/rhs.cjs",
           "line": 3,
           "message": "cannot analyze production export importers: CommonJS module/export objects are unsupported; use explicit named imports and statically analyzable exports",
@@ -400,6 +408,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [
         {
+          "file": "tests/callback.test.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: symbol consumers of `callbackKey` include an unknown import selector: tests/callback.test.mts:2 `../src/callback.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const items = [1].map(() => ({}) as typeof import(\"../src/callback.mjs\"));",
+          "target": "unanalyzable"
+        },
+        {
           "file": "tests/local-vi.test.mts",
           "line": 5,
           "message": "cannot analyze production export importers: symbol consumers of `localViKey` include an unknown import selector: tests/local-vi.test.mts:5 `../src/local-vi.mjs` (type import selector); use explicit named imports and statically analyzable exports",
@@ -543,6 +559,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "cannot analyze production export importers: symbol consumers of `omitKey` include an unknown import selector: tests/omit.test.mts:1 `../src/omit.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export type Rest = Omit<typeof import(\"../src/omit.mjs\"), \"omitKey\">;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/other-generic.test.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: symbol consumers of `genericKey` include an unknown import selector: tests/other-generic.test.mts:1 `../src/other-generic.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Wrapped = Promise<typeof import(\"../src/other-generic.mjs\")>;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/qualified-pick.test.mts",
+          "line": 1,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "declare namespace Utils {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/qualified-pick.test.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: symbol consumers of `qualKey` include an unknown import selector: tests/qualified-pick.test.mts:4 `../src/qualified-pick.mjs` (type import selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Qualified = Utils.Pick<typeof import(\"../src/qualified-pick.mjs\"), \"qualKey\">;",
           "target": "unanalyzable"
         }
       ],
