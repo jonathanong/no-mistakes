@@ -1,3 +1,4 @@
+mod lookup;
 use super::super::ScopeVisitor;
 use super::identity::Origin;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -39,7 +40,10 @@ impl ScopeVisitor<'_> {
         });
     }
 
-    fn capture_scope(&self, name: &str) -> Option<u32> {
+    pub(in crate::codebase::postgres::embedded::walk) fn capture_scope(
+        &self,
+        name: &str,
+    ) -> Option<u32> {
         let (index, _) = self
             .scopes
             .iter()
@@ -57,14 +61,7 @@ impl ScopeVisitor<'_> {
         let Expression::Identifier(name) = unwrap_ts_wrappers(expression) else {
             return None;
         };
-        let scope = self.capture_scope(name.name.as_str())?;
-        let index = self
-            .member_query_proof
-            .capture_indices
-            .get(&scope)?
-            .get(name.name.as_str())?
-            .last()?;
-        self.member_query_proof.captures.get(*index)
+        self.named_query_capture(name.name.as_str())
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn has_query_capture(

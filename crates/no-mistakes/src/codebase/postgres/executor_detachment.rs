@@ -1,8 +1,14 @@
 use oxc_ast::ast::*;
 
-pub(crate) fn query_receiver<'e, 'a>(expression: &'e Expression<'a>) -> Option<&'e Expression<'a>> {
+pub(crate) fn executor_receiver<'e, 'a>(
+    expression: &'e Expression<'a>,
+    names: &[String],
+) -> Option<&'e Expression<'a>> {
     let (receiver, name) = static_member(expression)?;
-    (name == "query").then_some(receiver)
+    names
+        .iter()
+        .any(|selected| selected == &name)
+        .then_some(receiver)
 }
 
 pub(crate) fn bind_method<'e, 'a>(call: &'e CallExpression<'a>) -> Option<&'e Expression<'a>> {
@@ -14,9 +20,9 @@ pub(crate) fn bind_callee<'e, 'a>(callee: &'e Expression<'a>) -> Option<&'e Expr
     (name == "bind").then_some(method)
 }
 
-/// A false proof still retains a possible query when a default or dynamic key intervenes.
-pub(crate) fn query_bindings<'e, 'a>(
+pub(crate) fn executor_bindings<'e, 'a>(
     pattern: &'e BindingPattern<'a>,
+    names: &[String],
 ) -> Vec<(&'e BindingIdentifier<'a>, bool)> {
     let BindingPattern::ObjectPattern(object) = pattern else {
         return Vec::new();
@@ -30,7 +36,10 @@ pub(crate) fn query_bindings<'e, 'a>(
             } else {
                 crate::ast::property_key_name(&property.key)
             };
-            if key.as_deref().is_some_and(|key| key != "query") {
+            if key
+                .as_deref()
+                .is_some_and(|key| !names.iter().any(|name| name == key))
+            {
                 return None;
             }
             let (local, plain) = match &property.value {
@@ -43,12 +52,14 @@ pub(crate) fn query_bindings<'e, 'a>(
                 }
                 _ => return None,
             };
-            Some((local.as_ref(), key.as_deref() == Some("query") && plain))
+            Some((local.as_ref(), key.is_some() && plain))
         })
         .collect()
 }
 
-fn static_member<'e, 'a>(expression: &'e Expression<'a>) -> Option<(&'e Expression<'a>, String)> {
+pub(crate) fn static_member<'e, 'a>(
+    expression: &'e Expression<'a>,
+) -> Option<(&'e Expression<'a>, String)> {
     match expression.get_inner_expression() {
         Expression::StaticMemberExpression(member) => {
             Some((&member.object, member.property.name.to_string()))

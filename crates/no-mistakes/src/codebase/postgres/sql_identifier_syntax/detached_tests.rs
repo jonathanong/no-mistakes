@@ -58,7 +58,13 @@ fn exact_detached_methods_are_normal_inputs_and_trusted_sinks() {
             );
             assert!(facts.recovery.sinks[&profile()].contains(&call.span));
         }
-        assert_eq!(calls.len(), 7);
+        assert_eq!(
+            calls
+                .iter()
+                .filter(|call| matches!(call.input, Input::Sql { .. }))
+                .count(),
+            7
+        );
     });
 }
 #[test]
@@ -173,3 +179,5 @@ fn called_bodies_retain_detached_roots_for_helper_demand() {
 }
 
 mod controls;
+
+mod obligations;

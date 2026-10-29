@@ -20,8 +20,11 @@ impl<'a> ScopeVisitor<'a> {
                         )
                         && !self.receiver_origins(init).is_empty();
                 let copied_query =
-                    !crate::codebase::postgres::executor_detachment::query_bindings(&declarator.id)
-                        .is_empty()
+                    !crate::codebase::postgres::executor_detachment::executor_bindings(
+                        &declarator.id,
+                        &self.executor_options.executor_names,
+                    )
+                    .is_empty()
                         && self.detached_query_receiver(init);
                 if !copied_query
                     && ((!tracked_alias && declaration.kind != ast::VariableDeclarationKind::Const)
@@ -81,7 +84,10 @@ impl<'a> ScopeVisitor<'a> {
                 self.revoke_mutated_query_member(&value.object);
             }
             ast::MemberExpression::ComputedMemberExpression(value)
-                if query_key::may_write_query(&value.expression) =>
+                if query_key::may_write_query(
+                    &value.expression,
+                    &self.executor_options.executor_names,
+                ) =>
             {
                 self.revoke_mutated_query_member(&value.object);
             }

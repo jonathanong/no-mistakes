@@ -32,6 +32,7 @@ require("./mutable-registry-effort-api.test.js");
 require("./rule-severity-advisory-api.test.js");
 require("./test-no-live-repository-scan-api.test.js");
 require("./postgres-detached-executors-api.test.js");
+require("./postgres-executor-obligations-api.test.js");
 
 const repositoryRoot = join(__dirname, "..", "..", "..");
 const fixtureRoot = join(repositoryRoot, "fixtures", "napi", "real-addon-dependencies");

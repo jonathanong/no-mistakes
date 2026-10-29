@@ -1,0 +1,78 @@
+{
+  "rules": [
+    {
+      "file": "tests/direct-wrappers.test.ts",
+      "line": 2,
+      "message": "tests/direct-wrappers.test.ts:2: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "(db.query)('DROP TABLE member_call');"
+    },
+    {
+      "file": "tests/direct-wrappers.test.ts",
+      "line": 4,
+      "message": "tests/direct-wrappers.test.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "(query as typeof query)('DROP TABLE alias_call');"
+    },
+    {
+      "file": "tests/known.test.ts",
+      "line": 3,
+      "message": "tests/known.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "run('DROP TABLE query_table');"
+    },
+    {
+      "file": "tests/known.test.ts",
+      "line": 4,
+      "message": "tests/known.test.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "read('DROP TABLE read_table');"
+    },
+    {
+      "file": "tests/known.test.ts",
+      "line": 5,
+      "message": "tests/known.test.ts:5: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "TRUNCATE",
+      "sourceLine": "write('TRUNCATE write_table');"
+    },
+    {
+      "file": "tests/known.test.ts",
+      "line": 6,
+      "message": "tests/known.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "execute('DROP TABLE execute_table');"
+    }
+  ],
+  "advisories": [
+    {
+      "file": "tests/file-suppressed.test.ts",
+      "line": 1,
+      "message": "directive for `postgres-no-test-state-mutation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+      "rule": "unused-disable-directive",
+      "target": "postgres-no-test-state-mutation",
+      "sourceLine": "// no-mistakes-disable-file postgres-no-test-state-mutation"
+    },
+    {
+      "file": "tests/suppressed.test.ts",
+      "line": 2,
+      "message": "directive for `postgres-no-test-state-mutation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+      "rule": "unused-disable-directive",
+      "target": "postgres-no-test-state-mutation",
+      "sourceLine": "// no-mistakes-disable-next-line postgres-no-test-state-mutation"
+    },
+    {
+      "file": "tests/suppressed.test.ts",
+      "line": 4,
+      "message": "directive for `postgres-no-test-state-mutation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+      "rule": "unused-disable-directive",
+      "target": "postgres-no-test-state-mutation",
+      "sourceLine": "consume(pool.query); // no-mistakes-disable-line postgres-no-test-state-mutation"
+    }
+  ]
+}

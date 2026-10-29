@@ -1,7 +1,11 @@
 use super::*;
-use crate::codebase::postgres::executor_detachment::{bind_method, query_bindings, query_receiver};
+use crate::codebase::postgres::executor_detachment::{
+    bind_method, executor_bindings, executor_receiver,
+};
 use oxc_ast::ast::BindingIdentifier;
 mod assignments;
+mod patterns;
+mod references;
 #[derive(Clone, Copy, PartialEq)]
 pub(super) enum Kind {
     Receiver,
@@ -20,11 +24,18 @@ pub(super) enum Form {
     Bind(Option<usize>, bool),
 }
 pub(super) struct Node {
+    pub default_span: Option<Span>,
+    pub profile: usize,
     pub id: usize,
     pub source: usize,
     pub form: Form,
     pub exact: bool,
     pub uses: Vec<Span>,
+}
+pub(super) struct Member {
+    pub span: Span,
+    pub root: Span,
+    pub name: String,
 }
 pub(super) struct Invocation {
     pub span: Span,
@@ -32,15 +43,19 @@ pub(super) struct Invocation {
     pub parts: Vec<String>,
     pub exact: bool,
 }
-pub(super) struct Collector {
+pub(super) struct Collector<'p> {
+    pub direct_callees: FxHashSet<Span>,
+    parameter: bool,
+    pub profiles: &'p [EmbeddedSqlOptions],
+    pub members: Vec<Member>,
     pub owners: FxHashMap<Span, usize>,
     bindings: FxHashMap<Span, usize>,
     pub nodes: Vec<Node>,
     pub node_ids: FxHashSet<usize>,
     pub calls: Vec<Invocation>,
 }
-impl Collector {
-    pub fn new(module: &TypeScriptModuleFacts) -> Self {
+impl<'p> Collector<'p> {
+    pub fn new(module: &TypeScriptModuleFacts, profiles: &'p [EmbeddedSqlOptions]) -> Self {
         let mut owners = FxHashMap::default();
         let mut bindings = FxHashMap::default();
         for binding in &module.bindings {
@@ -52,6 +67,10 @@ impl Collector {
             }
         }
         Self {
+            parameter: false,
+            direct_callees: FxHashSet::default(),
+            profiles,
+            members: Vec::new(),
             owners,
             bindings,
             nodes: Vec::new(),
@@ -59,50 +78,10 @@ impl Collector {
             calls: Vec::new(),
         }
     }
-    fn form(&self, expression: &Expression<'_>) -> Option<(usize, Form, bool, Vec<Span>)> {
-        let receiver = query_receiver(expression);
-        if let Some((root, parts)) = chain(receiver.unwrap_or(expression)) {
-            if parts.len() != 1 {
-                return None;
-            }
-            let form = if receiver.is_some() {
-                Form::Query
-            } else {
-                Form::Copy
-            };
-            return Some((*self.owners.get(&root)?, form, true, vec![root]));
-        }
-        let Expression::CallExpression(call) = unwrap_ts_wrappers(expression) else {
-            return None;
-        };
-        let method = bind_method(call)?;
-        let receiver = query_receiver(method);
-        let (root, parts) = chain(receiver.unwrap_or(method))?;
-        if parts.len() != 1 {
-            return None;
-        }
-        let query = receiver.is_some();
-        let mut uses = vec![root];
-        let receiver = call
-            .arguments
-            .first()
-            .and_then(|argument| argument.as_expression())
-            .and_then(chain)
-            .filter(|(_, parts)| parts.len() == 1)
-            .and_then(|(at, _)| {
-                uses.push(at);
-                self.owners.get(&at).copied()
-            });
-        Some((
-            *self.owners.get(&root)?,
-            Form::Bind(receiver, query),
-            call.arguments.len() == 1 && !call.optional,
-            uses,
-        ))
-    }
     fn add(
         &mut self,
         alias: &BindingIdentifier<'_>,
+        profile: usize,
         source: usize,
         form: Form,
         exact: bool,
@@ -110,6 +89,8 @@ impl Collector {
     ) {
         if let Some(id) = self.bindings.get(&span(alias.span)).copied() {
             self.nodes.push(Node {
+                default_span: self.parameter.then_some(span(alias.span)),
+                profile,
                 id,
                 source,
                 form,
@@ -120,12 +101,42 @@ impl Collector {
         }
     }
 }
-impl<'a> Visit<'a> for Collector {
+impl<'a> Visit<'a> for Collector<'_> {
     fn visit_assignment_expression(&mut self, value: &oxc_ast::ast::AssignmentExpression<'a>) {
         assignments::collect(self, value);
         walk::walk_assignment_expression(self, value);
     }
+    fn visit_static_member_expression(&mut self, value: &oxc_ast::ast::StaticMemberExpression<'a>) {
+        references::member(
+            self,
+            span(value.span),
+            &value.object,
+            value.property.name.to_string(),
+        );
+        walk::walk_static_member_expression(self, value);
+    }
+    fn visit_computed_member_expression(
+        &mut self,
+        value: &oxc_ast::ast::ComputedMemberExpression<'a>,
+    ) {
+        if let Some(name) = crate::ast::computed_property_name(value) {
+            references::member(self, span(value.span), &value.object, name.into_owned());
+        }
+        walk::walk_computed_member_expression(self, value);
+    }
+    fn visit_formal_parameter(&mut self, value: &oxc_ast::ast::FormalParameter<'a>) {
+        if let Some(init) = &value.initializer {
+            self.parameter = true;
+            self.pattern(&value.pattern, init, false);
+            self.parameter = false;
+        }
+        walk::walk_formal_parameter(self, value);
+    }
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        self.direct_callees
+            .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(
+                &call.callee,
+            ))));
         if let Some((root, parts)) = chain(&call.callee) {
             self.calls.push(Invocation {
                 span: span(call.span),
@@ -141,31 +152,8 @@ impl<'a> Visit<'a> for Collector {
     }
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
         for item in &declaration.declarations {
-            let Some((source, form, exact, uses)) =
-                item.init.as_ref().and_then(|init| self.form(init))
-            else {
-                continue;
-            };
-            match &item.id {
-                BindingPattern::BindingIdentifier(alias) => self.add(
-                    alias,
-                    source,
-                    form,
-                    exact && declaration.kind.is_const(),
-                    uses,
-                ),
-                BindingPattern::ObjectPattern(_) if matches!(form, Form::Copy) => {
-                    for (alias, plain) in query_bindings(&item.id) {
-                        self.add(
-                            alias,
-                            source,
-                            Form::Query,
-                            exact && declaration.kind.is_const() && plain,
-                            uses.clone(),
-                        );
-                    }
-                }
-                _ => {}
+            if let Some(init) = &item.init {
+                self.pattern(&item.id, init, declaration.kind.is_const());
             }
         }
         walk::walk_variable_declaration(self, declaration);

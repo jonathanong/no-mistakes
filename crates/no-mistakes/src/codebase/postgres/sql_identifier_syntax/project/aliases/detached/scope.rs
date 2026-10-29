@@ -1,7 +1,7 @@
 use super::*;
 
 pub(super) fn uncertain_receivers(
-    nodes: &[Node],
+    nodes: &[&Node],
     values: &FxHashMap<usize, Value>,
 ) -> FxHashSet<usize> {
     let mut origins = values
@@ -22,7 +22,7 @@ pub(super) fn uncertain_receivers(
 
 pub(super) fn eligible(profile: &EmbeddedSqlOptions, module: &TypeScriptModuleFacts) -> bool {
     !profile.import_specifier.is_empty()
-        && profile.executor_names.iter().any(|name| name == "query")
+        && !profile.executor_names.is_empty()
         && module.imports.iter().any(|import| {
             import.specifier == profile.import_specifier
                 && !import.type_only

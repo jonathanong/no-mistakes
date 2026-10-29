@@ -55,6 +55,9 @@ pub(crate) fn collect_calls<'a>(
         builder_reference_exemptions: Vec::new(),
         consumed_links: Default::default(),
         statement_calls: Default::default(),
+        executor_alias_refs: Default::default(),
+        executor_reference_spans: Default::default(),
+        executor_direct_refs: Default::default(),
         calls: Vec::new(),
         call_spans: Vec::new(),
         imported_names,
@@ -101,6 +104,7 @@ pub(crate) fn collect_calls<'a>(
     if !head_calls_only {
         visitor.finish_const_splices();
     }
+    visitor.finish_executor_references();
     super::super::observability::record(&visitor.calls);
     let sites = std::mem::take(&mut *visitor.imported_sites.borrow_mut()).into_list();
     let pending_imported = helpers::finalize::finalize(

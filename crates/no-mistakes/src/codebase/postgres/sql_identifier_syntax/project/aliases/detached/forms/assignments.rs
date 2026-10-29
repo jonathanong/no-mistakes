@@ -1,7 +1,7 @@
 use super::*;
 use oxc_ast::ast::{AssignmentExpression, AssignmentTarget};
 
-pub(super) fn collect(collector: &mut Collector, value: &AssignmentExpression<'_>) {
+pub(super) fn collect(collector: &mut Collector<'_>, value: &AssignmentExpression<'_>) {
     if !value.operator.is_assign() {
         return;
     }
@@ -11,15 +11,19 @@ pub(super) fn collect(collector: &mut Collector, value: &AssignmentExpression<'_
     let Some(id) = collector.owners.get(&span(target.span)).copied() else {
         return;
     };
-    let Some((source, form, _, uses)) = collector.form(&value.right) else {
-        return;
-    };
-    collector.nodes.push(Node {
-        id,
-        source,
-        form,
-        exact: false,
-        uses,
-    });
-    collector.node_ids.insert(id);
+    for profile in 0..collector.profiles.len() {
+        let Some((source, form, _, uses)) = collector.form(&value.right, profile) else {
+            continue;
+        };
+        collector.nodes.push(Node {
+            default_span: None,
+            profile,
+            id,
+            source,
+            form,
+            exact: false,
+            uses,
+        });
+        collector.node_ids.insert(id);
+    }
 }

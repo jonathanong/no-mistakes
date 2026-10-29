@@ -3,6 +3,32 @@ use oxc_ast::ast;
 use oxc_ast_visit::walk;
 
 impl<'a> ScopeVisitor<'a> {
+    pub(super) fn walk_runtime_export(&mut self, declaration: &ast::ExportNamedDeclaration<'a>) {
+        if !declaration.export_kind.is_type() {
+            for specifier in &declaration.specifiers {
+                if !specifier.export_kind.is_type() {
+                    walk::walk_export_specifier(self, specifier);
+                }
+            }
+        }
+    }
+
+    pub(super) fn walk_executor_identifier(&mut self, id: &ast::IdentifierReference<'a>) {
+        self.note_executor_identifier(id);
+        self.poison_literal_reference(id);
+        self.escape_builder_reference(id);
+    }
+    pub(super) fn walk_executor_expression(&mut self, expression: &ast::Expression<'a>) {
+        self.note_executor_member(expression);
+        self.revoke_aggregate_values(expression);
+        walk::walk_expression(self, expression);
+    }
+    pub(super) fn walk_computed_member(&mut self, member: &ast::ComputedMemberExpression<'a>) {
+        self.with_builder_receiver(&member.object, matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression), ast::Expression::StringLiteral(name) if name.value == "text"), |visitor| {
+            walk::walk_computed_member_expression(visitor, member)
+        });
+    }
+
     pub(super) fn walk_program_scope(&mut self, program: &ast::Program<'a>) {
         self.push_scope();
         resolve::hoist_vars(&program.body, self);

@@ -303,12 +303,14 @@ fn namespace_export_writes_share_named_import_origin() {
                 "left.query('SELECT id FROM before_export_write')",
                 Some("SELECT id FROM before_export_write"),
             ),
+            site(8, "ns.connection", None),
             site(9, "left.query('SELECT id FROM after_export_write')", None),
             site(
                 10,
                 "other.query('SELECT id FROM other_export_unaffected')",
                 Some("SELECT id FROM other_export_unaffected"),
             ),
+            site(11, "ns['connection']", None),
             site(
                 12,
                 "left.query('SELECT id FROM after_computed_export_write')",
@@ -333,6 +335,7 @@ fn namespace_export_and_whole_namespace_transfer_have_distinct_reach() {
                 "left.query('SELECT id FROM before_export_transfer')",
                 Some("SELECT id FROM before_export_transfer"),
             ),
+            site(9, "ns.connection", None),
             site(
                 10,
                 "left.query('SELECT id FROM after_export_transfer')",

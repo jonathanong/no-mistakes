@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    options:
+      testGlobs: ['tests/**/*.test.ts']
+      importSpecifier: '@example/db'
+      executorNames: [query, read, write, execute]
+      effort: low
+      unanalyzable: ignore

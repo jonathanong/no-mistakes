@@ -54,6 +54,10 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) consumed_links: crate::fx::FxHashSet<u32>,
     /// Calls that are a whole expression statement: their value is discarded.
     pub(super) statement_calls: crate::fx::FxHashSet<u32>,
+    pub(super) executor_alias_refs:
+        crate::fx::FxHashMap<u32, crate::fx::FxHashMap<String, Vec<oxc_span::Span>>>,
+    pub(super) executor_reference_spans: crate::fx::FxHashSet<(u32, u32)>,
+    pub(super) executor_direct_refs: crate::fx::FxHashSet<(u32, u32)>,
     pub(crate) calls: Vec<EmbeddedSqlCall>,
     pub(crate) call_spans: Vec<(u32, u32)>,
     /// Local names bound by value imports; a call to one is an imported helper.

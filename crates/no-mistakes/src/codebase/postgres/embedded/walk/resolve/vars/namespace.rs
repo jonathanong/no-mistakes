@@ -12,9 +12,10 @@ pub(in crate::codebase::postgres::embedded::walk) fn bind_query_property(
     if !visitor.detached_query_receiver(init) {
         return;
     }
-    for (local, exact) in
-        crate::codebase::postgres::executor_detachment::query_bindings(&declarator.id)
-    {
+    for (local, exact) in crate::codebase::postgres::executor_detachment::executor_bindings(
+        &declarator.id,
+        &visitor.executor_options.executor_names,
+    ) {
         if is_const && exact && visitor.detached_receiver_proven(init) {
             visitor.note_query_capture(local.name.as_str(), init);
         } else {

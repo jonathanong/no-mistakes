@@ -74,8 +74,9 @@ default to empty lists. Factories and types identify additional explicitly
 configured executor forms. A trusted tag entry names a named export from a
 module; it does not make unrelated strings executable SQL.
 
-When `query` is enabled for a configured executor module, the rule also follows
-immutable local copies of an imported receiver's `query` method:
+`executorNames` also selects methods copied from configured imported receivers.
+The defaults include `query`, `read`, and `write`; a custom name such as
+`execute` follows the same rules. Immutable local copies retain their origin:
 
 ```ts
 import { pool } from "@example/db";
@@ -87,19 +88,27 @@ run("DROP TABLE users");
 alias("TRUNCATE users");
 ```
 
-Receiver and method aliases retain their imported identity. A known bind must
-use the same receiver and bind no arguments before invocation. Defaults, dynamic
-destructuring keys, mutable or escaped bindings, receiver overrides, and binds
-using another receiver or additional arguments retain
-uncertainty rather than disappearing. The configured `unanalyzable` policy
-controls that uncertainty; use `advise` to keep it as a non-failing advisory.
+Every runtime reference to a selected executor member or its local alias that
+is not the callee of a direct call retains an unanalyzable obligation at that use.
+This includes copying the method, binding it (including an immediately invoked
+bind), `.call`, `.apply`, `Reflect.apply`, passing it to a helper, and
+`export { alias }`. A later known direct call can still report its SQL, but does
+not erase the earlier non-call obligation. Type-only references are excluded.
+The configured `unanalyzable` policy controls these obligations; use `advise`
+to keep them as non-failing advisories.
+
+A known bind must use the same receiver and bind no arguments before invocation.
+Defaulted destructuring parameters remain uncertain because callers can replace
+the default receiver, whether the parameter is first or follows another one.
+Dynamic destructuring keys, mutable or escaped bindings, receiver overrides,
+and binds using another receiver or additional arguments also retain uncertainty.
 Configured or standard named executor exports keep their function identity.
 A method assigned to an existing binding remains unanalyzable.
 SQL bound in advance is not replaced by the invocation's argument: these binds
 remain unanalyzable even if their caller passes `SELECT 1`.
 Full extraction distinguishes a method copied before a later receiver change
-from one copied after it. Rewrite an unclear binding as a direct named executor
-import or an immutable method copy so its origin can be checked.
+from one copied after it. Use a direct named executor import and a direct call
+to avoid an indirect-reference obligation.
 
 `unanalyzable` follows the shared `report` (default), `advise`, or `ignore`
 policy. The legacy `unanalyzableSql` alias also accepts `fail` as `report`.

@@ -8,7 +8,14 @@ fn detached_targets_do_not_cross_profiles_or_select_unrelated_bindings() {
         "exact.test.ts",
         &[profile(), unrelated, no_query],
         |facts, _| {
-            assert_eq!(facts.profiles[0].1.len(), 7);
+            assert_eq!(
+                facts.profiles[0]
+                    .1
+                    .iter()
+                    .filter(|call| matches!(call.input, Input::Sql { .. }))
+                    .count(),
+                7
+            );
             assert!(facts.profiles[1].1.is_empty());
             assert!(facts.profiles[2].1.is_empty());
         },

@@ -59,6 +59,9 @@ impl ScopeVisitor<'_> {
         }
         walk::walk_tagged_template_expression(self, template);
         self.builder_reference_exemptions.truncate(start);
+        for (index, expression) in template.quasi.expressions.iter().enumerate() {
+            self.revoke_namespace_expression(&template.tag, index, expression);
+        }
     }
 
     pub(super) fn with_builder_receiver(

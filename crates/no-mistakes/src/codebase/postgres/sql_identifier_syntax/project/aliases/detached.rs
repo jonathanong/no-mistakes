@@ -2,6 +2,7 @@ use super::super::*;
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 
 mod forms;
+mod obligations;
 mod scope;
 use forms::{Collector, Form, Kind, Node, Value};
 
@@ -18,18 +19,21 @@ pub(in crate::codebase::postgres::sql_identifier_syntax::project) fn collect(
     {
         return;
     }
-    let mut collector = Collector::new(module);
+    let mut collector = Collector::new(module, profiles);
     collector.visit_program(program);
-    for (profile, selection) in profiles.iter().zip(selections) {
-        if profile.import_specifier.is_empty()
-            || !profile.executor_names.iter().any(|name| name == "query")
-        {
+    for (index, (profile, selection)) in profiles.iter().zip(selections).enumerate() {
+        if profile.import_specifier.is_empty() || profile.executor_names.is_empty() {
             continue;
         }
         let mut values = scope::seeds(profile, module);
-        solve(&collector.nodes, &mut values);
+        let nodes = collector
+            .nodes
+            .iter()
+            .filter(|node| node.profile == index)
+            .collect::<Vec<_>>();
+        solve(&nodes, &mut values);
         let mut allowed = FxHashSet::default();
-        for node in &collector.nodes {
+        for node in &nodes {
             if values.contains_key(&node.id) {
                 allowed.extend(node.uses.iter().copied());
             }
@@ -45,7 +49,7 @@ pub(in crate::codebase::postgres::sql_identifier_syntax::project) fn collect(
             };
             let invokes = match value.kind {
                 Kind::Executor => parts.len() == 1,
-                Kind::Receiver => parts.len() == 2 && parts[1] == "query",
+                Kind::Receiver => parts.len() == 2 && profile.executor_names.contains(&parts[1]),
             };
             if !invokes {
                 continue;
@@ -66,14 +70,14 @@ pub(in crate::codebase::postgres::sql_identifier_syntax::project) fn collect(
         }
         loop {
             let mut changed = false;
-            let invalid_receivers = scope::uncertain_receivers(&collector.nodes, &values);
+            let invalid_receivers = scope::uncertain_receivers(&nodes, &values);
             for value in values.values_mut() {
                 if value.exact && invalid_receivers.contains(&value.origin) {
                     value.exact = false;
                     changed = true;
                 }
             }
-            for node in &collector.nodes {
+            for node in &nodes {
                 let Some(previous) = values.get(&node.id).copied() else {
                     continue;
                 };
@@ -86,11 +90,7 @@ pub(in crate::codebase::postgres::sql_identifier_syntax::project) fn collect(
                 break;
             }
         }
-        for node in collector
-            .nodes
-            .iter()
-            .filter(|node| values.contains_key(&node.id))
-        {
+        for node in nodes.iter().filter(|node| values.contains_key(&node.id)) {
             if values[&node.id].exact {
                 selection
                     .detached_initializers
@@ -99,6 +99,7 @@ pub(in crate::codebase::postgres::sql_identifier_syntax::project) fn collect(
                 selection.unsupported.insert(node.id);
             }
         }
+        obligations::collect(profile, module, &collector, &nodes, &values, selection);
         selection
             .detached_executors
             .extend(values.iter().filter_map(|(id, value)| {
@@ -114,7 +115,7 @@ pub(in crate::codebase::postgres::sql_identifier_syntax::project) fn collect(
     }
 }
 
-fn solve(nodes: &[Node], values: &mut FxHashMap<usize, Value>) {
+fn solve(nodes: &[&Node], values: &mut FxHashMap<usize, Value>) {
     loop {
         let mut changed = false;
         for node in nodes {

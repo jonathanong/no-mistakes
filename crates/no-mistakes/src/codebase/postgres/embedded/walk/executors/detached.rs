@@ -1,5 +1,5 @@
 use super::super::ScopeVisitor;
-use crate::codebase::postgres::executor_detachment::{bind_callee, bind_method, query_receiver};
+use crate::codebase::postgres::executor_detachment::{bind_callee, bind_method, executor_receiver};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Argument, BindingPattern, CallExpression, Expression, VariableDeclarator};
 
@@ -8,7 +8,7 @@ impl ScopeVisitor<'_> {
         &self,
         receiver: &Expression<'_>,
     ) -> bool {
-        if !self.query_binding {
+        if self.executor_options.executor_names.is_empty() {
             return false;
         }
         let origins = self.receiver_origins(receiver);
@@ -88,7 +88,8 @@ impl ScopeVisitor<'_> {
             return false;
         };
         let origins = if let Some(receiver) =
-            query_receiver(method).filter(|receiver| self.detached_receiver_proven(receiver))
+            executor_receiver(method, &self.executor_options.executor_names)
+                .filter(|receiver| self.detached_receiver_proven(receiver))
         {
             self.receiver_origins(receiver)
         } else {
@@ -123,8 +124,8 @@ impl ScopeVisitor<'_> {
         if self.copy_query_capture(name, init, constant) {
             return;
         }
-        if let Some(receiver) =
-            query_receiver(init).filter(|receiver| self.detached_query_receiver(receiver))
+        if let Some(receiver) = executor_receiver(init, &self.executor_options.executor_names)
+            .filter(|receiver| self.detached_query_receiver(receiver))
         {
             self.note_query_capture_with_certainty(
                 name,
@@ -147,8 +148,8 @@ impl ScopeVisitor<'_> {
         if self.copy_query_capture(name, method, trusted) {
             return;
         }
-        if let Some(receiver) =
-            query_receiver(method).filter(|receiver| self.detached_query_receiver(receiver))
+        if let Some(receiver) = executor_receiver(method, &self.executor_options.executor_names)
+            .filter(|receiver| self.detached_query_receiver(receiver))
         {
             self.note_query_capture_with_certainty(name, receiver, trusted);
         }

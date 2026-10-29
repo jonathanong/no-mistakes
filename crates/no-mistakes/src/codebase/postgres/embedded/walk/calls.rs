@@ -19,6 +19,9 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     pub(super) fn visit_sql_call(&mut self, call: &CallExpression<'a>) {
+        let callee_span = unwrap_ts_wrappers(&call.callee).span();
+        self.executor_direct_refs
+            .insert((callee_span.start, callee_span.end));
         self.record_undeclared_executor_call(call);
         if self.head_calls_only {
             self.visit_head_call(call);

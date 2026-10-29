@@ -40,7 +40,21 @@ fn namespace_mutation_revokes_member_proof_but_not_captured_query_function() {
     let facts = extract_embedded_sql_from_source(&path, &source, &options);
     // `afterMutation` used to disappear once the namespace had escaped.
     // It stays in the candidate set and is unanalyzable.
-    assert_eq!(facts.calls.len(), 10);
+    let retained = facts
+        .calls
+        .iter()
+        .filter(|call| !(call.line == 46 && call.callee == "execute"))
+        .collect::<Vec<_>>();
+    assert_eq!(retained.len(), 10, "{facts:?}");
+    assert_eq!(
+        facts
+            .calls
+            .iter()
+            .filter(|call| call.line == 46 && call.callee == "execute" && call.is_unanalyzable())
+            .count(),
+        1,
+        "{facts:?}"
+    );
     let captured = facts
         .calls
         .iter()
@@ -48,8 +62,7 @@ fn namespace_mutation_revokes_member_proof_but_not_captured_query_function() {
         .count();
     assert_eq!(captured, 1);
     assert_eq!(
-        facts
-            .calls
+        retained
             .iter()
             .filter(|call| call.is_unanalyzable())
             .count(),

@@ -21,7 +21,15 @@ fn detached_shapes_keep_exact_sql_and_original_capture_time() {
         ("receiver-escaped-after.test.ts", vec![6]),
     ] {
         let facts = facts(file, &profile());
-        assert_eq!(facts.calls.len(), lines.len(), "{file}: {facts:?}");
+        assert_eq!(
+            facts
+                .calls
+                .iter()
+                .filter(|call| call.sql_text.is_some())
+                .count(),
+            lines.len(),
+            "{file}: {facts:?}"
+        );
         for line in lines {
             let call = facts.calls.iter().find(|call| call.line == line).unwrap();
             assert_eq!(call.kind, EmbeddedSqlKind::Inline, "{file}:{line}");
