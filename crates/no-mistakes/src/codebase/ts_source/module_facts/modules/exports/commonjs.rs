@@ -49,7 +49,6 @@ pub(in crate::codebase::ts_source::module_facts::modules) fn commonjs_reference(
             module: value.name == "module",
             span: value.span,
         });
-        return;
     }
     unsupported(facts, value.span, UNSUPPORTED);
 }
@@ -63,11 +62,11 @@ pub(in crate::codebase::ts_source::module_facts::modules) fn finish_commonjs(
 ) {
     let modules = assignments.iter().filter(|a| a.module).count();
     let accepted = modules == 0 || assignments.len() == 1;
-    for assignment in assignments {
-        if accepted {
-            unsupported_importer_safe(facts, assignment.span, UNSUPPORTED);
-        } else {
-            unsupported(facts, assignment.span, UNSUPPORTED);
+    if accepted {
+        for assignment in assignments {
+            facts
+                .importer_safe
+                .push((assignment.span.start, assignment.span.end));
         }
     }
 }

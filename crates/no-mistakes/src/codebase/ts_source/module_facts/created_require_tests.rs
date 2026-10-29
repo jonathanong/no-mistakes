@@ -33,6 +33,25 @@ fn created_require_leaves_public_module_facts_unchanged() {
     assert_eq!(shadowed.facts.importer_safe.len(), 1);
 }
 
+// CommonJS export diagnostics stay in source order; only the private
+// importer-safe list depends on the later whole-file decision.
+#[test]
+fn commonjs_export_diagnostics_keep_source_order() {
+    for file in ["commonjs-exports.cjs", "commonjs-mutated-exports.cjs"] {
+        let starts: Vec<_> = module(file)
+            .facts
+            .diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic.span.as_ref().unwrap().start)
+            .collect();
+        assert!(starts.len() > 1, "{file}");
+        assert!(
+            starts.windows(2).all(|pair| pair[0] <= pair[1]),
+            "{file}: {starts:?}"
+        );
+    }
+}
+
 #[test]
 fn renamed_created_loader_adds_no_public_load_or_diagnostic() {
     let renamed = module("created-loader.ts");

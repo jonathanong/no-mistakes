@@ -182,11 +182,3 @@ fn unsupported(facts: &mut TypeScriptModuleFacts, span: oxc_span::Span, message:
         span: Some(span.into()),
     });
 }
-fn unsupported_importer_safe(
-    facts: &mut TypeScriptModuleFacts,
-    span: oxc_span::Span,
-    message: &str,
-) {
-    unsupported(facts, span, message);
-    facts.importer_safe.push((span.start, span.end));
-}
