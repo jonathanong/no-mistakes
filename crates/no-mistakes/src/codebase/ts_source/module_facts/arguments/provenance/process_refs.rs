@@ -24,37 +24,15 @@ pub(super) fn poison_process_imports(
 
 /// `require("process")` and `import("process")`: another route to the real `env`.
 pub(super) fn poison_process_loads(source: &str, out: &mut PathProvenance) {
-    if PROCESS_MODULES.contains(&source) {
+    if PROCESS_MODULES.contains(&source) || super::vi_refs::RUNNER_MODULES.contains(&source) {
         out.env_unknown_write = true;
     }
 }
 
-/// `unstubAllEnvs` and the `unstubEnvs` config restore variables after a stub, and
-/// `stubEnv` writes one. Only the direct `vi.stubEnv(...)` call is recorded by
-/// name; an alias, destructuring, or computed key hides the write.
-pub(super) fn poison_env_stubs(
-    nodes: &AstNodes<'_>,
-    node: NodeId,
-    name: &str,
-    out: &mut PathProvenance,
-) {
-    let poisons = match name {
-        "unstubAllEnvs" | "unstubEnvs" => true,
-        "stubEnv" => !is_direct_member_call(nodes, node),
-        _ => false,
-    };
-    if poisons {
+pub(super) fn poison_unstub(name: &str, out: &mut PathProvenance) {
+    if matches!(name, "unstubAllEnvs" | "unstubEnvs") {
         out.env_unknown_write = true;
     }
-}
-
-fn is_direct_member_call(nodes: &AstNodes<'_>, name: NodeId) -> bool {
-    let member = nodes.parent_id(name);
-    let AstKind::StaticMemberExpression(expression) = nodes.kind(member) else {
-        return false;
-    };
-    matches!(nodes.parent_kind(member),
-        AstKind::CallExpression(call) if call.callee.span() == expression.span)
 }
 
 pub(super) fn from_identifier(
@@ -94,11 +72,13 @@ fn literal_key(expression: &Expression<'_>) -> Option<String> {
 fn reaches_process(nodes: &AstNodes<'_>, node: NodeId, span: Span) -> bool {
     match nodes.parent_kind(node) {
         AstKind::StaticMemberExpression(member) => {
-            member.object.span() == span && member.property.name == "process"
+            member.object.span() == span
+                && matches!(member.property.name.as_str(), "process" | "vi" | "jest")
         }
         AstKind::ComputedMemberExpression(member) => {
             member.object.span() == span
-                && literal_key(&member.expression).is_none_or(|key| key == "process")
+                && literal_key(&member.expression)
+                    .is_none_or(|key| matches!(key.as_str(), "process" | "vi" | "jest"))
         }
         _ => false,
     }

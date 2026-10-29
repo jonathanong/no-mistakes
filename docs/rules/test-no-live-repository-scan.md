@@ -168,13 +168,24 @@ reachable call site passes an owned or fixture root at that argument position,
 the enumeration is accepted for those calls. A call that omits the argument
 resolves to the default, so one omitting caller keeps the finding. The callee
 must enumerate the parameter itself, in the function that declares it, and must
-not reassign it. Callers are the repository call sites in the canonical call
-graph; only calls through an imported binding record their argument roots. A
-function that is also referenced other than as a direct callee (`.then(sync)`,
-`list.forEach(sync)`, `export { sync }`, `sync.call(...)`, `.apply`, `.bind`) has
-callers this analysis cannot see, so it keeps the finding. That includes a default
-export imported under another name, and a function destructured from `require()`
-or `import()` and passed as a value.
+not reassign it. Only one shape is accepted; anything else keeps the finding, because a caller the
+call graph cannot see may pass anything:
+
+- The callee is a top-level function declaration or function-valued `const`, not
+  a class or object member.
+- Every reference to it is a direct call.
+- Every file that consumes its module does so through named static imports
+  (`import { sync } from "./sync"`) whose uses are all direct calls. A namespace
+  import, a default import, `import()`, `require`, a re-export (`export * from`,
+  `export { sync } from`), and `vi.mock`/`vi.importActual` of the module make its
+  consumers unknowable. A load whose specifier is not a string literal does the
+  same for every module. Modules are matched by file name (`./lib/index.ts` is
+  `lib`), which can only widen the set of kept findings.
+
+Callers are the repository call sites in the canonical call graph; only calls
+through an imported binding record their argument roots. A function reached only
+through `import()` or a namespace is not scanned at all unless a resolved call
+reaches it.
 
 **Environment variables.** A getter such as
 `() => process.env.X ?? "./tmp/default"` (same file, no parameters, one returned
@@ -202,19 +213,22 @@ every file in the run, including Vitest setup files that the rule's `include`/
 `exclude` filters remove from reporting, because a setup `beforeEach` runs after
 a test file's `beforeAll`.
 
-Recall comes first: any use of `process.env` poisons every variable, so the finding is
-kept, unless it is a plain member read (`process.env.X`), a recognized write, or
-one of three exceptions: a spread copy (`{ ...process.env }`), the `in` operator
-(`"A" in process.env`), or an object-destructuring read
-(`const { A } = process.env`). That covers `process.env = ...`, `Object.assign(process.env, ...)`, passing
-bare `process.env` to a function, an alias (`const env = process.env`, `q =
-process.env`), `const { env } = process`, `import { env } from "node:process"`,
-`require("process")`, `globalThis.process`, `process["env"]`, destructuring,
-array, loop, and update targets, and a non-literal key. `vi.unstubAllEnvs()`,
-`unstubAllEnvs` (also as a computed key), and an `unstubEnvs` option also poison,
-because they restore the default between tests. Only the direct `vi.stubEnv(...)`
-call is read as a write; an alias (`const s = vi.stubEnv`), a destructured
-`stubEnv`, or `vi["stubEnv"]` poisons.
+Recall comes first: an owned variable stays owned only while every `process.env`
+use is understood. A use is understood when it is a member read
+(`process.env.X`), a recorded write, a spread copy (`{ ...process.env }`), the
+`in` operator (`"A" in process.env`), or an object-destructuring read
+(`const { A } = process.env`). Any other use poisons every variable and keeps the
+finding: aliases and bare passing, `process["env"]`, `globalThis.process`,
+imports or loads of `process`, and destructuring, loop, or update targets.
+
+Test-runner helpers follow the same rule. Every reference to `vi` or `jest` (and
+to a local name it is imported as) must be the object of a direct, non-computed
+call to a known helper that cannot touch the environment (`vi.fn`, `vi.spyOn`,
+`vi.mock`, timer helpers, and similar) or to `vi.stubEnv`, which is recorded as a
+write. Computed access of any kind, a cast, an alias, passing `vi` as a value,
+`globalThis.vi`, a namespace or default import of the runner, an `import()` of it,
+or a helper outside the known list poisons. `unstubAllEnvs` and `unstubEnvs`
+poison wherever they appear, because they restore the default between tests.
 
 ## Pass-through mocks
 

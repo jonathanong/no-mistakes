@@ -2,6 +2,7 @@
 //!
 //! Recall first: any caller, write, or file this pass cannot read keeps the finding.
 pub(super) mod env;
+mod modules;
 
 use super::provenance::{classify, Verdict};
 use crate::codebase::dependencies::extract::InvocationKind;
@@ -29,7 +30,10 @@ pub(super) struct Owners<'g> {
     env: env::EnvWrites,
     /// Names of functions referenced other than as a direct callee, anywhere.
     escaped: FxHashSet<String>,
-    /// A file whose facts failed may hide such a reference.
+    /// Import names of modules consumed other than by named static imports
+    /// used only as calls.
+    unsafe_modules: FxHashSet<String>,
+    /// A file whose facts failed, or a module load that cannot be read, may hide a consumer.
     escape_unknown: bool,
 }
 
@@ -51,13 +55,25 @@ impl<'g> Owners<'g> {
             }
         }
         let mut escaped = FxHashSet::default();
+        let mut unsafe_modules = FxHashSet::default();
         let mut escape_unknown = false;
         for ts in graph_files
             .iter()
             .filter_map(|file| facts.get_ts_facts(file))
         {
             match path_provenance(ts) {
-                Some(provenance) => escaped.extend(provenance.value_refs.iter().cloned()),
+                Some(provenance) => {
+                    escaped.extend(provenance.value_refs.iter().cloned());
+                    escape_unknown |= provenance.modules_unknown;
+                    for specifier in &provenance.unsafe_modules {
+                        match modules::specifier_stem(specifier) {
+                            Some(stem) => {
+                                unsafe_modules.insert(stem);
+                            }
+                            None => escape_unknown = true,
+                        }
+                    }
+                }
                 None => escape_unknown |= ts.module_bindings.is_some(),
             }
         }
@@ -65,6 +81,7 @@ impl<'g> Owners<'g> {
             callers,
             env: env::EnvWrites::new(facts, graph_files),
             escaped,
+            unsafe_modules,
             escape_unknown,
         }
     }
@@ -88,6 +105,18 @@ impl<'g> Owners<'g> {
         }
     }
 
+    /// A top-level named function, referenced only as a direct callee, in a module
+    /// every consumer imports by name and only calls.
+    fn proven_target(&self, source: &NodeId) -> bool {
+        let NodeId::Symbol { file, symbol, .. } = source else {
+            return false;
+        };
+        let name: &str = symbol;
+        !name.contains('.')
+            && !self.escaped.contains(name)
+            && modules::file_stem(file).is_some_and(|stem| !self.unsafe_modules.contains(&stem))
+    }
+
     /// Every caller passes an argument at `index` that is itself owned or bounded.
     /// A caller that omits it falls back to the default and keeps the finding.
     fn param_owned(
@@ -98,20 +127,7 @@ impl<'g> Owners<'g> {
         fixture_dirs: &[&str],
     ) -> bool {
         let source = site_source_node(site);
-        // A function passed as a value or called through `.call` has callers this
-        // graph cannot see; an anonymous one cannot be matched by name.
-        let named = match &source {
-            NodeId::Symbol { symbol, .. } => Some(symbol.to_string()),
-            _ => None,
-        };
-        // A default export is imported under any local name, so a value use of
-        // `default` may be this function.
-        let escapes = self.escape_unknown
-            || self.escaped.contains("default")
-            || named.as_ref().is_none_or(|name| {
-                let last = name.rsplit('.').next().unwrap_or(name);
-                self.escaped.contains(name) || self.escaped.contains(last)
-            });
+        let escapes = self.escape_unknown || !self.proven_target(&source);
         let Some(callers) = self.callers.get(&source).filter(|_| !escapes) else {
             return false;
         };

@@ -2,11 +2,13 @@
 //!
 //! Syntactic only: a form this pass does not recognise is left out, and the
 //! rule that reads these facts then keeps its finding.
+mod consumers;
 mod env_writes;
 mod pass_through;
 mod process_refs;
 mod scope;
 mod value_refs;
+mod vi_refs;
 
 use super::path_origin::{callee_root, imported_locals};
 use super::{PathAnchor, PathOrigin, PathProvenance, Projector};
@@ -26,6 +28,7 @@ pub(super) fn collect(
     let mut immutable = super::AliasSafety::default();
     let mut result = PathProvenance::default();
     process_refs::poison_process_imports(facts, &mut result);
+    let vi_names = vi_refs::local_names(facts, &mut result);
     for node in semantic.nodes().iter() {
         let mut projector = Projector {
             semantic,
@@ -42,6 +45,7 @@ pub(super) fn collect(
                 {
                     result.pass_through.insert(call.span.start, spied);
                 }
+                consumers::from_call(call, &mut result);
                 if let Some(source) = loaded_module(call) {
                     process_refs::poison_process_loads(&source, &mut result);
                 }
@@ -60,24 +64,13 @@ pub(super) fn collect(
             }
             AstKind::IdentifierReference(id) => {
                 process_refs::from_identifier(semantic, node.id(), id, &mut result);
-                process_refs::poison_env_stubs(semantic.nodes(), node.id(), &id.name, &mut result);
+                process_refs::poison_unstub(&id.name, &mut result);
+                vi_refs::check(semantic.nodes(), node.id(), id, &vi_names, &mut result);
                 value_refs::from_identifier(semantic, node.id(), id, &mut result);
             }
-            AstKind::IdentifierName(name) => {
-                process_refs::poison_env_stubs(
-                    semantic.nodes(),
-                    node.id(),
-                    &name.name,
-                    &mut result,
-                );
-            }
+            AstKind::IdentifierName(name) => process_refs::poison_unstub(&name.name, &mut result),
             AstKind::StringLiteral(text) => {
-                process_refs::poison_env_stubs(
-                    semantic.nodes(),
-                    node.id(),
-                    &crate::ast::js_literal(text),
-                    &mut result,
-                );
+                process_refs::poison_unstub(&crate::ast::js_literal(text), &mut result);
             }
             AstKind::StaticMemberExpression(member) => {
                 value_refs::from_member(semantic.nodes(), node.id(), member, &mut result);
@@ -87,6 +80,7 @@ pub(super) fn collect(
                     let source = crate::ast::js_literal(source);
                     process_refs::poison_process_loads(&source, &mut result);
                 }
+                consumers::from_source(Some(&import.source), &mut result);
             }
             AstKind::AssignmentExpression(assignment) => {
                 env_writes::from_assignment(&mut projector, assignment, node.id(), &mut result);
@@ -101,6 +95,7 @@ pub(super) fn collect(
         }
     }
     value_refs::add_imported_names(facts, &mut result);
+    consumers::from_facts(facts, &mut result);
     result
 }
 

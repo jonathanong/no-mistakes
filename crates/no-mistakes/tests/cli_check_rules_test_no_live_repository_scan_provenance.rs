@@ -6,7 +6,7 @@ const RULE: &str = "test-no-live-repository-scan";
 
 /// Each root owns `POISON_DIR` once, then something this analysis cannot name
 /// writes it too; `control` has no second write and is accepted.
-const POISONED: [&str; 19] = [
+const POISONED: [&str; 22] = [
     "destructure-process",
     "import-env",
     "globalthis",
@@ -26,15 +26,21 @@ const POISONED: [&str; 19] = [
     "stub-destructure",
     "stub-computed",
     "unstub-computed",
+    "vi-template",
+    "vi-variable",
+    "vi-stub-global",
 ];
 
 /// Each root owns a default parameter through one direct caller, then the
 /// function escapes where the call graph cannot see; `param-control` is accepted.
-const ESCAPED: [&str; 4] = [
+const ESCAPED: [&str; 7] = [
     "escape-default",
     "escape-export-default",
     "escape-require",
     "escape-dynamic",
+    "escape-namespace",
+    "escape-import-call",
+    "escape-actual",
 ];
 
 fn root(kind: &str) -> PathBuf {
@@ -87,7 +93,7 @@ fn provenance_json_snapshot() {
             bulk.join(".no-mistakes.yml"),
         ),
     ];
-    for name in ["control", "param-control"]
+    for name in ["control", "param-control", "vi-control"]
         .into_iter()
         .chain(POISONED)
         .chain(ESCAPED)

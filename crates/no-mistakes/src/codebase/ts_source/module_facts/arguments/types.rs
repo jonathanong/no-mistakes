@@ -87,4 +87,8 @@ pub(crate) struct PathProvenance {
     pub(crate) test_callbacks: Vec<(u32, u32)>,
     /// Names of functions referenced other than as the callee of a direct call.
     pub(crate) value_refs: crate::fx::FxHashSet<String>,
+    /// Specifiers reached other than by named static imports used only as calls.
+    pub(crate) unsafe_modules: crate::fx::FxHashSet<String>,
+    /// A `require`/`import()`/`vi.mock` whose module cannot be read.
+    pub(crate) modules_unknown: bool,
 }
