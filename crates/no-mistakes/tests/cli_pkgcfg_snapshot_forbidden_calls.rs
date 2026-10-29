@@ -252,3 +252,70 @@ fn forbidden_calls_arguments_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn forbidden_calls_mock_boundaries_json_matches_snapshot() {
+    let cases: Vec<_> = [
+        "full",
+        "real",
+        "partial",
+        "auto",
+        "manual",
+        "initializer",
+        "initializer-dependency",
+        "initializer-factory",
+        "factory",
+        "nonliteral",
+        "original",
+        "domock",
+        "different",
+        "duplicate",
+        "captured",
+        "jest",
+        "shadow",
+        "suppressed",
+        "root-isolation",
+        "actual-outside",
+        "dynamic-bypass",
+        "helper",
+        "helper-external-value",
+        "require-actual",
+        "self",
+        "jest-require",
+        "actual-other",
+        "jest-require-real",
+        "module-full",
+        "module-real",
+        "module-factory",
+        "function-full",
+        "function-real",
+        "function-factory",
+        "external-factory",
+        "external-value",
+        "global-factory",
+        "registration-unused-module",
+        "registration-unused-function",
+        "registration-reachable-module",
+        "registration-reachable-function",
+        "registration-depth-limit",
+        "registration-depth-reached",
+        "registration-hoisted-module",
+        "registration-hoisted-function",
+    ]
+    .into_iter()
+    .map(|name| {
+        (
+            name,
+            root(if name == "suppressed" {
+                "mock-boundaries-suppression"
+            } else if name == "manual" {
+                "mock-manual"
+            } else {
+                "mock-boundaries"
+            }),
+            cfg(&format!("mock-boundaries-{name}.yml")),
+        )
+    })
+    .collect();
+    assert_saved_fixture("forbidden_calls_mock_boundaries", &cases);
+}

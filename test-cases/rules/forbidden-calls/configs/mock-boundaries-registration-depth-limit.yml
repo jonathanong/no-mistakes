@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      maxDepth: 2
+      unknownCalls: ignore
+      roots:
+        - function: { file: src/registration-reachable.mts, symbol: entry }
+      targets:
+        - function: { file: src/forbidden.mts, symbol: forbidden }

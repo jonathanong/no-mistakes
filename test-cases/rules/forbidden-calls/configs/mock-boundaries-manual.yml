@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      unknownCalls: ignore
+      roots:
+        - module: src/entry.mts
+      targets:
+        - function: { file: src/forbidden.mts, symbol: realForbidden }
+        - function: { file: src/forbidden.mts, symbol: manualForbidden }
+        - function: { file: src/forbidden.mts, symbol: manualInitializerForbidden }

@@ -100,20 +100,23 @@ async function assertParity(cases, snapshotPath) {
     .toMatchFileSnapshot(snapshotPath);
 }
 
-test(
-  "compiled check and prepared analysis snapshot live repository scans",
-  { skip: !compiled },
-  async () => {
-    await assertParity(
-      [
-        ["default", root, ".no-mistakes.yml"],
-        ["unresolved_report", root, "report.yml"],
-        ["container_exports", root, "containers.yml"],
-      ],
-      "snapshots/test-no-live-repository-scan-api.snap",
-    );
-  },
-);
+for (const [label, config] of [
+  ["default", ".no-mistakes.yml"],
+  ["unresolved_report", "report.yml"],
+  ["container_exports", "containers.yml"],
+]) {
+  const policy = label.replaceAll("_", "-");
+  test(
+    `compiled check and prepared analysis snapshot ${policy} live repository scans`,
+    { skip: !compiled },
+    async () => {
+      await assertParity(
+        [[label, root, config]],
+        `snapshots/test-no-live-repository-scan-${policy}-api.snap`,
+      );
+    },
+  );
+}
 
 test(
   "compiled Node loader scans preserve check and prepared analysis parity",

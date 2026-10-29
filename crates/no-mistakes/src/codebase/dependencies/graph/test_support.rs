@@ -61,6 +61,7 @@ pub(crate) fn from_raw_maps(
         resource_edge_details: fx_map(),
         selector_import_sites: fx_map(),
         resource_diagnostics: Vec::new(),
+        root_mock_boundaries: fx_map(),
     }
 }
 
@@ -83,6 +84,7 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
         resource_edge_details: fx_map(),
         selector_import_sites: fx_map(),
         resource_diagnostics: Vec::new(),
+        root_mock_boundaries: fx_map(),
     }
 }
 

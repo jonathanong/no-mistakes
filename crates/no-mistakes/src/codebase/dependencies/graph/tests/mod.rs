@@ -163,6 +163,7 @@ mod namespace_executor_shadows;
 mod receiver_escape_followups;
 mod receiver_escape_shapes;
 mod receiver_escapes;
+mod root_mock_coverage;
 mod unique_execution_phases;
 
 #[path = "mutable_receiver_bindings.rs"]

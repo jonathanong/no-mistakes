@@ -128,3 +128,6 @@ mod created_require_tests;
 
 #[cfg(test)]
 mod path_provenance_tests;
+
+#[cfg(test)]
+mod mock_boundary_tests;

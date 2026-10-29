@@ -100,8 +100,20 @@ pub struct ModuleDiagnostic {
     pub message: String,
     pub span: Option<ModuleSpan>,
 }
+#[derive(Debug, Clone)]
+pub(crate) struct ModuleMockCall {
+    pub(crate) automock: bool,
+    pub(crate) hoisted: bool,
+    pub(crate) specifier: Option<String>,
+    pub(crate) factory_span: Option<ModuleSpan>,
+    pub(crate) full: bool,
+}
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct TypeScriptModuleFacts {
+    #[serde(skip)]
+    pub(crate) module_mock_calls: Vec<ModuleMockCall>,
+    #[serde(skip)]
+    pub(crate) module_mock_actual_spans: Vec<ModuleSpan>,
     /// Potential Node-origin calls, consumed only as unresolved loader findings.
     #[serde(skip)]
     pub(crate) node_loader_calls:

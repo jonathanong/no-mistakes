@@ -86,7 +86,8 @@ caps the selected traversal. `direct` always stops after one call hop. Call
 cycles are finite and each distinct reachable call occurrence is reported once.
 
 Transitive source selection shares one breadth-first traversal across expanded
-roots, without constructing per-root call traces. At `maxDepth: N`, only call
+roots with ordinary reachability, and groups mocked roots by their declaring
+file without constructing per-root call traces. At `maxDepth: N`, only call
 sites whose owners are fewer than N call hops from a root are selected.
 
 `traversal` defaults to `direct`, `unknownCalls` defaults to `finding`, and
@@ -131,6 +132,47 @@ records as unknown. Use `terminal` for the last member name, including
 unresolved receivers such as typed callback parameters, renamed bindings,
 `this`, static computed members, and chained receivers whose source spelling
 ends in that member. Dynamic computed access (`page[method]()`) is not guessed.
+
+For transitive traversal, a root's top-level `vi.mock` or `jest.mock` can
+replace a module boundary. The specifier must be a literal string resolving
+through the same codebase resolver to the imported file. An automock can stop
+the walk at that file when no adjacent manual mock or module-scope call requires
+a fallback. A proven inline factory stops it there and adds the factory
+and replacement callables to the walk, so forbidden calls in the replacement
+still report. The mock applies only to the root file that declares it; another
+root still follows the real implementation. Suppressions apply at the reported
+source line as usual. Factories registered with `vi.mock` or `jest.mock` are
+always included for the declaring root, including registrations inside uncalled
+helpers: [`vi.mock` is hoisted regardless of its position](https://v4.vitest.dev/api/vi#vi-mock).
+Only top-level registrations can prove full replacement; a nested mock keeps
+the real implementation reachable. Other registrations, including `vi.doMock`, include their
+factories only when the registration owner is reachable, using the normal call
+graph and `maxDepth`. An uncalled helper containing `vi.doMock` therefore adds no
+factory findings for a module or function root. File roots intentionally select
+all callables in the file.
+
+Factory-less mocks can load an adjacent `__mocks__/<basename>` implementation;
+its callables remain selected, and the real implementation is conservatively
+retained too. Deriving an automock also evaluates the real module and its runtime
+dependencies. Their module-scope calls remain selected through the prepared
+import and call graph; any such calls or incomplete module facts keep the real
+implementation reachable. An ordinary automock with no manual replacement and
+no module-scope calls can still remove findings inside its replaced functions.
+Dynamic `eval` or `Function` code in the root also retains the real module,
+because its loader activity cannot be proven from the call graph.
+
+Partial or uncertain mocks retain the real implementation: `importActual`,
+`requireActual`, `importOriginal`, dynamic specifiers, `vi.doMock`, conditional
+registrations, conflicting registrations, spreads and opaque factories cannot
+prove replacement. Proven factories declare no parameters and return an explicit object whose
+property values are literals or arrow/function expressions; captured original-module references and helpers that depend
+on it also keep the real code reachable. Calls to unmodeled external or global
+functions or unresolved captured imports inside a factory cannot prove
+isolation and retain the real code. Repository helpers with runtime imports,
+module loads or incomplete facts also remain uncertain; the call proof does not
+evaluate dependency initializers or imported getter values. Shadowed local `vi`/`jest` objects are
+not framework mocks. These boundaries affect this rule's transitive selection,
+not the canonical graph or other call-graph consumers.
 
 Static external namespace and default-import chains such as `ns.a.b()` expose
 their full module export path. Select `{ module: some-pkg, export: a.b }` for

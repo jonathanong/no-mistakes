@@ -5,16 +5,6 @@ fn file_traversal_scans_only_selected_files() {
         selection.contains("graph.call_sites_in_file(&file)"),
         "file traversal must iterate selected files' call sites"
     );
-    assert!(
-        selection.contains(
-            "graph.call_source_nodes(roots, CallTraversal::Transitive, options.max_depth)"
-        ),
-        "source selection must share the bounded union traversal"
-    );
-    assert!(
-        selection.contains("return graph.call_source_nodes("),
-        "transitive source selection must return before the legacy direct trace path"
-    );
 }
 
 #[test]
@@ -109,5 +99,70 @@ fn transitive_rule_uses_one_source_union_for_overlapping_roots() {
             .get("graph.call_source_nodes.expanded"),
         Some(&(sources.len() as u64)),
         "the production rule must select sources once, without per-root traces"
+    );
+}
+
+#[test]
+fn graph_plan_requests_mock_projection_only_for_transitive_apps() {
+    use super::*;
+    use crate::codebase::dependencies::graph::GraphBuildPlan;
+    for traversal in ["", "traversal: direct\n", "traversal: file\n"] {
+        let config = NoMistakesConfig {
+            rules: vec![application(
+                "bounded",
+                &format!(
+                    "roots: [{{ file: src/entry.mts }}]\n{traversal}targets: [{{ global: setTimeout }}]"
+                ),
+            )],
+            ..Default::default()
+        };
+        let plan = graph_plan(&config).unwrap();
+        assert!(plan.calls);
+        assert!(!plan.imports && !plan.mock_boundaries, "{plan:?}");
+    }
+
+    let transitive = NoMistakesConfig {
+        rules: vec![application(
+            "transitive",
+            "roots: [{ file: src/entry.mts }]\ntraversal: transitive\ntargets: [{ global: setTimeout }]",
+        )],
+        ..Default::default()
+    };
+    let plan = graph_plan(&transitive).unwrap();
+    assert!(plan.imports && plan.mock_boundaries, "{plan:?}");
+
+    let mixed = NoMistakesConfig {
+        rules: vec![
+            application(
+                "direct",
+                "roots: [{ file: src/entry.mts }]\ntargets: [{ global: setTimeout }]",
+            ),
+            application(
+                "transitive",
+                "roots: [{ file: src/entry.mts }]\ntraversal: transitive\ntargets: [{ global: clearTimeout }]",
+            ),
+        ],
+        ..Default::default()
+    };
+    let plan = graph_plan(&mixed).unwrap();
+    assert!(plan.imports && plan.mock_boundaries, "{plan:?}");
+
+    let mut invalid = application(
+        "invalid",
+        "roots: [{ file: src/entry.mts }]\ntargets: [{ global: setTimeout }]",
+    );
+    invalid.options = serde_yaml::from_str(
+        "roots: [{ file: src/entry.mts }]\ntraversal: unsupported\ntargets: [{ global: setTimeout }]",
+    )
+    .unwrap();
+    assert!(invalid.try_rule_options::<Options>().is_err());
+    let config = NoMistakesConfig {
+        rules: vec![invalid],
+        ..Default::default()
+    };
+    let plan: GraphBuildPlan = graph_plan(&config).unwrap();
+    assert!(
+        plan.imports && plan.mock_boundaries,
+        "invalid config demand must remain conservative"
     );
 }

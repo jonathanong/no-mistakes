@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      unknownCalls: ignore
+      roots:
+        - module: src/factory.mts
+      targets:
+        - function: { file: src/forbidden.mts, symbol: forbidden }

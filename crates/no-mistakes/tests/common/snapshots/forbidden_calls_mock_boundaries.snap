@@ -1,0 +1,893 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "actual-other": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "actual-outside": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "auto": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "captured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "different": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "domock": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic-bypass": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "external-factory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "external-value": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "factory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/factory.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.mock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "full": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-factory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/function-factory.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.mock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "function-full": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "function-real": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "global-factory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "helper-external-value": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "initializer": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/initializer-module.mts",
+          "import": "forbidden",
+          "line": 3,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "forbidden()",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "initializer-dependency": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/initializer-helper.mts",
+          "import": "forbidden",
+          "line": 3,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "forbidden()",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "initializer-factory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "jest": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "jest-require": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "jest-require-real": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "manual": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/__mocks__/analysis.mts",
+          "import": "manualForbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#manualForbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { manualForbidden() }",
+          "target": "repository function `src/forbidden.mts#manualForbidden`"
+        },
+        {
+          "file": "src/analysis.mts",
+          "import": "realForbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#realForbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { realForbidden() }",
+          "target": "repository function `src/forbidden.mts#realForbidden`"
+        },
+        {
+          "file": "src/manual-init.mts",
+          "import": "manualInitializerForbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#manualInitializerForbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "manualInitializerForbidden()",
+          "target": "repository function `src/forbidden.mts#manualInitializerForbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "module-factory": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/factory.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.mock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "module-full": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "module-real": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nonliteral": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "original": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "partial": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "real": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-depth-limit": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registration-depth-reached": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-reachable.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.doMock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-hoisted-function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-hoisted.mts",
+          "import": "forbidden",
+          "line": 5,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.mock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-hoisted-module": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-hoisted.mts",
+          "import": "forbidden",
+          "line": 5,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.mock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-reachable-function": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-reachable.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.doMock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-reachable-module": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/registration-reachable.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "vi.doMock('./analysis.mts', () => { forbidden(); return { analyze: () => null } })",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "registration-unused-function": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registration-unused-module": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "require-actual": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-isolation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "self": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/self.mts",
+          "import": "forbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "forbidden()",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shadow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

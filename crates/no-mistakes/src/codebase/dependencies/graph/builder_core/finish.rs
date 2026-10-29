@@ -81,7 +81,12 @@
             resource_edge_details,
             selector_import_sites,
             resource_diagnostics,
+            root_mock_boundaries: fx_map(),
         };
+        if plan.mock_boundaries {
+            let mock_resolver = WorkspaceFallbackResolver::new(&resolver, workspace, graph_files);
+            graph.project_root_mocks(&edge_inputs, facts, &mock_resolver);
+        }
         if plan.assertion_owners {
             let applications = config_options.map(|options| options.assertion_owners.as_slice()).unwrap_or(&[]);
             let edges = crate::codebase::rules::coverage_producer_assertion_owner::ownership_edges(root, applications, &graph, facts.expect("ownership plan requires TS facts"))?;

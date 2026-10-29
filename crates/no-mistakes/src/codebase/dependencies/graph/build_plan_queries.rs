@@ -15,7 +15,7 @@ impl GraphBuildPlan {
 
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
-            module_bindings: self.symbol_import_selectors,
+            module_bindings: self.symbol_import_selectors || self.mock_boundaries,
             source: self.symbol_import_selectors,
             imports: self.imports
                 || self.route_imports

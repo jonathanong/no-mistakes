@@ -4,6 +4,9 @@ pub struct GraphBuildPlan {
     /// Build opt-in lexical call edges. This is excluded from `all()` so
     /// existing dependency output remains stable.
     pub calls: bool,
+    /// Retain root-local module-mock projections for call policies.
+    #[doc(hidden)]
+    pub mock_boundaries: bool,
     /// Explicit assertion ownership contracts, excluded from default graphs.
     pub assertion_owners: bool,
     /// Retain import-selector mappings for effects consumers of call records.
@@ -48,6 +51,7 @@ impl GraphBuildPlan {
         Self {
             assertion_owners: false,
             calls: false,
+            mock_boundaries: false,
             effect_selectors: false,
             extends: false,
             imports: true,
@@ -108,6 +112,7 @@ impl GraphBuildPlan {
         Self {
             assertion_owners: allowed.contains(&EdgeKind::AssertionOwner),
             calls: allowed.contains(&EdgeKind::Call) || allowed.contains(&EdgeKind::AssertionOwner),
+            mock_boundaries: false,
             effect_selectors: false,
             extends: allowed.contains(&EdgeKind::Extends),
             // Resolved call and extends edges use the prepared import projection
@@ -164,36 +169,7 @@ impl GraphBuildPlan {
                 || allowed.contains(&EdgeKind::TrpcProcedure),
         }
     }
-
-    pub(crate) fn include(&mut self, other: Self) {
-        self.assertion_owners |= other.assertion_owners;
-        self.calls |= other.calls;
-        self.effect_selectors |= other.effect_selectors;
-        self.extends |= other.extends;
-        self.imports |= other.imports;
-        self.route_imports |= other.route_imports;
-        self.workspace |= other.workspace;
-        self.package |= other.package;
-        self.tests |= other.tests;
-        self.markdown |= other.markdown;
-        self.ci |= other.ci;
-        self.workflow_topology |= other.workflow_topology;
-        self.routes |= other.routes;
-        self.queues |= other.queues;
-        self.playwright_routes |= other.playwright_routes;
-        self.playwright_selectors |= other.playwright_selectors;
-        self.http |= other.http;
-        self.process |= other.process;
-        self.assets |= other.assets;
-        self.resources |= other.resources;
-        self.react |= other.react;
-        self.symbols |= other.symbols;
-        self.symbol_import_selectors |= other.symbol_import_selectors;
-        self.dotnet |= other.dotnet;
-        self.swift |= other.swift;
-        self.terraform |= other.terraform;
-        self.language_frontends |= other.language_frontends;
-        self.trpc |= other.trpc;
-    }
 }
 include!("build_plan_queries.rs");
+
+include!("build_plan_merge.rs");
