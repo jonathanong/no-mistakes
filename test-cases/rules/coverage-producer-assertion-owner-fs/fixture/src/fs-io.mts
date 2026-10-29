@@ -40,3 +40,12 @@ export function fsSuppressed() { readFileSync('a', 'utf8'); }
 export function paramCallback(done: () => void) { fsNs.readFile('a', done); equal(1, 1); }
 // A dead fs call (after return) is not executed, so it cannot make the producer uncertain.
 export function deadFs() { equal(1, 1); return; fsNs.readFile('a', () => {}); }
+export function ternaryCallback(flag: boolean, first: () => void, second: () => void) {
+  fsNs.readFile('a', flag ? first : second);
+}
+export function logicalCallback(first: (() => void) | undefined, second: () => void) {
+  fsNs.readFile('a', first || second);
+}
+export function computedCallback() { fsNs.readFile('a', makeCallback()); }
+function makeCallback(): () => void { return () => {}; }
+export function literalLastArgument() { fsNs.readFile('a', 'utf8'); }

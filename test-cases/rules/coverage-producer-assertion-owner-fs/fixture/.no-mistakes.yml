@@ -28,5 +28,9 @@ rules:
         - { file: src/fs-io.mts, symbol: fsSuppressed }
         - { file: src/fs-io.mts, symbol: paramCallback }
         - { file: src/fs-io.mts, symbol: deadFs }
+        - { file: src/fs-io.mts, symbol: ternaryCallback }
+        - { file: src/fs-io.mts, symbol: logicalCallback }
+        - { file: src/fs-io.mts, symbol: computedCallback }
+        - { file: src/fs-io.mts, symbol: literalLastArgument }
       assertions:
         - { module: 'node:assert/strict', export: equal }
