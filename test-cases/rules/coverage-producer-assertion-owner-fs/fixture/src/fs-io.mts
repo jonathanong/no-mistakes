@@ -36,3 +36,7 @@ export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equa
 export function writeOnly() { fsNs.writeFileSync('a', 'x'); equal(1, 1); }
 // no-mistakes-disable-next-line coverage-producer-assertion-owner -- suppression still applies to fs producers
 export function fsSuppressed() { readFileSync('a', 'utf8'); }
+// A callback parameter handed to a callback-style fs API is not a resolved invocation.
+export function paramCallback(done: () => void) { fsNs.readFile('a', done); equal(1, 1); }
+// A dead fs call (after return) is not executed, so it cannot make the producer uncertain.
+export function deadFs() { equal(1, 1); return; fsNs.readFile('a', () => {}); }

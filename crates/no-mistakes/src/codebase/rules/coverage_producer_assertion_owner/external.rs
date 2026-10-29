@@ -1,21 +1,29 @@
 //! External-module call classification for assertion-owner traversal.
 use super::*;
 use crate::codebase::dependencies::extract::InvocationKind;
+use crate::codebase::dependencies::extract::ValueExpression;
 
 /// Node `fs` specifiers. Calls through them are ordinary external I/O: they
 /// are neither assertion evidence nor unresolved dispatch.
 const FS_MODULES: [&str; 4] = ["fs", "node:fs", "fs/promises", "node:fs/promises"];
 
-fn is_fs(candidate: &KnownCallTargetRef<'_>) -> bool {
-    matches!(candidate, KnownCallTargetRef::ModuleExport { specifier, repository_target: None, .. }
-        if FS_MODULES.contains(specifier))
+fn fs_export<'a>(candidate: &KnownCallTargetRef<'a>) -> Option<(&'a str, &'a str)> {
+    match candidate {
+        KnownCallTargetRef::ModuleExport {
+            specifier,
+            export_path,
+            repository_target: None,
+            ..
+        } if FS_MODULES.contains(specifier) => Some((specifier, export_path)),
+        _ => None,
+    }
 }
 
 /// Whether this occurrence calls a module outside the repository whose
 /// behavior is not modeled. Pure `fs` I/O is modeled and returns false.
 pub(super) fn unmodeled_external(site: &ResolvedCallSite) -> bool {
     site.targets().any(|candidate| {
-        !is_fs(&candidate.target)
+        fs_export(&candidate.target).is_none()
             && matches!(
                 candidate.target,
                 KnownCallTargetRef::ModuleExport {
@@ -27,14 +35,45 @@ pub(super) fn unmodeled_external(site: &ResolvedCallSite) -> bool {
 }
 
 pub(super) fn fs_effect(site: &ResolvedCallSite) -> bool {
-    !site.has_unknown_target() && site.targets().any(|candidate| is_fs(&candidate.target))
+    !site.has_unknown_target() && site.targets().any(|c| fs_export(&c.target).is_some())
 }
 
-/// `fs` may invoke a callback or promise continuation later; the canonical
-/// graph has no resolved invocation for it, so such a node stays uncertain.
-pub(super) fn hands_off_callback(sites: &[&ResolvedCallSite]) -> bool {
-    sites.iter().any(|site| fs_effect(site))
-        && sites
-            .iter()
-            .any(|site| site.invocation == InvocationKind::Callback)
+/// Whether a live `fs` occurrence may invoke a callback argument later. Only
+/// callback-style APIs (neither `*Sync` nor promise-based) can; their last
+/// argument being a function value, identifier, or member keeps the producer
+/// uncertain because that invocation is not a resolved call.
+pub(super) fn callback_argument(site: &ResolvedCallSite, facts: &dyn TsFactLookup) -> bool {
+    let callback_style = site.targets().any(|candidate| {
+        fs_export(&candidate.target).is_some_and(|(specifier, export)| {
+            !specifier.ends_with("promises")
+                && !export.ends_with("Sync")
+                && !export.contains("promises.")
+        })
+    });
+    callback_style
+        && facts.get_ts_facts(&site.file).is_none_or(|facts| {
+            facts
+                .value_flow
+                .calls
+                .iter()
+                .filter(|call| call.offset == site.offset)
+                .any(|call| {
+                    call.spread_at.is_some()
+                        || matches!(
+                            call.arguments.last(),
+                            Some(
+                                ValueExpression::Callable(_)
+                                    | ValueExpression::Named { .. }
+                                    | ValueExpression::Member(..)
+                            )
+                        )
+                })
+        })
+}
+
+/// Any synthetic callback site in a callable which also performs live `fs` I/O.
+pub(super) fn has_callback_site(sites: &[&ResolvedCallSite]) -> bool {
+    sites
+        .iter()
+        .any(|site| site.invocation == InvocationKind::Callback)
 }

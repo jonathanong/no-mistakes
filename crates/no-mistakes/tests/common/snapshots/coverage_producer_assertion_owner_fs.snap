@@ -98,6 +98,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }",
           "target": "callbackAsserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 40,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#paramCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function paramCallback(done: () => void) { fsNs.readFile('a', done); equal(1, 1); }",
+          "target": "paramCallback"
         }
       ],
       "warnings": []

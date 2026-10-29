@@ -26,5 +26,7 @@ rules:
         - { file: src/fs-io.mts, symbol: callbackAsserted }
         - { file: src/fs-io.mts, symbol: writeOnly }
         - { file: src/fs-io.mts, symbol: fsSuppressed }
+        - { file: src/fs-io.mts, symbol: paramCallback }
+        - { file: src/fs-io.mts, symbol: deadFs }
       assertions:
         - { module: 'node:assert/strict', export: equal }

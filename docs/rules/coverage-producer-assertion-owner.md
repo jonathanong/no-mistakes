@@ -124,10 +124,12 @@ export function withoutAssertion() { readFileSync('result', 'utf8'); } // no-own
 
 Shapes outside the model stay unanalyzable, never passing: computed members
 (`fs[name](...)`), dynamic `require('node:fs')`, wrappers the call graph cannot
-follow, and any `fs` call in a callable that also hands a callback or promise
-continuation to be invoked later (`readFile(path).then(cb)`, callbacks passed
-to `fs.readFile`), because the invocation of that callback is not a resolved
-call. Other modules, such as `node:os` or `node:child_process`, remain
+follow, and a live `fs` call that hands a callback to be invoked later: an
+inline callback or promise continuation in the same callable
+(`readFile(path).then(cb)`), or a function, identifier or member passed as the
+last argument of a callback-style API such as `fs.readFile(path, done)`. The
+invocation of that callback is not a resolved call. `*Sync` and promise APIs
+take no callback. Other modules, such as `node:os` or `node:child_process`, remain
 unmodeled; use an ownership contract for process dispatch. Tip: set
 `unanalyzable: advise` while rolling out the rule to inspect uncertain results
 without failing the check.
