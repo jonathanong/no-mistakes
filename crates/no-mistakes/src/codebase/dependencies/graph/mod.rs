@@ -75,6 +75,8 @@ include!("edge_import_reachability.rs");
 include!("edge_imports.rs");
 include!("edge_calls.rs");
 include!("root_mocks.rs");
+include!("root_mocks_automock.rs");
+include!("root_mocks_initializers.rs");
 include!("root_mocks_proof.rs");
 include!("root_mocks_imports.rs");
 include!("root_mocks_walk.rs");

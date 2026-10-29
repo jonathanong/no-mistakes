@@ -301,4 +301,5 @@ mod path_memo;
 mod playwright;
 mod terminal;
 
+mod automock_initializers;
 mod mock_boundaries;

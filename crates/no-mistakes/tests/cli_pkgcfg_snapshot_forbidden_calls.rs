@@ -260,6 +260,10 @@ fn forbidden_calls_mock_boundaries_json_matches_snapshot() {
         "real",
         "partial",
         "auto",
+        "manual",
+        "initializer",
+        "initializer-dependency",
+        "initializer-factory",
         "factory",
         "nonliteral",
         "original",
@@ -303,6 +307,8 @@ fn forbidden_calls_mock_boundaries_json_matches_snapshot() {
             name,
             root(if name == "suppressed" {
                 "mock-boundaries-suppression"
+            } else if name == "manual" {
+                "mock-manual"
             } else {
                 "mock-boundaries"
             }),

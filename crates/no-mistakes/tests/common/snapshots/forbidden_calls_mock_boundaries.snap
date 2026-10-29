@@ -336,6 +336,62 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "initializer": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/initializer-module.mts",
+          "import": "forbidden",
+          "line": 3,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "forbidden()",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "initializer-dependency": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/initializer-helper.mts",
+          "import": "forbidden",
+          "line": 3,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "forbidden()",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "initializer-factory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "jest": {
     "exitCode": 0,
     "report": {
@@ -377,6 +433,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "forbidden-calls",
           "sourceLine": "export function analyze() { forbidden() }",
           "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "manual": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/__mocks__/analysis.mts",
+          "import": "manualForbidden",
+          "line": 4,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#manualForbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { manualForbidden() }",
+          "target": "repository function `src/forbidden.mts#manualForbidden`"
+        },
+        {
+          "file": "src/analysis.mts",
+          "import": "realForbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#realForbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { realForbidden() }",
+          "target": "repository function `src/forbidden.mts#realForbidden`"
+        },
+        {
+          "file": "src/manual-init.mts",
+          "import": "manualInitializerForbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#manualInitializerForbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "manualInitializerForbidden()",
+          "target": "repository function `src/forbidden.mts#manualInitializerForbidden`"
         }
       ],
       "warnings": []

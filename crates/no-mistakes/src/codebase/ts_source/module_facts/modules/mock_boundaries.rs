@@ -50,6 +50,7 @@ pub(super) fn collect(
             _ => false,
         };
     facts.module_mock_calls.push(ModuleMockCall {
+        automock: call.arguments.len() == 1,
         hoisted,
         specifier,
         factory_span,

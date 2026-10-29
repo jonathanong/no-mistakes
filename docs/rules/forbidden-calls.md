@@ -135,8 +135,9 @@ ends in that member. Dynamic computed access (`page[method]()`) is not guessed.
 
 For transitive traversal, a root's top-level `vi.mock` or `jest.mock` can
 replace a module boundary. The specifier must be a literal string resolving
-through the same codebase resolver to the imported file. Automocks stop the
-walk at that file. A proven inline factory stops it there and adds the factory
+through the same codebase resolver to the imported file. An automock can stop
+the walk at that file when no adjacent manual mock or module-scope call requires
+a fallback. A proven inline factory stops it there and adds the factory
 and replacement callables to the walk, so forbidden calls in the replacement
 still report. The mock applies only to the root file that declares it; another
 root still follows the real implementation. Suppressions apply at the reported
@@ -149,6 +150,14 @@ factories only when the registration owner is reachable, using the normal call
 graph and `maxDepth`. An uncalled helper containing `vi.doMock` therefore adds no
 factory findings for a module or function root. File roots intentionally select
 all callables in the file.
+
+Factory-less mocks can load an adjacent `__mocks__/<basename>` implementation;
+its callables remain selected, and the real implementation is conservatively
+retained too. Deriving an automock also evaluates the real module and its runtime
+dependencies. Their module-scope calls remain selected through the prepared
+import and call graph; any such calls or incomplete module facts keep the real
+implementation reachable. An ordinary automock with no manual replacement and
+no module-scope calls can still remove findings inside its replaced functions.
 
 Partial or uncertain mocks retain the real implementation: `importActual`,
 `requireActual`, `importOriginal`, dynamic specifiers, `vi.doMock`, conditional

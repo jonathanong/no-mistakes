@@ -96,6 +96,26 @@ impl DepGraph {
             else {
                 continue;
             };
+            let manual = (call.hoisted && call.automock)
+                .then(|| self.root_automock_manual_factories(inputs, target))
+                .flatten();
+            if let Some(nodes) = &manual {
+                boundaries.factories.extend(nodes.iter().cloned());
+                for file in nodes
+                    .iter()
+                    .filter(|node| matches!(node, NodeId::File(_)))
+                    .filter_map(NodeId::as_file)
+                {
+                    boundaries
+                        .factories
+                        .extend(self.automock_initializer_seeds(file, facts).1);
+                }
+            }
+            let initializers = (call.hoisted && call.automock)
+                .then(|| self.automock_initializer_seeds(target, facts));
+            if let Some((_, nodes)) = &initializers {
+                boundaries.factories.extend(nodes.iter().cloned());
+            }
             let factory_known = call
                 .factory_span
                 .as_ref()
@@ -109,6 +129,8 @@ impl DepGraph {
                         .is_some_and(|file| !self.import_reaches_mock(file, target))
                 })
                 && call.full
+                && manual.is_none()
+                && initializers.as_ref().is_none_or(|(safe, _)| *safe)
                 && factory_known
                 && self.mock_factory_is_full(&factories, target, facts)
                 && call.factory_span.as_ref().is_none_or(|span| {

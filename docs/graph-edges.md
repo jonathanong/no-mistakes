@@ -361,6 +361,8 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   selection. The prepared resolver identifies the replacement file; ordinary
   call edges remain intact for other roots and consumers. See the
   [rule](rules/forbidden-calls.md) for conservative factory proof and fallback.
+  Automock selection also retains adjacent manual mock callables and real
+  module initializers through the same prepared import and call edges.
   Cyclic object or array member initializers remain unresolved during
   value projection; they do not abort analysis or prevent later independent
   member reads from resolving. Call traversal is cycle-safe and reports each target once at its

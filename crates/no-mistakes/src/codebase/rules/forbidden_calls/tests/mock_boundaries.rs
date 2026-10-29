@@ -6,6 +6,8 @@ fn run_mock_case(name: &str) -> Vec<crate::codebase::rules::RuleFinding> {
     run_check(
         &base.join(if name == "suppressed" {
             "mock-boundaries-suppression/fixture"
+        } else if name == "manual" {
+            "mock-manual/fixture"
         } else {
             "mock-boundaries/fixture"
         }),
@@ -80,9 +82,17 @@ fn root_mock_boundaries_have_node_api_parity() {
         ("real", 1),
         ("factory", 1),
         ("root-isolation", 1),
+        ("initializer", 1),
+        ("initializer-dependency", 1),
+        ("manual", 3),
     ] {
+        let fixture = if name == "manual" {
+            "mock-manual/fixture"
+        } else {
+            "mock-boundaries/fixture"
+        };
         let input = crate::napi_api::options::test_json_arg(serde_json::json!({
-            "root": base.join("mock-boundaries/fixture"),
+            "root": base.join(fixture),
             "config": base.join(format!("configs/mock-boundaries-{name}.yml")),
         }));
         let report: serde_json::Value =
@@ -92,7 +102,7 @@ fn root_mock_boundaries_have_node_api_parity() {
             let aggregate: serde_json::Value = serde_json::from_str(
                 &crate::napi_api::analyze_project_json_impl(
                     crate::napi_api::options::test_json_arg(serde_json::json!({
-                        "root": base.join("mock-boundaries/fixture"),
+                        "root": base.join(fixture),
                         "config": base.join(format!("configs/mock-boundaries-{name}.yml")),
                         "reports": [{"type": "check"}],
                     })),
@@ -245,4 +255,26 @@ fn nested_mock_factories_remain_hoisted_for_narrow_roots() {
             "{name}: {findings:#?}"
         );
     }
+}
+
+#[test]
+fn manual_automocks_retain_real_and_replacement_findings() {
+    assert!(run_mock_case("auto").is_empty());
+    let findings = run_mock_case("manual");
+    assert_eq!(findings.len(), 3, "{findings:#?}");
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file.ends_with("src/analysis.mts")),
+        "{findings:#?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file.ends_with("src/__mocks__/analysis.mts")),
+        "{findings:#?}"
+    );
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file.ends_with("src/manual-init.mts")));
 }

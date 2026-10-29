@@ -102,6 +102,7 @@ pub struct ModuleDiagnostic {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct ModuleMockCall {
+    pub(crate) automock: bool,
     pub(crate) hoisted: bool,
     pub(crate) specifier: Option<String>,
     pub(crate) factory_span: Option<ModuleSpan>,
