@@ -105,3 +105,30 @@ fn unbounded_effort_namespace_members_keep_max_query_only_selection() {
     assert!(report.rules.is_empty(), "{:?}", report.rules);
     assert!(report.advisories.is_empty());
 }
+
+#[test]
+fn unbounded_executor_reference_routes_unknowns_at_low_effort() {
+    for (config, finding, advice) in [
+        (".no-mistakes.yml", true, false),
+        (".no-mistakes-advise.yml", false, true),
+        (".no-mistakes-ignore.yml", false, false),
+    ] {
+        let result = run(config, false);
+        assert_eq!(
+            result
+                .rules
+                .iter()
+                .any(|row| row.rule == RULE && row.file == "src/selection.ts" && row.line == 6),
+            finding,
+            "{config}"
+        );
+        assert_eq!(
+            result
+                .advisories
+                .iter()
+                .any(|row| row.rule == RULE && row.file == "src/selection.ts" && row.line == 6),
+            advice,
+            "{config}"
+        );
+    }
+}
