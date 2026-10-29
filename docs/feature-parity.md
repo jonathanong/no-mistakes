@@ -1029,3 +1029,10 @@ PostgreSQL annotation low effort shares the bounded awaited fresh native builder
 return-origin proof across CLI, Rust checks and asynchronous Node checks. Exact
 prepared imported append-effect obligations must all resolve; unsupported return,
 await, alias or effect paths keep the existing unanalyzable policy.
+
+Low PostgreSQL annotation checks also share the bounded returned-builder caller
+proof across CLI and async Node APIs: one or two arguments, an omitted trusted
+native third default, and up to eight same-factory conditional leaves. All leaves
+must have the same continuation-safe head, and the closed native result permits
+only discarded appends and exact paired executor fields. No evaluator or public
+option/type change is involved; max keeps its existing behavior.

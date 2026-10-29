@@ -94,6 +94,13 @@ and unresolved mixed or escaped forms without running the annotation evaluator.
 They also include an exact directly imported helper that returns an immutable
 append alias of one fresh tagged builder argument, with an inert native default
 and a closed paired `.text`/`.values` executor read.
+Low PostgreSQL annotation checks also share the bounded returned-builder caller
+proof across CLI and async Node APIs: one or two arguments, an omitted trusted
+native third default, and up to eight same-factory conditional leaves. All leaves
+must have the same continuation-safe head, and the closed native result permits
+only discarded appends and exact paired executor fields. No evaluator or public
+option/type change is involved; max keeps its existing behavior.
+
 An exact top-level namespace destructure can follow unique explicit source
 reexports to a fixed-head helper through the same prepared check projection;
 other namespace shapes remain unresolved. At low effort, a helper's own

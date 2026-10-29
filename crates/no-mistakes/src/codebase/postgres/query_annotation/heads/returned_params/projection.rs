@@ -1,10 +1,6 @@
 //! One prepared source hop for a returned first-parameter builder.
-use super::Root;
 use crate::codebase::postgres::query_annotation::heads::{
-    bindings::Bindings,
-    helper_records,
-    syntax::{Head, Syntax},
-    HeadProof, Span,
+    bindings::Bindings, syntax::Syntax, HeadProof, Span,
 };
 use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFacts};
 use crate::fx::{FxHashMap, FxHashSet};
@@ -95,54 +91,16 @@ pub(in super::super) fn module_projection(
         }
     }
     let mut pending = Vec::new();
-    for call in syntax
-        .calls
-        .iter()
-        .filter(|call| executors.contains(&call.span))
-    {
-        let Some(owner) =
-            helper_records::candidate(syntax, bindings, call).filter(|owner| owner.imported)
-        else {
-            continue;
-        };
-        let Head::FieldReference(reference) = call.head else {
-            continue;
-        };
-        let Some(result) = bindings.owner(reference) else {
-            continue;
-        };
-        let declaration = (result.span.start, result.span.end);
-        let Some(root) = syntax.returned_param_roots.get(&declaration) else {
-            continue;
-        };
-        let Some((_, initializer)) = syntax.record_initializers.get(&declaration) else {
-            continue;
-        };
-        if !bindings.declaration_safe(*initializer) || !bindings.declaration_safe(call.span) {
-            continue;
-        }
-        if !caller_root(bindings, owner, root) {
-            continue;
-        }
-        let Some((specifier, imported)) = imports.get(&owner.id).copied().flatten() else {
+    for (span, owner, proof) in super::projected(syntax, bindings, module, executors, &roots) {
+        let Some((specifier, imported)) = imports.get(&owner).copied().flatten() else {
             continue;
         };
         pending.push(Pending {
-            span: call.span,
+            span,
             specifier: specifier.to_string(),
             imported: imported.to_string(),
-            proof: root.proof,
+            proof,
         });
     }
     (exported, pending)
-}
-
-fn caller_root(bindings: &Bindings<'_>, callee: &ModuleBinding, root: &Root) -> bool {
-    let Some(actual) = bindings.owner(root.callee) else {
-        return false;
-    };
-    let Some(tag) = bindings.owner(root.tag) else {
-        return false;
-    };
-    actual.id == callee.id && tag.imported && bindings.trusted_import(tag.id)
 }

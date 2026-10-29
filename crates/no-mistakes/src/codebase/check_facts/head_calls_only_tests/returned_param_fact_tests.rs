@@ -49,9 +49,11 @@ fn returned_first_builder_projects_one_prepared_hop_without_low_evaluation() {
             .collect::<Vec<_>>();
         assert_eq!(proofs.len(), 13);
         assert_eq!(proofs[0], Some(HeadProof::Literal));
-        assert!(proofs[1..6]
+        assert!(proofs[1..4]
             .iter()
             .all(|proof| *proof == Some(HeadProof::Unproven)));
+        assert_eq!(proofs[4], Some(HeadProof::Literal));
+        assert_eq!(proofs[5], Some(HeadProof::Unproven));
         assert_eq!(proofs[6], Some(HeadProof::Missing));
         assert_eq!(&proofs[7..10], &[Some(HeadProof::Unproven); 3]);
         assert_eq!(proofs[10], Some(HeadProof::Missing));

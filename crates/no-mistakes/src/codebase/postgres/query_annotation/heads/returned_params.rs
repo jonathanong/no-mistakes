@@ -7,14 +7,24 @@ use oxc_ast::ast::{
 
 mod caller;
 mod projection;
-pub(super) use caller::root;
+pub(super) use caller::{extend_wanted, projected, root};
 pub(super) use projection::{module_projection, Pending};
 
-#[derive(Clone, Copy)]
 pub(super) struct Root {
+    pub leaves: Vec<Leaf>,
+    pub span: Span,
+    pub proof: super::HeadProof,
+}
+#[derive(Clone, Copy)]
+pub(super) struct Leaf {
     pub callee: Span,
     pub tag: Span,
-    pub proof: super::HeadProof,
+    pub call: Span,
+}
+impl Root {
+    pub fn references(&self) -> impl Iterator<Item = Span> + '_ {
+        self.leaves.iter().flat_map(|leaf| [leaf.callee, leaf.tag])
+    }
 }
 
 #[derive(Clone)]
@@ -69,8 +79,8 @@ pub(super) fn function(value: &Function<'_>) -> Option<Candidate> {
         return None;
     };
     let body = value.body.as_ref()?;
-    // This complete body shape makes the extra guards false for a one-arg call
-    // and leaves the final alias return as its only same-function return.
+    // Keep this complete identity-return body shape. Caller proofs establish
+    // the fresh native input and closed lifetime separately.
     let [Statement::VariableDeclaration(declaration), first_if, from_append, second_if, Statement::ReturnStatement(ret)] =
         body.statements.as_slice()
     else {

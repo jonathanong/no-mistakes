@@ -15,9 +15,9 @@ read(escaped.text, escaped.values) // unanalyzable:
 const defaulted = unsafeDefault(sql`/* defaulted */ SELECT `)
 read(defaulted.text, defaulted.values) // unanalyzable:
 
-// An arbitrary extra object can have a getter that changes the first builder.
+// A getter remains effectful, but cannot reach the fresh private first builder.
 const getter = selectWithOwner(sql`/* getter */ SELECT `, { get columns() { return bad() }, join: sql`` })
-read(getter.text, getter.values) // unanalyzable:
+read(getter.text, getter.values)
 
 const redirected = forwarded(sql`/* redirected */ SELECT `)
 read(redirected.text, redirected.values) // unanalyzable:

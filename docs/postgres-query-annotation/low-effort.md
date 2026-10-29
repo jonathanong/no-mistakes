@@ -313,6 +313,17 @@ still fails under every unanalyzable policy. This syntax proof does not request
 the annotation evaluator or change max's append fallback. For unresolved results,
 put a named literal at the executor instead of passing an opaque `.text` field.
 
+A directly imported helper that returns its first native builder through the
+existing exact immutable append-alias shape also accepts one optional extra
+argument while leaving its third native default omitted. A caller initializer
+may select up to eight leaves, each with the same exact factory binding and a
+fresh trusted tag. All heads must agree, including definite missing annotations;
+a mixed or unsupported leaf keeps the whole call unresolved. Closed results may
+make discarded appends and exact paired executor reads in the same context.
+Getters are not assumed inert: no admitted reference exposes the fresh private
+builder to an extra argument. The native default import proves strict module
+semantics; sloppy CommonJS factories do not gain this projection.
+
 For a configured relative factory or executor type, the helper head is used
 only after the request resolver confirms that the executor import belongs to
 the configured package. An unconfirmed relative call cannot make a local

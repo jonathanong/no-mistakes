@@ -126,3 +126,6 @@ pub(super) fn collect_with_helpers(
 
 #[path = "effect_boundary_coverage_tests.rs"]
 mod effect_boundary_coverage_tests;
+
+#[path = "returned_branch_gap_tests.rs"]
+mod returned_branch_gap_tests;

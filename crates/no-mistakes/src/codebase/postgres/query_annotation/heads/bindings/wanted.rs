@@ -110,7 +110,7 @@ pub(super) fn references(syntax: &Syntax) -> FxHashSet<Span> {
             syntax
                 .returned_param_roots
                 .values()
-                .flat_map(|root| [root.callee, root.tag]),
+                .flat_map(|root| root.references()),
         )
         .chain(syntax.returned_params.values().flat_map(|candidate| {
             [candidate.allowed_parameter, candidate.default_tag]

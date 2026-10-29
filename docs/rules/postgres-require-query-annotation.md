@@ -279,11 +279,11 @@ prepared request resolver. This direct-import form leaves re-exports and
 unresolved package implementations unanalyzable.
 One directly imported synchronous helper may also return the same first native
 builder argument after a single immutable append alias and a final return.
-The caller must pass one fresh tagged argument with a fixed head, then read the
-closed result's paired `.text` and `.values` at a configured executor. Only an
-omitted optional extra argument and an inert no-hole native tag default qualify;
-an extra object, another return path, escaped alias, or unresolved import stays
-unanalyzable. This proves the leading head, not the full statement.
+The caller passes a fresh tagged first argument with a fixed head and may supply
+one extra argument, then reads the closed result's paired `.text` and `.values`
+at configured executors. The native third default remains omitted. Other return
+paths, escaped aliases and unresolved imports stay unanalyzable. This proves the
+leading head, not the full statement.
 An exact top-level `const` destructure of a runtime namespace import may also
 resolve a fixed-head helper through unique explicit reexports and an imported
 default binding. It uses the prepared resolver and source helper proof; dynamic
@@ -298,6 +298,19 @@ The local effect helper may take that builder as its second of two plain
 parameters when its direct call is discarded and every exact parameter use
 only appends a suffix. Imported effect helpers retain their first-argument
 contract. This proves the returned builder's leading name only.
+The returned-first-parameter factory caller may supply one or two plain
+arguments, leaving the trusted native third default in effect. Its initializer
+may choose between at most eight leaves, each calling the same exact imported
+factory with a fresh native tagged first argument. Every leaf must have the same
+continuation-safe annotation verdict; mixed or unknown leaves remain unresolved.
+The immutable result may make discarded appends and exact configured paired
+`.text`/`.values` reads in the same context; all other uses reject the proof.
+Optional/spread/third arguments, nonfresh inputs, captures, changed imports/tags
+and gaps remain unresolved. Extra getters are not considered pure: they cannot
+reach the fresh private builder through an admitted reference. The existing
+producer proof requires a static native ESM import, so this does not admit a
+sloppy CommonJS factory through `require` or implicit stack reflection.
+
 For a fresh plain record, the helper may return an immutable local string
 template as its `text` property. A caller may also extract exactly
 `const { text, values } = helper(args)` and pass those bindings once to a

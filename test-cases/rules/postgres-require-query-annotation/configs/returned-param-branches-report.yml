@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: [src/query.mts, src/factories.mts, src/mutated-callee.mts, src/mutated-tag.mts, src/dynamic.mts, src/sloppy.cjs, src/sloppy-query.mts]
+    options:
+      importSpecifier: '@bench/db'
+      executorNames: [read]
+      effort: low
+      unanalyzable: report
