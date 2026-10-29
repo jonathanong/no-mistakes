@@ -2,6 +2,7 @@
 mod config;
 mod enumerators;
 mod findings;
+mod node_loaders;
 mod provenance;
 mod reachable;
 mod requires;
@@ -9,7 +10,7 @@ mod requires;
 use super::analysis_policy::AnalysisDiagnostics;
 use super::forbidden_calls::{call_argument_values, expand_roots, site_source_node, SharedRoots};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
-use crate::config::v2::NoMistakesConfig;
+use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use anyhow::Result;
 use config::{Options, UnresolvedRoot};
 use enumerators::{scan_of, Scan};
@@ -71,6 +72,14 @@ pub(crate) fn check_with_graph(
                 || !filter.is_match(&site.file)
             {
                 continue;
+            }
+            let loads =
+                node_loaders::findings(&root, application, site, facts, &options.enumerators);
+            if !loads.is_empty() {
+                match options.unresolved_root {
+                    UnresolvedRoot::Report => diagnostics.findings.extend(loads),
+                    UnresolvedRoot::Advise => diagnostics.advisories.extend(loads),
+                }
             }
             sites.visit(site, &options.enumerators);
             let Some(scan) = scan_of(site, &options.enumerators) else {

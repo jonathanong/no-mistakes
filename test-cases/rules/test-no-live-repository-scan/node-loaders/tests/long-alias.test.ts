@@ -1,0 +1,45 @@
+import { createRequire } from "node:module";
+const load0 = createRequire(import.meta.url);
+// Long static alias chains must not silently exhaust a recursion budget.
+const load1 = load0;
+const load2 = load1;
+const load3 = load2;
+const load4 = load3;
+const load5 = load4;
+const load6 = load5;
+const load7 = load6;
+const load8 = load7;
+const load9 = load8;
+const load10 = load9;
+const load11 = load10;
+const load12 = load11;
+const load13 = load12;
+const load14 = load13;
+const load15 = load14;
+const load16 = load15;
+const load17 = load16;
+const load18 = load17;
+const load19 = load18;
+const load20 = load19;
+const load21 = load20;
+const load22 = load21;
+const load23 = load22;
+const load24 = load23;
+const load25 = load24;
+const load26 = load25;
+const load27 = load26;
+const load28 = load27;
+const load29 = load28;
+const load30 = load29;
+const load31 = load30;
+const load32 = load31;
+const load33 = load32;
+const load34 = load33;
+const load35 = load34;
+const load36 = load35;
+const load37 = load36;
+const load38 = load37;
+const load39 = load38;
+const load40 = load39;
+load40("node:fs"); // long-loader-alias
+load0("glob"); // original-loader-after-long-alias

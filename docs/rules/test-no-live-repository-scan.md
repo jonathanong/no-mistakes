@@ -71,6 +71,8 @@ An enumeration passes when its root is provably bounded:
 - Any path segment equals a `fixtureDirs` entry (`fixtures` or `__fixtures__` by
   default), such as `join(import.meta.dirname, "fixtures", name)`. This includes
   `.github/fixtures`; the directory name is the boundary, regardless of depth.
+  Thus `.github/fixtures/x` is allowed, while `.github/fixtures/../workflows`
+  is reported: normalization removes the `fixtures` segment before matching.
 - The root is anchored at the result of `mkdtemp`/
   `mkdtempSync`, held directly or through a `const`.
 
@@ -107,6 +109,34 @@ binding. An unknown direct member scan at the load's own offset is reported once
 Unknown export containers, including `fs.promises`, retain the fallback until
 their enumeration uses are accounted for. Configured descendant exports also
 keep their container visible.
+
+Node loader forms also retain an unresolved-root fallback at the load itself:
+
+```ts
+module.require("node:fs");
+import { createRequire as make } from "node:module";
+make(import.meta.url)("node:fs");
+const load = make(import.meta.url);
+load(moduleName);
+```
+
+This matcher recognizes global `module.require` and `module["require"]`,
+and `createRequire` from `module` or `node:module` through named ESM aliases,
+namespace/default members, or ordinary CommonJS named/namespace imports.
+Direct factory-return calls and same-file initializer aliases of factories and
+loaders are recognized through static expressions and cycle-safe initializer chains.
+Literal enumerator modules and computed module arguments are reported. Literal
+unrelated modules, custom factory imports, and ordinary shadowed bindings are
+not treated as Node loaders. A potentially Node-origin binding retains the
+fallback after reassignment, namespace mutation, or escape; this is uncertainty,
+not a claim that the runtime call still invokes Node's loader.
+
+These Node loader forms do not establish bounded paths, even when a later scan
+names `fixtures`: use a statically named import for that proof. Their findings
+use the same `unresolvedRoot`, severity, custom message, include/exclude, and
+suppression settings. Dynamic property names, factory reexports, arbitrary
+wrapper factories, and `.call`/`.bind` indirection are outside this matcher;
+rewrite them to a direct named import or a direct Node factory initializer.
 
 Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 `dirname`, `fileURLToPath`, `new URL(..., import.meta.url)`, `import.meta.dirname`,
