@@ -5,9 +5,10 @@ use std::collections::HashMap;
 
 mod aggregate;
 mod arguments;
+mod captures;
 mod identity;
 mod proof;
-use identity::Origin;
+pub(super) use identity::Origin;
 
 #[derive(Clone)]
 pub(in crate::codebase::postgres::embedded::walk) struct MemberCall {
@@ -36,8 +37,9 @@ pub(crate) struct MemberQueryProof {
     pub(super) next_event: u32,
     pub(super) aliases: HashMap<(u32, String), Vec<Origin>>,
     pub(super) escapes: HashMap<Origin, Vec<Escape>>,
-    captures: Vec<proof::QueryCapture>,
-    captured_calls: Vec<proof::CapturedCall>,
+    captures: Vec<captures::QueryCapture>,
+    capture_indices: crate::fx::FxHashMap<u32, crate::fx::FxHashMap<String, Vec<usize>>>,
+    captured_calls: Vec<captures::CapturedCall>,
     pub(in crate::codebase::postgres::embedded::walk) calls: Vec<MemberCall>,
 }
 
@@ -70,14 +72,6 @@ impl ScopeVisitor<'_> {
             }
             _ => false,
         }
-    }
-
-    pub(in crate::codebase::postgres::embedded::walk) fn namespace_query_valid(
-        &self,
-        _receiver: &Expression<'_>,
-    ) -> bool {
-        // An escape downgrades a recorded call. Rejecting here would drop it.
-        self.query_binding
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn note_member_call(
@@ -141,6 +135,9 @@ impl ScopeVisitor<'_> {
     }
 
     fn revoke_receiver(&mut self, receiver: &Expression<'_>, mutates_member: bool) {
+        if let Expression::Identifier(name) = unwrap_ts_wrappers(receiver) {
+            self.escape_query_capture(name.name.as_str());
+        }
         match unwrap_ts_wrappers(receiver) {
             Expression::ConditionalExpression(value) => {
                 self.revoke_receiver(&value.consequent, mutates_member);

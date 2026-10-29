@@ -121,6 +121,7 @@ impl ScopeVisitor<'_> {
     }
 
     pub(super) fn mark_dynamic(&mut self, name: &str) {
+        self.invalidate_query_capture(name);
         self.clear_undeclared_binding(name);
         self.forget_receiver_alias(name);
         for scope in self.scopes.iter_mut().rev() {
@@ -150,13 +151,15 @@ impl ScopeVisitor<'_> {
             }
         }
     }
-
     pub(super) fn record_params(&mut self, params: &FormalParameters<'_>) {
         for param in &params.items {
             self.bind_param(
                 &param.pattern,
                 params::param_is_sql_statement(param, &self.sql_statement_types),
             );
+        }
+        for param in &params.items {
+            self.note_executor_parameter(param);
         }
         if let Some(rest) = &params.rest {
             self.bind_param(&rest.rest.argument, false);

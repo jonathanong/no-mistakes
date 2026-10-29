@@ -36,6 +36,10 @@ impl ScopeVisitor<'_> {
         callee: &Expression<'_>,
         arguments: &[Argument<'_>],
     ) {
+        // An exact Function.bind receiver is copied, not handed to an opaque helper.
+        if self.valid_query_bind(callee, arguments) {
+            return;
+        }
         for (index, argument) in arguments.iter().enumerate() {
             if let Some(expression) = argument.as_expression() {
                 self.revoke_namespace_expression(callee, index, expression);

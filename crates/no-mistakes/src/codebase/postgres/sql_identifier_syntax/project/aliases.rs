@@ -1,5 +1,31 @@
 use super::*;
 use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFacts};
+pub(super) mod detached;
+impl Syntax<'_> {
+    pub(in crate::codebase::postgres::sql_identifier_syntax) fn selected_callee(
+        &self,
+        root: &Span,
+        parts: &[String],
+    ) -> bool {
+        (parts.len() == 1 && self.alias_target(root))
+            || (parts.len() == 2 && self.aliases.contains_key(root) && parts[1] == "query")
+            || (self.typed_targets.contains(root) && input::indirect_executor_call(parts))
+            || (parts.len() == 2
+                && self
+                    .namespace_targets
+                    .get(root)
+                    .is_some_and(|names| names.contains(&parts[1])))
+            || (self.loose_query
+                && parts.len() > 1
+                && parts.last().is_some_and(|name| name == "query"))
+    }
+    pub(in crate::codebase::postgres::sql_identifier_syntax) fn alias_target(
+        &self,
+        at: &Span,
+    ) -> bool {
+        self.targets.contains(at) || self.aliases.contains_key(at)
+    }
+}
 
 // An alias is still unsupported. Retain only enough syntax to report Unknown at
 // its uses, where line suppression applies, rather than at its declaration.

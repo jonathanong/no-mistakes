@@ -148,6 +148,7 @@ impl ScopeVisitor<'_> {
     }
 }
 
+mod detached;
 mod namespace;
 pub(super) use namespace::MemberQueryProof;
 

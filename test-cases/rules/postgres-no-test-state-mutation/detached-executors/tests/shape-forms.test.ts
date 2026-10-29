@@ -1,0 +1,10 @@
+import { pool } from '@example/db';
+const { ['query']: bracket } = pool;
+bracket('DROP TABLE bracket_capture');
+const { [`query`]: template } = pool;
+template('DROP TABLE template_capture');
+const receiver = pool;
+const first = receiver['query'], second = first;
+second('DROP TABLE declaration_chain');
+const bound = receiver[`query`][`bind`](pool);
+bound('DROP TABLE template_bind');

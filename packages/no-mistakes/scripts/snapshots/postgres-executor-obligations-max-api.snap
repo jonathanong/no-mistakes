@@ -1,0 +1,294 @@
+{
+  "rules": [
+    {
+      "file": "tests/direct-wrappers.test.ts",
+      "line": 2,
+      "message": "tests/direct-wrappers.test.ts:2: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "(db.query)('DROP TABLE member_call');"
+    },
+    {
+      "file": "tests/direct-wrappers.test.ts",
+      "line": 4,
+      "message": "tests/direct-wrappers.test.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "(query as typeof query)('DROP TABLE alias_call');"
+    },
+    {
+      "file": "tests/known.test.ts",
+      "line": 3,
+      "message": "tests/known.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "run('DROP TABLE query_table');"
+    },
+    {
+      "file": "tests/known.test.ts",
+      "line": 4,
+      "message": "tests/known.test.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "read('DROP TABLE read_table');"
+    },
+    {
+      "file": "tests/known.test.ts",
+      "line": 5,
+      "message": "tests/known.test.ts:5: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "TRUNCATE",
+      "sourceLine": "write('TRUNCATE write_table');"
+    },
+    {
+      "file": "tests/known.test.ts",
+      "line": 6,
+      "message": "tests/known.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "DROP TABLE",
+      "sourceLine": "execute('DROP TABLE execute_table');"
+    }
+  ],
+  "advisories": [
+    {
+      "file": "tests/forward-export.test.ts",
+      "line": 2,
+      "message": "tests/forward-export.test.ts:2: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "export { run };"
+    },
+    {
+      "file": "tests/names.test.ts",
+      "line": 3,
+      "message": "tests/names.test.ts:3: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "pool.read.call(pool, sql);"
+    },
+    {
+      "file": "tests/names.test.ts",
+      "line": 5,
+      "message": "tests/names.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "put.apply(pool, [sql]);"
+    },
+    {
+      "file": "tests/names.test.ts",
+      "line": 6,
+      "message": "tests/names.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "consume(pool.execute);"
+    },
+    {
+      "file": "tests/names.test.ts",
+      "line": 7,
+      "message": "tests/names.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "const run = pool.execute;"
+    },
+    {
+      "file": "tests/names.test.ts",
+      "line": 8,
+      "message": "tests/names.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "run(sql);"
+    },
+    {
+      "file": "tests/names.test.ts",
+      "line": 9,
+      "message": "tests/names.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "function custom({ execute } = pool) {"
+    },
+    {
+      "file": "tests/names.test.ts",
+      "line": 10,
+      "message": "tests/names.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "execute(sql);"
+    },
+    {
+      "file": "tests/parameter-alias.test.ts",
+      "line": 2,
+      "message": "tests/parameter-alias.test.ts:2: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "function f(client = pool, { query: run } = client) {"
+    },
+    {
+      "file": "tests/parameter-alias.test.ts",
+      "line": 3,
+      "message": "tests/parameter-alias.test.ts:3: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "run('DROP TABLE parameter_receiver');"
+    },
+    {
+      "file": "tests/parameter-alias.test.ts",
+      "line": 6,
+      "message": "tests/parameter-alias.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "function g(run = pool.execute) {"
+    },
+    {
+      "file": "tests/parameter-alias.test.ts",
+      "line": 7,
+      "message": "tests/parameter-alias.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "run('DROP TABLE parameter_executor');"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 3,
+      "message": "tests/references.test.ts:3: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "pool.query.bind(pool)(sql);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 5,
+      "message": "tests/references.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "q.call(pool, sql);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 6,
+      "message": "tests/references.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "q.apply(pool, [sql]);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 7,
+      "message": "tests/references.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "Reflect.apply(pool.query, pool, [sql]);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 8,
+      "message": "tests/references.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "consume(pool.query);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 9,
+      "message": "tests/references.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "consume(q);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 10,
+      "message": "tests/references.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "export { q };"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 11,
+      "message": "tests/references.test.ts:11: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "function f({ query } = pool) {"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 12,
+      "message": "tests/references.test.ts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "query(sql);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 14,
+      "message": "tests/references.test.ts:14: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "function g(text: string, { query: run } = pool) {"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 15,
+      "message": "tests/references.test.ts:15: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "run(text);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 19,
+      "message": "tests/references.test.ts:19: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "const alias = q;"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 20,
+      "message": "tests/references.test.ts:20: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "consume(alias);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 21,
+      "message": "tests/references.test.ts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "const unused = pool.query;"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 22,
+      "message": "tests/references.test.ts:22: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "const exact = pool.query;"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 23,
+      "message": "tests/references.test.ts:23: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "exact(sql);"
+    },
+    {
+      "file": "tests/references.test.ts",
+      "line": 24,
+      "message": "tests/references.test.ts:24: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "function unusedDefault({ query } = pool) {}"
+    },
+    {
+      "file": "tests/wrapped-reference.test.ts",
+      "line": 2,
+      "message": "tests/wrapped-reference.test.ts:2: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+      "rule": "postgres-no-test-state-mutation",
+      "target": "test-state-mutation",
+      "sourceLine": "consume((db.query as Function));"
+    }
+  ]
+}

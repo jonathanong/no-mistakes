@@ -1,0 +1,10 @@
+import { pool } from '@example/db';
+let run;
+run = pool.query.bind(pool);
+run = pool;
+run.query('DROP TABLE mixed_receiver');
+run('DROP TABLE mixed_callable');
+let reverse = pool;
+reverse = pool.query.bind(pool);
+reverse('DROP TABLE reverse_callable');
+reverse.query('DROP TABLE reverse_receiver');

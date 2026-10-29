@@ -1,0 +1,673 @@
+{
+  "report": {
+    "rules": [
+      {
+        "file": "tests/after-copy.test.ts",
+        "line": 5,
+        "message": "tests/after-copy.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const first = query;"
+      },
+      {
+        "file": "tests/after-copy.test.ts",
+        "line": 6,
+        "message": "tests/after-copy.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const second = first;"
+      },
+      {
+        "file": "tests/after-copy.test.ts",
+        "line": 7,
+        "message": "tests/after-copy.test.ts:7: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "second('DROP TABLE preserved_copy');"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 3,
+        "message": "tests/assigned.test.ts:3: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "run = pool.query.bind(pool);"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 4,
+        "message": "tests/assigned.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "run('DROP TABLE assigned_bound');"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 6,
+        "message": "tests/assigned.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "initialized = pool.query.bind(pool);"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 7,
+        "message": "tests/assigned.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "initialized('DROP TABLE rebound_initializer');"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 9,
+        "message": "tests/assigned.test.ts:9: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "copied = pool.query;"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 10,
+        "message": "tests/assigned.test.ts:10: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "copied('DROP TABLE assigned_copy');"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 12,
+        "message": "tests/assigned.test.ts:12: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "chain = run;"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 13,
+        "message": "tests/assigned.test.ts:13: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const last = chain;"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 14,
+        "message": "tests/assigned.test.ts:14: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "last('DROP TABLE assigned_alias');"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 16,
+        "message": "tests/assigned.test.ts:16: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "callback = pool.query.bind(pool);"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 17,
+        "message": "tests/assigned.test.ts:17: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "callback('SELECT 1');"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 19,
+        "message": "tests/assigned.test.ts:19: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "changing = pool.query;"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 20,
+        "message": "tests/assigned.test.ts:20: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "changing('SELECT 1');"
+      },
+      {
+        "file": "tests/assigned.test.ts",
+        "line": 22,
+        "message": "tests/assigned.test.ts:22: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "run('DROP TABLE after_unrelated_reassignment');"
+      },
+      {
+        "file": "tests/direct-member.test.ts",
+        "import": "@example/db",
+        "line": 2,
+        "message": "tests/direct-member.test.ts:2: receiver `pool` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "undeclared-executor-type",
+        "sourceLine": "pool.query('DROP TABLE direct_member_control');"
+      },
+      {
+        "file": "tests/direct-member.test.ts",
+        "import": "@example/db",
+        "line": 4,
+        "message": "tests/direct-member.test.ts:4: receiver `receiver` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "undeclared-executor-type",
+        "sourceLine": "receiver.query('DROP TABLE receiver_member_control');"
+      },
+      {
+        "file": "tests/escape-only.test.ts",
+        "line": 5,
+        "message": "tests/escape-only.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "export { namedEscaped };"
+      },
+      {
+        "file": "tests/escape-only.test.ts",
+        "line": 6,
+        "message": "tests/escape-only.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const invalidEscaped = ns.query.bind(otherReceiver);"
+      },
+      {
+        "file": "tests/escape-only.test.ts",
+        "line": 7,
+        "message": "tests/escape-only.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "export { invalidEscaped };"
+      },
+      {
+        "file": "tests/escaped.test.ts",
+        "line": 3,
+        "message": "tests/escaped.test.ts:3: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "retain(query);"
+      },
+      {
+        "file": "tests/escaped.test.ts",
+        "line": 4,
+        "message": "tests/escaped.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const alias = query;"
+      },
+      {
+        "file": "tests/escaped.test.ts",
+        "line": 5,
+        "message": "tests/escaped.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "alias('DROP TABLE escaped_executor');"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 4,
+        "message": "tests/exact.test.ts:4: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "query('DROP TABLE detached_capture');"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 5,
+        "message": "tests/exact.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const first = query;"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 6,
+        "message": "tests/exact.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const second = first;"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 7,
+        "message": "tests/exact.test.ts:7: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "TRUNCATE",
+        "sourceLine": "second('TRUNCATE detached_alias');"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 9,
+        "message": "tests/exact.test.ts:9: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const bound = pool.query.bind(pool);"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 10,
+        "message": "tests/exact.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "bound('DROP TABLE detached_bound');"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 11,
+        "message": "tests/exact.test.ts:11: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const boundAlias = bound;"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 12,
+        "message": "tests/exact.test.ts:12: executed test SQL uses ALTER TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "ALTER TABLE",
+        "sourceLine": "boundAlias('ALTER TABLE detached_bound ADD COLUMN value integer');"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 14,
+        "message": "tests/exact.test.ts:14: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "direct('DROP TABLE direct_control');"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 16,
+        "message": "tests/exact.test.ts:16: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const method = pool.query;"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 17,
+        "message": "tests/exact.test.ts:17: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "method('DROP TABLE copied_member');"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 18,
+        "message": "tests/exact.test.ts:18: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const rebound = method.bind(pool);"
+      },
+      {
+        "file": "tests/exact.test.ts",
+        "line": 19,
+        "message": "tests/exact.test.ts:19: executed test SQL uses DROP VIEW; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP VIEW",
+        "sourceLine": "rebound('DROP VIEW rebound_method');"
+      },
+      {
+        "file": "tests/legacy-escape.test.ts",
+        "line": 4,
+        "message": "tests/legacy-escape.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const bad = pool.query.bind(direct);"
+      },
+      {
+        "file": "tests/legacy-escape.test.ts",
+        "line": 5,
+        "message": "tests/legacy-escape.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const namespaceBad = ns.query.bind(otherReceiver);"
+      },
+      {
+        "file": "tests/local-bodies.test.ts",
+        "line": 4,
+        "message": "tests/local-bodies.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const alias = query;"
+      },
+      {
+        "file": "tests/local-bodies.test.ts",
+        "line": 5,
+        "message": "tests/local-bodies.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "alias('DROP TABLE local_detached_body');"
+      },
+      {
+        "file": "tests/local-bodies.test.ts",
+        "line": 10,
+        "message": "tests/local-bodies.test.ts:10: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "query = pool.query.bind(pool);"
+      },
+      {
+        "file": "tests/local-bodies.test.ts",
+        "line": 11,
+        "message": "tests/local-bodies.test.ts:11: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "query('DROP TABLE local_uncertain_body');"
+      },
+      {
+        "file": "tests/mixed-roles.test.ts",
+        "line": 3,
+        "message": "tests/mixed-roles.test.ts:3: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "run = pool.query.bind(pool);"
+      },
+      {
+        "file": "tests/mixed-roles.test.ts",
+        "line": 5,
+        "message": "tests/mixed-roles.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "run.query('DROP TABLE mixed_receiver');"
+      },
+      {
+        "file": "tests/mixed-roles.test.ts",
+        "line": 6,
+        "message": "tests/mixed-roles.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "run('DROP TABLE mixed_callable');"
+      },
+      {
+        "file": "tests/mixed-roles.test.ts",
+        "line": 8,
+        "message": "tests/mixed-roles.test.ts:8: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "reverse = pool.query.bind(pool);"
+      },
+      {
+        "file": "tests/mixed-roles.test.ts",
+        "line": 9,
+        "message": "tests/mixed-roles.test.ts:9: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "reverse('DROP TABLE reverse_callable');"
+      },
+      {
+        "file": "tests/mixed-roles.test.ts",
+        "line": 10,
+        "message": "tests/mixed-roles.test.ts:10: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "reverse.query('DROP TABLE reverse_receiver');"
+      },
+      {
+        "file": "tests/mutable.test.ts",
+        "line": 2,
+        "message": "tests/mutable.test.ts:2: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "let mutable = pool.query.bind(pool);"
+      },
+      {
+        "file": "tests/mutable.test.ts",
+        "line": 4,
+        "message": "tests/mutable.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const first = mutable;"
+      },
+      {
+        "file": "tests/mutable.test.ts",
+        "line": 5,
+        "message": "tests/mutable.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const second = first;"
+      },
+      {
+        "file": "tests/mutable.test.ts",
+        "line": 6,
+        "message": "tests/mutable.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "second('DROP TABLE mutable_executor');"
+      },
+      {
+        "file": "tests/prebound.test.ts",
+        "line": 3,
+        "message": "tests/prebound.test.ts:3: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const prebound = pool.query.bind(pool, 'DROP TABLE prebound_ddl');"
+      },
+      {
+        "file": "tests/prebound.test.ts",
+        "line": 4,
+        "message": "tests/prebound.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const alias = prebound;"
+      },
+      {
+        "file": "tests/prebound.test.ts",
+        "line": 5,
+        "message": "tests/prebound.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "alias('SELECT 1');"
+      },
+      {
+        "file": "tests/receiver-escaped-after.test.ts",
+        "line": 5,
+        "message": "tests/receiver-escaped-after.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const alias = query;"
+      },
+      {
+        "file": "tests/receiver-escaped-after.test.ts",
+        "line": 6,
+        "message": "tests/receiver-escaped-after.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "alias('DROP TABLE copied_before_receiver_escape');"
+      },
+      {
+        "file": "tests/receiver-escaped.test.ts",
+        "line": 5,
+        "message": "tests/receiver-escaped.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const alias = query;"
+      },
+      {
+        "file": "tests/receiver-escaped.test.ts",
+        "line": 6,
+        "message": "tests/receiver-escaped.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "alias('DROP TABLE escaped_receiver');"
+      },
+      {
+        "file": "tests/receiver-history.test.ts",
+        "line": 4,
+        "message": "tests/receiver-history.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "opaque(changing);"
+      },
+      {
+        "file": "tests/receiver-history.test.ts",
+        "line": 5,
+        "message": "tests/receiver-history.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "changing = pool.query;"
+      },
+      {
+        "file": "tests/receiver-history.test.ts",
+        "line": 8,
+        "message": "tests/receiver-history.test.ts:8: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "query('DROP TABLE escaped_receiver_history');"
+      },
+      {
+        "file": "tests/receiver-origins.test.ts",
+        "line": 5,
+        "message": "tests/receiver-origins.test.ts:5: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "opaque(changing);"
+      },
+      {
+        "file": "tests/receiver-origins.test.ts",
+        "line": 6,
+        "message": "tests/receiver-origins.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "changing = pool.query;"
+      },
+      {
+        "file": "tests/receiver-origins.test.ts",
+        "line": 8,
+        "message": "tests/receiver-origins.test.ts:8: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "first('DROP TABLE first_receiver_history');"
+      },
+      {
+        "file": "tests/receiver-origins.test.ts",
+        "line": 10,
+        "message": "tests/receiver-origins.test.ts:10: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "second('DROP TABLE second_receiver_history');"
+      },
+      {
+        "file": "tests/scopes.test.ts",
+        "line": 3,
+        "message": "tests/scopes.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "query('DROP TABLE outer_before_shadow');"
+      },
+      {
+        "file": "tests/scopes.test.ts",
+        "line": 8,
+        "message": "tests/scopes.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "query('DROP TABLE outer_after_shadow');"
+      },
+      {
+        "file": "tests/shape-forms.test.ts",
+        "line": 3,
+        "message": "tests/shape-forms.test.ts:3: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "bracket('DROP TABLE bracket_capture');"
+      },
+      {
+        "file": "tests/shape-forms.test.ts",
+        "line": 5,
+        "message": "tests/shape-forms.test.ts:5: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "template('DROP TABLE template_capture');"
+      },
+      {
+        "file": "tests/shape-forms.test.ts",
+        "line": 7,
+        "message": "tests/shape-forms.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const first = receiver['query'], second = first;"
+      },
+      {
+        "file": "tests/shape-forms.test.ts",
+        "line": 8,
+        "message": "tests/shape-forms.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "second('DROP TABLE declaration_chain');"
+      },
+      {
+        "file": "tests/shape-forms.test.ts",
+        "line": 9,
+        "message": "tests/shape-forms.test.ts:9: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const bound = receiver[`query`][`bind`](pool);"
+      },
+      {
+        "file": "tests/shape-forms.test.ts",
+        "line": 10,
+        "message": "tests/shape-forms.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "bound('DROP TABLE template_bind');"
+      },
+      {
+        "file": "tests/suppressed.test.ts",
+        "line": 6,
+        "message": "tests/suppressed.test.ts:6: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "DROP TABLE",
+        "sourceLine": "query('DROP TABLE unsuppressed_control');"
+      },
+      {
+        "file": "tests/uncertain-shapes.test.ts",
+        "line": 4,
+        "message": "tests/uncertain-shapes.test.ts:4: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "fallback('SELECT 1');"
+      },
+      {
+        "file": "tests/uncertain-shapes.test.ts",
+        "line": 6,
+        "message": "tests/uncertain-shapes.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "uncertain('SELECT 1');"
+      },
+      {
+        "file": "tests/uncertain.test.ts",
+        "line": 6,
+        "message": "tests/uncertain.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const changedAlias = changed;"
+      },
+      {
+        "file": "tests/uncertain.test.ts",
+        "line": 7,
+        "message": "tests/uncertain.test.ts:7: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "changedAlias('DROP TABLE replaced_receiver');"
+      },
+      {
+        "file": "tests/wrong-this.test.ts",
+        "line": 2,
+        "message": "tests/wrong-this.test.ts:2: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "const wrongThis = pool.query.bind(otherReceiver);"
+      },
+      {
+        "file": "tests/wrong-this.test.ts",
+        "line": 3,
+        "message": "tests/wrong-this.test.ts:3: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+        "rule": "postgres-no-test-state-mutation",
+        "target": "unanalyzable-sql",
+        "sourceLine": "wrongThis('DROP TABLE uncertain_receiver');"
+      }
+    ],
+    "advisories": []
+  }
+}

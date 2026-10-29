@@ -6,6 +6,7 @@ mod binding_visits;
 mod calls;
 mod const_literals;
 mod executor_arguments;
+mod executor_references;
 mod executors;
 mod finite_identifiers;
 mod flow;
@@ -68,6 +69,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.walk_variable_declaration_bindings(declaration);
     }
 
+    fn visit_export_named_declaration(&mut self, declaration: &ast::ExportNamedDeclaration<'a>) {
+        self.walk_runtime_export(declaration);
+    }
+
     fn visit_export_declaration(&mut self, decl: &ast::ExportDeclaration<'a>) {
         walk::walk_export_declaration(self, decl);
         self.poison_exported_const_objects(decl);
@@ -116,26 +121,19 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_tagged_template_expression(&mut self, template: &ast::TaggedTemplateExpression<'a>) {
         self.visit_builder_template(template);
-        for (index, expression) in template.quasi.expressions.iter().enumerate() {
-            self.revoke_namespace_expression(&template.tag, index, expression);
-        }
     }
     fn visit_ts_type(&mut self, _: &ast::TSType<'a>) {}
     fn visit_identifier_reference(&mut self, id: &ast::IdentifierReference<'a>) {
-        self.poison_literal_reference(id);
-        self.escape_builder_reference(id);
+        self.walk_executor_identifier(id);
     }
     fn visit_expression(&mut self, expression: &ast::Expression<'a>) {
-        self.revoke_aggregate_values(expression);
-        walk::walk_expression(self, expression);
+        self.walk_executor_expression(expression);
     }
     fn visit_static_member_expression(&mut self, member: &ast::StaticMemberExpression<'a>) {
         self.walk_literal_member(member);
     }
     fn visit_computed_member_expression(&mut self, member: &ast::ComputedMemberExpression<'a>) {
-        self.with_builder_receiver(&member.object, matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression), ast::Expression::StringLiteral(name) if name.value == "text"), |visitor| {
-            walk::walk_computed_member_expression(visitor, member)
-        });
+        self.walk_computed_member(member);
     }
 
     fn visit_return_statement(&mut self, statement: &ast::ReturnStatement<'a>) {

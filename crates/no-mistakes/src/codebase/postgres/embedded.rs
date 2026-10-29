@@ -183,3 +183,8 @@ mod variants_tests;
 
 #[cfg(test)]
 mod undeclared_tests;
+
+#[cfg(test)]
+mod detached_tests;
+#[cfg(test)]
+mod executor_obligations_tests;

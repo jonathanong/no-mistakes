@@ -3,7 +3,7 @@ import { query as offTarget } from "@example/db/other";
 import { createQuery } from "@example/db";
 
 // Namespace escape must not silently lose the eventual executor.
-const run = db.query; // clear: transferring the namespace member does not execute SQL.
+const run = db.query; // unsupported: low retains a non-call executor reference obligation.
 run("SELECT * FROM public.users"); // unsupported: the actual alias call retains unknown SQL.
 db["query"]("SELECT * FROM public.users"); // unsupported: namespace call
 const key = "query";

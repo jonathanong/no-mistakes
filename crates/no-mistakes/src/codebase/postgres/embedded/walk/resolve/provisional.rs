@@ -9,14 +9,14 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     visitor: &mut ScopeVisitor<'_>,
     call: &CallExpression<'_>,
 ) {
-    if visitor.executor_alias_callee(&call.callee) {
+    if visitor.has_query_capture(&call.callee) || visitor.executor_alias_callee(&call.callee) {
         let span = oxc_span::GetSpan::span(&call.callee);
         push_confirmed(
             visitor,
             call,
             visitor.source[span.start as usize..span.end as usize].to_string(),
         );
-        visitor.note_imported_alias_call(call);
+        visitor.note_captured_call(call, &call.callee, false);
         return;
     }
     if let Some(receiver) = member_query_receiver(call) {
@@ -25,9 +25,15 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
         }
         let namespace = visitor.namespace_expression(receiver);
         let broad = visitor.bindings.contains(MEMBER_QUERY_OPT_IN);
-        if broad || (visitor.proven_executor(receiver) && (!namespace || visitor.query_binding)) {
+        let uncertain = visitor.uncertain_detached_member(receiver);
+        if broad
+            || uncertain
+            || (visitor.proven_executor(receiver) && (!namespace || visitor.query_binding))
+        {
             let sequence = push_confirmed(visitor, call, "query".to_string());
-            if !broad {
+            if uncertain {
+                visitor.note_captured_call(call, receiver, true);
+            } else if !broad {
                 visitor.note_member_call(sequence, call, receiver);
             }
         } else {

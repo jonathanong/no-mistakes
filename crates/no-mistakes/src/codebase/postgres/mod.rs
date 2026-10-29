@@ -6,6 +6,7 @@ mod annotation;
 mod catalog;
 mod collect;
 mod conflict;
+pub(crate) mod executor_detachment;
 pub(crate) use conflict::may_have_insert_conflict;
 pub mod dml;
 pub(crate) mod embedded;

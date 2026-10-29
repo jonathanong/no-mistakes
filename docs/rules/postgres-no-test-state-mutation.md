@@ -74,6 +74,42 @@ default to empty lists. Factories and types identify additional explicitly
 configured executor forms. A trusted tag entry names a named export from a
 module; it does not make unrelated strings executable SQL.
 
+`executorNames` also selects methods copied from configured imported receivers.
+The defaults include `query`, `read`, and `write`; a custom name such as
+`execute` follows the same rules. Immutable local copies retain their origin:
+
+```ts
+import { pool } from "@example/db";
+
+const { query: run } = pool;
+const bound = pool.query.bind(pool);
+const alias = bound;
+run("DROP TABLE users");
+alias("TRUNCATE users");
+```
+
+Every runtime reference to a selected executor member or its local alias that
+is not the callee of a direct call retains an unanalyzable obligation at that use.
+This includes copying the method, binding it (including an immediately invoked
+bind), `.call`, `.apply`, `Reflect.apply`, passing it to a helper, and
+`export { alias }`. A later known direct call can still report its SQL, but does
+not erase the earlier non-call obligation. Type-only references are excluded.
+The configured `unanalyzable` policy controls these obligations; use `advise`
+to keep them as non-failing advisories.
+
+A known bind must use the same receiver and bind no arguments before invocation.
+Defaulted destructuring parameters remain uncertain because callers can replace
+the default receiver, whether the parameter is first or follows another one.
+Dynamic destructuring keys, mutable or escaped bindings, receiver overrides,
+and binds using another receiver or additional arguments also retain uncertainty.
+Configured or standard named executor exports keep their function identity.
+A method assigned to an existing binding remains unanalyzable.
+SQL bound in advance is not replaced by the invocation's argument: these binds
+remain unanalyzable even if their caller passes `SELECT 1`.
+Full extraction distinguishes a method copied before a later receiver change
+from one copied after it. Use a direct named executor import and a direct call
+to avoid an indirect-reference obligation.
+
 `unanalyzable` follows the shared `report` (default), `advise`, or `ignore`
 policy. The legacy `unanalyzableSql` alias also accepts `fail` as `report`.
 Definite violations remain findings under every policy. `message` customizes
@@ -114,8 +150,9 @@ imports to enable the proof.
 A complete SQL statement before an opaque template interpolation is still
 checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the
 `DROP TABLE` and retains an unresolved tail. An incomplete statement, imported
-SQL value, executor alias, unsupported helper, or invalid SQL remains
-unanalyzable under the configured policy. Put a complete literal at the
+SQL value, unsupported helper, or invalid SQL remains unanalyzable under the
+configured policy. Executor aliases outside the immutable query-method forms
+above also remain unanalyzable. Put a complete literal at the
 configured executor or select `max` to use broader analysis. Low keeps the
 same `testGlobs` and `helperRoots` fact and report boundaries. Helper source
 outside those roots cannot prove a selected executor call, which remains

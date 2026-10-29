@@ -428,6 +428,12 @@ It composes finite literal-string returns into complete ordinary SQL templates
 before the shared policy check; tagged-template substitutions remain binds.
 Local builder assignments after a direct throwing branch use the same
 reachable SQL alternatives in CLI and async Node check reports.
+Destructured and bound methods selected by `executorNames` on a configured imported receiver,
+including local aliases, use the same CLI, CJS, ESM, and prepared check behavior.
+Non-call runtime references retain the configured unanalyzable policy even if
+a later direct call is analyzed. Defaulted destructuring parameters remain
+uncertain; type-only references are excluded. This adds no public option or
+separate API function.
 
 The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLiteralHelpers` in rule configuration, for example `["pg-copy-streams#from"]`. Both effort modes recognize direct imported helper calls with one static literal argument; `SqlExecutorProfile.sqlLiteralHelpers` records the configured identities in requested SQL verdicts. See [the annotation rule](rules/postgres-require-query-annotation.md#configured-single-literal-sql-helpers).
 
