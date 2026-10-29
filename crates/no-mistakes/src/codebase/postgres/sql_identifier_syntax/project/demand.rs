@@ -13,6 +13,7 @@ impl Syntax<'_> {
         if self.recover_helpers {
             if retain(module, selections, output, &self.recovery) {
                 self.recovery.validate(&self.template_binds);
+                self.recovery.trim_bodies(module, output);
                 self.recovery.iterators =
                     helper_recovery::iterator::collect(program, module, source);
             } else {

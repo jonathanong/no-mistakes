@@ -1,5 +1,6 @@
 //! Bounded low-only helper facts, collected in the existing parsed-program walk.
 mod application;
+mod body_demand;
 mod budget;
 pub(crate) use application::ApplicationKey;
 mod catalog;
@@ -162,6 +163,8 @@ mod precision_tests;
 #[cfg(test)]
 mod coverage_tests;
 
+#[cfg(test)]
+mod body_demand_tests;
 #[cfg(test)]
 mod model_demand_tests;
 #[cfg(test)]
