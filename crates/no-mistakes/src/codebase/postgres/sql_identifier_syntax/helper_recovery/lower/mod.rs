@@ -12,12 +12,14 @@ use crate::codebase::ts_source::{byte_offset_to_line, module_facts::TypeScriptMo
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{Expression, Function};
 use oxc_span::GetSpan;
+use std::sync::{Arc, OnceLock};
 
 /// Shared per-file binding lookup, built from the already prepared semantics.
 #[derive(Default)]
 pub(crate) struct Bindings {
     slots: FxHashMap<Span, usize>,
     runtime: Vec<(Span, usize)>,
+    opaque_program: OnceLock<Arc<Program>>,
 }
 impl Bindings {
     pub fn new(module: &TypeScriptModuleFacts) -> Self {
@@ -34,7 +36,11 @@ impl Bindings {
             }
         }
         runtime.sort_unstable_by_key(|(at, _)| *at);
-        Self { slots, runtime }
+        Self {
+            slots,
+            runtime,
+            opaque_program: OnceLock::new(),
+        }
     }
     pub fn id(&self, at: oxc_span::Span) -> Option<usize> {
         self.slots.get(&span(at)).copied()
@@ -50,10 +56,22 @@ impl Bindings {
             .filter(move |(span, _)| span.1 <= at.1)
             .map(|(span, id)| (*id, *span))
     }
+    fn opaque_program(&self) -> Arc<Program> {
+        Arc::clone(self.opaque_program.get_or_init(|| {
+            // This mark is never projected: Return(Opaque) fails before it can yield SQL.
+            Arc::new(Program {
+                params: Vec::new(),
+                body: vec![Stmt::Return(
+                    Some(Expr::Opaque),
+                    Mark { line: 0, origin: 0 },
+                )],
+            })
+        }))
+    }
 }
 #[derive(Clone)]
 pub(crate) struct Lowered {
-    pub program: Program,
+    pub program: Arc<Program>,
     pub asynchronous: bool,
     /// Every library tag used by this model must survive whole-file writes.
     pub tags: FxHashSet<usize>,
@@ -110,7 +128,7 @@ pub(crate) fn function(function: &Function<'_>, ctx: &Context<'_>) -> Option<Low
         &function.body.as_ref()?.statements,
     )?);
     Some(Lowered {
-        program: Program { params, body },
+        program: Arc::new(Program { params, body }),
         asynchronous: function.r#async,
         tags: scope.tags,
         references: scope.references,
@@ -136,7 +154,7 @@ pub(crate) fn arrow(
     let (params, mut body) = parameters::lower(&mut scope, &function.params)?;
     body.extend(statements::block(&mut scope, &block.statements)?);
     Some(Lowered {
-        program: Program { params, body },
+        program: Arc::new(Program { params, body }),
         asynchronous: function.r#async,
         tags: scope.tags,
         references: scope.references,
@@ -154,10 +172,10 @@ pub(crate) fn expression(node: &Expression<'_>, ctx: &Context<'_>) -> Lowered {
     let mark = scope.mark(node.span());
     let value = scope.expression(node);
     Lowered {
-        program: Program {
+        program: Arc::new(Program {
             params: Vec::new(),
             body: vec![Stmt::Return(Some(value), mark)],
-        },
+        }),
         asynchronous: false,
         tags: scope.tags,
         references: scope.references,
@@ -168,16 +186,7 @@ pub(crate) fn expression(node: &Expression<'_>, ctx: &Context<'_>) -> Lowered {
 pub(crate) fn opaque_expression(node: &Expression<'_>, ctx: &Context<'_>) -> Lowered {
     let at = node.span();
     Lowered {
-        program: Program {
-            params: Vec::new(),
-            body: vec![Stmt::Return(
-                Some(Expr::Opaque),
-                Mark {
-                    line: byte_offset_to_line(ctx.source, at.start as usize),
-                    origin: at.start,
-                },
-            )],
-        },
+        program: ctx.bindings.opaque_program(),
         asynchronous: false,
         tags: FxHashSet::default(),
         references: ctx.bindings.references_in(span(at)).collect(),

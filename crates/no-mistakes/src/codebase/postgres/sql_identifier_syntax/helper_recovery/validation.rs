@@ -1,6 +1,7 @@
 use super::super::template_binds::TemplateBinds;
 use super::FileModels;
 use crate::codebase::postgres::embedded::helpers::program::Stmt;
+use std::sync::Arc;
 
 impl FileModels {
     pub(in crate::codebase::postgres::sql_identifier_syntax) fn validate(
@@ -16,7 +17,7 @@ impl FileModels {
         for call in &mut self.calls {
             for argument in &mut call.arguments {
                 if argument.tags.iter().any(|id| !tags.is_valid(*id)) {
-                    argument.program.body = vec![Stmt::Opaque];
+                    Arc::make_mut(&mut argument.program).body = vec![Stmt::Opaque];
                 }
             }
         }

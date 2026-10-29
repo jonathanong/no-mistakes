@@ -1,4 +1,4 @@
-use crate::codebase::postgres::embedded::helpers::program::{Expr, Stmt};
+use crate::codebase::postgres::embedded::helpers::program::{Expr, Program, Stmt};
 use crate::codebase::postgres::sql_identifier_syntax::helper_recovery::{
     budget::Limits,
     catalog::PreparedCatalog,
@@ -83,6 +83,23 @@ fn irrelevant_arguments_keep_skeletons_and_references_without_full_ir() {
             source[function.span.0 as usize..function.span.1 as usize]
                 .contains("throw unrelated(local)")
         }));
+        let unknown = facts
+            .profiles
+            .iter()
+            .flat_map(|(_, calls)| calls)
+            .find(|call| {
+                source[call.span.0 as usize..call.span.1 as usize].starts_with("read(local.sql)")
+            })
+            .unwrap();
+        assert!(matches!(unknown.input, super::super::Input::Unknown));
+        assert_eq!(
+            unknown.line,
+            source
+                .lines()
+                .position(|line| line.contains("read(local.sql)"))
+                .unwrap() as u32
+                + 1
+        );
         let opaque = call("unrelated({").arguments[0].clone();
         let mut files = FileIdMap::default();
         files.insert(
@@ -107,4 +124,65 @@ fn irrelevant_arguments_keep_skeletons_and_references_without_full_ir() {
         assert!(engine.residual(), "opaque argument must not prove a value");
     })
     .unwrap();
+}
+
+#[test]
+fn opaque_argument_programs_share_only_within_one_parsed_file() {
+    let root =
+        crate::test_support::rule_fixture_root("postgres-no-offset").join("low-model-demand/src");
+    let collect = |name: &str| {
+        let path = root.join(name);
+        let source = std::fs::read_to_string(&path).unwrap();
+        crate::ast::with_program(&path, &source, |program, _| {
+            let ts = collect_file_facts_from_program(
+                &path,
+                TsFactPlan {
+                    module_bindings: true,
+                    ..Default::default()
+                },
+                &TsFactContext::default(),
+                &source,
+                program,
+                None,
+                None,
+            );
+            super::super::collect(program, &ts, &source, &[super::tests::profile()])
+        })
+        .unwrap()
+    };
+    let first = collect("model-demand.mts");
+    let second = collect("model-demand-second.mts");
+    let repeated = collect("model-demand.mts");
+    let first_programs = opaque_programs(&first);
+    let second_programs = opaque_programs(&second);
+    let repeated_programs = opaque_programs(&repeated);
+    assert!(first_programs.len() >= 2 && second_programs.len() >= 2);
+    assert!(Arc::ptr_eq(first_programs[0], first_programs[1]));
+    assert!(Arc::ptr_eq(second_programs[0], second_programs[1]));
+    assert!(!Arc::ptr_eq(first_programs[0], second_programs[0]));
+    assert!(!Arc::ptr_eq(first_programs[0], repeated_programs[0]));
+    // The shared opaque Return still fails proof; each call keeps its own references.
+    assert!(first
+        .recovery
+        .calls
+        .iter()
+        .any(|call| call.arguments.iter().any(|arg| {
+            Arc::ptr_eq(&arg.program, first_programs[0]) && !arg.references.is_empty()
+        })));
+}
+
+fn opaque_programs(facts: &super::super::FileFacts) -> Vec<&Arc<Program>> {
+    facts
+        .recovery
+        .calls
+        .iter()
+        .flat_map(|call| &call.arguments)
+        .filter(|arg| {
+            matches!(
+                arg.program.body.as_slice(),
+                [Stmt::Return(Some(Expr::Opaque), _)]
+            )
+        })
+        .map(|arg| &arg.program)
+        .collect()
 }
