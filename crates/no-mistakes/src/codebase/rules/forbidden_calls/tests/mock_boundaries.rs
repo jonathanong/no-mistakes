@@ -87,18 +87,21 @@ fn root_mock_boundaries_have_node_api_parity() {
         }));
         let report: serde_json::Value =
             serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
-        let aggregate: serde_json::Value = serde_json::from_str(
-            &crate::napi_api::analyze_project_json_impl(crate::napi_api::options::test_json_arg(
-                serde_json::json!({
-                    "root": base.join("mock-boundaries/fixture"),
-                    "config": base.join(format!("configs/mock-boundaries-{name}.yml")),
-                    "reports": [{"type": "check"}],
-                }),
-            ))
-            .unwrap(),
-        )
-        .unwrap();
-        assert_eq!(aggregate["reports"][0]["result"], report, "{name}");
+        #[cfg(feature = "test-instrumentation")]
+        {
+            let aggregate: serde_json::Value = serde_json::from_str(
+                &crate::napi_api::analyze_project_json_impl(
+                    crate::napi_api::options::test_json_arg(serde_json::json!({
+                        "root": base.join("mock-boundaries/fixture"),
+                        "config": base.join(format!("configs/mock-boundaries-{name}.yml")),
+                        "reports": [{"type": "check"}],
+                    })),
+                )
+                .unwrap(),
+            )
+            .unwrap();
+            assert_eq!(aggregate["reports"][0]["result"], report, "{name}");
+        }
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
             expected,
