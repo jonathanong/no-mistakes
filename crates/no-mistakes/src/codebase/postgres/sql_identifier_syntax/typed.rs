@@ -77,6 +77,8 @@ pub(super) fn collect(
                 || !selection.unsupported.is_empty()
                 || !selection.namespaces.is_empty()
                 || !selection.factories.is_empty()
+                || !selection.advisory_factory_defaults.is_empty()
+                || !selection.advisory_factory_members.is_empty()
                 || !types.is_empty(),
         ),
         possible,
@@ -84,6 +86,8 @@ pub(super) fn collect(
         selected: FxHashSet::default(),
         unsupported: FxHashSet::default(),
         sources: transports::sources(module, selection),
+        advisory_factory_defaults: selection.advisory_factory_defaults.clone(),
+        advisory_factory_members: selection.advisory_factory_members.clone(),
         transports: FxHashSet::default(),
         factory_bindings: FxHashMap::default(),
         factory_arguments: Vec::new(),
@@ -147,6 +151,8 @@ struct Typed {
     selected: FxHashSet<usize>,
     unsupported: FxHashSet<usize>,
     sources: FxHashMap<Span, bool>,
+    advisory_factory_defaults: FxHashSet<usize>,
+    advisory_factory_members: FxHashMap<usize, FxHashSet<String>>,
     transports: FxHashSet<Span>,
     factory_bindings: FxHashMap<usize, bool>,
     factory_arguments: Vec<Span>,
