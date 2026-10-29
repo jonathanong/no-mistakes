@@ -26,5 +26,4 @@ fn strip_extension(segment: &str) -> &str {
 }
 
 #[cfg(test)]
-#[path = "modules_tests.rs"]
 mod tests;
