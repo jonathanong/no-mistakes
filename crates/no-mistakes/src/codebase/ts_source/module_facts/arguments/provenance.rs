@@ -4,6 +4,7 @@
 //! rule that reads these facts then keeps its finding.
 mod consumers;
 mod env_writes;
+mod member_refs;
 mod pass_through;
 mod process_refs;
 mod scope;
@@ -69,7 +70,11 @@ pub(super) fn collect(
             AstKind::StringLiteral(text) => {
                 process_refs::poison_name(&crate::ast::js_literal(text), &mut result);
             }
+            AstKind::ComputedMemberExpression(member) => {
+                member_refs::from_computed(member, &mut result);
+            }
             AstKind::StaticMemberExpression(member) => {
+                member_refs::from_member(&member.property.name, &mut result);
                 value_refs::from_member(semantic.nodes(), node.id(), member, &mut result);
             }
             AstKind::ImportExpression(import) => {

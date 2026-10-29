@@ -229,16 +229,24 @@ use is understood. A use is understood when it is a member read
 finding: aliases and bare passing, `process["env"]`, `globalThis.process`,
 imports or loads of `process`, and destructuring, loop, or update targets.
 
-`process` is accepted only as the bare global identifier. Any reference to the
-global object (`globalThis`, `global`, `window`, `self`) poisons unless it is a
-`typeof` or a read of a member that cannot reach `process`, so passing it to
-`Object.defineProperty`, `Reflect.set`, or `Object.assign`, aliasing it, and
-destructuring it all poison. A module load poisons when its specifier is
-`process`, `node:process`, `vm`, `node:vm`, or is not a string literal:
-`require`, `import()`, `module.require`, `vi.importActual`, `vi.importMock`,
-`jest.requireActual`, and `jest.requireMock`. `createRequire`, `eval`, and
-`Function` poison wherever they appear, as does any use of `require` or
-`module` other than a call, `require.resolve`, or `module.exports`.
+`process` is accepted only as the bare global identifier, and only through
+`process.env` plus a short list of plain members (`cwd`, `platform`, `argv`,
+`pid`, `version`, `versions`, `arch`, `hrtime`, `nextTick`, `uptime`, `exitCode`,
+`memoryUsage`, `stdout`, `stderr`) or `typeof process`. Any other member
+(`getBuiltinModule`, `mainModule`, `binding`), any computed member, and `process`
+used as a value poison. Any reference to the global object (`globalThis`,
+`global`, `window`, `self`) poisons unless it is `typeof` or a direct read of a
+host API on a short list (`fetch`, `console`, timers, `performance`, `URL`,
+`Buffer`, `crypto`, `document`, `location`, `navigator`, storage). Every `.constructor` or
+`.__proto__` member, a computed key spelling them, and a computed key built with
+string concatenation, a template, or a call poison, because they reach the
+`Function` constructor. A module load poisons when its specifier is `process`,
+`node:process`, `vm`, `node:vm`, or is not a string literal: `require`, `import()`,
+`module.require`, `vi.importActual`, `vi.importMock`, `jest.requireActual`, and
+`jest.requireMock`. So does an `import` or `export ... from` of those modules.
+`createRequire`, `eval`, and `Function` poison wherever they appear, as does any use
+of `require` or `module` other than a call, `require.resolve`, or `module.exports`.
+A computed key held in a plain variable is not followed.
 
 Test-runner helpers follow the same rule. Every reference to `vi` or `jest` (and
 to a local name it is imported as) must be the object of a direct, non-computed

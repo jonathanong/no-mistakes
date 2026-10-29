@@ -9,32 +9,21 @@ use oxc_syntax::operator::{BinaryOperator, UnaryOperator};
 
 const PROCESS_MODULES: [&str; 4] = ["process", "node:process", "vm", "node:vm"];
 
-/// Properties of the global object that reach `process`, a mock runner, a loader,
-/// or the global object again.
-const GLOBAL_REACH: [&str; 12] = [
-    "process",
-    "vi",
-    "jest",
-    "require",
-    "module",
-    "eval",
-    "Function",
-    "globalThis",
-    "global",
-    "self",
-    "window",
-    "createRequire",
-];
-
 pub(super) fn poison_process_imports(
     facts: &super::super::super::TypeScriptModuleFacts,
     out: &mut PathProvenance,
 ) {
-    if facts
+    let imported = facts
         .imports
         .iter()
-        .any(|import| PROCESS_MODULES.contains(&import.specifier.as_str()))
-    {
+        .any(|import| PROCESS_MODULES.contains(&import.specifier.as_str()));
+    let reexported = facts.exports.iter().any(|export| {
+        export
+            .specifier
+            .as_deref()
+            .is_some_and(|specifier| PROCESS_MODULES.contains(&specifier))
+    });
+    if imported || reexported {
         out.env_unknown_write = true;
     }
 }
@@ -82,18 +71,12 @@ pub(super) fn from_identifier(
     }
 }
 
-fn literal_key(expression: &Expression<'_>) -> Option<String> {
-    match expression.get_inner_expression() {
-        Expression::StringLiteral(key) => Some(crate::ast::js_literal(key).into_owned()),
-        _ => None,
-    }
-}
-
-/// Only `typeof` and a read of a member that cannot reach `process`.
+/// Only `typeof` and a read of a listed host API.
 fn global_use_is_safe(nodes: &AstNodes<'_>, node: NodeId, span: Span) -> bool {
     match nodes.parent_kind(node) {
         AstKind::StaticMemberExpression(member) => {
-            member.object.span() == span && !GLOBAL_REACH.contains(&member.property.name.as_str())
+            member.object.span() == span
+                && super::member_refs::GLOBAL_SAFE.contains(&member.property.name.as_str())
         }
         AstKind::UnaryExpression(unary) => unary.operator == UnaryOperator::Typeof,
         _ => false,
@@ -121,13 +104,11 @@ fn process_use_is_safe(nodes: &AstNodes<'_>, node: NodeId, span: Span) -> bool {
     let parent = nodes.parent_id(node);
     match nodes.kind(parent) {
         AstKind::StaticMemberExpression(member) if member.object.span() == span => {
-            member.property.name != "env" || env_use_is_safe(nodes, parent)
-        }
-        AstKind::ComputedMemberExpression(member) if member.object.span() == span => {
-            match literal_key(&member.expression) {
-                // `process["env"]` is a spelling the write recorder does not follow.
-                Some(key) => key != "env",
-                None => false,
+            let name = member.property.name.as_str();
+            if name == "env" {
+                env_use_is_safe(nodes, parent)
+            } else {
+                super::member_refs::PROCESS_SAFE.contains(&name)
             }
         }
         AstKind::UnaryExpression(unary) => unary.operator == UnaryOperator::Typeof,

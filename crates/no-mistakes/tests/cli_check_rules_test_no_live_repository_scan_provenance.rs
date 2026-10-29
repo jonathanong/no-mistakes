@@ -6,7 +6,18 @@ const RULE: &str = "test-no-live-repository-scan";
 
 /// Each root owns `POISON_DIR` once, then something this analysis cannot name
 /// writes it too; `control` has no second write and is accepted.
-const POISONED: [&str; 29] = [
+const POISONED: [&str; 40] = [
+    "global-constructor",
+    "global-proto",
+    "process-builtin",
+    "process-main-module",
+    "reexport-named",
+    "reexport-star",
+    "reexport-default",
+    "ctor-function",
+    "ctor-async",
+    "ctor-prototype",
+    "ctor-computed",
     "global-spyon",
     "global-alias",
     "global-define",
