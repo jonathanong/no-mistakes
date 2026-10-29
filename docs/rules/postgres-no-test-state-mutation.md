@@ -141,8 +141,9 @@ imports to enable the proof.
 A complete SQL statement before an opaque template interpolation is still
 checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the
 `DROP TABLE` and retains an unresolved tail. An incomplete statement, imported
-SQL value, executor alias, unsupported helper, or invalid SQL remains
-unanalyzable under the configured policy. Put a complete literal at the
+SQL value, unsupported helper, or invalid SQL remains unanalyzable under the
+configured policy. Executor aliases outside the immutable query-method forms
+above also remain unanalyzable. Put a complete literal at the
 configured executor or select `max` to use broader analysis. Low keeps the
 same `testGlobs` and `helperRoots` fact and report boundaries. Helper source
 outside those roots cannot prove a selected executor call, which remains

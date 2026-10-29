@@ -42,6 +42,42 @@ for (const policy of ["max", "low", "report", "ignore"])
           assert.deepEqual(stable(prepared.reports[0].result), stable(report));
         }
         const current = snapshot(report);
+        assert.deepEqual(report.warnings, []);
+        for (const field of ["rules", "advisories"]) {
+          assert.ok(
+            !current[field].some(
+              ({ file, line }) =>
+                [
+                  "tests/format-bind.test.ts",
+                  "tests/controls.test.ts",
+                  "tests/file-suppressed.test.ts",
+                ].includes(file) ||
+                (file === "tests/suppressed.test.ts" && [4, 5].includes(line)),
+            ),
+          );
+        }
+        if (policy === "low") {
+          for (const line of [4, 7, 10, 12, 14, 17, 19]) {
+            assert.ok(
+              current.rules.some((row) => row.file === "tests/exact.test.ts" && row.line === line),
+            );
+          }
+          for (const [file, line] of [
+            ["tests/wrong-this.test.ts", 3],
+            ["tests/prebound.test.ts", 5],
+            ["tests/after-copy.test.ts", 7],
+            ["tests/receiver-escaped-after.test.ts", 6],
+            ["tests/local-bodies.test.ts", 11],
+            ["tests/assigned.test.ts", 4],
+            ...[5, 6, 9, 10].map((line) => ["tests/mixed-roles.test.ts", line]),
+          ]) {
+            assert.ok(current.advisories.some((row) => row.file === file && row.line === line));
+            assert.ok(!current.rules.some((row) => row.file === file && row.line === line));
+          }
+          assert.ok(
+            current.rules.some((row) => row.file === "tests/suppressed.test.ts" && row.line === 6),
+          );
+        }
         assert.ok(
           current.rules.some(({ file, line }) => file === "tests/exact.test.ts" && line === 4),
         );
