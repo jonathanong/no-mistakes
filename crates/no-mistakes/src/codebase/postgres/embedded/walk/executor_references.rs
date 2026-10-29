@@ -13,8 +13,7 @@ impl ScopeVisitor<'_> {
     /// Only these call shapes invoke an executor reference; every other mention is a plain reference.
     pub(super) fn note_invoked_executor(&mut self, call: &CallExpression<'_>) {
         if let Some(target) = invoked_reference(call) {
-            let span = unwrap_ts_wrappers(target).span();
-            self.executor_invoked_refs.insert((span.start, span.end));
+            self.note_invoked_tag(target);
         }
     }
 

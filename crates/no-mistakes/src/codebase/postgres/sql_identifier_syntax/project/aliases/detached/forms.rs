@@ -54,6 +54,14 @@ pub(super) struct Collector<'p> {
     pub calls: Vec<Invocation>,
 }
 impl<'p> Collector<'p> {
+    fn mark_invoked(&mut self, target: &Expression<'_>) {
+        let mut targets = Vec::new();
+        tag_references(target, &mut targets);
+        for target in targets {
+            self.invoked
+                .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(target))));
+        }
+    }
     pub fn new(module: &TypeScriptModuleFacts, profiles: &'p [EmbeddedSqlOptions]) -> Self {
         let mut owners = FxHashMap::default();
         let mut bindings = FxHashMap::default();
@@ -132,12 +140,7 @@ impl<'a> Visit<'a> for Collector<'_> {
         &mut self,
         tagged: &oxc_ast::ast::TaggedTemplateExpression<'a>,
     ) {
-        let mut targets = Vec::new();
-        tag_references(&tagged.tag, &mut targets);
-        for target in targets {
-            self.invoked
-                .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(target))));
-        }
+        self.mark_invoked(&tagged.tag);
         walk::walk_tagged_template_expression(self, tagged);
     }
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
@@ -146,8 +149,7 @@ impl<'a> Visit<'a> for Collector<'_> {
                 &call.callee,
             ))));
         if let Some(target) = invoked_reference(call) {
-            self.invoked
-                .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(target))));
+            self.mark_invoked(target);
         }
         if let Some((root, parts)) = chain(&call.callee) {
             self.calls.push(Invocation {

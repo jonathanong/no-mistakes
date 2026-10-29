@@ -23,3 +23,4 @@ tag`DROP TABLE tagged_alias_control`;
 (Math.random() ? pool.query : pool.read)`DROP TABLE tagged_ternary_control`;
 (pool.query || pool.read)`DROP TABLE tagged_or_control`;
 (Math.random() && pool.write)`DROP TABLE tagged_and_control`;
+Reflect.apply(Math.random() && pool.query, pool, ["DROP TABLE reflect_logical_control"]);
