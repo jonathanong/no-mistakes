@@ -48,7 +48,12 @@ fn loader_facts_require_demand_and_exclude_unrelated_imports_and_shadows() {
         .1
         .node_loader_calls
         .is_empty());
-    for name in ["shadows.test.ts", "type-only.test.ts", "cycles.test.ts"] {
+    for name in [
+        "shadows.test.ts",
+        "type-only.test.ts",
+        "cycles.test.ts",
+        "unsupported.test.ts",
+    ] {
         assert!(read(name, true).1.node_loader_calls.is_empty(), "{name}");
     }
 }
