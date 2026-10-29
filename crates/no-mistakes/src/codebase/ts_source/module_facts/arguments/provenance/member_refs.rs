@@ -74,9 +74,7 @@ pub(super) fn from_name(
 /// A computed key that spells one of those properties, or builds a string that may.
 pub(super) fn from_computed(member: &ComputedMemberExpression<'_>, out: &mut PathProvenance) {
     let unsafe_key = match member.expression.get_inner_expression() {
-        Expression::StringLiteral(key) => {
-            reaches_constructor(&crate::ast::js_literal(key))
-        }
+        Expression::StringLiteral(key) => reaches_constructor(&crate::ast::js_literal(key)),
         Expression::BinaryExpression(binary) => {
             let text = |side: &Expression<'_>| {
                 matches!(
