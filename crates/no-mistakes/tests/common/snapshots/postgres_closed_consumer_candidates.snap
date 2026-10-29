@@ -23,14 +23,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
-  "complete_sql_low_fallback": {
+  "complete_sql_low": {
     "exitCode": 0,
     "report": {
       "advisories": [
         {
           "file": "privacy.mts",
           "line": 12,
-          "message": "privacy.mts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readVisiblePosts */ SELECT id FROM posts WHERE\"",
+          "message": "privacy.mts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(query)",
           "target": "test-state-mutation"
@@ -38,7 +38,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "privacy.mts",
           "line": 21,
-          "message": "privacy.mts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readPostsWithUnsafeAlias */ SELECT id FROM posts WHERE\"",
+          "message": "privacy.mts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(query)",
           "target": "test-state-mutation"
@@ -46,7 +46,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "privacy.mts",
           "line": 28,
-          "message": "privacy.mts:28: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* overwritten */ SELECT id FROM posts\"",
+          "message": "privacy.mts:28: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(query) // low: false",
           "target": "test-state-mutation"
@@ -54,7 +54,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "retained-relations.mts",
           "line": 40,
-          "message": "retained-relations.mts:40: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* insertRetainedOwner */ INSERT INTO sql_placeholder_1 (subject_id, id) VALUES ($1, $2)\"",
+          "message": "retained-relations.mts:40: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(`/* insertRetainedOwner */ INSERT INTO ${config.retainedTable} (subject_id, id) VALUES ($1, $2)`, ['subject', 'id'])",
           "target": "test-state-mutation"
@@ -62,7 +62,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "retained-relations.mts",
           "line": 41,
-          "message": "retained-relations.mts:41: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* insertRetainedImpact */ INSERT INTO relation_impacts (sql_placeholder_1) VALUES ($1)\"",
+          "message": "retained-relations.mts:41: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(`/* insertRetainedImpact */ INSERT INTO relation_impacts (${config.integrityTargetColumn}) VALUES ($1)`, ['id'])",
           "target": "test-state-mutation"
@@ -70,7 +70,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "retained-relations.mts",
           "line": 42,
-          "message": "retained-relations.mts:42: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readRetainedRelation */ SELECT id FROM sql_placeholder_1 WHERE sql_placeholder_2 = $1\"",
+          "message": "retained-relations.mts:42: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(",
           "target": "test-state-mutation"
@@ -78,7 +78,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "retained-relations.mts",
           "line": 46,
-          "message": "retained-relations.mts:46: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* countRetainedRelation */ SELECT COUNT(*) FROM sql_placeholder_1\"",
+          "message": "retained-relations.mts:46: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(`/* countRetainedRelation */ SELECT COUNT(*) FROM ${config.retainedTable}`)",
           "target": "test-state-mutation"
@@ -86,7 +86,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "retained-relations.mts",
           "line": 51,
-          "message": "retained-relations.mts:51: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readRetainedRoot */ SELECT id FROM sql_placeholder_1 WHERE id = $1\"",
+          "message": "retained-relations.mts:51: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(`/* readRetainedRoot */ SELECT id FROM ${table} WHERE id = $1`, ['id'])",
           "target": "test-state-mutation"
@@ -94,7 +94,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "retained-relations.mts",
           "line": 57,
-          "message": "retained-relations.mts:57: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readUnknownDefaultControl */ SELECT id FROM sql_placeholder_1 WHERE id = $1\"",
+          "message": "retained-relations.mts:57: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(`/* readUnknownDefaultControl */ SELECT id FROM ${table} WHERE id = $1`, ['id'])",
           "target": "test-state-mutation"
@@ -102,7 +102,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "retained-relations.mts",
           "line": 63,
-          "message": "retained-relations.mts:63: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* readUnsafeRetainedRelation */ SELECT id FROM sql_placeholder_1 WHERE id = $1\"",
+          "message": "retained-relations.mts:63: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(`/* readUnsafeRetainedRelation */ SELECT id FROM ${config.retainedTable} WHERE id = $1`, ['id'])",
           "target": "test-state-mutation"
@@ -113,9 +113,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
-      "warnings": [
-        "postgres-no-test-state-mutation: requested effort low; effective effort max because this rule has no low implementation"
-      ]
+      "warnings": []
     }
   },
   "finite_conditional_heads_low": {
