@@ -54,10 +54,22 @@ fn prepared_plain_clause_joins_only_complete_literal_switch_paths() {
     for line in [22, 25, 28] {
         let call = at(&calls, line);
         assert_eq!(call.variants.len(), 7, "line {line}: {call:#?}");
-        assert!(call
-            .variants
-            .iter()
-            .any(|variant| variant.sql_text.contains("orders")));
+        for table in [
+            "orders",
+            "accounts",
+            "archive_a",
+            "archive_b",
+            "archive_c",
+            "archive_d",
+            "archive_e",
+        ] {
+            assert!(
+                call.variants
+                    .iter()
+                    .any(|variant| variant.sql_text.contains(table)),
+                "line {line} missing {table}: {call:#?}"
+            );
+        }
         assert!(call
             .variants
             .iter()
