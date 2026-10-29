@@ -26,6 +26,12 @@ pub(in super::super) fn proofs(
     {
         return found;
     }
+    if syntax.native_values.protocol_exposed {
+        if let Some(observer) = crate::diagnostics::current() {
+            observer.increment("postgres.annotation.native_value_protocol_abstentions", 1);
+        }
+        return found;
+    }
     let observations = syntax.native_values.allowed();
     let observed = observations
         .iter()

@@ -67,3 +67,32 @@ fn native_observations_need_original_semantic_owners() {
     .unwrap();
     assert!(calls.iter().all(|span| !heads.accepts(*span)));
 }
+
+#[test]
+fn source_visible_intrinsic_exposure_abstains_without_changing_literal_heads() {
+    for name in [
+        "optional-dynamic-computed",
+        "dynamic-computed",
+        "bound-protocol-alias",
+        "array-join",
+        "array-reduce",
+        "prototype-alias",
+        "constructor-alias",
+        "computed-prototype",
+        "destructured-prototype",
+        "object-get-prototype",
+        "reflect-get-prototype",
+        "define-property",
+        "reflect-set",
+        "set-prototype",
+        "at-triggered-join",
+        "at-triggered-reduce",
+        "global-computed",
+        "array-constructor",
+        "object-key-prototype",
+    ] {
+        let name = format!("native-values-protocol/{name}.mts");
+        let (source, _, heads) = fixture_with_effects(&name);
+        assert_eq!(assert_markers(&source, &heads), 2, "{name}");
+    }
+}

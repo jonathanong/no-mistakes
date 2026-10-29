@@ -1,6 +1,10 @@
 import { read } from '@bench/db'
 import sql from 'sql-template-strings'
 
+// Type-only intrinsic names do not expose runtime protocols.
+type Values = Array<Object>
+type ProtocolNames = { constructor: Function; ['prototype']: Object }
+
 // Observations may run code and return objects; only the SQL head is proved.
 async function recipients(flag: boolean, bound: unknown, offset: number) {
   const q = sql`/* recipients */ SELECT ${bound}`

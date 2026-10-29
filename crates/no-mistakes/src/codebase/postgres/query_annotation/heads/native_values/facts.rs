@@ -13,6 +13,7 @@ enum Read {
 #[derive(Default)]
 pub(in super::super) struct Facts {
     enabled: bool,
+    pub protocol_exposed: bool,
     reads: FxHashMap<Span, Read>,
     blocked: FxHashSet<Span>,
     pub tags: FxHashSet<Span>,
@@ -39,6 +40,35 @@ impl Facts {
             ..Self::default()
         }
     }
+    // Conservative module-wide abstention: names include aliases' source exposures.
+    pub fn protocol_name(&mut self, name: &str) {
+        if self.enabled
+            && matches!(
+                name,
+                "Array"
+                    | "Object"
+                    | "Reflect"
+                    | "Function"
+                    | "String"
+                    | "globalThis"
+                    | "global"
+                    | "window"
+                    | "self"
+                    | "prototype"
+                    | "__proto__"
+                    | "constructor"
+                    | "getPrototypeOf"
+                    | "setPrototypeOf"
+                    | "defineProperty"
+                    | "defineProperties"
+            )
+        {
+            self.protocol_exposed = true;
+        }
+    }
+    pub fn replace_enabled(&mut self, enabled: bool) -> bool {
+        std::mem::replace(&mut self.enabled, enabled)
+    }
     pub fn demanded(&self) -> bool {
         self.enabled && !self.reads.is_empty()
     }
@@ -56,11 +86,17 @@ impl Facts {
         }
     }
     pub fn index(&mut self, value: &ComputedMemberExpression<'_>) {
-        if !self.enabled || value.optional {
+        if !self.enabled {
             return;
         }
-        if let Some(root) = values(&value.object) {
+        if let Some(root) = values(&value.object).filter(|_| !value.optional) {
             self.reads.insert(span(root.span), Read::Index);
+        } else if !matches!(
+            unwrap_ts_wrappers(&value.expression),
+            Expression::StringLiteral(_) | Expression::NumericLiteral(_)
+        ) {
+            // Do not infer a dynamically spelled constructor/prototype selector.
+            self.protocol_exposed = true;
         }
     }
     pub fn call(&mut self, value: &CallExpression<'_>) {
@@ -96,6 +132,9 @@ impl Facts {
         self.block(value.callee.span());
     }
     pub fn target(&mut self, value: &SimpleAssignmentTarget<'_>) {
+        if self.enabled && !matches!(value, SimpleAssignmentTarget::AssignmentTargetIdentifier(_)) {
+            self.protocol_exposed = true;
+        }
         self.block(value.span());
     }
     pub fn assignment(&mut self, value: &AssignmentExpression<'_>) {
@@ -103,6 +142,9 @@ impl Facts {
     }
     pub fn unary(&mut self, value: &UnaryExpression<'_>) {
         if value.operator == UnaryOperator::Delete {
+            if self.enabled {
+                self.protocol_exposed = true;
+            }
             self.block(value.argument.span());
         }
     }

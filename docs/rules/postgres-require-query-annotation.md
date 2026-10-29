@@ -176,7 +176,15 @@ strings and values arrays and the existing unchanged native protocol contract.
 Index coercion, getters and `.at` can execute code and return arbitrary values;
 this proof neither predicts those values nor asserts purity or bounds. It proves
 only that those effects cannot reach the private SQL strings through the allowed
-references. Low effort performs no SQL evaluation.
+references. The new proof conservatively abstains on source-visible intrinsic or
+prototype exposure, including constructor aliases, computed protocol names and
+reflective access. Unrecognized computed selectors, property writes and deletion
+also abstain, including writes through unknown bound-object aliases. Type-only
+names do not expose runtime protocols. Even benign uses of these names can
+require a simpler query shape. This guard does not establish global absence of hidden monkeypatches in
+other modules; unchanged native and built-in protocols remain the ambient trust
+contract. Ordinary direct literal proofs are unaffected. Low effort performs no
+SQL evaluation.
 
 Maximum effort also recognizes a direct loop-carried literal reassignment in
 `for...of`, `for...in`, `while`, `do...while`, and simple `for` loops: an

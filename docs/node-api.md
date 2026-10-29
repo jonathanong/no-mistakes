@@ -84,6 +84,10 @@ The shared low head facts also allow exact native builder value observations
 same-function ownership census. This preserves only the SQL head; returned
 values and read effects remain unknown. CLI and async Node reports use the same
 prepared proof and unchanged native constructor/append protocol contract.
+Source-visible intrinsic/prototype exposure makes this additional proof abstain;
+unrecognized computed selectors and property writes also abstain. Type-only
+names do not expose runtime protocols. This guard does not certify hidden effects
+in other modules.
 
 For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and

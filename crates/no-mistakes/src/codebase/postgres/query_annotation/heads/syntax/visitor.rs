@@ -105,17 +105,17 @@ impl<'a> Visit<'a> for Syntax {
         self.native_values.block(value.span);
         walk::walk_chain_expression(self, value);
     }
+    fn visit_ts_type(&mut self, value: &TSType<'a>) {
+        self.walk_type_facts(value);
+    }
     fn visit_return_statement(&mut self, value: &ReturnStatement<'a>) {
-        if self.collect_helper_heads {
-            if let Some(reference) = value
-                .argument
-                .as_ref()
-                .and_then(super::super::append::prefix_reference)
-            {
-                self.returned_effect_appends.insert(reference);
-            }
-        }
-        walk::walk_return_statement(self, value);
+        self.walk_return_facts(value);
+    }
+    fn visit_identifier_name(&mut self, value: &IdentifierName<'a>) {
+        self.native_values.protocol_name(value.name.as_str());
+    }
+    fn visit_string_literal(&mut self, value: &StringLiteral<'a>) {
+        self.native_values.protocol_name(value.value.as_str());
     }
     fn visit_simple_assignment_target(&mut self, value: &SimpleAssignmentTarget<'a>) {
         self.native_values.target(value);

@@ -4,6 +4,7 @@ use oxc_ast::ast::{BindingIdentifier, CallExpression, Expression, IdentifierRefe
 
 impl Syntax {
     pub(super) fn record_reference(&mut self, value: &IdentifierReference<'_>) {
+        self.native_values.protocol_name(value.name.as_str());
         self.contexts
             .insert(span(value.span), self.current_function);
         if self.collect_helper_heads && (value.name == "arguments" || value.name == "eval") {

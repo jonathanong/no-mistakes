@@ -1033,4 +1033,6 @@ await, alias or effect paths keep the existing unanalyzable policy.
 Low-effort PostgreSQL annotation checks share native value-read head separation
 between Rust, CLI and async Node. Exact length, index and one-argument `.at`
 observations require a closed function-local native builder and unchanged trusted
-native protocol. This does not predict values or declare reads pure.
+native protocol. Source-visible intrinsic/prototype exposure makes this proof
+abstain. Unchanged protocols remain an ambient assumption, including effects
+from other modules. This does not predict values or declare reads pure.

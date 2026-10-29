@@ -1,7 +1,7 @@
 rules:
   - rule: postgres-require-query-annotation
     scope: repository
-    include: [native-value-reads.mts, native-value-reads-unsafe.mts, native-value-reads-constructor.mts, native-value-reads-cache.mts]
+    include: [native-value-reads.mts, native-value-reads-unsafe.mts, native-value-reads-constructor.mts, native-value-reads-cache.mts, native-values-protocol/*.mts]
     options:
       importSpecifier: '@bench/db'
       executorNames: [read]
