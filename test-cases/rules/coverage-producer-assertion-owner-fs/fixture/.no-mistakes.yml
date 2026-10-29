@@ -78,5 +78,7 @@ rules:
         - { file: src/fs-io.mts, symbol: depthOptions }
         - { file: src/fs-io.mts, symbol: nestedDataOptions }
         - { file: src/fs-io.mts, symbol: nearDepthOptions }
+        - { file: src/fs-io.mts, symbol: helperModule }
+        - { file: src/fs-io.mts, symbol: reexportedWrapper }
       assertions:
         - { module: 'node:assert/strict', export: equal }
