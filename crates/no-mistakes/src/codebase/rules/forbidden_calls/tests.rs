@@ -300,3 +300,5 @@ mod parse_errors;
 mod path_memo;
 mod playwright;
 mod terminal;
+
+mod mock_boundaries;

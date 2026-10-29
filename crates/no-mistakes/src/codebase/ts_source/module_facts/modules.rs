@@ -6,6 +6,7 @@ use oxc_span::GetSpan;
 mod exports;
 mod imports;
 pub(super) mod loads;
+mod mock_boundaries;
 mod mocks;
 mod selectors;
 mod type_selection;
@@ -70,6 +71,7 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                 loads::dynamic(value, facts);
             }
             AstKind::CallExpression(value) => {
+                mock_boundaries::collect(value, node.id(), semantic, facts);
                 loads::require(value, semantic, &mut node_loaders, facts);
                 if arguments {
                     node_loaders.collect(value, facts);

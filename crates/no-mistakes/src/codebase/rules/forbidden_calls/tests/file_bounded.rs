@@ -5,16 +5,6 @@ fn file_traversal_scans_only_selected_files() {
         selection.contains("graph.call_sites_in_file(&file)"),
         "file traversal must iterate selected files' call sites"
     );
-    assert!(
-        selection.contains(
-            "graph.call_source_nodes(roots, CallTraversal::Transitive, options.max_depth)"
-        ),
-        "source selection must share the bounded union traversal"
-    );
-    assert!(
-        selection.contains("return graph.call_source_nodes("),
-        "transitive source selection must return before the legacy direct trace path"
-    );
 }
 
 #[test]

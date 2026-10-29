@@ -1,0 +1,163 @@
+use super::*;
+
+fn run_mock_case(name: &str) -> Vec<crate::codebase::rules::RuleFinding> {
+    let base = crate::test_support::rule_fixture_root("forbidden-calls");
+    let base = base.parent().unwrap();
+    run_check(
+        &base.join(if name == "suppressed" {
+            "mock-boundaries-suppression/fixture"
+        } else {
+            "mock-boundaries/fixture"
+        }),
+        Some(&base.join(format!("configs/mock-boundaries-{name}.yml"))),
+        None,
+    )
+    .unwrap()
+}
+
+#[test]
+fn full_mock_boundaries_replace_the_real_module_per_root() {
+    for name in [
+        "full",
+        "auto",
+        "jest",
+        "jest-require",
+        "actual-other",
+        "module-full",
+        "function-full",
+        "suppressed",
+    ] {
+        let findings = run_mock_case(name);
+        assert!(findings.is_empty(), "{name}: {findings:#?}");
+    }
+    for name in [
+        "real",
+        "partial",
+        "original",
+        "nonliteral",
+        "domock",
+        "different",
+        "duplicate",
+        "captured",
+        "shadow",
+        "root-isolation",
+        "actual-outside",
+        "helper",
+        "helper-external-value",
+        "require-actual",
+        "jest-require-real",
+        "module-real",
+        "function-real",
+        "external-factory",
+        "external-value",
+        "global-factory",
+    ] {
+        let findings = run_mock_case(name);
+        assert_eq!(findings.len(), 1, "{name}: {findings:#?}");
+        assert!(
+            findings[0].file.ends_with("src/analysis.mts"),
+            "{name}: {findings:#?}"
+        );
+    }
+}
+
+#[test]
+fn full_mock_factory_is_walked_instead_of_the_real_module() {
+    let findings = run_mock_case("factory");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(
+        findings[0].file.ends_with("src/factory.mts"),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn root_mock_boundaries_have_node_api_parity() {
+    let fixture = crate::test_support::rule_fixture_root("forbidden-calls");
+    let base = fixture.parent().unwrap();
+    for (name, expected) in [
+        ("full", 0),
+        ("real", 1),
+        ("factory", 1),
+        ("root-isolation", 1),
+    ] {
+        let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+            "root": base.join("mock-boundaries/fixture"),
+            "config": base.join(format!("configs/mock-boundaries-{name}.yml")),
+        }));
+        let report: serde_json::Value =
+            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+        let aggregate: serde_json::Value = serde_json::from_str(
+            &crate::napi_api::analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+                serde_json::json!({
+                    "root": base.join("mock-boundaries/fixture"),
+                    "config": base.join(format!("configs/mock-boundaries-{name}.yml")),
+                    "reports": [{"type": "check"}],
+                }),
+            ))
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(aggregate["reports"][0]["result"], report, "{name}");
+        assert_eq!(
+            report["rules"].as_array().unwrap().len(),
+            expected,
+            "{name}: {report}"
+        );
+    }
+}
+
+#[test]
+fn self_mock_does_not_remove_the_declaring_root() {
+    let findings = run_mock_case("self");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0].file.ends_with("src/self.mts"), "{findings:#?}");
+}
+
+#[test]
+fn factory_bodies_are_selected_for_module_and_function_roots() {
+    for name in ["module-factory", "function-factory"] {
+        let findings = run_mock_case(name);
+        assert_eq!(findings.len(), 1, "{name}: {findings:#?}");
+        assert!(
+            findings[0].file.contains("factory.mts"),
+            "{name}: {findings:#?}"
+        );
+    }
+}
+
+#[test]
+fn mock_selection_does_not_prune_the_canonical_call_graph() {
+    use crate::codebase::dependencies::graph::{CallRoot, CallTraversal, DepGraph, GraphBuildPlan};
+    let base = crate::test_support::rule_fixture_root("forbidden-calls");
+    let root = base.parent().unwrap().join("mock-boundaries/fixture");
+    let config = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths_dir: root.clone(),
+        ..Default::default()
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &config,
+        GraphBuildPlan {
+            calls: true,
+            imports: true,
+            mock_boundaries: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let roots = graph.expand_call_roots(&[CallRoot::File(root.join("src/full.mts"))]);
+    let ordinary = graph.call_source_nodes(&roots, CallTraversal::Transitive, None);
+    assert!(ordinary.iter().any(|node| node
+        .as_file()
+        .is_some_and(|file| file.ends_with("src/analysis.mts"))));
+    let mocked = graph.call_source_nodes_with_root_mocks(&roots, None);
+    assert!(!mocked.iter().any(|node| node
+        .as_file()
+        .is_some_and(|file| file.ends_with("src/analysis.mts"))));
+    assert_eq!(
+        ordinary,
+        graph.call_source_nodes(&roots, CallTraversal::Transitive, None)
+    );
+}

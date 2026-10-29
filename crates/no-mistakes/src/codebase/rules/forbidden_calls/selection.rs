@@ -21,6 +21,8 @@ pub(crate) fn graph_plan(
         .rule_configured(RULE_ID)
         .then(|| crate::codebase::dependencies::graph::GraphBuildPlan {
             calls: true,
+            imports: true,
+            mock_boundaries: true,
             ..Default::default()
         })
 }
@@ -171,10 +173,8 @@ fn reachable_source_nodes(
     roots: &[NodeId],
     options: &Options,
 ) -> FxHashSet<NodeId> {
-    // Only transitive policies need a union traversal; keep the existing file
-    // and direct paths intact so their work and lazy graph demand stay scoped.
     if matches!(options.traversal, Traversal::Transitive) {
-        return graph.call_source_nodes(roots, CallTraversal::Transitive, options.max_depth);
+        return graph.call_source_nodes_with_root_mocks(roots, options.max_depth);
     }
     let mut nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
     if matches!(options.traversal, Traversal::File) {
