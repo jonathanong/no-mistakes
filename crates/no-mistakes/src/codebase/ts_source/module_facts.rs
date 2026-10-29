@@ -93,7 +93,9 @@ pub(crate) fn extract_from_semantic(
         if let Some(observer) = crate::diagnostics::current() {
             observer.increment("facts.call_arguments.collections", 1);
         }
-        facts.call_arguments = Some(std::sync::Arc::new(arguments::collect(semantic, &facts)));
+        let (call_arguments, provenance) = arguments::collect(semantic, &facts);
+        facts.call_arguments = Some(std::sync::Arc::new(call_arguments));
+        facts.path_provenance = Some(std::sync::Arc::new(provenance));
     }
     facts
 }
@@ -123,3 +125,6 @@ mod argument_matrix_tests;
 
 #[cfg(test)]
 mod created_require_tests;
+
+#[cfg(test)]
+mod path_provenance_tests;

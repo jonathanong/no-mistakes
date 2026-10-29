@@ -10,6 +10,10 @@ test("live repository scan options expose roots, fixtures, enumerators, and unre
   assert.match(types, /fixtureDirs\?: string\[\];/);
   assert.match(types, /enumerators\?: TestNoLiveRepositoryScanEnumerator\[\];/);
   assert.match(types, /unresolvedRoot\?: "advise" \| "report";/);
+  assert.match(types, /export interface TestNoLiveRepositoryScanRuntimeAsset/);
+  assert.match(types, /runtimeAssets\?: TestNoLiveRepositoryScanRuntimeAsset\[\];/);
+  assert.match(types, /root: string;/);
+  assert.match(types, /reason: string;/);
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/test-no-live-repository-scan-types";/,

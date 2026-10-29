@@ -275,6 +275,9 @@ sees both substrings `cfg` and `test`; otherwise those AST checks skip parsing.
 [`test-no-live-repository-scan`](../rules/test-no-live-repository-scan.md) reports
 unresolved scan roots as advisories by default; `options.unresolvedRoot: report`
 makes them blocking unless the rule sets `severity: advisory`.
+`options.runtimeAssets` declares shipped asset roots (each with a required
+`reason`); a literal read at or under one is listed as an advisory with target
+`runtime asset` instead of failing.
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the

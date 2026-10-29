@@ -14,6 +14,14 @@ export interface TestNoLiveRepositoryScanEnumerator {
   export?: string;
 }
 
+/** A shipped asset tree that production code reads at runtime. */
+export interface TestNoLiveRepositoryScanRuntimeAsset {
+  /** Repository-relative directory, for example `assets/migrations`. No `..`, no leading `/`. */
+  root: string;
+  /** Why the tree is shipped input rather than a source or policy tree. Required. */
+  reason: string;
+}
+
 /** Options for `test-no-live-repository-scan`. */
 export interface TestNoLiveRepositoryScanOptions {
   /** Traversal roots. Default: every Vitest project. */
@@ -26,4 +34,9 @@ export interface TestNoLiveRepositoryScanOptions {
   enumerators?: TestNoLiveRepositoryScanEnumerator[];
   /** How unresolved scan roots are reported; default: `"advise"`. They are never omitted. */
   unresolvedRoot?: "advise" | "report";
+  /**
+   * Shipped asset roots. A literal read at or under one is listed as an advisory with
+   * target `runtime asset` instead of failing; other trees are still reported.
+   */
+  runtimeAssets?: TestNoLiveRepositoryScanRuntimeAsset[];
 }

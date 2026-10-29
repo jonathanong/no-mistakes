@@ -69,12 +69,19 @@ on the enumeration. A `readFileSync` of a fixed literal path is not reported.
 An enumeration passes when its root is provably bounded:
 
 - Any path segment equals a `fixtureDirs` entry (`fixtures` or `__fixtures__` by
+- Any path segment equals a `fixtureDirs` entry (`fixtures` or `__fixtures__` by
   default), such as `join(import.meta.dirname, "fixtures", name)`. This includes
   `.github/fixtures`; the directory name is the boundary, regardless of depth.
   Thus `.github/fixtures/x` is allowed, while `.github/fixtures/../workflows`
   is reported: normalization removes the `fixtures` segment before matching.
-- The root is anchored at the result of `mkdtemp`/
-  `mkdtempSync`, held directly or through a `const`.
+- The root is anchored at the result of `mkdtemp`/`mkdtempSync`, held directly,
+  through a `const`, or through a `let` whose every write is such a root.
+- The root is a parameter, or an environment variable, and the test supplies an
+  owned root (see [Owned parameters and env vars](#owned-parameters-and-env-vars)).
+- The call forwards a mock's own arguments unchanged
+  (see [Pass-through mocks](#pass-through-mocks)).
+- The read is under a declared [runtime asset](#runtime-assets); it is listed
+  separately instead of failing.
 
 `readdirSync(tmpdir())` and a predictable child such as
 `readdirSync(join(tmpdir(), "policy"))` are reported: the shared temporary
@@ -144,9 +151,107 @@ Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 immutable `const` aliases, including a `const` glob options object with a `cwd`.
 Parent traversal is resolved, so `fixtures/../src` is a live path, not a fixture
 path. A generic helper such as
-`listFiles(dir: string)` is therefore an unresolved root at its enumeration even
-when every caller passes a fixture; enumerate with a path the helper builds
-itself from a fixture root, or suppress the helper.
+`listFiles(dir: string)` is an unresolved root at its enumeration unless every
+reachable caller passes an owned root or a module- or `cwd`-anchored fixture
+path through an imported binding (see
+[Owned parameters and env vars](#owned-parameters-and-env-vars)); a caller that
+passes a relative literal, a variable, or nothing keeps the finding. Otherwise
+enumerate with a path the helper builds itself from a fixture root, or suppress
+the helper.
+
+## Owned parameters and env vars
+
+Two provenance gaps resolve when every route into the enumeration is proven.
+
+**Parameters.** `sync(user, dir = DEFAULT_DIR)` enumerates `dir`. If every
+reachable call site passes an owned or fixture root at that argument position,
+the enumeration is accepted for those calls. A call that omits the argument
+resolves to the default, so one omitting caller keeps the finding. The callee
+must enumerate the parameter itself, in the function that declares it, and must
+not reassign it. Callers are the repository call sites in the canonical call
+graph; only calls through an imported binding record their argument roots. A
+function that is also referenced other than as a direct callee (`.then(sync)`,
+`list.forEach(sync)`, `export { sync }`, `sync.call(...)`, `.apply`, `.bind`) has
+callers this analysis cannot see, so it keeps the finding. That includes a default
+export imported under another name, and a function destructured from `require()`
+or `import()` and passed as a value.
+
+**Environment variables.** A getter such as
+`() => process.env.X ?? "./tmp/default"` (same file, no parameters, one returned
+expression), a `process.env.X` or `process.env["X"]` read, and `path.join`
+around it carry the variable through. The enumeration is accepted when:
+
+- every write to `X` in the analyzed files (`process.env.X = ...`,
+  `process.env["X"] = ...`, `vi.stubEnv("X", ...)`) assigns an owned root, and
+- an unconditional owned write dominates every call chain that reaches the
+  enumeration: a module top-level statement before the call, a statement earlier
+  in the same function body, or one in a `beforeAll`/`beforeEach` callback that
+  covers an `it`/`test` callback calling it.
+
+An owned root is only owned below itself: a path that climbs out of it with
+`..` (`join(dir, "..", "src")`) keeps the finding for both parameters and env
+vars.
+
+The env read must happen at the call: a value captured into a module- or
+function-level `const` (`const dir = process.env.X ?? "."`) keeps the finding, as
+does a `beforeAll`/`beforeEach` registered inside a branch.
+
+The finding is kept when the write comes after the call, sits in an `if`, loop,
+or `try`, or is overwritten with a live value elsewhere. Writes are read from
+every file in the run, including Vitest setup files that the rule's `include`/
+`exclude` filters remove from reporting, because a setup `beforeEach` runs after
+a test file's `beforeAll`.
+
+Recall comes first: any use of `process.env` poisons every variable, so the finding is
+kept, unless it is a plain member read (`process.env.X`), a recognized write, or
+one of three exceptions: a spread copy (`{ ...process.env }`), the `in` operator
+(`"A" in process.env`), or an object-destructuring read
+(`const { A } = process.env`). That covers `process.env = ...`, `Object.assign(process.env, ...)`, passing
+bare `process.env` to a function, an alias (`const env = process.env`, `q =
+process.env`), `const { env } = process`, `import { env } from "node:process"`,
+`require("process")`, `globalThis.process`, `process["env"]`, destructuring,
+array, loop, and update targets, and a non-literal key. `vi.unstubAllEnvs()`,
+`unstubAllEnvs` (also as a computed key), and an `unstubEnvs` option also poison,
+because they restore the default between tests. Only the direct `vi.stubEnv(...)`
+call is read as a write; an alias (`const s = vi.stubEnv`), a destructured
+`stubEnv`, or `vi["stubEnv"]` poisons.
+
+## Pass-through mocks
+
+`vi.spyOn(fs, "readdir").mockImplementation((...args) => original(...args))`
+forwards the caller's arguments, so the forwarding call is not a root of its
+own. Only a `spyOn` with a literal name of an enumerating method (`readdir`,
+`readdirSync`, `opendir`, `opendirSync`, `glob`, `globSync`, or a configured
+`enumerators` export) qualifies; a bare `vi.fn()`, another method, or a computed
+name keeps the advisory. The callers of the mocked function are judged where they enumerate. Only an
+exact forward counts: a wrapper with any other parameter, an extra or dropped
+argument (`original("./x", ...args)`, `original(...args.slice(1))`), or a
+rebound rest parameter keeps the advisory; so does any other use of the rest
+binding (an index write, `splice`, `push`, `length = ...`, or a nested closure), as does forwarding outside
+`mockImplementation`/`mockImplementationOnce`.
+
+## Runtime assets
+
+Production code sometimes reads a shipped directory, such as migration files read
+to report migration status. That is runtime behavior, not a repository scan.
+Declare such roots in config; no directory name is built in:
+
+```yaml
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      runtimeAssets:
+        - root: backend/assets/migrations
+          reason: shipped migration files read to report status
+```
+
+A literal path (no non-literal components) at or under a declared root is
+reported as an advisory with target `runtime asset` and the reason in its
+message. Matching is by whole path segment, so `assets/migrations-src` and the
+parent `assets` are still reported, as is a path with a dynamic component. `root`
+is relative to the invocation root and may not contain `..`; `reason` is
+required. Delete the entry to make the read a finding again.
 
 ## Options
 
@@ -164,6 +269,9 @@ rules:
         - module: node:fs
           export: cpSync
       unresolvedRoot: advise
+      runtimeAssets:
+        - root: backend/assets/migrations
+          reason: shipped migration files read to report status
 ```
 
 - `roots` uses the [`forbidden-calls` root selectors](forbidden-calls.md#options-and-roots)
@@ -175,6 +283,8 @@ rules:
 - `enumerators` adds enumerating imports to the built-in set. `export` is
   optional; omit it to match every export of `module`.
 - `unresolvedRoot` is `advise` (default) or `report`.
+- `runtimeAssets` lists shipped asset roots as `{ root, reason }`; see
+  [Runtime assets](#runtime-assets). Default: none.
 - The rule entry's `message` replaces the default finding text.
 
 The common `include` and `exclude` filters narrow which files may carry a

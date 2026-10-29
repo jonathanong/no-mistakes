@@ -8,13 +8,16 @@ mod aliases;
 use aliases::AliasSafety;
 
 mod path_origin;
+mod provenance;
 mod types;
-pub(crate) use types::{ArgumentValue, ArgumentValues, PathAnchor, PathOrigin};
+pub(crate) use types::{
+    ArgumentValue, ArgumentValues, EnvWrite, PathAnchor, PathOrigin, PathProvenance, WriteScope,
+};
 
 pub(super) fn collect(
     semantic: &Semantic<'_>,
     facts: &super::TypeScriptModuleFacts,
-) -> FxHashMap<u32, ArgumentValues> {
+) -> (FxHashMap<u32, ArgumentValues>, PathProvenance) {
     let names: FxHashSet<_> = facts
         .exports
         .iter()
@@ -34,6 +37,7 @@ pub(super) fn collect(
         .map(|b| b.id)
         .collect();
     let imported = path_origin::imported_locals(facts);
+    let provenance = provenance::collect(semantic, facts, &exported);
     let mut immutable = AliasSafety::default();
     let mut result = FxHashMap::default();
     let mut dynamic_scope = false;
@@ -101,7 +105,7 @@ pub(super) fn collect(
             call.path = call.path.take().map(|_| PathOrigin::unknown());
         }
     }
-    result
+    (result, provenance)
 }
 
 struct Projector<'a, 's> {

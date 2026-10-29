@@ -3,10 +3,13 @@
 //! Syntactic heuristics only: `join`/`resolve`, `tmpdir`, `mkdtemp`, `cwd`, and
 //! `import.meta.dirname` are recognised by spelling, and only immutable `const`
 //! aliases are followed. Everything else is `Unknown`, never guessed.
+mod bindings;
 mod calls;
 mod composite;
+mod sources;
 
-pub(super) use self::composite::imported_locals;
+pub(super) use self::composite::{callee_root, imported_locals};
+pub(super) use self::sources::{env_name, is_process_env, process_global};
 use super::{PathAnchor, PathOrigin, Projector};
 use oxc_ast::{ast::*, AstKind};
 
@@ -16,6 +19,8 @@ impl PathOrigin {
             anchor: PathAnchor::Unknown,
             segments: Vec::new(),
             dynamic: true,
+            env: None,
+            param: None,
         }
     }
 
@@ -24,6 +29,8 @@ impl PathOrigin {
             anchor,
             segments: Vec::new(),
             dynamic: false,
+            env: None,
+            param: None,
         }
     }
 
@@ -37,6 +44,8 @@ impl PathOrigin {
             },
             segments: Vec::new(),
             dynamic: false,
+            env: None,
+            param: None,
         };
         origin.extend(
             text.split(['/', '\\'])
@@ -85,6 +94,21 @@ impl<'a> Projector<'a, '_> {
                 if module {
                     PathOrigin::anchored(PathAnchor::Module)
                 } else {
+                    self.env_origin(expression)
+                }
+            }
+            Expression::ComputedMemberExpression(_) => self.env_origin(expression),
+            Expression::LogicalExpression(logical)
+                if matches!(
+                    logical.operator,
+                    LogicalOperator::Coalesce | LogicalOperator::Or
+                ) =>
+            {
+                // An env var that is set wins over the fallback on its right.
+                let left = self.origin(&logical.left, depth + 1);
+                if left.env.is_some() {
+                    left
+                } else {
                     PathOrigin::unknown()
                 }
             }
@@ -100,9 +124,26 @@ impl<'a> Projector<'a, '_> {
             return PathOrigin::anchored(PathAnchor::Module);
         }
         match self.const_init(id) {
-            Some(init) => self.origin(init, depth + 1),
-            None => PathOrigin::unknown(),
+            Some(init) => {
+                let origin = self.origin(init, depth + 1);
+                // A captured env read ran when the alias was initialised, not at the
+                // call, so a later owned write does not cover it.
+                if origin.env.is_some() {
+                    PathOrigin::unknown()
+                } else {
+                    origin
+                }
+            }
+            None => self
+                .param_origin(id)
+                .or_else(|| self.owned_binding(id, depth))
+                .unwrap_or_else(PathOrigin::unknown),
         }
+    }
+
+    /// Origin of a path expression with no call-site context.
+    pub(super) fn path_of(&mut self, expression: &Expression<'a>) -> PathOrigin {
+        self.origin(expression, 0)
     }
 
     fn binding_symbol(&self, id: &IdentifierReference<'a>) -> Option<oxc_semantic::SymbolId> {

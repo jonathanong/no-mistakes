@@ -97,6 +97,8 @@ mod cli_check_rules_swift;
 mod cli_check_rules_test_no_live_repository_scan;
 #[path = "cli_check_rules_test_no_live_repository_scan_node_loaders.rs"]
 mod cli_check_rules_test_no_live_repository_scan_node_loaders;
+#[path = "cli_check_rules_test_no_live_repository_scan_provenance.rs"]
+mod cli_check_rules_test_no_live_repository_scan_provenance;
 #[path = "cli_check_rules_test_no_live_repository_scan_shapes.rs"]
 mod cli_check_rules_test_no_live_repository_scan_shapes;
 #[path = "cli_check_rules_tsconfig.rs"]

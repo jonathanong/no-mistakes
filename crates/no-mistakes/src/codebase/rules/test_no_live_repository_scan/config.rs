@@ -18,6 +18,17 @@ pub(super) struct Options {
     /// Extra enumerating imports, in addition to the built-in `fs` and glob set.
     pub(super) enumerators: Vec<Enumerator>,
     pub(super) unresolved_root: UnresolvedRoot,
+    /// Shipped asset trees that production code legitimately reads at runtime.
+    pub(super) runtime_assets: Vec<RuntimeAsset>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct RuntimeAsset {
+    /// Repository-relative directory; a read at or under it is a runtime asset read.
+    pub(super) root: String,
+    /// Why the tree is shipped input rather than a policy surface.
+    pub(super) reason: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -55,6 +66,22 @@ impl Options {
             e.module.trim().is_empty() || e.export.as_deref().is_some_and(|x| x.trim().is_empty())
         }) {
             bail!("{RULE_ID}: enumerators require a non-empty module and export");
+        }
+        for asset in &self.runtime_assets {
+            let segments = || {
+                asset
+                    .root
+                    .split('/')
+                    .filter(|part| !part.is_empty() && *part != ".")
+            };
+            if asset.reason.trim().is_empty()
+                || asset.root.contains('\\')
+                || asset.root.starts_with('/')
+                || segments().next().is_none()
+                || segments().any(|part| part == "..")
+            {
+                bail!("{RULE_ID}: runtimeAssets entries need a relative `root` without `..` and a non-empty `reason`");
+            }
         }
         Ok(())
     }

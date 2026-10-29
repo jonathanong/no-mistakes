@@ -130,6 +130,8 @@ pub struct TypeScriptModuleFacts {
     #[serde(skip)]
     pub(crate) call_arguments:
         Option<std::sync::Arc<crate::fx::FxHashMap<u32, super::arguments::ArgumentValues>>>,
+    #[serde(skip)]
+    pub(crate) path_provenance: Option<std::sync::Arc<super::arguments::PathProvenance>>,
     pub imports: Vec<ModuleImport>,
     pub exports: Vec<ModuleExport>,
     pub bindings: Vec<ModuleBinding>,
