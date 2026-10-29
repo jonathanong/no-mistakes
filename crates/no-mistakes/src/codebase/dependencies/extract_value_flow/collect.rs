@@ -1,8 +1,22 @@
 use super::*;
+
+pub(super) fn last_argument_is_literal(arguments: &[oxc_ast::ast::Argument<'_>]) -> bool {
+    expression_is_literal(
+        arguments
+            .last()
+            .and_then(|argument| argument.as_expression()),
+    )
+}
+
+pub(super) fn expression_is_literal(expression: Option<&Expression<'_>>) -> bool {
+    expression.is_some_and(literal_arguments::is_closed_literal)
+}
 #[path = "binding_patterns.rs"]
 mod binding_patterns;
 #[path = "for_of_value_binding.rs"]
 mod for_of_value_binding;
+#[path = "literal_arguments.rs"]
+mod literal_arguments;
 
 impl ImportCollector {
     fn record_value_binding(&mut self, declarator: &VariableDeclarator<'_>, immutable: bool) {
@@ -83,7 +97,8 @@ impl ImportCollector {
         }
         self.record_replacement_call(call);
         self.note_escaped_call(call);
-        let (callee, arguments, spread_at, bound) = self.adapted_value_call(call);
+        let (callee, arguments, spread_at, bound, last_argument_literal) =
+            self.adapted_value_call(call);
         self.record_object_assign_providers(&callee, &arguments, &call.arguments, call.span.end);
         let value_call = ValueCall {
             context: self.current_function_id(),
@@ -93,6 +108,7 @@ impl ImportCollector {
                 .unwrap_or_else(|| "<unknown>".to_string()),
             callee,
             arguments: std::sync::Arc::new(arguments),
+            last_argument_literal,
             bound,
             spread_at,
             repeated: self.repeat_depth > self.call_repeat_base,

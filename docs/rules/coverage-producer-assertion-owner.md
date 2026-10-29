@@ -126,10 +126,27 @@ Shapes outside the model stay unanalyzable, never passing: computed members
 (`fs[name](...)`), dynamic `require('node:fs')`, wrappers the call graph cannot
 follow, and a live `fs` call that hands a callback to be invoked later: an
 inline callback or promise continuation in the same callable
-(`readFile(path).then(cb)`), or a function, identifier or member passed as the
-last argument of a callback-style API such as `fs.readFile(path, done)`. The
-invocation of that callback is not a resolved call. `*Sync` and promise APIs
-take no callback. Other modules, such as `node:os` or `node:child_process`, remain
+(`readFile(path).then(cb)`), or a last argument whose syntax may be callable in a callback-style
+API such as `fs.readFile(path, done)`, `fs.readFile(path, flag ? first : second)`,
+or `fs.readFile(path, first || second)`. Such an argument may be a callback;
+its invocation is not a resolved call. For `.call` and literal-array `.apply`,
+this classification uses the effective arguments after removing `thisArg` or
+expanding the array. `*Sync` and promise APIs
+take no callback. The model conservatively treats every other `fs` export as
+potentially callback-capable rather than maintaining a callback-signature
+allowlist that could omit an API. Scalars, templates without substitutions
+and closed literal data containers remain modeled I/O. An object or array is
+closed only when all values recursively contain literal data, with static
+object keys and ordinary data properties. Literal options such as
+`fs.createReadStream(path, { encoding: 'utf8' })` therefore pass when their
+result is asserted. TypeScript wrappers preserve this classification.
+Functions or classes anywhere inside a container, identifiers, member reads,
+calls, conditional/logical expressions, dynamic templates, getters, methods,
+shorthand properties, computed keys, spreads and array holes remain uncertain.
+The recursive proof also stops conservatively after 16 nested expression
+levels. For example, `{ cb: () => {} }` is uncertain even when followed by an
+assertion.
+Other modules, such as `node:os` or `node:child_process`, remain
 unmodeled; use an ownership contract for process dispatch. Tip: set
 `unanalyzable: advise` while rolling out the rule to inspect uncertain results
 without failing the check.

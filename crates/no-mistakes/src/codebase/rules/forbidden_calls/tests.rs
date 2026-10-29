@@ -293,6 +293,7 @@ fn invalid_configuration_is_not_suppressed() {
 
 mod explicit_playwright;
 mod explicit_vitest;
+mod external_chains;
 mod file_bounded;
 mod glob;
 mod parse_errors;

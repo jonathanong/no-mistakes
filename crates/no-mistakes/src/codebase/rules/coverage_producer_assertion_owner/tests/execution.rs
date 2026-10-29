@@ -109,6 +109,90 @@ fn import_forms_and_external_calls_preserve_uncertainty_policy() {
 }
 
 #[test]
+fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
+    let root = crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-fs");
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join(".no-mistakes.yml")), None)
+            .unwrap();
+    for symbol in [
+        "ternaryCallback",
+        "logicalCallback",
+        "computedCallback",
+        "dynamicTemplateArgument",
+        "spreadArguments",
+        "applyCallbackArgument",
+        "applySpreadArguments",
+        "callCallbackArgument",
+        "ternaryOptions",
+        "fnPropertyOptions",
+        "functionPropertyOptions",
+        "classPropertyOptions",
+        "nestedFnPropertyOptions",
+        "unknownPropertyOptions",
+        "memberPropertyOptions",
+        "callPropertyOptions",
+        "conditionalPropertyOptions",
+        "logicalPropertyOptions",
+        "arrayFunctionOptions",
+        "arrayUnknownOptions",
+        "methodOptions",
+        "getterOptions",
+        "shorthandOptions",
+        "spreadOptions",
+        "arraySpreadOptions",
+        "arrayHoleOptions",
+        "computedKeyOptions",
+        "computedStaticKeyOptions",
+        "templatePropertyOptions",
+        "callFnPropertyOptions",
+        "applyFnPropertyOptions",
+        "depthOptions",
+    ] {
+        assert!(
+            findings.iter().any(|finding| finding.rule == RULE_ID
+                && finding.target.as_deref() == Some(symbol)
+                && finding.message.contains("unanalyzable")),
+            "{symbol}: {findings:#?}"
+        );
+    }
+    for symbol in [
+        "streamOptions",
+        "nestedDataOptions",
+        "nearDepthOptions",
+        "mkdirOptions",
+        "typedStreamOptions",
+        "arrayOptions",
+        "callObjectOptions",
+        "applyObjectOptions",
+        "applyArrayOptions",
+    ] {
+        assert!(
+            !findings.iter().any(|finding| finding.rule == RULE_ID
+                && finding.target.as_deref() == Some(symbol)),
+            "{symbol}: {findings:#?}"
+        );
+    }
+    for symbol in [
+        "literalLastArgument",
+        "templateLiteralArgument",
+        "typedLiteralArgument",
+        "noArguments",
+        "applyLiteralArgument",
+        "applyTemplateLiteralArgument",
+        "applyNoArguments",
+        "applyNullArguments",
+        "callLiteralArgument",
+    ] {
+        assert!(
+            findings.iter().any(|finding| finding.rule == RULE_ID
+                && finding.target.as_deref() == Some(symbol)
+                && !finding.message.contains("unanalyzable")),
+            "{findings:#?}"
+        );
+    }
+}
+
+#[test]
 fn literal_switches_only_count_executable_assertion_cases() {
     let findings = run("switches.yml");
     let mut targets = findings

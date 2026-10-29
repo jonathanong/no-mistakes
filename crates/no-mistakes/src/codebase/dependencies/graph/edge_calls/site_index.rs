@@ -26,6 +26,15 @@ impl CallableFileIndex {
 }
 
 impl DepGraph {
+    pub(crate) fn opaque_external_member_call(&self, site: &ResolvedCallSite) -> bool {
+        self.opaque_external_members
+            .get(&site.file)
+            .and_then(|offsets| offsets.get(&site.offset))
+            .is_some_and(|callees| callees.contains(site.source_callee.as_str()))
+            && site.targets().any(|candidate| matches!(candidate.target,
+                KnownCallTargetRef::ModuleExport { repository_target: None, .. }))
+    }
+
     /// Call sites in `file`, or an empty slice when the file has none.
     pub fn call_sites_in_file(&self, file: &std::path::Path) -> &[ResolvedCallSite] {
         self.call_sites_by_file

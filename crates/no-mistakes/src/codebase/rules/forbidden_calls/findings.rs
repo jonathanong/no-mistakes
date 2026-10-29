@@ -14,6 +14,7 @@ pub(super) fn finding_for_site_with_arguments(
     options: &Options,
     site: &ResolvedCallSite,
     arguments: Option<&crate::codebase::ts_source::module_facts::arguments::ArgumentValues>,
+    opaque_external_member: bool,
 ) -> Option<RuleFinding> {
     let target = target_label(
         root,
@@ -22,6 +23,7 @@ pub(super) fn finding_for_site_with_arguments(
         &options.unknown_calls,
         &options.unknown_arguments,
         arguments,
+        opaque_external_member,
     )?;
     let message = application.message.as_deref().unwrap_or("forbidden call");
     Some(RuleFinding {
@@ -40,6 +42,7 @@ fn target_label(
     unknown_calls: &UnknownCalls,
     unknown_arguments: &UnknownArguments,
     arguments: Option<&crate::codebase::ts_source::module_facts::arguments::ArgumentValues>,
+    opaque_external_member: bool,
 ) -> Option<String> {
     for target in targets {
         if !target_matches(root, target, site) {
@@ -56,7 +59,8 @@ fn target_label(
             _ => {}
         }
     }
-    (site.has_unknown_target() && unknown_calls == &UnknownCalls::Finding)
+    ((site.has_unknown_target() || opaque_external_member)
+        && unknown_calls == &UnknownCalls::Finding)
         .then(|| "unknown call".to_string())
 }
 fn target_matches(root: &Path, selector: &Target, site: &ResolvedCallSite) -> bool {

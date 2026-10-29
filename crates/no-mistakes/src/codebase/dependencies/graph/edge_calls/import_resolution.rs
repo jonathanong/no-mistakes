@@ -6,12 +6,19 @@ fn resolve_imported_call_target(
     resolver: &dyn ImportResolution,
     path: &std::path::Path,
     file: &CallableFileIndex,
-    callee: &str,
+    call: (&str, &FunctionCall, &std::cell::RefCell<OpaqueExternalMembers>),
     indexes: &CallableResolutionIndexes,
 ) -> Option<ResolvedCallTarget> {
+    let (callee, call, opaque_external_members) = call;
     let (local, requested_export) = match callee.split_once('.') {
         Some((local, member)) if !member.contains('.') => (local, Some(member)),
-        Some(_) => return resolve_external_nested_member(edge_inputs, resolver, path, file, callee),
+        Some(_) => {
+            let target = resolve_external_nested_member(edge_inputs, resolver, path, file, callee);
+            if target.is_some() {
+                opaque_external_members.borrow_mut().entry(call.offset).or_default().insert(call.callee.clone());
+            }
+            return target;
+        }
         None => (callee, None),
     };
     let binding = file

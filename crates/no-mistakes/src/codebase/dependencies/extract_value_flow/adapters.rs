@@ -31,12 +31,19 @@ impl ImportCollector {
     pub(super) fn adapted_value_call(
         &self,
         call: &CallExpression<'_>,
-    ) -> (ValueExpression, Vec<ValueExpression>, Option<usize>, bool) {
+    ) -> (
+        ValueExpression,
+        Vec<ValueExpression>,
+        Option<usize>,
+        bool,
+        bool,
+    ) {
         if let Some(raw) = simple_callee_name(&call.callee) {
             if let Some(receiver) = raw.strip_suffix(".bind") {
                 if self.is_builtin_bind_callee(&raw) {
                     let prefix = self.bound_prefix(call);
-                    let (arguments, spread) = self.value_arguments(&call.arguments[prefix.start..]);
+                    let tail = &call.arguments[prefix.start..];
+                    let (arguments, spread) = self.value_arguments(tail);
                     let spread = if prefix.uncertain {
                         Some(0)
                     } else {
@@ -54,6 +61,7 @@ impl ImportCollector {
                         leading,
                         spread,
                         true,
+                        super::collect::last_argument_is_literal(tail),
                     );
                 }
             }
@@ -76,15 +84,20 @@ impl ImportCollector {
                         shifted,
                         spread.map(|index| index.saturating_sub(1)),
                         false,
+                        super::collect::last_argument_is_literal(
+                            call.arguments.get(1..).unwrap_or_default(),
+                        ),
                     );
                 }
                 let array = call.arguments.get(1).and_then(Argument::as_expression);
                 return match array {
-                    None | Some(Expression::NullLiteral(_)) => (callee, Vec::new(), None, false),
+                    None | Some(Expression::NullLiteral(_)) => {
+                        (callee, Vec::new(), None, false, false)
+                    }
                     Some(expression)
                         if self.value_expression(expression) == ValueExpression::Undefined =>
                     {
-                        (callee, Vec::new(), None, false)
+                        (callee, Vec::new(), None, false, false)
                     }
                     Some(Expression::ArrayExpression(array)) => {
                         let arguments = array
@@ -110,9 +123,15 @@ impl ImportCollector {
                                 oxc_ast::ast::ArrayExpressionElement::SpreadElement(_)
                             )
                         });
-                        (callee, arguments, spread, false)
+                        let literal = super::collect::expression_is_literal(
+                            array
+                                .elements
+                                .last()
+                                .and_then(|element| element.as_expression()),
+                        );
+                        (callee, arguments, spread, false, literal)
                     }
-                    _ => (callee, Vec::new(), Some(0), false),
+                    _ => (callee, Vec::new(), Some(0), false, false),
                 };
             }
         }
@@ -122,6 +141,7 @@ impl ImportCollector {
             arguments,
             spread,
             false,
+            super::collect::last_argument_is_literal(&call.arguments),
         )
     }
     pub(in super::super) fn record_value_new(&mut self, new: &NewExpression<'_>) {
@@ -137,6 +157,7 @@ impl ImportCollector {
                 .unwrap_or_else(|| "<unknown>".to_string()),
             callee: self.value_expression(&new.callee),
             arguments: std::sync::Arc::new(arguments),
+            last_argument_literal: super::collect::last_argument_is_literal(&new.arguments),
             bound: false,
             spread_at,
             once: false,

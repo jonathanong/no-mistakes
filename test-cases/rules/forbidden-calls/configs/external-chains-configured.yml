@@ -1,0 +1,10 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/calls.mts }]
+      traversal: file
+      targets:
+        - moduleExport: { module: some-pkg, export: a.b }
+        - moduleExport: { module: some-pkg, export: default.a.b }
+        - moduleExport: { module: some-pkg, export: default.b }

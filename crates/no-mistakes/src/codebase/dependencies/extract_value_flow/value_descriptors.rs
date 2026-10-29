@@ -80,6 +80,7 @@ pub struct ValueCall {
     pub context: Option<CallableId>,
     pub callee: ValueExpression,
     pub arguments: std::sync::Arc<Vec<ValueExpression>>,
+    pub last_argument_literal: bool,
     pub bound: bool,
     pub spread_at: Option<usize>,
     /// A direct, module-level arrow invocation outside a repeated construct.

@@ -15,6 +15,7 @@ struct CallSiteResolution<'a, 'b> {
     namespaces_in_repo: bool,
     /// Namespace uses found while resolving this file's calls.
     escapes: std::cell::RefCell<FxHashSet<(std::path::PathBuf, String)>>,
+    opaque_external_members: std::cell::RefCell<OpaqueExternalMembers>,
 }
 
 impl CallSiteResolution<'_, '_> {
@@ -99,7 +100,7 @@ impl CallSiteResolution<'_, '_> {
                 self.resolver,
                 path,
                 index,
-                &resolved_callee.callee,
+                (&resolved_callee.callee, call, &self.opaque_external_members),
                 self.indexes,
             )
             .filter(|target| *target != ResolvedCallTarget::Unknown)

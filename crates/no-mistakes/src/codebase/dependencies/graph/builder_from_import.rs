@@ -15,6 +15,7 @@ impl DepGraph {
             callable_export_resolutions: fx_map(),
             module_files: fx_map(),
             resolved_call_sites: Vec::new(),
+            opaque_external_members: fx_map(),
             class_declarations: Vec::new(),
             class_ancestry: Default::default(),
             call_sites_by_file: fx_map(),

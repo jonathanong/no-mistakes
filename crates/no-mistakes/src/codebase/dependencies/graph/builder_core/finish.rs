@@ -71,6 +71,7 @@
             callable_export_resolutions,
             module_files,
             resolved_call_sites,
+            opaque_external_members,
             class_declarations,
             class_ancestry,
             call_sites_by_file,

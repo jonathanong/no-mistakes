@@ -349,7 +349,15 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `(api as typeof api)["run"]()` resolve the same as `api.run()`. Dynamic
   computed members, dynamic callees, globals, ambiguous `export *` targets, and
   unresolved modules remain call-site facts or diagnostics, never guessed graph
-  edges. Cyclic object or array member initializers remain unresolved during
+  edges. Static external default/namespace member chains retain their complete
+  module-export target names, including aliases of a full chain such as
+  `const target = ns.a.b; target()`, without adding a
+  repository call edge. The prepared graph also retains which targets came
+  from opaque multi-member import chains. `forbidden-calls` uses that provenance
+  to preserve its unknown-call fallback for unmatched chains; configured
+  module-export selectors still match. Other consumers can model a specific
+  external API without changing that rule's uncertainty policy.
+  Cyclic object or array member initializers remain unresolved during
   value projection; they do not abort analysis or prevent later independent
   member reads from resolving. Call traversal is cycle-safe and reports each target once at its
   deterministic shortest path; `depth: 0` emits no targets and `depth: 1` is the

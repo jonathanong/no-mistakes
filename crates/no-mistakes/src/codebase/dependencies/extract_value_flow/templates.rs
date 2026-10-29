@@ -39,6 +39,7 @@ impl ImportCollector {
                 .unwrap_or_else(|| "<unknown>".to_string()),
             callee: self.value_expression(&tagged.tag),
             arguments: std::sync::Arc::new(arguments),
+            last_argument_literal: false,
             bound: false,
             spread_at: None,
             once: false,

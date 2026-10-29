@@ -5,6 +5,28 @@ fn cfg(name: &str) -> PathBuf {
     rules_path("forbidden-calls", "configs", name)
 }
 
+#[test]
+fn forbidden_calls_external_chains_json_matches_snapshot() {
+    let fixture = root("external-chains");
+    assert_saved_fixture(
+        "forbidden_calls_external_chains",
+        &[
+            (
+                "unconfigured",
+                fixture.clone(),
+                cfg("external-chains-unknown.yml"),
+            ),
+            (
+                "configured",
+                fixture.clone(),
+                cfg("external-chains-configured.yml"),
+            ),
+            ("ignore", fixture.clone(), cfg("external-chains-ignore.yml")),
+            ("aliases", fixture, cfg("external-chains-aliases.yml")),
+        ],
+    );
+}
+
 fn root(kind: &str) -> PathBuf {
     rules_path("forbidden-calls", kind, "fixture")
 }
