@@ -70,3 +70,29 @@ export function callObjectOptions() { equal(fsNs.createReadStream.call(null, 'a'
 export function applyObjectOptions() { equal(fsNs.createReadStream.apply(null, ['a', { encoding: 'utf8' }]).path, 'a'); }
 export function applyArrayOptions() { equal(typeof fsNs.watch.apply(null, ['a', []]), 'object'); }
 export function ternaryOptions(flag: boolean) { equal(fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }
+export function fnPropertyOptions() { equal(fsNs.createReadStream('a', { cb: () => {} }).path, 'a'); }
+export function functionPropertyOptions() { equal(fsNs.createReadStream('a', { cb: function () {} }).path, 'a'); }
+export function classPropertyOptions() { equal(fsNs.createReadStream('a', { Handler: class {} }).path, 'a'); }
+export function nestedFnPropertyOptions() { equal(fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }
+export function unknownPropertyOptions(value: object) { equal(fsNs.createReadStream('a', { nested: value }).path, 'a'); }
+export function memberPropertyOptions(value: { encoding: string }) { equal(fsNs.createReadStream('a', { encoding: value.encoding }).path, 'a'); }
+export function callPropertyOptions() { equal(fsNs.createReadStream('a', { nested: makeOptions() }).path, 'a'); }
+export function conditionalPropertyOptions(flag: boolean) { equal(fsNs.createReadStream('a', { encoding: flag ? 'utf8' : 'ascii' }).path, 'a'); }
+export function logicalPropertyOptions(encoding: string | undefined) { equal(fsNs.createReadStream('a', { encoding: encoding || 'utf8' }).path, 'a'); }
+export function arrayFunctionOptions() { equal(fsNs.createReadStream('a', [() => {}]).path, 'a'); }
+export function arrayUnknownOptions(callback: () => void) { equal(fsNs.createReadStream('a', [callback]).path, 'a'); }
+export function methodOptions() { equal(fsNs.createReadStream('a', { cb() {} }).path, 'a'); }
+export function getterOptions() { equal(fsNs.createReadStream('a', { get encoding() { return 'utf8' } }).path, 'a'); }
+export function shorthandOptions(callback: () => void) { equal(fsNs.createReadStream('a', { callback }).path, 'a'); }
+export function spreadOptions(value: object) { equal(fsNs.createReadStream('a', { ...value }).path, 'a'); }
+export function arraySpreadOptions(values: unknown[]) { equal(fsNs.createReadStream('a', [...values]).path, 'a'); }
+export function arrayHoleOptions() { equal(fsNs.createReadStream('a', [,]).path, 'a'); }
+export function computedKeyOptions(key: string) { equal(fsNs.createReadStream('a', { [key]: 'utf8' }).path, 'a'); }
+export function computedStaticKeyOptions() { equal(fsNs.createReadStream('a', { ['encoding']: 'utf8' }).path, 'a'); }
+export function templatePropertyOptions(encoding: string) { equal(fsNs.createReadStream('a', { encoding: `${encoding}` }).path, 'a'); }
+export function nestedDataOptions() { equal(fsNs.createReadStream('a', { nested: { values: [1, true, null, `utf8`] }, encoding: 'utf8' as const }).path, 'a'); }
+function makeOptions() { return {}; }
+export function callFnPropertyOptions() { equal(fsNs.createReadStream.call(null, 'a', { cb: () => {} }).path, 'a'); }
+export function applyFnPropertyOptions() { equal(fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }
+export function nearDepthOptions() { equal(fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } }).path, 'a'); }
+export function depthOptions() { equal(fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }

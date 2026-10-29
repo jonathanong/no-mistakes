@@ -250,6 +250,190 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function ternaryOptions(flag: boolean) { equal(fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }",
           "target": "ternaryOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 73,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#fnPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function fnPropertyOptions() { equal(fsNs.createReadStream('a', { cb: () => {} }).path, 'a'); }",
+          "target": "fnPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 74,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#functionPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function functionPropertyOptions() { equal(fsNs.createReadStream('a', { cb: function () {} }).path, 'a'); }",
+          "target": "functionPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 75,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#classPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function classPropertyOptions() { equal(fsNs.createReadStream('a', { Handler: class {} }).path, 'a'); }",
+          "target": "classPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 76,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#nestedFnPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function nestedFnPropertyOptions() { equal(fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }",
+          "target": "nestedFnPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 77,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#unknownPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function unknownPropertyOptions(value: object) { equal(fsNs.createReadStream('a', { nested: value }).path, 'a'); }",
+          "target": "unknownPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 78,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#memberPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function memberPropertyOptions(value: { encoding: string }) { equal(fsNs.createReadStream('a', { encoding: value.encoding }).path, 'a'); }",
+          "target": "memberPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 79,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callPropertyOptions() { equal(fsNs.createReadStream('a', { nested: makeOptions() }).path, 'a'); }",
+          "target": "callPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 80,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#conditionalPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function conditionalPropertyOptions(flag: boolean) { equal(fsNs.createReadStream('a', { encoding: flag ? 'utf8' : 'ascii' }).path, 'a'); }",
+          "target": "conditionalPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 81,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#logicalPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function logicalPropertyOptions(encoding: string | undefined) { equal(fsNs.createReadStream('a', { encoding: encoding || 'utf8' }).path, 'a'); }",
+          "target": "logicalPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 82,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arrayFunctionOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayFunctionOptions() { equal(fsNs.createReadStream('a', [() => {}]).path, 'a'); }",
+          "target": "arrayFunctionOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 83,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arrayUnknownOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayUnknownOptions(callback: () => void) { equal(fsNs.createReadStream('a', [callback]).path, 'a'); }",
+          "target": "arrayUnknownOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 84,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#methodOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function methodOptions() { equal(fsNs.createReadStream('a', { cb() {} }).path, 'a'); }",
+          "target": "methodOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 85,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#getterOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function getterOptions() { equal(fsNs.createReadStream('a', { get encoding() { return 'utf8' } }).path, 'a'); }",
+          "target": "getterOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 86,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#shorthandOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function shorthandOptions(callback: () => void) { equal(fsNs.createReadStream('a', { callback }).path, 'a'); }",
+          "target": "shorthandOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 87,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#spreadOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function spreadOptions(value: object) { equal(fsNs.createReadStream('a', { ...value }).path, 'a'); }",
+          "target": "spreadOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 88,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arraySpreadOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arraySpreadOptions(values: unknown[]) { equal(fsNs.createReadStream('a', [...values]).path, 'a'); }",
+          "target": "arraySpreadOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 89,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arrayHoleOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function arrayHoleOptions() { equal(fsNs.createReadStream('a', [,]).path, 'a'); }",
+          "target": "arrayHoleOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 90,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedKeyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function computedKeyOptions(key: string) { equal(fsNs.createReadStream('a', { [key]: 'utf8' }).path, 'a'); }",
+          "target": "computedKeyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 91,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedStaticKeyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function computedStaticKeyOptions() { equal(fsNs.createReadStream('a', { ['encoding']: 'utf8' }).path, 'a'); }",
+          "target": "computedStaticKeyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 92,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#templatePropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function templatePropertyOptions(encoding: string) { equal(fsNs.createReadStream('a', { encoding: `${encoding}` }).path, 'a'); }",
+          "target": "templatePropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 95,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callFnPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callFnPropertyOptions() { equal(fsNs.createReadStream.call(null, 'a', { cb: () => {} }).path, 'a'); }",
+          "target": "callFnPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 96,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#applyFnPropertyOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function applyFnPropertyOptions() { equal(fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }",
+          "target": "applyFnPropertyOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 98,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#depthOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function depthOptions() { equal(fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }",
+          "target": "depthOptions"
         }
       ],
       "warnings": []

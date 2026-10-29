@@ -134,12 +134,18 @@ this classification uses the effective arguments after removing `thisArg` or
 expanding the array. `*Sync` and promise APIs
 take no callback. The model conservatively treats every other `fs` export as
 potentially callback-capable rather than maintaining a callback-signature
-allowlist that could omit an API. Scalar literals, object literals, array
-literals and templates without substitutions cannot be callbacks. Literal
-options such as `fs.createReadStream(path, { encoding: 'utf8' })` therefore
-remain modeled I/O; asserting the result passes. TypeScript wrappers preserve
-that classification. Identifiers, member reads, calls, conditional/logical
-expressions, dynamic templates and spread arguments remain uncertain.
+allowlist that could omit an API. Scalars, templates without substitutions
+and closed literal data containers remain modeled I/O. An object or array is
+closed only when all values recursively contain literal data, with static
+object keys and ordinary data properties. Literal options such as
+`fs.createReadStream(path, { encoding: 'utf8' })` therefore pass when their
+result is asserted. TypeScript wrappers preserve this classification.
+Functions or classes anywhere inside a container, identifiers, member reads,
+calls, conditional/logical expressions, dynamic templates, getters, methods,
+shorthand properties, computed keys, spreads and array holes remain uncertain.
+The recursive proof also stops conservatively after 16 nested expression
+levels. For example, `{ cb: () => {} }` is uncertain even when followed by an
+assertion.
 Other modules, such as `node:os` or `node:child_process`, remain
 unmodeled; use an ownership contract for process dispatch. Tip: set
 `unanalyzable: advise` while rolling out the rule to inspect uncertain results

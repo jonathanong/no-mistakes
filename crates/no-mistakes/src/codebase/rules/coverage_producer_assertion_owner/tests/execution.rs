@@ -124,6 +124,29 @@ fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
         "applySpreadArguments",
         "callCallbackArgument",
         "ternaryOptions",
+        "fnPropertyOptions",
+        "functionPropertyOptions",
+        "classPropertyOptions",
+        "nestedFnPropertyOptions",
+        "unknownPropertyOptions",
+        "memberPropertyOptions",
+        "callPropertyOptions",
+        "conditionalPropertyOptions",
+        "logicalPropertyOptions",
+        "arrayFunctionOptions",
+        "arrayUnknownOptions",
+        "methodOptions",
+        "getterOptions",
+        "shorthandOptions",
+        "spreadOptions",
+        "arraySpreadOptions",
+        "arrayHoleOptions",
+        "computedKeyOptions",
+        "computedStaticKeyOptions",
+        "templatePropertyOptions",
+        "callFnPropertyOptions",
+        "applyFnPropertyOptions",
+        "depthOptions",
     ] {
         assert!(
             findings.iter().any(|finding| finding.rule == RULE_ID
@@ -134,6 +157,8 @@ fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
     }
     for symbol in [
         "streamOptions",
+        "nestedDataOptions",
+        "nearDepthOptions",
         "mkdirOptions",
         "typedStreamOptions",
         "arrayOptions",

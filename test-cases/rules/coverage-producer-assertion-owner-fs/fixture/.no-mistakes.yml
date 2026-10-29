@@ -53,5 +53,30 @@ rules:
         - { file: src/fs-io.mts, symbol: applyObjectOptions }
         - { file: src/fs-io.mts, symbol: applyArrayOptions }
         - { file: src/fs-io.mts, symbol: ternaryOptions }
+        - { file: src/fs-io.mts, symbol: fnPropertyOptions }
+        - { file: src/fs-io.mts, symbol: functionPropertyOptions }
+        - { file: src/fs-io.mts, symbol: classPropertyOptions }
+        - { file: src/fs-io.mts, symbol: nestedFnPropertyOptions }
+        - { file: src/fs-io.mts, symbol: unknownPropertyOptions }
+        - { file: src/fs-io.mts, symbol: memberPropertyOptions }
+        - { file: src/fs-io.mts, symbol: callPropertyOptions }
+        - { file: src/fs-io.mts, symbol: conditionalPropertyOptions }
+        - { file: src/fs-io.mts, symbol: logicalPropertyOptions }
+        - { file: src/fs-io.mts, symbol: arrayFunctionOptions }
+        - { file: src/fs-io.mts, symbol: arrayUnknownOptions }
+        - { file: src/fs-io.mts, symbol: methodOptions }
+        - { file: src/fs-io.mts, symbol: getterOptions }
+        - { file: src/fs-io.mts, symbol: shorthandOptions }
+        - { file: src/fs-io.mts, symbol: spreadOptions }
+        - { file: src/fs-io.mts, symbol: arraySpreadOptions }
+        - { file: src/fs-io.mts, symbol: arrayHoleOptions }
+        - { file: src/fs-io.mts, symbol: computedKeyOptions }
+        - { file: src/fs-io.mts, symbol: computedStaticKeyOptions }
+        - { file: src/fs-io.mts, symbol: templatePropertyOptions }
+        - { file: src/fs-io.mts, symbol: callFnPropertyOptions }
+        - { file: src/fs-io.mts, symbol: applyFnPropertyOptions }
+        - { file: src/fs-io.mts, symbol: depthOptions }
+        - { file: src/fs-io.mts, symbol: nestedDataOptions }
+        - { file: src/fs-io.mts, symbol: nearDepthOptions }
       assertions:
         - { module: 'node:assert/strict', export: equal }

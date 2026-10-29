@@ -9,17 +9,14 @@ pub(super) fn last_argument_is_literal(arguments: &[oxc_ast::ast::Argument<'_>])
 }
 
 pub(super) fn expression_is_literal(expression: Option<&Expression<'_>>) -> bool {
-    expression.is_some_and(|expression| {
-        let expression = crate::codebase::ts_source::unwrap_ts_wrappers(expression);
-        expression.is_literal()
-            || matches!(expression, Expression::ObjectExpression(_) | Expression::ArrayExpression(_))
-            || matches!(expression, Expression::TemplateLiteral(template) if template.expressions.is_empty())
-    })
+    expression.is_some_and(literal_arguments::is_closed_literal)
 }
 #[path = "binding_patterns.rs"]
 mod binding_patterns;
 #[path = "for_of_value_binding.rs"]
 mod for_of_value_binding;
+#[path = "literal_arguments.rs"]
+mod literal_arguments;
 
 impl ImportCollector {
     fn record_value_binding(&mut self, declarator: &VariableDeclarator<'_>, immutable: bool) {
