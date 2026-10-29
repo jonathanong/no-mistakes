@@ -49,6 +49,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "DROP TABLE"
         },
         {
+          "file": "tests/import-forms.test.ts",
+          "line": 7,
+          "message": "tests/import-forms.test.ts:7: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await namedTx('DROP TABLE app.factory_named_control'); // named import is selected",
+          "target": "DROP TABLE"
+        },
+        {
           "file": "tests/iterator.test.ts",
           "line": 10,
           "message": "tests/iterator.test.ts:10: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
