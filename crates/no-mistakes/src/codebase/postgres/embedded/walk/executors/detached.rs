@@ -1,7 +1,9 @@
 use super::super::ScopeVisitor;
 use crate::codebase::postgres::executor_detachment::{bind_callee, bind_method, executor_receiver};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{Argument, BindingPattern, CallExpression, Expression, VariableDeclarator};
+use oxc_ast::ast::{
+    Argument, BindingPattern, CallExpression, Expression, LogicalOperator, VariableDeclarator,
+};
 
 impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn detached_query_receiver(
@@ -121,6 +123,21 @@ impl ScopeVisitor<'_> {
         init: &Expression<'_>,
         constant: bool,
     ) {
+        match unwrap_ts_wrappers(init) {
+            Expression::ConditionalExpression(branch) => {
+                self.initialize_detached_value(name, &branch.consequent, false);
+                self.initialize_detached_value(name, &branch.alternate, false);
+                return;
+            }
+            Expression::LogicalExpression(branch) => {
+                if branch.operator != LogicalOperator::And {
+                    self.initialize_detached_value(name, &branch.left, false);
+                }
+                self.initialize_detached_value(name, &branch.right, false);
+                return;
+            }
+            _ => {}
+        }
         if self.copy_query_capture(name, init, constant) {
             return;
         }

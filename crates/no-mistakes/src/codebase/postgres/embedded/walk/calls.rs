@@ -22,6 +22,7 @@ impl<'a> ScopeVisitor<'a> {
         let callee_span = unwrap_ts_wrappers(&call.callee).span();
         self.executor_direct_refs
             .insert((callee_span.start, callee_span.end));
+        self.note_invoked_executor(call);
         self.record_undeclared_executor_call(call);
         if self.head_calls_only {
             self.visit_head_call(call);

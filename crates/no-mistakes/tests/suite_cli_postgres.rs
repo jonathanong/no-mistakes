@@ -26,6 +26,8 @@ mod cli_mrf_snapshot_rust_no_inline_tests;
 mod cli_postgres_detached_executors;
 #[path = "cli_postgres_executor_obligations.rs"]
 mod cli_postgres_executor_obligations;
+#[path = "cli_postgres_non_call_references.rs"]
+mod cli_postgres_non_call_references;
 #[path = "cli_postgres_snapshot_array_columns.rs"]
 mod cli_postgres_snapshot_array_columns;
 #[path = "cli_postgres_snapshot_bounded_statements.rs"]

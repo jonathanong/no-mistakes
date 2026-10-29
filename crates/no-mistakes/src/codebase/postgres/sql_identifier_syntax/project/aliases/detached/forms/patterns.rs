@@ -52,6 +52,21 @@ impl Collector<'_> {
         init: &Expression<'_>,
         immutable: bool,
     ) {
+        match unwrap_ts_wrappers(init) {
+            Expression::ConditionalExpression(branch) => {
+                self.pattern(pattern, &branch.consequent, false);
+                self.pattern(pattern, &branch.alternate, false);
+                return;
+            }
+            Expression::LogicalExpression(branch) => {
+                if branch.operator != oxc_ast::ast::LogicalOperator::And {
+                    self.pattern(pattern, &branch.left, false);
+                }
+                self.pattern(pattern, &branch.right, false);
+                return;
+            }
+            _ => {}
+        }
         for profile in 0..self.profiles.len() {
             let Some((source, form, exact, uses)) = self.form(init, profile) else {
                 continue;

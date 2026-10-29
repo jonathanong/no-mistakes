@@ -58,6 +58,7 @@ pub(crate) fn collect_calls<'a>(
         executor_alias_refs: Default::default(),
         executor_reference_spans: Default::default(),
         executor_direct_refs: Default::default(),
+        executor_invoked_refs: Default::default(),
         calls: Vec::new(),
         call_spans: Vec::new(),
         imported_names,

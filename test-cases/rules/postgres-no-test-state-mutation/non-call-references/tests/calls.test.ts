@@ -1,0 +1,26 @@
+import { pool } from '@example/db';
+// Positive controls: invoking an executor still reports.
+const run = pool.execute;
+run('DROP TABLE alias_control');
+pool.query.call(pool, 'DROP TABLE call_control');
+Reflect.apply(pool.write, pool, ['DROP TABLE reflect_control']);
+const viaNullish = pool.query ?? pool.write;
+viaNullish('DROP TABLE nullish_control');
+const viaOr = pool.query || pool.write;
+viaOr('DROP TABLE or_control');
+const viaTernary = pool.query ? pool.write : pool.read;
+viaTernary('DROP TABLE ternary_control');
+const viaCast = pool.query as Function;
+viaCast('DROP TABLE cast_control');
+const viaBang = pool.query!;
+viaBang('DROP TABLE bang_control');
+(0, pool.query)('DROP TABLE sequence_control');
+(pool.query)('DROP TABLE paren_control');
+pool.query`DROP TABLE tagged_direct_control`;
+const tag = pool.query;
+tag`DROP TABLE tagged_alias_control`;
+(0, pool.query)`DROP TABLE tagged_sequence_control`;
+(Math.random() ? pool.query : pool.read)`DROP TABLE tagged_ternary_control`;
+(pool.query || pool.read)`DROP TABLE tagged_or_control`;
+(Math.random() && pool.write)`DROP TABLE tagged_and_control`;
+Reflect.apply(Math.random() && pool.query, pool, ["DROP TABLE reflect_logical_control"]);

@@ -38,14 +38,17 @@ for (const policy of ["low", "max", "low-report", "max-report", "low-ignore", "m
           assert.deepEqual(stable(prepared.reports[0].result), stable(report));
         }
         const current = snapshot(report);
+        const low = policy.startsWith("low");
         const has = (field, file, line) =>
           current[field].some((row) => row.file === file && row.line === line);
         for (const [file, lines] of [
-          ["tests/references.test.ts", [3, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 19, 20, 21, 22, 24]],
-          ["tests/names.test.ts", [3, 5, 6, 7, 9, 10]],
-          ["tests/wrapped-reference.test.ts", [2]],
-          ["tests/forward-export.test.ts", [2]],
-          ["tests/parameter-alias.test.ts", [2, 3, 6, 7]],
+          [
+            "tests/references.test.ts",
+            low ? [3, 5, 6, 7, 9, 10, 12, 15, 19, 20, 23] : [3, 5, 6, 7, 12, 15, 23],
+          ],
+          ["tests/names.test.ts", [3, 5, 8, 10]],
+          ["tests/forward-export.test.ts", low ? [2] : []],
+          ["tests/parameter-alias.test.ts", [3, 7]],
         ])
           for (const line of lines) {
             assert.equal(has("advisories", file, line), !policy.includes("-"), `${file}:${line}`);

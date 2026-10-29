@@ -88,12 +88,15 @@ run("DROP TABLE users");
 alias("TRUNCATE users");
 ```
 
-Every runtime reference to a selected executor member or its local alias that
-is not the callee of a direct call retains an unanalyzable obligation at that use.
-This includes copying the method, binding it (including an immediately invoked
-bind), `.call`, `.apply`, `Reflect.apply`, passing it to a helper, and
-`export { alias }`. A later known direct call can still report its SQL, but does
-not erase the earlier non-call obligation. Type-only references are excluded.
+Only an invocation of a selected executor member or its local alias that is not
+a direct call retains an unanalyzable obligation at that use: `.call`, `.apply`,
+`.bind` (including an immediately invoked bind), and `Reflect.apply`. A later
+known direct call can still report its SQL, but does not erase the earlier
+obligation. References are not calls: a truthiness test, `??`/`||`, a ternary,
+a destructure, a comparison, an assignment, a property read, an object-literal
+value, a `Proxy` target, `export { alias }`, or passing the executor as a call
+argument produces no finding at that line. A binding initialized from any branch of `??`, `||`, a ternary, or a cast is an executor alias, and calling it (or a sequence or parenthesized callee such as `(0, pool.query)(sql)`, or a tagged template such as ``pool.query`...` ``) reports; `effort: low` still reports uses of a
+copied alias. Type-only references are excluded.
 The configured `unanalyzable` policy controls these obligations; use `advise`
 to keep them as non-failing advisories.
 

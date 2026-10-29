@@ -1,11 +1,31 @@
 use super::ScopeVisitor;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind};
-use crate::codebase::postgres::executor_detachment::{executor_bindings, executor_receiver};
+use crate::codebase::postgres::executor_detachment::{
+    executor_bindings, executor_receiver, invoked_reference, tag_references,
+};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{BindingPattern, Expression, FormalParameter, IdentifierReference};
+use oxc_ast::ast::{
+    BindingPattern, CallExpression, Expression, FormalParameter, IdentifierReference,
+};
 use oxc_span::{GetSpan, Span};
 
 impl ScopeVisitor<'_> {
+    /// Only these call shapes invoke an executor reference; every other mention is a plain reference.
+    pub(super) fn note_invoked_executor(&mut self, call: &CallExpression<'_>) {
+        if let Some(target) = invoked_reference(call) {
+            self.note_invoked_tag(target);
+        }
+    }
+
+    pub(super) fn note_invoked_tag(&mut self, tag: &Expression<'_>) {
+        let mut targets = Vec::new();
+        tag_references(tag, &mut targets);
+        for target in targets {
+            let span = unwrap_ts_wrappers(target).span();
+            self.executor_invoked_refs.insert((span.start, span.end));
+        }
+    }
+
     pub(super) fn note_executor_member(&mut self, expression: &Expression<'_>) {
         if executor_receiver(expression, &self.executor_options.executor_names)
             .is_some_and(|receiver| self.detached_query_receiver(receiver))
@@ -54,13 +74,15 @@ impl ScopeVisitor<'_> {
         }
         for (local, _) in executor_bindings(pattern, &self.executor_options.executor_names) {
             self.note_query_capture_with_certainty(local.name.as_str(), receiver, false);
-            self.unresolved_executor_reference(local.span);
         }
     }
 
     fn unresolved_executor_reference(&mut self, span: Span) {
         let key = (span.start, span.end);
-        if self.executor_direct_refs.contains(&key) || !self.executor_reference_spans.insert(key) {
+        if self.executor_direct_refs.contains(&key)
+            || !self.executor_invoked_refs.contains(&key)
+            || !self.executor_reference_spans.insert(key)
+        {
             return;
         }
         self.calls.push(EmbeddedSqlCall {

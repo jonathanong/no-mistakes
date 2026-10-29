@@ -16,7 +16,6 @@ pub(super) fn collect(collector: &mut Collector<'_>, value: &AssignmentExpressio
             continue;
         };
         collector.nodes.push(Node {
-            default_span: None,
             profile,
             id,
             source,

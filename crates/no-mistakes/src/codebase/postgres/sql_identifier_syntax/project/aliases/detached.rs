@@ -78,7 +78,7 @@ pub(in crate::codebase::postgres::sql_identifier_syntax::project) fn collect(
                 selection.unsupported.insert(node.id);
             }
         }
-        obligations::collect(profile, module, &collector, &nodes, &values, selection);
+        obligations::collect(profile, module, &collector, &values, selection);
         selection
             .detached_executors
             .extend(values.iter().filter_map(|(id, value)| {
