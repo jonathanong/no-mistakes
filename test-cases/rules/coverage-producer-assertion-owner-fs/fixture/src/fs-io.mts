@@ -62,3 +62,4 @@ export function applyNullArguments() { fsNs.watch.apply(null, null); }
 export function applySpreadArguments(...callbacks: Array<() => void>) { fsNs.watch.apply(null, ['file', ...callbacks]); }
 export function callLiteralArgument() { fsNs.watch.call(null, 'file'); }
 export function callCallbackArgument(first: (() => void) | undefined, second: () => void) { fsNs.watch.call(null, 'file', first || second); }
+export function streamOptions() { fsNs.createReadStream('a', { encoding: 'utf8' }); equal(1, 1); }

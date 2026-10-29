@@ -123,6 +123,7 @@ fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
         "applyCallbackArgument",
         "applySpreadArguments",
         "callCallbackArgument",
+        "streamOptions",
     ] {
         assert!(
             findings.iter().any(|finding| finding.rule == RULE_ID

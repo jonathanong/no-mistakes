@@ -132,7 +132,12 @@ or `fs.readFile(path, first || second)`. Such an argument may be a callback;
 its invocation is not a resolved call. For `.call` and literal-array `.apply`,
 this classification uses the effective arguments after removing `thisArg` or
 expanding the array. `*Sync` and promise APIs
-take no callback. Other modules, such as `node:os` or `node:child_process`, remain
+take no callback. The model conservatively treats every other `fs` export as
+potentially callback-capable rather than maintaining a callback-signature
+allowlist that could omit an API. Non-literal options objects therefore also
+stay uncertain: even `fs.createReadStream(path, { encoding: 'utf8' })` followed
+by an assertion is unanalyzable. This deliberately favors recall over precision.
+Other modules, such as `node:os` or `node:child_process`, remain
 unmodeled; use an ownership contract for process dispatch. Tip: set
 `unanalyzable: advise` while rolling out the rule to inspect uncertain results
 without failing the check.

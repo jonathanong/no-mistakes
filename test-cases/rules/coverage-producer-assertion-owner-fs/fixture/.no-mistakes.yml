@@ -45,5 +45,6 @@ rules:
         - { file: src/fs-io.mts, symbol: applySpreadArguments }
         - { file: src/fs-io.mts, symbol: callLiteralArgument }
         - { file: src/fs-io.mts, symbol: callCallbackArgument }
+        - { file: src/fs-io.mts, symbol: streamOptions }
       assertions:
         - { module: 'node:assert/strict', export: equal }
