@@ -440,6 +440,9 @@ retain unresolved computed loads, and distinguish shared temporary roots from
 owned `mkdtemp` directories. Direct `import.meta.glob` and `fs-extra` scans follow
 the same rule contract. CLI and compiled CJS, ESM, and prepared API reports are
 locked by saved-fixture snapshots.
+Node-origin `module.require` and imported `createRequire` loads use conservative
+unresolved-root findings in these same async APIs, including computed module
+arguments and simple loader aliases. They add no public module-fact fields.
 
 ## PostgreSQL query annotation
 

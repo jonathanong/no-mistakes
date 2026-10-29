@@ -5,6 +5,7 @@ use oxc_span::GetSpan;
 pub(crate) mod arguments;
 mod legacy_references;
 mod modules;
+mod node_loaders;
 mod report;
 pub use report::*;
 mod types;
@@ -86,7 +87,7 @@ pub(crate) fn extract_from_semantic(
             parent_id: scoping.scope_parent_id(id).map(|parent| parent.index()),
         })
         .collect();
-    modules::collect(semantic, &mut facts);
+    modules::collect(semantic, &mut facts, collect);
     if collect && facts.diagnostics.iter().all(argument_safe_diagnostic) {
         modules::collect_require_bindings(semantic, &mut facts);
         if let Some(observer) = crate::diagnostics::current() {

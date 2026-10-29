@@ -5,11 +5,12 @@ use oxc_span::GetSpan;
 
 mod exports;
 mod imports;
-mod loads;
+pub(super) mod loads;
 mod mocks;
 mod selectors;
 
-pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts) {
+pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts, arguments: bool) {
+    let mut node_loaders = super::node_loaders::Collector::new(semantic);
     let mut inline_bindings = facts
         .bindings
         .iter()
@@ -53,7 +54,12 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                 }
                 loads::dynamic(value, facts);
             }
-            AstKind::CallExpression(value) => loads::require(value, semantic, facts),
+            AstKind::CallExpression(value) => {
+                loads::require(value, semantic, facts);
+                if arguments {
+                    node_loaders.collect(value, facts);
+                }
+            }
             AstKind::IdentifierReference(value) => {
                 loads::indirect(value, node.id(), semantic, facts);
                 exports::commonjs_reference(value, node.id(), semantic, facts)
@@ -134,7 +140,7 @@ pub(super) fn collect_require_bindings(semantic: &Semantic<'_>, facts: &mut Type
         }
     }
 }
-fn name(value: &ModuleExportName<'_>) -> String {
+pub(super) fn name(value: &ModuleExportName<'_>) -> String {
     match value {
         ModuleExportName::IdentifierName(value) => value.name.to_string(),
         ModuleExportName::IdentifierReference(value) => value.name.to_string(),

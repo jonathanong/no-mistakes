@@ -92,7 +92,7 @@ pub(super) fn indirect(
     );
 }
 
-pub(super) fn has_runtime_binding(
+pub(in super::super) fn has_runtime_binding(
     reference: &oxc_semantic::Reference,
     semantic: &Semantic<'_>,
 ) -> bool {

@@ -21,7 +21,7 @@ fn plain(module: &str) -> &str {
     module.strip_prefix("node:").unwrap_or(module)
 }
 
-fn is_enumerator_module(specifier: &str, extra: &[Enumerator]) -> bool {
+pub(super) fn is_enumerator_module(specifier: &str, extra: &[Enumerator]) -> bool {
     let module = plain(specifier);
     FS_MODULES.contains(&module)
         || GLOB_MODULES.contains(&module)

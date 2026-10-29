@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    message: Use a declared fixture directory.
+    include: [tests/extra.test.ts]
+    options:
+      enumerators: [{module: walker}]

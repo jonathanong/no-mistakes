@@ -97,6 +97,10 @@ pub struct ModuleDiagnostic {
 }
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct TypeScriptModuleFacts {
+    /// Potential Node-origin calls, consumed only as unresolved loader findings.
+    #[serde(skip)]
+    pub(crate) node_loader_calls:
+        crate::fx::FxHashMap<u32, Vec<super::node_loaders::NodeLoaderCall>>,
     /// Locals initialized directly from a recognized static CommonJS load.
     #[serde(skip)]
     pub(crate) require_bindings: Vec<RequireBinding>,

@@ -5,9 +5,13 @@ const test = globalThis.test || require("node:test").test;
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 const root = join(__dirname, "../../../test-cases/rules/test-no-live-repository-scan/fixture");
+const nodeRoot = join(
+  __dirname,
+  "../../../test-cases/rules/test-no-live-repository-scan/node-loaders",
+);
 const rule = "test-no-live-repository-scan";
 
-function normalizedFinding(finding) {
+function normalizedFinding(finding, root) {
   const file = (isAbsolute(finding.file) ? relative(root, finding.file) : finding.file)
     .split(sep)
     .join("/");
@@ -21,11 +25,11 @@ function normalizedFinding(finding) {
   return { ...finding, file, sourceLine };
 }
 
-function snapshotReport(report) {
+function snapshotReport(report, root) {
   const findings = (items) =>
     items
       .filter((finding) => finding.rule === rule)
-      .map(normalizedFinding)
+      .map((finding) => normalizedFinding(finding, root))
       .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right), "en"));
   return {
     rules: findings(report.rules),
@@ -45,13 +49,17 @@ test(
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     const cases = [
-      ["default", ".no-mistakes.yml"],
-      ["unresolved_report", "report.yml"],
-      ["container_exports", "containers.yml"],
+      ["default", root, ".no-mistakes.yml"],
+      ["unresolved_report", root, "report.yml"],
+      ["container_exports", root, "containers.yml"],
+      ["node_default", nodeRoot, ".no-mistakes.yml"],
+      ["node_report", nodeRoot, "report.yml"],
+      ["node_custom", nodeRoot, "custom.yml"],
+      ["node_advisory", nodeRoot, "advisory.yml"],
     ];
     const snapshots = {};
 
-    for (const [label, config] of cases) {
+    for (const [label, root, config] of cases) {
       let expected;
       for (const jobs of [1, 2]) {
         const options = { root, config: join(root, config), jobs };
@@ -71,10 +79,21 @@ test(
           withoutPoolWarning(report),
         );
 
-        const current = snapshotReport(report);
-        assert.ok(current.rules.length > 0, `${label} has no live repository findings`);
-        assert.ok(current.advisories.length > 0 || label === "unresolved_report");
-        if (label === "unresolved_report") {
+        const current = snapshotReport(report, root);
+        if (root !== nodeRoot) {
+          assert.ok(current.rules.length > 0, `${label} has no live repository findings`);
+          assert.ok(current.advisories.length > 0 || label === "unresolved_report");
+        }
+        if (root === nodeRoot) {
+          const [rules, advisories] = {
+            node_default: [1, 23],
+            node_report: [24, 0],
+            node_custom: [0, 2],
+            node_advisory: [0, 24],
+          }[label];
+          assert.equal(current.rules.length, rules);
+          assert.equal(current.advisories.length, advisories);
+        } else if (label === "unresolved_report") {
           assert.ok(
             current.rules.some(({ file, line }) => file === "helpers/list-files.ts" && line === 4),
           );
