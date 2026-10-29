@@ -7,7 +7,24 @@ use oxc_span::{GetSpan, Span};
 use oxc_syntax::node::NodeId;
 use oxc_syntax::operator::{BinaryOperator, UnaryOperator};
 
-const PROCESS_MODULES: [&str; 2] = ["process", "node:process"];
+const PROCESS_MODULES: [&str; 4] = ["process", "node:process", "vm", "node:vm"];
+
+/// Properties of the global object that reach `process`, a mock runner, a loader,
+/// or the global object again.
+const GLOBAL_REACH: [&str; 12] = [
+    "process",
+    "vi",
+    "jest",
+    "require",
+    "module",
+    "eval",
+    "Function",
+    "globalThis",
+    "global",
+    "self",
+    "window",
+    "createRequire",
+];
 
 pub(super) fn poison_process_imports(
     facts: &super::super::super::TypeScriptModuleFacts,
@@ -29,8 +46,8 @@ pub(super) fn poison_process_loads(source: &str, out: &mut PathProvenance) {
     }
 }
 
-pub(super) fn poison_unstub(name: &str, out: &mut PathProvenance) {
-    if matches!(name, "unstubAllEnvs" | "unstubEnvs") {
+pub(super) fn poison_name(name: &str, out: &mut PathProvenance) {
+    if matches!(name, "unstubAllEnvs" | "unstubEnvs" | "createRequire") {
         out.env_unknown_write = true;
     }
 }
@@ -54,7 +71,10 @@ pub(super) fn from_identifier(
     let nodes = semantic.nodes();
     let safe = match id.name.as_str() {
         "process" => process_use_is_safe(nodes, node, id.span),
-        "globalThis" | "global" | "self" | "window" => !reaches_process(nodes, node, id.span),
+        "globalThis" | "global" | "self" | "window" => global_use_is_safe(nodes, node, id.span),
+        "eval" | "Function" => false,
+        "require" => require_use_is_safe(nodes, node, id.span),
+        "module" => module_use_is_safe(nodes, node, id.span),
         _ => true,
     };
     if !safe {
@@ -69,19 +89,31 @@ fn literal_key(expression: &Expression<'_>) -> Option<String> {
     }
 }
 
-fn reaches_process(nodes: &AstNodes<'_>, node: NodeId, span: Span) -> bool {
+/// Only `typeof` and a read of a member that cannot reach `process`.
+fn global_use_is_safe(nodes: &AstNodes<'_>, node: NodeId, span: Span) -> bool {
     match nodes.parent_kind(node) {
         AstKind::StaticMemberExpression(member) => {
-            member.object.span() == span
-                && matches!(member.property.name.as_str(), "process" | "vi" | "jest")
+            member.object.span() == span && !GLOBAL_REACH.contains(&member.property.name.as_str())
         }
-        AstKind::ComputedMemberExpression(member) => {
-            member.object.span() == span
-                && literal_key(&member.expression)
-                    .is_none_or(|key| matches!(key.as_str(), "process" | "vi" | "jest"))
+        AstKind::UnaryExpression(unary) => unary.operator == UnaryOperator::Typeof,
+        _ => false,
+    }
+}
+
+/// `require(...)` and `require.resolve`; any other use may load `process` later.
+fn require_use_is_safe(nodes: &AstNodes<'_>, node: NodeId, span: Span) -> bool {
+    match nodes.parent_kind(node) {
+        AstKind::CallExpression(call) => call.callee.span() == span,
+        AstKind::StaticMemberExpression(member) => {
+            member.object.span() == span && member.property.name == "resolve"
         }
         _ => false,
     }
+}
+
+fn module_use_is_safe(nodes: &AstNodes<'_>, node: NodeId, span: Span) -> bool {
+    matches!(nodes.parent_kind(node), AstKind::StaticMemberExpression(member)
+        if member.object.span() == span && matches!(member.property.name.as_str(), "exports" | "require"))
 }
 
 /// `process.cwd()`, `typeof process`, and `process.env` used only as a plain read.

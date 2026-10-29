@@ -1,8 +1,9 @@
 //! Resolve a parameter or env-var root through the callers that reach it.
 //!
 //! Recall first: any caller, write, or file this pass cannot read keeps the finding.
+mod consumers;
 pub(super) mod env;
-mod modules;
+pub(crate) use consumers::Resolution;
 
 use super::provenance::{classify, Verdict};
 use crate::codebase::dependencies::extract::InvocationKind;
@@ -30,9 +31,8 @@ pub(super) struct Owners<'g> {
     env: env::EnvWrites,
     /// Names of functions referenced other than as a direct callee, anywhere.
     escaped: FxHashSet<String>,
-    /// Import names of modules consumed other than by named static imports
-    /// used only as calls.
-    unsafe_modules: FxHashSet<String>,
+    /// Files consumed other than by named static imports used only as calls.
+    consumed: consumers::Consumed,
     /// A file whose facts failed, or a module load that cannot be read, may hide a consumer.
     escape_unknown: bool,
 }
@@ -43,6 +43,7 @@ impl<'g> Owners<'g> {
         reachable: &FxHashSet<NodeId>,
         facts: &dyn TsFactLookup,
         graph_files: &[PathBuf],
+        resolution: &Resolution<'_>,
     ) -> Self {
         let mut callers: FxHashMap<NodeId, Vec<&ResolvedCallSite>> = FxHashMap::default();
         for site in graph.resolved_call_sites() {
@@ -55,7 +56,6 @@ impl<'g> Owners<'g> {
             }
         }
         let mut escaped = FxHashSet::default();
-        let mut unsafe_modules = FxHashSet::default();
         let mut escape_unknown = false;
         for ts in graph_files
             .iter()
@@ -65,23 +65,17 @@ impl<'g> Owners<'g> {
                 Some(provenance) => {
                     escaped.extend(provenance.value_refs.iter().cloned());
                     escape_unknown |= provenance.modules_unknown;
-                    for specifier in &provenance.unsafe_modules {
-                        match modules::specifier_stem(specifier) {
-                            Some(stem) => {
-                                unsafe_modules.insert(stem);
-                            }
-                            None => escape_unknown = true,
-                        }
-                    }
                 }
                 None => escape_unknown |= ts.module_bindings.is_some(),
             }
         }
+        let consumed = consumers::Consumed::new(facts, graph_files, resolution);
+        escape_unknown |= consumed.unknown();
         Self {
             callers,
             env: env::EnvWrites::new(facts, graph_files),
             escaped,
-            unsafe_modules,
+            consumed,
             escape_unknown,
         }
     }
@@ -112,9 +106,7 @@ impl<'g> Owners<'g> {
             return false;
         };
         let name: &str = symbol;
-        !name.contains('.')
-            && !self.escaped.contains(name)
-            && modules::file_stem(file).is_some_and(|stem| !self.unsafe_modules.contains(&stem))
+        !name.contains('.') && !self.escaped.contains(name) && !self.consumed.contains(file)
     }
 
     /// Every caller passes an argument at `index` that is itself owned or bounded.

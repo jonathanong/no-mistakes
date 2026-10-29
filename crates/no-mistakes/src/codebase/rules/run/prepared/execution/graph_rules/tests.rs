@@ -31,6 +31,7 @@ fn error_from(config: &crate::config::v2::NoMistakesConfig) -> anyhow::Error {
         dependency_graph: Some(&graph),
         inferred_roots: None,
         sources: None,
+        tsconfig_catalog: None,
         prepared_vitest_projects: None,
         prepared_playwright_projects: None,
     })
@@ -65,6 +66,7 @@ fn panic_without_graph(rule: &str) {
         dependency_graph: None,
         inferred_roots: None,
         sources: None,
+        tsconfig_catalog: None,
         prepared_vitest_projects: None,
         prepared_playwright_projects: None,
     });

@@ -77,11 +77,24 @@ pub(super) fn check(
         AstKind::StaticMemberExpression(member) if member.object.span() == id.span => {
             HELPERS.contains(&member.property.name.as_str())
                 && matches!(nodes.parent_kind(nodes.parent_id(node)),
-                    AstKind::CallExpression(call) if call.callee.span() == member.span)
+                    AstKind::CallExpression(call) if call.callee.span() == member.span
+                        && (member.property.name != "spyOn" || spies_on_a_plain_target(call)))
         }
         _ => false,
     };
     if !safe {
         out.env_unknown_write = true;
     }
+}
+
+/// `spyOn` reaches `process` only through the global object or a `process` argument,
+/// both poisoned where they appear; any other computed target is not understood.
+fn spies_on_a_plain_target(call: &CallExpression<'_>) -> bool {
+    matches!(
+        call.arguments
+            .first()
+            .and_then(Argument::as_expression)
+            .map(Expression::get_inner_expression),
+        Some(Expression::Identifier(_) | Expression::StaticMemberExpression(_))
+    )
 }

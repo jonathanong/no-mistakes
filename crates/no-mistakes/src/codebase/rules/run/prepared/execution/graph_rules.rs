@@ -10,6 +10,7 @@ pub(super) struct GraphRuleRequest<'a> {
     pub(super) dependency_graph: Option<&'a DepGraph>,
     pub(super) inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
     pub(super) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+    pub(super) tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
     pub(super) prepared_vitest_projects:
         Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
     pub(super) prepared_playwright_projects:
@@ -28,6 +29,7 @@ pub(super) fn graph_rule_findings(
         dependency_graph,
         inferred_roots,
         sources,
+        tsconfig_catalog,
         prepared_vitest_projects,
         prepared_playwright_projects,
     } = request;
@@ -71,6 +73,10 @@ pub(super) fn graph_rule_findings(
                 prepared_vitest_projects,
                 shared.graph_file_universe(),
                 shared,
+                &crate::codebase::rules::test_no_live_repository_scan::Resolution {
+                    catalog: tsconfig_catalog,
+                    workspace: prepared_graph.map(|prepared| prepared.workspace()),
+                },
             )
         })?;
         findings.extend(diagnostics.findings);

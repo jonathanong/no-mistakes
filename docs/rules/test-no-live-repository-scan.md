@@ -179,8 +179,16 @@ call graph cannot see may pass anything:
   import, a default import, `import()`, `require`, a re-export (`export * from`,
   `export { sync } from`), and `vi.mock`/`vi.importActual` of the module make its
   consumers unknowable. A load whose specifier is not a string literal does the
-  same for every module. Modules are matched by file name (`./lib/index.ts` is
-  `lib`), which can only widen the set of kept findings.
+  same for every module.
+
+A consumer is matched to the callee by resolved file, not by specifier text: the
+resolver the dependency graph uses (relative paths, tsconfig `paths` aliases,
+workspace packages, `package.json` `exports`) maps each such specifier to a file,
+so `import * as m from "@lib"` consumes the file `@lib` points at. A specifier
+that is neither a bare package nor resolvable to a file keeps the finding for
+every callee. A default import, a barrel re-export, and a type-only import of the
+callee also keep the finding. Class and object-literal methods are never
+accepted, and the rule does not reach them at all.
 
 Callers are the repository call sites in the canonical call graph; only calls
 through an imported binding record their argument roots. A function reached only
@@ -221,10 +229,22 @@ use is understood. A use is understood when it is a member read
 finding: aliases and bare passing, `process["env"]`, `globalThis.process`,
 imports or loads of `process`, and destructuring, loop, or update targets.
 
+`process` is accepted only as the bare global identifier. Any reference to the
+global object (`globalThis`, `global`, `window`, `self`) poisons unless it is a
+`typeof` or a read of a member that cannot reach `process`, so passing it to
+`Object.defineProperty`, `Reflect.set`, or `Object.assign`, aliasing it, and
+destructuring it all poison. A module load poisons when its specifier is
+`process`, `node:process`, `vm`, `node:vm`, or is not a string literal:
+`require`, `import()`, `module.require`, `vi.importActual`, `vi.importMock`,
+`jest.requireActual`, and `jest.requireMock`. `createRequire`, `eval`, and
+`Function` poison wherever they appear, as does any use of `require` or
+`module` other than a call, `require.resolve`, or `module.exports`.
+
 Test-runner helpers follow the same rule. Every reference to `vi` or `jest` (and
 to a local name it is imported as) must be the object of a direct, non-computed
-call to a known helper that cannot touch the environment (`vi.fn`, `vi.spyOn`,
-`vi.mock`, timer helpers, and similar) or to `vi.stubEnv`, which is recorded as a
+call to a known helper that cannot touch the environment (`vi.fn`, `vi.mock`,
+timer helpers, and similar, or `vi.spyOn` whose first argument is a plain
+identifier or member path) or to `vi.stubEnv`, which is recorded as a
 write. Computed access of any kind, a cast, an alias, passing `vi` as a value,
 `globalThis.vi`, a namespace or default import of the runner, an `import()` of it,
 or a helper outside the known list poisons. `unstubAllEnvs` and `unstubEnvs`

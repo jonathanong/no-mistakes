@@ -6,7 +6,14 @@ const RULE: &str = "test-no-live-repository-scan";
 
 /// Each root owns `POISON_DIR` once, then something this analysis cannot name
 /// writes it too; `control` has no second write and is accepted.
-const POISONED: [&str; 22] = [
+const POISONED: [&str; 29] = [
+    "global-spyon",
+    "global-alias",
+    "global-define",
+    "load-actual-process",
+    "load-computed",
+    "load-create-require",
+    "load-eval",
     "destructure-process",
     "import-env",
     "globalthis",
@@ -33,7 +40,9 @@ const POISONED: [&str; 22] = [
 
 /// Each root owns a default parameter through one direct caller, then the
 /// function escapes where the call graph cannot see; `param-control` is accepted.
-const ESCAPED: [&str; 7] = [
+const ESCAPED: [&str; 9] = [
+    "escape-alias",
+    "escape-alias-actual",
     "escape-default",
     "escape-export-default",
     "escape-require",

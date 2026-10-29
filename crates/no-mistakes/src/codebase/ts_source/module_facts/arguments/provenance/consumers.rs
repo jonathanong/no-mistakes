@@ -16,23 +16,32 @@ pub(super) fn from_call(call: &CallExpression<'_>, out: &mut PathProvenance) {
     let loads = match call.callee.get_inner_expression() {
         Expression::Identifier(callee) => callee.name == "require",
         Expression::StaticMemberExpression(callee) => {
-            LOADERS.contains(&callee.property.name.as_str())
+            callee.property.name == "require" || LOADERS.contains(&callee.property.name.as_str())
         }
         _ => false,
     };
     if loads {
         let source = call.arguments.first().and_then(Argument::as_expression);
-        from_source(source, out);
+        if !matches!(
+            source.map(Expression::get_inner_expression),
+            Some(Expression::ImportExpression(_))
+        ) {
+            from_source(source, out);
+        }
     }
 }
 
 pub(super) fn from_source(source: Option<&Expression<'_>>, out: &mut PathProvenance) {
     match source.map(Expression::get_inner_expression) {
         Some(Expression::StringLiteral(text)) => {
-            out.unsafe_modules
-                .insert(crate::ast::js_literal(text).into_owned());
+            let text = crate::ast::js_literal(text);
+            super::process_refs::poison_process_loads(&text, out);
+            out.unsafe_modules.insert(text.into_owned());
         }
-        _ => out.modules_unknown = true,
+        _ => {
+            out.modules_unknown = true;
+            out.env_unknown_write = true;
+        }
     }
 }
 

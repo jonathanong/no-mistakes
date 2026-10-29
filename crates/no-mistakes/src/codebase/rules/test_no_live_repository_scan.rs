@@ -5,6 +5,7 @@ mod enumerators;
 mod findings;
 mod node_loaders;
 mod owned;
+pub(crate) use owned::Resolution;
 mod provenance;
 mod reachable;
 mod requires;
@@ -47,6 +48,7 @@ pub(crate) fn check_with_graph(
     vitest: Option<&super::PreparedVitestProjectCatalog>,
     graph_files: &[PathBuf],
     facts: &dyn crate::codebase::dependencies::graph::TsFactLookup,
+    resolution: &Resolution<'_>,
 ) -> Result<AnalysisDiagnostics> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut diagnostics = AnalysisDiagnostics::default();
@@ -111,7 +113,9 @@ pub(crate) fn check_with_graph(
                 && scan == Scan::Resolved
                 && origin.is_some_and(|origin| {
                     owners
-                        .get_or_init(|| owned::Owners::new(graph, &reachable, facts, graph_files))
+                        .get_or_init(|| {
+                            owned::Owners::new(graph, &reachable, facts, graph_files, resolution)
+                        })
                         .owned(origin, site, facts, &fixture_dirs)
                 });
             match verdict {
