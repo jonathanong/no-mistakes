@@ -153,6 +153,8 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("append_effect_composition_ignore", "low-heads", "append-effect-composition-ignore.yml"),
         // A same-file helper can append through its second parameter without changing the factory's head.
         case("second_argument_effects_report", "low-heads", "second-argument-effects-report.yml"),
+        // A single closed const may hold a primitive fixed-head helper result.
+        case("primitive_result_report", "low-heads", "primitive-result-report.yml"),
         case("effect_defaults_report", "effect-defaults", "effect-defaults-report.yml"),
         // Captured callbacks may add suffixes even if replayed; escaping the builder still advises.
         case("captured_append_effects_report", "low-heads", "captured-append-effects-report.yml"),
@@ -190,6 +192,7 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("finite_comment_names_ignore", "low-heads", "finite-comment-names-ignore.yml"),
         case("two_arm_assignment_report", "low-heads", "two-arm-assignment-report.yml"),
         case("callback_export_payload_report", "callback-export-payload", "callback-export-payload-report.yml"),
+        case("string_prefix_report", "low-heads", "string-prefix-report.yml"),
         case("callback_more_report", "callback-more", "callback-more-report.yml"),
     ];
     assert_saved_fixture("postgres_require_query_annotation", &cases);

@@ -14,6 +14,7 @@ mod finite_visits;
 mod head_kind;
 mod helper_visits;
 pub(super) mod literals;
+mod string_visits;
 mod visitor;
 pub(super) struct Call {
     pub span: Span,
@@ -26,12 +27,15 @@ pub(super) struct Syntax {
     pub async_returns: FxHashMap<Span, super::async_returns::Candidate>,
     pub async_callers: Vec<super::async_returns::Caller>,
     pub async_awaits: Vec<Span>,
+    pub collect_string_prefix: bool,
     pub helper_returns: FxHashMap<Span, super::helper_heads::Summary>,
     pub record_returns: FxHashMap<Span, super::helper_records::Summary>,
     pub returned_params: FxHashMap<Span, super::returned_params::Candidate>,
     pub returned_param_roots: FxHashMap<Span, super::returned_params::Root>,
     pub finite_returns: FxHashMap<Span, super::finite_returns::Candidate>,
+    pub primitive_functions: FxHashSet<Span>,
     pub record_initializers: FxHashMap<Span, (Span, Span)>,
+    pub primitive_initializers: FxHashSet<Span>,
     pub record_destructures: FxHashMap<Span, destructure::Destructure>,
     pub destructure_calls: FxHashMap<Span, (Span, Span)>,
     pub builder_direct_calls: FxHashMap<Span, Span>,
@@ -59,6 +63,8 @@ pub(super) struct Syntax {
     pub loop_candidates: Vec<super::loop_carried::Candidate>,
     pub constants: FxHashMap<Span, Head>,
     pub string_constants: FxHashSet<Span>,
+    pub string_heads: FxHashMap<Span, Head>,
+    pub string_appends: FxHashSet<Span>,
     pub value_reads: FxHashMap<Span, Span>,
     pub record_result_calls: FxHashSet<Span>,
     pub record_options_calls: FxHashSet<Span>,

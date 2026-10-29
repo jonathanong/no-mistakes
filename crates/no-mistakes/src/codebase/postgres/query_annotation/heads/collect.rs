@@ -1,8 +1,8 @@
 //! Low annotation head facts from the original prepared program.
 use super::{
     bindings, callback_heads, effects, finite_comments, helper_heads, helper_records,
-    literal_helpers, loop_carried, namespace_heads, returned_params, syntax, trusted_append,
-    AnnotationHeads, HeadCallSpans, HeadProof, PreparedLoopHeads, Span,
+    literal_helpers, loop_carried, namespace_heads, primitive_results, returned_params, syntax,
+    trusted_append, AnnotationHeads, HeadCallSpans, HeadProof, PreparedLoopHeads, Span,
 };
 use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
@@ -61,6 +61,11 @@ pub(crate) fn collect_prepared(
     let (trusted_append_calls, trusted_prefix_calls) =
         trusted_append::proofs(&syntax, &bindings, &calls, candidates, low_candidates);
     if include_all_calls {
+        for (span, proof) in super::string_prefix::proofs(&syntax, &bindings, &executor_calls) {
+            if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
+                calls.insert(span, proof);
+            }
+        }
         for (span, proof) in super::branch_assignments::proofs(&syntax, &bindings, &executor_calls)
         {
             if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
@@ -72,15 +77,7 @@ pub(crate) fn collect_prepared(
         }
         // Source-proven helper results are low-only endpoints. Legacy max
         // append fallback above must see the original call-head proofs.
-        for call in syntax
-            .calls
-            .iter()
-            .filter(|call| executor_calls.contains(&call.span))
-        {
-            if let Some(summary) = helper_records::local_result_proof(&syntax, &bindings, call) {
-                calls.insert(call.span, summary.proof());
-            }
-        }
+        primitive_results::apply(&syntax, &bindings, ts, &executor_calls, &mut calls);
         for (span, proof) in finite_comments::proofs(
             &syntax,
             &bindings,

@@ -30,6 +30,10 @@ mod helper_record_tests;
 mod missing_append_tests;
 #[path = "missing_tests.rs"]
 mod missing_tests;
+#[path = "primitive_result_tests.rs"]
+mod primitive_result_tests;
+#[path = "primitive_stability_cache_tests.rs"]
+mod primitive_stability_cache_tests;
 #[path = "returned_captured_tests.rs"]
 mod returned_captured_tests;
 #[path = "returned_param_tests.rs"]
@@ -128,3 +132,5 @@ pub(super) fn collect_with_helpers(
 
 #[path = "effect_boundary_coverage_tests.rs"]
 mod effect_boundary_coverage_tests;
+#[path = "string_prefix_tests.rs"]
+mod string_prefix_tests;

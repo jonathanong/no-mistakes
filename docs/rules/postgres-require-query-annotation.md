@@ -173,6 +173,29 @@ over-budget expressions remain unresolved. It does not infer the SQL body:
 a named privacy-filter append or frozen-registry lookup can retain separate
 full-SQL advisories from other rules. See the [bounded low-effort proofs](../postgres-query-annotation/low-effort.md).
 
+Low effort also accepts a function-local `let` initialized with a primitive
+string or template whose leading annotation survives any suffix. Every write
+must be a discarded `+=` with a string literal or template RHS; conditional
+appends and interpolations are allowed. For example:
+
+```ts
+let statement = `/* accounts/list */ SELECT id FROM accounts`;
+if (active) statement += ` WHERE active = true`;
+statement += ` LIMIT ${limit}`;
+query(statement);
+```
+
+The complete semantic reference census must contain only those writes and
+first-argument reads by configured executors in the same function. Reassignment,
+updates, aliases, captured uses, dynamic ownership gaps, optional calls, and
+loop uses leave the continuation proof unresolved. An executor read inside a
+`+=` RHS also prevents that proof; the inner read may still use the existing
+literal initializer proof before the assignment completes. For `+=`, a bare
+transaction command and an unfinished opening comment do not establish a
+continuation-safe head. This
+annotation-only proof does not recover complete SQL and never runs the evaluator.
+
+
 Maximum effort also recognizes a direct loop-carried literal reassignment in
 `for...of`, `for...in`, `while`, `do...while`, and simple `for` loops: an
 unconditional executor call followed by a missing-annotation literal assignment
@@ -305,6 +328,10 @@ The local effect helper may take that builder as its second of two plain
 parameters when its direct call is discarded and every exact parameter use
 only appends a suffix. Imported effect helpers retain their first-argument
 contract. This proves the returned builder's leading name only.
+At low effort, one local const may also hold a proven same-file helper result
+when every return is a plain literal string or no-hole ordinary template and
+the local has one exact executor read. The proof rejects mutable builders,
+aliases, writes, captures, and incomplete switch paths.
 For a fresh plain record, the helper may return an immutable local string
 template as its `text` property. A caller may also extract exactly
 `const { text, values } = helper(args)` and pass those bindings once to a

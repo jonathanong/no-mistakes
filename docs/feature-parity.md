@@ -105,6 +105,8 @@ annotation evaluator. This prefix proof does not establish complete SQL.
 The same low proof recognizes a fresh native builder returned after exact
 same-file helpers append through their second of two plain parameters; CLI and
 async Node checks use the shared prepared facts and keep max behavior intact.
+Low CLI and async Node checks also share a closed primitive helper-result proof:
+one local const, one executor read, and complete literal return paths.
 Opaque append suffixes preserve a prefix only for the trusted
 `sql-template-strings` tag; other tags and their later reads remain unresolved.
 An exact source helper may forward a proven head into a direct inline
@@ -119,6 +121,12 @@ Function declarations with explicit early returns or a total final switch
 also join identical named or missing heads. The switch default must throw
 directly or call a stable same-file throw-only function. All return paths must
 produce fresh trusted builders before callers may append to the result.
+CLI and async Node checks also share the low-effort proof for a local primitive
+`let` string with a continuation-safe head, discarded literal/template `+=`
+writes, and only direct configured executor reads in the same function.
+Conditional appends and template interpolations need no SQL evaluation;
+captures, aliases, reassignment, and dynamic ownership gaps remain unresolved.
+
 The low-effort prefix proof also accepts a captured local trusted builder when
 all of its exact-binding uses preserve the named head, regardless of closure
 execution order. CLI, async Node, and the Rust library share this evidence.

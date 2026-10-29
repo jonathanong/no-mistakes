@@ -1,0 +1,131 @@
+//! One immutable primitive helper result read by a confirmed executor.
+use super::{
+    bindings::{Bindings, ExportIndex},
+    finite_returns,
+    syntax::{Head, Syntax},
+    HeadProof, Span,
+};
+use crate::fx::FxHashMap;
+
+#[derive(Default)]
+pub(super) struct Memo {
+    owners: FxHashMap<usize, Option<Span>>,
+    helpers: FxHashMap<usize, Option<HeadProof>>,
+    stability: FxHashMap<usize, bool>,
+    exports: Option<ExportIndex>,
+}
+
+pub(super) fn apply(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    ts: &crate::codebase::ts_source::facts::TsFileFacts,
+    executors: &crate::fx::FxHashSet<Span>,
+    calls: &mut std::collections::BTreeMap<Span, HeadProof>,
+) {
+    let mut primitive_memo = Memo::default();
+    let clean_module = ts
+        .module_bindings
+        .as_deref()
+        .is_some_and(|module| module.diagnostics.is_empty());
+    for call in syntax
+        .calls
+        .iter()
+        .filter(|call| executors.contains(&call.span))
+    {
+        if let Some(summary) = super::helper_records::local_result_proof(syntax, bindings, call) {
+            calls.insert(call.span, summary.proof());
+        } else if clean_module {
+            if let Some(proof) = proof(syntax, bindings, call, &mut primitive_memo) {
+                calls.insert(call.span, proof);
+            }
+        }
+    }
+}
+
+pub(super) fn proof(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    call: &super::syntax::Call,
+    memo: &mut Memo,
+) -> Option<HeadProof> {
+    let Head::Reference(reference) = call.head else {
+        return None;
+    };
+    if !syntax.confirmed_builder_reads.contains(&reference) || !syntax.dynamic_refs.is_empty() {
+        return None;
+    }
+    let result = bindings.owner(reference).filter(|owner| !owner.imported)?;
+    let declaration = (result.span.start, result.span.end);
+    let &(callee, initialized) = syntax.record_initializers.get(&declaration)?;
+    if !syntax.primitive_initializers.contains(&declaration)
+        || syntax.repeated_calls.contains(&call.span)
+    {
+        return None;
+    }
+    let selected = *memo.owners.entry(result.id).or_insert_with(|| {
+        if let Some(observer) = crate::diagnostics::current() {
+            observer.increment("postgres.annotation.primitive_owner_censuses", 1);
+        }
+        if !bindings.declaration_safe(declaration)
+            || memo
+                .exports
+                .get_or_insert_with(|| bindings.export_index())
+                .contains(result)
+            || syntax.repeated_calls.contains(&initialized)
+        {
+            return None;
+        }
+        single_read(syntax, bindings, result)
+    });
+    if selected != Some(reference) || initialized.1 >= reference.0 {
+        return None;
+    }
+    let owner = bindings.owner(callee).filter(|owner| !owner.imported)?;
+    let stability = &mut memo.stability;
+    *memo.helpers.entry(owner.id).or_insert_with(|| {
+        if let Some(observer) = crate::diagnostics::current() {
+            observer.increment("postgres.annotation.primitive_result_censuses", 1);
+        }
+        if syntax
+            .primitive_functions
+            .contains(&(owner.span.start, owner.span.end))
+        {
+            finite_returns::primitive_head_proof(syntax, bindings, owner, |owner| {
+                *stability
+                    .entry(owner.id)
+                    .or_insert_with(|| finite_returns::primitive_stable(syntax, bindings, owner))
+            })
+        } else {
+            None
+        }
+    })
+}
+
+fn single_read(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    result: &crate::codebase::ts_source::module_facts::ModuleBinding,
+) -> Option<Span> {
+    let mut selected = None;
+    for usage in result.references.iter().filter(|usage| usage.runtime) {
+        if let Some(observer) = crate::diagnostics::current() {
+            observer.increment("postgres.annotation.primitive_owner_refs_visited", 1);
+        }
+        let span = (usage.span.start, usage.span.end);
+        if selected.is_some()
+            || syntax.contexts.get(&(result.span.start, result.span.end))
+                != syntax.contexts.get(&span)
+            || !syntax.confirmed_builder_reads.contains(&span)
+            || !bindings.declaration_safe(span)
+            || !bindings
+                .owner(span)
+                .is_some_and(|owner| owner.id == result.id)
+            || syntax.assignments.writes.contains_key(&span)
+            || syntax.assignments.unsupported_writes.contains(&span)
+        {
+            return None;
+        }
+        selected = Some(span);
+    }
+    selected
+}

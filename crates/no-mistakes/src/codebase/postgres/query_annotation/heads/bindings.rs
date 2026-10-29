@@ -8,6 +8,8 @@ use crate::fx::{FxHashMap, FxHashSet};
 mod prefix;
 mod proof;
 mod record_scope;
+mod string_prefix_wanted;
+pub(super) use record_scope::ExportIndex;
 mod wanted;
 pub(super) struct Bindings<'a> {
     module: Option<&'a crate::codebase::ts_source::module_facts::TypeScriptModuleFacts>,
@@ -58,14 +60,15 @@ impl<'a> Bindings<'a> {
         }) else {
             return index;
         };
-        // A closed captured root needs ownership for every runtime reference,
-        // including uses that are not executor or append candidates.
+        let executors = executor_calls.collect::<FxHashSet<_>>();
+        if low {
+            string_prefix_wanted::extend(syntax, module, &executors, &mut wanted);
+        }
         let finite_declarations = super::finite_comments::declarations(syntax);
         for binding in &module.bindings {
-            if syntax
-                .append_tags
-                .contains_key(&(binding.span.start, binding.span.end))
-                || finite_declarations.contains(&(binding.span.start, binding.span.end))
+            let declaration = (binding.span.start, binding.span.end);
+            if syntax.append_tags.contains_key(&declaration)
+                || finite_declarations.contains(&declaration)
             {
                 wanted.extend(
                     binding
@@ -92,7 +95,6 @@ impl<'a> Bindings<'a> {
                 }
             }
         }
-        let executors = executor_calls.collect::<FxHashSet<_>>();
         index.trusted_roots = index.trusted_roots(syntax);
         let effects = super::effects::prepare(syntax, &index, module, &index.trusted_roots);
         index.effects = effects;
@@ -160,8 +162,7 @@ impl<'a> Bindings<'a> {
             .map(|&reference| {
                 let owner = self.owner(reference)?;
                 let declaration = (owner.span.start, owner.span.end);
-                // Called closures can write outside the loop's lexical span;
-                // retain exact function ownership instead of assuming locality.
+                // Called closures may write outside the loop: retain function ownership.
                 let function = syntax
                     .contexts
                     .get(&reference)

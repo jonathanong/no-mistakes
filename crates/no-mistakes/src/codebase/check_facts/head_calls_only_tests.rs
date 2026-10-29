@@ -18,6 +18,8 @@ mod callback_more_tests;
 mod finite_comment_fact_tests;
 #[path = "head_calls_only_tests/namespace_fact_tests.rs"]
 mod namespace_fact_tests;
+#[path = "head_calls_only_tests/primitive_result_fact_tests.rs"]
+mod primitive_result_fact_tests;
 #[path = "head_calls_only_tests/returned_param_fact_tests.rs"]
 mod returned_param_fact_tests;
 #[path = "head_calls_only_tests/returned_prefix_fact_tests.rs"]
@@ -194,3 +196,5 @@ mod relative_pending;
 
 #[path = "head_calls_only_tests/callback_export_payload_tests.rs"]
 mod callback_export_payload_tests;
+#[path = "head_calls_only_tests/string_prefix_fact_tests.rs"]
+mod string_prefix_fact_tests;

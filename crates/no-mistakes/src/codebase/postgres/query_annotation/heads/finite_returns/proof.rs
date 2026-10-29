@@ -16,6 +16,22 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn head_proof(
     join(syntax, bindings, owner).map(|(proof, _)| proof)
 }
 
+pub(in crate::codebase::postgres::query_annotation::heads) fn primitive_head_proof(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    owner: &ModuleBinding,
+    mut stability: impl FnMut(&ModuleBinding) -> bool,
+) -> Option<HeadProof> {
+    let span = (owner.span.start, owner.span.end);
+    let Candidate::Returns { heads, .. } = syntax.finite_returns.get(&span)? else {
+        return None;
+    };
+    if !heads.iter().all(|head| head.primitive) {
+        return None;
+    }
+    join_with_stability(syntax, bindings, owner, &mut stability).map(|(proof, _)| proof)
+}
+
 pub(in crate::codebase::postgres::query_annotation::heads) fn builder_summary(
     syntax: &Syntax,
     bindings: &Bindings<'_>,
@@ -30,11 +46,22 @@ fn join(
     bindings: &Bindings<'_>,
     owner: &ModuleBinding,
 ) -> Option<(HeadProof, Option<Span>)> {
+    join_with_stability(syntax, bindings, owner, &mut |owner| {
+        stable(syntax, bindings, owner)
+    })
+}
+
+fn join_with_stability(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    owner: &ModuleBinding,
+    stability: &mut impl FnMut(&ModuleBinding) -> bool,
+) -> Option<(HeadProof, Option<Span>)> {
     let declaration = (owner.span.start, owner.span.end);
     let Candidate::Returns { heads, abrupt } = syntax.finite_returns.get(&declaration)? else {
         return None;
     };
-    if owner.imported || !stable(syntax, bindings, owner) {
+    if owner.imported || !stability(owner) {
         return None;
     }
     for &reference in abrupt {
@@ -42,7 +69,7 @@ fn join(
             .owner(reference)
             .filter(|callee| !callee.imported)?;
         let span = (callee.span.start, callee.span.end);
-        if !stable(syntax, bindings, callee)
+        if !stability(callee)
             || !matches!(syntax.finite_returns.get(&span), Some(Candidate::ThrowOnly))
         {
             return None;
@@ -66,8 +93,45 @@ fn join(
 }
 
 fn stable(syntax: &Syntax, bindings: &Bindings<'_>, owner: &ModuleBinding) -> bool {
+    stable_with_visit(syntax, bindings, owner, || {})
+}
+
+pub(in crate::codebase::postgres::query_annotation::heads) fn primitive_stable(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    owner: &ModuleBinding,
+) -> bool {
+    let observer = crate::diagnostics::current();
+    if let Some(observer) = &observer {
+        observer.increment("postgres.annotation.primitive_stability_censuses", 1);
+    }
+    let result = stable_with_visit(syntax, bindings, owner, || {
+        if let Some(observer) = &observer {
+            observer.increment("postgres.annotation.primitive_stability_refs_visited", 1);
+        }
+    });
+    if let Some(observer) = observer {
+        observer.increment(
+            if result {
+                "postgres.annotation.primitive_stability_positive_censuses"
+            } else {
+                "postgres.annotation.primitive_stability_negative_censuses"
+            },
+            1,
+        );
+    }
+    result
+}
+
+fn stable_with_visit(
+    syntax: &Syntax,
+    bindings: &Bindings<'_>,
+    owner: &ModuleBinding,
+    mut visit: impl FnMut(),
+) -> bool {
     bindings.declaration_safe((owner.span.start, owner.span.end))
         && owner.references.iter().all(|usage| {
+            visit();
             let span = (usage.span.start, usage.span.end);
             usage.runtime
                 && bindings.declaration_safe(span)
