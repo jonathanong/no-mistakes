@@ -32,15 +32,25 @@ fn configured_executor_runtime_references_reach_every_unanalyzable_policy() {
                         .iter()
                         .any(|row| row["file"] == file && row["line"] == line)
                 };
+                // A reference is not a call: only invocations report. Low effort
+                // still reports alias uses and exports through its escape pass.
+                let low = effort == "low";
                 for (file, lines) in [
                     (
                         "tests/references.test.ts",
-                        vec![3, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 19, 20, 21, 22, 24],
+                        if low {
+                            vec![3, 5, 6, 7, 9, 10, 12, 15, 19, 20, 23]
+                        } else {
+                            vec![3, 5, 6, 7, 12, 15, 23]
+                        },
                     ),
-                    ("tests/names.test.ts", vec![3, 5, 6, 7, 9, 10]),
-                    ("tests/wrapped-reference.test.ts", vec![2]),
-                    ("tests/forward-export.test.ts", vec![2]),
-                    ("tests/parameter-alias.test.ts", vec![2, 3, 6, 7]),
+                    ("tests/names.test.ts", vec![3, 5, 8, 10]),
+                    ("tests/parameter-alias.test.ts", vec![3, 7]),
+                    (
+                        "tests/forward-export.test.ts",
+                        if low { vec![2] } else { vec![] },
+                    ),
+                    ("tests/wrapped-reference.test.ts", vec![]),
                 ] {
                     for line in lines {
                         assert_eq!(

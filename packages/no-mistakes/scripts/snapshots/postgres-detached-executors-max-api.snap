@@ -140,22 +140,6 @@
     ],
     "advisories": [
       {
-        "file": "tests/after-copy.test.ts",
-        "line": 5,
-        "message": "tests/after-copy.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const first = query;"
-      },
-      {
-        "file": "tests/after-copy.test.ts",
-        "line": 6,
-        "message": "tests/after-copy.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const second = first;"
-      },
-      {
         "file": "tests/assigned.test.ts",
         "line": 3,
         "message": "tests/assigned.test.ts:3: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
@@ -189,35 +173,11 @@
       },
       {
         "file": "tests/assigned.test.ts",
-        "line": 9,
-        "message": "tests/assigned.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "copied = pool.query;"
-      },
-      {
-        "file": "tests/assigned.test.ts",
         "line": 10,
         "message": "tests/assigned.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "copied('DROP TABLE assigned_copy');"
-      },
-      {
-        "file": "tests/assigned.test.ts",
-        "line": 12,
-        "message": "tests/assigned.test.ts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "chain = run;"
-      },
-      {
-        "file": "tests/assigned.test.ts",
-        "line": 13,
-        "message": "tests/assigned.test.ts:13: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const last = chain;"
       },
       {
         "file": "tests/assigned.test.ts",
@@ -242,14 +202,6 @@
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "callback('SELECT 1');"
-      },
-      {
-        "file": "tests/assigned.test.ts",
-        "line": 19,
-        "message": "tests/assigned.test.ts:19: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "changing = pool.query;"
       },
       {
         "file": "tests/assigned.test.ts",
@@ -285,43 +237,11 @@
       },
       {
         "file": "tests/escape-only.test.ts",
-        "line": 5,
-        "message": "tests/escape-only.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "export { namedEscaped };"
-      },
-      {
-        "file": "tests/escape-only.test.ts",
         "line": 6,
         "message": "tests/escape-only.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "const invalidEscaped = ns.query.bind(otherReceiver);"
-      },
-      {
-        "file": "tests/escape-only.test.ts",
-        "line": 7,
-        "message": "tests/escape-only.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "export { invalidEscaped };"
-      },
-      {
-        "file": "tests/escaped.test.ts",
-        "line": 3,
-        "message": "tests/escaped.test.ts:3: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "retain(query);"
-      },
-      {
-        "file": "tests/escaped.test.ts",
-        "line": 4,
-        "message": "tests/escaped.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const alias = query;"
       },
       {
         "file": "tests/escaped.test.ts",
@@ -333,43 +253,11 @@
       },
       {
         "file": "tests/exact.test.ts",
-        "line": 5,
-        "message": "tests/exact.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const first = query;"
-      },
-      {
-        "file": "tests/exact.test.ts",
-        "line": 6,
-        "message": "tests/exact.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const second = first;"
-      },
-      {
-        "file": "tests/exact.test.ts",
         "line": 9,
         "message": "tests/exact.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "const bound = pool.query.bind(pool);"
-      },
-      {
-        "file": "tests/exact.test.ts",
-        "line": 11,
-        "message": "tests/exact.test.ts:11: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const boundAlias = bound;"
-      },
-      {
-        "file": "tests/exact.test.ts",
-        "line": 16,
-        "message": "tests/exact.test.ts:16: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const method = pool.query;"
       },
       {
         "file": "tests/exact.test.ts",
@@ -397,14 +285,6 @@
       },
       {
         "file": "tests/local-bodies.test.ts",
-        "line": 4,
-        "message": "tests/local-bodies.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const alias = query;"
-      },
-      {
-        "file": "tests/local-bodies.test.ts",
         "line": 10,
         "message": "tests/local-bodies.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
         "rule": "postgres-no-test-state-mutation",
@@ -426,14 +306,6 @@
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "run = pool.query.bind(pool);"
-      },
-      {
-        "file": "tests/mixed-roles.test.ts",
-        "line": 5,
-        "message": "tests/mixed-roles.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "run.query('DROP TABLE mixed_receiver');"
       },
       {
         "file": "tests/mixed-roles.test.ts",
@@ -476,36 +348,12 @@
         "sourceLine": "reverse.query('DROP TABLE reverse_receiver');"
       },
       {
-        "file": "tests/mixed-roles.test.ts",
-        "line": 10,
-        "message": "tests/mixed-roles.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "reverse.query('DROP TABLE reverse_receiver');"
-      },
-      {
         "file": "tests/mutable.test.ts",
         "line": 2,
         "message": "tests/mutable.test.ts:2: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "let mutable = pool.query.bind(pool);"
-      },
-      {
-        "file": "tests/mutable.test.ts",
-        "line": 4,
-        "message": "tests/mutable.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const first = mutable;"
-      },
-      {
-        "file": "tests/mutable.test.ts",
-        "line": 5,
-        "message": "tests/mutable.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const second = first;"
       },
       {
         "file": "tests/mutable.test.ts",
@@ -525,35 +373,11 @@
       },
       {
         "file": "tests/prebound.test.ts",
-        "line": 4,
-        "message": "tests/prebound.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const alias = prebound;"
-      },
-      {
-        "file": "tests/prebound.test.ts",
         "line": 5,
         "message": "tests/prebound.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "alias('SELECT 1');"
-      },
-      {
-        "file": "tests/receiver-escaped-after.test.ts",
-        "line": 5,
-        "message": "tests/receiver-escaped-after.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const alias = query;"
-      },
-      {
-        "file": "tests/receiver-escaped.test.ts",
-        "line": 5,
-        "message": "tests/receiver-escaped.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const alias = query;"
       },
       {
         "file": "tests/receiver-escaped.test.ts",
@@ -565,43 +389,11 @@
       },
       {
         "file": "tests/receiver-history.test.ts",
-        "line": 4,
-        "message": "tests/receiver-history.test.ts:4: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "opaque(changing);"
-      },
-      {
-        "file": "tests/receiver-history.test.ts",
-        "line": 5,
-        "message": "tests/receiver-history.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "changing = pool.query;"
-      },
-      {
-        "file": "tests/receiver-history.test.ts",
         "line": 8,
         "message": "tests/receiver-history.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "query('DROP TABLE escaped_receiver_history');"
-      },
-      {
-        "file": "tests/receiver-origins.test.ts",
-        "line": 5,
-        "message": "tests/receiver-origins.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "opaque(changing);"
-      },
-      {
-        "file": "tests/receiver-origins.test.ts",
-        "line": 6,
-        "message": "tests/receiver-origins.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "changing = pool.query;"
       },
       {
         "file": "tests/receiver-origins.test.ts",
@@ -618,22 +410,6 @@
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "second('DROP TABLE second_receiver_history');"
-      },
-      {
-        "file": "tests/shape-forms.test.ts",
-        "line": 7,
-        "message": "tests/shape-forms.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const first = receiver['query'], second = first;"
-      },
-      {
-        "file": "tests/shape-forms.test.ts",
-        "line": 7,
-        "message": "tests/shape-forms.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const first = receiver['query'], second = first;"
       },
       {
         "file": "tests/shape-forms.test.ts",
@@ -658,14 +434,6 @@
         "rule": "postgres-no-test-state-mutation",
         "target": "test-state-mutation",
         "sourceLine": "uncertain('SELECT 1');"
-      },
-      {
-        "file": "tests/uncertain.test.ts",
-        "line": 6,
-        "message": "tests/uncertain.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
-        "rule": "postgres-no-test-state-mutation",
-        "target": "test-state-mutation",
-        "sourceLine": "const changedAlias = changed;"
       },
       {
         "file": "tests/uncertain.test.ts",

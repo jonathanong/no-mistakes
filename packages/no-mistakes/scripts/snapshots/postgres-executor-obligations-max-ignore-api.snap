@@ -72,7 +72,7 @@
       "message": "directive for `postgres-no-test-state-mutation` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
       "rule": "unused-disable-directive",
       "target": "postgres-no-test-state-mutation",
-      "sourceLine": "consume(pool.query); // no-mistakes-disable-line postgres-no-test-state-mutation"
+      "sourceLine": "pool.query.call(pool, \"SELECT 1\"); // no-mistakes-disable-line postgres-no-test-state-mutation"
     }
   ]
 }

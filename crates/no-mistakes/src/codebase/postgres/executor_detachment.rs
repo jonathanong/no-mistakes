@@ -15,6 +15,19 @@ pub(crate) fn bind_method<'e, 'a>(call: &'e CallExpression<'a>) -> Option<&'e Ex
     bind_callee(&call.callee)
 }
 
+/// The expression a call invokes through `.call`, `.apply`, `.bind` or `Reflect.apply`.
+pub(crate) fn invoked_reference<'e, 'a>(
+    call: &'e CallExpression<'a>,
+) -> Option<&'e Expression<'a>> {
+    match static_member(&call.callee)? {
+        (Expression::Identifier(reflect), name) if reflect.name == "Reflect" && name == "apply" => {
+            call.arguments.first()?.as_expression()
+        }
+        (object, name) if matches!(name.as_str(), "call" | "apply" | "bind") => Some(object),
+        _ => None,
+    }
+}
+
 pub(crate) fn bind_callee<'e, 'a>(callee: &'e Expression<'a>) -> Option<&'e Expression<'a>> {
     let (method, name) = static_member(callee)?;
     (name == "bind").then_some(method)

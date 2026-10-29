@@ -46,13 +46,12 @@ fn namespace_mutation_revokes_member_proof_but_not_captured_query_function() {
         .filter(|call| !(call.line == 46 && call.callee == "execute"))
         .collect::<Vec<_>>();
     assert_eq!(retained.len(), 10, "{facts:?}");
-    assert_eq!(
-        facts
+    // The ternary branch only mentions `execute`; it is not an invocation.
+    assert!(
+        !facts
             .calls
             .iter()
-            .filter(|call| call.line == 46 && call.callee == "execute" && call.is_unanalyzable())
-            .count(),
-        1,
+            .any(|call| call.line == 46 && call.callee == "execute"),
         "{facts:?}"
     );
     let captured = facts

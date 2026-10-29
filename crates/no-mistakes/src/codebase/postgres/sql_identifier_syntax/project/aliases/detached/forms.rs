@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::postgres::executor_detachment::{
-    bind_method, executor_bindings, executor_receiver,
+    bind_method, executor_bindings, executor_receiver, invoked_reference,
 };
 use oxc_ast::ast::BindingIdentifier;
 mod assignments;
@@ -24,7 +24,6 @@ pub(super) enum Form {
     Bind(Option<usize>, bool),
 }
 pub(super) struct Node {
-    pub default_span: Option<Span>,
     pub profile: usize,
     pub id: usize,
     pub source: usize,
@@ -45,7 +44,7 @@ pub(super) struct Invocation {
 }
 pub(super) struct Collector<'p> {
     pub direct_callees: FxHashSet<Span>,
-    parameter: bool,
+    pub invoked: FxHashSet<Span>,
     pub profiles: &'p [EmbeddedSqlOptions],
     pub members: Vec<Member>,
     pub owners: FxHashMap<Span, usize>,
@@ -67,8 +66,8 @@ impl<'p> Collector<'p> {
             }
         }
         Self {
-            parameter: false,
             direct_callees: FxHashSet::default(),
+            invoked: FxHashSet::default(),
             profiles,
             members: Vec::new(),
             owners,
@@ -89,7 +88,6 @@ impl<'p> Collector<'p> {
     ) {
         if let Some(id) = self.bindings.get(&span(alias.span)).copied() {
             self.nodes.push(Node {
-                default_span: self.parameter.then_some(span(alias.span)),
                 profile,
                 id,
                 source,
@@ -126,9 +124,7 @@ impl<'a> Visit<'a> for Collector<'_> {
     }
     fn visit_formal_parameter(&mut self, value: &oxc_ast::ast::FormalParameter<'a>) {
         if let Some(init) = &value.initializer {
-            self.parameter = true;
             self.pattern(&value.pattern, init, false);
-            self.parameter = false;
         }
         walk::walk_formal_parameter(self, value);
     }
@@ -137,6 +133,10 @@ impl<'a> Visit<'a> for Collector<'_> {
             .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(
                 &call.callee,
             ))));
+        if let Some(target) = invoked_reference(call) {
+            self.invoked
+                .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(target))));
+        }
         if let Some((root, parts)) = chain(&call.callee) {
             self.calls.push(Invocation {
                 span: span(call.span),
