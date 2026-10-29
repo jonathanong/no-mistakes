@@ -32,6 +32,8 @@ mod missing_append_tests;
 mod missing_tests;
 #[path = "primitive_result_tests.rs"]
 mod primitive_result_tests;
+#[path = "primitive_stability_cache_tests.rs"]
+mod primitive_stability_cache_tests;
 #[path = "returned_captured_tests.rs"]
 mod returned_captured_tests;
 #[path = "returned_param_tests.rs"]

@@ -11,6 +11,7 @@ use crate::fx::FxHashMap;
 pub(super) struct Memo {
     owners: FxHashMap<usize, Option<Span>>,
     helpers: FxHashMap<usize, Option<HeadProof>>,
+    stability: FxHashMap<usize, bool>,
     exports: Option<ExportIndex>,
 }
 
@@ -80,6 +81,7 @@ pub(super) fn proof(
         return None;
     }
     let owner = bindings.owner(callee).filter(|owner| !owner.imported)?;
+    let stability = &mut memo.stability;
     *memo.helpers.entry(owner.id).or_insert_with(|| {
         if let Some(observer) = crate::diagnostics::current() {
             observer.increment("postgres.annotation.primitive_result_censuses", 1);
@@ -88,7 +90,11 @@ pub(super) fn proof(
             .primitive_functions
             .contains(&(owner.span.start, owner.span.end))
         {
-            finite_returns::primitive_head_proof(syntax, bindings, owner)
+            finite_returns::primitive_head_proof(syntax, bindings, owner, |owner| {
+                *stability
+                    .entry(owner.id)
+                    .or_insert_with(|| finite_returns::primitive_stable(syntax, bindings, owner))
+            })
         } else {
             None
         }

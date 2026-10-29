@@ -187,9 +187,12 @@ query(statement);
 
 The complete semantic reference census must contain only those writes and
 first-argument reads by configured executors in the same function. Reassignment,
-updates, aliases, captured uses, dynamic ownership gaps, nested RHS reads,
-optional calls, and loop uses remain unresolved. `"BEGIN" += "NING"` and an
-unfinished opening comment do not establish a continuation-safe head. This
+updates, aliases, captured uses, dynamic ownership gaps, optional calls, and
+loop uses leave the continuation proof unresolved. An executor read inside a
+`+=` RHS also prevents that proof; the inner read may still use the existing
+literal initializer proof before the assignment completes. For `+=`, a bare
+transaction command and an unfinished opening comment do not establish a
+continuation-safe head. This
 annotation-only proof does not recover complete SQL and never runs the evaluator.
 
 

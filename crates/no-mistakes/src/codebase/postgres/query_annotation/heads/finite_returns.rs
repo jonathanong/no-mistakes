@@ -4,7 +4,7 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BindingPattern, Function, ReturnStatement, Statement};
 use oxc_ast_visit::{walk, Visit};
 mod proof;
-pub(super) use proof::{builder_summary, head_proof, primitive_head_proof};
+pub(super) use proof::{builder_summary, head_proof, primitive_head_proof, primitive_stable};
 
 #[derive(Clone)]
 pub(super) enum Candidate {
