@@ -44,6 +44,7 @@ fn full_mock_boundaries_replace_the_real_module_per_root() {
         "shadow",
         "root-isolation",
         "actual-outside",
+        "dynamic-bypass",
         "helper",
         "helper-external-value",
         "require-actual",
@@ -79,6 +80,7 @@ fn root_mock_boundaries_have_node_api_parity() {
     let base = fixture.parent().unwrap();
     for (name, expected) in [
         ("full", 0),
+        ("dynamic-bypass", 1),
         ("real", 1),
         ("factory", 1),
         ("root-isolation", 1),

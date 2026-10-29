@@ -158,6 +158,8 @@ dependencies. Their module-scope calls remain selected through the prepared
 import and call graph; any such calls or incomplete module facts keep the real
 implementation reachable. An ordinary automock with no manual replacement and
 no module-scope calls can still remove findings inside its replaced functions.
+Dynamic `eval` or `Function` code in the root also retains the real module,
+because its loader activity cannot be proven from the call graph.
 
 Partial or uncertain mocks retain the real implementation: `importActual`,
 `requireActual`, `importOriginal`, dynamic specifiers, `vi.doMock`, conditional

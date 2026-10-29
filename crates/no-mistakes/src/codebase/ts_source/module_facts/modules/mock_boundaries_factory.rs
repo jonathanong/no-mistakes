@@ -2,19 +2,29 @@ use super::*;
 use oxc_ast_visit::{walk, Visit};
 
 pub(super) fn isolated(expression: &Expression<'_>) -> bool {
-    let params = match expression {
-        Expression::ArrowFunctionExpression(function) => &function.params,
+    let (params, returned) = match expression {
+        Expression::ArrowFunctionExpression(function) => (
+            &function.params,
+            function
+                .body
+                .as_expression()
+                .or_else(|| function.body.as_function_body().and_then(direct_return)),
+        ),
         Expression::FunctionExpression(function)
             if !function.generator && function.body.is_some() =>
         {
-            &function.params
+            (
+                &function.params,
+                function.body.as_deref().and_then(direct_return),
+            )
         }
         _ => return false,
     };
-    if !params.items.is_empty()
-        || params.rest.is_some()
-        || !replacement(expression).is_some_and(literal_object)
-    {
+    let Some(Expression::ObjectExpression(object)) = returned.map(Expression::get_inner_expression)
+    else {
+        return false;
+    };
+    if !params.items.is_empty() || params.rest.is_some() || !literal_object(object) {
         return false;
     }
     let mut execution = FactoryExecution(false);
@@ -63,23 +73,6 @@ impl<'a> Visit<'a> for FactoryExecution {
 
     fn visit_spread_element(&mut self, _: &SpreadElement<'a>) {
         self.0 = true;
-    }
-}
-
-fn replacement<'a>(expression: &'a Expression<'a>) -> Option<&'a ObjectExpression<'a>> {
-    let returned = match expression {
-        Expression::ArrowFunctionExpression(function) => function
-            .body
-            .as_expression()
-            .or_else(|| function.body.as_function_body().and_then(direct_return)),
-        Expression::FunctionExpression(function) => {
-            function.body.as_deref().and_then(direct_return)
-        }
-        _ => None,
-    }?;
-    match returned.get_inner_expression() {
-        Expression::ObjectExpression(object) => Some(object),
-        _ => None,
     }
 }
 

@@ -136,6 +136,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "dynamic-bypass": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/analysis.mts",
+          "import": "forbidden",
+          "line": 2,
+          "message": "forbidden call (application #1): repository function `src/forbidden.mts#forbidden`",
+          "rule": "forbidden-calls",
+          "sourceLine": "export function analyze() { forbidden() }",
+          "target": "repository function `src/forbidden.mts#forbidden`"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "external-factory": {
     "exitCode": 1,
     "report": {

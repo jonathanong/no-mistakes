@@ -7,19 +7,16 @@ impl DepGraph {
     ) -> bool {
         let sources = self.call_source_nodes(factories, CallTraversal::Transitive, None);
         let factory_nodes: FxHashSet<_> = factories.iter().collect();
-        if sources.iter().any(|node| {
-            node.as_file().is_none_or(|file| {
-                file == target
-                    || (!factory_nodes.contains(node) && self.import_reaches_mock(file, target))
-            })
-        }) {
-            return false;
-        }
         let mut by_file: FxHashMap<&Path, FxHashSet<&NodeId>> = fx_map();
         for source in &sources {
             let Some(path) = source.as_file() else {
                 return false;
             };
+            if path == target
+                || (!factory_nodes.contains(source) && self.import_reaches_mock(path, target))
+            {
+                return false;
+            }
             by_file.entry(path).or_default().insert(source);
         }
         by_file.into_iter().all(|(path, owners)| {

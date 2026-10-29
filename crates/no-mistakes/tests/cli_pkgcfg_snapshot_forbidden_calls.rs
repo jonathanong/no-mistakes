@@ -276,6 +276,7 @@ fn forbidden_calls_mock_boundaries_json_matches_snapshot() {
         "suppressed",
         "root-isolation",
         "actual-outside",
+        "dynamic-bypass",
         "helper",
         "helper-external-value",
         "require-actual",

@@ -3,9 +3,7 @@ use super::config::{self, Options, Traversal};
 use super::findings::finding_for_site_with_arguments;
 use super::roots;
 use super::RULE_ID;
-use crate::codebase::dependencies::graph::{
-    CallTraversal, DepGraph, GraphBuildPlan, NodeId, ResolvedCallSite,
-};
+use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId, ResolvedCallSite};
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
 use crate::fx::{FxHashMap, FxHashSet};
@@ -180,15 +178,5 @@ fn reachable_source_nodes(
     if matches!(options.traversal, Traversal::Transitive) {
         return graph.call_source_nodes_with_root_mocks(roots, options.max_depth);
     }
-    let mut nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
-    if matches!(options.traversal, Traversal::File) {
-        return nodes;
-    }
-    let cap = 1;
-    for trace in graph.call_traces(roots, CallTraversal::Direct, options.max_depth) {
-        if trace.nodes.len().saturating_sub(1) < cap {
-            nodes.insert(trace.target);
-        }
-    }
-    nodes
+    roots.iter().cloned().collect()
 }
