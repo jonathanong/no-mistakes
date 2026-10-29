@@ -24,10 +24,9 @@ pub(super) fn analyze(
             continue;
         }
         let mut targets = FxHashSet::default();
-        for site in sites
-            .get(&node)
-            .into_iter()
-            .flatten()
+        let node_sites = sites.get(&node).map_or(&[][..], Vec::as_slice);
+        for site in node_sites
+            .iter()
             .copied()
             .filter(|site| eligible(site, facts))
         {
@@ -55,23 +54,16 @@ pub(super) fn analyze(
             });
             targets.extend(modeled.iter().map(|contract| contract.to.clone()));
             targets.extend(site.target_nodes().cloned());
-            // External calls are opaque boundaries unless explicitly modeled. Known
-            // globals remain syntactically classified, while dynamic targets abstain.
+            // External calls are opaque boundaries unless explicitly modeled. Node `fs`
+            // is modeled I/O; known globals remain syntactically classified, while
+            // dynamic targets abstain.
             if site.has_unknown_target()
-                || (modeled.is_empty()
-                    && site.targets().any(|candidate| {
-                        matches!(
-                            candidate.target,
-                            KnownCallTargetRef::ModuleExport {
-                                repository_target: None,
-                                ..
-                            }
-                        )
-                    }))
+                || (modeled.is_empty() && external::unmodeled_external(site))
             {
                 out.uncertain = true;
             }
         }
+        out.uncertain |= external::hands_off_callback(node_sites);
         for (target, kind) in graph.dependencies_of_node(&node).into_iter().flatten() {
             if !targets.contains(target)
                 || !matches!(kind, EdgeKind::Call | EdgeKind::AssertionOwner)

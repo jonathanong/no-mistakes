@@ -9,6 +9,7 @@ use crate::fx::{FxHashMap, FxHashSet};
 use anyhow::Result;
 use std::path::Path;
 mod config;
+mod external;
 mod ownership;
 mod traversal;
 use config::Options;

@@ -41,6 +41,18 @@ fn coverage_producer_assertion_owner_json_matches_snapshot() {
 }
 
 #[test]
+fn coverage_producer_assertion_owner_fs_json_matches_snapshot() {
+    assert_saved_fixture(
+        "coverage_producer_assertion_owner_fs",
+        &[rule(
+            "fs_io",
+            "coverage-producer-assertion-owner-fs/fixture",
+            ".no-mistakes.yml",
+        )],
+    );
+}
+
+#[test]
 fn declared_payload_compatibility_json_matches_snapshot() {
     let dir = "fixtures/rules/declared-payload-compatibility";
     assert_saved_fixture(

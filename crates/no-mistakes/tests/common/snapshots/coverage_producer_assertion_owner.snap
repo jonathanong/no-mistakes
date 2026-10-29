@@ -687,7 +687,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#externalAndAssertion",
           "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function externalAndAssertion() { existsSync('.'); equal(1, 1); }",
+          "sourceLine": "export function externalAndAssertion() { hostname(); equal(1, 1); }",
           "target": "externalAndAssertion"
         },
         {
