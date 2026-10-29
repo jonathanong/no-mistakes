@@ -114,6 +114,9 @@ The shared low proof also accepts bounded same-file append-only helper calls
 and a returned parameter-rooted append chain when the caller discards it. An
 append-only helper's captured callback may make discarded static appends to
 its exact parameter, including after or between executor reads.
+An unsupported use anywhere in a local builder's lifetime invalidates every
+read of that builder, even reads before a mutation or escape. Plain immutable
+strings keep their existing head proof.
 The same prepared effect proof permits inert literal defaults on later helper
 parameters and closed object arguments for supported destructured defaults.
 For `nextjs-redirect-destinations`, `low` keeps

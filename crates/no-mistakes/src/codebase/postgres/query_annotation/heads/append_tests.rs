@@ -1,7 +1,7 @@
 use super::support::{assert_markers, fixture};
 
 #[test]
-fn append_chains_keep_heads_only_before_local_escapes() {
+fn append_chains_require_safe_builder_uses_throughout_the_lifetime() {
     let (source, _, heads) = fixture("append.mts");
     assert_eq!(assert_markers(&source, &heads), 22);
 }

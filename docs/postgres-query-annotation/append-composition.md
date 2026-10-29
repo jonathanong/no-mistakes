@@ -33,8 +33,10 @@ A local const initialized by that trusted tag also permits later statement
 appends with one opaque suffix when its uses remain safe and in order.
 At low effort, a discarded call to a proven same-file or direct imported
 append-only function also preserves the local builder's fixed prefix. The
-function's first parameter can only be used in discarded static append chains;
-other uses and unresolved imports leave the later read unanalyzable.
+function's first parameter can only be used in discarded static append chains.
+Other parameter uses and unresolved imports leave every read of the local
+builder unanalyzable, including reads before the helper call. Proven append-only
+effects preserve the fixed head throughout the builder's lifetime.
 
 When full SQL recovery encounters independent conditional appends, it explores
 all-off first, then each singleton, then pairs, and larger combinations in that

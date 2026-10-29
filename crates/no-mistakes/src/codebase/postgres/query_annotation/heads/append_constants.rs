@@ -1,4 +1,4 @@
-//! Per-binding first unsafe use; later escapes cannot invalidate an earlier call.
+//! Append-only builder lifetimes and ordered immutable primitive uses.
 use super::{syntax::Syntax, Span};
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::{FxHashMap, FxHashSet};
@@ -12,7 +12,7 @@ pub(super) struct Safety {
     first_opaque_append: FxHashMap<Span, u32>,
     repeated_calls: FxHashSet<Span>,
     conditional_limits: FxHashMap<Span, u32>,
-    pending_by_declaration: FxHashMap<Span, Vec<(u32, Span)>>,
+    pending_by_declaration: FxHashMap<Span, Vec<Span>>,
     closed_prefix: FxHashSet<Span>,
 }
 impl Safety {
@@ -66,6 +66,11 @@ impl Safety {
             }
             let context = syntax.contexts.get(&declaration);
             let trusted_root = trusted_roots.contains(&declaration);
+            let builder = finite_roots.contains(&declaration)
+                || syntax
+                    .constants
+                    .get(&declaration)
+                    .is_some_and(|head| head.tagged());
             let mut limit = u32::MAX;
             let mut legacy_limit = u32::MAX;
             let mut conditional_limit = u32::MAX;
@@ -106,18 +111,20 @@ impl Safety {
                     if allowed.low.contains(&span) {
                         continue;
                     }
-                    limit = limit.min(span.0);
+                    let cutoff = if builder { 0 } else { span.0 };
+                    legacy_limit = legacy_limit.min(cutoff);
+                    limit = limit.min(cutoff);
                     if trusted_root {
                         if let Some(&call) = pending.get(&span) {
                             result
                                 .pending_by_declaration
                                 .entry(declaration)
                                 .or_default()
-                                .push((span.0, call));
+                                .push(call);
                             continue;
                         }
                     }
-                    conditional_limit = conditional_limit.min(span.0);
+                    conditional_limit = conditional_limit.min(cutoff);
                 }
             }
             result.limits.insert(declaration, limit);
@@ -165,13 +172,7 @@ impl Safety {
         if declaration.1 >= call.0 || call.1 > limit || (repeated && limit != u32::MAX) {
             return None;
         }
-        let mut required = self
-            .pending_by_declaration
-            .get(&declaration)?
-            .iter()
-            .filter(|(start, _)| repeated || *start < call.0)
-            .map(|(_, span)| *span)
-            .collect::<Vec<_>>();
+        let mut required = self.pending_by_declaration.get(&declaration)?.clone();
         required.sort_unstable();
         required.dedup();
         (!required.is_empty()).then_some(required)

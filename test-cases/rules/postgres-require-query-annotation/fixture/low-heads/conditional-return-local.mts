@@ -25,7 +25,7 @@ function taggedBranches(flag: boolean) {
   const statement = flag
     ? sql`/* taggedLeft */ SELECT 1`
     : sql`/* taggedRight */ SELECT 2`;
-  read(statement); // low: true
+  read(statement); // low: false
   escape(statement);
   read(statement); // low: false
 }

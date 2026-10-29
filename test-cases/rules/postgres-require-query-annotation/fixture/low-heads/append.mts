@@ -8,13 +8,13 @@ read(sql`/* computed */ SELECT 1`[method]("suffix")); // low: false
 export function local() {
   const query = sql`/* local */ SELECT 1`;
   query.append(sql` AND x = ${value}`);
-  read(query); // low: true
-  read(query.append(" suffix").append(" more")); // low: true
+  read(query); // low: false
+  read(query.append(" suffix").append(" more")); // low: false
   escape(query);
   read(query); // low: false
   const string = "/* string */ SELECT 1".append("");
   string.append("suffix");
-  read(string); // low: true
+  read(string); // low: false
   escape(string);
   read(string); // low: false
   let changed = sql`/* changed */ SELECT 1`;

@@ -11,13 +11,12 @@ read(sql`/* named */`.append("SELECT 1")); // head: clear
 read(sql`/* */ SELECT `.append("1")); // head: missing
 read(sql`/* */`.append("BEGIN")); // head: unknown
 function local() {
-  // Later escapes cannot invalidate earlier reads, even without an append.
   const namedBeforeEscape = sql`/* named */ SELECT 1`;
-  read(namedBeforeEscape); // head: clear
+  read(namedBeforeEscape); // head: unknown
   stash(namedBeforeEscape);
   read(namedBeforeEscape); // head: unknown
   const missingBeforeEscape = sql`SELECT 1`;
-  read(missingBeforeEscape); // head: missing
+  read(missingBeforeEscape); // head: unknown
   stash(missingBeforeEscape);
   read(missingBeforeEscape); // head: unknown
   const transaction = sql`BEGIN`;
@@ -42,7 +41,7 @@ function local() {
   fixed.append(" tail");
   read(fixed); // head: clear
   const initializer = sql`SELECT `.append("1");
-  read(initializer); // head: missing
+  read(initializer); // head: unknown
   stash(initializer);
   read(initializer); // head: unknown
   const escaped = sql`SELECT `;
