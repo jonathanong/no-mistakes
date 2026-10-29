@@ -66,15 +66,19 @@ pub(super) fn collect(
                 vi_refs::check(semantic.nodes(), node.id(), id, &vi_names, &mut result);
                 value_refs::from_identifier(semantic, node.id(), id, &mut result);
             }
-            AstKind::IdentifierName(name) => process_refs::poison_name(&name.name, &mut result),
+            AstKind::IdentifierName(name) => {
+                process_refs::poison_name(&name.name, &mut result);
+                member_refs::from_name(semantic.nodes(), node.id(), &name.name, &mut result);
+            }
             AstKind::StringLiteral(text) => {
-                process_refs::poison_name(&crate::ast::js_literal(text), &mut result);
+                let literal = crate::ast::js_literal(text);
+                process_refs::poison_name(&literal, &mut result);
+                member_refs::from_literal(&literal, &mut result);
             }
             AstKind::ComputedMemberExpression(member) => {
                 member_refs::from_computed(member, &mut result);
             }
             AstKind::StaticMemberExpression(member) => {
-                member_refs::from_member(&member.property.name, &mut result);
                 value_refs::from_member(semantic.nodes(), node.id(), member, &mut result);
             }
             AstKind::ImportExpression(import) => {

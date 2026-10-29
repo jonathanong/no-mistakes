@@ -1,6 +1,7 @@
 //! Member accesses that reach code or the process object without naming them.
 use super::super::PathProvenance;
 use oxc_ast::ast::*;
+use oxc_ast::AstKind;
 
 /// Members of the global object that are plain host APIs and cannot reach code.
 pub(super) const GLOBAL_SAFE: [&str; 20] = [
@@ -44,9 +45,28 @@ pub(super) const PROCESS_SAFE: [&str; 14] = [
     "stderr",
 ];
 
-/// `.constructor` and `.__proto__` reach the `Function` constructor and so any code.
-pub(super) fn from_member(property: &str, out: &mut PathProvenance) {
-    if matches!(property, "constructor" | "__proto__") {
+/// `constructor` and `__proto__` reach the `Function` constructor and so any code.
+fn reaches_constructor(name: &str) -> bool {
+    matches!(name, "constructor" | "__proto__")
+}
+
+/// The literal text anywhere in a file, since `Reflect.get(f, "constructor")` and
+/// `const k = "constructor"; f[k]` carry it without a member access.
+pub(super) fn from_literal(text: &str, out: &mut PathProvenance) {
+    if reaches_constructor(text) {
+        out.env_unknown_write = true;
+    }
+}
+
+/// The name as a property or binding key, except a class method named `constructor`.
+pub(super) fn from_name(
+    nodes: &oxc_semantic::AstNodes<'_>,
+    node: oxc_semantic::NodeId,
+    name: &str,
+    out: &mut PathProvenance,
+) {
+    if reaches_constructor(name) && !matches!(nodes.parent_kind(node), AstKind::MethodDefinition(_))
+    {
         out.env_unknown_write = true;
     }
 }
@@ -55,7 +75,7 @@ pub(super) fn from_member(property: &str, out: &mut PathProvenance) {
 pub(super) fn from_computed(member: &ComputedMemberExpression<'_>, out: &mut PathProvenance) {
     let unsafe_key = match member.expression.get_inner_expression() {
         Expression::StringLiteral(key) => {
-            matches!(&*crate::ast::js_literal(key), "constructor" | "__proto__")
+            reaches_constructor(&crate::ast::js_literal(key))
         }
         Expression::BinaryExpression(binary) => {
             let text = |side: &Expression<'_>| {
