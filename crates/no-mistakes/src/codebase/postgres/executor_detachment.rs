@@ -19,6 +19,9 @@ pub(crate) fn bind_method<'e, 'a>(call: &'e CallExpression<'a>) -> Option<&'e Ex
 pub(crate) fn invoked_reference<'e, 'a>(
     call: &'e CallExpression<'a>,
 ) -> Option<&'e Expression<'a>> {
+    if let Expression::SequenceExpression(sequence) = call.callee.get_inner_expression() {
+        return sequence.expressions.last();
+    }
     match static_member(&call.callee)? {
         (Expression::Identifier(reflect), name) if reflect.name == "Reflect" && name == "apply" => {
             call.arguments.first()?.as_expression()

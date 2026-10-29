@@ -95,7 +95,7 @@ known direct call can still report its SQL, but does not erase the earlier
 obligation. References are not calls: a truthiness test, `??`/`||`, a ternary,
 a destructure, a comparison, an assignment, a property read, an object-literal
 value, a `Proxy` target, `export { alias }`, or passing the executor as a call
-argument produces no finding at that line; `effort: low` still reports uses of a
+argument produces no finding at that line. A binding initialized from any branch of `??`, `||`, a ternary, or a cast is an executor alias, and calling it (or a sequence or parenthesized callee such as `(0, pool.query)(sql)`) reports; `effort: low` still reports uses of a
 copied alias. Type-only references are excluded.
 The configured `unanalyzable` policy controls these obligations; use `advise`
 to keep them as non-failing advisories.
