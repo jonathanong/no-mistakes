@@ -103,8 +103,9 @@ pub(super) fn function(value: &Function<'_>) -> Option<Candidate> {
 }
 
 fn collect_if(value: &oxc_ast::ast::IfStatement<'_>, heads: &mut Vec<Return>) -> Option<()> {
-    // Guard conditions are intentionally ignored even when they may mutate builders:
-    // only literal/tag heads and separately proven append-safe locals qualify.
+    // Guard conditions are intentionally ignored here even when they may mutate builders.
+    // Only literal/tag heads or append-safe locals qualify; returned_local_prefix
+    // in proof.rs rejects condition mutations before accepting a local builder head.
     // The return-count check rejects returns hidden elsewhere in the body.
     if let Some(head) = branch_return(&value.consequent)? {
         heads.push(head);
