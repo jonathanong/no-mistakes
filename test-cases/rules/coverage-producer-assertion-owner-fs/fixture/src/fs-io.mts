@@ -6,6 +6,8 @@ import { readFile } from 'node:fs/promises';
 import { readFile as bareRead } from 'fs/promises';
 import { equal } from 'node:assert/strict';
 import { hostname } from 'node:os';
+import { readResult } from './fs-helper.mts';
+import { readWrapped } from './fs-barrel.mts';
 
 // Control 3: fs producer, asserted -> passes.
 export function fsAsserted() { equal(readFileSync('result', 'utf8'), 'expected'); }
@@ -96,3 +98,7 @@ export function callFnPropertyOptions() { equal(fsNs.createReadStream.call(null,
 export function applyFnPropertyOptions() { equal(fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }
 export function nearDepthOptions() { equal(fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } }).path, 'a'); }
 export function depthOptions() { equal(fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }
+// The fs call is in another module. Traversal still models it, so a missing assertion is a no-owner finding.
+export function helperModule() { readResult(); }
+// The wrapper is reached through an explicit named re-export. The fs call inside it stays modeled I/O.
+export function reexportedWrapper() { readWrapped('result'); }

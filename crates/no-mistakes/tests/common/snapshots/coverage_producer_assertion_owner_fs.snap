@@ -13,7 +13,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/fs-io.mts",
-          "line": 13,
+          "line": 100,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#depthOptions",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function depthOptions() { equal(fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }",
+          "target": "depthOptions"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 102,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#helperModule",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function helperModule() { readResult(); }",
+          "target": "helperModule"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 104,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#reexportedWrapper",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function reexportedWrapper() { readWrapped('result'); }",
+          "target": "reexportedWrapper"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 15,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#fsUnasserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function fsUnasserted() { readFileSync('result', 'utf8'); }",
@@ -21,7 +45,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 15,
+          "line": 17,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#pureUnasserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function pureUnasserted() { return 1; }",
@@ -29,7 +53,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 18,
+          "line": 20,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#namespaceUnasserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function namespaceUnasserted() { fsNs.readFileSync('a', 'utf8'); }",
@@ -37,7 +61,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 20,
+          "line": 22,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#defaultUnasserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function defaultUnasserted() { fsDefault.readFileSync('a', 'utf8'); }",
@@ -45,7 +69,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 22,
+          "line": 24,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#bareDefaultUnasserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function bareDefaultUnasserted() { bareFs.existsSync('a'); }",
@@ -53,7 +77,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 24,
+          "line": 26,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#defaultPromisesUnasserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function defaultPromisesUnasserted() { bareFs.promises.readFile('a'); }",
@@ -61,7 +85,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 26,
+          "line": 28,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#promisesUnasserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export async function promisesUnasserted() { await bareRead('a', 'utf8'); }",
@@ -69,7 +93,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 30,
+          "line": 32,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedMember",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function computedMember(name: 'readFileSync') { equal(fsDefault[name]('a', 'utf8'), 'x'); }",
@@ -77,7 +101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 32,
+          "line": 34,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#otherModuleAsserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function otherModuleAsserted() { equal(hostname(), 'h'); }",
@@ -85,7 +109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 33,
+          "line": 35,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#dynamicRequire",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function dynamicRequire() { equal(require('node:fs').readFileSync('a', 'utf8'), 'x'); }",
@@ -93,7 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 35,
+          "line": 37,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callbackAsserted",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }",
@@ -101,7 +125,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 40,
+          "line": 42,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#paramCallback",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function paramCallback(done: () => void) { fsNs.readFile('a', done); equal(1, 1); }",
@@ -109,7 +133,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 43,
+          "line": 45,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#ternaryCallback",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function ternaryCallback(flag: boolean, first: () => void, second: () => void) {",
@@ -117,7 +141,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 46,
+          "line": 48,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#logicalCallback",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function logicalCallback(first: (() => void) | undefined, second: () => void) {",
@@ -125,7 +149,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 49,
+          "line": 51,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedCallback",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function computedCallback() { fsNs.readFile('a', makeCallback()); }",
@@ -133,7 +157,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 51,
+          "line": 53,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#literalLastArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function literalLastArgument() { fsNs.readFile('a', 'utf8'); }",
@@ -141,7 +165,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 52,
+          "line": 54,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#templateLiteralArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function templateLiteralArgument() { fsNs.readFile('a', `utf8`); }",
@@ -149,7 +173,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 53,
+          "line": 55,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#typedLiteralArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function typedLiteralArgument() { fsNs.readFile('a', 'utf8' as const); }",
@@ -157,7 +181,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 54,
+          "line": 56,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#dynamicTemplateArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function dynamicTemplateArgument(encoding: string) { fsNs.readFile('a', `${encoding}`); }",
@@ -165,7 +189,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 55,
+          "line": 57,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#spreadArguments",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function spreadArguments(...callbacks: Array<() => void>) { fsNs.readFile('a', ...callbacks); }",
@@ -173,7 +197,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 56,
+          "line": 58,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#noArguments",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function noArguments() { fsNs.readFile(); }",
@@ -181,7 +205,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 57,
+          "line": 59,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#applyLiteralArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applyLiteralArgument() { fsNs.watch.apply(null, ['file']); }",
@@ -189,7 +213,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 58,
+          "line": 60,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#applyTemplateLiteralArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applyTemplateLiteralArgument() { fsNs.watch.apply(null, [`file`]); }",
@@ -197,7 +221,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 59,
+          "line": 61,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#applyCallbackArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applyCallbackArgument(flag: boolean, first: () => void, second: () => void) { fsNs.watch.apply(null, ['file', flag ? first : second]); }",
@@ -205,7 +229,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 60,
+          "line": 62,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#applyNoArguments",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applyNoArguments() { fsNs.watch.apply(null, []); }",
@@ -213,7 +237,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 61,
+          "line": 63,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#applyNullArguments",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applyNullArguments() { fsNs.watch.apply(null, null); }",
@@ -221,7 +245,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 62,
+          "line": 64,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#applySpreadArguments",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applySpreadArguments(...callbacks: Array<() => void>) { fsNs.watch.apply(null, ['file', ...callbacks]); }",
@@ -229,7 +253,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 63,
+          "line": 65,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#callLiteralArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callLiteralArgument() { fsNs.watch.call(null, 'file'); }",
@@ -237,7 +261,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 64,
+          "line": 66,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callCallbackArgument",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callCallbackArgument(first: (() => void) | undefined, second: () => void) { fsNs.watch.call(null, 'file', first || second); }",
@@ -245,7 +269,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 72,
+          "line": 74,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#ternaryOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function ternaryOptions(flag: boolean) { equal(fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }",
@@ -253,7 +277,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 73,
+          "line": 75,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#fnPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function fnPropertyOptions() { equal(fsNs.createReadStream('a', { cb: () => {} }).path, 'a'); }",
@@ -261,7 +285,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 74,
+          "line": 76,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#functionPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function functionPropertyOptions() { equal(fsNs.createReadStream('a', { cb: function () {} }).path, 'a'); }",
@@ -269,7 +293,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 75,
+          "line": 77,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#classPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function classPropertyOptions() { equal(fsNs.createReadStream('a', { Handler: class {} }).path, 'a'); }",
@@ -277,7 +301,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 76,
+          "line": 78,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#nestedFnPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function nestedFnPropertyOptions() { equal(fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }",
@@ -285,7 +309,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 77,
+          "line": 79,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#unknownPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function unknownPropertyOptions(value: object) { equal(fsNs.createReadStream('a', { nested: value }).path, 'a'); }",
@@ -293,7 +317,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 78,
+          "line": 80,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#memberPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function memberPropertyOptions(value: { encoding: string }) { equal(fsNs.createReadStream('a', { encoding: value.encoding }).path, 'a'); }",
@@ -301,7 +325,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 79,
+          "line": 81,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callPropertyOptions() { equal(fsNs.createReadStream('a', { nested: makeOptions() }).path, 'a'); }",
@@ -309,7 +333,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 80,
+          "line": 82,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#conditionalPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function conditionalPropertyOptions(flag: boolean) { equal(fsNs.createReadStream('a', { encoding: flag ? 'utf8' : 'ascii' }).path, 'a'); }",
@@ -317,7 +341,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 81,
+          "line": 83,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#logicalPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function logicalPropertyOptions(encoding: string | undefined) { equal(fsNs.createReadStream('a', { encoding: encoding || 'utf8' }).path, 'a'); }",
@@ -325,7 +349,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 82,
+          "line": 84,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arrayFunctionOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function arrayFunctionOptions() { equal(fsNs.createReadStream('a', [() => {}]).path, 'a'); }",
@@ -333,7 +357,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 83,
+          "line": 85,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arrayUnknownOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function arrayUnknownOptions(callback: () => void) { equal(fsNs.createReadStream('a', [callback]).path, 'a'); }",
@@ -341,7 +365,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 84,
+          "line": 86,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#methodOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function methodOptions() { equal(fsNs.createReadStream('a', { cb() {} }).path, 'a'); }",
@@ -349,7 +373,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 85,
+          "line": 87,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#getterOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function getterOptions() { equal(fsNs.createReadStream('a', { get encoding() { return 'utf8' } }).path, 'a'); }",
@@ -357,7 +381,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 86,
+          "line": 88,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#shorthandOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function shorthandOptions(callback: () => void) { equal(fsNs.createReadStream('a', { callback }).path, 'a'); }",
@@ -365,7 +389,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 87,
+          "line": 89,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#spreadOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function spreadOptions(value: object) { equal(fsNs.createReadStream('a', { ...value }).path, 'a'); }",
@@ -373,7 +397,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 88,
+          "line": 90,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arraySpreadOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function arraySpreadOptions(values: unknown[]) { equal(fsNs.createReadStream('a', [...values]).path, 'a'); }",
@@ -381,7 +405,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 89,
+          "line": 91,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#arrayHoleOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function arrayHoleOptions() { equal(fsNs.createReadStream('a', [,]).path, 'a'); }",
@@ -389,7 +413,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 90,
+          "line": 92,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedKeyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function computedKeyOptions(key: string) { equal(fsNs.createReadStream('a', { [key]: 'utf8' }).path, 'a'); }",
@@ -397,7 +421,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 91,
+          "line": 93,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedStaticKeyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function computedStaticKeyOptions() { equal(fsNs.createReadStream('a', { ['encoding']: 'utf8' }).path, 'a'); }",
@@ -405,7 +429,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 92,
+          "line": 94,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#templatePropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function templatePropertyOptions(encoding: string) { equal(fsNs.createReadStream('a', { encoding: `${encoding}` }).path, 'a'); }",
@@ -413,7 +437,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 95,
+          "line": 97,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callFnPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callFnPropertyOptions() { equal(fsNs.createReadStream.call(null, 'a', { cb: () => {} }).path, 'a'); }",
@@ -421,19 +445,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 96,
+          "line": 98,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#applyFnPropertyOptions",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function applyFnPropertyOptions() { equal(fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }",
           "target": "applyFnPropertyOptions"
-        },
-        {
-          "file": "src/fs-io.mts",
-          "line": 98,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#depthOptions",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function depthOptions() { equal(fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }",
-          "target": "depthOptions"
         }
       ],
       "warnings": []

@@ -112,7 +112,9 @@ Calls into Node `fs` (`fs`, `node:fs`, `fs/promises`, `node:fs/promises`) are
 ordinary external I/O: neither assertion evidence nor unresolved dispatch. They
 are recognized through named imports, namespace imports, default imports and
 their member chains (`fs.readFileSync`, `fs.promises.readFile`), and statically
-followed local aliases of those bindings. An `fs` producer that reaches a
+followed local aliases of those bindings. An `fs` call inside a helper in
+another module, and a call through an explicit re-export of a wrapper around
+that call, are the same modeled I/O. An `fs` producer that reaches a
 configured assertion passes; one that does not gets the usual no-owner finding.
 
 ```ts
