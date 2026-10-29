@@ -120,6 +120,9 @@ fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
         "computedCallback",
         "dynamicTemplateArgument",
         "spreadArguments",
+        "applyCallbackArgument",
+        "applySpreadArguments",
+        "callCallbackArgument",
     ] {
         assert!(
             findings.iter().any(|finding| finding.rule == RULE_ID
@@ -133,6 +136,11 @@ fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
         "templateLiteralArgument",
         "typedLiteralArgument",
         "noArguments",
+        "applyLiteralArgument",
+        "applyTemplateLiteralArgument",
+        "applyNoArguments",
+        "applyNullArguments",
+        "callLiteralArgument",
     ] {
         assert!(
             findings.iter().any(|finding| finding.rule == RULE_ID

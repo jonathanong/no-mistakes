@@ -129,7 +129,9 @@ inline callback or promise continuation in the same callable
 (`readFile(path).then(cb)`), or any non-literal last argument of a callback-style
 API such as `fs.readFile(path, done)`, `fs.readFile(path, flag ? first : second)`,
 or `fs.readFile(path, first || second)`. Such an argument may be a callback;
-its invocation is not a resolved call. `*Sync` and promise APIs
+its invocation is not a resolved call. For `.call` and literal-array `.apply`,
+this classification uses the effective arguments after removing `thisArg` or
+expanding the array. `*Sync` and promise APIs
 take no callback. Other modules, such as `node:os` or `node:child_process`, remain
 unmodeled; use an ownership contract for process dispatch. Tip: set
 `unanalyzable: advise` while rolling out the rule to inspect uncertain results

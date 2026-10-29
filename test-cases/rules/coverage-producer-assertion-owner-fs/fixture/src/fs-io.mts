@@ -54,3 +54,11 @@ export function typedLiteralArgument() { fsNs.readFile('a', 'utf8' as const); }
 export function dynamicTemplateArgument(encoding: string) { fsNs.readFile('a', `${encoding}`); }
 export function spreadArguments(...callbacks: Array<() => void>) { fsNs.readFile('a', ...callbacks); }
 export function noArguments() { fsNs.readFile(); }
+export function applyLiteralArgument() { fsNs.watch.apply(null, ['file']); }
+export function applyTemplateLiteralArgument() { fsNs.watch.apply(null, [`file`]); }
+export function applyCallbackArgument(flag: boolean, first: () => void, second: () => void) { fsNs.watch.apply(null, ['file', flag ? first : second]); }
+export function applyNoArguments() { fsNs.watch.apply(null, []); }
+export function applyNullArguments() { fsNs.watch.apply(null, null); }
+export function applySpreadArguments(...callbacks: Array<() => void>) { fsNs.watch.apply(null, ['file', ...callbacks]); }
+export function callLiteralArgument() { fsNs.watch.call(null, 'file'); }
+export function callCallbackArgument(first: (() => void) | undefined, second: () => void) { fsNs.watch.call(null, 'file', first || second); }

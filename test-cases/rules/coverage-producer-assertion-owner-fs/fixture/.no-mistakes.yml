@@ -37,5 +37,13 @@ rules:
         - { file: src/fs-io.mts, symbol: dynamicTemplateArgument }
         - { file: src/fs-io.mts, symbol: spreadArguments }
         - { file: src/fs-io.mts, symbol: noArguments }
+        - { file: src/fs-io.mts, symbol: applyLiteralArgument }
+        - { file: src/fs-io.mts, symbol: applyTemplateLiteralArgument }
+        - { file: src/fs-io.mts, symbol: applyCallbackArgument }
+        - { file: src/fs-io.mts, symbol: applyNoArguments }
+        - { file: src/fs-io.mts, symbol: applyNullArguments }
+        - { file: src/fs-io.mts, symbol: applySpreadArguments }
+        - { file: src/fs-io.mts, symbol: callLiteralArgument }
+        - { file: src/fs-io.mts, symbol: callCallbackArgument }
       assertions:
         - { module: 'node:assert/strict', export: equal }

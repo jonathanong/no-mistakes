@@ -1,7 +1,15 @@
 use super::*;
 
 pub(super) fn last_argument_is_literal(arguments: &[oxc_ast::ast::Argument<'_>]) -> bool {
-    arguments.last().and_then(|argument| argument.as_expression()).is_some_and(|expression| {
+    expression_is_literal(
+        arguments
+            .last()
+            .and_then(|argument| argument.as_expression()),
+    )
+}
+
+pub(super) fn expression_is_literal(expression: Option<&Expression<'_>>) -> bool {
+    expression.is_some_and(|expression| {
         let expression = crate::codebase::ts_source::unwrap_ts_wrappers(expression);
         expression.is_literal()
             || matches!(expression, Expression::TemplateLiteral(template) if template.expressions.is_empty())
@@ -91,7 +99,8 @@ impl ImportCollector {
         }
         self.record_replacement_call(call);
         self.note_escaped_call(call);
-        let (callee, arguments, spread_at, bound) = self.adapted_value_call(call);
+        let (callee, arguments, spread_at, bound, last_argument_literal) =
+            self.adapted_value_call(call);
         self.record_object_assign_providers(&callee, &arguments, &call.arguments, call.span.end);
         let value_call = ValueCall {
             context: self.current_function_id(),
@@ -101,7 +110,7 @@ impl ImportCollector {
                 .unwrap_or_else(|| "<unknown>".to_string()),
             callee,
             arguments: std::sync::Arc::new(arguments),
-            last_argument_literal: last_argument_is_literal(&call.arguments),
+            last_argument_literal,
             bound,
             spread_at,
             repeated: self.repeat_depth > self.call_repeat_base,
