@@ -99,11 +99,15 @@ low can also check a local SQL map selected by a literal row value. The rows
 must be an inline array of at most 16 unescaped strings, and the map and
 callback parameter must stay unchanged and unescaped. Unknown rows, inherited
 object keys, writes, and runner aliases retain the configured uncertainty
-policy.
+policy. Inline the flat string literals: nested table rows and rows held in a
+`const` array do not establish a finite domain.
 An `executorFactoryNames` entry also accepts an exact `effects.postgres.returnedExecutors`
 module/export identity when the factory is imported from another specifier.
 The factory result must be kept in an immutable local binding; a same-spelled
-undeclared import, shadowed name, or reassigned result is not proof.
+undeclared import, shadowed name, or reassigned result is not proof. Only named
+imports of the declared factory are selected; namespace member calls and default
+imports stay outside this scope. Rewrite those imports as named imports to
+enable this proof.
 
 A complete SQL statement before an opaque template interpolation is still
 checked. For example, ``query(`DROP TABLE users; ${unknown}`)`` reports the

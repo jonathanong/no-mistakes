@@ -44,7 +44,9 @@ factory import from another module only when its export also appears in
 `executorFactoryNames`. The returned executor still needs an immutable local;
 a same-spelled import without a declaration or mutable result remains unproved. This
 selector does not certify members listed under `returnedMembers` or an executor
-after it escapes to opaque code.
+after it escapes to opaque code. Declared returned-executor factories match only
+named imports. Namespace member calls and default imports are outside this
+selection; rewrite them as named imports to enable the proof.
 
 Receiver values used as proven SQL bind data or direct executor metadata do not
 create another SQL obligation. An ordinary aggregate or property read of an
