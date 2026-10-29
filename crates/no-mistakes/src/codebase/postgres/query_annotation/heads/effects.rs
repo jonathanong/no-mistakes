@@ -3,15 +3,17 @@ use super::Span;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BindingPattern, Expression, Function, FunctionType};
 
+mod conditional;
 mod defaults;
 mod prepare;
 mod summary;
+pub(super) use conditional::collect as collect_conditionals;
 pub(crate) use prepare::Pending;
 pub(super) use prepare::{prepare, Prepared};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Conditional {
-    pub span: Span,
+    pub spans: Vec<Span>,
     pub required: Vec<Span>,
 }
 

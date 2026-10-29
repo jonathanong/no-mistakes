@@ -191,6 +191,8 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("finite_comment_names_report", "low-heads", "finite-comment-names-report.yml"),
         case("finite_comment_names_ignore", "low-heads", "finite-comment-names-ignore.yml"),
         case("two_arm_assignment_report", "low-heads", "two-arm-assignment-report.yml"),
+        case("builder_write_census_report", "low-heads", "builder-write-census-report.yml"),
+        case("builder_write_census_ignore", "low-heads", "builder-write-census-ignore.yml"),
         case("callback_export_payload_report", "callback-export-payload", "callback-export-payload-report.yml"),
         case("string_prefix_report", "low-heads", "string-prefix-report.yml"),
         case("callback_more_report", "callback-more", "callback-more-report.yml"),

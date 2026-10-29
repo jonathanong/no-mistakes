@@ -10,6 +10,7 @@ pub(crate) fn project(
     files: &mut FileIdMap<CheckFileFacts>,
     resolve: impl Fn(&str, &Path) -> Option<PathBuf>,
 ) {
+    let observer = crate::diagnostics::current();
     let mut completed: Vec<(PathBuf, Span, HeadProof)> = Vec::new();
     let mut effects: FxHashMap<PathBuf, FxHashSet<Span>> = FxHashMap::default();
     let mut callbacks = Vec::new();
@@ -138,12 +139,15 @@ pub(crate) fn project(
         };
         let heads: &mut AnnotationHeads = Arc::make_mut(heads);
         for condition in &heads.conditional_effects {
-            if condition
-                .required
-                .iter()
-                .all(|span| approved.contains(span))
-            {
-                heads.calls.insert(condition.span, HeadProof::Literal);
+            if condition.required.iter().all(|span| {
+                if let Some(observer) = &observer {
+                    observer.increment("postgres.annotation.conditional_effect_approval_checks", 1);
+                }
+                approved.contains(span)
+            }) {
+                for &span in &condition.spans {
+                    heads.calls.insert(span, HeadProof::Literal);
+                }
             }
         }
     }

@@ -144,7 +144,7 @@ separately.
 
 A local `const` selecting between finite conditional arms qualifies when every
 arm starts with a complete named literal comment. Tagged arms retain the
-mutable-builder lifetime checks, including escapes before execution. An
+mutable-builder lifetime checks, including escapes anywhere in its lifetime. An
 unknown, partial, or missing arm remains unanalyzable; the syntax pass does
 not evaluate the condition or combine SQL text.
 
@@ -214,8 +214,8 @@ than once because these uses only add suffixes. The callback may be stored or
 returned; its scheduling identity is irrelevant to the exact parameter uses.
 A nested return or implicit arrow result of `.append(...)` exposes the builder
 and stays unanalyzable.
-Defaults, aliases, used append results, and other parameter uses leave the
-later read unanalyzable. Direct imported helpers qualify only when their
+Defaults, aliases, used append results, and other parameter uses leave every
+read of the builder unanalyzable. Direct imported helpers qualify only when their
 prepared source file exports the proven function; unresolved and re-exported
 helpers remain unanalyzable.
 An exact same-file helper with two plain parameters may instead receive the
@@ -258,15 +258,29 @@ defaults, and a default on the builder parameter remain unresolved. The proof
 does not use TypeScript types as runtime bounds or infer complete SQL.
 
 For ordinary const tracing, its declaration and uses must stay in the same
-function. The closed captured-root proof above is the narrow exception. Before the executor call,
-its uses may only append supported literals or pass it directly to prepared
-executors. An opaque suffix is supported for the trusted tagged initializer
-or the trusted local builder described above. Other opaque appends make later
-reads unanalyzable. Repeated
+function. The closed captured-root proof above is the narrow exception. Throughout
+a mutable builder's lifetime, its uses must be supported appends, prepared
+executor reads, or proven append-only effects. An opaque suffix is supported for the trusted tagged initializer
+or the trusted local builder described above. Other opaque appends make every
+read of the builder unanalyzable. Repeated
 executor reads qualify. Reassignment, property writes, other receiver methods,
 helper escapes, aliases, unsupported returns, stores, and exports make it unanalyzable
-because a const binding does not make its builder immutable. An escape after
-an executor call does not invalidate that earlier call.
+because a const binding does not make its builder immutable. Unsupported uses
+invalidate every executor read of that builder, including reads textually before
+the use. This covers property assignment, `Object.assign`, `Reflect.set`,
+`Object.defineProperty`, `delete`, and `strings.splice`; unknown calls, getters,
+and other property uses can also expose or mutate the builder. The proof does not
+assume a configured executor consumes SQL synchronously. Move those operations
+to a separate builder, or keep this builder limited to supported append-only uses.
+Imported append-only effects must be proven even when called after an executor
+read. A later supported append preserves the leading comment.
+Each binding's pending imported-effect requirements are normalized and checked
+once, then reused across its executor reads. This keeps repeated reads followed
+by many helper calls from multiplying proof work. Same-named bindings keep
+separate requirements.
+Reads of the same exact builder binding share one normalized set of imported
+effect requirements. The prepared projection checks that set once, then publishes
+the result to all of its reads; same-name bindings in other scopes stay separate.
 A const holding a plain literal string retains its head when passed elsewhere;
 passing an immutable string cannot change the original head.
 Captured builders and loop calls that might observe a previous iteration's

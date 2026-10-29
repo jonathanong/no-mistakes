@@ -18,13 +18,13 @@ test(
     const cli =
       process.env.NO_MISTAKES_TEST_CLI_PATH ||
       join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
-    // These saved sites have no named head or escape/mutate before execution.
+    // These saved sites have no named head or an unsafe builder lifetime.
     // The nested executor at line 29 must still be checked inside append's tail.
     // The append receiver at 4, nested executor at 29, and safe local tagged
     // builder at 47 all have a proven unnamed head; other rejected sites rely
     // on policy-controlled unresolved behavior.
     const definiteMissing = [4, 29, 47];
-    const unresolved = [6, 7, 14, 19, 23, 27, 30, 35, 42, 55, 60, 66];
+    const unresolved = [6, 7, 11, 12, 14, 17, 19, 23, 27, 30, 35, 42, 55, 60, 66];
     const lines = [...definiteMissing, ...unresolved].sort((left, right) => left - right);
     for (const policy of ["report", "advise", "ignore"]) {
       const config = join(root, `.no-mistakes-append-${policy}.yml`);

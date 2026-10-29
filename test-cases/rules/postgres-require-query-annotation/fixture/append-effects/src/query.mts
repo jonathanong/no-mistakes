@@ -1,6 +1,6 @@
 import sql from 'sql-template-strings';
 import { read } from '@bench/db';
-import { add, addMore, returned, composed, aliased, defaulted, captured, forwarded } from './helpers.mjs';
+import { add, addMore, returned, composed, aliased, defaulted, captured, forwarded, mutating } from './helpers.mjs';
 
 function safe(tail) {
   const q = sql`/* imported */ SELECT 1`;
@@ -37,9 +37,27 @@ function escape(tail) {
 }
 function order(tail) {
   const q = sql`/* order */ SELECT 1`;
+  read(q); // unanalyzable
+  add(q, tail);
+  read(q); // unanalyzable
+  forwarded(q);
+  read(q); // unanalyzable
+}
+function safePostRead(tail) {
+  const q = sql`/* safePostRead */ SELECT 1`;
   read(q); // accepted
   add(q, tail);
   read(q); // accepted
+}
+function mutatingPostRead() {
+  const q = sql`/* mutatingPostRead */ SELECT 1`;
+  read(q); // unanalyzable
+  mutating(q);
+  read(q); // unanalyzable
+}
+function unknownPostRead() {
+  const q = sql`/* unknownPostRead */ SELECT 1`;
+  read(q); // unanalyzable
   forwarded(q);
   read(q); // unanalyzable
 }

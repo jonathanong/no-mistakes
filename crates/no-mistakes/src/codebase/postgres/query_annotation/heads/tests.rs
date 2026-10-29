@@ -1,5 +1,7 @@
 #[path = "append_tests.rs"]
 mod append_tests;
+#[path = "builder_write_census_tests.rs"]
+mod builder_write_census_tests;
 #[path = "captured_prefix_tests.rs"]
 mod captured_prefix_tests;
 #[path = "conditional_return_tests.rs"]

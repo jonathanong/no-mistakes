@@ -59,7 +59,7 @@ function unsafe(tail) {
 }
 function order(tail) {
   const q = sql`/* order */ SELECT 1`;
-  read(q); // low: true
+  read(q); // low: false
   forwarded(q);
   read(q); // low: false
 }

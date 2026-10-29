@@ -230,6 +230,15 @@ const holding that chain, or a trusted local tagged builder followed by safe
 statement appends. The evaluator does not run. Decidable missing annotations
 remain failing findings under every policy; unresolved shapes follow
 `unanalyzable`. Complete literal transaction commands retain their exemption.
+Every unsupported use of a local builder invalidates its fixed-head proof across
+the entire lifetime, including executor calls before that use. Property writes,
+`Object.assign`, `Reflect.set`, `Object.defineProperty`, `delete`, and mutation
+through `strings.splice` all leave the builder unresolved. Unknown calls and
+property uses also abstain because they can expose or mutate the builder. This
+does not assume executors read SQL synchronously: keep the builder append-only,
+or use a separate builder for the unsupported operation. Supported appends after
+an executor read remain safe, including directly imported effects whose targets
+are proven append-only. Plain immutable strings retain their existing head proof.
 A discarded call to a same-file or directly imported append-only function can
 preserve that trusted local builder's fixed prefix. Its first parameter may
 only appear as the receiver of discarded static append chains; defaults,

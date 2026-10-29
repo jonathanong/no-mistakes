@@ -123,7 +123,7 @@ fn concise_helper_and_consumed_append_heads_survive_mixed_full_sql_demand() {
         assert_eq!(
             proofs[1],
             vec![
-                Some(HeadProof::Literal),
+                Some(HeadProof::Unproven),
                 Some(HeadProof::Unproven),
                 Some(HeadProof::Unproven),
                 Some(HeadProof::Literal),
