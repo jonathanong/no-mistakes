@@ -128,6 +128,16 @@ impl<'a> Visit<'a> for Collector<'_> {
         }
         walk::walk_formal_parameter(self, value);
     }
+    fn visit_tagged_template_expression(
+        &mut self,
+        tagged: &oxc_ast::ast::TaggedTemplateExpression<'a>,
+    ) {
+        self.invoked
+            .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(
+                &tagged.tag,
+            ))));
+        walk::walk_tagged_template_expression(self, tagged);
+    }
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.direct_callees
             .insert(span(oxc_span::GetSpan::span(unwrap_ts_wrappers(

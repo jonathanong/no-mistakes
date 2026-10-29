@@ -53,6 +53,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/calls.ts",
+          "line": 21,
+          "message": "src/calls.ts:21: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "db.query`SELECT 7`;",
+          "target": "annotation"
+        },
+        {
+          "file": "src/calls.ts",
+          "line": 23,
+          "message": "src/calls.ts:23: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "tag`SELECT 8`;",
+          "target": "annotation"
+        },
+        {
+          "file": "src/calls.ts",
           "line": 6,
           "message": "src/calls.ts:6: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
@@ -113,6 +129,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "tests/calls.test.ts:18: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "(pool.query)('DROP TABLE paren_control');",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/calls.test.ts",
+          "line": 19,
+          "message": "tests/calls.test.ts:19: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "pool.query`DROP TABLE tagged_direct_control`;",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/calls.test.ts",
+          "line": 21,
+          "message": "tests/calls.test.ts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "tag`DROP TABLE tagged_alias_control`;",
           "target": "test-state-mutation"
         },
         {
@@ -207,6 +239,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "(pool.query)('DROP TABLE paren_control');",
           "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/calls.test.ts",
+          "line": 19,
+          "message": "tests/calls.test.ts:19: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "pool.query`DROP TABLE tagged_direct_control`;",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/calls.test.ts",
+          "line": 21,
+          "message": "tests/calls.test.ts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "tag`DROP TABLE tagged_alias_control`;",
+          "target": "test-state-mutation"
         },
         {
           "file": "tests/calls.test.ts",

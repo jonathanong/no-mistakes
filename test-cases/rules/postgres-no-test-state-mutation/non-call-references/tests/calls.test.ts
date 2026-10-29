@@ -16,3 +16,6 @@ const viaBang = pool.query!;
 viaBang('DROP TABLE bang_control');
 (0, pool.query)('DROP TABLE sequence_control');
 (pool.query)('DROP TABLE paren_control');
+pool.query`DROP TABLE tagged_direct_control`;
+const tag = pool.query;
+tag`DROP TABLE tagged_alias_control`;

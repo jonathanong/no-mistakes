@@ -47,6 +47,7 @@ impl ScopeVisitor<'_> {
         Self: Visit<'a>,
     {
         let start = self.builder_reference_exemptions.len();
+        self.note_invoked_tag(&template.tag);
         if super::super::tags::is_sql_tag(
             &template.tag,
             &mut |name| super::resolve::compose::tag_shadowed(name, self),

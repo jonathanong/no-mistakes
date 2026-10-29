@@ -18,6 +18,11 @@ impl ScopeVisitor<'_> {
         }
     }
 
+    pub(super) fn note_invoked_tag(&mut self, tag: &Expression<'_>) {
+        let span = unwrap_ts_wrappers(tag).span();
+        self.executor_invoked_refs.insert((span.start, span.end));
+    }
+
     pub(super) fn note_executor_member(&mut self, expression: &Expression<'_>) {
         if executor_receiver(expression, &self.executor_options.executor_names)
             .is_some_and(|receiver| self.detached_query_receiver(receiver))

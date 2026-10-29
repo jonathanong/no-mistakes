@@ -16,3 +16,8 @@ export function aliases(options: any = db) {
   viaCast('SELECT 5');
   (0, options.query)('SELECT 6');
 }
+
+// A tagged template whose tag is an executor invokes it.
+db.query`SELECT 7`;
+const tag = db.query;
+tag`SELECT 8`;
