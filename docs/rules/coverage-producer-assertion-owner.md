@@ -103,10 +103,36 @@ unmodeled external module calls also follow shared `unanalyzable` policy:
 that uncertain result. Uncertainty never supplies assertion evidence, and is
 reported even when another reachable call owns an assertion. Known globals
 retain the call graph's classification; external process calls need contracts.
-An unmodeled external call such as `node:fs` keeps the producer unanalyzable even
-when an assertion is also reached. Tip: set `unanalyzable: advise` while rolling
-out the rule, especially for producers that perform I/O, to inspect uncertain
-results without failing the check.
+Unmodeled external module calls keep the producer unanalyzable even when an
+assertion is also reached.
+
+## Node `fs` is modeled I/O
+
+Calls into Node `fs` (`fs`, `node:fs`, `fs/promises`, `node:fs/promises`) are
+ordinary external I/O: neither assertion evidence nor unresolved dispatch. They
+are recognized through named imports, namespace imports, default imports and
+their member chains (`fs.readFileSync`, `fs.promises.readFile`), and statically
+followed local aliases of those bindings. An `fs` producer that reaches a
+configured assertion passes; one that does not gets the usual no-owner finding.
+
+```ts
+import { readFileSync } from 'node:fs';
+import { equal } from 'node:assert/strict';
+export function asserted() { equal(readFileSync('result', 'utf8'), 'x'); } // passes
+export function withoutAssertion() { readFileSync('result', 'utf8'); } // no-owner finding
+```
+
+Shapes outside the model stay unanalyzable, never passing: computed members
+(`fs[name](...)`), dynamic `require('node:fs')`, wrappers the call graph cannot
+follow, and a live `fs` call that hands a callback to be invoked later: an
+inline callback or promise continuation in the same callable
+(`readFile(path).then(cb)`), or a function, identifier or member passed as the
+last argument of a callback-style API such as `fs.readFile(path, done)`. The
+invocation of that callback is not a resolved call. `*Sync` and promise APIs
+take no callback. Other modules, such as `node:os` or `node:child_process`, remain
+unmodeled; use an ownership contract for process dispatch. Tip: set
+`unanalyzable: advise` while rolling out the rule to inspect uncertain results
+without failing the check.
 
 ## Suppression
 

@@ -1,0 +1,32 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      unanalyzable: report
+      producers:
+        - { file: src/fs-io.mts, symbol: fsAsserted }
+        - { file: src/fs-io.mts, symbol: fsUnasserted }
+        - { file: src/fs-io.mts, symbol: pureAsserted }
+        - { file: src/fs-io.mts, symbol: pureUnasserted }
+        - { file: src/fs-io.mts, symbol: namespaceAsserted }
+        - { file: src/fs-io.mts, symbol: namespaceUnasserted }
+        - { file: src/fs-io.mts, symbol: defaultAsserted }
+        - { file: src/fs-io.mts, symbol: defaultUnasserted }
+        - { file: src/fs-io.mts, symbol: bareDefaultAsserted }
+        - { file: src/fs-io.mts, symbol: bareDefaultUnasserted }
+        - { file: src/fs-io.mts, symbol: defaultPromisesAsserted }
+        - { file: src/fs-io.mts, symbol: defaultPromisesUnasserted }
+        - { file: src/fs-io.mts, symbol: promisesAsserted }
+        - { file: src/fs-io.mts, symbol: promisesUnasserted }
+        - { file: src/fs-io.mts, symbol: computedMember }
+        - { file: src/fs-io.mts, symbol: aliasedDefault }
+        - { file: src/fs-io.mts, symbol: otherModuleAsserted }
+        - { file: src/fs-io.mts, symbol: dynamicRequire }
+        - { file: src/fs-io.mts, symbol: callbackAsserted }
+        - { file: src/fs-io.mts, symbol: writeOnly }
+        - { file: src/fs-io.mts, symbol: fsSuppressed }
+        - { file: src/fs-io.mts, symbol: paramCallback }
+        - { file: src/fs-io.mts, symbol: deadFs }
+      assertions:
+        - { module: 'node:assert/strict', export: equal }

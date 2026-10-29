@@ -11,7 +11,7 @@ fn resolve_imported_call_target(
 ) -> Option<ResolvedCallTarget> {
     let (local, requested_export) = match callee.split_once('.') {
         Some((local, member)) if !member.contains('.') => (local, Some(member)),
-        Some(_) => return None,
+        Some(_) => return resolve_external_nested_member(edge_inputs, resolver, path, file, callee),
         None => (callee, None),
     };
     let binding = file
@@ -85,6 +85,30 @@ fn resolve_imported_call_target(
             ResolvedCallTarget::Unknown
         }
     })
+}
+
+/// A default or namespace import member chain such as `fs.promises.readFile`
+/// names an external export path only when the module is not a repository file;
+/// repository modules keep their prior unresolved behavior.
+fn resolve_external_nested_member(
+    edge_inputs: &GraphEdgeBuildInputs<'_>,
+    resolver: &dyn ImportResolution,
+    path: &std::path::Path,
+    file: &CallableFileIndex,
+    callee: &str,
+) -> Option<ResolvedCallTarget> {
+    use crate::codebase::dependencies::extract::ImportedBindingKind;
+    let local = callee.split_once('.').map(|(local, _)| local)?;
+    let binding = file.imported.get(local)?;
+    if binding.kind == ImportedBindingKind::Named
+        || resolver
+            .resolve(&binding.specifier, path)
+            .and_then(|target| edge_inputs.graph_files.visible_path(&target))
+            .is_some()
+    {
+        return None;
+    }
+    module_export_target(file, callee, None, None)
 }
 
 fn resolve_imported_class_static_member(

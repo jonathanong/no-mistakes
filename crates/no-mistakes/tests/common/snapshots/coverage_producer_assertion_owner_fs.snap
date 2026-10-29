@@ -1,0 +1,114 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fs_io": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/fs-io.mts",
+          "line": 13,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#fsUnasserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function fsUnasserted() { readFileSync('result', 'utf8'); }",
+          "target": "fsUnasserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 15,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#pureUnasserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function pureUnasserted() { return 1; }",
+          "target": "pureUnasserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 18,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#namespaceUnasserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function namespaceUnasserted() { fsNs.readFileSync('a', 'utf8'); }",
+          "target": "namespaceUnasserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 20,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#defaultUnasserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function defaultUnasserted() { fsDefault.readFileSync('a', 'utf8'); }",
+          "target": "defaultUnasserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 22,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#bareDefaultUnasserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function bareDefaultUnasserted() { bareFs.existsSync('a'); }",
+          "target": "bareDefaultUnasserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 24,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#defaultPromisesUnasserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function defaultPromisesUnasserted() { bareFs.promises.readFile('a'); }",
+          "target": "defaultPromisesUnasserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 26,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#promisesUnasserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export async function promisesUnasserted() { await bareRead('a', 'utf8'); }",
+          "target": "promisesUnasserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 30,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedMember",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function computedMember(name: 'readFileSync') { equal(fsDefault[name]('a', 'utf8'), 'x'); }",
+          "target": "computedMember"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 32,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#otherModuleAsserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function otherModuleAsserted() { equal(hostname(), 'h'); }",
+          "target": "otherModuleAsserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 33,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#dynamicRequire",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamicRequire() { equal(require('node:fs').readFileSync('a', 'utf8'), 'x'); }",
+          "target": "dynamicRequire"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 35,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#callbackAsserted",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }",
+          "target": "callbackAsserted"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 40,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#paramCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function paramCallback(done: () => void) { fsNs.readFile('a', done); equal(1, 1); }",
+          "target": "paramCallback"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
