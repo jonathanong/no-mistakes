@@ -72,7 +72,9 @@ impl<'a> Projector<'a, '_> {
                 }
                 origin
             }
-            _ => PathOrigin::unknown(),
+            _ => self
+                .getter_origin(call, depth)
+                .unwrap_or_else(PathOrigin::unknown),
         }
     }
 }
@@ -98,7 +100,7 @@ pub(in super::super) fn imported_locals(
 }
 
 /// Leftmost identifier of a static member chain.
-pub(super) fn callee_root<'a>(expression: &'a Expression<'_>) -> Option<&'a str> {
+pub(in super::super) fn callee_root<'a>(expression: &'a Expression<'_>) -> Option<&'a str> {
     match expression.get_inner_expression() {
         Expression::Identifier(id) => Some(id.name.as_str()),
         Expression::StaticMemberExpression(member) => callee_root(&member.object),

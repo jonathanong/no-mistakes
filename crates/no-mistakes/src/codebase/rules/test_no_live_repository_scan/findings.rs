@@ -1,4 +1,5 @@
 use super::super::RuleFinding;
+use super::config::RuntimeAsset;
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::ResolvedCallSite;
 use crate::codebase::ts_source::relative_slash_path;
@@ -40,6 +41,24 @@ pub(super) fn unresolved(
             site.source_callee
         ),
         "unresolved root",
+    )
+}
+
+pub(super) fn runtime_asset(
+    root: &Path,
+    application: &RuleDef,
+    site: &ResolvedCallSite,
+    asset: &RuntimeAsset,
+) -> RuleFinding {
+    build(
+        root,
+        application,
+        site,
+        format!(
+            "runtime asset: `{}` enumerates `{}`, which `runtimeAssets` declares as shipped input ({}). Listed for review, not a repository scan. If this tree is policy or source, remove the declaration so the read is reported.",
+            site.source_callee, asset.root, asset.reason
+        ),
+        "runtime asset",
     )
 }
 

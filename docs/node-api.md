@@ -472,8 +472,10 @@ Configured [`production-exports-only-used-by-tests`](rules/production-exports-on
 
 [`test-no-live-repository-scan`](rules/test-no-live-repository-scan.md) runs
 through the existing asynchronous `check()` and `analyzeProject()` APIs; it adds
-no new entrypoint. Type its options with `TestNoLiveRepositoryScanOptions`,
-exported from `no-mistakes/types`.
+no new entrypoint. Type its options with `TestNoLiveRepositoryScanOptions`
+(including `runtimeAssets` entries, `TestNoLiveRepositoryScanRuntimeAsset`),
+exported from `no-mistakes/types`. Runtime-asset reads are advisories with
+target `runtime asset` in the check report.
 
 The reports share CommonJS binding provenance with the canonical call graph,
 retain unresolved computed loads, and distinguish shared temporary roots from

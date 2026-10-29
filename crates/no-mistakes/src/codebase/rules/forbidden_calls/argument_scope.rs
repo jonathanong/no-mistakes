@@ -50,14 +50,19 @@ impl ArgumentFactScope {
 }
 
 fn for_config(root: &Path, config: &NoMistakesConfig) -> Option<Arc<ArgumentFactScope>> {
-    // `test-no-live-repository-scan` always reads the first argument's path origin.
+    // `test-no-live-repository-scan` reads path origins and `process.env` writes
+    // from every graph file: a write in a file its `include` removes (a Vitest
+    // setup file) still changes what an enumeration reads, so it is unfiltered.
+    if !config
+        .rule_applications(crate::codebase::rules::test_no_live_repository_scan::RULE_ID)
+        .is_empty()
+    {
+        return Some(Arc::new(ArgumentFactScope { filters: None }));
+    }
     let applications = config
         .rule_applications(super::RULE_ID)
         .into_iter()
         .filter(|application| requires_arguments(application))
-        .chain(
-            config.rule_applications(crate::codebase::rules::test_no_live_repository_scan::RULE_ID),
-        )
         .collect::<Vec<_>>();
     if applications.is_empty() {
         return None;

@@ -32,6 +32,7 @@ const UNRESOLVED_NAMES: &[&str] = &[
     "globSync",
 ];
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Scan {
     /// A call whose target resolves to an enumerating import.
     Resolved,
@@ -59,6 +60,15 @@ pub(super) fn scan_of(site: &ResolvedCallSite, extra: &[Enumerator]) -> Option<S
     }
     let terminal = site.source_callee.rsplit('.').next().unwrap_or_default();
     (site.has_unknown_target() && UNRESOLVED_NAMES.contains(&terminal)).then_some(Scan::Unresolved)
+}
+
+/// A mocked method name that enumerates, so forwarding it is a pass-through.
+pub(super) fn spied_enumerator(name: &str, extra: &[Enumerator]) -> bool {
+    FS_ENUMERATORS.contains(&name)
+        || UNRESOLVED_NAMES.contains(&name)
+        || extra
+            .iter()
+            .any(|extra| extra.export.as_deref() == Some(name))
 }
 
 pub(super) fn enumerates(specifier: &str, export_path: &str, extra: &[Enumerator]) -> bool {

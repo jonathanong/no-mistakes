@@ -372,6 +372,7 @@
   "TestNoLiveRepositoryScanEnumerator",
   "TestNoLiveRepositoryScanOptions",
   "TestNoLiveRepositoryScanRoot",
+  "TestNoLiveRepositoryScanRuntimeAsset",
   "TestPlan",
   "TestPlanFramework",
   "TestPlanGroup",

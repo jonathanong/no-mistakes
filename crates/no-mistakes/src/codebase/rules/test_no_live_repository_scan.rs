@@ -1,8 +1,11 @@
 //! Reject directory enumeration of the live repository reachable from test roots.
+mod assets;
 mod config;
 mod enumerators;
 mod findings;
 mod node_loaders;
+mod owned;
+pub(crate) use owned::Resolution;
 mod provenance;
 mod reachable;
 mod requires;
@@ -45,6 +48,7 @@ pub(crate) fn check_with_graph(
     vitest: Option<&super::PreparedVitestProjectCatalog>,
     graph_files: &[PathBuf],
     facts: &dyn crate::codebase::dependencies::graph::TsFactLookup,
+    resolution: &Resolution<'_>,
 ) -> Result<AnalysisDiagnostics> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut diagnostics = AnalysisDiagnostics::default();
@@ -66,6 +70,7 @@ pub(crate) fn check_with_graph(
         let filter = super::path_filter::RulePathFilter::new(&root, config, application)?;
         let fixture_dirs = options.fixture_dirs();
         let mut sites = requires::Sites::default();
+        let owners = std::cell::OnceCell::new();
         for site in graph.resolved_call_sites() {
             if site.invocation != crate::codebase::dependencies::extract::InvocationKind::Call
                 || !reachable.contains(&site_source_node(site))
@@ -85,8 +90,17 @@ pub(crate) fn check_with_graph(
             let Some(scan) = scan_of(site, &options.enumerators) else {
                 continue;
             };
-            let origin = facts
-                .get_ts_facts(&site.file)
+            let ts = facts.get_ts_facts(&site.file);
+            // A mock that forwards its arguments unchanged is not a root of its own;
+            // the callers of the mocked function are judged where they enumerate.
+            if ts
+                .and_then(owned::path_provenance)
+                .and_then(|provenance| provenance.pass_through.get(&site.offset))
+                .is_some_and(|spied| enumerators::spied_enumerator(spied, &options.enumerators))
+            {
+                continue;
+            }
+            let origin = ts
                 .and_then(|ts| call_argument_values(ts, site.offset))
                 .and_then(|values| values.path.as_ref());
             let verdict = match scan {
@@ -95,12 +109,35 @@ pub(crate) fn check_with_graph(
                 }
                 Scan::Resolved => classify(origin, &fixture_dirs),
             };
+            let owned = matches!(verdict, Verdict::Unresolved(_))
+                && scan == Scan::Resolved
+                && origin.is_some_and(|origin| {
+                    owners
+                        .get_or_init(|| {
+                            owned::Owners::new(graph, &reachable, facts, graph_files, resolution)
+                        })
+                        .owned(origin, site, facts, &fixture_dirs)
+                });
             match verdict {
                 Verdict::Allowed => {}
+                _ if owned => {}
                 Verdict::Live(why) => {
-                    diagnostics
-                        .findings
-                        .push(findings::live(&root, application, site, why))
+                    let asset = origin.and_then(|origin| {
+                        assets::declared(origin, &root, &site.file, &options.runtime_assets)
+                    });
+                    match asset {
+                        Some(asset) => diagnostics.advisories.push(findings::runtime_asset(
+                            &root,
+                            application,
+                            site,
+                            asset,
+                        )),
+                        None => {
+                            diagnostics
+                                .findings
+                                .push(findings::live(&root, application, site, why))
+                        }
+                    }
                 }
                 Verdict::Unresolved(why) => {
                     let finding = findings::unresolved(&root, application, site, why);
