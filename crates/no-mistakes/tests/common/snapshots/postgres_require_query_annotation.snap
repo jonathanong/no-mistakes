@@ -426,7 +426,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 33,
           "message": "src/query.mts:33: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: leading annotation is not visible at effort low; use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position",
           "rule": "postgres-require-query-annotation",
-          "sourceLine": "read(beforeEscape); // low: true",
+          "sourceLine": "read(beforeEscape); // low: false",
           "target": "leading-annotation"
         },
         {

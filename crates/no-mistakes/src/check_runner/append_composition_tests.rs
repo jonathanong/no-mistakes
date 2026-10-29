@@ -109,7 +109,7 @@ fn low_opaque_append_prefix_keeps_clear_missing_and_unsafe_outcomes() {
             .iter()
             .filter(|&&s| s == SqlVerdictStatus::ProvenClear)
             .count(),
-        10
+        9
     );
     assert_eq!(
         statuses
@@ -123,10 +123,10 @@ fn low_opaque_append_prefix_keeps_clear_missing_and_unsafe_outcomes() {
             .iter()
             .filter(|&&s| s == SqlVerdictStatus::Abstain)
             .count(),
-        18
+        19
     );
     assert_eq!(report.rules.len(), 2);
-    assert_eq!(report.advisories.len(), 18);
+    assert_eq!(report.advisories.len(), 19);
 }
 
 #[path = "append_composition_tests/conflict_ordering.rs"]

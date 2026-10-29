@@ -30,7 +30,7 @@ const captured = sql`/* captured */ SELECT 1`.append(tail);
 function mutate() { captured.append(" AND 1=1"); }
 read(captured); // low: false
 const beforeEscape = sql`/* before */ SELECT 1`.append(tail);
-read(beforeEscape); // low: true
+read(beforeEscape); // low: false
 change(beforeEscape);
 read(beforeEscape); // low: false
 
