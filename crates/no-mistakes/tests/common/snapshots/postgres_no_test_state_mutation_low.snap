@@ -478,5 +478,297 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "unprovenMemberQuerySql": 2,
       "warnings": []
     }
+  },
+  "member_arguments_low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/member.test.ts",
+          "line": 10,
+          "message": "tests/member.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ 0: 'DROP TABLE app.numeric_key' }); // ADVISE: unknown object shape",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 13,
+          "message": "tests/member.test.ts:13: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query(t); // ADVISE: local const SQL",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 14,
+          "message": "tests/member.test.ts:14: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ text: t }); // ADVISE: local const text field",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 15,
+          "message": "tests/member.test.ts:15: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query('DROP TABLE app.concat_' + 'sql'); // ADVISE: concatenation",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 16,
+          "message": "tests/member.test.ts:16: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query(String.raw`DROP TABLE app.raw_sql`); // ADVISE: String.raw",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 17,
+          "message": "tests/member.test.ts:17: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query(['DROP TABLE app.joined_sql'].join('')); // ADVISE: joined SQL",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 18,
+          "message": "tests/member.test.ts:18: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query(...['DROP TABLE app.spread_sql']); // ADVISE: spread argument",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 19,
+          "message": "tests/member.test.ts:19: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ ['text']: 'DROP TABLE app.computed_key' }); // ADVISE: computed text key",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 23,
+          "message": "tests/member.test.ts:23: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p2.query(t); // ADVISE: local receiver alias",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 24,
+          "message": "tests/member.test.ts:24: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p3.query({ text: t }); // ADVISE: two-hop receiver alias",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 27,
+          "message": "tests/member.test.ts:27: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "letAlias.query(t); // ADVISE: let receiver alias",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 29,
+          "message": "tests/member.test.ts:29: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "varAlias.query(t); // ADVISE: var receiver alias",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 31,
+          "message": "tests/member.test.ts:31: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "db2.query(t); // ADVISE: default receiver alias",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 33,
+          "message": "tests/member.test.ts:33: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "ns2.query(t); // ADVISE: namespace receiver alias",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 8,
+          "message": "tests/member.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ ...{ text: 'DROP TABLE app.spread' } }); // ADVISE: spread object",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 9,
+          "message": "tests/member.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ 'text': 'DROP TABLE app.quoted_key' }); // ADVISE: quoted text key",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "member_arguments_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/member.test.ts",
+          "line": 10,
+          "message": "tests/member.test.ts:10: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ 0: 'DROP TABLE app.numeric_key' }); // ADVISE: unknown object shape",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 13,
+          "message": "tests/member.test.ts:13: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query(t); // ADVISE: local const SQL",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 14,
+          "message": "tests/member.test.ts:14: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ text: t }); // ADVISE: local const text field",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 15,
+          "message": "tests/member.test.ts:15: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query('DROP TABLE app.concat_' + 'sql'); // ADVISE: concatenation",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 16,
+          "message": "tests/member.test.ts:16: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query(String.raw`DROP TABLE app.raw_sql`); // ADVISE: String.raw",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 17,
+          "message": "tests/member.test.ts:17: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query(['DROP TABLE app.joined_sql'].join('')); // ADVISE: joined SQL",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 18,
+          "message": "tests/member.test.ts:18: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query(...['DROP TABLE app.spread_sql']); // ADVISE: spread argument",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 19,
+          "message": "tests/member.test.ts:19: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ ['text']: 'DROP TABLE app.computed_key' }); // ADVISE: computed text key",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 23,
+          "message": "tests/member.test.ts:23: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p2` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p2.query(t); // ADVISE: local receiver alias",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 24,
+          "message": "tests/member.test.ts:24: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p3` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p3.query({ text: t }); // ADVISE: two-hop receiver alias",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 25,
+          "message": "tests/member.test.ts:25: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p3` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p3.query(); // OUTSIDE: low alias fallback requires an argument",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 27,
+          "message": "tests/member.test.ts:27: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `letAlias` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "letAlias.query(t); // ADVISE: let receiver alias",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 29,
+          "message": "tests/member.test.ts:29: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `varAlias` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "varAlias.query(t); // ADVISE: var receiver alias",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 7,
+          "message": "tests/member.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query(); // OUTSIDE: low member fallback requires an argument",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 8,
+          "message": "tests/member.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ ...{ text: 'DROP TABLE app.spread' } }); // ADVISE: spread object",
+          "target": "undeclared-executor-type"
+        },
+        {
+          "file": "tests/member.test.ts",
+          "line": 9,
+          "message": "tests/member.test.ts:9: postgres-no-test-state-mutation application #0 has unresolved SQL for undeclared-executor-type: receiver `p` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "p.query({ 'text': 'DROP TABLE app.quoted_key' }); // ADVISE: quoted text key",
+          "target": "undeclared-executor-type"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/member.test.ts",
+          "line": 12,
+          "message": "tests/member.test.ts:12: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "const t = 'DROP TABLE app.const_sql';",
+          "target": "DROP TABLE"
+        }
+      ],
+      "unprovenMemberQuerySql": 11,
+      "warnings": []
+    }
   }
 }

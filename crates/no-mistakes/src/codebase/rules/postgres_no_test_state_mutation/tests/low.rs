@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn imported_member_argument_shapes_only_advise_on_a_direct_sql_text_field() {
+fn imported_member_calls_keep_every_argument_shape_and_receiver_alias_visible() {
     let root = fixture().join("effort-member-args");
     let path = root.join("tests/member.test.ts");
     let files = vec![path.clone()];
@@ -35,13 +35,25 @@ fn imported_member_argument_shapes_only_advise_on_a_direct_sql_text_field() {
         .iter()
         .filter(|row| row.advisory && row.file == "tests/member.test.ts")
         .map(|row| crate::codebase::ts_source::byte_offset_to_line(&source, row.span.0 as usize))
-        .collect::<Vec<_>>();
-    let quoted = source
+        .collect::<std::collections::BTreeSet<_>>();
+    let expected = source
         .lines()
-        .position(|line| line.contains("quoted text key stays advisory"))
-        .unwrap() as u32
-        + 1;
-    assert_eq!(lines, vec![quoted]);
+        .enumerate()
+        .filter(|(_, line)| line.contains("// ADVISE:"))
+        .map(|(index, _)| index as u32 + 1)
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(lines, expected);
+    for (index, _) in source
+        .lines()
+        .enumerate()
+        .filter(|(_, line)| line.contains("// OUTSIDE:"))
+    {
+        assert!(!facts.sql_verdicts().iter().any(|row| {
+            row.file == "tests/member.test.ts"
+                && crate::codebase::ts_source::byte_offset_to_line(&source, row.span.0 as usize)
+                    == index as u32 + 1
+        }));
+    }
 }
 
 #[test]

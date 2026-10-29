@@ -127,12 +127,23 @@ fn postgres_no_test_state_mutation_check_json_snapshot() {
 #[test]
 fn postgres_no_test_state_mutation_low_check_json_snapshot() {
     let root = fixture().join("effort-low");
+    let members = fixture().join("effort-member-args");
     // A separate snapshot keeps the low and max reports on the same saved SQL.
     assert_saved_fixture(
         "postgres_no_test_state_mutation_low",
         &[
             ("low", root.clone(), root.join("low.yml")),
             ("max", root.clone(), root.join("max.yml")),
+            (
+                "member_arguments_low",
+                members.clone(),
+                members.join("low.yml"),
+            ),
+            (
+                "member_arguments_max",
+                members.clone(),
+                members.join("max.yml"),
+            ),
         ],
     );
 }
