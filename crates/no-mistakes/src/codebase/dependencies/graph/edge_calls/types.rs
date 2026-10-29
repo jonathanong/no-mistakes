@@ -1,3 +1,5 @@
+type OpaqueExternalMembers = FxHashMap<u32, FxHashSet<String>>;
+
 /// A non-collapsing, statically resolved call occurrence. Graph edges dedupe
 /// adjacency; policy consumers use these records when each source line matters.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

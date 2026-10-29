@@ -106,6 +106,78 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function paramCallback(done: () => void) { fsNs.readFile('a', done); equal(1, 1); }",
           "target": "paramCallback"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 43,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#ternaryCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function ternaryCallback(flag: boolean, first: () => void, second: () => void) {",
+          "target": "ternaryCallback"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 46,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#logicalCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function logicalCallback(first: (() => void) | undefined, second: () => void) {",
+          "target": "logicalCallback"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 49,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#computedCallback",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function computedCallback() { fsNs.readFile('a', makeCallback()); }",
+          "target": "computedCallback"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 51,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#literalLastArgument",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function literalLastArgument() { fsNs.readFile('a', 'utf8'); }",
+          "target": "literalLastArgument"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 52,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#templateLiteralArgument",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function templateLiteralArgument() { fsNs.readFile('a', `utf8`); }",
+          "target": "templateLiteralArgument"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 53,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#typedLiteralArgument",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function typedLiteralArgument() { fsNs.readFile('a', 'utf8' as const); }",
+          "target": "typedLiteralArgument"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 54,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#dynamicTemplateArgument",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamicTemplateArgument(encoding: string) { fsNs.readFile('a', `${encoding}`); }",
+          "target": "dynamicTemplateArgument"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 55,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#spreadArguments",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function spreadArguments(...callbacks: Array<() => void>) { fsNs.readFile('a', ...callbacks); }",
+          "target": "spreadArguments"
+        },
+        {
+          "file": "src/fs-io.mts",
+          "line": 56,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/fs-io.mts#noArguments",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function noArguments() { fsNs.readFile(); }",
+          "target": "noArguments"
         }
       ],
       "warnings": []

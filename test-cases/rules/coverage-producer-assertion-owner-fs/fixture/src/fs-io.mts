@@ -49,3 +49,8 @@ export function logicalCallback(first: (() => void) | undefined, second: () => v
 export function computedCallback() { fsNs.readFile('a', makeCallback()); }
 function makeCallback(): () => void { return () => {}; }
 export function literalLastArgument() { fsNs.readFile('a', 'utf8'); }
+export function templateLiteralArgument() { fsNs.readFile('a', `utf8`); }
+export function typedLiteralArgument() { fsNs.readFile('a', 'utf8' as const); }
+export function dynamicTemplateArgument(encoding: string) { fsNs.readFile('a', `${encoding}`); }
+export function spreadArguments(...callbacks: Array<() => void>) { fsNs.readFile('a', ...callbacks); }
+export function noArguments() { fsNs.readFile(); }

@@ -56,6 +56,7 @@ fn mutator_call(base: &str, method: &str) -> ValueCall {
         context: None,
         callee: ValueExpression::Member(Arc::new(named(base)), method.into()),
         arguments: Arc::new(vec![named("tables")]),
+        last_argument_literal: false,
         bound: false,
         spread_at: None,
         once: false,
@@ -100,6 +101,7 @@ fn object_and_reflect_property_mutators_are_member_writes() {
                     calls: vec![ValueCall {
                         callee: named("assign"),
                         arguments: Arc::new(vec![named("tables")]),
+                        last_argument_literal: false,
                         source_callee: "assign".into(),
                         offset: 0,
                         end: 1,

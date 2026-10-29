@@ -1,7 +1,6 @@
 //! External-module call classification for assertion-owner traversal.
 use super::*;
 use crate::codebase::dependencies::extract::InvocationKind;
-use crate::codebase::dependencies::extract::ValueExpression;
 
 /// Node `fs` specifiers. Calls through them are ordinary external I/O: they
 /// are neither assertion evidence nor unresolved dispatch.
@@ -40,7 +39,7 @@ pub(super) fn fs_effect(site: &ResolvedCallSite) -> bool {
 
 /// Whether a live `fs` occurrence may invoke a callback argument later. Only
 /// callback-style APIs (neither `*Sync` nor promise-based) can; their last
-/// argument being a function value, identifier, or member keeps the producer
+/// argument being a non-literal value keeps the producer
 /// uncertain because that invocation is not a resolved call.
 pub(super) fn callback_argument(site: &ResolvedCallSite, facts: &dyn TsFactLookup) -> bool {
     let callback_style = site.targets().any(|candidate| {
@@ -59,14 +58,7 @@ pub(super) fn callback_argument(site: &ResolvedCallSite, facts: &dyn TsFactLooku
                 .filter(|call| call.offset == site.offset)
                 .any(|call| {
                     call.spread_at.is_some()
-                        || matches!(
-                            call.arguments.last(),
-                            Some(
-                                ValueExpression::Callable(_)
-                                    | ValueExpression::Named { .. }
-                                    | ValueExpression::Member(..)
-                            )
-                        )
+                        || (!call.arguments.is_empty() && !call.last_argument_literal)
                 })
         })
 }

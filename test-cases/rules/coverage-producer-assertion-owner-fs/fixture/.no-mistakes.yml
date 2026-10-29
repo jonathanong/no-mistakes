@@ -32,5 +32,10 @@ rules:
         - { file: src/fs-io.mts, symbol: logicalCallback }
         - { file: src/fs-io.mts, symbol: computedCallback }
         - { file: src/fs-io.mts, symbol: literalLastArgument }
+        - { file: src/fs-io.mts, symbol: templateLiteralArgument }
+        - { file: src/fs-io.mts, symbol: typedLiteralArgument }
+        - { file: src/fs-io.mts, symbol: dynamicTemplateArgument }
+        - { file: src/fs-io.mts, symbol: spreadArguments }
+        - { file: src/fs-io.mts, symbol: noArguments }
       assertions:
         - { module: 'node:assert/strict', export: equal }

@@ -39,6 +39,7 @@ fn prepared() -> (CallableFileIndex, ValueCall) {
             context: None,
         },
         arguments: std::sync::Arc::new(vec![]),
+        last_argument_literal: false,
         bound: false,
         spread_at: None,
         once: false,

@@ -1,4 +1,12 @@
 use super::*;
+
+pub(super) fn last_argument_is_literal(arguments: &[oxc_ast::ast::Argument<'_>]) -> bool {
+    arguments.last().and_then(|argument| argument.as_expression()).is_some_and(|expression| {
+        let expression = crate::codebase::ts_source::unwrap_ts_wrappers(expression);
+        expression.is_literal()
+            || matches!(expression, Expression::TemplateLiteral(template) if template.expressions.is_empty())
+    })
+}
 #[path = "binding_patterns.rs"]
 mod binding_patterns;
 #[path = "for_of_value_binding.rs"]
@@ -93,6 +101,7 @@ impl ImportCollector {
                 .unwrap_or_else(|| "<unknown>".to_string()),
             callee,
             arguments: std::sync::Arc::new(arguments),
+            last_argument_literal: last_argument_is_literal(&call.arguments),
             bound,
             spread_at,
             repeated: self.repeat_depth > self.call_repeat_base,

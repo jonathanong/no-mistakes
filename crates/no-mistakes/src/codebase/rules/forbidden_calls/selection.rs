@@ -125,6 +125,7 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
                 argument_facts
                     .and_then(|facts| facts.get_ts_facts(&site.file))
                     .and_then(|facts| super::arguments::for_call(facts, site.offset)),
+                graph.opaque_external_member_call(site),
             )
             .map(|finding| (site.offset, finding))
         })

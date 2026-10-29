@@ -1,0 +1,192 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "aliases": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/aliases.mts",
+          "import": "defaultFull",
+          "line": 15,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "defaultFull()",
+          "target": "unknown call"
+        },
+        {
+          "file": "src/aliases.mts",
+          "import": "nsFull",
+          "line": 13,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "nsFull()",
+          "target": "unknown call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/calls.mts",
+          "import": "local.a.b",
+          "line": 13,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "local.a.b()",
+          "target": "unknown call"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "ns.a.b",
+          "line": 6,
+          "message": "forbidden call (application #1): module export `some-pkg#a.b`",
+          "rule": "forbidden-calls",
+          "sourceLine": "ns.a.b()",
+          "target": "module export `some-pkg#a.b`"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "ns.default.b",
+          "line": 11,
+          "message": "forbidden call (application #1): module export `some-pkg#default.b`",
+          "rule": "forbidden-calls",
+          "sourceLine": "ns.default.b()",
+          "target": "module export `some-pkg#default.b`"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "value.a.b",
+          "line": 7,
+          "message": "forbidden call (application #1): module export `some-pkg#default.a.b`",
+          "rule": "forbidden-calls",
+          "sourceLine": "value.a.b()",
+          "target": "module export `some-pkg#default.a.b`"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "value.b",
+          "line": 12,
+          "message": "forbidden call (application #1): module export `some-pkg#default.b`",
+          "rule": "forbidden-calls",
+          "sourceLine": "value.b()",
+          "target": "module export `some-pkg#default.b`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/calls.mts",
+          "import": "ns.a.b",
+          "line": 6,
+          "message": "forbidden call (application #1): module export `some-pkg#a.b`",
+          "rule": "forbidden-calls",
+          "sourceLine": "ns.a.b()",
+          "target": "module export `some-pkg#a.b`"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "ns.default.b",
+          "line": 11,
+          "message": "forbidden call (application #1): module export `some-pkg#default.b`",
+          "rule": "forbidden-calls",
+          "sourceLine": "ns.default.b()",
+          "target": "module export `some-pkg#default.b`"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "value.a.b",
+          "line": 7,
+          "message": "forbidden call (application #1): module export `some-pkg#default.a.b`",
+          "rule": "forbidden-calls",
+          "sourceLine": "value.a.b()",
+          "target": "module export `some-pkg#default.a.b`"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "value.b",
+          "line": 12,
+          "message": "forbidden call (application #1): module export `some-pkg#default.b`",
+          "rule": "forbidden-calls",
+          "sourceLine": "value.b()",
+          "target": "module export `some-pkg#default.b`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unconfigured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/calls.mts",
+          "import": "local.a.b",
+          "line": 13,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "local.a.b()",
+          "target": "unknown call"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "ns.a.b",
+          "line": 6,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "ns.a.b()",
+          "target": "unknown call"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "ns.default.b",
+          "line": 11,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "ns.default.b()",
+          "target": "unknown call"
+        },
+        {
+          "file": "src/calls.mts",
+          "import": "value.a.b",
+          "line": 7,
+          "message": "forbidden call (application #1): unknown call",
+          "rule": "forbidden-calls",
+          "sourceLine": "value.a.b()",
+          "target": "unknown call"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

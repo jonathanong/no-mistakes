@@ -137,6 +137,7 @@ impl ImportCollector {
                 .unwrap_or_else(|| "<unknown>".to_string()),
             callee: self.value_expression(&new.callee),
             arguments: std::sync::Arc::new(arguments),
+            last_argument_literal: super::collect::last_argument_is_literal(&new.arguments),
             bound: false,
             spread_at,
             once: false,

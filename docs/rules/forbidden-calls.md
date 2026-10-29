@@ -132,6 +132,17 @@ unresolved receivers such as typed callback parameters, renamed bindings,
 `this`, static computed members, and chained receivers whose source spelling
 ends in that member. Dynamic computed access (`page[method]()`) is not guessed.
 
+Static external namespace and default-import chains such as `ns.a.b()` expose
+their full module export path. Select `{ module: some-pkg, export: a.b }` for
+a namespace import or `export: default.a.b` for a default import. This names
+the target without proving the package's implementation. An unmatched opaque
+multi-member chain admitted by the import resolver still reports `unknown call`
+by default, including direct aliases of the complete callee.
+`unknownCalls: ignore` suppresses that fallback. Configured selector
+matches remain definite findings. One-member calls and repository resolution
+keep their existing behavior. This distinction preserves diagnostics when the
+shared graph gains more precise external target names.
+
 A callable declared in a TypeScript `namespace` body has the scope of its own
 name, as it does everywhere the graph names a scope, so `symbol: Twin` selects
 `new A.Twin()` and `new B.Twin()` alike when two namespaces of one file both

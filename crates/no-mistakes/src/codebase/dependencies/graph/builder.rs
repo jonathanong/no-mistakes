@@ -9,6 +9,7 @@ pub struct DepGraph {
     callable_export_resolutions: FxHashMap<(PathBuf, String), ExportedCallableResolution>,
     module_files: FxHashMap<String, FxHashSet<PathBuf>>,
     resolved_call_sites: Vec<ResolvedCallSite>,
+    opaque_external_members: FxHashMap<PathBuf, OpaqueExternalMembers>,
     /// Class ancestry records in deterministic preparation order. Empty unless
     /// the graph was built with [`GraphBuildPlan::extends`].
     class_declarations: Vec<ClassDeclaration>,

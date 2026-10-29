@@ -111,13 +111,16 @@ fn import_forms_and_external_calls_preserve_uncertainty_policy() {
 #[test]
 fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
     let root = crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-fs");
-    let findings = crate::codebase::rules::run_check(
-        &root,
-        Some(&root.join(".no-mistakes.yml")),
-        None,
-    )
-    .unwrap();
-    for symbol in ["ternaryCallback", "logicalCallback", "computedCallback"] {
+    let findings =
+        crate::codebase::rules::run_check(&root, Some(&root.join(".no-mistakes.yml")), None)
+            .unwrap();
+    for symbol in [
+        "ternaryCallback",
+        "logicalCallback",
+        "computedCallback",
+        "dynamicTemplateArgument",
+        "spreadArguments",
+    ] {
         assert!(
             findings.iter().any(|finding| finding.rule == RULE_ID
                 && finding.target.as_deref() == Some(symbol)
@@ -125,12 +128,19 @@ fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
             "{symbol}: {findings:#?}"
         );
     }
-    assert!(
-        findings.iter().any(|finding| finding.rule == RULE_ID
-            && finding.target.as_deref() == Some("literalLastArgument")
-            && !finding.message.contains("unanalyzable")),
-        "{findings:#?}"
-    );
+    for symbol in [
+        "literalLastArgument",
+        "templateLiteralArgument",
+        "typedLiteralArgument",
+        "noArguments",
+    ] {
+        assert!(
+            findings.iter().any(|finding| finding.rule == RULE_ID
+                && finding.target.as_deref() == Some(symbol)
+                && !finding.message.contains("unanalyzable")),
+            "{findings:#?}"
+        );
+    }
 }
 
 #[test]

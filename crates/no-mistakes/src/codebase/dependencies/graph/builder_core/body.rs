@@ -104,6 +104,7 @@
             ExportedCallableResolution,
         > = fx_map();
         let mut resolved_call_sites = Vec::new();
+        let mut opaque_external_members = fx_map();
         let mut class_declarations = Vec::new();
         let files = graph_files.indexable();
         for file in files {
@@ -163,10 +164,10 @@
                 callable_export_resolutions: &mut callable_export_resolutions,
                 module_files: &mut module_files,
                 resolved_call_sites: &mut resolved_call_sites,
+                opaque_external_members: &mut opaque_external_members,
                 class_declarations: &mut class_declarations,
             },
         )?;
-
         let class_ancestry = if plan.extends || plan.calls {
             class_ancestry_for_graph(
                 &edge_inputs,
