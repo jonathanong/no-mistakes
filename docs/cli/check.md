@@ -207,14 +207,15 @@ remain failures under every policy. Job permissions override workflow defaults,
 and a valid workflow without a checkout step is not a finding. See
 [checkout credential analysis](../rules/github-actions-checkout-credentials.md#analysis).
 
-`github-actions-job-permissions` reports jobs that inherit an explicit workflow
-write grant, including `id-token: write` and reusable-workflow callers. Explicit
-job permissions replace the workflow grant. Unknown declarations follow
-`options.unanalyzable`; see [job permissions](../rules/github-actions-job-permissions.md).
 For `pull_request_target`, PR-head refs fail even with false persistence;
 unresolved refs/repositories use the shared policy. Configure `defaultBranch`
 in rule YAML for literal default-branch names. Separate credential and ref risks
 can produce separate rows on one checkout.
+
+`github-actions-job-permissions` reports jobs that inherit an explicit workflow
+write grant, including `id-token: write` and reusable-workflow callers. Explicit
+job permissions replace the workflow grant. Unknown declarations follow
+`options.unanalyzable`; see [job permissions](../rules/github-actions-job-permissions.md).
 
 The opt-in [coverage-producer-assertion-owner](../rules/coverage-producer-assertion-owner.md) rule checks configured coverage producers for reachable assertions; uncertain dispatch follows `unanalyzable`.
 

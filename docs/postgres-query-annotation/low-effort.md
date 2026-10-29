@@ -81,6 +81,12 @@ when that binding has only prefix-preserving `.append(...)` uses before the
 single final return. Aliases, captures, property writes, and passing the
 builder to another helper keep the return unresolved.
 
+Chained same-file append helpers, where one local helper appends through another,
+are followed for at most 4 edges. A chain longer than that is not proven: the
+helper effect stays unresolved, so the builder's head is unresolved and
+reported under the shared `unanalyzable` policy. Cycles and imported helper
+chains are unresolved too.
+
 A same-file function declaration may also have explicit early `if` returns
 followed by a final top-level return. A final `switch` qualifies when every
 case returns a fixed head and its default either throws directly or calls an
