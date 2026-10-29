@@ -27,19 +27,22 @@ fn collect_created_require_selectors(
         .filter(|import| import.kind == ImportKind::Require)
         .map(|import| (import.specifier.as_str(), import.line))
         .collect();
-    for module in &file_facts.module_bindings {
-        for load in module.loads.iter().filter(|load| load.kind == "require") {
-            let line = line_of(load.span.start);
-            if !known.contains(&(load.specifier.as_str(), line)) {
-                selector_unknown(
-                    inputs,
-                    &load.specifier,
-                    line as usize,
-                    "dynamic or require selector",
-                    edges,
-                    sites,
-                );
-            }
+    let loads = file_facts
+        .module_bindings
+        .iter()
+        .flat_map(|module| module.loads.iter())
+        .filter(|load| load.kind == "require");
+    for load in loads {
+        let line = line_of(load.span.start);
+        if !known.contains(&(load.specifier.as_str(), line)) {
+            selector_unknown(
+                inputs,
+                &load.specifier,
+                line as usize,
+                "dynamic or require selector",
+                edges,
+                sites,
+            );
         }
     }
 }
