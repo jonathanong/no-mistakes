@@ -1,9 +1,18 @@
 use super::*;
 
+const UNSUPPORTED: &str = "CommonJS module/export objects are unsupported";
+
+/// A top-level `module.exports = ...` or `exports.name = ...` statement.
+pub(in crate::codebase::ts_source::module_facts::modules) struct ExportAssignment {
+    module: bool,
+    span: oxc_span::Span,
+}
+
 pub(in crate::codebase::ts_source::module_facts::modules) fn commonjs_reference(
     value: &IdentifierReference<'_>,
     node_id: oxc_semantic::NodeId,
     semantic: &Semantic<'_>,
+    assignments: &mut Vec<ExportAssignment>,
     facts: &mut TypeScriptModuleFacts,
 ) {
     if value.name != "module" && value.name != "exports" {
@@ -35,9 +44,59 @@ pub(in crate::codebase::ts_source::module_facts::modules) fn commonjs_reference(
             return;
         }
     }
-    unsupported(
-        facts,
-        value.span,
-        "CommonJS module/export objects are unsupported",
-    );
+    if top_level_assignment(value, node_id, semantic) {
+        assignments.push(ExportAssignment {
+            module: value.name == "module",
+            span: value.span,
+        });
+        return;
+    }
+    unsupported(facts, value.span, UNSUPPORTED);
+}
+
+/// One lone `module.exports = value`, or only `exports.name = value`
+/// statements, are the file's exports and cannot hide an importer. Any other
+/// combination is unsupported for importer analysis too.
+pub(in crate::codebase::ts_source::module_facts::modules) fn finish_commonjs(
+    assignments: Vec<ExportAssignment>,
+    facts: &mut TypeScriptModuleFacts,
+) {
+    let modules = assignments.iter().filter(|a| a.module).count();
+    let accepted = modules == 0 || assignments.len() == 1;
+    for assignment in assignments {
+        if accepted {
+            unsupported_importer_safe(facts, assignment.span, UNSUPPORTED);
+        } else {
+            unsupported(facts, assignment.span, UNSUPPORTED);
+        }
+    }
+}
+
+fn top_level_assignment(
+    value: &IdentifierReference<'_>,
+    node_id: oxc_semantic::NodeId,
+    semantic: &Semantic<'_>,
+) -> bool {
+    let nodes = semantic.nodes();
+    let AstKind::StaticMemberExpression(member) = nodes.parent_kind(node_id) else {
+        return false;
+    };
+    if member.optional || (value.name == "module" && member.property.name != "exports") {
+        return false;
+    }
+    let member_id = nodes.parent_id(node_id);
+    let AstKind::AssignmentExpression(assignment) = nodes.parent_kind(member_id) else {
+        return false;
+    };
+    let assignment_id = nodes.parent_id(member_id);
+    assignment.operator == AssignmentOperator::Assign
+        && assignment.left.span() == member.span
+        && matches!(
+            nodes.parent_kind(assignment_id),
+            AstKind::ExpressionStatement(_)
+        )
+        && matches!(
+            nodes.parent_kind(nodes.parent_id(assignment_id)),
+            AstKind::Program(_)
+        )
 }

@@ -11,13 +11,20 @@ pub(super) fn typed_mock_import(
     let Some(AstKind::CallExpression(call)) = loads::unwrapped_parent(node, semantic) else {
         return false;
     };
-    if call.optional
-        || call.arguments.len() != 2
+    if call.arguments.len() != 2
         || call
             .arguments
             .first()
             .is_none_or(|arg| arg.span() != import.span)
     {
+        return false;
+    }
+    vitest_mock_call(call, semantic) && call.arguments.get(1).is_some_and(inert_factory)
+}
+
+/// `vi.mock` or `vi.doMock` where `vi` is the non-type `vitest` import.
+pub(super) fn vitest_mock_call(call: &CallExpression<'_>, semantic: &Semantic<'_>) -> bool {
+    if call.optional {
         return false;
     }
     let Expression::StaticMemberExpression(member) = call.callee.get_inner_expression() else {
@@ -49,7 +56,6 @@ pub(super) fn typed_mock_import(
     }
     matches!(semantic.nodes().parent_kind(declaration), AstKind::ImportDeclaration(import)
         if !import.import_kind.is_type() && crate::ast::js_literal(&import.source) == "vitest")
-        && call.arguments.get(1).is_some_and(inert_factory)
 }
 
 // A factory can implicitly load the original module through an argument or an

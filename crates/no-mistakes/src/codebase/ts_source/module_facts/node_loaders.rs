@@ -6,6 +6,7 @@ use oxc_semantic::Semantic;
 use oxc_syntax::symbol::SymbolId;
 
 mod bindings;
+mod created;
 mod origins;
 #[cfg(test)]
 mod tests;

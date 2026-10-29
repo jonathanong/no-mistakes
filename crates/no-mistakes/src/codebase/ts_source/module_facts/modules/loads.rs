@@ -11,9 +11,10 @@ pub(super) fn dynamic(value: &ImportExpression<'_>, facts: &mut TypeScriptModule
         unsupported(facts, value.span, "Non-literal dynamic import specifier");
     }
 }
-pub(super) fn require(
-    value: &CallExpression<'_>,
+pub(super) fn require<'a>(
+    value: &CallExpression<'a>,
     semantic: &Semantic<'_>,
+    loaders: &mut super::super::node_loaders::Collector<'_, 'a>,
     facts: &mut TypeScriptModuleFacts,
 ) {
     let Expression::Identifier(callee) = value.callee.get_inner_expression() else {
@@ -30,10 +31,11 @@ pub(super) fn require(
         );
         return;
     }
-    if callee.name != "require" {
+    let created = has_runtime_binding(reference, semantic) && loaders.created_require(callee);
+    if callee.name != "require" && !created {
         return;
     }
-    if has_runtime_binding(reference, semantic) {
+    if has_runtime_binding(reference, semantic) && !created {
         unsupported(facts, value.span, "Shadowed require is not a module loader");
         return;
     }

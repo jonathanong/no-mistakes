@@ -1,7 +1,7 @@
 use super::*;
 
 mod commonjs;
-pub(super) use commonjs::commonjs_reference;
+pub(super) use commonjs::{commonjs_reference, finish_commonjs};
 pub(super) fn from(value: &ExportFromDeclaration<'_>, facts: &mut TypeScriptModuleFacts) {
     if value.specifiers.is_empty() {
         facts.exports.push(ModuleExport {

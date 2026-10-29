@@ -50,6 +50,7 @@ pub(super) fn collect(
         span: value.span.into(),
         bindings,
         qualifier: None,
+        picked: None,
     });
 }
 

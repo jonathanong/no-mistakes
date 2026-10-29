@@ -8,9 +8,11 @@ mod imports;
 pub(super) mod loads;
 mod mocks;
 mod selectors;
+mod type_selection;
 
 pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts, arguments: bool) {
     let mut node_loaders = super::node_loaders::Collector::new(semantic);
+    let mut assignments = Vec::new();
     let mut inline_bindings = facts
         .bindings
         .iter()
@@ -31,6 +33,7 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                 span: value.span.into(),
                 bindings: Vec::new(),
                 qualifier: imports::qualifier_root(value),
+                picked: type_selection::selected(value, node.id(), semantic),
             }),
             AstKind::ExportFromDeclaration(value) if root_module => exports::from(value, facts),
             AstKind::ExportAllDeclaration(value) if root_module => exports::all(value, facts),
@@ -55,14 +58,19 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
                 loads::dynamic(value, facts);
             }
             AstKind::CallExpression(value) => {
-                loads::require(value, semantic, facts);
+                loads::require(value, semantic, &mut node_loaders, facts);
                 if arguments {
                     node_loaders.collect(value, facts);
                 }
             }
             AstKind::IdentifierReference(value) => {
                 loads::indirect(value, node.id(), semantic, facts);
-                exports::commonjs_reference(value, node.id(), semantic, facts)
+                exports::commonjs_reference(value, node.id(), semantic, &mut assignments, facts)
+            }
+            AstKind::TSExternalModuleDeclaration(value)
+                if root_module && value.declare && value.id.value.contains('*') =>
+            {
+                unsupported_importer_safe(facts, value.span, UNSUPPORTED_FORM);
             }
             AstKind::TSExternalModuleDeclaration(_)
             | AstKind::TSNamespaceDeclaration(_)
@@ -70,15 +78,12 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
             | AstKind::TSExportAssignment(_)
             | AstKind::TSNamespaceExportDeclaration(_)
             | AstKind::WithStatement(_) => {
-                unsupported(
-                    facts,
-                    node.kind().span(),
-                    "Unsupported module or dynamic binding form",
-                );
+                unsupported(facts, node.kind().span(), UNSUPPORTED_FORM);
             }
             _ => {}
         }
     }
+    exports::finish_commonjs(assignments, facts);
 }
 
 pub(super) fn collect_require_bindings(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts) {
@@ -147,10 +152,19 @@ pub(super) fn name(value: &ModuleExportName<'_>) -> String {
         ModuleExportName::StringLiteral(value) => crate::ast::js_literal(value).into_owned(),
     }
 }
+const UNSUPPORTED_FORM: &str = "Unsupported module or dynamic binding form";
 fn unsupported(facts: &mut TypeScriptModuleFacts, span: oxc_span::Span, message: &str) {
     facts.diagnostics.push(ModuleDiagnostic {
         kind: "unsupported".into(),
         message: message.into(),
         span: Some(span.into()),
     });
+}
+fn unsupported_importer_safe(
+    facts: &mut TypeScriptModuleFacts,
+    span: oxc_span::Span,
+    message: &str,
+) {
+    unsupported(facts, span, message);
+    facts.importer_safe.push((span.start, span.end));
 }

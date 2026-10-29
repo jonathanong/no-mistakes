@@ -60,14 +60,21 @@ fn collect_type_import_selectors(
     {
         let line = line_of(import.span.start);
         let target = selector_target(inputs, &import.specifier).filter(|path| is_indexable(path));
-        match (&import.qualifier, target) {
-            (Some(name), Some(target)) => {
-                let site = SelectorImportSite {
-                    line,
-                    specifier: import.specifier.clone(),
-                    reason: "unresolved named selector",
-                };
-                push_type_selector(inputs, &target, name, site, exported, edges, sites);
+        let names = match (&import.qualifier, &import.picked) {
+            (Some(name), _) => Some(std::slice::from_ref(name)),
+            (None, Some(picked)) => Some(picked.as_slice()),
+            (None, None) => None,
+        };
+        match (names, target) {
+            (Some(names), Some(target)) => {
+                for name in names {
+                    let site = SelectorImportSite {
+                        line,
+                        specifier: import.specifier.clone(),
+                        reason: "unresolved named selector",
+                    };
+                    push_type_selector(inputs, &target, name, site, exported, edges, sites);
+                }
             }
             _ => selector_unknown(
                 inputs,

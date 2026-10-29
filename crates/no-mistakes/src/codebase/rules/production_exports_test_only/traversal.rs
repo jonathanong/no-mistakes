@@ -128,7 +128,11 @@ pub(super) fn incomplete_sources(
             continue;
         }
         if let Some(bindings) = &ts.module_bindings {
-            for diagnostic in &bindings.diagnostics {
+            for diagnostic in bindings.diagnostics.iter().filter(|diagnostic| {
+                diagnostic
+                    .span
+                    .is_none_or(|span| !bindings.importer_safe.contains(&(span.start, span.end)))
+            }) {
                 let line = diagnostic.span.as_ref().zip(ts.source.as_deref()).map_or(
                     1,
                     |(span, source)| {

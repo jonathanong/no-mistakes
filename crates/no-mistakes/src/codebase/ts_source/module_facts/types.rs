@@ -64,6 +64,11 @@ pub struct ModuleImport {
     /// Leading export name of an `import("x").Name` type reference.
     #[serde(skip)]
     pub(crate) qualifier: Option<String>,
+    /// Export names a bare-looking `typeof import("x")` provably selects. An
+    /// empty list is a type assertion that reads no export. `None` is a whole
+    /// module type.
+    #[serde(skip)]
+    pub(crate) picked: Option<Vec<String>>,
 }
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -106,6 +111,11 @@ pub struct TypeScriptModuleFacts {
     pub(crate) require_bindings: Vec<RequireBinding>,
     #[serde(skip)]
     pub(crate) mock_import_spans: Vec<ModuleSpan>,
+    /// Byte ranges of `unsupported` diagnostics that cannot hide an importer
+    /// (ambient wildcard modules, whole-file CommonJS export assignments).
+    /// They stay in `diagnostics` so module completeness is unchanged.
+    #[serde(skip)]
+    pub(crate) importer_safe: Vec<(u32, u32)>,
     /// Start offset and export names of dynamic imports with proven selectors.
     #[serde(skip)]
     pub(crate) dynamic_import_selectors: Vec<(u32, Vec<String>)>,
