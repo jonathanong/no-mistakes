@@ -21,7 +21,8 @@ Release job environment overrides enforce the same symbol-free
 profiles for those historical manifests. The tooling checkout never replaces the tagged Rust source or becomes Cargo's
 working directory.
 
-CI runs lint/source checks and package verification in separate 15-minute jobs.
+CI runs lint/source checks and package verification in separate jobs. Lint/source
+checks retain their 30-minute aggregate budget; package verification has 15 minutes.
 The package job retains the locked Cargo publish dry run and npm pack dry run;
 neither publishes an artifact. The required `Tests with coverage` aggregate
 requires both jobs to succeed, including rejecting cancelled or skipped package
@@ -95,11 +96,12 @@ Missing or malformed totals fail the check. This avoids the extra table and
 full JSON passes performed by native `--fail-under-*` flags; LCOV generation
 for CRAP and Codecov retains its existing settings.
 
-The lint and package job has a 30-minute aggregate deadline; its existing
-step deadlines remain in place, including ten minutes for Cargo package
-verification. An observed run spent about twelve minutes on setup and checks
-before reaching that verification, leaving too little of the former
-15-minute job budget for packaging, npm checks, and cleanup.
+The lint/source job retains its 30-minute aggregate deadline and existing step
+deadlines. Before package verification moved to its own job, an observed combined
+run spent about twelve minutes on setup and checks before reaching the ten-minute
+Cargo package step. The former 15-minute combined budget left too little time
+for packaging, npm checks, and cleanup; splitting the job does not shorten the
+remaining source-check budget.
 
 The Rust coverage job has a 25-minute aggregate deadline. In the same observed
 run, all 14,669 Rust tests, documentation tests, snapshot auditing, and coverage

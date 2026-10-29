@@ -305,7 +305,7 @@ const stepBudgetSeconds = (job, name) => {
   return Number(step.match(/\s+timeout-minutes: (\d+)/)[1]) * 60;
 };
 
-test("quality job leaves bounded package verification and cleanup time after observed checks", () => {
+test("split quality and package jobs retain observed check and verification budgets", () => {
   const observed = JSON.parse(
     readFileSync(
       path.join(root, "test-cases/rust-validation/fixture/quality-job-timing.json"),
@@ -313,20 +313,24 @@ test("quality job leaves bounded package verification and cleanup time after obs
     ),
   );
   const job = workflowJob("quality");
+  const packages = workflowJob("packages");
   const elapsed =
     (Date.parse(observed.cargoPublishStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
-  const publish = stepBudgetSeconds(job, "Check Cargo packages");
-  const npm = stepBudgetSeconds(job, "Check npm packages");
+  const publish = stepBudgetSeconds(packages, "Check Cargo packages");
+  const npm = stepBudgetSeconds(packages, "Check npm packages");
   const diagnostics = stepBudgetSeconds(job, "Diagnose Rust disk usage after failure");
   assert.equal(observed.conclusion, "cancelled");
   assert.deepEqual([publish, npm, diagnostics], [600, 120, 120]);
-  assert.match(job, /run: cargo publish --dry-run --locked -p no-mistakes/);
-  assert.match(job, /run: pnpm run pack:check/);
+  assert.match(packages, /run: cargo publish --dry-run --locked -p no-mistakes/);
+  assert.match(packages, /run: pnpm run pack:check/);
   assert.ok(
-    jobBudgetSeconds(job) >= elapsed + publish + npm + diagnostics,
-    "job budget must leave package and diagnostic steps their existing bounded time",
+    jobBudgetSeconds(job) >= elapsed + diagnostics,
+    "quality must retain room for the observed checks and bounded diagnostics",
   );
-  assert.ok(jobBudgetSeconds(job) <= 1800, "retain a job deadline of at most thirty minutes");
+  assert.equal(jobBudgetSeconds(job), 1800, "retain the existing thirty-minute quality budget");
+  assert.equal(stepBudgetSeconds(packages, "Diagnose Rust disk usage after failure"), diagnostics);
+  assert.ok(jobBudgetSeconds(packages) >= publish + npm + diagnostics);
+  assert.equal(jobBudgetSeconds(packages), 900, "retain the separate bounded package job");
 });
 
 test("coverage job reserves bounded post-cache time after completed tests and gates", () => {
