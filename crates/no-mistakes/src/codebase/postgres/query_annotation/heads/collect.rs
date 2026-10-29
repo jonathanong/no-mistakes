@@ -93,20 +93,7 @@ pub(crate) fn collect_prepared(
         }
     }
     let conditional_effects = if include_all_calls {
-        syntax
-            .calls
-            .iter()
-            .filter(|call| executor_calls.contains(&call.span))
-            .filter(|call| !matches!(calls.get(&call.span), Some(HeadProof::Literal)))
-            .filter_map(|call| {
-                bindings
-                    .conditional_prefix(call.head, call.span)
-                    .map(|required| effects::Conditional {
-                        span: call.span,
-                        required,
-                    })
-            })
-            .collect()
+        effects::collect_conditionals(&syntax, &bindings, &executor_calls, &calls)
     } else {
         Vec::new()
     };

@@ -261,6 +261,13 @@ assume a configured executor consumes SQL synchronously. Move those operations
 to a separate builder, or keep this builder limited to supported append-only uses.
 Imported append-only effects must be proven even when called after an executor
 read. A later supported append preserves the leading comment.
+Each binding's pending imported-effect requirements are normalized and checked
+once, then reused across its executor reads. This keeps repeated reads followed
+by many helper calls from multiplying proof work. Same-named bindings keep
+separate requirements.
+Reads of the same exact builder binding share one normalized set of imported
+effect requirements. The prepared projection checks that set once, then publishes
+the result to all of its reads; same-name bindings in other scopes stay separate.
 A const holding a plain literal string retains its head when passed elsewhere;
 passing an immutable string cannot change the original head.
 Captured builders and loop calls that might observe a previous iteration's

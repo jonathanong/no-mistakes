@@ -52,7 +52,7 @@ impl Bindings<'_> {
         &self,
         head: Head,
         call: Span,
-    ) -> Option<Vec<Span>> {
+    ) -> Option<(Span, &[Span])> {
         let reference = head.reference()?;
         let owner = self.owner(reference).filter(|owner| !owner.imported)?;
         let declaration = (owner.span.start, owner.span.end);
@@ -64,7 +64,9 @@ impl Bindings<'_> {
         {
             return None;
         }
-        self.append_safety.conditional(declaration, call)
+        self.append_safety
+            .conditional(declaration, call)
+            .map(|required| (declaration, required))
     }
     pub(in crate::codebase::postgres::query_annotation::heads) fn returned_local_prefix(
         &self,

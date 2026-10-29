@@ -166,15 +166,13 @@ impl Safety {
                 call.1 <= *limit && (*limit == u32::MAX || !self.repeated_calls.contains(&call))
             })
     }
-    pub fn conditional(&self, declaration: Span, call: Span) -> Option<Vec<Span>> {
+    pub fn conditional(&self, declaration: Span, call: Span) -> Option<&[Span]> {
         let limit = *self.conditional_limits.get(&declaration)?;
         let repeated = self.repeated_calls.contains(&call);
         if declaration.1 >= call.0 || call.1 > limit || (repeated && limit != u32::MAX) {
             return None;
         }
-        let mut required = self.pending_by_declaration.get(&declaration)?.clone();
-        required.sort_unstable();
-        required.dedup();
-        (!required.is_empty()).then_some(required)
+        let required = self.pending_by_declaration.get(&declaration)?;
+        (!required.is_empty()).then_some(required.as_slice())
     }
 }
