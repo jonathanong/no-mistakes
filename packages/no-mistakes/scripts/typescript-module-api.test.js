@@ -145,7 +145,12 @@ test(
         root,
         files: ["created-require.ts", "created-loader.ts"],
       });
-      const [shadowedCreated, renamedCreated] = created.modules;
+      const shadowedCreated = created.modules.find((entry) =>
+        entry.fileName.endsWith("created-require.ts"),
+      );
+      const renamedCreated = created.modules.find((entry) =>
+        entry.fileName.endsWith("created-loader.ts"),
+      );
       assert.equal(shadowedCreated.complete, false);
       assert.deepEqual(shadowedCreated.loads, []);
       assert.deepEqual(
