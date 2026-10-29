@@ -64,7 +64,7 @@ fn variant_limits_keep_known_sql_and_debug_output_private() {
                 ..Limits::default()
             },
         );
-        let values = engine.evaluate(&path, &call.arguments[0]).unwrap();
+        let values = engine.evaluate_at(&path, &call.arguments[0], None).unwrap();
         assert_eq!(values.len(), variants);
         assert_eq!(engine.residual(), variants == 1);
         let alternatives = values

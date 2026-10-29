@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use oxc_ast::ast::{FormalParameters, VariableDeclarator};
+mod advisory;
 
 // False = configured direct executor; true = configured executor factory.
 pub(super) fn sources(
@@ -57,18 +58,19 @@ impl Typed {
         (self.sources.get(&at) == Some(&true)).then_some(at)
     }
     pub(super) fn factory_binding(&mut self, variable: &VariableDeclarator<'_>) {
-        let Some(at) = variable
-            .init
-            .as_ref()
-            .and_then(|init| self.factory_source(init))
-        else {
+        let Some((at, advisory)) = variable.init.as_ref().and_then(|init| {
+            self.factory_source(init)
+                .map(|at| (at, false))
+                .or_else(|| self.advisory_factory_source(init).map(|at| (at, true)))
+        }) else {
             return;
         };
         if let BindingPattern::BindingIdentifier(binding) = &variable.id {
             if let Some(id) = self.bindings.get(&span(binding.span)) {
                 self.transports.insert(at);
                 self.selected.insert(*id);
-                self.factory_bindings.insert(*id, self.immutable);
+                self.factory_bindings
+                    .insert(*id, self.immutable && !advisory);
             }
         } else if let BindingPattern::ObjectPattern(object) = &variable.id {
             if object.properties.len() == 1

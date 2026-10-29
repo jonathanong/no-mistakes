@@ -39,6 +39,16 @@ or `await using` local is checked at its actual executor calls. Reassignment
 and unsupported defaults remain uncertain. Imported type identities can come
 from another module when explicitly declared in `effects.postgres.typedExecutors`
 and selected by `executorTypeNames`; matching only a type's spelling is insufficient.
+Likewise, `effects.postgres.returnedExecutors` can select an exact named runtime
+factory import from another module only when its export also appears in
+`executorFactoryNames`. The returned executor still needs an immutable local;
+a same-spelled import without a declaration or mutable result remains unproved. This
+selector does not certify members listed under `returnedMembers` or an executor
+after it escapes to opaque code. Only named imports establish the returned-executor
+proof. A namespace call to a declared factory export, or a default import from a module with a selected
+declared factory, retains uncertainty at calls on its returned local executor.
+The default import does not prove which named export it represents. Rewrite
+these forms as named imports to enable the proof.
 
 Receiver values used as proven SQL bind data or direct executor metadata do not
 create another SQL obligation. An ordinary aggregate or property read of an

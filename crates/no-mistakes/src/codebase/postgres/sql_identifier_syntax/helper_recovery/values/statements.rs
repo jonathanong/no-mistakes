@@ -52,6 +52,7 @@ impl Engine<'_> {
                             }
                         }
                     }
+                    Stmt::Throw => {}
                     // Unsupported effects never inherit a value-only exemption.
                     _ => {
                         self.failures += 1;

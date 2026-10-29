@@ -33,7 +33,9 @@ fn pure_sql_siblings_survive_failed_members_appends_templates_and_statements() {
         }
         let mut cache = Cache::default();
         let mut engine = Engine::new(&catalog, &mut cache, Limits::default());
-        let values = engine.evaluate(&path, &call.arguments[0]).expect(raw);
+        let values = engine
+            .evaluate_at(&path, &call.arguments[0], None)
+            .expect(raw);
         assert!(engine.residual(), "{raw}");
         for value in values {
             let sql = match value {
@@ -77,7 +79,7 @@ fn generated_bind_placements_are_checked_structurally_and_authored_text_is_liter
         }
         let mut cache = Cache::default();
         let values = Engine::new(&catalog, &mut cache, Limits::default())
-            .evaluate(&path, &call.arguments[0])
+            .evaluate_at(&path, &call.arguments[0], None)
             .expect(raw);
         let Value::Sql(sql) = &values[0] else {
             panic!()

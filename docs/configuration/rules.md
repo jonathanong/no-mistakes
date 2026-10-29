@@ -201,7 +201,10 @@ Unsupported shapes follow shared `options.unanalyzable` (`report`, `advise`, or
 keep their existing analysis. See the [bounded helper contract](../postgres-facts/low-helper-recovery.md).
 [`postgres-no-test-state-mutation`](../rules/postgres-no-test-state-mutation.md#effort)
 also supports `low` within its explicit test and helper globs. A complete
-banned statement before unknown SQL remains a finding.
+banned statement before unknown SQL remains a finding. Bounded helper sources
+must stay in configured test/helper roots and the rule application's scope;
+finite inline Vitest rows may select
+unmodified local SQL maps without using erased type unions as runtime bounds.
 
 [`finite-set-consistency`](../rules/finite-set-consistency.md#effort) supports
 `low` for `yaml-sequence`, `yaml-string-selector`, and `path-regex-capture`.

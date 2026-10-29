@@ -1,0 +1,176 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/budget.test.ts",
+          "line": 7,
+          "message": "tests/budget.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual row budget",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/escaped-map.test.ts",
+          "line": 7,
+          "message": "tests/escaped-map.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual escaped map",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/fake-runner.test.ts",
+          "line": 5,
+          "message": "tests/fake-runner.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(updates[field]); // residual fake runner",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/parameter-write.test.ts",
+          "line": 7,
+          "message": "tests/parameter-write.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual parameter write",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/property-write.test.ts",
+          "line": 7,
+          "message": "tests/property-write.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual property write",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/prototype.test.ts",
+          "line": 5,
+          "message": "tests/prototype.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, sql-variants-truncated",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual prototype key",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/shadowed-runner.test.ts",
+          "line": 8,
+          "message": "tests/shadowed-runner.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(updates[field]); // residual shadowed runner",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/unknown-rows.test.ts",
+          "line": 6,
+          "message": "tests/unknown-rows.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual unknown rows",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/positive.test.ts",
+          "line": 9,
+          "message": "tests/positive.test.ts:9: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "bad: { sql: 'DROP TABLE app.iterator_bad', value: unknownId }, // iterator DROP origin",
+          "target": "DROP TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/budget.test.ts",
+          "line": 7,
+          "message": "tests/budget.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual row budget",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/escaped-map.test.ts",
+          "line": 7,
+          "message": "tests/escaped-map.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual escaped map",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/fake-runner.test.ts",
+          "line": 5,
+          "message": "tests/fake-runner.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(updates[field]); // residual fake runner",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/parameter-write.test.ts",
+          "line": 7,
+          "message": "tests/parameter-write.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual parameter write",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/positive.test.ts",
+          "line": 12,
+          "message": "tests/positive.test.ts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(update.sql); // finite iterator call",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/property-write.test.ts",
+          "line": 7,
+          "message": "tests/property-write.test.ts:7: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual property write",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/prototype.test.ts",
+          "line": 5,
+          "message": "tests/prototype.test.ts:5: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual prototype key",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/shadowed-runner.test.ts",
+          "line": 8,
+          "message": "tests/shadowed-runner.test.ts:8: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(updates[field]); // residual shadowed runner",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/unknown-rows.test.ts",
+          "line": 6,
+          "message": "tests/unknown-rows.test.ts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(updates[field]); // residual unknown rows",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -21,6 +21,8 @@ impl Machine<'_> {
             Expr::Append(target, arg, mark) => self.eval_append(target, arg, *mark, path),
             Expr::Call(name, args) => self.call(name, args, path, false),
             Expr::Member(object, property) => self.eval_member(object, property, path),
+            // Computed reads are currently emitted only by the low projector.
+            Expr::ComputedMember(..) => None,
             Expr::Object(entries) => self.eval_object(entries, path),
             Expr::Array(elements) => self.eval_array(elements, path),
             Expr::Cond(test, then, otherwise) => self.eval_cond(test, then, otherwise, path),

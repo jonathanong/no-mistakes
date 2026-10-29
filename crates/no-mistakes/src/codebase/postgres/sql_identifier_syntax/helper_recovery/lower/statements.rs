@@ -64,9 +64,12 @@ pub(super) fn block(scope: &mut Scope<'_>, statements: &[Statement<'_>]) -> Opti
                 result.push(Stmt::If(test, yes, no));
             }
             Statement::BlockStatement(block_node) => result.extend(block(scope, &block_node.body)?),
-            // Throw arguments can execute or escape values. Closedness must inspect
-            // them rather than silently treating every throw as a harmless end.
-            Statement::ThrowStatement(_) => result.push(Stmt::Opaque),
+            Statement::SwitchStatement(statement) => {
+                result.extend(super::switch::lower(scope, statement))
+            }
+            Statement::ThrowStatement(statement) => {
+                result.push(Stmt::Expr(scope.raise(&statement.argument)))
+            }
             _ => result.push(Stmt::Opaque),
         }
     }

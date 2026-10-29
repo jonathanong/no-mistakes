@@ -120,7 +120,7 @@ mod selection;
 mod typed;
 use selection::Selection;
 mod project;
-pub(crate) use project::{collect, collect_with_types, collect_with_types_and_demand};
+pub(crate) use project::{collect, collect_with_declarations, collect_with_types};
 
 mod invalid;
 pub(crate) use invalid::collect_invalid;

@@ -1,10 +1,15 @@
 //! Bounded low-only helper facts, collected in the existing parsed-program walk.
 mod application;
+mod body_demand;
 mod budget;
 pub(crate) use application::ApplicationKey;
 mod catalog;
+mod construction;
+pub(super) mod iterator;
+mod locals;
 mod project;
 mod transports;
+mod validation;
 pub(crate) use project::project;
 mod recovered;
 mod sql_text;
@@ -13,7 +18,7 @@ mod value;
 mod values;
 pub(crate) use recovered::{ExecutionSite, Recovered};
 pub(crate) mod lower;
-use super::{span, template_binds::TemplateBinds, Span};
+use super::{span, Span};
 use crate::codebase::dependencies::extract::CallableId;
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{Argument, CallExpression, Function};
@@ -21,30 +26,71 @@ use oxc_ast::ast::{Argument, CallExpression, Function};
 #[derive(Clone)]
 pub(crate) struct FunctionModel {
     pub id: CallableId,
+    pub span: Span,
     pub binding: Option<usize>,
     pub lowered: lower::Lowered,
 }
 #[derive(Clone)]
 pub(crate) struct CallModel {
     pub span: Span,
+    pub construction: bool,
     pub callee: Option<usize>,
     pub members: Vec<String>,
     pub arguments: Vec<lower::Lowered>,
     pub caller: Option<CallableId>,
 }
+#[derive(Clone)]
+pub(crate) struct LocalModel {
+    pub declaration: Span,
+    pub initializer: Span,
+    pub lowered: lower::Lowered,
+}
 #[derive(Default)]
 pub(crate) struct FileModels {
+    pub dynamic_scope: bool,
+    pub iterators: FxHashMap<
+        CallableId,
+        Vec<
+            crate::codebase::postgres::embedded::walk::resolve::functions::provenance::RecoveredSql,
+        >,
+    >,
     pub stack: Vec<CallableId>,
     pub binding_functions: FxHashMap<usize, Option<CallableId>>,
     pub argument_owners: FxHashMap<Span, usize>,
     pub functions: FxHashMap<CallableId, FunctionModel>,
     pub calls: Vec<CallModel>,
+    pub locals: FxHashMap<usize, LocalModel>,
     pub executors:
         std::collections::BTreeMap<super::EmbeddedSqlOptions, crate::fx::FxHashSet<usize>>,
     pub sinks: std::collections::BTreeMap<super::EmbeddedSqlOptions, crate::fx::FxHashSet<Span>>,
     pub writes: crate::fx::FxHashSet<usize>,
 }
 impl FileModels {
+    pub fn local(
+        &mut self,
+        declaration: &oxc_ast::ast::VariableDeclaration<'_>,
+        ctx: &lower::Context<'_>,
+    ) {
+        locals::collect(self, declaration, ctx);
+    }
+    pub fn arrow(
+        &mut self,
+        function: &oxc_ast::ast::ArrowFunctionExpression<'_>,
+        ctx: &lower::Context<'_>,
+    ) {
+        if let Some(lowered) = lower::arrow(function, ctx) {
+            let id = CallableId(function.span.start);
+            self.functions.insert(
+                id,
+                FunctionModel {
+                    id,
+                    span: span(function.span),
+                    binding: None,
+                    lowered,
+                },
+            );
+        }
+    }
     pub fn function(&mut self, function: &Function<'_>, ctx: &lower::Context<'_>) {
         let Some(lowered) = lower::function(function, ctx) else {
             return;
@@ -54,12 +100,23 @@ impl FileModels {
             id,
             FunctionModel {
                 id,
+                span: span(function.span),
                 binding: function.id.as_ref().and_then(|id| ctx.bindings.id(id.span)),
                 lowered,
             },
         );
     }
-    pub fn call(&mut self, call: &CallExpression<'_>, ctx: &lower::Context<'_>) {
+    pub fn call(
+        &mut self,
+        call: &CallExpression<'_>,
+        ctx: &lower::Context<'_>,
+        lower_arguments: bool,
+    ) {
+        if super::chain(&call.callee)
+            .is_some_and(|(_, parts)| parts.last().is_some_and(|part| part == "eval"))
+        {
+            self.dynamic_scope = true;
+        }
         if call.optional
             || call
                 .arguments
@@ -74,6 +131,7 @@ impl FileModels {
         let members = chain.map_or(Vec::new(), |(_, parts)| parts.into_iter().skip(1).collect());
         self.calls.push(CallModel {
             span: span(call.span),
+            construction: false,
             callee,
             members,
             caller: self.stack.last().copied(),
@@ -81,45 +139,15 @@ impl FileModels {
                 .arguments
                 .iter()
                 .filter_map(Argument::as_expression)
-                .map(|arg| lower::expression(arg, ctx))
+                .map(|arg| {
+                    if lower_arguments {
+                        lower::expression(arg, ctx)
+                    } else {
+                        lower::opaque_expression(arg, ctx)
+                    }
+                })
                 .collect(),
         });
-    }
-    pub(in crate::codebase::postgres::sql_identifier_syntax) fn validate(
-        &mut self,
-        tags: &TemplateBinds,
-    ) {
-        self.functions
-            .retain(|_, function| function.lowered.tags.iter().all(|id| tags.is_valid(*id)));
-        self.calls.retain(|call| {
-            call.arguments
-                .iter()
-                .all(|argument| argument.tags.iter().all(|id| tags.is_valid(*id)))
-        });
-        self.calls.sort_by_key(|call| call.span);
-        for function in self.functions.values() {
-            if let Some(binding) = function.binding {
-                self.binding_functions
-                    .entry(binding)
-                    .and_modify(|id| *id = None)
-                    .or_insert(Some(function.id));
-            }
-        }
-        for (index, call) in self.calls.iter().enumerate() {
-            for argument in &call.arguments {
-                for (_, at) in &argument.references {
-                    self.argument_owners
-                        .entry(*at)
-                        .and_modify(|owner| {
-                            let previous = &self.calls[*owner];
-                            if call.span.1 - call.span.0 < previous.span.1 - previous.span.0 {
-                                *owner = index;
-                            }
-                        })
-                        .or_insert(index);
-                }
-            }
-        }
     }
 }
 
@@ -136,8 +164,25 @@ mod precision_tests;
 mod coverage_tests;
 
 #[cfg(test)]
+mod body_demand_tests;
+#[cfg(test)]
+mod model_demand_tests;
+#[cfg(test)]
+mod module_demand_tests;
+
+#[cfg(test)]
+#[path = "tests/abrupt.rs"]
+mod abrupt_tests;
+#[cfg(test)]
+#[path = "tests/locals.rs"]
+mod locals_tests;
+#[cfg(test)]
 mod patch_budget_tests;
 #[cfg(test)]
 mod patch_catalog_tests;
 #[cfg(test)]
 mod patch_support_tests;
+#[cfg(test)]
+mod predicate_tests;
+#[cfg(test)]
+mod switch_tests;

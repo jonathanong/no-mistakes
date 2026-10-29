@@ -11,7 +11,7 @@ impl Engine<'_> {
         call: &CallModel,
         executors: &FxHashSet<usize>,
     ) -> Option<Recovered> {
-        if !call.members.is_empty() {
+        if call.construction || !call.members.is_empty() {
             return None;
         }
         let key = self.catalog.callee(file, call.callee?)?;
@@ -84,6 +84,10 @@ impl Engine<'_> {
     ) -> Option<Vec<(State, Value)>> {
         if name == "operation:await" {
             return self.await_result(args, state);
+        }
+        if let Some(at) = name.strip_prefix("operation:throw:") {
+            let (start, end) = at.split_once(':')?;
+            return self.raise(args, state, (start.parse().ok()?, end.parse().ok()?));
         }
         let (name, site) = name.rsplit_once('@')?;
         let site = site.parse().ok()?;

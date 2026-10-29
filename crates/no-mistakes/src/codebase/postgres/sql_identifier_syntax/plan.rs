@@ -12,6 +12,7 @@ pub struct SqlIdentifierScan {
     paths: Arc<RuleGlobFilter>,
     application: Arc<RulePathFilter>,
     typed_executor_types: Arc<Vec<crate::config::v2::schema::EffectTargetConfig>>,
+    declared_factories: Arc<Vec<crate::config::v2::schema::EffectTargetConfig>>,
 }
 pub type SqlIdentifierScans = BTreeMap<EmbeddedSqlOptions, Vec<SqlIdentifierScan>>;
 impl SqlIdentifierScan {
@@ -33,6 +34,7 @@ impl SqlIdentifierScan {
             paths: Arc::new(RuleGlobFilter::new(&application.rule, include, exclude)?),
             application: Arc::new(RulePathFilter::new(root, config, application)?),
             typed_executor_types: Arc::new(Vec::new()),
+            declared_factories: Arc::new(Vec::new()),
         })
     }
     pub(crate) fn with_typed_executor_types(
@@ -49,6 +51,22 @@ impl SqlIdentifierScan {
     }
     pub(crate) fn typed_executor_types(&self) -> &[crate::config::v2::schema::EffectTargetConfig] {
         &self.typed_executor_types
+    }
+    pub(crate) fn with_declared_factories(
+        mut self,
+        factories: &[crate::config::v2::schema::EffectTargetConfig],
+    ) -> Self {
+        let mut factories = factories.to_vec();
+        factories.sort_by(|left, right| {
+            (&left.module, &left.export).cmp(&(&right.module, &right.export))
+        });
+        factories
+            .dedup_by(|left, right| left.module == right.module && left.export == right.export);
+        self.declared_factories = Arc::new(factories);
+        self
+    }
+    pub(crate) fn declared_factories(&self) -> &[crate::config::v2::schema::EffectTargetConfig] {
+        &self.declared_factories
     }
     pub(crate) fn includes(&self, root: &Path, path: &Path) -> bool {
         self.paths

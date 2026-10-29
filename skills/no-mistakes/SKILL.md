@@ -63,7 +63,8 @@ recovery; SQL-template interpolations in configured bind templates are values,
 not SQL text. Unsupported shapes follow `unanalyzable`, and selected `.sql`
 files retain their existing checks. See the
 [bounded helper contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-facts/low-helper-recovery.md).
-`postgres-no-test-state-mutation` supports `low` for configured test SQL;
+`postgres-no-test-state-mutation` supports `low` for configured test SQL,
+bounded source helpers, and finite inline Vitest row selections;
 complete banned statements before opaque SQL remain findings, while unknown
 tails follow `unanalyzable`. See its
 [Effort section](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-test-state-mutation.md#effort).

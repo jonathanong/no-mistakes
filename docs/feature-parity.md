@@ -182,6 +182,11 @@ when a branch ends in a direct throw. Its shared PostgreSQL SQL parser accepts
 `ANALYZE VERBOSE a, b` and per-relation columns such as `ANALYZE a(col), b`;
 malformed lists and parenthesized `ANALYZE` option lists remain unanalyzable.
 
+At low effort, test-state SQL can use bounded source helpers, literal-return
+switches with source-proven abrupt defaults, correlated strict predicates in
+fresh builders, and unmodified local maps selected by inline Vitest literal
+rows. Unsupported branches retain advisories rather than becoming clear.
+
 The opt-in `postgres-json-relation-ids` check inspects selected migration SQL
 and executed embedded SQL for JSON identifier keys without a same-row foreign
 key, plus unique fingerprint columns. CLI `check`, async Node `check()`, and

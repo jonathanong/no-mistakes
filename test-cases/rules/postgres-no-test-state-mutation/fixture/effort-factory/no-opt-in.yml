@@ -1,0 +1,14 @@
+effort: low
+effects:
+  postgres:
+    returnedExecutors:
+      - { module: '../db/index', export: beginTransaction }
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include: ['tests/declared.test.ts']
+    options:
+      testGlobs: ['tests/**/*.test.ts']
+      importSpecifier: '@example/db'
+      executorFactoryNames: [someOtherFactory]
+      unanalyzableSql: advise

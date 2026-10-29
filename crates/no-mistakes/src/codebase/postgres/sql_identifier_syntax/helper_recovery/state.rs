@@ -5,15 +5,21 @@ use crate::fx::FxHashMap;
 #[derive(Clone, Default)]
 pub(super) struct State {
     pub env: FxHashMap<String, Value>,
+    pub excluded_text: FxHashMap<String, Vec<String>>,
     pub heap: Vec<SqlText>,
     pub returned: Option<Value>,
 }
 impl State {
     pub fn bytes(&self) -> usize {
-        self.heap
+        self.excluded_text
             .iter()
-            .map(|text| text.raw.sql.len())
+            .map(|(name, values)| name.len() + values.iter().map(String::len).sum::<usize>())
             .sum::<usize>()
+            + self
+                .heap
+                .iter()
+                .map(|text| text.raw.sql.len())
+                .sum::<usize>()
             + self.env.values().map(Value::bytes).sum::<usize>()
     }
     pub fn allocate(&mut self, sql: SqlText) -> Value {

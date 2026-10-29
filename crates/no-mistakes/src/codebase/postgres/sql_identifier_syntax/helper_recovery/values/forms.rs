@@ -1,6 +1,27 @@
 use super::{Engine, State, Value};
 use crate::codebase::postgres::embedded::helpers::program::Expr;
 impl Engine<'_> {
+    pub(super) fn computed_member(
+        &mut self,
+        object: &Expr,
+        key: &Expr,
+        state: State,
+    ) -> Option<Vec<(State, Value)>> {
+        let mut out = Vec::new();
+        for (state, values) in self.all(&[object, key], state)? {
+            let [Value::Object(props), Value::Text(key)] = values.as_slice() else {
+                self.failures += 1;
+                continue;
+            };
+            // Own entries only: erased unions never authorize inherited keys.
+            if let Some((_, value)) = props.iter().rev().find(|(name, _)| name == &key.raw.sql) {
+                out.push((state, value.clone()));
+            } else {
+                self.failures += 1;
+            }
+        }
+        Some(out)
+    }
     pub(super) fn member(
         &mut self,
         object: &Expr,

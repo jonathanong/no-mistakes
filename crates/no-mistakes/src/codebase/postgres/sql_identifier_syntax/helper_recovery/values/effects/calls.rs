@@ -25,7 +25,7 @@ impl Engine<'_> {
         site: u32,
     ) -> Option<Vec<(State, Value)>> {
         let mut out = Vec::new();
-        for (state, args) in self.all(&args.iter().collect::<Vec<_>>(), state)? {
+        for (mut state, args) in self.all(&args.iter().collect::<Vec<_>>(), state)? {
             match args.first().and_then(|arg| state.text(arg)) {
                 Some(text) => self.executed.push(Execution {
                     file: self.file()?.to_path_buf(),
@@ -33,6 +33,13 @@ impl Engine<'_> {
                     sql: text,
                 }),
                 None => self.failures += 1,
+            }
+            if self.site.is_some_and(|span| span.0 == site)
+                && self.file() == self.root_file.as_deref()
+            {
+                // Later statements cannot alter SQL already supplied at this
+                // exact sink. Transport mode has no stop site and stays closed.
+                state.returned = Some(Value::Undefined);
             }
             out.push((state, Value::Promise(Box::new(Value::Scalar))));
         }

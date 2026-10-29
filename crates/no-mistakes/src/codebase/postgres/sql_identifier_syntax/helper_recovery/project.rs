@@ -26,9 +26,6 @@ pub(crate) fn project(
         }
         let models = &file.sql_identifier_syntax.recovery;
         for application in file.sql_identifier_syntax.application_keys() {
-            if application.rule == "postgres-no-test-state-mutation" {
-                continue;
-            }
             let profile = &application.profile;
             let catalog = PreparedCatalog {
                 application: Some(&application),
@@ -44,7 +41,10 @@ pub(crate) fn project(
             };
             let cache = caches.entry(application.clone()).or_default();
             for call in calls {
-                if !matches!(call.input, Input::Unknown) || !sinks.contains(&call.span) {
+                let partial = application.rule == "postgres-no-test-state-mutation"
+                    && finite_template_candidate(&call.input);
+                if !(matches!(call.input, Input::Unknown) || partial) || !sinks.contains(&call.span)
+                {
                     continue;
                 }
                 let Ok(index) = models
@@ -57,7 +57,22 @@ pub(crate) fn project(
                     continue;
                 };
                 let mut engine = Engine::new(&catalog, cache, Limits::default());
-                let mut recovered = if let Some(values) = engine.evaluate(path, argument) {
+                let iteration = models.calls[index].caller.and_then(|caller| {
+                    let rows = models.iterators.get(&caller)?;
+                    let parameters = &models.functions.get(&caller)?.lowered.program.params;
+                    let [parameter] = parameters.as_slice() else {
+                        return None;
+                    };
+                    let id = parameter.name.strip_prefix("binding:")?.parse().ok()?;
+                    (!models.writes.contains(&id)).then_some((&parameter.name, rows))
+                });
+                let values = match iteration {
+                    Some((parameter, rows)) => {
+                        engine.evaluate_iteration(path, argument, call.span, parameter, rows)
+                    }
+                    None => engine.evaluate_at(path, argument, Some(call.span)),
+                };
+                let mut recovered = if let Some(values) = values {
                     let mut recovered = Recovered {
                         residual: engine.residual(),
                         ..Default::default()
@@ -89,7 +104,7 @@ pub(crate) fn project(
                     };
                     recovered = recovered_site;
                 }
-                if !recovered.alternatives.is_empty() {
+                if !recovered.alternatives.is_empty() && (!partial || recovered.complete()) {
                     updates.push((
                         path.clone(),
                         application.clone(),
@@ -129,4 +144,23 @@ pub(crate) fn project(
             calls[index].input = Input::Recovered(recovered);
         }
     }
+}
+
+fn finite_template_candidate(input: &Input) -> bool {
+    let Input::Sql {
+        text,
+        holes,
+        parameterized: None,
+        ..
+    } = input
+    else {
+        return false;
+    };
+    let first = holes
+        .iter()
+        .filter_map(|(marker, _)| text.find(marker))
+        .min();
+    // Preserve the existing complete-statement prefix path. In particular,
+    // an invalid recovered suffix must never erase a known prefix finding.
+    first.is_some_and(|first| !text[..first].contains(';'))
 }

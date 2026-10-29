@@ -10,8 +10,64 @@ pub(super) struct Selection {
     pub typed: FxHashSet<usize>,
     pub unsupported: FxHashSet<usize>,
     pub advisory_receivers: FxHashSet<usize>,
+    pub advisory_factory_defaults: FxHashSet<usize>,
+    pub advisory_factory_members: FxHashMap<usize, FxHashSet<String>>,
 }
 impl Selection {
+    pub fn retains_recovery(&self) -> bool {
+        !self.selected.is_empty()
+            || !self.namespaces.is_empty()
+            || !self.factories.is_empty()
+            || !self.transports.is_empty()
+            || !self.runtime.is_empty()
+            || !self.typed.is_empty()
+            || !self.unsupported.is_empty()
+            || !self.advisory_receivers.is_empty()
+            || !self.advisory_factory_defaults.is_empty()
+            || !self.advisory_factory_members.is_empty()
+    }
+    pub fn add_declared_factories(
+        &mut self,
+        profile: &EmbeddedSqlOptions,
+        module: &TypeScriptModuleFacts,
+        declared: &[crate::config::v2::schema::EffectTargetConfig],
+    ) {
+        for import in &module.imports {
+            if import.type_only {
+                continue;
+            }
+            let names = declared
+                .iter()
+                .filter(|target| {
+                    target.module == import.specifier
+                        && profile.executor_factory_names.contains(&target.export)
+                })
+                .map(|target| target.export.clone())
+                .collect::<FxHashSet<_>>();
+            if names.is_empty() {
+                continue;
+            }
+            for binding in &import.bindings {
+                if binding.type_only {
+                    continue;
+                }
+                match binding.kind.as_str() {
+                    "named" if names.contains(&binding.imported) => {
+                        self.factories.insert(binding.binding_id);
+                        self.unsupported.insert(binding.binding_id);
+                    }
+                    "default" => {
+                        self.advisory_factory_defaults.insert(binding.binding_id);
+                    }
+                    "namespace" => {
+                        self.advisory_factory_members
+                            .insert(binding.binding_id, names.clone());
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
     pub fn new(profile: &EmbeddedSqlOptions, module: &TypeScriptModuleFacts) -> Self {
         let mut selected = FxHashSet::default();
         let mut namespaces = FxHashSet::default();
@@ -81,6 +137,8 @@ impl Selection {
             runtime: FxHashSet::default(),
             unsupported,
             advisory_receivers,
+            advisory_factory_defaults: FxHashSet::default(),
+            advisory_factory_members: FxHashMap::default(),
         }
     }
 }

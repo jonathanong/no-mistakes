@@ -1,3 +1,4 @@
+use super::refine::Refinement;
 use super::*;
 impl Engine<'_> {
     pub(super) fn binary(
@@ -12,6 +13,13 @@ impl Engine<'_> {
             let [left, right] = values.as_slice() else {
                 return None;
             };
+            let state = match self.refine_strict(expression, a, b, left, right, state) {
+                Refinement::Applied(refined) => {
+                    out.extend(refined);
+                    continue;
+                }
+                Refinement::Unchanged(state) => state,
+            };
             let value = match expression {
                 Expr::Add(..) => match self.concatenate(left, right) {
                     Some(value) => value,
@@ -20,8 +28,17 @@ impl Engine<'_> {
                         continue;
                     }
                 },
-                Expr::Eq(_, _, strict, negate) => equals(left, right, *strict)
-                    .map_or(Value::Scalar, |value| Value::Bool(value != *negate)),
+                Expr::Eq(_, _, strict, negate) => match equals(left, right, *strict) {
+                    Some(value) => Value::Bool(value != *negate),
+                    None => {
+                        if let Some(copied) = self.copy_state(&state) {
+                            out.push((copied, Value::Bool(!*negate)));
+                        } else {
+                            self.failures += 1;
+                        }
+                        Value::Bool(*negate)
+                    }
+                },
                 _ => return None,
             };
             out.push((state, value));

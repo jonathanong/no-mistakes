@@ -28,31 +28,37 @@ impl Engine<'_> {
             Expr::Null => vec![(state, Value::Null)],
             Expr::Undefined => vec![(state, Value::Undefined)],
             Expr::Num => vec![(state, Value::Scalar)],
-            Expr::Ident(name) => {
-                let value = state.env.get(name).cloned().or_else(|| {
-                    let id = name.strip_prefix("binding:")?.parse().ok()?;
-                    self.catalog
-                        .sink(self.file()?, id)
-                        .then_some(Value::Executor)
-                })?;
-                vec![(state, value)]
-            }
+            Expr::Ident(name) => self.identifier_value(name, state)?,
             Expr::Member(object, name) => self.member(object, name, state)?,
-
-            Expr::Object(entries) => self.object_values(entries, state)?,
-            Expr::Array(items) => self.array_values(items, state)?,
-            Expr::Call(name, args) => self.call(name, args, state)?,
-            Expr::Template(pieces, holes) => self.template(pieces, holes, state, false)?,
-            Expr::Sql(pieces, holes, true) => self.template(pieces, holes, state, true)?,
-            Expr::Append(target, argument, _) => self.append(target, argument, state)?,
-
-            Expr::Cond(test, yes, no) => self.conditional(test, yes, no, state)?,
-
-            _ => self.operator(expr, state)?,
+            Expr::ComputedMember(object, key) => self.computed_member(object, key, state)?,
+            _ => self.compound_value(expr, state)?,
         };
         let mut values = values;
         self.cap(&mut values);
         Some(values)
+    }
+    fn identifier_value(&mut self, name: &str, state: State) -> Option<Vec<(State, Value)>> {
+        if let Some(value) = state.env.get(name).cloned() {
+            return Some(vec![(state, value)]);
+        }
+        let id = name.strip_prefix("binding:")?.parse().ok()?;
+        if self.catalog.sink(self.file()?, id) {
+            Some(vec![(state, Value::Executor)])
+        } else {
+            self.local_value(id, state)
+        }
+    }
+    fn compound_value(&mut self, expr: &Expr, state: State) -> Option<Vec<(State, Value)>> {
+        match expr {
+            Expr::Object(entries) => self.object_values(entries, state),
+            Expr::Array(items) => self.array_values(items, state),
+            Expr::Call(name, args) => self.call(name, args, state),
+            Expr::Template(pieces, holes) => self.template(pieces, holes, state, false),
+            Expr::Sql(pieces, holes, true) => self.template(pieces, holes, state, true),
+            Expr::Append(target, argument, _) => self.append(target, argument, state),
+            Expr::Cond(test, yes, no) => self.conditional(test, yes, no, state),
+            _ => self.operator(expr, state),
+        }
     }
     pub(super) fn all(
         &mut self,

@@ -49,6 +49,34 @@ pub(super) fn typed_executor_types_by_profile(
         })
         .collect()
 }
+pub(super) fn declared_factories_by_profile(
+    root: &Path,
+    path: &Path,
+    plan: &CheckFactPlan,
+) -> Vec<(
+    EmbeddedSqlOptions,
+    Vec<crate::config::v2::schema::EffectTargetConfig>,
+)> {
+    plan.sql_identifier_profiles
+        .iter()
+        .filter_map(|(profile, scans)| {
+            let mut factories = scans
+                .iter()
+                .filter(|scan| scan.includes(root, path))
+                .flat_map(|scan| scan.declared_factories().iter().cloned())
+                .collect::<Vec<_>>();
+            if factories.is_empty() {
+                return None;
+            }
+            factories.sort_by(|left, right| {
+                (&left.module, &left.export).cmp(&(&right.module, &right.export))
+            });
+            factories
+                .dedup_by(|left, right| left.module == right.module && left.export == right.export);
+            Some((profile.clone(), factories))
+        })
+        .collect()
+}
 pub(super) fn collect(
     root: &Path,
     path: &Path,
@@ -64,18 +92,16 @@ pub(super) fn collect(
     let typed = typed_executor_types_by_profile(root, path, plan)
         .into_iter()
         .collect::<std::collections::BTreeMap<_, _>>();
-    let recover_helpers = plan.sql_identifier_profiles.values().any(|scans| {
-        scans
-            .iter()
-            .any(|scan| scan.includes(root, path) && scan.rule != "postgres-no-test-state-mutation")
-    });
-    let mut facts = if recover_helpers && typed.is_empty() {
+    let factories = declared_factories_by_profile(root, path, plan)
+        .into_iter()
+        .collect::<std::collections::BTreeMap<_, _>>();
+    let mut facts = if typed.is_empty() && factories.is_empty() {
         sql_identifier_syntax::collect(program, ts, source, &profiles)
-    } else if recover_helpers {
+    } else if factories.is_empty() {
         sql_identifier_syntax::collect_with_types(program, ts, source, &profiles, &typed)
     } else {
-        sql_identifier_syntax::collect_with_types_and_demand(
-            program, ts, source, &profiles, &typed, false,
+        sql_identifier_syntax::collect_with_declarations(
+            program, ts, source, &profiles, &typed, &factories,
         )
     };
     register(root, path, plan, &mut facts);

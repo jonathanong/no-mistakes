@@ -111,8 +111,8 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
     );
     let low_models = &facts.ts[&path].sql_identifier_syntax.recovery;
     assert!(
-        low_models.calls.is_empty() && low_models.functions.is_empty(),
-        "direct-only test-state SQL must not lower helper models"
+        !low_models.calls.is_empty() && !low_models.functions.is_empty(),
+        "selected test-state files must lower bounded helper models"
     );
     let (max, _) = run("max.yml");
     for (marker, origin) in [
@@ -144,7 +144,6 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
         "quoted semicolon stays safe",
         "commented semicolon stays safe",
         "invalid prefix template",
-        "mixed helper remains unproved",
         "escaped prefix stays unproved",
         "no-semicolon interpolation stays unproved",
         "mutable assignment stays unproved",
@@ -165,7 +164,6 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
         "residual invalid SQL",
         "safe prefix, residual tail",
         "invalid prefix template",
-        "mixed helper remains unproved",
         "escaped prefix stays unproved",
         "no-semicolon interpolation stays unproved",
         "mutable assignment stays unproved",
@@ -216,7 +214,7 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
 }
 
 #[test]
-fn mixed_low_sql_preserves_other_helper_recovery_without_proving_test_state() {
+fn mixed_low_sql_shares_bounded_helper_recovery_with_test_state() {
     let root = fixture().join("effort-low");
     let path = root.join("tests/mutation.test.ts");
     let files = vec![path.clone()];
@@ -243,7 +241,7 @@ fn mixed_low_sql_preserves_other_helper_recovery_without_proving_test_state() {
     let source = std::fs::read_to_string(&path).unwrap();
     let mixed_line = source
         .lines()
-        .position(|line| line.contains("mixed helper remains unproved"))
+        .position(|line| line.contains("mixed helper is recovered"))
         .unwrap() as u32
         + 1;
     let member_line = source
@@ -273,12 +271,7 @@ fn mixed_low_sql_preserves_other_helper_recovery_without_proving_test_state() {
             .iter()
             .find(|call| call.line == mixed_line)
             .unwrap();
-        if key.rule == RULE_ID {
-            assert!(matches!(
-                call.input,
-                crate::codebase::postgres::sql_identifier_syntax::Input::Unknown
-            ));
-        } else if key.rule == "postgres-no-offset" {
+        if key.rule == RULE_ID || key.rule == "postgres-no-offset" {
             assert!(matches!(
                 call.input,
                 crate::codebase::postgres::sql_identifier_syntax::Input::Recovered(_)
@@ -318,11 +311,11 @@ fn standalone_low_entrypoint_matches_prepared_rule_application() {
     let source = std::fs::read_to_string(&path).unwrap();
     let helper_line = source
         .lines()
-        .position(|line| line.contains("mixed helper remains unproved"))
+        .position(|line| line.contains("mixed helper is recovered"))
         .unwrap()
         + 1;
     assert!(
-        actual.iter().any(|finding| finding.line == helper_line
+        !actual.iter().any(|finding| finding.line == helper_line
             && finding.target.as_deref() == Some("unanalyzable-sql")),
         "{actual:?}"
     );

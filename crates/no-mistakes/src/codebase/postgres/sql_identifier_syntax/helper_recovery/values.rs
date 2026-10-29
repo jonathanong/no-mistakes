@@ -1,8 +1,10 @@
 //! Closed low-only evaluation: every call must resolve, including statements.
+mod abrupt;
 mod effects;
 mod execute;
 mod expressions;
 mod forms;
+mod locals;
 mod operators;
 mod sites;
 mod statements;
@@ -18,7 +20,7 @@ use crate::codebase::dependencies::extract::CallableId;
 use crate::fx::FxHashMap;
 use rustc_hash::FxHasher;
 use std::{
-    hash::Hasher,
+    hash::{Hash, Hasher},
     path::{Path, PathBuf},
 };
 
@@ -32,6 +34,8 @@ pub(super) trait Catalog {
     fn function(&self, key: &Key) -> Option<&Lowered>;
     fn callee(&self, from: &Path, binding: usize) -> Option<Key>;
     fn sink(&self, from: &Path, binding: usize) -> bool;
+    fn value_throw(&self, from: &Path, argument: super::Span) -> bool;
+    fn local(&self, from: &Path, binding: usize, site: super::Span) -> Option<&Lowered>;
 }
 #[derive(Clone)]
 struct Execution {
@@ -65,6 +69,8 @@ pub(super) struct Engine<'a> {
     stack: Vec<Key>,
     deepest: usize,
     root_file: Option<PathBuf>,
+    site: Option<super::Span>,
+    local_stack: Vec<(PathBuf, usize)>,
     failures: usize,
     effects: bool,
     executed: Vec<Execution>,
@@ -78,29 +84,12 @@ impl<'a> Engine<'a> {
             stack: Vec::new(),
             deepest: 0,
             root_file: None,
+            site: None,
+            local_stack: Vec::new(),
             failures: 0,
             effects: false,
             executed: Vec::new(),
         }
-    }
-    pub fn evaluate(&mut self, file: &Path, lowered: &Lowered) -> Option<Vec<Value>> {
-        self.root_file = Some(file.to_path_buf());
-        let mut state = State::default();
-        for (id, _) in &lowered.references {
-            state.env.insert(format!("binding:{id}"), Value::Scalar);
-        }
-        let mut values = Vec::new();
-        for state in self.block(&lowered.program.body, vec![state])? {
-            let Some(value) = state.materialize(state.returned.clone().unwrap_or(Value::Undefined))
-            else {
-                self.failures += 1;
-                continue;
-            };
-            if !values.contains(&value) {
-                values.push(value);
-            }
-        }
-        (!values.is_empty()).then_some(values)
     }
     pub fn residual(&self) -> bool {
         self.failures > 0
@@ -120,6 +109,11 @@ impl<'a> Engine<'a> {
         let before = self.budget.used();
         let before_bytes = self.budget.bytes();
         let mut hash = FxHasher::default();
+        self.effects.hash(&mut hash);
+        self.site.hash(&mut hash);
+        if self.site.is_some() {
+            self.root_file.hash(&mut hash);
+        }
         for arg in args {
             arg.cache_hash(&mut hash);
         }
@@ -155,6 +149,10 @@ impl<'a> Engine<'a> {
         self.stack.pop();
         self.deepest = self.deepest.max(ancestor_deepest);
         let mut outcomes = result?;
+        if lowered.asynchronous && outcomes.is_empty() {
+            // An async throw still returns a rejected Promise to a sync caller.
+            outcomes.push(Value::Scalar);
+        }
         if lowered.asynchronous {
             for value in &mut outcomes {
                 if !matches!(value, Value::Promise(_)) {
