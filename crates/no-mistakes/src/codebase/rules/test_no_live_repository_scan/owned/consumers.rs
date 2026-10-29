@@ -11,6 +11,18 @@ pub(crate) struct Resolution<'a> {
     pub(crate) workspace: Option<&'a IndexedWorkspaceMap>,
 }
 
+impl<'a> Resolution<'a> {
+    pub(crate) fn new(
+        catalog: Option<&'a TsConfigCatalog>,
+        prepared: Option<&'a crate::codebase::dependencies::graph::PreparedGraphConfig>,
+    ) -> Self {
+        Self {
+            catalog,
+            workspace: prepared.map(|prepared| prepared.workspace()),
+        }
+    }
+}
+
 #[derive(Default)]
 pub(super) struct Consumed {
     files: FxHashSet<PathBuf>,

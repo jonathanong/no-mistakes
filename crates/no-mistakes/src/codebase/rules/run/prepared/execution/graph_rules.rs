@@ -1,5 +1,7 @@
 use super::*;
 
+use crate::codebase::rules::test_no_live_repository_scan::Resolution;
+
 pub(super) struct GraphRuleRequest<'a> {
     pub(super) root: &'a Path,
     pub(super) config: &'a crate::config::v2::NoMistakesConfig,
@@ -73,10 +75,7 @@ pub(super) fn graph_rule_findings(
                 prepared_vitest_projects,
                 shared.graph_file_universe(),
                 shared,
-                &crate::codebase::rules::test_no_live_repository_scan::Resolution {
-                    catalog: tsconfig_catalog,
-                    workspace: prepared_graph.map(|prepared| prepared.workspace()),
-                },
+                &Resolution::new(tsconfig_catalog, prepared_graph),
             )
         })?;
         findings.extend(diagnostics.findings);
