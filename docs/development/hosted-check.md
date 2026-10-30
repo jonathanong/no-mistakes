@@ -10,7 +10,7 @@ It complements the ARM CodSpeed benchmarks; it does not replace them.
 
 ## Source selection and builds
 
-Nightly invocations resolve the candidate from current `main` HEAD. A manual
+Dispatches without `candidate_sha` resolve the candidate from current `main` HEAD. A
 dispatch can optionally set `candidate_sha` to an exact 40-character lowercase
 commit SHA to measure that immutable candidate; leaving it empty resolves current
 `main` as usual. The baseline always comes from GitHub's latest stable release
@@ -112,7 +112,7 @@ The healthy source-built analyzer was commit
 `84e887bf581544066820736bc8cfbb26c4ff0104`, binary SHA-256
 `b7811e0eef07d068a380c8e03ca17d54f4f6d745fcbf5115e401ff477c437185`,
 built with Rust 1.99.1 and default features. That historical record's npm
-comparator is historical evidence only; nightly runs resolve the latest release
+comparator is historical evidence only; current runs resolve the latest release
 and build it from source.
 
 The six observations span fresh four-core hosted runners and six CPU models.
@@ -127,7 +127,7 @@ Here `auto` covers four available workers, not a 24-worker machine.
 
 Recalibrate after an intentional workload, analyzer, compiler, runner-image or
 hardware change. Also review tighter limits when proposals stay well below the
-frozen budgets across several healthy nightly runs. First establish that the
+frozen budgets across several healthy runs. First establish that the
 candidate is healthy; never adopt a regression or a failed/censored sample as
 the new normal.
 
@@ -194,7 +194,7 @@ gh workflow run hosted-check.yml --ref main -f candidate_sha=<40-character-commi
 ```
 
 The resolver verifies that GitHub returns that exact commit before building it;
-provenance labels the candidate as `commit`. Empty input preserves nightly's
+provenance labels the candidate as `commit`. Empty input keeps the default
 current-main selection.
 
 Each run emits calibration proposals for review. It does not commit budgets,
