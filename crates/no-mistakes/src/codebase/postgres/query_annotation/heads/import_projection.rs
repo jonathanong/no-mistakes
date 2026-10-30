@@ -151,4 +151,5 @@ pub(crate) fn project(
             }
         }
     }
+    super::import_gate::retain(files, &resolve);
 }

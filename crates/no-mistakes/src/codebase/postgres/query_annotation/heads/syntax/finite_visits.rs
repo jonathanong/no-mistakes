@@ -1,7 +1,7 @@
 //! Candidate facts recorded during the one original syntax visit.
 use super::{span, Syntax};
 use crate::codebase::postgres::query_annotation::heads::finite_comments::{
-    self, Argument, CallSite, Function, Select, TemplateUse,
+    self, Argument, CallSite, Function, Select,
 };
 use oxc_ast::ast::{
     ArrowFunctionExpression, BindingPattern, CallExpression, Expression, Function as AstFunction,
@@ -13,24 +13,7 @@ impl Syntax {
         if !self.collect_finite {
             return;
         }
-        if let Some(expression) = call.arguments.first().and_then(|arg| arg.as_expression()) {
-            if let Some((reference, before, after)) = finite_comments::template(expression) {
-                if let Some(domain) = self.active_domains.iter().rev().find(|domain| {
-                    matches!(expression,
-                        Expression::TemplateLiteral(value) if value.expressions.first()
-                            .is_some_and(|part| matches!(part, Expression::Identifier(id)
-                                if id.name.as_str() == domain.name)))
-                }) {
-                    self.finite_templates.push(TemplateUse {
-                        call: span(call.span),
-                        reference,
-                        domain: domain.clone(),
-                        before,
-                        after,
-                    });
-                }
-            }
-        }
+        self.record_finite_name(call);
         let Expression::Identifier(callee) = &call.callee else {
             return;
         };
@@ -87,6 +70,7 @@ impl Syntax {
         let Some(init) = &value.init else {
             return;
         };
+        self.record_closed_name(binding, init);
         if let Some(function) = self.current_function {
             if let Some(root) = finite_comments::root(span(binding.span), function, init) {
                 self.finite_roots.push(root);

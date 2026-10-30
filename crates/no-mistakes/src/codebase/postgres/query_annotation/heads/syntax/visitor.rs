@@ -9,6 +9,7 @@ impl<'a> Visit<'a> for Syntax {
     fn visit_program(&mut self, value: &Program<'a>) {
         self.async_body(&value.body, value.span);
         walk::walk_program(self, value);
+        self.bind_closed_names();
     }
     fn visit_await_expression(&mut self, value: &AwaitExpression<'a>) {
         self.async_await(value.span);

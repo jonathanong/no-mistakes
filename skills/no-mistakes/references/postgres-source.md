@@ -19,8 +19,11 @@ A helper may return one trusted local builder even when captured closures only
 append suffixes; every reference must be a discarded append, proven append-only
 effect, or direct return from that helper.
 Low also proves a first ordinary comment name from up to 16 direct string
-tuples in a `for-of` loop or from a closed set of direct literal calls through
-one local select closure into a same-file helper. Unknown names and tagged
+tuples in a `for-of` loop, a plain ternary of two string literals, a
+synchronous `for (const name of ['one', 'two'])`, or a closed set of direct
+literal calls through one local select closure into a same-file helper. An
+unresolved import anywhere in the file leaves the ternary and string-list
+forms under `unanalyzable`. Unknown names and tagged
 bind interpolation remain unanalyzable.
 Other helper, alias, and mutation shapes use
 `unanalyzable: report | advise | ignore`. `trustedSqlTags` is deprecated and
@@ -28,8 +31,10 @@ ignored for this rule at low effort.
 Captured local trusted builders retain their named prefix when every use of the
 same binding is a discarded append, configured executor read, or proven local
 append-only effect. Closure order does not establish complete SQL.
-Discarded helper calls may compose through exact same-file append-only helpers;
-a returned parameter append chain qualifies only when its caller discards the
+Discarded helper calls may compose through exact same-file append-only helpers
+for at most four local edges. A longer chain leaves that helper effect unresolved,
+so the builder head is unresolved and reported under `unanalyzable`.
+A returned parameter append chain qualifies only when its caller discards the
 result. Used aliases and nested captures stay unanalyzable.
 
 Use the async Node `parsePostgresSql({ sql, fileName })` export for migration

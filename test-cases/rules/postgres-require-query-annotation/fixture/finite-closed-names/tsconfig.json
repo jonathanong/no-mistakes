@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "baseUrl": ".",
+    "paths": {
+      "@bench/db": ["db.mts"]
+    }
+  },
+  "include": ["*.mts"]
+}

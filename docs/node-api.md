@@ -401,7 +401,9 @@ See [Effect alternatives](node-api/effect-alternatives.md).
 For `postgres-require-query-annotation`, these async reports share the CLI's
 low-effort finite conditional heads, finite explicit helper returns, safe
 returned-local builder proofs, and bounded literal names from direct tuple
-loops and closed local helper calls. Unsupported arms and escaped builders
+loops, a two-literal name ternary, a string-literal `for-of`, and closed
+local helper calls. An unresolved import leaves the ternary and string-list
+forms under `unanalyzable`. Unsupported arms and escaped builders
 retain the configured `unanalyzable`
 policy. See [low-effort annotation](postgres-query-annotation/low-effort.md).
 

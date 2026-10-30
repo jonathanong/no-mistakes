@@ -12,9 +12,9 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
     bindings: &Bindings<'_>,
     module: Option<&TypeScriptModuleFacts>,
     executors: &FxHashSet<Span>,
-) -> BTreeMap<Span, HeadProof> {
+) -> (BTreeMap<Span, HeadProof>, FxHashSet<Span>) {
     let Some(module) = module else {
-        return BTreeMap::new();
+        return (BTreeMap::new(), FxHashSet::default());
     };
     if executors.is_empty()
         || !syntax.collect_finite
@@ -26,13 +26,29 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
         || !module.diagnostics.is_empty()
         || !syntax.dynamic_refs.is_empty()
     {
-        return BTreeMap::new();
+        return (BTreeMap::new(), FxHashSet::default());
     }
     let mut index = super::index::Index::new(syntax, bindings, module, executors);
     let mut found = BTreeMap::new();
+    let mut gated = FxHashSet::default();
     for candidate in &syntax.finite_templates {
-        if executors.contains(&candidate.call) && direct(syntax, bindings, &mut index, candidate) {
+        if !executors.contains(&candidate.call) {
+            continue;
+        }
+        let proven = if candidate.inline {
+            all_named(
+                &candidate.before,
+                &candidate.after,
+                &candidate.domain.values,
+            )
+        } else {
+            direct(syntax, bindings, &mut index, candidate)
+        };
+        if proven {
             found.insert(candidate.call, HeadProof::Literal);
+            if candidate.inline || candidate.domain.import_gated {
+                gated.insert(candidate.call);
+            }
         }
     }
     for root in &syntax.finite_roots {
@@ -58,7 +74,7 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn proofs(
         }
     }
     index.report();
-    found
+    (found, gated)
 }
 
 fn direct(

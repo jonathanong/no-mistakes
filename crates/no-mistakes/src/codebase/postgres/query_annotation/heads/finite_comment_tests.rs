@@ -1,4 +1,4 @@
-use super::support::{assert_markers, fixture_with_effects};
+use super::support::{assert_markers, fixture_with_effects, fixture_with_effects_from};
 
 #[test]
 fn finite_names_require_exact_runtime_domains_and_trusted_builder_lifetimes() {
@@ -13,6 +13,12 @@ fn finite_names_require_exact_runtime_domains_and_trusted_builder_lifetimes() {
 #[test]
 fn malformed_loop_rows_and_comment_interpolations_keep_names_unknown() {
     let (source, _, heads) = fixture_with_effects("finite-comment-grammar.mts");
+    assert_eq!(assert_markers(&source, &heads), 8);
+}
+
+#[test]
+fn closed_literal_names_prove_a_ternary_an_inline_arm_and_a_string_list() {
+    let (source, _, heads) = fixture_with_effects_from("finite-closed-names", "closed.mts");
     assert_eq!(assert_markers(&source, &heads), 8);
 }
 

@@ -8,6 +8,9 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn loop_domain(
     if value.r#await {
         return None;
     }
+    if let Some(domain) = super::names::string_list(value) {
+        return Some(domain);
+    }
     let ForStatementLeft::VariableDeclaration(left) = &value.left else {
         return None;
     };
@@ -60,39 +63,18 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn loop_domain(
         declaration: (first.span.start, first.span.end),
         name: first.name.to_string(),
         values,
+        import_gated: false,
     })
 }
 
 pub(in crate::codebase::postgres::query_annotation::heads) fn template(
     expression: &Expression<'_>,
 ) -> Option<(Span, String, String)> {
-    let Expression::TemplateLiteral(value) = unwrap_ts_wrappers(expression) else {
+    let (first, before, after) = super::names::comment_bounds(expression)?;
+    let Expression::Identifier(reference) = first else {
         return None;
     };
-    let Expression::Identifier(reference) = value.expressions.first()? else {
-        return None;
-    };
-    let before = value
-        .quasis
-        .first()
-        .filter(|part| part.value.cooked.is_some())
-        .map(crate::ast::template_quasi_text)?
-        .into_owned();
-    let after = value
-        .quasis
-        .get(1)
-        .filter(|part| part.value.cooked.is_some())
-        .map(crate::ast::template_quasi_text)?
-        .into_owned();
-    if !before.trim_start().starts_with("/*") || before.contains("*/") || !after.contains("*/") {
-        return None;
-    }
-    let end = after.find("*/")? + 2;
-    Some((
-        (reference.span.start, reference.span.end),
-        before,
-        after[..end].to_string(),
-    ))
+    Some(((reference.span.start, reference.span.end), before, after))
 }
 
 pub(in crate::codebase::postgres::query_annotation::heads) fn root(

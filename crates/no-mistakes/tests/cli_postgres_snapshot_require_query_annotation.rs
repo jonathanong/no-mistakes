@@ -196,6 +196,11 @@ fn postgres_require_query_annotation_check_json_snapshot() {
         case("callback_export_payload_report", "callback-export-payload", "callback-export-payload-report.yml"),
         case("string_prefix_report", "low-heads", "string-prefix-report.yml"),
         case("callback_more_report", "callback-more", "callback-more-report.yml"),
+        case(
+            "finite_closed_names_advise",
+            "finite-closed-names",
+            "finite-closed-names-advise.yml",
+        ),
     ];
     assert_saved_fixture("postgres_require_query_annotation", &cases);
 }

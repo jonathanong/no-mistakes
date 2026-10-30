@@ -10,6 +10,7 @@ mod const_visits;
 mod context;
 mod destructure;
 mod field_visits;
+mod finite_names;
 mod finite_visits;
 mod head_kind;
 mod helper_visits;
@@ -46,6 +47,8 @@ pub(super) struct Syntax {
     pub collect_finite: bool,
     pub finite_calls: Vec<super::finite_comments::CallSite>,
     pub finite_templates: Vec<super::finite_comments::TemplateUse>,
+    pub name_domains: Vec<super::finite_comments::Domain>,
+    pub pending_name_templates: Vec<super::finite_comments::PendingName>,
     pub finite_roots: Vec<super::finite_comments::Root>,
     pub finite_functions: Vec<super::finite_comments::Function>,
     pub finite_selects: Vec<super::finite_comments::Select>,

@@ -130,8 +130,10 @@ captures, aliases, reassignment, and dynamic ownership gaps remain unresolved.
 The low-effort prefix proof also accepts a captured local trusted builder when
 all of its exact-binding uses preserve the named head, regardless of closure
 execution order. CLI, async Node, and the Rust library share this evidence.
-They also share bounded literal names in a direct `for-of` tuple loop or a
-closed same-file helper/select call chain. Only the first ordinary comment
+They also share bounded literal names in a direct `for-of` tuple loop, a
+two-literal name ternary, a string-literal `for-of`, or a
+closed same-file helper/select call chain. An unresolved import leaves the
+ternary and string-list forms under `unanalyzable`. Only the first ordinary comment
 template is substituted; SQL suffixes and tagged bind values are not composed.
 The same low check follows an exact runtime namespace destructure through
 unique explicit source exports and a barrel's imported default helper. It

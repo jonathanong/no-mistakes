@@ -16,6 +16,7 @@ mod finite_comments;
 mod finite_returns;
 mod helper_heads;
 mod helper_records;
+mod import_gate;
 mod import_projection;
 mod literal_helpers;
 mod lookup;
@@ -65,6 +66,7 @@ pub(crate) struct AnnotationHeads {
     pub(crate) pending_async_returns: Vec<async_returns::Pending>,
     pub(crate) pending_returned_params: Vec<returned_params::Pending>,
     pub(crate) conditional_effects: Vec<effects::Conditional>,
+    pub(crate) import_gated_finite: Vec<Span>,
     pub(crate) loop_carried_missing: BTreeMap<Span, Vec<Option<String>>>,
     helper_calls: Option<BTreeMap<Span, (String, HeadProof)>>,
     pub(crate) trusted_append_calls: crate::fx::FxHashSet<Span>,

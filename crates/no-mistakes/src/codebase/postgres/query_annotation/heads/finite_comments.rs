@@ -4,8 +4,10 @@ use crate::fx::FxHashSet;
 mod domain;
 mod grammar;
 mod index;
+mod names;
 mod proof;
 pub(super) use grammar::{loop_domain, root, template};
+pub(super) use names::{inline_name, plain_ternary};
 pub(super) use proof::proofs;
 
 #[derive(Clone)]
@@ -13,11 +15,20 @@ pub(super) struct Domain {
     pub declaration: Span,
     pub name: String,
     pub values: Vec<String>,
+    pub import_gated: bool,
 }
 pub(super) struct TemplateUse {
     pub call: Span,
     pub reference: Span,
     pub domain: Domain,
+    pub before: String,
+    pub after: String,
+    pub inline: bool,
+}
+pub(super) struct PendingName {
+    pub call: Span,
+    pub reference: Span,
+    pub name: String,
     pub before: String,
     pub after: String,
 }
