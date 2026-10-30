@@ -2,7 +2,9 @@
 
 <!-- cspell:ignore getrusage RUSAGE -->
 
-The hosted check runs nightly on `main` and through `workflow_dispatch`. It
+The hosted check runs through `workflow_dispatch` only. The nightly schedule is
+paused until the max-effort annotation work in #2636 lands, because `jobs=1`
+exceeds the 600s sample cap (#2414). It
 measures the public full-check command on two fixed large consumer snapshots.
 It complements the ARM CodSpeed benchmarks; it does not replace them.
 

@@ -1,8 +1,6 @@
 name: Hosted full-check performance
 
 on:
-  schedule:
-    - cron: "23 8 * * *"
   workflow_dispatch:
     inputs:
       candidate_sha:
