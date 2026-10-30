@@ -52,27 +52,15 @@ impl<'s, 'a> Collector<'s, 'a> {
                     steps.push(Step::Call(module));
                     expression = &call.callee;
                 }
-                Expression::ChainExpression(chain) => match &chain.expression {
-                    ChainElement::CallExpression(call) => {
-                        steps.push(Step::Call(super::module_argument(call)));
-                        expression = &call.callee;
+                Expression::ChainExpression(chain) => {
+                    let Some((step, next)) = chain_step(chain) else {
+                        break None;
+                    };
+                    if let Some(step) = step {
+                        steps.push(step);
                     }
-                    ChainElement::StaticMemberExpression(member) => {
-                        steps.push(Step::Member(member.property.name.as_str()));
-                        expression = &member.object;
-                    }
-                    ChainElement::ComputedMemberExpression(member) => {
-                        let Some(property) = super::computed_name(member) else {
-                            break None;
-                        };
-                        steps.push(Step::Member(property));
-                        expression = &member.object;
-                    }
-                    ChainElement::TSNonNullExpression(inner) => {
-                        expression = &inner.expression;
-                    }
-                    ChainElement::PrivateFieldExpression(_) => break None,
-                },
+                    expression = next;
+                }
                 expression_member => {
                     let Some((object, property)) = member(expression_member) else {
                         break None;
@@ -106,5 +94,29 @@ impl<'s, 'a> Collector<'s, 'a> {
             }
         }
         origin
+    }
+}
+
+fn chain_step<'s, 'a>(
+    chain: &'s ChainExpression<'a>,
+) -> Option<(Option<Step<'a>>, &'s Expression<'a>)> {
+    match &chain.expression {
+        ChainElement::CallExpression(call) => {
+            Some((Some(Step::Call(super::module_argument(call))), &call.callee))
+        }
+        ChainElement::StaticMemberExpression(member) => Some((
+            Some(Step::Member(member.property.name.as_str())),
+            &member.object,
+        )),
+        ChainElement::ComputedMemberExpression(member) => {
+            let Expression::StringLiteral(name) = member.expression.get_inner_expression() else {
+                return None;
+            };
+            let property = name.value.as_str()?;
+            let next: &'s Expression<'a> = &member.object;
+            Some((Some(Step::Member(property)), next))
+        }
+        ChainElement::TSNonNullExpression(inner) => Some((None, &inner.expression)),
+        ChainElement::PrivateFieldExpression(_) => None,
     }
 }

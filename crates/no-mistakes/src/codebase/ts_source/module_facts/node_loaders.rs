@@ -105,7 +105,30 @@ fn member<'e, 'a>(expression: &'e Expression<'a>) -> Option<(&'e Expression<'a>,
     }
 }
 
-fn label(mut expression: &Expression<'_>) -> String {
+enum ChainLabel<'s, 'a> {
+    Suffix(String, &'s Expression<'a>),
+    Continue(&'s Expression<'a>),
+    Stop,
+}
+
+fn chain_label<'s, 'a>(chain: &'s ChainExpression<'a>) -> ChainLabel<'s, 'a> {
+    match &chain.expression {
+        ChainElement::CallExpression(call) => ChainLabel::Suffix("(...)".into(), &call.callee),
+        ChainElement::StaticMemberExpression(member) => {
+            ChainLabel::Suffix(format!(".{}", member.property.name), &member.object)
+        }
+        ChainElement::ComputedMemberExpression(member) => {
+            let Some(property) = computed_name(member) else {
+                return ChainLabel::Stop;
+            };
+            ChainLabel::Suffix(format!("[{property:?}]"), &member.object)
+        }
+        ChainElement::TSNonNullExpression(inner) => ChainLabel::Continue(&inner.expression),
+        ChainElement::PrivateFieldExpression(_) => ChainLabel::Stop,
+    }
+}
+
+fn label<'a>(mut expression: &'a Expression<'a>) -> String {
     let mut suffixes = Vec::new();
     let mut label = loop {
         match expression.get_inner_expression() {
@@ -114,26 +137,13 @@ fn label(mut expression: &Expression<'_>) -> String {
                 suffixes.push("(...)".into());
                 expression = &call.callee;
             }
-            Expression::ChainExpression(chain) => match &chain.expression {
-                ChainElement::CallExpression(call) => {
-                    suffixes.push("(...)".into());
-                    expression = &call.callee;
+            Expression::ChainExpression(chain) => match chain_label(chain) {
+                ChainLabel::Suffix(text, next) => {
+                    suffixes.push(text);
+                    expression = next;
                 }
-                ChainElement::StaticMemberExpression(member) => {
-                    suffixes.push(format!(".{}", member.property.name));
-                    expression = &member.object;
-                }
-                ChainElement::ComputedMemberExpression(member) => {
-                    let Some(property) = computed_name(member) else {
-                        break "<Node loader>".into();
-                    };
-                    suffixes.push(format!("[{property:?}]"));
-                    expression = &member.object;
-                }
-                ChainElement::TSNonNullExpression(inner) => {
-                    expression = &inner.expression;
-                }
-                ChainElement::PrivateFieldExpression(_) => break "<Node loader>".into(),
+                ChainLabel::Continue(next) => expression = next,
+                ChainLabel::Stop => break "<Node loader>".into(),
             },
             member_expression => {
                 let Some((object, property)) = member(member_expression) else {
