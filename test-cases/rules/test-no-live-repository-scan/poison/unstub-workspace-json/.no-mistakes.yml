@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    configs: vitest.workspace.json
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository

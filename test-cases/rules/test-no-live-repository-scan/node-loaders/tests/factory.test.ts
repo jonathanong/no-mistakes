@@ -1,8 +1,9 @@
-import { createRequire as make } from "node:module";
+import { createRequire as make, createRequire } from "node:module";
 import * as nodeModule from "module";
 import nodeDefault from "node:module";
 
 make(import.meta.url)("node:fs"); // direct-factory
+createRequire?.(import.meta.url)?.("fs"); // optional-factory
 make(import.meta.url)(moduleName); // computed-factory
 nodeModule.createRequire(import.meta.url)("glob"); // namespace-factory
 nodeDefault["createRequire"](import.meta.url)("fast-glob"); // default-factory

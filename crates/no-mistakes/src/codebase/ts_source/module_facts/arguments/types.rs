@@ -83,6 +83,8 @@ pub(crate) struct PathProvenance {
     pub(crate) env_writes: Vec<EnvWrite>,
     /// A `process.env` mutation whose variable cannot be named.
     pub(crate) env_unknown_write: bool,
+    /// A computed object key whose text is not a literal other than `unstubEnvs`.
+    pub(crate) opaque_config_key: bool,
     /// Function spans of `it`/`test` callbacks.
     pub(crate) test_callbacks: Vec<(u32, u32)>,
     /// Names of functions referenced other than as the callee of a direct call.

@@ -75,6 +75,21 @@ fn is_module(name: &str) -> bool {
     matches!(name, "module" | "node:module")
 }
 
+fn module_argument(call: &CallExpression<'_>) -> bool {
+    call.arguments
+        .first()
+        .and_then(Argument::as_expression)
+        .and_then(crate::codebase::dependencies::extract::static_import_specifier)
+        .is_some_and(|name| is_module(&name))
+}
+
+fn computed_name<'a>(member: &'a ComputedMemberExpression<'a>) -> Option<&'a str> {
+    let Expression::StringLiteral(name) = member.expression.get_inner_expression() else {
+        return None;
+    };
+    name.value.as_str()
+}
+
 fn member<'e, 'a>(expression: &'e Expression<'a>) -> Option<(&'e Expression<'a>, &'e str)> {
     match expression {
         Expression::StaticMemberExpression(member) => {
@@ -90,7 +105,30 @@ fn member<'e, 'a>(expression: &'e Expression<'a>) -> Option<(&'e Expression<'a>,
     }
 }
 
-fn label(mut expression: &Expression<'_>) -> String {
+enum ChainLabel<'s, 'a> {
+    Suffix(String, &'s Expression<'a>),
+    Continue(&'s Expression<'a>),
+    Stop,
+}
+
+fn chain_label<'s, 'a>(chain: &'s ChainExpression<'a>) -> ChainLabel<'s, 'a> {
+    match &chain.expression {
+        ChainElement::CallExpression(call) => ChainLabel::Suffix("(...)".into(), &call.callee),
+        ChainElement::StaticMemberExpression(member) => {
+            ChainLabel::Suffix(format!(".{}", member.property.name), &member.object)
+        }
+        ChainElement::ComputedMemberExpression(member) => {
+            let Some(property) = computed_name(member) else {
+                return ChainLabel::Stop;
+            };
+            ChainLabel::Suffix(format!("[{property:?}]"), &member.object)
+        }
+        ChainElement::TSNonNullExpression(inner) => ChainLabel::Continue(&inner.expression),
+        ChainElement::PrivateFieldExpression(_) => ChainLabel::Stop,
+    }
+}
+
+fn label<'a>(mut expression: &'a Expression<'a>) -> String {
     let mut suffixes = Vec::new();
     let mut label = loop {
         match expression.get_inner_expression() {
@@ -99,6 +137,14 @@ fn label(mut expression: &Expression<'_>) -> String {
                 suffixes.push("(...)".into());
                 expression = &call.callee;
             }
+            Expression::ChainExpression(chain) => match chain_label(chain) {
+                ChainLabel::Suffix(text, next) => {
+                    suffixes.push(text);
+                    expression = next;
+                }
+                ChainLabel::Continue(next) => expression = next,
+                ChainLabel::Stop => break "<Node loader>".into(),
+            },
             member_expression => {
                 let Some((object, property)) = member(member_expression) else {
                     break "<Node loader>".into();

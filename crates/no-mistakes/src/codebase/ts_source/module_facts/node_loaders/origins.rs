@@ -48,14 +48,18 @@ impl<'s, 'a> Collector<'s, 'a> {
                     }
                 }
                 Expression::CallExpression(call) => {
-                    let module = call
-                        .arguments
-                        .first()
-                        .and_then(Argument::as_expression)
-                        .and_then(crate::codebase::dependencies::extract::static_import_specifier)
-                        .is_some_and(|name| is_module(&name));
+                    let module = super::module_argument(call);
                     steps.push(Step::Call(module));
                     expression = &call.callee;
+                }
+                Expression::ChainExpression(chain) => {
+                    let Some((step, next)) = chain_step(chain) else {
+                        break None;
+                    };
+                    if let Some(step) = step {
+                        steps.push(step);
+                    }
+                    expression = next;
                 }
                 expression_member => {
                     let Some((object, property)) = member(expression_member) else {
@@ -90,5 +94,29 @@ impl<'s, 'a> Collector<'s, 'a> {
             }
         }
         origin
+    }
+}
+
+fn chain_step<'s, 'a>(
+    chain: &'s ChainExpression<'a>,
+) -> Option<(Option<Step<'a>>, &'s Expression<'a>)> {
+    match &chain.expression {
+        ChainElement::CallExpression(call) => {
+            Some((Some(Step::Call(super::module_argument(call))), &call.callee))
+        }
+        ChainElement::StaticMemberExpression(member) => Some((
+            Some(Step::Member(member.property.name.as_str())),
+            &member.object,
+        )),
+        ChainElement::ComputedMemberExpression(member) => {
+            let Expression::StringLiteral(name) = member.expression.get_inner_expression() else {
+                return None;
+            };
+            let property = name.value.as_str()?;
+            let next: &'s Expression<'a> = &member.object;
+            Some((Some(Step::Member(property)), next))
+        }
+        ChainElement::TSNonNullExpression(inner) => Some((None, &inner.expression)),
+        ChainElement::PrivateFieldExpression(_) => None,
     }
 }

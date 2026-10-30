@@ -173,4 +173,43 @@ fn only_unconditional_owned_writes_that_precede_the_call_dominate_it() {
     assert!(dominated(&provenance, "HOOK", 120));
     assert!(!dominated(&provenance, "HOOK", 160));
     assert!(!dominated(&provenance, "HOOK", 70));
+    let mut climb = write("CLIMB", PathAnchor::Temp, WriteScope::Program, 10);
+    climb.origin = origin(PathAnchor::Temp, &[".."]);
+    let mut climbed = provenance.clone();
+    climbed.env_writes.push(climb);
+    assert!(!dominated(&climbed, "CLIMB", 90));
+}
+
+#[test]
+fn json_workspace_unstub_envs_poisons_when_the_key_cannot_be_ruled_out() {
+    use super::owned::env::json_text_poisons;
+    assert!(!json_text_poisons(
+        r#"[{ "test": { "include": ["tests/**/*.test.ts"] } }]"#
+    ));
+    assert!(json_text_poisons(
+        r#"[{ "test": { "include": ["tests/**/*.test.ts"], "unstubEnvs": false } }]"#
+    ));
+    assert!(json_text_poisons(
+        "// restored between cases\n[{ \"test\": { \"unstubEnvs\": true } }]"
+    ));
+    assert!(json_text_poisons("{"));
+    assert!(!json_text_poisons(""));
+}
+
+#[test]
+fn json_config_read_errors_poison_and_absolute_paths_stay_unpoisoned_when_missing() {
+    use super::owned::env::{json_configs_poison, json_file_poisons};
+    use crate::config::v2::schema::StringOrList;
+    use crate::config::v2::NoMistakesConfig;
+
+    let root = crate::test_support::rule_fixture_root("test-no-live-repository-scan/facts");
+    assert!(json_file_poisons(&root.join("unreadable.json")));
+
+    let absolute = std::env::current_dir()
+        .unwrap()
+        .join("no-such-nm-vitest.json");
+    assert!(absolute.is_absolute());
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One(absolute.display().to_string()));
+    assert!(!json_configs_poison(&root, &config));
 }
