@@ -278,8 +278,10 @@ computed key whose text is not a literal poisons when the file is
 A literal key with different text, such as `"include"`, does not. The same two
 names poison wherever they appear in a Vitest JSON or JSONC config: each path in
 `tests.vitest.configs`, plus `vitest.workspace.json`, `vitest.workspace.jsonc`,
-`vitest.projects.json`, and `vitest.projects.jsonc` at the project root. A
-missing file does not. A file that exists but cannot be read or parsed does.
+`vitest.projects.json`, and `vitest.projects.jsonc` at the project root. A JSON
+or JSONC workspace file inside a package is not read unless that path is listed
+in `tests.vitest.configs`. A missing file does not. A file that exists but
+cannot be read or parsed does.
 The key poisons whatever its value is, including `false`.
 
 `process.env` forms that poison every variable:
