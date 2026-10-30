@@ -75,6 +75,21 @@ fn is_module(name: &str) -> bool {
     matches!(name, "module" | "node:module")
 }
 
+fn module_argument(call: &CallExpression<'_>) -> bool {
+    call.arguments
+        .first()
+        .and_then(Argument::as_expression)
+        .and_then(crate::codebase::dependencies::extract::static_import_specifier)
+        .is_some_and(|name| is_module(&name))
+}
+
+fn computed_name<'a>(member: &'a ComputedMemberExpression<'a>) -> Option<&'a str> {
+    let Expression::StringLiteral(name) = member.expression.get_inner_expression() else {
+        return None;
+    };
+    name.value.as_str()
+}
+
 fn member<'e, 'a>(expression: &'e Expression<'a>) -> Option<(&'e Expression<'a>, &'e str)> {
     match expression {
         Expression::StaticMemberExpression(member) => {
@@ -99,6 +114,27 @@ fn label(mut expression: &Expression<'_>) -> String {
                 suffixes.push("(...)".into());
                 expression = &call.callee;
             }
+            Expression::ChainExpression(chain) => match &chain.expression {
+                ChainElement::CallExpression(call) => {
+                    suffixes.push("(...)".into());
+                    expression = &call.callee;
+                }
+                ChainElement::StaticMemberExpression(member) => {
+                    suffixes.push(format!(".{}", member.property.name));
+                    expression = &member.object;
+                }
+                ChainElement::ComputedMemberExpression(member) => {
+                    let Some(property) = computed_name(member) else {
+                        break "<Node loader>".into();
+                    };
+                    suffixes.push(format!("[{property:?}]"));
+                    expression = &member.object;
+                }
+                ChainElement::TSNonNullExpression(inner) => {
+                    expression = &inner.expression;
+                }
+                ChainElement::PrivateFieldExpression(_) => break "<Node loader>".into(),
+            },
             member_expression => {
                 let Some((object, property)) = member(member_expression) else {
                     break "<Node loader>".into();

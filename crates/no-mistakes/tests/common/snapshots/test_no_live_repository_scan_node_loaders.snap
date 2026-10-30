@@ -45,7 +45,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "alias(\"fs-extra\")",
-          "line": 12,
+          "line": 13,
           "message": "unresolved root: `alias(\"fs-extra\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "alias(\"fs-extra\"); // loader-alias",
@@ -53,8 +53,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/factory.test.ts",
+          "import": "createRequire(...)(\"fs\")",
+          "line": 6,
+          "message": "unresolved root: `createRequire(...)(\"fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "createRequire?.(import.meta.url)?.(\"fs\"); // optional-factory",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/factory.test.ts",
           "import": "load(\"node:fs\")",
-          "line": 10,
+          "line": 11,
           "message": "unresolved root: `load(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "load(\"node:fs\"); // bound-loader",
@@ -72,7 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "make(...)(moduleName)",
-          "line": 6,
+          "line": 7,
           "message": "unresolved root: `make(...)(moduleName)` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "make(import.meta.url)(moduleName); // computed-factory",
@@ -81,7 +90,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "makeAlias(...)(\"globby\")",
-          "line": 14,
+          "line": 15,
           "message": "unresolved root: `makeAlias(...)(\"globby\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "makeAlias(import.meta.url)(\"globby\"); // factory-alias",
@@ -90,7 +99,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "mutable(\"node:fs\")",
-          "line": 17,
+          "line": 18,
           "message": "unresolved root: `mutable(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "mutable(\"node:fs\"); // mutated-loader",
@@ -99,7 +108,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "nodeDefault[\"createRequire\"](...)(\"fast-glob\")",
-          "line": 8,
+          "line": 9,
           "message": "unresolved root: `nodeDefault[\"createRequire\"](...)(\"fast-glob\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "nodeDefault[\"createRequire\"](import.meta.url)(\"fast-glob\"); // default-factory",
@@ -108,7 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "nodeModule.createRequire(...)(\"glob\")",
-          "line": 7,
+          "line": 8,
           "message": "unresolved root: `nodeModule.createRequire(...)(\"glob\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "nodeModule.createRequire(import.meta.url)(\"glob\"); // namespace-factory",
@@ -143,6 +152,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/module.test.ts",
+          "import": "module.require(\"node:fs\")",
+          "line": 5,
+          "message": "unresolved root: `module.require(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module.require?.(\"node:fs\"); // module-optional",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/module.test.ts",
+          "import": "module.require(\"node:fs\")",
+          "line": 6,
+          "message": "unresolved root: `module.require(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module?.require(\"node:fs\"); // module-optional-member",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/module.test.ts",
           "import": "module.require(name)",
           "line": 4,
           "message": "unresolved root: `module.require(name)` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
@@ -153,7 +180,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/module.test.ts",
           "import": "module[\"require\"](\"fs-extra\")",
-          "line": 5,
+          "line": 7,
           "message": "unresolved root: `module[\"require\"](\"fs-extra\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "module[\"require\"](\"fs-extra\"); // module-bracket",
@@ -305,7 +332,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "alias(\"fs-extra\")",
-          "line": 12,
+          "line": 13,
           "message": "unresolved root: `alias(\"fs-extra\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "alias(\"fs-extra\"); // loader-alias",
@@ -313,8 +340,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/factory.test.ts",
+          "import": "createRequire(...)(\"fs\")",
+          "line": 6,
+          "message": "unresolved root: `createRequire(...)(\"fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "createRequire?.(import.meta.url)?.(\"fs\"); // optional-factory",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/factory.test.ts",
           "import": "load(\"node:fs\")",
-          "line": 10,
+          "line": 11,
           "message": "unresolved root: `load(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "load(\"node:fs\"); // bound-loader",
@@ -332,7 +368,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "make(...)(moduleName)",
-          "line": 6,
+          "line": 7,
           "message": "unresolved root: `make(...)(moduleName)` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "make(import.meta.url)(moduleName); // computed-factory",
@@ -341,7 +377,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "makeAlias(...)(\"globby\")",
-          "line": 14,
+          "line": 15,
           "message": "unresolved root: `makeAlias(...)(\"globby\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "makeAlias(import.meta.url)(\"globby\"); // factory-alias",
@@ -350,7 +386,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "mutable(\"node:fs\")",
-          "line": 17,
+          "line": 18,
           "message": "unresolved root: `mutable(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "mutable(\"node:fs\"); // mutated-loader",
@@ -359,7 +395,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "nodeDefault[\"createRequire\"](...)(\"fast-glob\")",
-          "line": 8,
+          "line": 9,
           "message": "unresolved root: `nodeDefault[\"createRequire\"](...)(\"fast-glob\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "nodeDefault[\"createRequire\"](import.meta.url)(\"fast-glob\"); // default-factory",
@@ -368,7 +404,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "nodeModule.createRequire(...)(\"glob\")",
-          "line": 7,
+          "line": 8,
           "message": "unresolved root: `nodeModule.createRequire(...)(\"glob\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "nodeModule.createRequire(import.meta.url)(\"glob\"); // namespace-factory",
@@ -403,6 +439,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/module.test.ts",
+          "import": "module.require(\"node:fs\")",
+          "line": 5,
+          "message": "unresolved root: `module.require(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module.require?.(\"node:fs\"); // module-optional",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/module.test.ts",
+          "import": "module.require(\"node:fs\")",
+          "line": 6,
+          "message": "unresolved root: `module.require(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module?.require(\"node:fs\"); // module-optional-member",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/module.test.ts",
           "import": "module.require(name)",
           "line": 4,
           "message": "unresolved root: `module.require(name)` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
@@ -413,7 +467,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/module.test.ts",
           "import": "module[\"require\"](\"fs-extra\")",
-          "line": 5,
+          "line": 7,
           "message": "unresolved root: `module[\"require\"](\"fs-extra\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "module[\"require\"](\"fs-extra\"); // module-bracket",
@@ -540,7 +594,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "alias(\"fs-extra\")",
-          "line": 12,
+          "line": 13,
           "message": "unresolved root: `alias(\"fs-extra\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "alias(\"fs-extra\"); // loader-alias",
@@ -548,8 +602,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/factory.test.ts",
+          "import": "createRequire(...)(\"fs\")",
+          "line": 6,
+          "message": "unresolved root: `createRequire(...)(\"fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "createRequire?.(import.meta.url)?.(\"fs\"); // optional-factory",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/factory.test.ts",
           "import": "load(\"node:fs\")",
-          "line": 10,
+          "line": 11,
           "message": "unresolved root: `load(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "load(\"node:fs\"); // bound-loader",
@@ -567,7 +630,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "make(...)(moduleName)",
-          "line": 6,
+          "line": 7,
           "message": "unresolved root: `make(...)(moduleName)` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "make(import.meta.url)(moduleName); // computed-factory",
@@ -576,7 +639,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "makeAlias(...)(\"globby\")",
-          "line": 14,
+          "line": 15,
           "message": "unresolved root: `makeAlias(...)(\"globby\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "makeAlias(import.meta.url)(\"globby\"); // factory-alias",
@@ -585,7 +648,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "mutable(\"node:fs\")",
-          "line": 17,
+          "line": 18,
           "message": "unresolved root: `mutable(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "mutable(\"node:fs\"); // mutated-loader",
@@ -594,7 +657,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "nodeDefault[\"createRequire\"](...)(\"fast-glob\")",
-          "line": 8,
+          "line": 9,
           "message": "unresolved root: `nodeDefault[\"createRequire\"](...)(\"fast-glob\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "nodeDefault[\"createRequire\"](import.meta.url)(\"fast-glob\"); // default-factory",
@@ -603,7 +666,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/factory.test.ts",
           "import": "nodeModule.createRequire(...)(\"glob\")",
-          "line": 7,
+          "line": 8,
           "message": "unresolved root: `nodeModule.createRequire(...)(\"glob\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "nodeModule.createRequire(import.meta.url)(\"glob\"); // namespace-factory",
@@ -638,6 +701,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/module.test.ts",
+          "import": "module.require(\"node:fs\")",
+          "line": 5,
+          "message": "unresolved root: `module.require(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module.require?.(\"node:fs\"); // module-optional",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/module.test.ts",
+          "import": "module.require(\"node:fs\")",
+          "line": 6,
+          "message": "unresolved root: `module.require(\"node:fs\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "module?.require(\"node:fs\"); // module-optional-member",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/module.test.ts",
           "import": "module.require(name)",
           "line": 4,
           "message": "unresolved root: `module.require(name)` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
@@ -648,7 +729,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/module.test.ts",
           "import": "module[\"require\"](\"fs-extra\")",
-          "line": 5,
+          "line": 7,
           "message": "unresolved root: `module[\"require\"](\"fs-extra\")` may load a directory enumerator through a Node module loader. Its uses and roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under fixtures or an owned mkdtemp directory, or add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "module[\"require\"](\"fs-extra\"); // module-bracket",

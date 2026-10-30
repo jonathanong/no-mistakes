@@ -17,10 +17,10 @@ pub(super) fn from_assignment<'a>(
                 out.env_unknown_write = true;
                 return;
             }
-            is_env_object(semantic, &member.object).then(|| member.property.name.to_string())
+            is_process_env(semantic, &member.object).then(|| member.property.name.to_string())
         }
         AssignmentTarget::ComputedMemberExpression(member) => {
-            if !is_env_object(semantic, &member.object) {
+            if !is_process_env(semantic, &member.object) {
                 return;
             }
             match member.expression.get_inner_expression() {
@@ -82,6 +82,9 @@ pub(super) fn from_call<'a>(
     node: NodeId,
     out: &mut PathProvenance,
 ) {
+    if super::stub_global::stubs_process(call) {
+        out.env_unknown_write = true;
+    }
     let semantic = projector.semantic;
     let Expression::StaticMemberExpression(callee) = call.callee.get_inner_expression() else {
         return;
@@ -130,10 +133,6 @@ pub(super) fn from_alias<'a>(
     {
         out.env_unknown_write = true;
     }
-}
-
-fn is_env_object(semantic: &oxc_semantic::Semantic<'_>, object: &Expression<'_>) -> bool {
-    is_process_env(semantic, object)
 }
 
 fn record(

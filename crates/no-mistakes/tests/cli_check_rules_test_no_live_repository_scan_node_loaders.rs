@@ -14,12 +14,19 @@ fn node_loader_origins_remain_visible_without_binding_resolution() {
     let expected = [
         (
             "module.test.ts",
-            vec!["module-literal", "module-computed", "module-bracket"],
+            vec![
+                "module-literal",
+                "module-computed",
+                "module-optional",
+                "module-optional-member",
+                "module-bracket",
+            ],
         ),
         (
             "factory.test.ts",
             vec![
                 "direct-factory",
+                "optional-factory",
                 "computed-factory",
                 "namespace-factory",
                 "default-factory",
@@ -82,7 +89,7 @@ fn node_loader_origins_remain_visible_without_binding_resolution() {
                 && finding["import"] == "readdirSync"),
         "{report}"
     );
-    assert_eq!(advisories.len(), 23, "{report}");
+    assert_eq!(advisories.len(), 26, "{report}");
     let findings = report["rules"].as_array().unwrap();
     assert_eq!(findings.len(), 1, "{report}");
     assert_eq!(findings[0]["file"], "tests/segments.test.ts");
@@ -116,11 +123,11 @@ fn node_loader_fallback_preserves_policy_filters_messages_and_suppression() {
         serde_json::from_slice::<Value>(&output.stdout).unwrap()
     };
     let report = run("report.yml", false);
-    assert_eq!(report["rules"].as_array().unwrap().len(), 24, "{report}");
+    assert_eq!(report["rules"].as_array().unwrap().len(), 27, "{report}");
     assert!(report["advisories"].as_array().unwrap().is_empty());
     let advisory = run("advisory.yml", false);
     assert!(advisory["rules"].as_array().unwrap().is_empty());
-    assert_eq!(advisory["advisories"].as_array().unwrap().len(), 24);
+    assert_eq!(advisory["advisories"].as_array().unwrap().len(), 27);
     let custom = run("custom.yml", false);
     let advisories = custom["advisories"].as_array().unwrap();
     assert_eq!(advisories.len(), 2, "{custom}");

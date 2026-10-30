@@ -108,6 +108,21 @@ fn unattributable_env_mutations_are_marked_unknown() {
 }
 
 #[test]
+fn stub_global_process_and_opaque_config_keys_poison() {
+    assert!(
+        read("stub-global-process.mjs")
+            .provenance()
+            .env_unknown_write
+    );
+    let other = read("stub-global-other.mjs");
+    assert!(!other.provenance().env_unknown_write);
+    assert!(!other.provenance().opaque_config_key);
+    let computed = read("config-computed-key.mjs");
+    assert!(computed.provenance().opaque_config_key);
+    assert!(!computed.provenance().env_unknown_write);
+}
+
+#[test]
 fn origins_follow_getters_owned_lets_and_parameters_but_nothing_else() {
     let read = read("origins.mjs");
     let env = |needle: &str| read.origin(needle).env;

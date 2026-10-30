@@ -2,12 +2,14 @@
 //!
 //! Syntactic only: a form this pass does not recognise is left out, and the
 //! rule that reads these facts then keeps its finding.
+mod config_keys;
 mod consumers;
 mod env_writes;
 mod member_refs;
 mod pass_through;
 mod process_refs;
 mod scope;
+mod stub_global;
 mod value_refs;
 mod vi_refs;
 
@@ -92,6 +94,9 @@ pub(super) fn collect(
             }
             AstKind::VariableDeclarator(declarator) => {
                 env_writes::from_alias(&mut projector, declarator, &mut result);
+            }
+            AstKind::ObjectProperty(property) => {
+                config_keys::from_property(property, &mut result);
             }
             _ => {}
         }

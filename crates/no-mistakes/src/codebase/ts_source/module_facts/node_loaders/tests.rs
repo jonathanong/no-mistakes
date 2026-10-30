@@ -17,8 +17,8 @@ fn read(name: &str, collect: bool) -> (String, TypeScriptModuleFacts) {
 #[test]
 fn node_loaders_keep_private_potential_provenance_and_exact_offsets() {
     for (file, count) in [
-        ("module.test.ts", 4),
-        ("factory.test.ts", 9),
+        ("module.test.ts", 6),
+        ("factory.test.ts", 10),
         ("commonjs.test.cjs", 3),
         ("long-alias.test.ts", 2),
         ("arguments.test.ts", 1),

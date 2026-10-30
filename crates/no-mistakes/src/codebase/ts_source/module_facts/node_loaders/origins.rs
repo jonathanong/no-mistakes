@@ -48,15 +48,31 @@ impl<'s, 'a> Collector<'s, 'a> {
                     }
                 }
                 Expression::CallExpression(call) => {
-                    let module = call
-                        .arguments
-                        .first()
-                        .and_then(Argument::as_expression)
-                        .and_then(crate::codebase::dependencies::extract::static_import_specifier)
-                        .is_some_and(|name| is_module(&name));
+                    let module = super::module_argument(call);
                     steps.push(Step::Call(module));
                     expression = &call.callee;
                 }
+                Expression::ChainExpression(chain) => match &chain.expression {
+                    ChainElement::CallExpression(call) => {
+                        steps.push(Step::Call(super::module_argument(call)));
+                        expression = &call.callee;
+                    }
+                    ChainElement::StaticMemberExpression(member) => {
+                        steps.push(Step::Member(member.property.name.as_str()));
+                        expression = &member.object;
+                    }
+                    ChainElement::ComputedMemberExpression(member) => {
+                        let Some(property) = super::computed_name(member) else {
+                            break None;
+                        };
+                        steps.push(Step::Member(property));
+                        expression = &member.object;
+                    }
+                    ChainElement::TSNonNullExpression(inner) => {
+                        expression = &inner.expression;
+                    }
+                    ChainElement::PrivateFieldExpression(_) => break None,
+                },
                 expression_member => {
                     let Some((object, property)) = member(expression_member) else {
                         break None;

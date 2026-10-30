@@ -173,4 +173,25 @@ fn only_unconditional_owned_writes_that_precede_the_call_dominate_it() {
     assert!(dominated(&provenance, "HOOK", 120));
     assert!(!dominated(&provenance, "HOOK", 160));
     assert!(!dominated(&provenance, "HOOK", 70));
+    let mut climb = write("CLIMB", PathAnchor::Temp, WriteScope::Program, 10);
+    climb.origin = origin(PathAnchor::Temp, &[".."]);
+    let mut climbed = provenance.clone();
+    climbed.env_writes.push(climb);
+    assert!(!dominated(&climbed, "CLIMB", 90));
+}
+
+#[test]
+fn json_workspace_unstub_envs_poisons_when_the_key_cannot_be_ruled_out() {
+    use super::owned::env::json_text_poisons;
+    assert!(!json_text_poisons(
+        r#"[{ "test": { "include": ["tests/**/*.test.ts"] } }]"#
+    ));
+    assert!(json_text_poisons(
+        r#"[{ "test": { "include": ["tests/**/*.test.ts"], "unstubEnvs": false } }]"#
+    ));
+    assert!(json_text_poisons(
+        "// restored between cases\n[{ \"test\": { \"unstubEnvs\": true } }]"
+    ));
+    assert!(json_text_poisons("{"));
+    assert!(!json_text_poisons(""));
 }

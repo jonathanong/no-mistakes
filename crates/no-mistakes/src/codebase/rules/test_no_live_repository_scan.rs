@@ -114,7 +114,15 @@ pub(crate) fn check_with_graph(
                 && origin.is_some_and(|origin| {
                     owners
                         .get_or_init(|| {
-                            owned::Owners::new(graph, &reachable, facts, graph_files, resolution)
+                            owned::Owners::new(
+                                graph,
+                                &reachable,
+                                facts,
+                                graph_files,
+                                resolution,
+                                &root,
+                                config,
+                            )
                         })
                         .owned(origin, site, facts, &fixture_dirs)
                 });

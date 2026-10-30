@@ -128,6 +128,8 @@ load(moduleName);
 ```
 
 This matcher recognizes global `module.require` and `module["require"]`,
+including optional calls and optional members (`module.require?.("node:fs")`,
+`module?.require("node:fs")`, `createRequire?.(import.meta.url)?.("fs")`),
 and `createRequire` from `module` or `node:module` through named ESM aliases,
 namespace/default members, or ordinary CommonJS named/namespace imports.
 Direct factory-return calls and same-file initializer aliases of factories and
@@ -209,7 +211,9 @@ around it carry the variable through. The enumeration is accepted when:
 
 An owned root is only owned below itself: a path that climbs out of it with
 `..` (`join(dir, "..", "src")`) keeps the finding for both parameters and env
-vars.
+vars. A write is an owned root only when its value stays inside the temp
+directory. `process.env.X = join(mkdtempSync(...), "..", "..", "..")` is not an
+owned write, and that write does not dominate the call.
 
 The env read must happen at the call: a value captured into a module- or
 function-level `const` (`const dir = process.env.X ?? "."`) keeps the finding, as
@@ -261,6 +265,41 @@ write. Computed access of any kind, a cast, an alias, passing `vi` as a value,
 `globalThis.vi`, a namespace or default import of the runner, an `import()` of it,
 or a helper outside the known list poisons. `unstubAllEnvs` and `unstubEnvs`
 poison wherever they appear, because they restore the default between tests.
+`stubGlobal("process", ...)` poisons too, including a named import, a member, a
+string computed member, and an optional call, even when the receiver is not
+named `vi`. `stubGlobal` with a first argument that is not a string literal
+poisons. `stubGlobal("fetch", ...)` and `` stubGlobal(`location`, ...) `` do not,
+by themselves.
+
+A computed object key poisons when its text is the literal `unstubEnvs` or
+`unstubAllEnvs` (a string or a template with no substitutions). Any other
+computed key whose text is not a literal poisons when the file is
+`vitest.config.*`, `vitest.workspace.*`, `vitest.projects.*`, or `vite.config.*`.
+A literal key with different text, such as `"include"`, does not. The same two
+names poison wherever they appear in a Vitest JSON or JSONC config: each path in
+`tests.vitest.configs`, plus `vitest.workspace.json`, `vitest.workspace.jsonc`,
+`vitest.projects.json`, and `vitest.projects.jsonc` at the project root. A
+missing file does not. A file that exists but cannot be read or parsed does.
+The key poisons whatever its value is, including `false`.
+
+`process.env` forms that poison every variable:
+
+- an alias (`const env = process.env`) or passing `process.env` where it is not a member read, a spread copy, an `in` test, or an object-destructuring read
+- `process["env"]`, `globalThis.process`, and any `process` use other than `process.env`, the plain members listed above, or `typeof process`
+- an import, re-export, `require`, or `import()` of `process`, `node:process`, `vm`, or `node:vm`, or a load specifier that is not a string literal
+- a destructuring, loop, or update target on an env member
+- assigning `process.env` itself, or a computed env write whose key is not a string literal
+- `delete process.env` without a name, and `Object`/`Reflect` mutators applied to `process.env`
+- `vi.stubEnv` / `jest` stub helpers whose name is not a string literal
+- `unstubAllEnvs`, `unstubEnvs`, and `createRequire` wherever those names appear
+- `stubGlobal("process")` and `stubGlobal` with a non-literal first argument
+- a computed `unstubEnvs` / `unstubAllEnvs` key, and an opaque computed key in a Vitest or Vite config file
+- `unstubEnvs` or `unstubAllEnvs` in a Vitest JSON or JSONC config, as above
+- `.constructor` / `.__proto__`, a computed key that spells them or is built from strings, templates, or calls, and the strings `"constructor"` and `"__proto__"`
+- `eval` and `Function`
+- `require` or `module` used other than as a call, `require.resolve`, or `module.exports` / `module.require`
+- `vi` or `jest` (including a local import name) used other than as a known helper or `stubEnv`
+- a namespace or default import of `vitest` or `@jest/globals`, or an `import()` / `require` of those modules
 
 ## Pass-through mocks
 

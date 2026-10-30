@@ -6,7 +6,7 @@ const RULE: &str = "test-no-live-repository-scan";
 
 /// Each root owns `POISON_DIR` once, then something this analysis cannot name
 /// writes it too; `control` has no second write and is accepted.
-const POISONED: [&str; 44] = [
+const POISONED: [&str; 47] = [
     "global-constructor",
     "global-proto",
     "process-builtin",
@@ -51,6 +51,9 @@ const POISONED: [&str; 44] = [
     "vi-template",
     "vi-variable",
     "vi-stub-global",
+    "stub-global-import",
+    "unstub-computed-key",
+    "unstub-workspace-json",
 ];
 
 /// Each root owns a default parameter through one direct caller, then the
@@ -183,6 +186,7 @@ fn owned_env_and_arguments_resolve_but_unproven_provenance_is_kept() {
         "src/param-call.ts:4",
         // An owned root does not cover a path that climbs out of it with `..`.
         "src/env-climb.ts:8",
+        "src/env-write-climb.ts:7",
         "src/param-climb.ts:6",
     ] {
         assert!(

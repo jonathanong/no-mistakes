@@ -44,6 +44,8 @@ impl<'g> Owners<'g> {
         facts: &dyn TsFactLookup,
         graph_files: &[PathBuf],
         resolution: &Resolution<'_>,
+        root: &std::path::Path,
+        config: &crate::config::v2::NoMistakesConfig,
     ) -> Self {
         let mut callers: FxHashMap<NodeId, Vec<&ResolvedCallSite>> = FxHashMap::default();
         for site in graph.resolved_call_sites() {
@@ -73,7 +75,7 @@ impl<'g> Owners<'g> {
         escape_unknown |= consumed.unknown();
         Self {
             callers,
-            env: env::EnvWrites::new(facts, graph_files),
+            env: env::EnvWrites::new(facts, graph_files, root, config),
             escaped,
             consumed,
             escape_unknown,

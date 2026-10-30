@@ -71,10 +71,10 @@ async function assertParity(cases, snapshotPath) {
       }
       if (root === nodeRoot) {
         const [rules, advisories] = {
-          node_default: [1, 23],
-          node_report: [24, 0],
+          node_default: [1, 26],
+          node_report: [27, 0],
           node_custom: [0, 2],
-          node_advisory: [0, 24],
+          node_advisory: [0, 27],
         }[label];
         assert.equal(current.rules.length, rules);
         assert.equal(current.advisories.length, advisories);
