@@ -195,3 +195,21 @@ fn json_workspace_unstub_envs_poisons_when_the_key_cannot_be_ruled_out() {
     assert!(json_text_poisons("{"));
     assert!(!json_text_poisons(""));
 }
+
+#[test]
+fn json_config_read_errors_poison_and_absolute_paths_stay_unpoisoned_when_missing() {
+    use super::owned::env::{json_configs_poison, json_file_poisons};
+    use crate::config::v2::schema::StringOrList;
+    use crate::config::v2::NoMistakesConfig;
+
+    let root = crate::test_support::rule_fixture_root("test-no-live-repository-scan/facts");
+    assert!(json_file_poisons(&root.join("unreadable.json")));
+
+    let absolute = std::env::current_dir()
+        .unwrap()
+        .join("no-such-nm-vitest.json");
+    assert!(absolute.is_absolute());
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One(absolute.display().to_string()));
+    assert!(!json_configs_poison(&root, &config));
+}

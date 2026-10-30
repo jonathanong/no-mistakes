@@ -12,9 +12,10 @@ struct Read {
 fn read(name: &str) -> Read {
     let path =
         crate::test_support::rule_fixture_root("test-no-live-repository-scan/facts").join(name);
-    let source = std::fs::read_to_string(path).unwrap();
+    let source = std::fs::read_to_string(&path).unwrap();
     let allocator = Allocator::default();
-    let parsed = Parser::new(&allocator, &source, SourceType::mjs()).parse();
+    let source_type = SourceType::from_path(&path).unwrap();
+    let parsed = Parser::new(&allocator, &source, source_type).parse();
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let facts = extract_with_arguments(&parsed.program, true);
     Read { source, facts }
@@ -120,6 +121,11 @@ fn stub_global_process_and_opaque_config_keys_poison() {
     let computed = read("config-computed-key.mjs");
     assert!(computed.provenance().opaque_config_key);
     assert!(!computed.provenance().env_unknown_write);
+    assert!(
+        read("stub-global-chains.mts")
+            .provenance()
+            .env_unknown_write
+    );
 }
 
 #[test]

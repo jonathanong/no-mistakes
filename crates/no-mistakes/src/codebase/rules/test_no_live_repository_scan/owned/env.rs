@@ -86,7 +86,7 @@ fn runner_config(path: &Path) -> bool {
     )
 }
 
-fn json_configs_poison(root: &Path, config: &NoMistakesConfig) -> bool {
+pub(in super::super) fn json_configs_poison(root: &Path, config: &NoMistakesConfig) -> bool {
     let mut paths = config
         .tests
         .vitest
@@ -115,7 +115,7 @@ fn json_configs_poison(root: &Path, config: &NoMistakesConfig) -> bool {
     paths.into_iter().any(|path| json_file_poisons(&path))
 }
 
-fn json_file_poisons(path: &Path) -> bool {
+pub(in super::super) fn json_file_poisons(path: &Path) -> bool {
     if !matches!(
         path.extension().and_then(|extension| extension.to_str()),
         Some("json" | "jsonc")
