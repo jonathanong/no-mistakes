@@ -177,6 +177,10 @@ prefix must close a nonempty `/* name */` before any other interpolation.
 Aliases, writes, defaults, spreads, extra or dynamic calls, escaped helpers,
 untrusted builders, and tagged bind interpolation remain unresolved. This
 proof joins only the leading comment and does not compose the SQL suffix.
+A plain ternary whose two arms are string literals supplies those names,
+including when the ternary is the template interpolation. A synchronous
+`for (const name of ['one', 'two'])` does too. An unresolved import anywhere
+in that file leaves those calls under `unanalyzable`.
 
 These are deliberately narrow low-effort syntax proofs. Low does not run the
 helper/value evaluator, so other helper-produced heads can remain unresolved

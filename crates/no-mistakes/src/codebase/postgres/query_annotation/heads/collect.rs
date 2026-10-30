@@ -60,6 +60,7 @@ pub(crate) fn collect_prepared(
     let low_candidates = include_all_calls.then_some(&executor_calls);
     let (trusted_append_calls, trusted_prefix_calls) =
         trusted_append::proofs(&syntax, &bindings, &calls, candidates, low_candidates);
+    let mut import_gated_finite = Vec::new();
     if include_all_calls {
         for (span, proof) in super::string_prefix::proofs(&syntax, &bindings, &executor_calls) {
             if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
@@ -78,14 +79,18 @@ pub(crate) fn collect_prepared(
         // Source-proven helper results are low-only endpoints. Legacy max
         // append fallback above must see the original call-head proofs.
         primitive_results::apply(&syntax, &bindings, ts, &executor_calls, &mut calls);
-        for (span, proof) in finite_comments::proofs(
+        let (finite_proofs, finite_gated) = finite_comments::proofs(
             &syntax,
             &bindings,
             ts.module_bindings.as_deref(),
             &executor_calls,
-        ) {
+        );
+        for (span, proof) in finite_proofs {
             if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
                 calls.insert(span, proof);
+                if finite_gated.contains(&span) {
+                    import_gated_finite.push(span);
+                }
             }
         }
     }
@@ -168,6 +173,7 @@ pub(crate) fn collect_prepared(
             Default::default()
         },
         conditional_effects,
+        import_gated_finite,
         helper_calls,
         loop_carried_missing,
         calls,

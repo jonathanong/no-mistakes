@@ -17,13 +17,28 @@ pub(super) fn fixture_with_append_candidates(
 pub(super) fn fixture_with_effects(name: &str) -> (String, TsFileFacts, AnnotationHeads) {
     fixture_with_modes(name, false, true)
 }
+pub(super) fn fixture_with_effects_from(
+    dir: &str,
+    name: &str,
+) -> (String, TsFileFacts, AnnotationHeads) {
+    fixture_in(dir, name, false, true)
+}
 fn fixture_with_modes(
     name: &str,
     append_candidates: bool,
     collect_helper_heads: bool,
 ) -> (String, TsFileFacts, AnnotationHeads) {
+    fixture_in("low-heads", name, append_candidates, collect_helper_heads)
+}
+fn fixture_in(
+    dir: &str,
+    name: &str,
+    append_candidates: bool,
+    collect_helper_heads: bool,
+) -> (String, TsFileFacts, AnnotationHeads) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-require-query-annotation/fixture/low-heads")
+        .join("../../test-cases/rules/postgres-require-query-annotation/fixture")
+        .join(dir)
         .join(name);
     let source = std::fs::read_to_string(&path).unwrap();
     let (ts, heads) = crate::ast::with_program(&path, &source, |program, _| {

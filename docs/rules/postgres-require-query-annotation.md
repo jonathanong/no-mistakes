@@ -247,7 +247,9 @@ are discarded static appends on the exact parameter; callbacks may run later
 or repeatedly without changing the head. Captured returns, implicit arrow
 append results, and nested helper calls stay unresolved.
 The helper may compose up to four exact same-file append-only calls on that
-parameter. It may return a static parameter-rooted append chain only when the
+parameter. A chain of more than four local edges is not proven: that helper
+effect stays unresolved, so the builder head is unresolved and reported under
+`unanalyzable`. It may return a static parameter-rooted append chain only when the
 caller discards the result. Nested helper calls, aliases, cycles, and used helper
 results remain unresolved.
 Inert Boolean or string defaults on later helper parameters can preserve the
@@ -273,7 +275,11 @@ A fixed missing head returned by such a helper is a failing finding.
 One local const returned by a helper qualifies when its trusted named tag
 keeps a fixed prefix through append-only uses until the single final return.
 At low effort, an ordinary leading comment template may use one exact
-read-only loop name drawn from at most 16 direct literal tuple rows. A local
+read-only loop name drawn from at most 16 direct literal tuple rows. A plain
+ternary whose arms are two string literals, including that ternary written in
+the template interpolation, and a synchronous `for (const name of ['one', 'two'])`
+supply the same first comment name. An unresolved import anywhere in the file
+leaves those calls under `unanalyzable`. A local
 helper may also receive at most 16 direct literal names through a closed
 `select(name)` call set before appending that ordinary template to an empty
 trusted SQL builder. Each runtime name must close the first named comment;
