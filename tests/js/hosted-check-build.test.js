@@ -385,12 +385,12 @@ test("rejects dependency stubs and unexpected tracked source changes instead of 
     );
   }));
 
-test("nightly and demand runs always source-build latest release against resolved main, without a PR perf job", () => {
+test("demand runs always source-build latest release against resolved main, without a PR perf job", () => {
   const workflow = readFileSync(
     join(__dirname, "../../.github/workflows/hosted-check.yml"),
     "utf8",
   );
-  assert.match(workflow, /cron: "23 8 \* \* \*"/);
+  assert.doesNotMatch(workflow, /schedule:/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /candidate_sha:[\s\S]*?required: false[\s\S]*?default: ""/);
   assert.match(workflow, /HOSTED_CANDIDATE_SHA: \$\{\{ inputs\.candidate_sha \}\}/);
