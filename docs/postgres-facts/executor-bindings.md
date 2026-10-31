@@ -33,7 +33,8 @@ For low SQL-structure checks, a typed parameter may default to a configured
 executor export. Typed callback parameters keep the same literal-SQL contract.
 For a wrapper declared in `executorFactoryNames`, passing a known receiver
 alongside that callback is transport, not another SQL statement. Helpers outside
-that configured set retain uncertainty for any executor passed to them. A configured
+that configured set retain uncertainty for any executor passed to them, except
+for the typed helper transport described below. A configured
 factory result bound to an immutable `const`, `using`,
 or `await using` local is checked at its actual executor calls. Reassignment
 and unsupported defaults remain uncertain. Imported type identities can come
@@ -58,6 +59,15 @@ uncertainty at that invocation. A global-looking intrinsic call is still opaque
 until the analysis proves no local binding or mutation overrides it. Configured callback
 and factory wrappers transport executor values; their callback parameter
 headers do not create extra SQL obligations.
+For `postgres-no-unbounded-sql-identifier` and
+`postgres-no-transformed-uuid-predicates` at low effort, a direct executor
+argument may also flow into a resolved helper parameter annotated directly with
+a configured imported executor type. The proof uses the receiving parameter at
+that argument position, including resolved imported helpers. The helper's SQL
+calls and unsupported uses are still checked independently. Untyped parameters,
+unrelated types, unresolved or mutated callees, and executor values nested in
+containers retain uncertainty. A configured type on the argument alone is
+insufficient.
 The four SQL structure low rules also support
 [bounded helper and builder recovery](low-helper-recovery.md): a helper transport
 is cleared only after its executor uses are analyzed. Opaque helpers and

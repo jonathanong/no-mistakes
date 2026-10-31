@@ -110,6 +110,11 @@ bindings use the same ownership proof. Erased
 type references create no findings; dynamic SQL and runtime executor escapes
 are diagnosed at their own use. See [executor
 bindings](../postgres-facts/executor-bindings.md).
+Passing a proven executor directly to a resolved helper's parameter annotated
+with a configured imported executor type is transport at low effort. SQL in the
+helper is checked at its own executor calls. Untyped or differently typed
+parameters and unresolved helpers retain uncertainty, even when the argument
+has a configured executor type.
 JavaScript escapes and other construction follow the
 unanalyzable policy. At `effort: max`, it also analyzes supported prepared SQL
 builders and helper-returned statements. Unanalyzable or dynamic query text
