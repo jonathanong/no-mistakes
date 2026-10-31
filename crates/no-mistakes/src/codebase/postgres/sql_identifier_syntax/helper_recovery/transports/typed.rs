@@ -1,4 +1,4 @@
-use super::super::{catalog::PreparedCatalog, CallModel};
+use super::super::{catalog::PreparedCatalog, ApplicationKey, CallModel, FileModels};
 use crate::codebase::postgres::{
     embedded::helpers::program::{Expr, Stmt},
     sql_identifier_syntax::Span,
@@ -9,13 +9,12 @@ use std::path::Path;
 pub(super) fn accepts(
     catalog: &PreparedCatalog<'_>,
     file: &Path,
+    application: &ApplicationKey,
+    caller: &FileModels,
     call: &CallModel,
     reference: Span,
     executors: &FxHashSet<usize>,
 ) -> bool {
-    let Some(application) = catalog.application else {
-        return false;
-    };
     if !matches!(
         application.rule.as_str(),
         "postgres-no-unbounded-sql-identifier" | "postgres-no-transformed-uuid-predicates"
@@ -24,43 +23,20 @@ pub(super) fn accepts(
     {
         return false;
     }
-    let Some(profile) = catalog.profile else {
-        return false;
-    };
-    let Some(caller_file) = catalog.files.get(file) else {
-        return false;
-    };
-    let caller = &caller_file.sql_identifier_syntax.recovery;
     if caller.dynamic_scope || call.callee.is_some_and(|id| caller.writes.contains(&id)) {
         return false;
     }
     let callback = call.callee.and_then(|id| caller.callbacks.get(&id));
     let (parameters, typed) = if let Some(parameters) = callback {
-        let Some(typed) = caller.executors.get(profile) else {
-            return false;
-        };
-        (parameters, typed)
+        (parameters.as_slice(), executors)
     } else {
-        let Some(key) = call
+        let Some(receiver) = call
             .callee
-            .and_then(|callee| catalog.typed_binding(file, callee))
+            .and_then(|callee| catalog.typed_parameters(file, callee, &application.profile))
         else {
             return false;
         };
-        let Some(receiver_file) = catalog.files.get(&key.file) else {
-            return false;
-        };
-        let receiver = &receiver_file.sql_identifier_syntax.recovery;
-        if receiver.dynamic_scope {
-            return false;
-        }
-        let Some(parameters) = receiver.signatures.get(&key.callable) else {
-            return false;
-        };
-        let Some(typed) = receiver.executors.get(profile) else {
-            return false;
-        };
-        (parameters, typed)
+        receiver
     };
     call.arguments.iter().enumerate().any(|(index, argument)| {
         let [(id, at)] = argument.references.as_slice() else {

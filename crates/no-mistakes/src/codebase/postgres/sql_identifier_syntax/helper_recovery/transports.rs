@@ -66,7 +66,15 @@ pub(super) fn project(
                 let Some(owner) = owner else {
                     continue;
                 };
-                if typed::accepts(&catalog, path, owner, call.span, executors) {
+                if typed::accepts(
+                    &catalog,
+                    path,
+                    &application,
+                    models,
+                    owner,
+                    call.span,
+                    executors,
+                ) {
                     updates.push((
                         path.clone(),
                         application.clone(),

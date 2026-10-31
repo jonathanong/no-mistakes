@@ -38,8 +38,17 @@ impl PreparedCatalog<'_> {
     pub fn binding(&self, file: &Path, id: usize) -> Option<Key> {
         self.resolve_binding(file, id, &mut Vec::new(), false)
     }
-    pub fn typed_binding(&self, file: &Path, id: usize) -> Option<Key> {
-        self.resolve_binding(file, id, &mut Vec::new(), true)
+    pub fn typed_parameters(
+        &self,
+        file: &Path,
+        id: usize,
+        profile: &super::super::EmbeddedSqlOptions,
+    ) -> Option<(&[Option<usize>], &crate::fx::FxHashSet<usize>)> {
+        let key = self.resolve_binding(file, id, &mut Vec::new(), true)?;
+        let receiver = &self.files.get(&key.file)?.sql_identifier_syntax.recovery;
+        let parameters = receiver.signatures.get(&key.callable)?;
+        let typed = receiver.executors.get(profile)?;
+        (!receiver.dynamic_scope).then_some((parameters.as_slice(), typed))
     }
     fn resolve_binding(
         &self,
