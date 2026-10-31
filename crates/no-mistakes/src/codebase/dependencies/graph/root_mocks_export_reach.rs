@@ -6,6 +6,16 @@ pub(crate) struct MockExportReach {
     guards: Vec<MockGuard>,
 }
 
+impl MockExportReach {
+    pub(crate) fn sources(&self) -> FxHashSet<NodeId> {
+        let mut nodes = self.ordinary.clone();
+        for (guard_nodes, _) in &self.guards {
+            nodes.extend(guard_nodes.iter().cloned());
+        }
+        nodes
+    }
+}
+
 impl DepGraph {
     pub(crate) fn mock_export_reach(
         &self,
@@ -28,14 +38,10 @@ impl DepGraph {
                 ordinary.extend(boundaries.factories.iter().cloned());
                 continue;
             }
-            let nodes = if boundaries.blocked.is_empty() {
-                let mut seeds = group;
-                seeds.extend(boundaries.factories.iter().cloned());
-                self.call_source_nodes(&seeds, CallTraversal::Transitive, max_depth)
-            } else {
-                self.walk_with_mock_boundaries(&group, max_depth, boundaries)
-            };
-            guards.push((nodes, boundaries.suppressed.clone()));
+            guards.push((
+                self.walk_with_mock_boundaries(&group, max_depth, boundaries),
+                boundaries.suppressed.clone(),
+            ));
         }
         MockExportReach {
             ordinary: self.call_source_nodes(&ordinary, CallTraversal::Transitive, max_depth),
