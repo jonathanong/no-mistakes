@@ -31,7 +31,7 @@ window. This is an estimate from the previous job graph, not a measured release
 with the new graph; runner queues and registry propagation can change the gain.
 No additional release is published merely to benchmark workflow changes.
 
-In [release run 38330395062](https://github.com/jonathanong/no-mistakes/actions/runs/38330395062)
+In release run `38330395062`
 (version `0.88.0`), Cargo publication took 209 seconds. Native builds and
 validation were already parallel; both Linux builds and validation finished
 within about one minute of each other. The platform npm publication stage then
@@ -70,7 +70,7 @@ change does not establish a shorter end-to-end release on its own.
 
 The isolated JavaScript job was exercised twice on `ubuntu-latest`, Node 24,
 with source `bd1181f41583d83cca847110c8c073c54fe903b4` in
-[run 38338859408](https://github.com/jonathanong/no-mistakes/actions/runs/38338859408).
+run `38338859408`.
 Both jobs passed without any Rust toolchain or build, in 120 and 121 seconds
 including setup and post steps. The configured suite passed 1,197 tests with 264
 configured skips, and retained its coverage gates. Chromium installation took

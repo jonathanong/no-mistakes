@@ -111,7 +111,7 @@ ARM CI comparisons require the expected base and runner before interpretation.
 
 ## Benchmark verification gap
 
-The first [memory-query CI failure](https://github.com/jonathanong/no-mistakes/actions/runs/39090131971/job/117566867392)
+The first memory-query CI failure (run `39090131971`, job `117566867392`)
 at head `43cb40d9621e2a691726de90cad0a36032b58021` exposed an obsolete expected
 resolver count: the saved four-report request computes ten distinct keys, while
 the benchmark still expected twelve. Equivalent graph and legacy-symbol scopes
