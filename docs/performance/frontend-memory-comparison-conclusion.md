@@ -17,7 +17,7 @@ new archived-pair experiment follows from this investigation.
 
 ## Original observations
 
-[The original check](https://github.com/jonathanong/no-mistakes/runs/116245579477)
+The original check (`116245579477`)
 compares base `6489073eec9d4a9a02fc00e196c8ca0ceaa13513` with head
 `3414f3c47ec55291c6b8c843e43b43ca754b847d`. The check reports 221 untouched
 entries, four skipped entries using baseline values, and 39 syscall-limited

@@ -120,7 +120,7 @@ merged profile available to `cargo llvm-cov report`.
 
 ## Hosted measurement
 
-[Run 38332918032](https://github.com/jonathanong/no-mistakes/actions/runs/38332918032)
+Run `38332918032`
 built source `202d9ca7140af38c38bc8b49f5ec700998b6029b` plus only the experiment
 workflow (measurement commit `1d68ff3807c2c65556a79877d6e867c3890fb819`) with
 Rust 1.96.0 on two four-vCPU `ubuntu-latest` x86 runners. Each runner used a
@@ -151,7 +151,7 @@ repeated on Rust 1.99 after the latest-stable policy changed, as recorded below.
 
 ## Rust 1.99 confirmation
 
-[Run 38333716822](https://github.com/jonathanong/no-mistakes/actions/runs/38333716822)
+Run `38333716822`
 used the same production source and reversed-order design, changing only the
 measurement workflow to install Rust 1.99.0 (LLVM 23.1.1). Its measurement commit
 was `09492537c61143aa3e893d8c1d8fc4d9e8bfb486`.

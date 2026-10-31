@@ -106,7 +106,7 @@ CPU calibration from the six healthy observations per cohort, in seconds:
 
 The observations are retained in
 [`hosted-check-calibration.json`](hosted-check-calibration.json), from
-[run 39074247358](https://github.com/jonathanong/no-mistakes/actions/runs/39074247358).
+run `39074247358`.
 The healthy source-built analyzer was commit
 `d3d3131442c85b1e7d64cf83fcb2bb620e856049`, tree
 `84e887bf581544066820736bc8cfbb26c4ff0104`, binary SHA-256
