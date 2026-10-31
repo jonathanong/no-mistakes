@@ -373,6 +373,78 @@ fn flows_unbounded_follows_parameter_containers_and_returns() {
         35,
         member(ValueExpression::Call(240, 250), "table"),
     ));
+    extra.bindings.push(bind(
+        "from_nullish_member",
+        36,
+        member(
+            ValueExpression::Nullish(
+                Arc::new(ValueExpression::Unknown),
+                Arc::new(object("table", named("free", 40))),
+            ),
+            "table",
+        ),
+    ));
+    extra.bindings.push(bind(
+        "from_default_member",
+        37,
+        member(
+            ValueExpression::Default(
+                Arc::new(ValueExpression::Unknown),
+                Arc::new(object("table", named("free", 40))),
+            ),
+            "table",
+        ),
+    ));
+    extra.returns.push((
+        CallableId(19),
+        ValueExpression::Either(
+            Arc::new(ValueExpression::Unknown),
+            Arc::new(object("table", named("free", 40))),
+        ),
+    ));
+    extra
+        .calls
+        .push(call(260, 270, ValueExpression::Callable(CallableId(19))));
+    extra.bindings.push(bind(
+        "from_either_right",
+        38,
+        member(ValueExpression::Call(260, 270), "table"),
+    ));
+    extra.returns.push((
+        CallableId(20),
+        ValueExpression::Named {
+            name: "no_such".to_string(),
+            scope: Some(0),
+            offset: 1,
+            context: None,
+        },
+    ));
+    extra
+        .calls
+        .push(call(280, 290, ValueExpression::Callable(CallableId(20))));
+    extra.bindings.push(bind(
+        "from_missing_name",
+        39,
+        member(ValueExpression::Call(280, 290), "table"),
+    ));
+    extra
+        .bindings
+        .push(bind("as_fn", 41, ValueExpression::Callable(CallableId(21))));
+    extra
+        .returns
+        .push((CallableId(21), object("table", named("free", 40))));
+    extra.calls.push(call(300, 310, named("as_fn", 41)));
+    extra.bindings.push(bind(
+        "from_named_callable",
+        42,
+        member(ValueExpression::Call(300, 310), "table"),
+    ));
+    extra.calls.push(call(320, 330, ValueExpression::Unknown));
+    extra.bindings.push(bind(
+        "from_unknown_callee",
+        43,
+        member(ValueExpression::Call(320, 330), "table"),
+    ));
     let harness = Harness::new(facts(extra));
     assert_eq!(harness.file, file);
     for name in [
@@ -380,10 +452,16 @@ fn flows_unbounded_follows_parameter_containers_and_returns() {
         "from_nullish_return",
         "from_default_return",
         "from_named_field",
+        "from_nullish_member",
+        "from_default_member",
+        "from_either_right",
+        "from_named_callable",
     ] {
         assert!(harness.unbounded(name), "{name}");
     }
     assert!(!harness.unbounded("self_member"));
     assert!(!harness.unbounded("from_box_cycle"));
     assert!(!harness.unbounded("from_missing_field"));
+    assert!(!harness.unbounded("from_missing_name"));
+    assert!(!harness.unbounded("from_unknown_callee"));
 }

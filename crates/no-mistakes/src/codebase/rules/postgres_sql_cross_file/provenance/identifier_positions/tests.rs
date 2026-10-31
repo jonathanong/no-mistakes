@@ -1,5 +1,6 @@
 use super::*;
 use crate::codebase::postgres::EmbeddedSqlCall;
+use sqlparser::ast::{GroupByExpr, SetExpr, Statement, UpdateTableFromKind};
 
 fn collected(sql: &str) -> (BTreeSet<u32>, BTreeSet<u32>) {
     let statements = parse_postgres_sql(sql).expect("sql");
@@ -67,6 +68,71 @@ fn other_statement_shapes_keep_identifier_indexes() {
     let (relations, columns) = collected("SELECT sql_placeholder_0, sql_placeholder_");
     assert!(relations.is_empty());
     assert!(columns.is_empty());
+}
+
+#[test]
+fn nested_dml_and_non_select_shapes_keep_identifier_indexes() {
+    let (relations, columns) =
+        collected("UPDATE sql_placeholder_1 FROM sql_placeholder_2 SET sql_placeholder_3 = 1");
+    assert_eq!(relations, BTreeSet::from([1, 2]));
+    assert_eq!(columns, BTreeSet::from([3]));
+    let (relations, columns) = collected("SELECT sql_placeholder_1 GROUP BY ALL");
+    assert!(relations.is_empty());
+    assert_eq!(columns, BTreeSet::from([1]));
+    let (relations, columns) =
+        collected("SELECT sql_placeholder_1 FROM ((SELECT sql_placeholder_2)) AS nested");
+    assert!(relations.is_empty());
+    assert_eq!(columns, BTreeSet::from([1, 2]));
+    let (relations, columns) = collected(
+        "WITH c AS (SELECT sql_placeholder_1) INSERT INTO sql_placeholder_2 SELECT sql_placeholder_3",
+    );
+    assert_eq!(relations, BTreeSet::from([2]));
+    assert_eq!(columns, BTreeSet::from([1, 3]));
+    let (relations, columns) = collected("EXPLAIN SELECT 1");
+    assert!(relations.is_empty());
+    assert!(columns.is_empty());
+    let update = parse_postgres_sql(
+        "UPDATE sql_placeholder_1 FROM sql_placeholder_2 SET sql_placeholder_3 = 1",
+    )
+    .expect("sql");
+    assert!(matches!(
+        &update[0],
+        Statement::Update(update) if matches!(update.from, Some(UpdateTableFromKind::BeforeSet(_)))
+    ));
+    let grouped = parse_postgres_sql("SELECT sql_placeholder_1 GROUP BY ALL").expect("sql");
+    let Statement::Query(query) = &grouped[0] else {
+        panic!("query");
+    };
+    let SetExpr::Select(select) = query.body.as_ref() else {
+        panic!("select");
+    };
+    assert!(matches!(select.group_by, GroupByExpr::All(_)));
+    let nested =
+        parse_postgres_sql("SELECT sql_placeholder_1 FROM ((SELECT sql_placeholder_2)) AS nested")
+            .expect("sql");
+    let Statement::Query(query) = &nested[0] else {
+        panic!("query");
+    };
+    let SetExpr::Select(select) = query.body.as_ref() else {
+        panic!("select");
+    };
+    let sqlparser::ast::TableFactor::Derived { subquery, .. } = &select.from[0].relation else {
+        panic!("derived");
+    };
+    assert!(matches!(subquery.body.as_ref(), SetExpr::Query(_)));
+    let inserted = parse_postgres_sql(
+        "WITH c AS (SELECT sql_placeholder_1) INSERT INTO sql_placeholder_2 SELECT sql_placeholder_3",
+    )
+    .expect("sql");
+    let Statement::Query(query) = &inserted[0] else {
+        panic!("query");
+    };
+    assert!(matches!(query.body.as_ref(), SetExpr::Insert(_)));
+    let explained = parse_postgres_sql("EXPLAIN SELECT 1").expect("sql");
+    assert!(!matches!(
+        &explained[0],
+        Statement::Query(_) | Statement::Insert(_) | Statement::Update(_) | Statement::Delete(_)
+    ));
 }
 
 #[test]
