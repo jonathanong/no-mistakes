@@ -19,12 +19,8 @@ impl Bindings<'_> {
         let Some(binding) = self.value(file, scope, name, at) else {
             return self.parameter(file, name);
         };
-        if !seen
-            .bindings
-            .insert((binding.scope, binding.name.clone(), binding.declared_at))
-        {
-            return false;
-        }
+        seen.bindings
+            .insert((binding.scope, binding.name.clone(), binding.declared_at));
         self.expr_unbounded(file, &binding.value, &mut seen)
     }
 
@@ -127,3 +123,6 @@ impl Bindings<'_> {
 }
 
 mod returns;
+
+#[cfg(test)]
+mod tests;

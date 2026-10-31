@@ -75,3 +75,6 @@ fn template_parts<'a>(
         _ => None,
     }
 }
+
+#[cfg(test)]
+mod tests;
