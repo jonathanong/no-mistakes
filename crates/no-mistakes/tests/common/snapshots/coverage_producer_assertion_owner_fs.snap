@@ -101,14 +101,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/fs-io.mts",
-          "line": 34,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#otherModuleAsserted",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function otherModuleAsserted() { equal(hostname(), 'h'); }",
-          "target": "otherModuleAsserted"
-        },
-        {
-          "file": "src/fs-io.mts",
           "line": 35,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/fs-io.mts#dynamicRequire",
           "rule": "coverage-producer-assertion-owner",

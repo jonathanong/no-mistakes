@@ -97,7 +97,38 @@ impl Function {
 }
 impl Import {
     pub fn matches(&self, site: &ResolvedCallSite) -> bool {
-        !site.has_unknown_target() && site.targets().len() > 0 && site.targets().all(|candidate| matches!(candidate.target,
-            KnownCallTargetRef::ModuleExport { specifier, export_path, .. } if specifier == self.module && export_path == self.export))
+        !site.has_unknown_target()
+            && site.targets().len() > 0
+            && site
+                .targets()
+                .all(|candidate| self.matches_target(candidate.target))
+    }
+
+    fn matches_target(&self, target: KnownCallTargetRef<'_>) -> bool {
+        let KnownCallTargetRef::ModuleExport {
+            specifier,
+            export_path,
+            ..
+        } = target
+        else {
+            return false;
+        };
+        specifier == self.module
+            && (export_path == self.export
+                || node_assert_export(specifier, export_path) == Some(self.export.as_str()))
+    }
+}
+
+fn node_assert_export<'a>(specifier: &str, export_path: &'a str) -> Option<&'a str> {
+    if !matches!(
+        specifier,
+        "assert" | "assert/strict" | "node:assert" | "node:assert/strict"
+    ) {
+        return None;
+    }
+    if export_path == "default" {
+        Some("ok")
+    } else {
+        export_path.strip_prefix("default.")
     }
 }

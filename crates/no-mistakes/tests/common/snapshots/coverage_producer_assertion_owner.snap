@@ -684,19 +684,19 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/import-forms.mts",
-          "line": 11,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#externalAndAssertion",
+          "line": 15,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#externalOnly",
           "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function externalAndAssertion() { hostname(); equal(1, 1); }",
-          "target": "externalAndAssertion"
+          "sourceLine": "export function externalOnly() { hostname(); query('select 1'); }",
+          "target": "externalOnly"
         },
         {
           "file": "src/import-forms.mts",
-          "line": 9,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#defaultMemberAssertion",
+          "line": 21,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#bareNodeAssert",
           "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function defaultMemberAssertion() { assert.strictEqual(1, 1); }",
-          "target": "defaultMemberAssertion"
+          "sourceLine": "export function bareNodeAssert() { assert(1); }",
+          "target": "bareNodeAssert"
         }
       ],
       "warnings": []

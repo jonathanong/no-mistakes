@@ -61,7 +61,7 @@ fn generator_contracts_do_not_emit_executable_ownership_edges() {
 }
 
 #[test]
-fn import_forms_and_external_calls_preserve_uncertainty_policy() {
+fn assert_import_forms_reach_owners_and_unmatched_externals_stay_uncertain() {
     let root = fixture();
     for (policy, channel) in [
         ("report", "rules"),
@@ -92,9 +92,22 @@ fn import_forms_and_external_calls_preserve_uncertainty_policy() {
         let expected = if policy == "ignore" {
             vec![]
         } else {
-            vec!["defaultMemberAssertion", "externalAndAssertion"]
+            vec!["bareNodeAssert", "externalOnly"]
         };
         assert_eq!(targets, expected, "{report}");
+        for symbol in [
+            "namedAssertion",
+            "namespaceAssertion",
+            "defaultMemberAssertion",
+            "externalAndAssertion",
+            "strictDefaultEqual",
+            "strictNamespaceOk",
+            "bareStrictAssert",
+            "bareLooseAssert",
+            "strictPackageEqual",
+        ] {
+            assert!(!targets.contains(&symbol), "{symbol}: {report}");
+        }
         let other = if channel == "rules" {
             "advisories"
         } else {
@@ -165,6 +178,7 @@ fn callback_style_fs_treats_nonliteral_last_arguments_as_possible_callbacks() {
         "callObjectOptions",
         "applyObjectOptions",
         "applyArrayOptions",
+        "otherModuleAsserted",
     ] {
         assert!(
             !findings.iter().any(|finding| finding.rule == RULE_ID

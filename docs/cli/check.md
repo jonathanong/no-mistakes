@@ -221,7 +221,7 @@ write grant, including `id-token: write` and reusable-workflow callers. Explicit
 job permissions replace the workflow grant. Unknown declarations follow
 `options.unanalyzable`; see [job permissions](../rules/github-actions-job-permissions.md).
 
-The opt-in [coverage-producer-assertion-owner](../rules/coverage-producer-assertion-owner.md) rule checks configured coverage producers for reachable assertions; uncertain dispatch follows `unanalyzable`.
+The opt-in [coverage-producer-assertion-owner](../rules/coverage-producer-assertion-owner.md) rule checks configured coverage producers for reachable assertions. Uncertain dispatch follows `unanalyzable`. An unmodeled module call does not erase a reached owner.
 
 The opt-in [forbidden-lint-suppressions](../rules/forbidden-lint-suppressions.md)
 check reports protected lint rule IDs disabled by real TS/JS comments in
