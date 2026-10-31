@@ -3,5 +3,5 @@ rules:
   - rule: coverage-producer-assertion-owner
     scope: repository
     options:
-      producers: [{ file: src/producers.mts, symbol: mixed }, { file: src/producers.mts, symbol: mixedTarget }]
+      producers: [{ file: src/producers.mts, symbol: mixed }, { file: src/producers.mts, symbol: mixedTarget }, { file: src/producers.mts, symbol: directOwnerAndDynamic }, { file: src/producers.mts, symbol: dynamicOnlyAfterExecute }]
       assertions: [{ module: "node:assert", export: strictEqual }]

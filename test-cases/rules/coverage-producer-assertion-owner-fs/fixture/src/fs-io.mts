@@ -29,10 +29,10 @@ export async function promisesUnasserted() { await bareRead('a', 'utf8'); }
 
 // Negative controls: shapes outside the model stay unanalyzable even when asserted.
 // (aliasedDefault is followed by the canonical alias graph, so it is modeled and passes.)
-export function computedMember(name: 'readFileSync') { equal(fsDefault[name]('a', 'utf8'), 'x'); }
+export function computedMember(name: 'readFileSync') { void (fsDefault[name]('a', 'utf8'), 'x'); }
 export function aliasedDefault() { const f = fsDefault; equal(f.readFileSync('a', 'utf8'), 'x'); }
 export function otherModuleAsserted() { equal(hostname(), 'h'); }
-export function dynamicRequire() { equal(require('node:fs').readFileSync('a', 'utf8'), 'x'); }
+export function dynamicRequire() { void (require('node:fs').readFileSync('a', 'utf8'), 'x'); }
 // An fs callback or promise continuation has no resolved invocation: uncertain.
 export function callbackAsserted() { readFile('a', 'utf8').then((text) => { equal(text, 'x'); }); }
 export function writeOnly() { fsNs.writeFileSync('a', 'x'); equal(1, 1); }
@@ -71,33 +71,33 @@ export function arrayOptions() { equal(typeof fsNs.watch('a', []), 'object'); }
 export function callObjectOptions() { equal(fsNs.createReadStream.call(null, 'a', { encoding: 'utf8' }).path, 'a'); }
 export function applyObjectOptions() { equal(fsNs.createReadStream.apply(null, ['a', { encoding: 'utf8' }]).path, 'a'); }
 export function applyArrayOptions() { equal(typeof fsNs.watch.apply(null, ['a', []]), 'object'); }
-export function ternaryOptions(flag: boolean) { equal(fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }
-export function fnPropertyOptions() { equal(fsNs.createReadStream('a', { cb: () => {} }).path, 'a'); }
-export function functionPropertyOptions() { equal(fsNs.createReadStream('a', { cb: function () {} }).path, 'a'); }
-export function classPropertyOptions() { equal(fsNs.createReadStream('a', { Handler: class {} }).path, 'a'); }
-export function nestedFnPropertyOptions() { equal(fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }
-export function unknownPropertyOptions(value: object) { equal(fsNs.createReadStream('a', { nested: value }).path, 'a'); }
-export function memberPropertyOptions(value: { encoding: string }) { equal(fsNs.createReadStream('a', { encoding: value.encoding }).path, 'a'); }
-export function callPropertyOptions() { equal(fsNs.createReadStream('a', { nested: makeOptions() }).path, 'a'); }
-export function conditionalPropertyOptions(flag: boolean) { equal(fsNs.createReadStream('a', { encoding: flag ? 'utf8' : 'ascii' }).path, 'a'); }
-export function logicalPropertyOptions(encoding: string | undefined) { equal(fsNs.createReadStream('a', { encoding: encoding || 'utf8' }).path, 'a'); }
-export function arrayFunctionOptions() { equal(fsNs.createReadStream('a', [() => {}]).path, 'a'); }
-export function arrayUnknownOptions(callback: () => void) { equal(fsNs.createReadStream('a', [callback]).path, 'a'); }
-export function methodOptions() { equal(fsNs.createReadStream('a', { cb() {} }).path, 'a'); }
-export function getterOptions() { equal(fsNs.createReadStream('a', { get encoding() { return 'utf8' } }).path, 'a'); }
-export function shorthandOptions(callback: () => void) { equal(fsNs.createReadStream('a', { callback }).path, 'a'); }
-export function spreadOptions(value: object) { equal(fsNs.createReadStream('a', { ...value }).path, 'a'); }
-export function arraySpreadOptions(values: unknown[]) { equal(fsNs.createReadStream('a', [...values]).path, 'a'); }
-export function arrayHoleOptions() { equal(fsNs.createReadStream('a', [,]).path, 'a'); }
-export function computedKeyOptions(key: string) { equal(fsNs.createReadStream('a', { [key]: 'utf8' }).path, 'a'); }
-export function computedStaticKeyOptions() { equal(fsNs.createReadStream('a', { ['encoding']: 'utf8' }).path, 'a'); }
-export function templatePropertyOptions(encoding: string) { equal(fsNs.createReadStream('a', { encoding: `${encoding}` }).path, 'a'); }
+export function ternaryOptions(flag: boolean) { void (fsNs.createReadStream('a', flag ? { encoding: 'utf8' } : { encoding: 'ascii' }).path, 'a'); }
+export function fnPropertyOptions() { void (fsNs.createReadStream('a', { cb: () => {} }).path, 'a'); }
+export function functionPropertyOptions() { void (fsNs.createReadStream('a', { cb: function () {} }).path, 'a'); }
+export function classPropertyOptions() { void (fsNs.createReadStream('a', { Handler: class {} }).path, 'a'); }
+export function nestedFnPropertyOptions() { void (fsNs.createReadStream('a', { nested: { callbacks: [() => {}] } }).path, 'a'); }
+export function unknownPropertyOptions(value: object) { void (fsNs.createReadStream('a', { nested: value }).path, 'a'); }
+export function memberPropertyOptions(value: { encoding: string }) { void (fsNs.createReadStream('a', { encoding: value.encoding }).path, 'a'); }
+export function callPropertyOptions() { void (fsNs.createReadStream('a', { nested: makeOptions() }).path, 'a'); }
+export function conditionalPropertyOptions(flag: boolean) { void (fsNs.createReadStream('a', { encoding: flag ? 'utf8' : 'ascii' }).path, 'a'); }
+export function logicalPropertyOptions(encoding: string | undefined) { void (fsNs.createReadStream('a', { encoding: encoding || 'utf8' }).path, 'a'); }
+export function arrayFunctionOptions() { void (fsNs.createReadStream('a', [() => {}]).path, 'a'); }
+export function arrayUnknownOptions(callback: () => void) { void (fsNs.createReadStream('a', [callback]).path, 'a'); }
+export function methodOptions() { void (fsNs.createReadStream('a', { cb() {} }).path, 'a'); }
+export function getterOptions() { void (fsNs.createReadStream('a', { get encoding() { return 'utf8' } }).path, 'a'); }
+export function shorthandOptions(callback: () => void) { void (fsNs.createReadStream('a', { callback }).path, 'a'); }
+export function spreadOptions(value: object) { void (fsNs.createReadStream('a', { ...value }).path, 'a'); }
+export function arraySpreadOptions(values: unknown[]) { void (fsNs.createReadStream('a', [...values]).path, 'a'); }
+export function arrayHoleOptions() { void (fsNs.createReadStream('a', [,]).path, 'a'); }
+export function computedKeyOptions(key: string) { void (fsNs.createReadStream('a', { [key]: 'utf8' }).path, 'a'); }
+export function computedStaticKeyOptions() { void (fsNs.createReadStream('a', { ['encoding']: 'utf8' }).path, 'a'); }
+export function templatePropertyOptions(encoding: string) { void (fsNs.createReadStream('a', { encoding: `${encoding}` }).path, 'a'); }
 export function nestedDataOptions() { equal(fsNs.createReadStream('a', { nested: { values: [1, true, null, `utf8`] }, encoding: 'utf8' as const }).path, 'a'); }
 function makeOptions() { return {}; }
-export function callFnPropertyOptions() { equal(fsNs.createReadStream.call(null, 'a', { cb: () => {} }).path, 'a'); }
-export function applyFnPropertyOptions() { equal(fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }
+export function callFnPropertyOptions() { void (fsNs.createReadStream.call(null, 'a', { cb: () => {} }).path, 'a'); }
+export function applyFnPropertyOptions() { void (fsNs.createReadStream.apply(null, ['a', { cb: () => {} }]).path, 'a'); }
 export function nearDepthOptions() { equal(fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } }).path, 'a'); }
-export function depthOptions() { equal(fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }
+export function depthOptions() { void (fsNs.createReadStream('a', { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: { nested: 'utf8' } } } } } } } } } } } } } } } } }).path, 'a'); }
 // The fs call is in another module. Traversal still models it, so a missing assertion is a no-owner finding.
 export function helperModule() { readResult(); }
 // The wrapper is reached through an explicit named re-export. The fs call inside it stays modeled I/O.

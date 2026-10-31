@@ -488,6 +488,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function callback() { callbackOwner(assertResult); }",
           "target": "callback"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 98,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#deepChainOnly",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function deepChainOnly() { deepA(); }",
+          "target": "deepChainOnly"
         }
       ],
       "warnings": []
@@ -785,19 +793,19 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/producers.mts",
-          "line": 28,
-          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#mixed",
-          "rule": "coverage-producer-assertion-owner",
-          "sourceLine": "export function mixed(dispatch: () => void) { assertResult(); dispatch(); }",
-          "target": "mixed"
-        },
-        {
-          "file": "src/producers.mts",
           "line": 35,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#mixedTarget",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function mixedTarget(dispatch: typeof strictEqual | undefined) {",
           "target": "mixedTarget"
+        },
+        {
+          "file": "src/producers.mts",
+          "line": 96,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/producers.mts#dynamicOnlyAfterExecute",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function dynamicOnlyAfterExecute(dispatch: () => void) { execute(); dispatch(); }",
+          "target": "dynamicOnlyAfterExecute"
         }
       ],
       "warnings": []
