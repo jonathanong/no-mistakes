@@ -1,5 +1,6 @@
 //! Production exports whose syntactic consumers all belong to configured tests.
 mod config;
+mod extends;
 mod nextjs;
 mod selector_advisories;
 mod selector_gaps;
@@ -22,6 +23,7 @@ pub const RULE_ID: &str = "production-exports-only-used-by-tests";
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| GraphBuildPlan {
         symbol_import_selectors: true,
+        extends: true,
         ..Default::default()
     })
 }
@@ -79,6 +81,13 @@ pub(crate) fn check_with_graph(
                     let mut consumers = traversal::consumers(graph, file, name);
                     let undetermined = consumers.settle(&export.kind, |file| options.test(file));
                     if consumers.files.iter().any(|file| !options.test(file)) {
+                        continue;
+                    }
+                    if matches!(export.kind, ExportKind::Class)
+                        && extends::extended_by_production(graph, file, name, |path| {
+                            options.production(path)
+                        })
+                    {
                         continue;
                     }
                     if !consumers.unknown.is_empty() {

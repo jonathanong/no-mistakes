@@ -303,3 +303,4 @@ mod terminal;
 
 mod automock_initializers;
 mod mock_boundaries;
+mod mocked_owner;

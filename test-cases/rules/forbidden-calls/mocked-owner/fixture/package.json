@@ -1,0 +1,5 @@
+{
+  "name": "forbidden-calls-mocked-owner",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

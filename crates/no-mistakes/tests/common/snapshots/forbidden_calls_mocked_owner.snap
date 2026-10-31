@@ -1,0 +1,54 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "mocked_owner": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/avoid-through.mts",
+          "import": "analyzeProject",
+          "line": 3,
+          "message": "forbidden call (application #1): repository function `packages/no-mistakes/src/analyze.mts#analyzeProject`",
+          "rule": "forbidden-calls",
+          "sourceLine": "analyzeProject()",
+          "target": "repository function `packages/no-mistakes/src/analyze.mts#analyzeProject`"
+        },
+        {
+          "file": "src/direct-mock.test.mts",
+          "import": "analyzeProject",
+          "line": 4,
+          "message": "forbidden call (application #1): module export `no-mistakes#analyzeProject`",
+          "rule": "forbidden-calls",
+          "sourceLine": "analyzeProject()",
+          "target": "module export `no-mistakes#analyzeProject`"
+        },
+        {
+          "file": "src/direct-mock.test.mts",
+          "import": "analyzeProject",
+          "line": 6,
+          "message": "forbidden call (application #1): module export `no-mistakes#analyzeProject`",
+          "rule": "forbidden-calls",
+          "sourceLine": "analyzeProject()",
+          "target": "module export `no-mistakes#analyzeProject`"
+        },
+        {
+          "file": "src/other-through.mts",
+          "import": "analyzeProject",
+          "line": 3,
+          "message": "forbidden call (application #1): module export `no-mistakes#analyzeProject`",
+          "rule": "forbidden-calls",
+          "sourceLine": "analyzeProject()",
+          "target": "module export `no-mistakes#analyzeProject`"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
