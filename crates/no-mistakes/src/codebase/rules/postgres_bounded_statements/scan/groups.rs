@@ -51,7 +51,13 @@ impl Groups {
         for (_, group) in self.0 {
             let executor = crate::codebase::ts_source::relative_slash_path(root, &group.executor);
             let mut findings = group.findings;
-            merge(&mut findings, (&executor, group.call_line), root, sources, allow);
+            merge(
+                &mut findings,
+                (&executor, group.call_line),
+                root,
+                sources,
+                allow,
+            );
             output.extend(findings);
         }
     }
