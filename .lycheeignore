@@ -1,0 +1,10 @@
+# Historical Actions pages cited by the development and performance docs.
+# GitHub returned 200 for these URLs on main (run 40995649570, 2026-10-30)
+# and 404 on 2026-10-31. The measurements stay in the docs.
+^https://github\.com/jonathanong/no-mistakes/actions/runs/38332918032$
+^https://github\.com/jonathanong/no-mistakes/actions/runs/38333716822$
+^https://github\.com/jonathanong/no-mistakes/actions/runs/39074247358$
+^https://github\.com/jonathanong/no-mistakes/actions/runs/38330395062$
+^https://github\.com/jonathanong/no-mistakes/actions/runs/38338859408$
+^https://github\.com/jonathanong/no-mistakes/actions/runs/39090131971/job/117566867392$
+^https://github\.com/jonathanong/no-mistakes/runs/116245579477$
