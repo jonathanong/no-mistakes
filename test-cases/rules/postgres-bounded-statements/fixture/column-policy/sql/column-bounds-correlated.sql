@@ -9,3 +9,6 @@ WHERE target.id = $1;
 SELECT target.id FROM accounts target
 JOIN LATERAL (SELECT x.id FROM orders x WHERE x.account_id = x.id) child ON true
 WHERE target.id = $1;
+SELECT target.id FROM accounts target
+JOIN LATERAL (SELECT x.id FROM orders x WHERE x.account_id = $2 AND x.id = target.id) child ON true
+WHERE target.id = $1;
