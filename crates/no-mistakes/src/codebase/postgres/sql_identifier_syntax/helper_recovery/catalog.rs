@@ -44,11 +44,18 @@ impl PreparedCatalog<'_> {
         id: usize,
         profile: &super::super::EmbeddedSqlOptions,
     ) -> Option<(&[Option<usize>], &crate::fx::FxHashSet<usize>)> {
+        let (receiver, parameters) = self.typed_signature(file, id)?;
+        Some((parameters, receiver.executors.get(profile)?))
+    }
+    pub fn typed_signature(
+        &self,
+        file: &Path,
+        id: usize,
+    ) -> Option<(&super::FileModels, &[Option<usize>])> {
         let key = self.resolve_binding(file, id, &mut Vec::new(), true)?;
         let receiver = &self.files.get(&key.file)?.sql_identifier_syntax.recovery;
         let parameters = receiver.signatures.get(&key.callable)?;
-        let typed = receiver.executors.get(profile)?;
-        (!receiver.dynamic_scope).then_some((parameters.as_slice(), typed))
+        (!receiver.dynamic_scope).then_some((receiver, parameters.as_slice()))
     }
     fn resolve_binding(
         &self,

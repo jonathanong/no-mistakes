@@ -66,6 +66,9 @@ pub(super) fn project(
                 let Some(owner) = owner else {
                     continue;
                 };
+                if callbacks::blocks(&catalog, path, &application, models, owner) {
+                    continue;
+                }
                 if typed::accepts(
                     &catalog,
                     path,
@@ -109,3 +112,5 @@ pub(super) fn project(
 }
 
 mod typed;
+
+mod callbacks;

@@ -61,3 +61,23 @@ export function callbackSpread(transaction: TransactionQuery, run: (query: Query
 export function callbackDefault(transaction: TransactionQuery, run: (query: QueryExecutor) => void = opaque) {
   run(transaction); // CLEAR_TYPED
 }
+
+function cb(run: QueryExecutor, fn: (q: QueryExecutor) => void) { fn(run); }
+function namedUntyped(q) { q(`SELECT ${value}`); }
+function namedTyped(q: QueryExecutor) { q('SELECT 1'); }
+export function callbackArguments(run: QueryExecutor) {
+  cb(run, (q) => q(`SELECT ${value}`)); // UNKNOWN_INLINE_CALLBACK
+  cb(run, namedUntyped); // UNKNOWN_NAMED_CALLBACK
+  cb(run, (q: QueryExecutor) => q('SELECT 1')); // CLEAR_TYPED
+  cb(run, namedTyped); // CLEAR_TYPED
+}
+
+function cbUntyped(run, fn) { fn(run); }
+function cbIndexed(run: QueryExecutor, fn: (first: unknown, q: QueryExecutor) => void) { fn(value, run); }
+export function untypedHelperCallbacks(run: QueryExecutor) {
+  cbUntyped(run, (q) => q(`SELECT ${value}`)); // UNKNOWN_UNTYPED_HELPER_INLINE
+  cbUntyped(run, namedUntyped); // UNKNOWN_UNTYPED_HELPER_NAMED
+  cbUntyped(run, (q: QueryExecutor) => q('SELECT 1')); // UNKNOWN_TYPED_CALLBACK_UNTYPED_HELPER
+  cbUntyped(run, namedTyped); // UNKNOWN_TYPED_NAMED_UNTYPED_HELPER
+  cbIndexed(run, (first: QueryExecutor, q) => q(`SELECT ${value}`)); // UNKNOWN_CALLBACK_INDEX
+}
