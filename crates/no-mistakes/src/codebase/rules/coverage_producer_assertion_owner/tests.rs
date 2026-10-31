@@ -67,6 +67,21 @@ fn configured_producers_require_actual_reachable_assertion_owners() {
     assert_eq!(findings, run(".no-mistakes.yml"));
 }
 #[test]
+fn reached_owner_passes_despite_dynamic_dispatch_or_traversal_limit() {
+    for (name, passes, reported) in [
+        ("mixed.yml", "directOwnerAndDynamic", "dynamicOnlyAfterExecute"),
+        ("depth.yml", "directOwnerAndDeepChain", "deepChainOnly"),
+    ] {
+        let findings = run(name);
+        let symbols = findings
+            .iter()
+            .filter_map(|finding| finding.target.as_deref())
+            .collect::<Vec<_>>();
+        assert!(!symbols.contains(&passes), "{name}: {findings:#?}");
+        assert!(symbols.contains(&reported), "{name}: {findings:#?}");
+    }
+}
+#[test]
 fn unknowns_limits_and_policy_never_become_assertion_proof() {
     let root = fixture();
     for name in [
@@ -164,7 +179,6 @@ fn mixed_known_unknown_assertion_target_cannot_pass() {
     let mut findings = run("mixed.yml");
     findings.extend(run("ambiguous-callback.yml"));
     for symbol in [
-        "mixed",
         "mixedTarget",
         "ambiguousCallbackA",
         "ambiguousCallbackB",

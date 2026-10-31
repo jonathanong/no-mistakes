@@ -89,9 +89,7 @@ pub(super) fn analyze(
             queue.push_back((target.clone(), depth + 1));
         }
     }
-    // Unmodeled modules are uncertain only when no assertion owner was reached.
-    if out.unmodeled && !out.assertion {
-        out.uncertain = true;
-    }
+    // Uncertainty elsewhere cannot change whether some owner was reached.
+    out.uncertain = !out.assertion && (out.uncertain || out.unmodeled);
     out
 }

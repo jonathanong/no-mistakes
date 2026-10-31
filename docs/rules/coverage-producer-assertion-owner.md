@@ -120,12 +120,13 @@ are positive traversal bounds. A reached bound with unexplored work is
 unanalyzable. Dynamic targets, unknown alternatives, source/parse failures, and
 Node `fs` callback shapes also follow shared `unanalyzable` policy: `report`
 emits a finding, `advise` emits an advisory, `ignore` explicitly omits that
-uncertain result. Those results never supply assertion evidence, and they are
-reported even when another reachable call owns an assertion. An unmodeled
-external module call, such as a PostgreSQL client or another Node builtin, is
-different: it is reported only when no owner was reached. Once a resolved path
-reaches an owner, that producer passes even if it also calls an unmodeled
-module. Known globals retain the call graph's classification; external process
+uncertain result. Those results never supply assertion evidence, but they are
+deferred: the rule asks whether some owner is reached, so once any owner is
+reached the producer passes even when another call is dynamic, hits a bound, or
+is an unmodeled external module call such as a PostgreSQL client or another
+Node builtin. With no owner reached, any such uncertainty is reported with
+the shared `unanalyzable` message. Known globals retain the call graph's
+classification; external process
 calls need contracts.
 
 ## Node `fs` is modeled I/O
@@ -146,7 +147,7 @@ export function asserted() { equal(readFileSync('result', 'utf8'), 'x'); } // pa
 export function withoutAssertion() { readFileSync('result', 'utf8'); } // no-owner finding
 ```
 
-Shapes outside the model stay unanalyzable, never passing: computed members
+Shapes outside the model stay unanalyzable unless an owner is reached elsewhere: computed members
 (`fs[name](...)`), dynamic `require('node:fs')`, wrappers the call graph cannot
 follow, and a live `fs` call that hands a callback to be invoked later: an
 inline callback or promise continuation in the same callable
@@ -168,8 +169,7 @@ Functions or classes anywhere inside a container, identifiers, member reads,
 calls, conditional/logical expressions, dynamic templates, getters, methods,
 shorthand properties, computed keys, spreads and array holes remain uncertain.
 The recursive proof also stops conservatively after 16 nested expression
-levels. For example, `{ cb: () => {} }` is uncertain even when followed by an
-assertion.
+levels. For example, `{ cb: () => {} }` is uncertain, and passes only if another call reaches an owner.
 Other modules, such as `node:os`, `node:child_process`, or a PostgreSQL client,
 remain unmodeled. A reached assertion owner still passes when the producer also
 calls one; with no owner, the call follows `unanalyzable`. Use an ownership

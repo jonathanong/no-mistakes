@@ -92,3 +92,10 @@ export function asyncGenerator() { asyncOwner(); }
 export function selectedGenerator() { aliasedGenerator(); }
 export function generatorContract() { generatorAssertion(); }
 export function generatorContractOwner() { spawn('worker'); }
+export function directOwnerAndDynamic(dispatch: () => void) { strictEqual(1, 1); dispatch(); }
+export function dynamicOnlyAfterExecute(dispatch: () => void) { execute(); dispatch(); }
+export function directOwnerAndDeepChain() { strictEqual(1, 1); deepA(); }
+export function deepChainOnly() { deepA(); }
+function deepA() { deepB(); }
+function deepB() { deepC(); }
+function deepC() { execute(); }
