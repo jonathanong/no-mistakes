@@ -57,27 +57,26 @@ resolved helpers:
 ```ts
 // tests/coverage.mts
 import { strictEqual } from 'node:assert';
-function execute() { return 1; }
-export function produceCoverage() { strictEqual(execute(), 1); }
-```
-
-The same owner is reached through Node assert's default and namespace imports.
-`assert.<export>()` selects that export. A bare `assert()` selects `ok`.
-Configure each module string you import; `node:assert` does not cover
-`node:assert/strict`. An unmodeled call beside a reached owner still passes.
-The same unmodeled call with no owner stays unanalyzable:
-
-```ts
 import assert from 'node:assert/strict';
 import * as strict from 'node:assert/strict';
 import { query } from 'pg';
 
+function execute() { return 1; }
+export function produceCoverage() {
+  query('select 1');
+  strictEqual(execute(), 1);
+}
 export function defaultEqual() { assert.equal(1, 1); }
 export function namespaceOk() { strict.ok(1); }
 export function bareOk() { assert(1); }
-export function withClient() { assert.equal(query('select 1'), 1); }
-export function clientOnly() { query('select 1'); }
 ```
+
+`produceCoverage` is the configured producer. Its named `strictEqual` is the
+owner, so the unmodeled `query` call does not make it unanalyzable. The same
+owner is reached through a default import as `assert.<export>()` and through a
+namespace import as `strict.<export>()`. A bare `assert()` selects `ok`.
+Configure each module string you import; `node:assert` does not cover
+`node:assert/strict`. A producer that only calls `query` stays unanalyzable.
 
 Uncalled sibling/nested functions, assertions in other files without a call
 path, literal dead conditional/logical arms and loop bodies, and calls after a sequential `return`/`throw`/`break`/`continue` do not
