@@ -17,21 +17,23 @@ pub(super) fn push(items: &mut [SqlBoundItem]) {
             .filter(|pin| portable(pin))
             .cloned()
             .collect();
-        if pins.is_empty() {
-            continue;
-        }
-        let SqlBoundItemKind::Query(query) = &mut item.kind else {
-            continue;
-        };
-        let mut planned: BTreeMap<Vec<usize>, Vec<(String, SqlBoundPin)>> = BTreeMap::new();
-        for pin in &pins {
-            let Some(ordinal) = ordinal(query, &aliases, &pin.column) else {
+        if !pins.is_empty() {
+            let SqlBoundItemKind::Query(query) = &mut item.kind else {
+                item.pins.clear();
                 continue;
             };
-            let mut path = Vec::new();
-            plan(query, ordinal, pin, &mut path, &mut planned);
+            let mut planned: BTreeMap<Vec<usize>, Vec<(String, SqlBoundPin)>> = BTreeMap::new();
+            for pin in &pins {
+                let Some(ordinal) = ordinal(query, &aliases, &pin.column) else {
+                    continue;
+                };
+                let mut path = Vec::new();
+                plan(query, ordinal, pin, &mut path, &mut planned);
+            }
+            apply(query, alternatives, &planned);
         }
-        apply(query, alternatives, &planned);
+        // Copied onto the base column. A pin left here is not a separate bound.
+        item.pins.clear();
     }
 }
 

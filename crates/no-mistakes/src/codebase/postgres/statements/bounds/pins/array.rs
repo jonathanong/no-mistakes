@@ -40,9 +40,14 @@ pub(super) fn finite_array(
         })
         .collect::<Option<Vec<_>>>()?;
     let mut sourced = merge(sources);
-    // One scalar leaf is equality with that value. A nested constructor still needs the
-    // catalog array proof: ARRAY[ARRAY[col]] is not ARRAY[col].
-    if elements.len() == 1 && indexed_columns.is_empty() && scalar_equality_leaf(&elements[0]) {
+    // A CTE or bind leaf is equality with that value. A base-table leaf keeps the catalog
+    // array proof, and a nested constructor is still ARRAY[ARRAY[col]], not ARRAY[col].
+    if elements.len() == 1
+        && indexed_columns.is_empty()
+        && cast_types.is_empty()
+        && scalar_equality_leaf(&elements[0])
+        && equality_leaf(&sourced, resolver)
+    {
         return Some(sourced);
     }
     let items = match sourced.source {
@@ -65,6 +70,14 @@ pub(super) fn finite_array(
         };
     }
     Some(sourced)
+}
+
+fn equality_leaf(sourced: &Sourced, resolver: &Resolver) -> bool {
+    match &sourced.source {
+        SqlPinSource::Value => true,
+        SqlPinSource::Items(items) => items.iter().all(|item| !resolver.is_table(*item)),
+        _ => false,
+    }
 }
 
 fn scalar_equality_leaf(expr: &Expr) -> bool {
