@@ -34,7 +34,7 @@ export function union(executor: QueryExecutor | undefined) {
   executor?.("/* union */ SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
 }
 export function aliased(executor: Alias) {
-  executor("/* alias */ SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
+  executor("/* alias */ SELECT 1 OFFSET 1"); // OFFSET
 }
 // Alias cycles only preserve possible executor use; they never prove SQL.
 type CycleA = QueryExecutor | CycleB;

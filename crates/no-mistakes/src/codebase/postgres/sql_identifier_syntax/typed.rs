@@ -8,11 +8,10 @@ mod parameters;
 mod patterns;
 mod possible;
 mod runtime;
+mod strict;
 mod transports;
 mod visit;
 
-// Match both type references and parameters by semantic identity. A local type
-// with the same spelling as the configured import is never an executor proof.
 pub(super) fn collect(
     program: &Program<'_>,
     module: &TypeScriptModuleFacts,
@@ -48,13 +47,6 @@ pub(super) fn collect(
                 .map(|binding| binding.binding_id)
         })
         .collect::<FxHashSet<_>>();
-    let references = module
-        .bindings
-        .iter()
-        .filter(|binding| types.contains(&binding.id))
-        .flat_map(|binding| &binding.references)
-        .map(|reference| (reference.span.start, reference.span.end))
-        .collect();
     let bindings = module
         .bindings
         .iter()
@@ -67,7 +59,12 @@ pub(super) fn collect(
             )
         })
         .collect();
-    let candidates = types.union(&selection.unsupported).copied().collect();
+    let (references, values) = strict::annotations(program, &types, selection, &bindings);
+    let candidates = types
+        .union(&selection.unsupported)
+        .copied()
+        .chain(values)
+        .collect();
     let possible = possible::references(program, module, &candidates, &bindings);
     let mut visitor = Typed {
         references,
@@ -162,12 +159,9 @@ struct Typed {
 
 impl Typed {
     fn direct_type(&self, ty: &TSType<'_>) -> bool {
-        matches!(ty, TSType::TSTypeReference(reference)
-            if matches!(&reference.type_name, TSTypeName::IdentifierReference(name)
-                if self.references.contains(&span(name.span))))
+        use oxc_span::GetSpan;
+        self.references.contains(&span(ty.span()))
     }
-    // Only direct imported types on formal parameters prove literal SQL. Other
-    // annotation shapes retain runtime Unknown uses without evaluating SQL.
     fn record(&mut self, binding: &oxc_ast::ast::BindingIdentifier<'_>, ty: &TSType<'_>) {
         if let Some(id) = self.bindings.get(&span(binding.span)) {
             let direct = self.direct_type(ty);
