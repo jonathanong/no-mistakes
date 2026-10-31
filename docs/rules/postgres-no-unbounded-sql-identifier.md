@@ -73,6 +73,9 @@ finite validator. Interpolations come from prepared template-expression facts,
 not a lexical `${...}` scan of the call span.
 
 A value used only as a bind parameter is never the identifier source.
+A call with no interpolation produces no finding, including a static SQL
+string and a dynamic SQL argument that is not itself interpolated. A call
+whose interpolations are only binds produces no finding either.
 Comparison predicates, `LIMIT`, `OFFSET`, function arguments such as
 `ANY(...)`, and extra executor arguments are binds. The named source is the
 expression interpolated into an identifier position: a relation, a `SELECT`,

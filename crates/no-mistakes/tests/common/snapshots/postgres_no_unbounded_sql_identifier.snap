@@ -1094,6 +1094,18 @@ assertion_line: 51
       "warnings": []
     }
   },
+  "pass_static_or_bind_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "pass_suppressed": {
     "exitCode": 0,
     "report": {

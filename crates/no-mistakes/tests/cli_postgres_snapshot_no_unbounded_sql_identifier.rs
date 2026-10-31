@@ -160,6 +160,9 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "fail-limit-cursor-bind",
         ],
     );
+    // No finding: a static call, a dynamic call with no interpolation,
+    // and calls whose only interpolations or arguments are binds.
+    push(&mut owned, rule, &config, &["pass-static-or-bind-only"]);
     let cases: Vec<(&str, PathBuf, PathBuf)> = owned
         .iter()
         .map(|(label, root, config)| (label.as_str(), root.clone(), config.clone()))
