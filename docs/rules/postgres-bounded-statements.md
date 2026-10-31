@@ -314,7 +314,12 @@ comma-separated list of catalog object refs, such as
 `table:accounts, table:orders`. A single root keeps its ordinary object ref.
 Independent statements remain separate, even on the same source line. SQL
 alternatives from one executor statement share the union of their unbounded
-roots.
+roots. The finding sits at the executed statement, not at a shared fragment
+that the statement appends from another function or file: callers that append
+the same fragment each get their own finding, and a directive at one caller
+suppresses only that caller. When a root comes from an appended fragment, the
+message names the fragment's location. A statement made only of appended
+fragments is reported at its executor call.
 
 `allow` entries are applied per root and still report stale entries. A
 relation-line suppression suppresses that relation before the remaining roots

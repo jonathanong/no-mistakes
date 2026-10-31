@@ -10,7 +10,14 @@ use std::path::{Path, PathBuf};
 type StatementKey = (PathBuf, Option<usize>, (usize, usize));
 
 #[derive(Default)]
-pub(super) struct Groups(BTreeMap<StatementKey, PostgresFindings>);
+pub(super) struct Groups(BTreeMap<StatementKey, Group>);
+
+#[derive(Default)]
+struct Group {
+    findings: PostgresFindings,
+    executor: PathBuf,
+    call_line: Option<usize>,
+}
 
 impl Groups {
     pub(super) fn collect(
@@ -25,11 +32,13 @@ impl Groups {
             .as_ref()
             .map(|locations| locations.call_index);
         let at = bound.statement_start.unwrap_or((bound.line, bound.column));
-        self.0
-            .entry((file.path.clone(), call, at))
-            .or_default()
-            .0
-            .extend(output.0.drain(start..));
+        let group = self.0.entry((file.path.clone(), call, at)).or_default();
+        group.executor.clone_from(&file.path);
+        group.call_line = file
+            .variant_locations
+            .as_ref()
+            .map(|locations| locations.original_call_line as usize);
+        group.findings.0.extend(output.0.drain(start..));
     }
 
     pub(super) fn finish(
@@ -39,14 +48,22 @@ impl Groups {
         sources: &SourceStore,
         allow: &AllowList,
     ) {
-        for (_, mut group) in self.0 {
-            merge(&mut group, root, sources, allow);
-            output.extend(group);
+        for (_, group) in self.0 {
+            let executor = crate::codebase::ts_source::relative_slash_path(root, &group.executor);
+            let mut findings = group.findings;
+            merge(&mut findings, (&executor, group.call_line), root, sources, allow);
+            output.extend(findings);
         }
     }
 }
 
-fn merge(output: &mut PostgresFindings, root: &Path, sources: &SourceStore, allow: &AllowList) {
+fn merge(
+    output: &mut PostgresFindings,
+    (executor, call_line): (&str, Option<usize>),
+    root: &Path,
+    sources: &SourceStore,
+    allow: &AllowList,
+) {
     if output.len() < 2 {
         return;
     }
@@ -79,11 +96,29 @@ fn merge(output: &mut PostgresFindings, root: &Path, sources: &SourceStore, allo
         .filter_map(|located| located.finding.target.clone())
         .collect();
     let targets = roots.into_iter().collect::<Vec<_>>().join(", ");
-    let mut located: LocatedRuleFinding = group.remove(0);
+    let fragments: BTreeSet<_> = group
+        .iter()
+        .filter(|located| located.finding.file != executor)
+        .map(|located| format!("{}:{}", located.finding.file, located.finding.line))
+        .collect();
+    let local = group
+        .iter()
+        .position(|located| located.finding.file == executor);
+    let mut located: LocatedRuleFinding = group.remove(local.unwrap_or(0));
     let finding = &mut located.finding;
+    if local.is_none() {
+        finding.file = executor.to_string();
+        finding.line = call_line.unwrap_or(finding.line).max(1);
+    }
     finding.target = Some(targets.clone());
+    let note = if fragments.is_empty() {
+        String::new()
+    } else {
+        let fragments = fragments.into_iter().collect::<Vec<_>>().join(", ");
+        format!(" (includes SQL appended from {fragments})")
+    };
     finding.message = format!(
-        "{}:{}: statement can scan unbounded rows from roots {targets}; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+        "{}:{}: statement can scan unbounded rows from roots {targets}{note}; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
         finding.file, finding.line
     );
     output.0.push(located);

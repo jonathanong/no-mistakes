@@ -7,6 +7,8 @@ mod cascading;
 mod correlated_append;
 #[path = "cli_check_rules_postgres_bounded/joined_dml.rs"]
 mod joined_dml;
+#[path = "cli_check_rules_postgres_bounded/shared_fragment.rs"]
+mod shared_fragment;
 
 fn fixture() -> PathBuf {
     fixture_dir("fixture")
