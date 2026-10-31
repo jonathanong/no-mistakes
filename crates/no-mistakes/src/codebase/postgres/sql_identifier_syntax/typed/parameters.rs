@@ -30,6 +30,13 @@ impl Typed {
             (BindingPattern::AssignmentPattern(default), ty) => {
                 self.default_parameter(&default.left, ty, &default.right);
             }
+            (BindingPattern::BindingIdentifier(_), Some(TSType::TSFunctionType(callback)))
+                if callback.params.items.iter().any(|parameter| {
+                    parameter
+                        .type_annotation
+                        .as_ref()
+                        .is_some_and(|annotation| self.direct_type(&annotation.type_annotation))
+                }) => {}
             (BindingPattern::BindingIdentifier(binding), Some(ty)) => self.record(binding, ty),
             (BindingPattern::ObjectPattern(object), ty) => self.object_parameter(object, ty),
             (pattern, Some(ty)) => self.unknown_pattern(pattern, ty),

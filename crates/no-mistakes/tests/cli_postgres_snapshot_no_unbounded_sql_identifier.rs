@@ -152,3 +152,19 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
         .collect();
     assert_saved_fixture("postgres_no_unbounded_sql_identifier", &cases);
 }
+
+#[test]
+fn postgres_low_typed_transports_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "low-typed-transports",
+    );
+    assert_saved_fixture(
+        "postgres_low_typed_transports",
+        &[
+            ("low", root.clone(), root.join(".no-mistakes-low.yml")),
+            ("max", root.clone(), root.join(".no-mistakes-max.yml")),
+        ],
+    );
+}

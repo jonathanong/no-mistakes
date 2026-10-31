@@ -149,3 +149,6 @@ mod low_max_bind_parity_tests;
 mod detached_tests;
 #[cfg(test)]
 mod typed_computed_parameter_tests;
+
+#[cfg(test)]
+mod typed_transport_policy_tests;
