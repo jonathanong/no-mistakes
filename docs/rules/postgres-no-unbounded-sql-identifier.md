@@ -72,6 +72,15 @@ A helper call around those values is reported unless the callee is a proven
 finite validator. Interpolations come from prepared template-expression facts,
 not a lexical `${...}` scan of the call span.
 
+A value used only as a bind parameter is never the identifier source.
+Comparison predicates, `LIMIT`, `OFFSET`, function arguments such as
+`ANY(...)`, and extra executor arguments are binds. The named source is the
+expression interpolated into an identifier position: a relation, a `SELECT`,
+`ORDER BY`, or `GROUP BY` column, an `INSERT` column list, or an `UPDATE`
+assignment target. That includes a column or table taken from a helper that
+returns a storage config when the interpolated field flows from an unbounded
+parameter. The finding names that interpolated expression.
+
 ## Analysis
 
 ### Effort

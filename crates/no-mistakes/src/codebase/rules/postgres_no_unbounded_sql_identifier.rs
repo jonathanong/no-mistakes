@@ -1,6 +1,6 @@
 //! Cross-file env/config identifier interpolations without a finite validator.
 use super::postgres_sql_cross_file::{
-    count, finding, identifier_placeholder, interpolations, is_process_env, is_process_specifier,
+    count, finding, identifier_sources, is_process_env, is_process_specifier, scans_identifier,
     sql_calls, unique_export, unique_namespace_member, walk_expression, Bindings, Provenance,
     RegistryRoutes, SqlCall,
 };
@@ -66,10 +66,10 @@ fn scan(
     let bindings = Bindings::with_calls(facts, &calls);
     for call in &calls {
         candidates += 1;
-        if identifier_placeholder(call.call) != Some(true) {
+        if !scans_identifier(call.call) {
             continue;
         }
-        for provenance in interpolations(graph, facts, call, &bindings) {
+        for provenance in identifier_sources(graph, facts, call, &bindings) {
             if let Provenance::Reference {
                 name,
                 scope,
@@ -78,6 +78,7 @@ fn scan(
             } = &provenance
             {
                 if bindings.env_alias(&call.file, *scope, name, *offset)
+                    || bindings.flows_unbounded(&call.file, *scope, name, *offset)
                     || (!bindings.row_member_overwritten(
                         &call.file, *scope, name, *offset, members, call.span,
                     ) && bindings.query_projection(&call.file, *scope, name, *offset))

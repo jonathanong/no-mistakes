@@ -146,6 +146,20 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
         &config,
         &["fail-array-row-unmatched-overwrites"],
     );
+    // Bind values are not identifier sources. Targets:
+    // fail-table-with-binds: table;
+    // fail-helper-column: entityColumn and table;
+    // fail-limit-cursor-bind: name.
+    push(
+        &mut owned,
+        rule,
+        &config,
+        &[
+            "fail-table-with-binds",
+            "fail-helper-column",
+            "fail-limit-cursor-bind",
+        ],
+    );
     let cases: Vec<(&str, PathBuf, PathBuf)> = owned
         .iter()
         .map(|(label, root, config)| (label.as_str(), root.clone(), config.clone()))

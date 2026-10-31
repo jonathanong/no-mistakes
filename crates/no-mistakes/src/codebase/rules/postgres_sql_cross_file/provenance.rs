@@ -8,10 +8,13 @@ use std::path::Path;
 
 mod bindings;
 mod env;
+mod identifier_holes;
+mod identifier_positions;
 mod search;
 pub(crate) use bindings::Bindings;
 pub(crate) use env::is_process_specifier;
 use env::{env_from_chain, env_key, process_env_key};
+pub(crate) use identifier_positions::scans_identifier;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Provenance {
@@ -27,6 +30,22 @@ pub(crate) enum Provenance {
         exported: String,
         members: Vec<String>,
     },
+}
+
+pub(crate) fn identifier_sources<'a>(
+    graph: &DepGraph,
+    facts: &'a CheckFactMap,
+    call: &SqlCall<'a>,
+    bindings: &Bindings<'a>,
+) -> BTreeSet<Provenance> {
+    if let Some(holes) = identifier_holes::selected(facts, call, bindings) {
+        let mut out = BTreeSet::new();
+        for hole in holes {
+            classify(graph, facts, &call.file, hole, &mut out, bindings);
+        }
+        return out;
+    }
+    interpolations(graph, facts, call, bindings)
 }
 
 pub(crate) fn interpolations(

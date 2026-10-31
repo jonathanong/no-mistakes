@@ -1,5 +1,6 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 51
 ---
 {
   "fail_alias_chain": {
@@ -535,6 +536,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "fail_helper_column": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "entityColumn",
+          "line": 14,
+          "message": "Unbounded identifier source `entityColumn` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(",
+          "target": "entityColumn"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 14,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail_identity_wrapper": {
     "exitCode": 1,
     "report": {
@@ -667,6 +699,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "fail_limit_cursor_bind": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "name",
+          "line": 10,
+          "message": "Unbounded identifier source `name` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${name} WHERE id > ${cursor} LIMIT ${limit}`, [",
+          "target": "name"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail_process_namespace": {
     "exitCode": 1,
     "report": {
@@ -706,6 +760,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "return query(`SELECT id FROM ${req.params.schema}.users`);",
           "target": "req"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_table_with_binds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 9,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(",
+          "target": "table"
         }
       ],
       "warnings": []
