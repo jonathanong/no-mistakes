@@ -71,6 +71,7 @@ words:
   - inout
   - invalidators
   - jsonc
+  - recordset
   - jscpd
   - Laravel
   - leakproof

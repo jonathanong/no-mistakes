@@ -1,0 +1,23 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      executorNames: [read]
+      sqlInclude:
+        - sql/issue-2961-bounded-source.sql
+        - sql/issue-2961-union-all.sql
+        - sql/issue-2961-any-array.sql
+        - sql/issue-2961-unqualified-column.sql
+        - sql/issue-2961-delete-array.sql
+        - sql/issue-2961-counterexamples.sql
+      include:
+        - src/issue-2961-lines.mts
+        - sql/issue-2961-bounded-source.sql
+        - sql/issue-2961-union-all.sql
+        - sql/issue-2961-any-array.sql
+        - sql/issue-2961-unqualified-column.sql
+        - sql/issue-2961-delete-array.sql
+        - sql/issue-2961-counterexamples.sql

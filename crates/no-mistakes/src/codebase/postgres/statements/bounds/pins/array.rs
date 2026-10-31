@@ -1,7 +1,7 @@
 //! Finite constructor leaves preserve source dependencies and scalar-type requirements.
 use super::{merge, Resolver, Sourced};
 use crate::codebase::postgres::SqlPinSource;
-use sqlparser::ast::Expr;
+use sqlparser::ast::{DataType, Expr};
 
 mod caller_value;
 mod columns;
@@ -40,6 +40,11 @@ pub(super) fn finite_array(
         })
         .collect::<Option<Vec<_>>>()?;
     let mut sourced = merge(sources);
+    // One scalar leaf is equality with that value. A nested constructor still needs the
+    // catalog array proof: ARRAY[ARRAY[col]] is not ARRAY[col].
+    if elements.len() == 1 && indexed_columns.is_empty() && scalar_equality_leaf(&elements[0]) {
+        return Some(sourced);
+    }
     let items = match sourced.source {
         SqlPinSource::Items(items) => items,
         SqlPinSource::Value if !cast_types.is_empty() => Vec::new(),
@@ -60,4 +65,15 @@ pub(super) fn finite_array(
         };
     }
     Some(sourced)
+}
+
+fn scalar_equality_leaf(expr: &Expr) -> bool {
+    match expr {
+        Expr::Nested(inner) => scalar_equality_leaf(inner),
+        Expr::Identifier(_) | Expr::CompoundIdentifier(_) | Expr::Value(_) => true,
+        Expr::Cast {
+            expr, data_type, ..
+        } if !matches!(data_type, DataType::Array(_)) => scalar_equality_leaf(expr),
+        _ => false,
+    }
 }

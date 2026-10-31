@@ -68,3 +68,27 @@ pub(in crate::codebase::postgres::embedded::walk::resolve) fn parameter_source_p
     }
     resolve(expr, visitor).map(|(_, positions, _)| positions)
 }
+
+/// `head + tail` names consts. Their positions live on the bindings; the `+`
+/// expression itself has no template span to measure.
+pub(in crate::codebase::postgres::embedded::walk::resolve) fn binding_source_positions(
+    expr: &Expression<'_>,
+    visitor: &ScopeVisitor<'_>,
+    sql: &str,
+) -> Option<Vec<crate::codebase::postgres::embedded::EmbeddedSqlSourcePosition>> {
+    if !mentions_binding(expr) {
+        return None;
+    }
+    let recovered = super::resolve_chain_recovered(expr, visitor)?;
+    (recovered.sql == sql).then_some(recovered.positions)
+}
+
+fn mentions_binding(expr: &Expression<'_>) -> bool {
+    match unwrap_ts_wrappers(expr) {
+        Expression::Identifier(_) => true,
+        Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
+            mentions_binding(&binary.left) || mentions_binding(&binary.right)
+        }
+        _ => false,
+    }
+}
