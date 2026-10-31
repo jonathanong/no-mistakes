@@ -62,3 +62,15 @@ export function genericDirect(run: QueryExecutor<string>) {
 import { beginTransaction as unconfiguredFactory } from '@unconfigured/db';
 type Unconfigured = Awaited<ReturnType<typeof unconfiguredFactory>>;
 export function unconfigured(run: Unconfigured) { run('SELECT 1'); }
+
+export function callbackAlias(transaction: Chained, run: (query: Local) => void) {
+  run(transaction); // CLEAR
+}
+export function callbackTypeof(transaction: Local, run: (query: typeof transaction) => void) {
+  run(transaction); // CLEAR
+}
+
+type AwaitedUnion = Awaited<QueryExecutor | undefined>;
+export function awaitedUnion(run: AwaitedUnion) {
+  run('SELECT 1'); // ADVISE
+}

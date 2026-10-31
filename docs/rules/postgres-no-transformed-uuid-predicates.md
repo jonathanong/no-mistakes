@@ -114,7 +114,10 @@ Passing a proven executor directly to a resolved helper's parameter annotated
 with a configured imported executor type is transport at low effort. SQL in the
 helper is checked at its own executor calls. Untyped or differently typed
 parameters and unresolved helpers retain uncertainty, even when the argument
-has a configured executor type.
+has a configured executor type. Explicit callback signatures accepting an
+executor qualify too. Supported local type aliases, `typeof` proven executor
+values, and `Awaited<ReturnType<typeof configuredFactory>>` retain executor
+identity; unrelated or shadowed types and cyclic aliases do not.
 JavaScript escapes and other construction follow the
 unanalyzable policy. At `effort: max`, it also analyzes supported prepared SQL
 builders and helper-returned statements. Unanalyzable or dynamic query text

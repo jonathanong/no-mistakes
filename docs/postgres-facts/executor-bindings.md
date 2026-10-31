@@ -19,7 +19,7 @@ a configured `importSpecifier`, plus relative imports that resolve into that
 package (see the
 [migration notes](../migrations/explicit-postgres-executors.md#scoped-executors)). With neither option set, no executor calls are collected.
 
-At low effort, parameters annotated directly with a configured imported executor
+At low effort, parameters annotated with a configured imported executor
 type support direct calls and `.query` calls, including optional calls and
 bindings destructured from an inline object parameter type. Their SQL uses the
 same literal/one-local-constant contract as named executors. Type annotations,
@@ -62,12 +62,22 @@ headers do not create extra SQL obligations.
 For `postgres-no-unbounded-sql-identifier` and
 `postgres-no-transformed-uuid-predicates` at low effort, a direct executor
 argument may also flow into a resolved helper parameter annotated directly with
-a configured imported executor type. The proof uses the receiving parameter at
-that argument position, including resolved imported helpers. The helper's SQL
+a configured imported executor type. A callback parameter with an explicit
+function signature accepting an executor uses the same transport proof. The
+proof uses the receiving parameter at that argument position, including
+resolved imported helpers. The helper's SQL
 calls and unsupported uses are still checked independently. Untyped parameters,
 unrelated types, unresolved or mutated callees, and executor values nested in
 containers retain uncertainty. A configured type on the argument alone is
 insufficient.
+
+The shared low SQL syntax projection resolves local type aliases referring to a
+configured executor type, `typeof` a proven executor value, or
+`ReturnType<typeof beginTransaction>` with an optional built-in `Awaited`
+wrapper when `beginTransaction` is a configured factory import. These proofs
+follow lexical binding identities; same-spelled unrelated imports, shadowed
+utility types, cycles, and mutable or
+unproven values do not establish executor ownership.
 The four SQL structure low rules also support
 [bounded helper and builder recovery](low-helper-recovery.md): a helper transport
 is cleared only after its executor uses are analyzed. Opaque helpers and
@@ -80,8 +90,8 @@ it can prove the binding. A function return header alone is erased, and neither
 the header nor a producer result proves SQL passed to a later call safe. Nested
 functions use their own return type; ambient declarations have no returned value
 to report. Arbitrary object mutation and cross-file value flow remain opaque.
-For the SQL-structure low rules, indirect annotations (such as local type aliases
-or interfaces derived from a configured type, generic constraints/defaults,
+For the SQL-structure low rules, unsupported indirect annotations (such as
+interfaces derived from a configured type, generic constraints/defaults,
 intersections, and array/rest or nested binding patterns) retain unknown runtime
 uses; they do not prove a literal call safe. The annotation rule retains its existing
 receiver scope and independently checks the visible leading comment at each
@@ -200,7 +210,7 @@ effort. Use a supported explicitly typed parameter to make the receiver
 eligible for SQL analysis.
 
 The low-effort SQL syntax projection also proves simple parameters annotated
-with a configured named imported executor type, including renamed bindings in
+with a supported executor type, including renamed bindings in
 inline object parameter types. It checks literal SQL at `executor(sql)` and
 `executor.query(sql)` with the same rules as direct named imports. Type identity
 is lexical: shadowed names, unions, qualified types, and unrelated imports do

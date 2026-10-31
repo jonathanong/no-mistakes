@@ -15,6 +15,7 @@ rules:
   - rule: postgres-no-transformed-uuid-predicates
     scope: repository
     options:
+      schemaCatalogPath: schema.json
       importSpecifier: '@example/db'
       executorNames: [read]
       executorFactoryNames: [beginTransaction]

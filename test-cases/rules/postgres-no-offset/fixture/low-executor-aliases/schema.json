@@ -1,0 +1,8 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "users": { "columns": { "id": { "dataType": "uuid" } } }
+  }
+}

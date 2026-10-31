@@ -14,6 +14,7 @@ export async function execute(run: QueryExecutor) {
   nonExecutor(run); // UNKNOWN_NON_EXECUTOR
   mixed(run, run); // UNKNOWN_MIXED
   wrongPosition(run, value); // UNKNOWN_POSITION
+  wrongPosition('value', run); // CLEAR_TYPED
   otherType(run); // UNKNOWN_TYPE
   excluded(run); // UNKNOWN_EXCLUDED
   typed({ run }); // UNKNOWN_CONTAINER
