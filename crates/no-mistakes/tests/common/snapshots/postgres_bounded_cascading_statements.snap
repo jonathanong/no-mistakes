@@ -60,6 +60,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "same_line_legacy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT a.id FROM accounts a CROSS JOIN accounts b`);",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_variants": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: statement can scan unbounded rows from roots table:accounts; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT a.id FROM accounts a CROSS JOIN accounts b ${flag ? sql`/* first */` : sql`/* second */`}`);",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "suppression": {
     "exitCode": 1,
     "report": {

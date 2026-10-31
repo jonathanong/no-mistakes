@@ -40,13 +40,36 @@ fn alternatives_share_one_statement_finding_with_every_unbounded_root() {
 #[test]
 fn cascading_statement_check_json_snapshot() {
     let root = fixture_dir("variants/cascading-statements");
+    let variants = fixture_dir("variants/distinct-columns");
+    let legacy = fixture_dir("variants/legacy-columns");
     crate::check_json_snapshot::assert_saved_fixture(
         "postgres_bounded_cascading_statements",
         &[
             ("roots", root.clone(), root.join(".no-mistakes.yml")),
+            (
+                "same_line_variants",
+                variants.clone(),
+                variants.join(".no-mistakes.yml"),
+            ),
+            (
+                "same_line_legacy",
+                legacy.clone(),
+                legacy.join(".no-mistakes.yml"),
+            ),
             ("allow", root.clone(), root.join("allow.yml")),
             ("variants", root.clone(), root.join("variants.yml")),
             ("suppression", root.clone(), root.join("suppression.yml")),
         ],
     );
+}
+
+#[test]
+fn bounded_same_line_variants_share_one_statement_finding() {
+    for fixture in ["distinct-columns", "legacy-columns"] {
+        let root = fixture_dir(&format!("variants/{fixture}"));
+        let findings = findings_of(check_in(&root, ".no-mistakes.yml"));
+        assert_eq!(findings.len(), 1, "{fixture}: {findings:?}");
+        assert_eq!(findings[0].1, 2);
+        assert_eq!(findings[0].2, "table:accounts");
+    }
 }

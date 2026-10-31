@@ -276,11 +276,7 @@ fn finite_append_fragments_are_checked_without_an_opaque_builder_diagnostic() {
 
 #[test]
 fn distinct_same_line_variant_tokens_survive_final_sorting_without_changing_legacy_output() {
-    for rule in [
-        "postgres-explicit-columns",
-        "postgres-sql-shape-policy",
-        "postgres-bounded-statements",
-    ] {
+    for rule in ["postgres-explicit-columns", "postgres-sql-shape-policy"] {
         let variants = check(rule, "distinct-columns");
         let findings = variants["rules"].as_array().unwrap();
         assert_eq!(findings.len(), 2, "{rule}: {variants}");
