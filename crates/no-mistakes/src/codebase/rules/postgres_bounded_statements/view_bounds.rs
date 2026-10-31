@@ -13,7 +13,10 @@ pub(super) enum ViewBoundMode {
 }
 
 #[derive(Default)]
-pub(super) struct ViewBounds(BTreeMap<String, ViewBoundMode>);
+pub(super) struct ViewBounds {
+    views: BTreeMap<String, ViewBoundMode>,
+    pub(super) keys: super::column_bounds::ColumnBounds,
+}
 
 impl ViewBounds {
     pub(super) fn compile(
@@ -29,7 +32,10 @@ impl ViewBounds {
                 bail!("{RULE_ID} option viewBounds: {name} resolves to a duplicate catalog view");
             }
         }
-        Ok(Self(resolved))
+        Ok(Self {
+            views: resolved,
+            keys: Default::default(),
+        })
     }
 
     pub(super) fn get<'a>(
@@ -37,11 +43,11 @@ impl ViewBounds {
         name: &str,
         catalog: &'a SchemaCatalog,
     ) -> Option<(&'a CatalogView, ViewBoundMode)> {
-        if self.0.is_empty() {
+        if self.views.is_empty() {
             return None;
         }
         let view = catalog.bounded_view_relation(name)?;
-        let mode = self.0.get(&view.name)?;
+        let mode = self.views.get(&view.name)?;
         Some((view, *mode))
     }
 }

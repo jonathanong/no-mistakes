@@ -514,3 +514,12 @@ The async `check()` and `analyzeProject()` annotation reports also share low's
 It uses the same prepared source/effect projections and requires exact awaited
 `const` consumption by the immediately next configured executor. No API option,
 report field or max-effort contract changes.
+
+Configured [`postgres-bounded-statements`](rules/postgres-bounded-statements.md)
+applications accept `columnBounds` through the existing asynchronous `check()` →
+`checkJson` binding and `analyzeProject()` check reports. Import
+`PostgresBoundedStatementsOptions`, `PostgresColumnBound`, and
+`PostgresViewBoundMode` for the rule options. `columnBounds` maps catalog
+`table.column` names to a required nonempty `reason`; CLI and Node use the same
+catalog validation and caller-bounded key proof. No separate runtime export is
+needed.

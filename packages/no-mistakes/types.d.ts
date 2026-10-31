@@ -30,3 +30,4 @@ export type * from "./lint-suppression-types";
 
 export type * from "./production-exports-test-only-types";
 export type * from "./test-no-live-repository-scan-types";
+export type * from "./postgres-bounded-statements-types";

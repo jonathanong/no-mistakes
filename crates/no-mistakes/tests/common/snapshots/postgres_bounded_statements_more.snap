@@ -1008,18 +1008,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/column-alias-list.sql",
           "line": 7,
-          "message": "sql/column-alias-list.sql:7: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/column-alias-list.sql:7: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts AS a(tenant_id, id) WHERE a.id IN (SELECT id FROM orders);",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/column-alias-list.sql",
-          "line": 7,
-          "message": "sql/column-alias-list.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts AS a(tenant_id, id) WHERE a.id IN (SELECT id FROM orders);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -1246,18 +1238,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/issue-2665.sql",
           "line": 11,
-          "message": "sql/issue-2665.sql:11: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/issue-2665.sql:11: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT a.id FROM orders o CROSS JOIN LATERAL (SELECT id FROM accounts WHERE id = o.account_id LIMIT 1) latest JOIN accounts a ON a.id = latest.id;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/issue-2665.sql",
-          "line": 11,
-          "message": "sql/issue-2665.sql:11: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT a.id FROM orders o CROSS JOIN LATERAL (SELECT id FROM accounts WHERE id = o.account_id LIMIT 1) latest JOIN accounts a ON a.id = latest.id;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/issue-2665.sql",
@@ -1580,18 +1564,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/caller-array-provenance.sql",
           "line": 15,
-          "message": "sql/caller-array-provenance.sql:15: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/caller-array-provenance.sql:15: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT a.id FROM accounts a WHERE a.id = ANY((SELECT o.account_ids FROM orders o)::uuid[]);",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/caller-array-provenance.sql",
-          "line": 15,
-          "message": "sql/caller-array-provenance.sql:15: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT a.id FROM accounts a WHERE a.id = ANY((SELECT o.account_ids FROM orders o)::uuid[]);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/caller-array-provenance.sql",
@@ -2434,6 +2410,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT pg_ls_dir(count(*)) FROM orders;",
           "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "column_bounds_composite_prefix": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/column-bounds-composite-prefix.sql",
+          "line": 2,
+          "message": "sql/column-bounds-composite-prefix.sql:2: SELECT can return every row of memberships; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT member_id FROM memberships WHERE member_id = $1;",
+          "target": "table:memberships"
         }
       ],
       "warnings": []
@@ -3655,6 +3652,67 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT NULL::uuid UNION ALL TABLE Accounts LIMIT 1;",
           "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared_column_bounds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/column-bounds.sql",
+          "line": 10,
+          "message": "sql/column-bounds.sql:10: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders AS o (order_id, owner_id, state) WHERE owner_id = $1;",
+          "target": "table:orders"
+        },
+        {
+          "file": "sql/column-bounds.sql",
+          "line": 5,
+          "message": "sql/column-bounds.sql:5: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE status = $1;",
+          "target": "table:orders"
+        },
+        {
+          "file": "sql/column-bounds.sql",
+          "line": 6,
+          "message": "sql/column-bounds.sql:6: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE account_id = ANY(SELECT id FROM accounts);",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "sql/column-bounds.sql",
+          "line": 7,
+          "message": "sql/column-bounds.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders;",
+          "target": "table:orders"
+        },
+        {
+          "file": "sql/column-bounds.sql",
+          "line": 8,
+          "message": "sql/column-bounds.sql:8: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT o.id FROM orders o JOIN accounts a ON o.account_id = a.id;",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "sql/column-bounds.sql",
+          "line": 9,
+          "message": "sql/column-bounds.sql:9: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE account_id = $1 OR status = $2;",
+          "target": "table:orders"
         }
       ],
       "warnings": []
@@ -5725,18 +5783,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/issue-2665-adversarial.sql",
           "line": 41,
-          "message": "sql/issue-2665-adversarial.sql:41: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/issue-2665-adversarial.sql:41: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT a.id FROM orders o LEFT JOIN LATERAL (SELECT id FROM accounts WHERE id = o.account_id LIMIT 1) latest ON true JOIN accounts a ON a.id = latest.id WHERE latest.id = $1;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/issue-2665-adversarial.sql",
-          "line": 41,
-          "message": "sql/issue-2665-adversarial.sql:41: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT a.id FROM orders o LEFT JOIN LATERAL (SELECT id FROM accounts WHERE id = o.account_id LIMIT 1) latest ON true JOIN accounts a ON a.id = latest.id WHERE latest.id = $1;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/issue-2665-adversarial.sql",
@@ -7807,18 +7857,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/long-mixed-set-operation.sql",
           "line": 2,
-          "message": "sql/long-mixed-set-operation.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/long-mixed-set-operation.sql:2: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "(SELECT id FROM accounts EXCEPT SELECT account_id FROM orders)",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/long-mixed-set-operation.sql",
-          "line": 2,
-          "message": "sql/long-mixed-set-operation.sql:2: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "(SELECT id FROM accounts EXCEPT SELECT account_id FROM orders)",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -10334,130 +10376,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "cycle-16.sql",
           "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t0; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "cycle-16.sql:2: statement can scan unbounded rows from roots table:public.t0, table:public.t1, table:public.t10, table:public.t11, table:public.t12, table:public.t13, table:public.t14, table:public.t15, table:public.t2, table:public.t3, table:public.t4, table:public.t5, table:public.t6, table:public.t7, table:public.t8, table:public.t9; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t0"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t10; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t10"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t11; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t11"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t12; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t12"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t13; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t13"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t14; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t14"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t15; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t15"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t1; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t1"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t2; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t2"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t3; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t3"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t4; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t4"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t5; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t5"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t6; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t6"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t7; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t7"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t8; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t8"
-        },
-        {
-          "file": "cycle-16.sql",
-          "line": 2,
-          "message": "cycle-16.sql:2: SELECT can return every row of public.t9; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a0.id;",
-          "target": "table:public.t9"
+          "target": "table:public.t0, table:public.t1, table:public.t10, table:public.t11, table:public.t12, table:public.t13, table:public.t14, table:public.t15, table:public.t2, table:public.t3, table:public.t4, table:public.t5, table:public.t6, table:public.t7, table:public.t8, table:public.t9"
         }
       ],
       "warnings": []
@@ -10475,514 +10397,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "cycle-64.sql",
           "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t0; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "cycle-64.sql:2: statement can scan unbounded rows from roots table:public.t0, table:public.t1, table:public.t10, table:public.t11, table:public.t12, table:public.t13, table:public.t14, table:public.t15, table:public.t16, table:public.t17, table:public.t18, table:public.t19, table:public.t2, table:public.t20, table:public.t21, table:public.t22, table:public.t23, table:public.t24, table:public.t25, table:public.t26, table:public.t27, table:public.t28, table:public.t29, table:public.t3, table:public.t30, table:public.t31, table:public.t32, table:public.t33, table:public.t34, table:public.t35, table:public.t36, table:public.t37, table:public.t38, table:public.t39, table:public.t4, table:public.t40, table:public.t41, table:public.t42, table:public.t43, table:public.t44, table:public.t45, table:public.t46, table:public.t47, table:public.t48, table:public.t49, table:public.t5, table:public.t50, table:public.t51, table:public.t52, table:public.t53, table:public.t54, table:public.t55, table:public.t56, table:public.t57, table:public.t58, table:public.t59, table:public.t6, table:public.t60, table:public.t61, table:public.t62, table:public.t63, table:public.t7, table:public.t8, table:public.t9; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t0"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t10; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t10"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t11; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t11"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t12; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t12"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t13; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t13"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t14; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t14"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t15; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t15"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t16; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t16"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t17; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t17"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t18; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t18"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t19; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t19"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t1; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t1"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t20; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t20"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t21; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t21"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t22; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t22"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t23; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t23"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t24; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t24"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t25; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t25"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t26; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t26"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t27; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t27"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t28; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t28"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t29; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t29"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t2; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t2"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t30; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t30"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t31; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t31"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t32; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t32"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t33; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t33"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t34; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t34"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t35; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t35"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t36; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t36"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t37; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t37"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t38; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t38"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t39; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t39"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t3; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t3"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t40; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t40"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t41; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t41"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t42; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t42"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t43; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t43"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t44; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t44"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t45; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t45"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t46; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t46"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t47; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t47"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t48; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t48"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t49; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t49"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t4; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t4"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t50; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t50"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t51; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t51"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t52; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t52"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t53; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t53"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t54; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t54"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t55; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t55"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t56; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t56"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t57; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t57"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t58; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t58"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t59; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t59"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t5; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t5"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t60; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t60"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t61; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t61"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t62; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t62"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t63; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t63"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t6; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t6"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t7; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t7"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t8; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t8"
-        },
-        {
-          "file": "cycle-64.sql",
-          "line": 2,
-          "message": "cycle-64.sql:2: SELECT can return every row of public.t9; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM t0 a0, t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8, t9 a9, t10 a10, t11 a11, t12 a12, t13 a13, t14 a14, t15 a15, t16 a16, t17 a17, t18 a18, t19 a19, t20 a20, t21 a21, t22 a22, t23 a23, t24 a24, t25 a25, t26 a26, t27 a27, t28 a28, t29 a29, t30 a30, t31 a31, t32 a32, t33 a33, t34 a34, t35 a35, t36 a36, t37 a37, t38 a38, t39 a39, t40 a40, t41 a41, t42 a42, t43 a43, t44 a44, t45 a45, t46 a46, t47 a47, t48 a48, t49 a49, t50 a50, t51 a51, t52 a52, t53 a53, t54 a54, t55 a55, t56 a56, t57 a57, t58 a58, t59 a59, t60 a60, t61 a61, t62 a62, t63 a63 WHERE a0.id = a1.id AND a1.id = a2.id AND a2.id = a3.id AND a3.id = a4.id AND a4.id = a5.id AND a5.id = a6.id AND a6.id = a7.id AND a7.id = a8.id AND a8.id = a9.id AND a9.id = a10.id AND a10.id = a11.id AND a11.id = a12.id AND a12.id = a13.id AND a13.id = a14.id AND a14.id = a15.id AND a15.id = a16.id AND a16.id = a17.id AND a17.id = a18.id AND a18.id = a19.id AND a19.id = a20.id AND a20.id = a21.id AND a21.id = a22.id AND a22.id = a23.id AND a23.id = a24.id AND a24.id = a25.id AND a25.id = a26.id AND a26.id = a27.id AND a27.id = a28.id AND a28.id = a29.id AND a29.id = a30.id AND a30.id = a31.id AND a31.id = a32.id AND a32.id = a33.id AND a33.id = a34.id AND a34.id = a35.id AND a35.id = a36.id AND a36.id = a37.id AND a37.id = a38.id AND a38.id = a39.id AND a39.id = a40.id AND a40.id = a41.id AND a41.id = a42.id AND a42.id = a43.id AND a43.id = a44.id AND a44.id = a45.id AND a45.id = a46.id AND a46.id = a47.id AND a47.id = a48.id AND a48.id = a49.id AND a49.id = a50.id AND a50.id = a51.id AND a51.id = a52.id AND a52.id = a53.id AND a53.id = a54.id AND a54.id = a55.id AND a55.id = a56.id AND a56.id = a57.id AND a57.id = a58.id AND a58.id = a59.id AND a59.id = a60.id AND a60.id = a61.id AND a61.id = a62.id AND a62.id = a63.id AND a63.id = a0.id;",
-          "target": "table:public.t9"
+          "target": "table:public.t0, table:public.t1, table:public.t10, table:public.t11, table:public.t12, table:public.t13, table:public.t14, table:public.t15, table:public.t16, table:public.t17, table:public.t18, table:public.t19, table:public.t2, table:public.t20, table:public.t21, table:public.t22, table:public.t23, table:public.t24, table:public.t25, table:public.t26, table:public.t27, table:public.t28, table:public.t29, table:public.t3, table:public.t30, table:public.t31, table:public.t32, table:public.t33, table:public.t34, table:public.t35, table:public.t36, table:public.t37, table:public.t38, table:public.t39, table:public.t4, table:public.t40, table:public.t41, table:public.t42, table:public.t43, table:public.t44, table:public.t45, table:public.t46, table:public.t47, table:public.t48, table:public.t49, table:public.t5, table:public.t50, table:public.t51, table:public.t52, table:public.t53, table:public.t54, table:public.t55, table:public.t56, table:public.t57, table:public.t58, table:public.t59, table:public.t6, table:public.t60, table:public.t61, table:public.t62, table:public.t63, table:public.t7, table:public.t8, table:public.t9"
         }
       ],
       "warnings": []
@@ -11951,6 +11369,99 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "CREATE TEMP TABLE \"Accounts\"(id uuid);",
           "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "recursive_depth": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 14,
+          "message": "sql/recursive-depth.sql:14: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, w.depth + 1 FROM accounts a JOIN walk w ON a.id = w.id",
+          "target": "table:accounts"
+        },
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 19,
+          "message": "sql/recursive-depth.sql:19: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, w.depth FROM accounts a JOIN walk w ON a.id = w.id WHERE w.depth < 5",
+          "target": "table:accounts"
+        },
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 24,
+          "message": "sql/recursive-depth.sql:24: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, w.depth + 1 FROM accounts a JOIN walk w ON a.id = w.id WHERE w.depth < 5 OR a.name = 'bypass'",
+          "target": "table:accounts"
+        },
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 29,
+          "message": "sql/recursive-depth.sql:29: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, w.depth + 1 FROM accounts a JOIN walk w ON a.name = w.id::text WHERE w.depth < 5",
+          "target": "table:accounts"
+        },
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 32,
+          "message": "sql/recursive-depth.sql:32: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, 0 FROM accounts",
+          "target": "table:accounts"
+        },
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 39,
+          "message": "sql/recursive-depth.sql:39: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, w.depth + 1 FROM accounts a CROSS JOIN walk w WHERE w.depth < 5",
+          "target": "table:accounts"
+        },
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 44,
+          "message": "sql/recursive-depth.sql:44: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, w.depth + 1 FROM accounts a JOIN walk w ON a.id = w.id CROSS JOIN orders o WHERE w.depth < 5",
+          "target": "table:orders"
+        },
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 59,
+          "message": "sql/recursive-depth.sql:59: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, w.depth + 0 FROM accounts a JOIN walk w ON a.id = w.id WHERE w.depth < 5",
+          "target": "table:accounts"
+        },
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 64,
+          "message": "sql/recursive-depth.sql:64: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, w.depth + 1 FROM accounts a JOIN walk w ON a.id = w.id WHERE w.depth < length(a.name)",
+          "target": "table:accounts"
+        },
+        {
+          "file": "sql/recursive-depth.sql",
+          "line": 69,
+          "message": "sql/recursive-depth.sql:69: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id, w.depth + 1 FROM accounts a JOIN walk w ON a.id = w.id WHERE w.depth < 5",
+          "target": "table:accounts"
         }
       ],
       "warnings": []

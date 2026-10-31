@@ -129,8 +129,11 @@ predicate still bounds that input. Casts and ordinary expression wrappers do
 not remove this scan requirement.
 Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
 whose arguments read a column, query or function result (`unnest(ARRAY[a.id])`,
-`unnest(get_all_account_ids())`), and the recursive reference of a `WITH RECURSIVE` are opaque: never
-reported themselves, and they bound nothing pinned to them. `EXCEPT` and `INTERSECT` read
+`unnest(get_all_account_ids())`), and an uncapped recursive reference of a `WITH RECURSIVE` are opaque: never
+reported themselves, and they bound nothing pinned to them. A proven
+[depth-capped recursive CTE](postgres-bounded-statements.md#depth-capped-recursive-ctes)
+can supply a bounded driver while its anchor and step relations retain their
+ordinary key proofs. `EXCEPT` and `INTERSECT` read
 both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
 only the result. An outer LIMIT does not suppress the input-arm findings for EXCEPT,
 INTERSECT or duplicate-eliminating UNION; UNION ALL can stream until its cap.

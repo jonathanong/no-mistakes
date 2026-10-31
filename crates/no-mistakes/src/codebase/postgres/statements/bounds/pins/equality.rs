@@ -10,9 +10,21 @@ pub(super) fn equate(
     pin: &mut impl FnMut(&Expr, Option<Sourced>, bool),
 ) {
     if let Some((item, _)) = resolver.column(left) {
-        pin(left, resolver.source(right, item), null_safe);
+        pin(
+            left,
+            resolver
+                .source(right, item)
+                .or_else(|| resolver.correlated_source(right)),
+            null_safe,
+        );
     }
     if let Some((item, _)) = resolver.column(right) {
-        pin(right, resolver.source(left, item), null_safe);
+        pin(
+            right,
+            resolver
+                .source(left, item)
+                .or_else(|| resolver.correlated_source(left)),
+            null_safe,
+        );
     }
 }

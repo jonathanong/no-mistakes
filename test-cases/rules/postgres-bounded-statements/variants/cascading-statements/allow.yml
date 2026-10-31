@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: [queries.sql]
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [queries.sql]
+      allow:
+        - object: table:orders
+          reason: Fixed application batch

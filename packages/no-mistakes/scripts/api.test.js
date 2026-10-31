@@ -152,3 +152,18 @@ test("production export test-only options require explicit production and test s
     ),
   );
 });
+
+test("bounded statement options export key fan-out contracts", () => {
+  const types = readFileSync(join(packageRoot, "postgres-bounded-statements-types.d.ts"), "utf8");
+  assert.match(types, /export interface PostgresBoundedStatementsOptions/);
+  assert.match(types, /export interface PostgresColumnBound \{\s*reason: string;/);
+  assert.match(types, /export type PostgresViewBoundMode = "bounded" \| "unbounded";/);
+  assert.match(types, /columnBounds\?: Record<string, PostgresColumnBound>;/);
+  assert.match(types, /viewBounds\?: Record<string, PostgresViewBoundMode>;/);
+  assert.match(types, /schemaCatalogPath: string;/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./postgres-bounded-statements-types";',
+    ),
+  );
+});

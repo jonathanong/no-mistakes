@@ -55,10 +55,15 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
                     .unwrap_or_else(|| opaque(start(cte.query.span())))
             }
         } else if with.recursive {
-            // A recursive reference is whatever the recursion has produced so far: it
-            // bounds nothing joined to it.
             let mut inner = scope.child();
-            inner.insert(name.clone(), opaque(start(cte.query.span())));
+            inner.insert(
+                name.clone(),
+                if super::recursive_depth::finite(cte) {
+                    super::sized_by_itself(start(cte.query.span()))
+                } else {
+                    opaque(start(cte.query.span()))
+                },
+            );
             bound_query(&cte.query, &inner, positions)
         } else {
             bound_query(&cte.query, &scope, positions)

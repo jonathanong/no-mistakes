@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: [query.ts]
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]

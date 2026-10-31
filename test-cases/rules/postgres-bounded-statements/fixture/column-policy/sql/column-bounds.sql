@@ -1,0 +1,10 @@
+SELECT id FROM orders WHERE account_id = $1;
+SELECT id FROM orders WHERE account_id = ANY($1);
+UPDATE orders SET status = 'done' WHERE account_id = $1;
+DELETE FROM orders WHERE account_id = ANY($1);
+SELECT id FROM orders WHERE status = $1;
+SELECT id FROM orders WHERE account_id = ANY(SELECT id FROM accounts);
+SELECT id FROM orders;
+SELECT o.id FROM orders o JOIN accounts a ON o.account_id = a.id;
+SELECT id FROM orders WHERE account_id = $1 OR status = $2;
+SELECT id FROM orders AS o (order_id, owner_id, state) WHERE owner_id = $1;

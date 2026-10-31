@@ -5,6 +5,7 @@ use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::SqlBoundKind;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
+mod groups;
 mod verdicts;
 
 pub(super) fn scan(
@@ -23,7 +24,8 @@ pub(super) fn scan(
         prepared,
     )?;
     let catalog = inputs.catalog;
-    let views = ViewBounds::compile(&opts.view_bounds, catalog)?;
+    let mut views = ViewBounds::compile(&opts.view_bounds, catalog)?;
+    views.keys = super::column_bounds::ColumnBounds::compile(&opts.column_bounds, catalog)?;
     let statements = inputs.statements;
     let embedded = inputs.embedded;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
@@ -44,6 +46,7 @@ pub(super) fn scan(
             }
         }
     }
+    let mut groups = groups::Groups::default();
     for file in statements {
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
@@ -74,6 +77,7 @@ pub(super) fn scan(
             } else {
                 offenders_with_views
             };
+            let group_start = findings.len();
             for offender in evaluate(bound, catalog, &views) {
                 // Keep suppression and its audit in the shared layer. A directive
                 // on the statement start anchors all of that statement's findings.
@@ -108,8 +112,10 @@ pub(super) fn scan(
                     ),
                 );
             }
+            groups.collect(&mut findings, group_start, file, bound);
         }
     }
+    groups.finish(&mut findings, root, sources, &opts.allow);
     // Sorted first: dedup only removes adjacent duplicates, and one relation can be reported
     // by several statements of a file (or arms of one) with others between them.
     findings.sort();

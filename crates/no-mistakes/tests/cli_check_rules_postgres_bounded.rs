@@ -1,6 +1,10 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "cli_check_rules_postgres_bounded/cascading.rs"]
+mod cascading;
+#[path = "cli_check_rules_postgres_bounded/correlated_append.rs"]
+mod correlated_append;
 #[path = "cli_check_rules_postgres_bounded/joined_dml.rs"]
 mod joined_dml;
 
@@ -251,8 +255,8 @@ fn unique_index_shape_guards_survive_cli_preparation() {
 #[test]
 fn catalog_key_ownership_and_view_policies_survive_cli_preparation() {
     for (directory, config, expected) in [
-        ("catalog-resolution", "key-resolution.yml", 6),
-        ("catalog-resolution", "key-operators.yml", 4),
+        ("catalog-resolution", "key-resolution.yml", 5),
+        ("catalog-resolution", "key-operators.yml", 2),
         ("catalog-resolution", "key-booleans.yml", 1),
         ("catalog-resolution", "view-bounds.yml", 1),
         ("catalog-resolution", "view-allow.yml", 0),
@@ -285,12 +289,7 @@ fn schemaless_bare_catalog_keys_still_judge_qualified_tables() {
             (
                 "sql/qualified-bare-tables.sql".to_string(),
                 3,
-                "table:a".to_string(),
-            ),
-            (
-                "sql/qualified-bare-tables.sql".to_string(),
-                3,
-                "table:b".to_string(),
+                "table:a, table:b".to_string(),
             ),
         ]
     );
@@ -300,8 +299,7 @@ fn issue_2665_shapes_preserve_bounded_inputs_and_conservative_negatives() {
     let expected = [
         (4, "table:order_lines"),
         (8, "table:accounts"),
-        (11, "table:accounts"),
-        (11, "table:orders"),
+        (11, "table:accounts, table:orders"),
         (14, "table:accounts"),
         (15, "table:accounts"),
         (16, "table:accounts"),

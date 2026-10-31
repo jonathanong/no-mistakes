@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: [src/query.ts]
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]
+      schemaCatalogPath: schema.json
+      columnBounds:
+        orders.account_id:
+          reason: Each account owns a finite caller-bounded batch of orders.

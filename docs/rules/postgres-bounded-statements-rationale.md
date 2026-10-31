@@ -143,7 +143,9 @@ contract.
 Recursive key walks remain reported without a proven total-depth bound. A
 single-row seed and one key lookup per step bound branching, but do not bound
 the number of steps; `UNION ALL` may also revisit a cycle forever. Use an
-explicit bounded batch or a separate statically provable total-row contract.
+explicit bounded batch or a
+[depth-capped recursive CTE](postgres-bounded-statements.md#depth-capped-recursive-ctes)
+with a bounded anchor and key joins.
 A `DISTINCT ON` key can also erase that caller row if a set-returning function
 yields no values. The guaranteed-row proof uses the existing projection-expansion
 classifier for those keys; fixed keys and ordinary `DISTINCT` retain their row.

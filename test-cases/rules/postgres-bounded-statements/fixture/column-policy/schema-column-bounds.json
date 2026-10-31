@@ -1,0 +1,64 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "public.orders": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "archive.orders": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "\"Mixed.Table\"": {
+      "columns": {
+        "Owner Id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "memberships": {
+      "columns": {
+        "account_id": {
+          "dataType": "uuid"
+        },
+        "member_id": {
+          "dataType": "uuid"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "account_id",
+          "member_id"
+        ]
+      },
+      "indexes": {
+        "memberships_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "account_id",
+              "expression": "account_id"
+            },
+            {
+              "column": "member_id",
+              "expression": "member_id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

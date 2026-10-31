@@ -118,6 +118,13 @@ selected view's cardinality contract; views without a policy remain unknown.
 See [catalog views](../rules/postgres-bounded-statements.md#catalog-views) for
 identity validation, examples and suppression.
 
+`postgres-bounded-statements` accepts application-local `options.columnBounds`,
+a map from catalog `table.column` names to `{reason: "..."}` entries. Each
+nonempty reason declares bounded fan-out per key; a caller-bounded equality or
+key array can then bound the statement without a unique constraint. This does
+not exempt other predicates or SQL-derived unbounded key sets. See
+[per-column bounds](../rules/postgres-bounded-statements.md#per-column-bounds).
+
 [`postgres-json-relation-ids`](../rules/postgres-json-relation-ids.md) is an
 opt-in advisory. It has no naming conventions enabled by default. Set
 `idKeyPattern` to inspect JSON identifier keys; set `fingerprintNamePattern`
