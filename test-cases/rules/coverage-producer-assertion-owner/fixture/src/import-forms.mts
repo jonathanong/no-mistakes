@@ -7,6 +7,7 @@ import strictAssert from 'node:assert/strict';
 import * as strictNamespace from 'node:assert/strict';
 import looseAssert from 'assert';
 import strictPackage from 'assert/strict';
+import { execFile } from 'node:child_process';
 
 export function namedAssertion() { equal(1, 1); }
 export function namespaceAssertion() { assertions.strictEqual(1, 1); }
@@ -19,3 +20,4 @@ export function bareStrictAssert() { strictAssert(1); }
 export function bareLooseAssert() { looseAssert(1); }
 export function strictPackageEqual() { strictPackage.equal(1, 1); }
 export function bareNodeAssert() { assert(1); }
+export function otherChildExport() { execFile('true'); }

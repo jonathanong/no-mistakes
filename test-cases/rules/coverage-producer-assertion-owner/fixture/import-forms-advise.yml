@@ -16,8 +16,10 @@ rules:
         - { file: src/import-forms.mts, symbol: bareLooseAssert }
         - { file: src/import-forms.mts, symbol: strictPackageEqual }
         - { file: src/import-forms.mts, symbol: bareNodeAssert }
+        - { file: src/import-forms.mts, symbol: otherChildExport }
       assertions:
         - { module: 'node:assert', export: strictEqual }
+        - { module: 'node:child_process', export: spawn }
         - { module: 'node:assert/strict', export: equal }
         - { module: 'node:assert/strict', export: ok }
         - { module: 'assert', export: ok }

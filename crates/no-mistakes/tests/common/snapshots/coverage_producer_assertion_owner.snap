@@ -684,7 +684,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/import-forms.mts",
-          "line": 15,
+          "line": 16,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#externalOnly",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function externalOnly() { hostname(); query('select 1'); }",
@@ -692,11 +692,19 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/import-forms.mts",
-          "line": 21,
+          "line": 22,
           "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#bareNodeAssert",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function bareNodeAssert() { assert(1); }",
           "target": "bareNodeAssert"
+        },
+        {
+          "file": "src/import-forms.mts",
+          "line": 23,
+          "message": "unanalyzable coverage producer: unresolved dispatch, source failure, or traversal limit; model the dispatch ownership or rewrite it statically: src/import-forms.mts#otherChildExport",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function otherChildExport() { execFile('true'); }",
+          "target": "otherChildExport"
         }
       ],
       "warnings": []

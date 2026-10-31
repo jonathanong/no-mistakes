@@ -92,7 +92,7 @@ fn assert_import_forms_reach_owners_and_unmatched_externals_stay_uncertain() {
         let expected = if policy == "ignore" {
             vec![]
         } else {
-            vec!["bareNodeAssert", "externalOnly"]
+            vec!["bareNodeAssert", "externalOnly", "otherChildExport"]
         };
         assert_eq!(targets, expected, "{report}");
         for symbol in [
