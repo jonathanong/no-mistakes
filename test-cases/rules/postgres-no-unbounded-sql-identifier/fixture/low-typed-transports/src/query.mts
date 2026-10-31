@@ -58,3 +58,6 @@ export function callbackWrong(transaction: TransactionQuery, run: (first: unknow
 export function callbackSpread(transaction: TransactionQuery, run: (query: QueryExecutor) => void) {
   run(...[transaction]); // UNKNOWN_CALLBACK_SPREAD
 }
+export function callbackDefault(transaction: TransactionQuery, run: (query: QueryExecutor) => void = opaque) {
+  run(transaction); // CLEAR_TYPED
+}
