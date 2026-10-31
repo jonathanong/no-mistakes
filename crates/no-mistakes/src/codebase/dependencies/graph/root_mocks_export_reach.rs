@@ -33,9 +33,8 @@ impl DepGraph {
                 ordinary.extend(group);
                 continue;
             };
-            if boundaries.blocked.is_empty() && boundaries.suppressed.is_empty() {
+            if boundaries.suppressed.is_empty() {
                 ordinary.extend(group);
-                ordinary.extend(boundaries.factories.iter().cloned());
                 continue;
             }
             guards.push((
@@ -44,7 +43,7 @@ impl DepGraph {
             ));
         }
         MockExportReach {
-            ordinary: self.call_source_nodes(&ordinary, CallTraversal::Transitive, max_depth),
+            ordinary: self.call_source_nodes_with_root_mocks(&ordinary, max_depth),
             guards,
         }
     }
