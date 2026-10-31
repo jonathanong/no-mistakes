@@ -4,6 +4,7 @@ use std::collections::VecDeque;
 pub(super) struct Outcome {
     pub assertion: bool,
     pub uncertain: bool,
+    unmodeled: bool,
 }
 pub(super) fn analyze(
     root: &NodeId,
@@ -58,10 +59,10 @@ pub(super) fn analyze(
             // External calls are opaque boundaries unless explicitly modeled. Node `fs`
             // is modeled I/O; known globals remain syntactically classified, while
             // dynamic targets abstain.
-            if site.has_unknown_target()
-                || (modeled.is_empty() && external::unmodeled_external(site))
-            {
+            if site.has_unknown_target() {
                 out.uncertain = true;
+            } else if modeled.is_empty() && external::unmodeled_external(site) {
+                out.unmodeled = true;
             }
             if modeled.is_empty() && external::fs_effect(site) {
                 live_fs = true;
@@ -87,6 +88,10 @@ pub(super) fn analyze(
             seen.insert(target.clone());
             queue.push_back((target.clone(), depth + 1));
         }
+    }
+    // Unmodeled modules are uncertain only when no assertion owner was reached.
+    if out.unmodeled && !out.assertion {
+        out.uncertain = true;
     }
     out
 }

@@ -24,11 +24,14 @@ rules:
 `producers` and `assertions` must be non-empty. Producers select exactly one
 prepared callable by file and symbol; missing or ambiguous selectors are errors.
 There are no framework, test-location, or assertion-name defaults. Assertion
-imports match resolved module/export identities, including named and namespace
-imports and imported aliases. Default-import member calls such as
-`import assert from 'node:assert'; assert.strictEqual(...)` remain unanalyzable;
-a locally shadowed identifier or a string containing an assertion name does not
-qualify. Helpers need no local assertion when their actual call descendants own
+imports match resolved module/export identities, including named imports,
+namespace member calls, and imported aliases. For the Node assert specifiers
+`assert`, `assert/strict`, `node:assert`, and `node:assert/strict`, a
+default-import member call `assert.<export>()` reaches that export, and a bare
+`assert()` reaches `ok`. Those specifier strings are not aliases of each other:
+configuring `node:assert` does not match an import of `node:assert/strict` or
+`assert`. A locally shadowed identifier or a string containing an assertion
+name does not qualify. Helpers need no local assertion when their actual call descendants own
 one. Actual resolved callback invocations use the canonical call graph. Storing,
 registering, or forwarding a callback without invoking it supplies no assertion
 evidence; reference-only callback/member edges are excluded from this proof.
@@ -54,9 +57,26 @@ resolved helpers:
 ```ts
 // tests/coverage.mts
 import { strictEqual } from 'node:assert';
+import assert from 'node:assert/strict';
+import * as strict from 'node:assert/strict';
+import { query } from 'pg';
+
 function execute() { return 1; }
-export function produceCoverage() { strictEqual(execute(), 1); }
+export function produceCoverage() {
+  query('select 1');
+  strictEqual(execute(), 1);
+}
+export function defaultEqual() { assert.equal(1, 1); }
+export function namespaceOk() { strict.ok(1); }
+export function bareOk() { assert(1); }
 ```
+
+`produceCoverage` is the configured producer. Its named `strictEqual` is the
+owner, so the unmodeled `query` call does not make it unanalyzable. The same
+owner is reached through a default import as `assert.<export>()` and through a
+namespace import as `strict.<export>()`. A bare `assert()` selects `ok`.
+Configure each module string you import; `node:assert` does not cover
+`node:assert/strict`. A producer that only calls `query` stays unanalyzable.
 
 Uncalled sibling/nested functions, assertions in other files without a call
 path, literal dead conditional/logical arms and loop bodies, and calls after a sequential `return`/`throw`/`break`/`continue` do not
@@ -98,13 +118,15 @@ and generator ownership targets follow the same policy.
 `maxDepth` (default 64) and `maxNodes` (default 10000, including the producer)
 are positive traversal bounds. A reached bound with unexplored work is
 unanalyzable. Dynamic targets, unknown alternatives, source/parse failures, and
-unmodeled external module calls also follow shared `unanalyzable` policy:
-`report` emits a finding, `advise` emits an advisory, `ignore` explicitly omits
-that uncertain result. Uncertainty never supplies assertion evidence, and is
-reported even when another reachable call owns an assertion. Known globals
-retain the call graph's classification; external process calls need contracts.
-Unmodeled external module calls keep the producer unanalyzable even when an
-assertion is also reached.
+Node `fs` callback shapes also follow shared `unanalyzable` policy: `report`
+emits a finding, `advise` emits an advisory, `ignore` explicitly omits that
+uncertain result. Those results never supply assertion evidence, and they are
+reported even when another reachable call owns an assertion. An unmodeled
+external module call, such as a PostgreSQL client or another Node builtin, is
+different: it is reported only when no owner was reached. Once a resolved path
+reaches an owner, that producer passes even if it also calls an unmodeled
+module. Known globals retain the call graph's classification; external process
+calls need contracts.
 
 ## Node `fs` is modeled I/O
 
@@ -148,8 +170,10 @@ shorthand properties, computed keys, spreads and array holes remain uncertain.
 The recursive proof also stops conservatively after 16 nested expression
 levels. For example, `{ cb: () => {} }` is uncertain even when followed by an
 assertion.
-Other modules, such as `node:os` or `node:child_process`, remain
-unmodeled; use an ownership contract for process dispatch. Tip: set
+Other modules, such as `node:os`, `node:child_process`, or a PostgreSQL client,
+remain unmodeled. A reached assertion owner still passes when the producer also
+calls one; with no owner, the call follows `unanalyzable`. Use an ownership
+contract for process dispatch that should count as an owner. Tip: set
 `unanalyzable: advise` while rolling out the rule to inspect uncertain results
 without failing the check.
 

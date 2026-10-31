@@ -399,7 +399,7 @@ It supports `effort: low` for literal SQL and the common `unanalyzable` policy.
 
 ### Coverage producer assertion ownership
 
-The opt-in [`coverage-producer-assertion-owner`](../rules/coverage-producer-assertion-owner.md) rule requires non-empty `producers` (exact `{file, symbol}` callables) and `assertions` (`{module, export}` bindings). Optional `ownership` entries tie an actual `via` dispatch to an explicit assertion-bearing owner. `maxDepth` defaults to 64 and `maxNodes` to 10000; both are positive, and truncation follows shared `unanalyzable` policy. No locations, assertion libraries, or process contracts are inferred from repository conventions.
+The opt-in [`coverage-producer-assertion-owner`](../rules/coverage-producer-assertion-owner.md) rule requires non-empty `producers` (exact `{file, symbol}` callables) and `assertions` (`{module, export}` bindings). Optional `ownership` entries tie an actual `via` dispatch to an explicit assertion-bearing owner. `maxDepth` defaults to 64 and `maxNodes` to 10000; both are positive, and truncation follows shared `unanalyzable` policy. No locations, assertion libraries, or process contracts are inferred from repository conventions. For a configured `assert`, `assert/strict`, `node:assert`, or `node:assert/strict` module, a default-import member call selects that export and a bare call selects `ok`. Those module strings are not aliases. A reached owner passes even when another call is an unmodeled module.
 
 The opt-in [`forbidden-lint-suppressions`](../rules/forbidden-lint-suppressions.md)
 repository check requires explicit `options.files` globs and protects exact
