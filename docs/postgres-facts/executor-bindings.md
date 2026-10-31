@@ -63,7 +63,10 @@ For `postgres-no-unbounded-sql-identifier` and
 `postgres-no-transformed-uuid-predicates` at low effort, a direct executor
 argument may also flow into a resolved helper parameter annotated directly with
 a configured imported executor type. A callback parameter with an explicit
-function signature accepting an executor uses the same transport proof. The
+function signature accepting an executor uses the same transport proof.
+Callback arguments supplied to a helper require a configured executor type on
+their own receiving parameter. Untyped inline or named callbacks retain
+uncertainty. The
 proof uses the receiving parameter at that argument position, including
 resolved imported helpers. The helper's SQL
 calls and unsupported uses are still checked independently. Untyped parameters,

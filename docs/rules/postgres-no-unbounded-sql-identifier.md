@@ -103,7 +103,9 @@ with a configured imported executor type is transport at low effort. The
 helper's SQL calls are checked where they occur. An untyped parameter, a
 different parameter type, or an unresolved helper retains uncertainty; an
 executor type on the argument alone does not clear the escape. Explicit callback
-signatures accepting an executor qualify too. Supported local type aliases,
+signatures accepting an executor qualify too, provided the actual callback's
+receiving parameter has a configured executor type. Untyped inline or named
+callbacks retain uncertainty. Supported local type aliases,
 `typeof` proven executor values, and
 `Awaited<ReturnType<typeof configuredFactory>>` retain executor identity;
 unrelated or shadowed types and cyclic aliases do not.
