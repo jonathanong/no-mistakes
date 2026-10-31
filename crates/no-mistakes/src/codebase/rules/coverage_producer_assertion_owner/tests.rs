@@ -69,7 +69,11 @@ fn configured_producers_require_actual_reachable_assertion_owners() {
 #[test]
 fn reached_owner_passes_despite_dynamic_dispatch_or_traversal_limit() {
     for (name, passes, reported) in [
-        ("mixed.yml", "directOwnerAndDynamic", "dynamicOnlyAfterExecute"),
+        (
+            "mixed.yml",
+            "directOwnerAndDynamic",
+            "dynamicOnlyAfterExecute",
+        ),
         ("depth.yml", "directOwnerAndDeepChain", "deepChainOnly"),
     ] {
         let findings = run(name);
@@ -178,11 +182,7 @@ mod prepared;
 fn mixed_known_unknown_assertion_target_cannot_pass() {
     let mut findings = run("mixed.yml");
     findings.extend(run("ambiguous-callback.yml"));
-    for symbol in [
-        "mixedTarget",
-        "ambiguousCallbackA",
-        "ambiguousCallbackB",
-    ] {
+    for symbol in ["mixedTarget", "ambiguousCallbackA", "ambiguousCallbackB"] {
         assert!(
             findings
                 .iter()
