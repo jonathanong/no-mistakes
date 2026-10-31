@@ -6,6 +6,15 @@ pub(crate) struct ImportClassification {
 }
 
 impl ImportClassification {
+    #[cfg(test)]
+    pub(crate) fn unresolved() -> Self {
+        Self {
+            resolver_target: None,
+            workspace_target: None,
+            workspace_recognized: false,
+        }
+    }
+
     pub(crate) fn preferred_path(&self) -> Option<&Path> {
         self.resolver_target
             .as_deref()

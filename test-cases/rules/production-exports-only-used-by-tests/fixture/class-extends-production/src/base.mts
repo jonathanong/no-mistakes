@@ -7,3 +7,10 @@ export class DefaultChild extends DefaultBase {}
 class ReexportBase {}
 export { ReexportBase }
 export class ReexportChild extends ReexportBase {}
+
+export class GlobalChild extends Error {}
+
+export class Constructed {
+  constructor() {}
+}
+export class Sub extends Constructed {}
