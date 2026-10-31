@@ -1,0 +1,22 @@
+{
+  "scripts": {
+    "build:esbuild": "esbuild src/esbuild.mts --bundle --outfile=dist/out.js &&",
+    "build:bin": "node_modules/.bin/tsup src/tsup.mts --dts",
+    "build:vite": "vite build src/vite.mts",
+    "build:rollup": "rollup src/rollup.mts -o src/flag-value.mts",
+    "build:webpack": "webpack src/webpack.mts --mode=production",
+    "build:wrangler": "wrangler deploy src/wrangler.mts",
+    "build:node": "node src/node-only.mts",
+    "build:quoted": "esbuild \"src/quoted name.mts\" --bundle",
+    "build:and": "echo hi && esbuild src/and.mts --bundle",
+    "build:or": "false || esbuild src/or.mts --bundle",
+    "build:semi": "echo hi; esbuild src/semi.mts --bundle",
+    "build:nl": "echo hi\nesbuild src/nl.mts --bundle",
+    "build:env": "NODE_ENV=production esbuild src/env.mts --bundle",
+    "build:missing": "esbuild src/missing.mts --bundle",
+    "build:dynamic": "esbuild src/$WORKER.mts --bundle",
+    "build:badquote": "esbuild \"src/esbuild.mts",
+    "build:abs": "esbuild /etc/passwd.mts",
+    "count": 1
+  }
+}

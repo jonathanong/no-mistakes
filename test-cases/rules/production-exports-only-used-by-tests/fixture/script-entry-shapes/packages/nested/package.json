@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "build:nested": "esbuild src/nested.mts --bundle"
+  }
+}

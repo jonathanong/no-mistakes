@@ -256,6 +256,40 @@ reads:
   `config`.
 - `instrumentation-client` at the project root or `src/`: `onRouterTransitionStart`.
 
+## Bundler script entrypoints
+
+A source file named as a positional argument of `esbuild`, `tsup`, `vite`,
+`rollup`, `webpack`, or `wrangler` in a `package.json` script is a production
+entry. The path is resolved relative to the `package.json` that contains the
+script, and the manifest is the analysis root or a directory above a discovered
+source file. Every export of that file, including `export default`, is a
+production use, even when the only other importer is a configured test.
+
+Commands split on `&&`, `||`, `;`, and newlines. The bundler may be a path whose
+basename is one of those tools (`node_modules/.bin/esbuild`). A flag, including
+`--outfile=dist/worker.js`, is not an entry. The separate value of `-o`,
+`--outfile`, `--outdir`, `--out-dir`, `--out`, `--config`, `-c`, `--format`,
+`--platform`, `--target`, or `--tsconfig` is not an entry. `node`, environment
+assignments, globs, unquoted expansions, paths outside the analysis root, and a
+command with an unbalanced quote are not entries. A `package.json` that is not
+JSON contributes no entry.
+
+```json
+{
+  "scripts": {
+    "build:worker": "esbuild src/worker.mts --bundle --outfile=dist/worker.js"
+  }
+}
+```
+
+```ts
+// src/worker.mts
+export default { ready: true };
+```
+
+The same file with no bundler script, imported only by a configured test, is
+reported.
+
 ## Incomplete analysis
 
 Dynamic or unresolved module/symbol relationships cannot prove exclusive test
