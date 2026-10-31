@@ -43,6 +43,7 @@ pub(crate) fn check_with_graph(
         let policy = config.effective_rule_analysis(application)?.unanalyzable;
         let files = facts.graph_file_universe();
         let nextjs_roots = nextjs::project_roots(&root, config);
+        let bases = extends::ProductionBases::collect(graph, |path| options.production(path));
         for (file, line, reason) in &incomplete {
             diagnostics.unanalyzable(policy, uncertain(&root, application, file, *line, reason));
         }
@@ -83,11 +84,7 @@ pub(crate) fn check_with_graph(
                     if consumers.files.iter().any(|file| !options.test(file)) {
                         continue;
                     }
-                    if matches!(export.kind, ExportKind::Class)
-                        && extends::extended_by_production(graph, file, name, |path| {
-                            options.production(path)
-                        })
-                    {
+                    if bases.extends_class(ts, file, export) {
                         continue;
                     }
                     if !consumers.unknown.is_empty() {

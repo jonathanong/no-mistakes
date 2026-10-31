@@ -30,11 +30,13 @@ file does not establish production use of the reported symbol.
 
 An exported class extended by another exported class in a production root is a
 production use, even when no other production file imports it. That includes a
-same-file `export class Child extends Base` and a resolved cross-file `extends`
-edge. Declaration emit of the subclass names the base, so the base cannot be
-made private. A subclass that is not exported, or that lives only in a
-configured test or test helper, does not count. `implements` and
-`interface extends` are not class extensions. Type-position references to a
+same-file `export class Child extends Base`, a resolved cross-file `extends`
+edge, `export default class Base`, and `class Base {}` followed by
+`export { Base }`. Declaration emit of the subclass names the base, so the base
+cannot be made private. The base is that class declaration: a same-named class
+in another namespace does not count. A subclass that is not exported, or that
+lives only in a configured test or test helper, does not count. `implements`
+and `interface extends` are not class extensions. Type-position references to a
 class remain production use.
 
 ## Counterexample

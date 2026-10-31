@@ -38,6 +38,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export class OnlyHidden {}",
           "target": "OnlyHidden"
+        },
+        {
+          "file": "src/base.mts",
+          "line": 5,
+          "message": "production export `Shadow` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export class Shadow {}",
+          "target": "Shadow"
+        },
+        {
+          "file": "src/base.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: Unsupported module or dynamic binding form; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export namespace Box {",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

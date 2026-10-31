@@ -14,5 +14,9 @@ fn test_only_subclass_still_reports_the_base() {
         .map(|row| row.target.as_deref().unwrap().to_string())
         .collect();
     names.sort();
-    assert_eq!(names, ["Base", "OnlyHidden"], "{found:#?}");
+    assert_eq!(
+        names,
+        ["Base", "OnlyHidden", "Shadow", "unanalyzable"],
+        "{found:#?}"
+    );
 }
