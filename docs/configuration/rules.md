@@ -114,7 +114,11 @@ shared `unanalyzable` policy and accepts the legacy `unanalyzableSql` spelling.
 
 `postgres-bounded-statements` also accepts application-local `options.viewBounds`,
 a map from catalog view names to `bounded` or `unbounded`. It declares each
-selected view's cardinality contract; views without a policy remain unknown.
+selected view's cardinality contract. A catalog view with no entry is an unsized
+relation when its definition projects a base table primary key one-to-one; a
+keyed read is then bounded like a table. Every other catalog view stays an
+unknown-relation advisory and is not a finding. Names the catalog does not
+contain, and a bare name shared by a table and a view, remain unknown.
 See [catalog views](../rules/postgres-bounded-statements.md#catalog-views) for
 identity validation, examples and suppression.
 

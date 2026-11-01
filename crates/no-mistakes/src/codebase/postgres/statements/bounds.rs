@@ -12,6 +12,7 @@ mod items;
 mod pins;
 mod predicate;
 mod query;
+mod returning;
 mod scalar_limit;
 mod table;
 mod temporary;

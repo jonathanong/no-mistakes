@@ -14,8 +14,10 @@ mod propagation;
 mod qualified;
 mod reads;
 mod scalar_output;
+mod view_key;
 use outer_reads::reads_outer;
 use reads::relation_offender;
+pub(super) use view_key::visible_key;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -166,7 +168,7 @@ fn evaluate(
                 &pin_subqueries[index],
                 &pin_arrays[index],
                 catalog,
-                &views.keys,
+                views,
             )
         })
         .collect();

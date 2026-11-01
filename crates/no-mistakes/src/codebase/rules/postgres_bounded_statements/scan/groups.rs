@@ -1,3 +1,5 @@
+mod append;
+
 use super::super::RULE_ID;
 use crate::codebase::postgres::statements::SqlBoundFact;
 use crate::codebase::postgres::AllowList;
@@ -17,6 +19,7 @@ struct Group {
     findings: PostgresFindings,
     executor: PathBuf,
     call_line: Option<usize>,
+    spans: Vec<append::Span>,
 }
 
 impl Groups {
@@ -25,6 +28,7 @@ impl Groups {
         output: &mut PostgresFindings,
         start: usize,
         file: &SqlStatementFileFacts,
+        bound_index: usize,
         bound: &SqlBoundFact,
     ) {
         let call = file
@@ -38,6 +42,9 @@ impl Groups {
             .variant_locations
             .as_ref()
             .map(|locations| locations.original_call_line as usize);
+        if let Some(span) = append::span(file, bound_index) {
+            group.spans.push(span);
+        }
         group.findings.0.extend(output.0.drain(start..));
     }
 
@@ -50,10 +57,11 @@ impl Groups {
     ) {
         for (_, group) in self.0 {
             let executor = crate::codebase::ts_source::relative_slash_path(root, &group.executor);
+            let relocate_line = append::relocate(&group.spans, &group.findings.0, &executor);
             let mut findings = group.findings;
             merge(
                 &mut findings,
-                (&executor, group.call_line),
+                (&executor, group.call_line, relocate_line),
                 root,
                 sources,
                 allow,
@@ -65,7 +73,7 @@ impl Groups {
 
 fn merge(
     output: &mut PostgresFindings,
-    (executor, call_line): (&str, Option<usize>),
+    (executor, call_line, relocate_line): (&str, Option<usize>, Option<usize>),
     root: &Path,
     sources: &SourceStore,
     allow: &AllowList,
@@ -102,7 +110,7 @@ fn merge(
         .filter_map(|located| located.finding.target.clone())
         .collect();
     let targets = roots.into_iter().collect::<Vec<_>>().join(", ");
-    let fragments: BTreeSet<_> = group
+    let mut fragments: BTreeSet<_> = group
         .iter()
         .filter(|located| located.finding.file != executor)
         .map(|located| format!("{}:{}", located.finding.file, located.finding.line))
@@ -110,11 +118,24 @@ fn merge(
     let local = group
         .iter()
         .position(|located| located.finding.file == executor);
+    let relocate = relocate_line.filter(|_| local.is_some());
+    if relocate.is_some() {
+        for located in &group {
+            if located.finding.file == executor {
+                fragments.insert(format!("{}:{}", located.finding.file, located.finding.line));
+            }
+        }
+    }
     let mut located: LocatedRuleFinding = group.remove(local.unwrap_or(0));
     let finding = &mut located.finding;
     if local.is_none() {
         finding.file = executor.to_string();
         finding.line = call_line.unwrap_or(finding.line).max(1);
+    } else if let Some(line) = relocate {
+        finding.line = line.max(1);
+    }
+    if let Some(line) = relocate {
+        fragments.remove(&format!("{}:{}", finding.file, line));
     }
     finding.target = Some(targets.clone());
     let note = if fragments.is_empty() {

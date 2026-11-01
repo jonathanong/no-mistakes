@@ -50,11 +50,11 @@ fn unqualified_candidate_evidence_is_reused_with_catalog_specific_ownership() {
 }
 
 #[test]
-fn unconfigured_views_remain_unknown_under_advisory_and_ignore_policies() {
-    for (config_name, advisory) in [
-        ("view-unconfigured-advise.yml", true),
-        ("view-unconfigured-ignore.yml", false),
-        ("view-unconfigured-fail.yml", false),
+fn unconfigured_catalog_views_are_unsized_relations() {
+    for config_name in [
+        "view-unconfigured-advise.yml",
+        "view-unconfigured-ignore.yml",
+        "view-unconfigured-fail.yml",
     ] {
         let root = root();
         let config = config(config_name);
@@ -74,22 +74,36 @@ fn unconfigured_views_remain_unknown_under_advisory_and_ignore_policies() {
         .unwrap();
         facts.enable_sql_verdicts();
         // Recording the check fills sql verdicts. Findings for these configs are snapshotted.
-        crate::codebase::rules::postgres_bounded_statements::check_with_files_sources_and_facts(
-            &root, &config, &files, &sources, &facts,
-        )
-        .unwrap();
+        let findings =
+            crate::codebase::rules::postgres_bounded_statements::check_with_files_sources_and_facts(
+                &root, &config, &files, &sources, &facts,
+            )
+            .unwrap();
+        assert!(
+            findings.iter().any(|finding| {
+                finding.target.as_deref() == Some("view:public.unconfigured_view")
+            }),
+            "{config_name}: {findings:#?}"
+        );
         let verdicts = facts.sql_verdicts();
         let select_verdicts: Vec<_> = verdicts
             .iter()
             .filter(|verdict| verdict.subcheck == "select")
             .collect();
-        assert_eq!(select_verdicts.len(), 1, "{config_name}: {verdicts:#?}");
-        assert_eq!(select_verdicts[0].status, SqlVerdictStatus::Abstain);
-        assert_eq!(select_verdicts[0].advisory, advisory);
-        assert!(select_verdicts[0]
-            .residual_reasons
-            .iter()
-            .any(|reason| reason == "unknown-relation"));
+        assert!(!select_verdicts.is_empty(), "{config_name}: {verdicts:#?}");
+        let advisory = config_name.ends_with("advise.yml");
+        assert!(
+            select_verdicts.iter().all(|verdict| {
+                verdict.status == SqlVerdictStatus::Violation && verdict.advisory == advisory
+            }),
+            "{config_name}: {select_verdicts:#?}"
+        );
+        assert!(select_verdicts.iter().all(|verdict| {
+            !verdict
+                .residual_reasons
+                .iter()
+                .any(|reason| reason == "unknown-relation")
+        }));
         assert!(verdicts
             .iter()
             .filter(|verdict| verdict.subcheck != "select")

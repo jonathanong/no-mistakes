@@ -51,8 +51,10 @@ nothing is reported as stale. The catalog's name for the table is the object ref
 
 `viewBounds` defaults to `{}`. It maps specific catalog view names to `bounded`
 or `unbounded`, for example `viewBounds: {"public.small_codes": bounded,
-"public.activity_feed": unbounded}`. These are explicit cardinality assertions;
-the rule does not infer a bound from a view's definition.
+"public.activity_feed": unbounded}`. These are explicit cardinality assertions.
+`bounded` trusts the view without reading its definition. Without an entry, a
+one-to-one projection of a base table's primary key supplies the key below;
+every other view stays unknown.
 
 - `bounded` is an unchecked user assertion that the view supplies a finite set of
   rows. The rule trusts it without inspecting the SQL definition, including when
@@ -61,9 +63,23 @@ the rule does not infer a bound from a view's definition.
   A bounded view can also size another relation through a unique-key join.
 - `unbounded` treats the view as an unsized relation. A statement cap can bound
   it; otherwise the finding targets `view:<catalog-name>`.
-- Views without a policy retain their `unknown-relation` verdicts. Use
-  `unanalyzableSql: advise` for residual advice and `--include-sql-verdicts` to
-  inspect the individual verdicts.
+- A catalog view with no `viewBounds` entry is judged when its definition
+  projects one base table's primary key one-to-one. `SELECT id, ... FROM base`
+  and `SELECT base.* FROM base LEFT JOIN other ON other.pk = base.column` are
+  that shape: the joined table's whole primary key must match a base column or
+  a literal, so the join cannot multiply rows. The projected primary-key
+  columns are the view's key, and a lookup or join on that key is bounded the
+  same way as a table. The rule uses the primary key only, not some other
+  unique index, and it does not follow a view that reads another view.
+  `viewBounds: unbounded` stays an unsized relation even when a key could be
+  derived. A read that renames columns, as in `FROM v AS x(a, b)`, has no view
+  key because aliases rename positionally, so it is judged as an unsized view.
+- Any other catalog view stays an `unknown-relation` advisory and is not a
+  finding. That includes aggregates, projections that omit the primary key,
+  `DISTINCT`, `GROUP BY`, `UNION`, limits inside the view, and joins that can
+  multiply rows. Names the catalog does not contain, and a bare name shared by
+  a table and a view, stay `unknown-relation` too. Use `unanalyzableSql: advise`
+  for that residual advice and `--include-sql-verdicts` to inspect the verdicts.
 
 Each key must resolve to one catalog view. Missing names, ambiguous bare names,
 table/view collisions and duplicate aliases for one view are configuration
@@ -334,7 +350,9 @@ WHERE binding.id = ANY($1) OR binding.email = ANY($2);
 
 `ANY(ARRAY[one scalar])` is equality with that scalar. A nested `ARRAY[ARRAY[...]]` or a constructor with several elements is not. A bare column such as `id = $1` resolves to the `UPDATE` target when the other items do not project that column and the catalog names a single owner. A derived table's column-alias list is the complete set of names it exposes, so `src(account_id)` does not claim `id`. A positional alias on a base table does hide the catalog columns, and then a bare `id` stays unproven. A wildcard CTE does not prove that either.
 
-`DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A multi-line template, including `head + tail` where each const is its own template, reports the source line that contains the SQL.
+`DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A positional `LIMIT $n` inside `WITH page AS MATERIALIZED (... LIMIT $n)` caps that page. A data-modifying CTE joined to the page on the target's whole primary key, including `column = ANY(ARRAY[page.column])` for each key column, stays bounded, and the outer `SELECT` of its `RETURNING` rows keeps that proof. The same statement without the `LIMIT` still reports the target.
+
+A multi-line template reports the source line that contains the SQL. That includes `head + tail`, where each const is its own template. A single-root finding keeps that relation's source line, including inside a fluent append. A grouped finding keeps the opening template's line when its earliest root is there. When the earliest root is an appended fragment instead, the finding is reported once, on the executing call, and the message names that fragment.
 
 ## Analysis
 
@@ -353,15 +371,21 @@ comma-separated list of catalog object refs, such as
 Independent statements remain separate, even on the same source line. SQL
 alternatives from one executor statement share the union of their unbounded
 roots. The finding sits at the executed statement, not at a shared fragment
-that the statement appends from another function or file: callers that append
-the same fragment each get their own finding, and a directive at one caller
-suppresses only that caller. When a root comes from an appended fragment, the
+that the statement appends from another file: callers that append the same
+fragment each get their own finding, and a directive at one caller suppresses
+only that caller. A same-file const is treated the same way when the grouped
+finding's earliest root is in that fragment rather than in the statement's
+opening template. The finding is then one report on the executing call, and the
+message names the fragment. A grouped finding that starts in the opening
+template keeps that line. When a root comes from an appended fragment, the
 message names the fragment's location. A statement made only of appended
 fragments is reported at its executor call.
 
 `allow` entries are applied per root and still report stale entries. A
 relation-line suppression suppresses that relation before the remaining roots
-are grouped; a statement-start suppression covers the whole statement.
+are grouped; a statement-start suppression covers the whole statement. A
+`no-mistakes-disable-line` or `-next-line` on the executing call's line
+suppresses a grouped finding reported there.
 
 ### Depth-capped recursive CTEs
 

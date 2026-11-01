@@ -14,6 +14,7 @@ mod explicit_self_alias;
 mod fetch_expressions;
 mod fixture_configs;
 mod issue_2961;
+mod issue_2961_remainder;
 mod json_function_outputs;
 mod legacy_single_column;
 mod multi_table_arms;

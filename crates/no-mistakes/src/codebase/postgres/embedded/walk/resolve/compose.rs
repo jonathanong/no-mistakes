@@ -13,9 +13,9 @@ mod parameter_positions;
 pub(in crate::codebase::postgres::embedded::walk) use builder::{
     appended_builder_fragment, builder_binding_recovered, builder_fragment, is_builder_append,
 };
-pub(super) use parameter_positions::binding_source_positions;
 pub(in crate::codebase::postgres::embedded::walk) use parameter_positions::contains_parameter_helper;
 pub(super) use parameter_positions::parameter_source_positions;
+pub(super) use parameter_positions::{append_chain_source_positions, binding_source_positions};
 
 pub(super) const DYNAMIC_SQL_FRAGMENT: &str = "sql_dynamic_outer.column";
 
