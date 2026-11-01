@@ -24,7 +24,7 @@ impl Bindings<'_> {
         self.expr_unbounded(file, &binding.value, &mut seen)
     }
 
-    fn parameter(&self, file: &Path, name: &str) -> bool {
+    pub(crate) fn parameter(&self, file: &Path, name: &str) -> bool {
         self.facts.get_ts_facts(file).is_some_and(|ts| {
             ts.value_flow
                 .parameters

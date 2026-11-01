@@ -10,6 +10,7 @@ mod bindings;
 mod env;
 mod identifier_holes;
 mod identifier_positions;
+mod outside;
 mod search;
 pub(crate) use bindings::Bindings;
 pub(crate) use env::is_process_specifier;
@@ -38,11 +39,12 @@ pub(crate) fn identifier_sources<'a>(
     call: &SqlCall<'a>,
     bindings: &Bindings<'a>,
 ) -> BTreeSet<Provenance> {
-    if let Some(holes) = identifier_holes::selected(facts, call, bindings) {
+    if let Some((holes, outside_holes)) = identifier_holes::split(facts, call, bindings) {
         let mut out = BTreeSet::new();
         for hole in holes {
             classify(graph, facts, &call.file, hole, &mut out, bindings);
         }
+        outside::retain(graph, facts, call, bindings, &outside_holes, &mut out);
         return out;
     }
     interpolations(graph, facts, call, bindings)

@@ -160,8 +160,12 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "fail-limit-cursor-bind",
         ],
     );
+    // Env and config holes outside identifier positions stay findings.
+    // Each call also names table. Plain parameters beside them do not.
+    push(&mut owned, rule, &config, &["fail-env-in-where"]);
     // No finding: a static call, a dynamic call with no interpolation,
-    // and calls whose only interpolations or arguments are binds.
+    // calls whose only interpolations or arguments are binds, and a
+    // conditional relation name with parameter binds.
     push(&mut owned, rule, &config, &["pass-static-or-bind-only"]);
     let cases: Vec<(&str, PathBuf, PathBuf)> = owned
         .iter()

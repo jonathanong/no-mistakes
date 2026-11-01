@@ -14,3 +14,8 @@ export function read(
     `SELECT id FROM users WHERE id = ${currentUserId} AND id > ${cursor} LIMIT ${limit}`,
   );
 }
+
+export function conditional(flag: boolean, uid: string, limit: number) {
+  const t = flag ? "users" : "accounts";
+  return query(`SELECT id FROM ${t} WHERE id = ${uid} LIMIT ${limit}`);
+}

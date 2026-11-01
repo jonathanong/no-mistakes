@@ -76,9 +76,13 @@ A value used only as a bind parameter is never the identifier source.
 A call with no interpolation produces no finding, including a static SQL
 string and a dynamic SQL argument that is not itself interpolated. A call
 whose interpolations are only binds produces no finding either.
-Comparison predicates, `LIMIT`, `OFFSET`, function arguments such as
-`ANY(...)`, and extra executor arguments are binds. The named source is the
-expression interpolated into an identifier position: a relation, a `SELECT`,
+A plain parameter or other unproven value in a comparison, `LIMIT`,
+`OFFSET`, function argument, or extra executor argument is not a source.
+An environment value, a query projection, or another non-parameter value
+that flows from an unbounded source in one of those positions still is when
+the same call also interpolates an identifier: the parser cannot tell that
+placeholder from a bind. The named source for a
+positional identifier is the expression in a relation, a `SELECT`,
 `ORDER BY`, or `GROUP BY` column, an `INSERT` column list, or an `UPDATE`
 assignment target. That includes a column or table taken from a helper that
 returns a storage config when the interpolated field flows from an unbounded
@@ -258,8 +262,8 @@ export function list() {
 }
 ```
 
-A bind-value interpolation (`WHERE tenant = ${process.env.SCHEMA}`), an HTTP
-`req.query(...)`, or a recovered finite helper stays silent.
+A call whose only interpolation is a bind (`WHERE tenant = ${process.env.SCHEMA}`),
+an HTTP `req.query(...)`, or a recovered finite helper stays silent.
 `${(process.env.UNUSED, "public")}` also stays silent because the final operand
 is finite.
 
@@ -277,7 +281,10 @@ export function list() {
 So are `${identity(process.env.SCHEMA)}`, `${process.env.SCHEMA.toLowerCase()}`,
 `${process.env["SCHEMA"]}`, `${env.SCHEMA}` after `import { env } from
 "node:process"`, `${req.params.schema}`, `${result.rows[0].schema}`, and
-`${("public", process.env.SCHEMA)}`.
+`${("public", process.env.SCHEMA)}`. So is `${process.env.COLUMN}` in
+`WHERE`, `JOIN ON`, a function argument, `HAVING`, `RETURNING`, or
+`ON CONFLICT` when the same call also interpolates an identifier such as
+`${table}`. A plain parameter beside that environment value stays a bind.
 
 ## Fix
 

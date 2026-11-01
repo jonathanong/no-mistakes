@@ -1,6 +1,5 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
-assertion_line: 51
 ---
 {
   "fail_alias_chain": {
@@ -509,6 +508,163 @@ assertion_line: 51
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "return query(`SELECT id FROM ${process.env.SCHEMA}.users`);",
           "target": "process.env.SCHEMA"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_env_in_where": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "col",
+          "line": 9,
+          "message": "Unbounded identifier source `col` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE ${col} = ${uid}`);",
+          "target": "col"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "process.env.CCOL",
+          "line": 29,
+          "message": "Unbounded identifier source `process.env.CCOL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`INSERT INTO ${table} (id) VALUES (${uid}) ON CONFLICT (${process.env.CCOL}) DO NOTHING`);",
+          "target": "process.env.CCOL"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "process.env.FCOL",
+          "line": 17,
+          "message": "Unbounded identifier source `process.env.FCOL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT lower(${process.env.FCOL}) FROM ${table} WHERE id = ${uid}`);",
+          "target": "process.env.FCOL"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "process.env.HCOL",
+          "line": 21,
+          "message": "Unbounded identifier source `process.env.HCOL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT count(*) FROM ${table} GROUP BY id HAVING ${process.env.HCOL} > ${uid}`);",
+          "target": "process.env.HCOL"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "process.env.JCOL",
+          "line": 13,
+          "message": "Unbounded identifier source `process.env.JCOL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} JOIN o ON o.x = ${process.env.JCOL} AND o.id = ${uid}`);",
+          "target": "process.env.JCOL"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "process.env.RCOL",
+          "line": 25,
+          "message": "Unbounded identifier source `process.env.RCOL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`UPDATE ${table} SET name = ${uid} RETURNING ${process.env.RCOL}`);",
+          "target": "process.env.RCOL"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "process.env.SCOL",
+          "line": 33,
+          "message": "Unbounded identifier source `process.env.SCOL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE a IN (SELECT ${process.env.SCOL} FROM t2 WHERE id = ${uid})`);",
+          "target": "process.env.SCOL"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "process.env.WCOL",
+          "line": 4,
+          "message": "Unbounded identifier source `process.env.WCOL` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE ${process.env.WCOL} = ${uid}`);",
+          "target": "process.env.WCOL"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 13,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} JOIN o ON o.x = ${process.env.JCOL} AND o.id = ${uid}`);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 17,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT lower(${process.env.FCOL}) FROM ${table} WHERE id = ${uid}`);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 21,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT count(*) FROM ${table} GROUP BY id HAVING ${process.env.HCOL} > ${uid}`);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 25,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`UPDATE ${table} SET name = ${uid} RETURNING ${process.env.RCOL}`);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 29,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`INSERT INTO ${table} (id) VALUES (${uid}) ON CONFLICT (${process.env.CCOL}) DO NOTHING`);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 33,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE a IN (SELECT ${process.env.SCOL} FROM t2 WHERE id = ${uid})`);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 4,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE ${process.env.WCOL} = ${uid}`);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 9,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE ${col} = ${uid}`);",
+          "target": "table"
         }
       ],
       "warnings": []

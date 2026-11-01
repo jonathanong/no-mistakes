@@ -9,11 +9,22 @@ use std::path::Path;
 
 use super::super::SqlCall;
 
+#[cfg(test)]
 pub(super) fn selected<'a>(
     facts: &'a CheckFactMap,
     call: &SqlCall<'a>,
     bindings: &Bindings<'a>,
 ) -> Option<Vec<&'a ValueExpression>> {
+    split(facts, call, bindings).map(|(selected, _)| selected)
+}
+
+/// Identifier-position holes, then every other hole. `None` when placeholder
+/// indexes cannot be aligned, so the caller classifies every hole instead.
+pub(super) fn split<'a>(
+    facts: &'a CheckFactMap,
+    call: &SqlCall<'a>,
+    bindings: &Bindings<'a>,
+) -> Option<(Vec<&'a ValueExpression>, Vec<&'a ValueExpression>)> {
     let (indexes, max_index) = aligned(call.call)?;
     let value_call = facts
         .get_ts_facts(&call.file)?
@@ -25,12 +36,21 @@ pub(super) fn selected<'a>(
     if holes.len() != max_index || indexes.is_empty() {
         return None;
     }
+    let mut taken = vec![false; holes.len()];
     let mut selected = Vec::new();
-    for index in indexes {
-        let hole = holes.get(usize::try_from(index).ok()?.checked_sub(1)?)?;
+    for index in &indexes {
+        let position = usize::try_from(*index).ok()?.checked_sub(1)?;
+        let hole = holes.get(position)?;
         selected.push(*hole);
+        taken[position] = true;
     }
-    Some(selected)
+    let outside = holes
+        .iter()
+        .enumerate()
+        .filter(|(offset, _)| !taken[*offset])
+        .map(|(_, hole)| *hole)
+        .collect();
+    Some((selected, outside))
 }
 
 fn template_holes<'a>(
