@@ -4262,7 +4262,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "catalog_resolution_view_unconfigured_advise": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -4272,26 +4272,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "unused-disable-directive",
           "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements -- this view is intentionally unbounded here.",
           "target": "postgres-bounded-statements"
-        },
-        {
-          "file": "src/unconfigured-view.ts",
-          "line": 4,
-          "message": "src/unconfigured-view.ts:4: postgres-bounded-statements application #0 has unresolved SQL for select: unknown-relation",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "return query(\"SELECT 1 FROM public.unconfigured_view\");",
-          "target": "select"
         }
       ],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/unconfigured-view.ts",
+          "line": 4,
+          "message": "src/unconfigured-view.ts:4: Select can read unbounded rows from view public.unconfigured_view; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(\"SELECT 1 FROM public.unconfigured_view\");",
+          "target": "view:public.unconfigured_view"
+        }
+      ],
       "warnings": []
     }
   },
   "catalog_resolution_view_unconfigured_fail": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -4307,12 +4308,21 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/unconfigured-view.ts",
+          "line": 4,
+          "message": "src/unconfigured-view.ts:4: Select can read unbounded rows from view public.unconfigured_view; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(\"SELECT 1 FROM public.unconfigured_view\");",
+          "target": "view:public.unconfigured_view"
+        }
+      ],
       "warnings": []
     }
   },
   "catalog_resolution_view_unconfigured_ignore": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [
         {
@@ -4328,7 +4338,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/unconfigured-view.ts",
+          "line": 4,
+          "message": "src/unconfigured-view.ts:4: Select can read unbounded rows from view public.unconfigured_view; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(\"SELECT 1 FROM public.unconfigured_view\");",
+          "target": "view:public.unconfigured_view"
+        }
+      ],
       "warnings": []
     }
   },

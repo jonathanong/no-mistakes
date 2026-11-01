@@ -128,3 +128,40 @@ fn earlier_modifying_cte_facts_keep_the_physical_relation_before_a_later_alias()
     assert!(matches!(&source.items[0].kind,
         SqlBoundItemKind::Table(name) if name == "orders"));
 }
+
+#[test]
+fn retained_sibling_pins_are_remapped_and_pins_on_removed_siblings_are_dropped() {
+    let found = super::super::facts(&fixture("sibling-pin-removed.sql"));
+    let SqlBoundItemKind::Query(cte) = &found[1].query.items[1].kind else {
+        panic!("outer query must read the modifying CTE");
+    };
+    let pin = |source| {
+        let mut pin = cte.items[0].pins[0].clone();
+        pin.source = source;
+        pin
+    };
+    let mut query = cte.clone();
+    let sibling = query.items[1].clone();
+    query.items = vec![
+        query.items[0].clone(),
+        sibling.clone(),
+        sibling.clone(),
+        sibling,
+    ];
+    query.items[0].pins = vec![
+        pin(SqlPinSource::Items(vec![2])),
+        pin(SqlPinSource::Items(vec![3])),
+    ];
+    query.items[2].pins = vec![
+        pin(SqlPinSource::Items(vec![1])),
+        pin(SqlPinSource::Items(vec![3])),
+    ];
+    let projected = super::super::super::returning::project(query).unwrap();
+    assert_eq!(projected.items.len(), 3);
+    let sources: Vec<_> = projected.items[1]
+        .pins
+        .iter()
+        .map(|pin| &pin.source)
+        .collect();
+    assert_eq!(sources, [&SqlPinSource::Items(vec![2])]);
+}

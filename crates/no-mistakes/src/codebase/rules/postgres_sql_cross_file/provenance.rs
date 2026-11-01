@@ -1,7 +1,9 @@
 use super::validators::is_finite_validator;
 use super::SqlCall;
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::extract::{ImportedBindingKind, ValueCall, ValueExpression};
+use crate::codebase::dependencies::extract::{
+    unique_closed_collection, ImportedBindingKind, RegistryKind, ValueCall, ValueExpression,
+};
 use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -141,13 +143,30 @@ fn classify_call(
     out: &mut BTreeSet<Provenance>,
     bindings: &Bindings<'_>,
 ) {
-    if is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee) {
+    if is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee)
+        || closed_map_lookup(facts, file, value_call)
+    {
         return;
     }
     classify(graph, facts, file, &value_call.callee, out, bindings);
     for argument in value_call.arguments.iter() {
         classify(graph, facts, file, argument, out, bindings);
     }
+}
+
+fn closed_map_lookup(facts: &CheckFactMap, file: &Path, value_call: &ValueCall) -> bool {
+    let ValueExpression::Member(inner, method) = &value_call.callee else {
+        return false;
+    };
+    if method != "get" {
+        return false;
+    }
+    let ValueExpression::Named { name, .. } = inner.as_ref() else {
+        return false;
+    };
+    facts
+        .get_ts_facts(file)
+        .is_some_and(|ts| unique_closed_collection(&ts.value_flow, name, RegistryKind::Map))
 }
 
 mod helpers;

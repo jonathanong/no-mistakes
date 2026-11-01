@@ -117,6 +117,7 @@ fn visit_for_of_statement_with_scope<'a>(
             collector.visit_for_statement_left(left)
         });
     });
+    collector.mark_for_of_registry(&statement.right);
     collector.visit_expression(&statement.right);
     collector.record_for_of_value_binding(&statement.left, &statement.right);
     let (repeated, may_repeat, guaranteed_assignment) =

@@ -4,6 +4,7 @@ use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlP
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
 use std::collections::BTreeMap;
 mod indexes;
+mod view;
 
 /// Each pin source requires all its referenced items to be bounded.
 type SourceItems = Vec<usize>;
@@ -26,19 +27,24 @@ pub(super) fn prepare(
     subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     catalog: &SchemaCatalog,
-    declared: &super::super::column_bounds::ColumnBounds,
+    views: &super::super::view_bounds::ViewBounds,
 ) -> Keys {
     let SqlBoundItemKind::Table(name) = &item.kind else {
         return Vec::new();
     };
     let Some(table) = catalog.bounded_relation(name) else {
-        return Vec::new();
+        // viewBounds is the cardinality contract, so a derived key must not override it.
+        if views.get(name, catalog).is_some() {
+            return Vec::new();
+        }
+        return view::keys_for(item, item_index, owners, subqueries, arrays, catalog, name);
     };
     let mut keys: Vec<Vec<(String, String)>> = catalog
         .unique_keys(name)
         .into_iter()
         .chain(
-            declared
+            views
+                .keys
                 .columns(&table.name)
                 .map(|column| vec![column.to_owned()]),
         )

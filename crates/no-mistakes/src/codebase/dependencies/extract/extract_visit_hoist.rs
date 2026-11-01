@@ -34,6 +34,7 @@ pub(super) fn walk_function_with_body_bindings<'a>(
             let previous_cutoff = collector.record_value_fallthrough(&body.statements);
             predeclare_function_declarations(collector, &body.statements);
             walk::walk_function_body(collector, body);
+            collector.record_finite_identifier_guards(&body.statements, body.span.end);
             collector.unreachable_value_binding_after = previous_cutoff;
         }
         collector.call_repeat_base = previous_repeat_base;
@@ -68,6 +69,7 @@ pub(super) fn walk_arrow_function_with_body_bindings<'a>(
             let previous_cutoff = collector.record_value_fallthrough(&body.statements);
             predeclare_function_declarations(collector, &body.statements);
             walk::walk_function_body(collector, body);
+            collector.record_finite_identifier_guards(&body.statements, body.span.end);
             collector.unreachable_value_binding_after = previous_cutoff;
         } else if let Some(expression) = arrow.body.as_expression() {
             if collector.collect_value_flow {

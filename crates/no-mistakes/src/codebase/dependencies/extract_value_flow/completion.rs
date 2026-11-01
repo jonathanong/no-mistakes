@@ -25,7 +25,7 @@ fn statement_completion(statement: &Statement<'_>) -> (bool, Option<u32>) {
     }
 }
 
-fn statement_completes(statement: &Statement<'_>) -> bool {
+pub(crate) fn statement_completes(statement: &Statement<'_>) -> bool {
     match statement {
         Statement::ReturnStatement(_) | Statement::ThrowStatement(_) => false,
         Statement::BlockStatement(block) => sequence_completes(&block.body),
