@@ -6,6 +6,13 @@ use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Statement};
 mod blocking;
 mod compact;
 mod outputs;
+
+pub(super) fn caller_value(
+    expr: &sqlparser::ast::Expr,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> bool {
+    outputs::caller_value(expr, positions)
+}
 mod recursive_depth;
 mod recursive_order;
 mod set;

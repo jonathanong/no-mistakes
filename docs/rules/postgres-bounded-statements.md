@@ -327,6 +327,14 @@ UPDATE accounts AS a SET name = 'n' FROM c WHERE a.email = c.email;
 
 `jsonb_to_recordset($1)` and `jsonb_populate_recordset(NULL, $1)` are caller-bounded, the same as `jsonb_array_elements($1)`, when the argument is a caller-supplied value.
 
+A `LIMIT` on a CTE bounds the rest of that statement when each later data-modifying CTE writes rows identified by a complete primary key of the capped rows. A non-unique join inside the capped CTE does not reopen those later writes. The same statement without the `LIMIT` still reports.
+
+A call to a function the rule cannot prove scalar in the capped CTE's select list (`fn_remaining(g.id) AS rem`) may return a set that skips input rows, so the `LIMIT` is not trusted and the statement reports the CTE's tables; a builtin scalar such as `lower(g.note)` keeps the cap. Tracked in #2979.
+
+Rows from `jsonb_to_recordset($1)` stay caller-bounded as they pass through later primary-key updates, including a final read of the returned keys. When that recordset reads a table column instead of a caller value, the finding names the table that supplied the document, not the primary-key target. `INSERT ... RETURNING` of a caller-supplied array, then `CROSS JOIN LATERAL unnest(cte.column)` matched back by primary key, is the same caller bound. An array taken from a table is not.
+
+`id = ANY(ARRAY(SELECT alias.column FROM capped))` is bounded the same way as `id IN (SELECT alias.column FROM capped)`. The name inside the array subquery may be qualified, as in `a.id`.
+
 A pin on a derived `UNION ALL` table reaches each arm that projects that column. Pins on a constant projection stay on the arm that actually reads the column:
 
 ```sql
@@ -347,6 +355,8 @@ SELECT 1 FROM (
 ) binding
 WHERE binding.id = ANY($1) OR binding.email = ANY($2);
 ```
+
+Declared `columnBounds` follow that push. A predicate on the derived column reaches the base column of each arm that projects it, so a declaration for `owner_placements.owner_id` applies to `b.owner_id = ANY($1::uuid[])` after the arm list is expanded. An arm that projects `NULL` for a column does not have to prove that predicate. With a declaration for each filtered base column, and a primary-key pin on the joined row, the `UNION ALL` scan is bounded. `ORDER BY ... FOR UPDATE OF` that row does not drop the proof. Without the declarations the scan still reports.
 
 `ANY(ARRAY[one scalar])` is equality with that scalar. A nested `ARRAY[ARRAY[...]]` or a constructor with several elements is not. A bare column such as `id = $1` resolves to the `UPDATE` target when the other items do not project that column and the catalog names a single owner. A derived table's column-alias list is the complete set of names it exposes, so `src(account_id)` does not claim `id`. A positional alias on a base table does hide the catalog columns, and then a bare `id` stays unproven. A wildcard CTE does not prove that either.
 

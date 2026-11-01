@@ -14,6 +14,7 @@ fn pin(column: &str) -> SqlBoundPin {
         null_safe: false,
         reads: Vec::new(),
         qualified_reads: Vec::new(),
+        peer_column: None,
     }
 }
 

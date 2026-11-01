@@ -1,6 +1,7 @@
 mod alternatives;
 mod builder;
 mod derived_pins;
+mod equijoin;
 use super::super::value::PlaceholderPositions;
 use super::{start, Scope};
 use crate::codebase::postgres::idents::ident_key;
@@ -22,7 +23,10 @@ pub(super) fn from_select(
     builder.tables(&select.from);
     let mut items = builder.finish(select.selection.as_ref());
     if super::aggregate::expands_from_data(select, positions) {
-        items.push(opaque(start(select.span())));
+        let mut marker = opaque(start(select.span()));
+        // No alias, but explicit: a select-list SRF, not a FROM row source.
+        marker.alias_explicit = true;
+        items.push(marker);
     }
     items
 }

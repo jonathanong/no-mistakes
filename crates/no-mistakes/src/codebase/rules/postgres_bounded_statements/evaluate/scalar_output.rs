@@ -1,4 +1,5 @@
 //! Catalog-proven scalar outputs prevent an array-valued row from hiding arbitrary elements.
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundOutput};
 use crate::codebase::postgres::{SchemaCatalog, SqlBoundItemKind, SqlBoundQuery};
 
 pub(super) fn single(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> bool {
@@ -28,13 +29,29 @@ fn scalar(query: &SqlBoundQuery, ordinal: usize, catalog: &SchemaCatalog) -> boo
                 .outputs
                 .iter()
                 .enumerate()
-                .filter(|(index, output)| {
-                    item.column_aliases.get(*index).or(output.name.as_ref()) == Some(name)
-                })
+                .filter(|(index, output)| exposed_name(item, *index, output) == Some(name.as_str()))
                 .map(|(index, _)| index)
                 .collect();
             matches.len() == 1 && scalar(inner, matches[0], catalog)
         }
         _ => false,
     }
+}
+
+/// A column alias or a stored name wins. `a.id` keeps no name, so the source column is
+/// what a later `SELECT id` reads, without making the projection a complete column list.
+fn exposed_name<'a>(
+    item: &'a SqlBoundItem,
+    index: usize,
+    output: &'a SqlBoundOutput,
+) -> Option<&'a str> {
+    if let Some(alias) = item.column_aliases.get(index) {
+        return Some(alias.as_str());
+    }
+    output.name.as_deref().or_else(|| {
+        output
+            .source_column
+            .as_ref()
+            .map(|(_, column)| column.as_str())
+    })
 }

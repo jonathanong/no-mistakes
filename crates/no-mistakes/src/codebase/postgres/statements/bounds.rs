@@ -8,6 +8,7 @@ mod aggregate;
 mod compact_pins;
 mod dml;
 mod functions;
+mod inserted;
 mod items;
 mod pins;
 mod predicate;

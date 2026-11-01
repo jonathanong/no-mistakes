@@ -17,6 +17,7 @@ use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundPin, SqlPinSou
 use resolver::Sourced;
 use source_merge::merge;
 use sqlparser::ast::{BinaryOperator, Expr, Query};
+use std::cell::Cell;
 
 pub(super) use correlated::{projection_columns, Reads};
 pub(super) use evidence::collect as collect_evidence;
@@ -31,6 +32,7 @@ pub(super) fn extract(
     positions: super::super::value::PlaceholderPositions<'_>,
     out: &mut Vec<(usize, SqlBoundPin)>,
 ) {
+    let pinned = Cell::new(0usize);
     let mut pin = |column: &Expr, sourced: Option<Sourced>, null_safe: bool| {
         if let (
             Some((item, column)),
@@ -55,8 +57,10 @@ pub(super) fn extract(
                         null_safe,
                         reads,
                         qualified_reads,
+                        peer_column: None,
                     },
                 ));
+                pinned.set(pinned.get() + 1);
             }
         }
     };
@@ -74,12 +78,18 @@ pub(super) fn extract(
             op: BinaryOperator::Eq,
             right,
         } => {
+            let before = pinned.get();
             equality::equate(left, right, false, resolver, &mut pin);
+            let start = out.len() - (pinned.get() - before);
+            equality::note_peers(left, right, resolver, &mut out[start..]);
             candidate::equate(left, right, false, resolver, restricted, out);
             expression::equate(left, right, false, resolver, restricted, out);
         }
         Expr::IsNotDistinctFrom(left, right) => {
+            let before = pinned.get();
             equality::equate(left, right, true, resolver, &mut pin);
+            let start = out.len() - (pinned.get() - before);
+            equality::note_peers(left, right, resolver, &mut out[start..]);
             candidate::equate(left, right, true, resolver, restricted, out);
             expression::equate(left, right, true, resolver, restricted, out);
         }
