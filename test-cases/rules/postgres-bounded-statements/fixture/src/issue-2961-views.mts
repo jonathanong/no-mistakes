@@ -67,3 +67,7 @@ export function counts() {
 export function statuses() {
   return query("SELECT status FROM view_status");
 }
+
+export function aliased(id: string) {
+  return query("SELECT x.id FROM view_labeled AS x(id, other) WHERE x.id = $1", [id]);
+}

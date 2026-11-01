@@ -17,12 +17,13 @@ pub(super) fn project(mut query: SqlBoundQuery) -> Option<SqlBoundQuery> {
     for pin in &query.items[0].pins {
         keep_pin.push(retain(&pin.source, &capped, &mut keep_item));
     }
-    let mut remap = vec![0; capped.len()];
+    let mut remap = vec![None; capped.len()];
+    remap[0] = Some(0);
     let mut kept = Vec::new();
     for (offset, sibling) in siblings.into_iter().enumerate() {
         let index = offset + 1;
         if keep_item[index] {
-            remap[index] = 1 + kept.len();
+            remap[index] = Some(1 + kept.len());
             kept.push(sibling);
         }
     }
@@ -30,15 +31,12 @@ pub(super) fn project(mut query: SqlBoundQuery) -> Option<SqlBoundQuery> {
     query.items[0].pins = pins
         .into_iter()
         .zip(keep_pin)
-        .filter_map(|(mut pin, keep)| {
-            if !keep {
-                return None;
-            }
-            rewrite(&mut pin.source, &remap);
-            Some(pin)
-        })
+        .filter_map(|(pin, keep)| keep.then_some(pin))
         .collect();
     query.items.extend(kept);
+    for item in &mut query.items {
+        item.pins.retain_mut(|pin| rewrite(&mut pin.source, &remap));
+    }
     query.outputs.clear();
     Some(query)
 }
@@ -77,7 +75,7 @@ fn sibling_indexes(source: &SqlPinSource) -> Option<Vec<usize>> {
     }
 }
 
-fn rewrite(source: &mut SqlPinSource, remap: &[usize]) {
+fn rewrite(source: &mut SqlPinSource, remap: &[Option<usize>]) -> bool {
     match source {
         SqlPinSource::Items(items) => apply(items, remap),
         SqlPinSource::Array {
@@ -86,17 +84,26 @@ fn rewrite(source: &mut SqlPinSource, remap: &[usize]) {
             indexed_columns,
             ..
         } => {
-            apply(items, remap);
-            for (index, _) in scalar_columns.iter_mut().chain(indexed_columns.iter_mut()) {
-                *index = remap[*index];
-            }
+            apply(items, remap)
+                && scalar_columns
+                    .iter_mut()
+                    .chain(indexed_columns.iter_mut())
+                    .all(|(index, _)| map(index, remap))
         }
-        _ => {}
+        _ => true,
     }
 }
 
-fn apply(items: &mut [usize], remap: &[usize]) {
-    for index in items {
-        *index = remap[*index];
+fn apply(items: &mut [usize], remap: &[Option<usize>]) -> bool {
+    items.iter_mut().all(|index| map(index, remap))
+}
+
+fn map(index: &mut usize, remap: &[Option<usize>]) -> bool {
+    match remap.get(*index).copied().flatten() {
+        Some(mapped) => {
+            *index = mapped;
+            true
+        }
+        None => false,
     }
 }

@@ -129,6 +129,26 @@
         }
       }
     },
+    "labels": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false},
+        "name": {"dataType": "text", "nullable": false}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "labels_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
     "feeds": {
       "relationKind": "table",
       "columns": {
@@ -232,6 +252,10 @@
     }
   },
   "views": {
+    "view_labeled": {
+      "materialized": false,
+      "definition": "SELECT name, id FROM labels"
+    },
     "dispute_parties": {
       "materialized": false,
       "definition": "SELECT party_id FROM disputes"

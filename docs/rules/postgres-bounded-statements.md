@@ -72,7 +72,8 @@ every other view stays unknown.
   same way as a table. The rule uses the primary key only, not some other
   unique index, and it does not follow a view that reads another view.
   `viewBounds: unbounded` stays an unsized relation even when a key could be
-  derived.
+  derived. A read that renames columns, as in `FROM v AS x(a, b)`, has no view
+  key because aliases rename positionally, so it is judged as an unsized view.
 - Any other catalog view stays an `unknown-relation` advisory and is not a
   finding. That includes aggregates, projections that omit the primary key,
   `DISTINCT`, `GROUP BY`, `UNION`, limits inside the view, and joins that can
@@ -382,7 +383,9 @@ fragments is reported at its executor call.
 
 `allow` entries are applied per root and still report stale entries. A
 relation-line suppression suppresses that relation before the remaining roots
-are grouped; a statement-start suppression covers the whole statement.
+are grouped; a statement-start suppression covers the whole statement. A
+`no-mistakes-disable-line` or `-next-line` on the executing call's line
+suppresses a grouped finding reported there.
 
 ### Depth-capped recursive CTEs
 

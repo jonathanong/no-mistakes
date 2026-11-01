@@ -16,13 +16,7 @@ pub(super) fn keys_for(
     let Some(key) = super::super::view_key::visible_key(catalog, name) else {
         return Vec::new();
     };
-    if !item.column_aliases.is_empty()
-        && !key.iter().all(|column| {
-            item.column_aliases
-                .iter()
-                .any(|alias| alias.eq_ignore_ascii_case(column))
-        })
-    {
+    if !item.column_aliases.is_empty() {
         return Vec::new();
     }
     let sources: Vec<_> = item

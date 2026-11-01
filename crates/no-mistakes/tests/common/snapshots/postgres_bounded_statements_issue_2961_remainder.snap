@@ -299,6 +299,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "\"SELECT l.id FROM logs l JOIN items i ON true LEFT JOIN view_people v ON v.id = l.person_id WHERE l.id = $1\",",
           "target": "table:items"
+        },
+        {
+          "file": "src/issue-2961-views.mts",
+          "line": 72,
+          "message": "src/issue-2961-views.mts:72: Select can read unbounded rows from view view_labeled; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(\"SELECT x.id FROM view_labeled AS x(id, other) WHERE x.id = $1\", [id]);",
+          "target": "view:view_labeled"
         }
       ],
       "warnings": []
