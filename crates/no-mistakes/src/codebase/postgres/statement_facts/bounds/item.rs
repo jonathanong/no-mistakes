@@ -18,6 +18,7 @@ impl SqlBoundItem {
             predicate_conjuncts: Vec::new(),
             nonnull_columns: Vec::new(),
             pin_alternatives: 0,
+            rejected_alternatives: Vec::new(),
             lateral: false,
             lateral_reads: Vec::new(),
             lateral_qualified_reads: Vec::new(),

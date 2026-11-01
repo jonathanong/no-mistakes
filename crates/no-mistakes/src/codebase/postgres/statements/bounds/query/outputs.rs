@@ -1,7 +1,7 @@
 mod finite;
 
 use super::super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
-use crate::codebase::postgres::idents::ident_key;
+use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::SqlBoundOutput;
 use sqlparser::ast::{DataType, Expr, Select, SelectItem, Value};
 
@@ -22,17 +22,15 @@ pub(super) fn select(
                 scalar: scalar(expr, items, &resolver, positions),
                 source_column: resolver.column(expr),
                 array_aggregate_column: array_element(expr, select, &resolver),
+                constant_null: constant_null(expr),
             }),
             SelectItem::UnnamedExpr(expr) => Some(SqlBoundOutput {
-                name: if let Expr::Identifier(ident) = expr {
-                    Some(ident_key(ident))
-                } else {
-                    None
-                },
+                name: projected_name(expr),
                 caller_sized: caller_value(expr, positions),
                 scalar: scalar(expr, items, &resolver, positions),
                 source_column: resolver.column(expr),
                 array_aggregate_column: array_element(expr, select, &resolver),
+                constant_null: constant_null(expr),
             }),
             // Wildcards have catalog-dependent width, so later ordinal aliases cannot be mapped.
             _ => None,
@@ -43,7 +41,24 @@ pub(super) fn select(
 
 // A custom cast or function may vary for each duplicate source row. Only direct values and
 // trusted builtin scalar casts provide output proof; ordinary row bounds remain separate.
-fn caller_value(expr: &Expr, positions: PlaceholderPositions<'_>) -> bool {
+/// A bare identifier is a name. `a.id` stays unnamed, so that projection is not a complete
+/// column list and can still hide a bare column of the outer statement.
+fn projected_name(expr: &Expr) -> Option<String> {
+    match unwrap_expr(expr) {
+        Expr::Identifier(ident) => Some(ident_key(ident)),
+        _ => None,
+    }
+}
+
+fn constant_null(expr: &Expr) -> bool {
+    match unwrap_expr(expr) {
+        Expr::Value(value) => matches!(value.value, Value::Null),
+        Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => constant_null(inner),
+        _ => false,
+    }
+}
+
+pub(super) fn caller_value(expr: &Expr, positions: PlaceholderPositions<'_>) -> bool {
     match expr {
         Expr::Value(_) => true,
         Expr::Identifier(ident) => is_placeholder_ident_at(ident, positions),
@@ -60,7 +75,8 @@ fn caller_value(expr: &Expr, positions: PlaceholderPositions<'_>) -> bool {
                 | DataType::BigInt(_)
                 | DataType::SmallInt(_)
                 | DataType::Numeric(_)
-                | DataType::Decimal(_),
+                | DataType::Decimal(_)
+                | DataType::Array(_),
             ..
         } => caller_value(expr, positions),
         _ => false,
@@ -79,6 +95,7 @@ pub(super) fn common(left: &[SqlBoundOutput], right: &[SqlBoundOutput]) -> Vec<S
             scalar: left.scalar && right.scalar,
             source_column: None,
             array_aggregate_column: None,
+            constant_null: left.constant_null && right.constant_null,
         })
         .collect()
 }

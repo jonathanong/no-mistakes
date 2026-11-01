@@ -47,6 +47,7 @@ pub(super) fn pin(
                 null_safe,
                 reads: sourced.reads,
                 qualified_reads: sourced.qualified_reads,
+                peer_column: None,
             },
         ));
     }

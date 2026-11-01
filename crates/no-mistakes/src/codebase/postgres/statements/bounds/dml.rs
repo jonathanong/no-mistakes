@@ -1,6 +1,5 @@
 use super::items::Builder;
 use super::{Scope, SqlBoundFact, SqlBoundKind, SqlBoundQuery};
-use crate::codebase::postgres::statements::SqlPinSource;
 use sqlparser::ast::{Delete, FromTable, Query, Statement, Update, UpdateTableFromKind};
 
 /// An `UPDATE` is bounded when the relation it changes is: other FROM items only feed it values.
@@ -69,8 +68,8 @@ fn push(
     });
 }
 
-/// RETURNING emits one row per changed target row. Keep only pins independent of
-/// auxiliary FROM/USING items when projecting that cardinality into a CTE.
+/// RETURNING emits one row per changed target row. Keep key pins only when every
+/// sibling they name is row-bounded, and drop other auxiliary FROM/USING items.
 pub(super) fn returning_bound(
     query: &Query,
     statement: &Statement,
@@ -92,11 +91,11 @@ pub(super) fn returning_bound(
             .is_some_and(|items| !items.is_empty())
         {
             let source = insert.source.as_deref()?;
-            return Some(super::query::bound_query(
-                source,
-                &projection_scope,
-                positions,
-            ));
+            let mut bound = super::query::bound_query(source, &projection_scope, positions);
+            if let Some(returning) = &insert.returning {
+                super::inserted::name(&mut bound, source, returning, positions);
+            }
+            return Some(bound);
         }
         return None;
     }
@@ -119,15 +118,5 @@ pub(super) fn returning_bound(
         }
         _ => return None,
     }
-    let query = facts.pop()?.query;
-    let mut target = query.items.into_iter().next()?;
-    target
-        .pins
-        .retain(|pin| matches!(&pin.source, SqlPinSource::Value | SqlPinSource::Query(_)));
-    Some(SqlBoundQuery {
-        input_mode: query.input_mode,
-        capped: query.capped,
-        items: vec![target],
-        outputs: Vec::new(),
-    })
+    super::returning::project(facts.pop()?.query)
 }

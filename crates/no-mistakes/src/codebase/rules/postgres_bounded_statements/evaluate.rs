@@ -5,6 +5,7 @@ use crate::codebase::postgres::statements::{
 };
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
 mod correlated;
+mod driven;
 mod keys;
 mod lateral;
 mod outer_reads;
@@ -73,6 +74,9 @@ fn offenders_with_columns(
     // An UPDATE or DELETE changes each target row at most once, so only the target must be bounded.
     if query.capped || evaluation.items[target] {
         return Vec::new();
+    }
+    if let Some(roots) = driven::roots(&query, target, &evaluation.offenders, catalog) {
+        return roots;
     }
     let item = &query.items[target];
     match &item.kind {
@@ -171,7 +175,7 @@ fn evaluate(
         })
         .collect();
     propagation::bound(&keys, &mut bounded);
-    let offenders = reads::collect(
+    let mut offenders = reads::collect(
         query,
         &nested,
         &pin_subqueries,
@@ -180,6 +184,7 @@ fn evaluate(
         views,
         precise_columns,
     );
+    driven::suppress(query, catalog, &mut offenders);
     Evaluation {
         bounded: query.capped || bounded.iter().all(|state| *state),
         items: bounded,

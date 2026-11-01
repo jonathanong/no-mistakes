@@ -44,6 +44,8 @@ pub struct SqlBoundOutput {
     pub source_column: Option<(usize, String)>,
     /// A simple array_agg element column; its input rows need an independent bound.
     pub array_aggregate_column: Option<(usize, String)>,
+    /// `NULL` or `NULL::type`. An equality on this output matches no row.
+    pub constant_null: bool,
 }
 
 /// One FROM item and the columns or index expressions the statement pins on it.
@@ -67,6 +69,8 @@ pub struct SqlBoundItem {
     pub nonnull_columns: Vec<String>,
     /// Number of disjunctive alternatives; every alternative must complete a unique key.
     pub pin_alternatives: usize,
+    /// Alternatives that reject every row of this item, so they need no key.
+    pub rejected_alternatives: Vec<usize>,
     /// A certain bare outer read in a `LATERAL` source; its driver ownership is unproven.
     /// Qualified outer reads retain separate scope evidence for driver-dependent bounds.
     pub lateral: bool,
@@ -153,6 +157,8 @@ pub struct SqlBoundPin {
     pub reads: Vec<SqlBareRead>,
     /// Schema-qualified reads retained for catalog identity resolution.
     pub qualified_reads: Vec<SqlQualifiedRead>,
+    /// When `source` is one other item, the column of that item this equality names.
+    pub peer_column: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

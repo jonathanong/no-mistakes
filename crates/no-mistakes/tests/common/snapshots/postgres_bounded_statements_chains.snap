@@ -1,0 +1,117 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "array_subquery_delete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/expired.mts",
+          "line": 24,
+          "message": "src/expired.mts:24: DELETE can remove every row of attempts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM attempts WHERE id = ANY(ARRAY(SELECT id FROM expired)) RETURNING id",
+          "target": "table:attempts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "capped_cte_chain": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/chain-open.sql",
+          "line": 12,
+          "message": "sql/chain-open.sql:12: statement can scan unbounded rows from roots table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE states st SET effective_at = act.started_at",
+          "target": "table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "recordset_and_unnest": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/record-open.sql",
+          "line": 3,
+          "message": "sql/record-open.sql:3: statement can scan unbounded rows from roots table:events; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM events e",
+          "target": "table:events"
+        },
+        {
+          "file": "sql/unnest-open.sql",
+          "line": 5,
+          "message": "sql/unnest-open.sql:5: statement can scan unbounded rows from roots table:items; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE items SET archived_at = NULL",
+          "target": "table:items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "union_column_bounds": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "union_without_column_bounds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/union-lock.sql",
+          "line": 3,
+          "message": "sql/union-lock.sql:3: statement can scan unbounded rows from roots table:owner_placements, table:placements, table:surface_placements; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT placement_id, owner_id, asset_id FROM owner_placements",
+          "target": "table:owner_placements, table:placements, table:surface_placements"
+        },
+        {
+          "file": "sql/union.sql",
+          "line": 3,
+          "message": "sql/union.sql:3: statement can scan unbounded rows from roots table:owner_placements, table:placements, table:surface_placements; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT placement_id, owner_id, asset_id FROM owner_placements",
+          "target": "table:owner_placements, table:placements, table:surface_placements"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
