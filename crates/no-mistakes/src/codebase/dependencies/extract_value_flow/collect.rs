@@ -51,6 +51,9 @@ impl ImportCollector {
                 return;
             }
             self.record_value_pattern(&declarator.id, value, declarator.span.start, immutable);
+            if immutable {
+                self.note_closed_identifier(&declarator.id, init, declarator.span.start);
+            }
         }
     }
     pub(in super::super) fn record_value_parameters(&mut self, params: &FormalParameters<'_>) {

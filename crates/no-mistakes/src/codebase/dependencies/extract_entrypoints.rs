@@ -74,6 +74,7 @@ fn extract_import_facts_with_rhs_probe(
         .later_exported_type_names
         .extend(later_named_type_exports(program, &local_type_names));
     collector.visit_program(program);
+    collector.record_finite_identifier_guards(&program.body, u32::MAX);
     collector.materialize_aggregate_aliases();
     collector.materialize_deferred_simple_aliases();
     collector.finish_forward_receiver_writes();

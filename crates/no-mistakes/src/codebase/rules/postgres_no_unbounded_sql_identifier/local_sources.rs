@@ -39,6 +39,16 @@ pub(super) fn export_is_unbounded(facts: &CheckFactMap, producer: &Path, exporte
     })
 }
 
+pub(super) fn shadowed_process(facts: &CheckFactMap, file: &Path) -> bool {
+    facts.get_ts_facts(file).is_some_and(|ts| {
+        ts.imported_bindings.iter().any(|binding| {
+            !binding.is_type_only
+                && binding.local == "process"
+                && !is_process_specifier(&binding.specifier)
+        })
+    })
+}
+
 fn expression_unbounded(expr: &ValueExpression) -> bool {
     let mut found = false;
     walk_expression(expr, &mut |value| {

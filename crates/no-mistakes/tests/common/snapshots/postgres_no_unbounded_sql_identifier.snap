@@ -535,6 +535,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "fail_guard_outside_branch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 10,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table}`);",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail_identity_wrapper": {
     "exitCode": 1,
     "report": {
@@ -667,6 +689,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "fail_open_object_member": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "OPEN",
+          "line": 9,
+          "message": "Unbounded identifier source `OPEN` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${OPEN.extra}`);",
+          "target": "OPEN"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_open_set_guard": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 6,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table}`);",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail_process_namespace": {
     "exitCode": 1,
     "report": {
@@ -684,6 +750,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "query(`SELECT id FROM ${proc.env.SCHEMA}.users`);",
           "target": "process.env.SCHEMA"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_regex_only_guard": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 7,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table}`);",
+          "target": "table"
         }
       ],
       "warnings": []
@@ -777,6 +865,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "fail_uuid_unstripped_or_suffix": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "suffix",
+          "line": 19,
+          "message": "Unbounded identifier source `suffix` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${`tmp_${randomUUID().replaceAll(\"-\", \"\")}_${suffix}`}`);",
+          "target": "suffix"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 10,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table}`);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 15,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table}`);",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "pass_alias_cycle": {
     "exitCode": 0,
     "report": {
@@ -850,6 +978,54 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "pass_bind_value": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_closed_array_registry": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_closed_frozen_registry": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_closed_map": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_closed_object_registry": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -957,6 +1133,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "pass_finite_domain_assertion": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "pass_http_query": {
     "exitCode": 0,
     "report": {
@@ -971,6 +1159,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "pass_imported_literal": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_includes_throw_guard": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -1018,6 +1218,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "pass_set_throw_guard": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "pass_suppressed": {
     "exitCode": 0,
     "report": {
@@ -1031,6 +1243,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "pass_switch": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_uuid_temp_name": {
     "exitCode": 0,
     "report": {
       "advisories": [],

@@ -267,6 +267,36 @@ So are `${identity(process.env.SCHEMA)}`, `${process.env.SCHEMA.toLowerCase()}`,
 "node:process"`, `${req.params.schema}`, `${result.rows[0].schema}`, and
 `${("public", process.env.SCHEMA)}`.
 
+## Closed domains
+
+At max effort, an interpolation is bounded when the value is drawn from a finite
+set the scan can see:
+
+- A local `const` object or array whose values are string literals, including
+  `as const` and `Object.freeze` of that literal. `TABLE_MAP[kind]` and
+  `TABLE_MAP.user` are bounded. A registry with any non-literal, spread, or
+  `process.env` value stays unbounded.
+- `.get` on a local `const` `Map` built only from string-literal pairs,
+  including a frozen map.
+- A temporary name that is a non-empty literal prefix plus `randomUUID()` or
+  `crypto.randomUUID()`, with hyphens removed by `replaceAll("-", "")` or
+  `replace(/-/g, "")`. An unstripped UUID, `.replace("-", "")`, or any other
+  dynamic part stays unbounded.
+- A value dominated by `if (!ALLOWED.has(value)) throw` or
+  `if (!ALLOWED_LIST.includes(value)) throw` in the same callable. `ALLOWED`
+  must be one local `const` `Set` of string literals, and `ALLOWED_LIST` one
+  local `const` array of string literals. A guard inside a branch does not
+  cover a query after that branch. A regex test is not a finite domain.
+- A direct call, before the query, to a helper listed in
+  `finiteDomainAssertions`. `argument` is the zero-based index of the value
+  that helper validates. `name` and `argument` are both required.
+
+```yaml
+finiteDomainAssertions:
+  - name: assertWhitelistedSqlIdentifier
+    argument: 0
+```
+
 ## Fix
 
 Map accepted runtime values to literal schemas with a switch whose default
@@ -277,8 +307,9 @@ throws, then interpolate that helper. Keep values in tagged binds.
 `importSpecifier` defaults to empty and must be set (or set `executorNames`) to
 select executor calls when the rule does not inherit a project postgres block.
 `executorNames` defaults to `query`, `read`, and `write` when a specifier is
-set. `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default
-to empty. `include` and `exclude` default to empty (all indexable files).
+set. `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, and
+`finiteDomainAssertions` default to empty. `include` and `exclude` default to
+empty (all indexable files). See [Closed domains](#closed-domains).
 
 ## Suppression
 

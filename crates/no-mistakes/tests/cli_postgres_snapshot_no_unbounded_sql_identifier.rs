@@ -146,6 +146,39 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
         &config,
         &["fail-array-row-unmatched-overwrites"],
     );
+    // Closed registries, stripped uuid names, and dominating throw guards are empty.
+    // fail-guard-outside-branch keeps the query after the branch.
+    // fail-uuid-unstripped-or-suffix keeps unstripped, single replace, and a suffix.
+    // fail-open-object-member keeps a registry value that reads process.env.
+    push(
+        &mut owned,
+        rule,
+        &config,
+        &[
+            "pass-closed-object-registry",
+            "pass-closed-array-registry",
+            "pass-closed-frozen-registry",
+            "pass-closed-map",
+            "pass-uuid-temp-name",
+            "pass-set-throw-guard",
+            "pass-includes-throw-guard",
+            "fail-guard-outside-branch",
+            "fail-uuid-unstripped-or-suffix",
+            "fail-open-object-member",
+        ],
+    );
+    let assertions = rules_path(rule, "configs", "finite-domain-assertions.yml");
+    // The assertion helper is bounded. A regex test and an open set stay findings.
+    push(
+        &mut owned,
+        rule,
+        &assertions,
+        &[
+            "pass-finite-domain-assertion",
+            "fail-regex-only-guard",
+            "fail-open-set-guard",
+        ],
+    );
     let cases: Vec<(&str, PathBuf, PathBuf)> = owned
         .iter()
         .map(|(label, root, config)| (label.as_str(), root.clone(), config.clone()))

@@ -87,6 +87,9 @@ fn scan(
                     continue;
                 }
             }
+            if closed::proven(opts, facts, &bindings, call, &provenance) {
+                continue;
+            }
             if let Some(finding) =
                 identifier_finding(root, graph, facts, &bindings.routes, call, &provenance)
             {
@@ -182,18 +185,11 @@ pub(super) fn diagnostic_message(producer: &str) -> String {
     format!("Unbounded identifier source `{producer}` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.")
 }
 
-fn shadowed_process(facts: &CheckFactMap, file: &Path) -> bool {
-    facts.get_ts_facts(file).is_some_and(|ts| {
-        ts.imported_bindings.iter().any(|binding| {
-            !binding.is_type_only
-                && binding.local == "process"
-                && !is_process_specifier(&binding.specifier)
-        })
-    })
-}
-
 #[cfg(test)]
 mod tests;
 
+mod closed;
 mod local_sources;
-use local_sources::{export_is_unbounded, local_env_alias, parameter, query_result_binding};
+use local_sources::{
+    export_is_unbounded, local_env_alias, parameter, query_result_binding, shadowed_process,
+};
