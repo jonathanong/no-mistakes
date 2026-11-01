@@ -1,7 +1,8 @@
+use super::hoisted;
 use super::*;
 use oxc_ast_visit::{walk, Visit};
 
-pub(super) fn isolated(expression: &Expression<'_>) -> bool {
+pub(super) fn isolated(expression: &Expression<'_>, semantic: &Semantic<'_>) -> bool {
     let (params, returned) = match expression {
         Expression::ArrowFunctionExpression(function) => (
             &function.params,
@@ -20,14 +21,20 @@ pub(super) fn isolated(expression: &Expression<'_>) -> bool {
         }
         _ => return false,
     };
-    let Some(Expression::ObjectExpression(object)) = returned.map(Expression::get_inner_expression)
-    else {
+    let Some(returned) = returned.map(Expression::get_inner_expression) else {
         return false;
     };
-    if !params.items.is_empty() || params.rest.is_some() || !literal_object(object) {
+    if !params.items.is_empty() || params.rest.is_some() {
         return false;
     }
-    let mut execution = FactoryExecution(false);
+    let shape = match returned {
+        Expression::ObjectExpression(object) => literal_object(object, semantic),
+        other => hoisted::proven(other, semantic),
+    };
+    if !shape {
+        return false;
+    }
+    let mut execution = FactoryExecution(false, semantic);
     execution.visit_expression(expression);
     !execution.0
 }
@@ -47,9 +54,9 @@ pub(super) fn actual_loader(call: &CallExpression<'_>) -> bool {
     )
 }
 
-struct FactoryExecution(bool);
+struct FactoryExecution<'s, 'b>(bool, &'s Semantic<'b>);
 
-impl<'a> Visit<'a> for FactoryExecution {
+impl<'a> Visit<'a> for FactoryExecution<'_, '_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         if actual_loader(call) {
             self.0 = true;
@@ -71,8 +78,10 @@ impl<'a> Visit<'a> for FactoryExecution {
         self.0 = true;
     }
 
-    fn visit_spread_element(&mut self, _: &SpreadElement<'a>) {
-        self.0 = true;
+    fn visit_spread_element(&mut self, spread: &SpreadElement<'a>) {
+        if !hoisted::proven(&spread.argument, self.1) {
+            self.0 = true;
+        }
     }
 }
 
@@ -92,34 +101,38 @@ fn direct_return<'a>(body: &'a FunctionBody<'a>) -> Option<&'a Expression<'a>> {
     statement.argument.as_ref()
 }
 
-fn literal_object(object: &ObjectExpression<'_>) -> bool {
+fn literal_object(object: &ObjectExpression<'_>, semantic: &Semantic<'_>) -> bool {
     object.properties.iter().all(|property| {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            return false;
+        let property = match property {
+            ObjectPropertyKind::ObjectProperty(property) => property,
+            ObjectPropertyKind::SpreadProperty(spread) => {
+                return hoisted::proven(&spread.argument, semantic)
+            }
         };
         property.kind == PropertyKind::Init
             && !property.method
             && !property.computed
             && crate::ast::property_key_name(&property.key).is_some_and(|key| key != "__proto__")
-            && literal_value(&property.value)
+            && literal_value(&property.value, semantic)
     })
 }
 
-fn literal_value(value: &Expression<'_>) -> bool {
+fn literal_value(value: &Expression<'_>, semantic: &Semantic<'_>) -> bool {
     match value.get_inner_expression() {
         Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => true,
-        Expression::ObjectExpression(object) => literal_object(object),
-        Expression::ArrayExpression(array) => array
-            .elements
-            .iter()
-            .all(|element| element.as_expression().is_some_and(literal_value)),
+        Expression::ObjectExpression(object) => literal_object(object, semantic),
+        Expression::ArrayExpression(array) => array.elements.iter().all(|element| {
+            element
+                .as_expression()
+                .is_some_and(|element| literal_value(element, semantic))
+        }),
         Expression::TemplateLiteral(template) => template.expressions.is_empty(),
-        Expression::CallExpression(call) => framework_fn(call),
-        other => other.is_literal(),
+        Expression::CallExpression(call) => framework_fn(call, semantic),
+        other => other.is_literal() || hoisted::proven(other, semantic),
     }
 }
 
-fn framework_fn(call: &CallExpression<'_>) -> bool {
+fn framework_fn(call: &CallExpression<'_>, semantic: &Semantic<'_>) -> bool {
     let Some(member) = call.callee.get_inner_expression().as_member_expression() else {
         return false;
     };
@@ -128,8 +141,9 @@ fn framework_fn(call: &CallExpression<'_>) -> bool {
             .static_property_name()
             .is_some_and(|name| name.as_str() == Some("fn"))
         && !call.optional
-        && call
-            .arguments
-            .iter()
-            .all(|argument| argument.as_expression().is_some_and(literal_value))
+        && call.arguments.iter().all(|argument| {
+            argument
+                .as_expression()
+                .is_some_and(|argument| literal_value(argument, semantic))
+        })
 }

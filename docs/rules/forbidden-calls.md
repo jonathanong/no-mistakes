@@ -164,9 +164,17 @@ because its loader activity cannot be proven from the call graph.
 Partial or uncertain mocks retain the real implementation: `importActual`,
 `requireActual`, `importOriginal`, dynamic specifiers, `vi.doMock`, conditional
 registrations, conflicting registrations, spreads and opaque factories cannot
-prove replacement. Proven factories declare no parameters and return an explicit object whose
+prove replacement, except the hoisted-binding form below. Proven factories declare no parameters and return an explicit object whose
 property values are literals, arrow/function expressions, or `vi.fn(...)`/`jest.fn(...)` calls whose arguments are themselves such values; captured original-module references and helpers that depend
-on it also keep the real code reachable. Calls to unmodeled external or global
+on it also keep the real code reachable. A factory may also return, spread (`...x`), or set `default:` to a top-level
+`const x = vi.hoisted(() => ({ ... }))` (or `jest`) binding, in the object form or
+a single-`return` block. The hoisted object must hold only literals, nested
+objects, and `vi.fn(...)`/`jest.fn(...)` calls (type arguments allowed) whose
+arguments are literals; functions, other calls, a `let`/`var` or reassigned
+binding, a non-object initializer, or a spread of any other binding keep
+reporting. `as`/`satisfies` casts, parentheses, a block body with `return`,
+`vi.mock<T>(...)` type arguments, and an `import('pkg')` specifier are accepted.
+Calls to unmodeled external or global
 functions or unresolved captured imports inside a factory cannot prove
 isolation and retain the real code. Repository helpers with runtime imports,
 module loads or incomplete facts also remain uncertain; the call proof does not

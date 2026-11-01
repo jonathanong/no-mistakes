@@ -2,6 +2,28 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "hoisted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/through.mts",
+          "import": "analyzeProject",
+          "line": 3,
+          "message": "forbidden call (application #1): module export `external-analyzer#analyzeProject`",
+          "rule": "forbidden-calls",
+          "sourceLine": "analyzeProject()",
+          "target": "module export `external-analyzer#analyzeProject`"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "impure": {
     "exitCode": 1,
     "report": {
