@@ -1,7 +1,7 @@
 use super::super::super::simple_callee_name;
 use super::{literal_string, plain_call, RegistryKind};
 use oxc_ast::ast::{
-    ArrayExpression, Expression, ObjectExpression, ObjectPropertyKind, PropertyKind,
+    ArrayExpression, Expression, NewExpression, ObjectExpression, ObjectPropertyKind, PropertyKind,
 };
 
 pub(super) fn registry(expr: &Expression<'_>) -> Option<(RegistryKind, Vec<String>)> {
@@ -16,7 +16,7 @@ pub(super) fn registry(expr: &Expression<'_>) -> Option<(RegistryKind, Vec<Strin
         Expression::ArrayExpression(array) => {
             string_elements(array).map(|keys| (RegistryKind::Array, keys))
         }
-        Expression::NewExpression(_) => constructed(expr),
+        Expression::NewExpression(new) => constructed(new),
         _ => None,
     }
 }
@@ -59,10 +59,7 @@ fn string_elements(array: &ArrayExpression<'_>) -> Option<Vec<String>> {
     (!values.is_empty()).then_some(values)
 }
 
-fn constructed(expr: &Expression<'_>) -> Option<(RegistryKind, Vec<String>)> {
-    let Expression::NewExpression(new) = expr else {
-        return None;
-    };
+fn constructed(new: &NewExpression<'_>) -> Option<(RegistryKind, Vec<String>)> {
     if new.arguments.len() != 1 {
         return None;
     }

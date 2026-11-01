@@ -28,6 +28,7 @@ fn closed_domain_facts_reject_open_shapes() {
             "KEEP_MAP",
             "KEEP_OBJECT",
             "KEEP_SET",
+            "KEEP_TEMPLATE",
             "TABLES",
             "TABLES",
         ]

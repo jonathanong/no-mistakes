@@ -35,9 +35,8 @@ fn identifier_name(expr: &Expression<'_>) -> Option<String> {
 pub(super) fn stripped_temp_name(expr: &Expression<'_>) -> bool {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
         Expression::TemplateLiteral(template) => {
-            let Some(first) = template.quasis.first() else {
-                return false;
-            };
+            // A parsed template has one more quasi than it has holes.
+            let first = &template.quasis[0];
             !template.expressions.is_empty()
                 && !crate::ast::template_quasi_text(first).is_empty()
                 && template.expressions.iter().all(stripped_uuid)

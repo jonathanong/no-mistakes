@@ -150,6 +150,7 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
     // fail-guard-outside-branch keeps the query after the branch.
     // fail-uuid-unstripped-or-suffix keeps unstripped, single replace, and a suffix.
     // fail-open-object-member keeps a registry value that reads process.env.
+    // fail-nested-map-get keeps a get reached through another object.
     push(
         &mut owned,
         rule,
@@ -165,6 +166,7 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "fail-guard-outside-branch",
             "fail-uuid-unstripped-or-suffix",
             "fail-open-object-member",
+            "fail-nested-map-get",
         ],
     );
     let assertions = rules_path(rule, "configs", "finite-domain-assertions.yml");

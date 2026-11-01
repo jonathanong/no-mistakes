@@ -8,6 +8,7 @@
 
         const user = "users";
         const KEEP_OBJECT = { user: "users" };
+        const KEEP_TEMPLATE = { user: `users` };
         const KEEP_ARRAY = ["users"];
         const KEEP_MAP = new Map([["user", "users"]]);
         const KEEP_SET = new Set(["users"]);
@@ -51,6 +52,9 @@
         const optUuid = `tmp_${randomUUID?.().replaceAll("-", "")}`;
         const emptyAdd = "" + randomUUID().replaceAll("-", "");
         const mixed = `tmp_${randomUUID().replaceAll("-", "")}_${suffix}`;
+        const notCall = "tmp_" + "uuid".replaceAll("-", "");
+        const computedReplace = `tmp_${randomUUID()["replaceAll"]("-", "")}`;
+        const otherMethod = `tmp_${randomUUID().concat("-", "")}`;
 
         function shadow(ALLOWED: string) {
           if (!ALLOWED.has(ALLOWED)) throw new Error("x");
@@ -106,6 +110,13 @@
         function optionalAssert(table: string) {
           assertWhitelistedSqlIdentifier?.(table);
         }
+        declare function allowed(value: string): boolean;
+        function unaryPlus(table: string) {
+          if (void table) throw new Error("x");
+        }
+        function bareHas(table: string) {
+          if (!allowed(table)) throw new Error("x");
+        }
         void shadow;
         void second;
         void useTables;
@@ -157,4 +168,9 @@
         void fromArray;
         void fromMap;
         void goodName;
+        void notCall;
+        void computedReplace;
+        void otherMethod;
+        void unaryPlus;
+        void bareHas;
     
