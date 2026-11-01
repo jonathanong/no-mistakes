@@ -523,6 +523,42 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": "src/branches.ts",
+          "import": "tbl",
+          "line": 12,
+          "message": "Unbounded identifier source `tbl` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${tbl} WHERE id = ${uid}`);",
+          "target": "tbl"
+        },
+        {
+          "file": "src/branches.ts",
+          "import": "tbl",
+          "line": 18,
+          "message": "Unbounded identifier source `tbl` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${tbl} WHERE id = ${uid}`);",
+          "target": "tbl"
+        },
+        {
+          "file": "src/branches.ts",
+          "import": "tbl",
+          "line": 24,
+          "message": "Unbounded identifier source `tbl` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${tbl} WHERE id = ${uid}`);",
+          "target": "tbl"
+        },
+        {
+          "file": "src/branches.ts",
+          "import": "tbl",
+          "line": 6,
+          "message": "Unbounded identifier source `tbl` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${tbl} WHERE id = ${uid}`);",
+          "target": "tbl"
+        },
+        {
           "file": "src/query.ts",
           "import": "col",
           "line": 9,

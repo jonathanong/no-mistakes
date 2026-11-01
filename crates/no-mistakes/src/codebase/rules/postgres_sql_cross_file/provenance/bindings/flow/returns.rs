@@ -14,7 +14,8 @@ impl Bindings<'_> {
         key: &str,
         seen: &mut Seen,
     ) -> bool {
-        if !seen.calls.insert((start, end, key.to_string())) {
+        let call = (start, end, key.to_string());
+        if !seen.calls.insert(call.clone()) {
             return false;
         }
         let Some(value_call) = value_call_at(self.facts, file, start, end) else {
@@ -24,9 +25,11 @@ impl Bindings<'_> {
         let Some(ts) = self.facts.get_ts_facts(file) else {
             return false;
         };
-        ts.value_flow.returns.iter().any(|(id, value)| {
+        let found = ts.value_flow.returns.iter().any(|(id, value)| {
             ids.contains(id) && self.object_field_unbounded(file, value, key, seen)
-        })
+        });
+        seen.calls.remove(&call);
+        found
     }
 
     fn object_field_unbounded(
@@ -72,13 +75,13 @@ impl Bindings<'_> {
         let Some(binding) = self.value(file, scope, name, at) else {
             return false;
         };
-        if !seen
-            .bindings
-            .insert((binding.scope, binding.name.clone(), binding.declared_at))
-        {
+        let id = (binding.scope, binding.name.clone(), binding.declared_at);
+        if !seen.bindings.insert(id.clone()) {
             return false;
         }
-        self.object_field_unbounded(file, &binding.value, key, seen)
+        let found = self.object_field_unbounded(file, &binding.value, key, seen);
+        seen.bindings.remove(&id);
+        found
     }
 
     fn callable_ids(&self, file: &Path, callee: &ValueExpression) -> Vec<CallableId> {

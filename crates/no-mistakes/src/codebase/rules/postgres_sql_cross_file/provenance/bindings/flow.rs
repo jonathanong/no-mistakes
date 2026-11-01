@@ -87,14 +87,14 @@ impl Bindings<'_> {
         let Some(binding) = self.value(file, scope, name, at) else {
             return self.parameter(file, name);
         };
-        if !seen
-            .bindings
-            .insert((binding.scope, binding.name.clone(), binding.declared_at))
-        {
+        let key = (binding.scope, binding.name.clone(), binding.declared_at);
+        if !seen.bindings.insert(key.clone()) {
             return false;
         }
-        self.query_projection(file, scope, name, at)
-            || self.expr_unbounded(file, &binding.value, seen)
+        let found = self.query_projection(file, scope, name, at)
+            || self.expr_unbounded(file, &binding.value, seen);
+        seen.bindings.remove(&key);
+        found
     }
 
     fn member_unbounded(
@@ -118,13 +118,13 @@ impl Bindings<'_> {
                 let Some(binding) = self.value(file, scope.unwrap_or(0), name, *offset) else {
                     return false;
                 };
-                if !seen
-                    .bindings
-                    .insert((binding.scope, binding.name.clone(), binding.declared_at))
-                {
+                let id = (binding.scope, binding.name.clone(), binding.declared_at);
+                if !seen.bindings.insert(id.clone()) {
                     return false;
                 }
-                self.member_unbounded(file, &binding.value, key, seen)
+                let found = self.member_unbounded(file, &binding.value, key, seen);
+                seen.bindings.remove(&id);
+                found
             }
             ValueExpression::Call(start, end) => {
                 self.returned_field_unbounded(file, *start, *end, key, seen)
