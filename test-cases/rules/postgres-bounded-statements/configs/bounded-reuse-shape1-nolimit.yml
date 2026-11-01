@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema.json
+      sqlInclude: [sql/shape1-nolimit.sql]
+      include: [sql/shape1-nolimit.sql]

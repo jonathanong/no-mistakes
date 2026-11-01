@@ -12,6 +12,7 @@ fn repo_rel(rel: &str) -> PathBuf {
 #[test]
 fn postgres_bounded_statements_chains_check_json_snapshot() {
     let root = "test-cases/rules/postgres-bounded-statements/fixture/bounded-chains";
+    let reuse = "test-cases/rules/postgres-bounded-statements/fixture/bounded-reuse";
     let cases = [
         // LIMIT 1 keeps the later primary-key writes quiet; the open chain still reports
         ("capped_cte_chain", root, "bounded-chains-capped.yml"),
@@ -31,6 +32,13 @@ fn postgres_bounded_statements_chains_check_json_snapshot() {
             root,
             "bounded-chains-union-columns.yml",
         ),
+        // #2979 shape (1): fn_remaining() in the capped CTE may return a set, so the cap is
+        // not trusted; the builtin projection keeps it
+        ("reuse_sibling_function", reuse, "bounded-reuse-sibling.yml"),
+        ("reuse_shape1_function", reuse, "bounded-reuse-shape1.yml"),
+        ("reuse_shape1_builtin", reuse, "bounded-reuse-shape1-builtin.yml"),
+        ("reuse_shape1_no_limit", reuse, "bounded-reuse-shape1-nolimit.yml"),
+        ("reuse_shape1_unpinned", reuse, "bounded-reuse-shape1-unpinned.yml"),
     ]
     .map(|(label, root, config)| {
         (
