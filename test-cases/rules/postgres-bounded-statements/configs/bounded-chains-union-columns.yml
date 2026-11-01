@@ -1,0 +1,16 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema.json
+      columnBounds:
+        owner_placements.owner_id:
+          reason: Owner pages list a bounded placement set
+        owner_placements.asset_id:
+          reason: Asset pages list a bounded placement set
+        surface_placements.asset_id:
+          reason: Surface pages list a bounded placement set
+      sqlInclude: [sql/union.sql, sql/union-lock.sql]
+      include: [sql/union.sql, sql/union-lock.sql]

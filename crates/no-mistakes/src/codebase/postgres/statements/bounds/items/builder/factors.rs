@@ -4,9 +4,11 @@ use super::super::super::{
 };
 use super::super::{alias_columns, alias_key, sql_name};
 use super::Builder;
-use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
+use crate::codebase::postgres::idents::{
+    ident_key, object_name_ident, object_name_key, unwrap_expr,
+};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
-use sqlparser::ast::{ObjectName, Spanned, TableFactor};
+use sqlparser::ast::{Expr, FunctionArg, FunctionArgExpr, ObjectName, Spanned, TableFactor};
 
 impl<'a> Builder<'a> {
     pub(super) fn factor(&mut self, factor: &'a TableFactor) {
@@ -65,11 +67,28 @@ impl<'a> Builder<'a> {
             // `unnest(…)` is its own table factor: sized by the arrays it is given.
             TableFactor::UNNEST {
                 array_exprs, alias, ..
-            } => self.push(
-                unnest_kind_at(array_exprs, self.positions),
-                alias,
-                start(factor.span()),
-            ),
+            } => {
+                let kind = if array_exprs
+                    .iter()
+                    .all(|expr| caller_column(expr, self.scope))
+                {
+                    SqlBoundItemKind::Other
+                } else {
+                    unnest_kind_at(array_exprs, self.positions)
+                };
+                self.push(kind, alias, start(factor.span()));
+            }
+            // `LATERAL unnest(...)` is a function table factor, not `UNNEST`.
+            TableFactor::Function {
+                name, args, alias, ..
+            } => {
+                let kind = lateral_unnest_kind(name, args, self.scope, self.positions);
+                if matches!(kind, SqlBoundItemKind::Other) {
+                    self.push(kind, alias, start(factor.span()));
+                } else {
+                    self.push(SqlBoundItemKind::Opaque, &None, start(factor.span()));
+                }
+            }
             other => self.push(SqlBoundItemKind::Opaque, &None, start(other.span())),
         }
     }
@@ -98,4 +117,52 @@ impl<'a> Builder<'a> {
         item.column_aliases = alias_columns(alias);
         self.items.push(item);
     }
+}
+
+fn lateral_unnest_kind(
+    name: &ObjectName,
+    args: &[FunctionArg],
+    scope: &super::super::super::Scope,
+    positions: super::super::super::super::value::PlaceholderPositions<'_>,
+) -> SqlBoundItemKind {
+    if object_name_ident(name).is_none_or(|ident| ident_key(ident) != "unnest") {
+        return SqlBoundItemKind::Opaque;
+    }
+    let Some(exprs) = arg_exprs(args) else {
+        return SqlBoundItemKind::Opaque;
+    };
+    if exprs.iter().all(|expr| caller_column(expr, scope)) {
+        return SqlBoundItemKind::Other;
+    }
+    unnest_kind_at(&exprs, positions)
+}
+
+fn arg_exprs(args: &[FunctionArg]) -> Option<Vec<Expr>> {
+    args.iter()
+        .map(|arg| match arg {
+            FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))
+            | FunctionArg::Named {
+                arg: FunctionArgExpr::Expr(expr),
+                ..
+            } => Some(expr.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// `unnest(cte.column)` is caller-sized when that returned column is a caller value.
+fn caller_column(expr: &Expr, scope: &super::super::super::Scope) -> bool {
+    let Expr::CompoundIdentifier(parts) = unwrap_expr(expr) else {
+        return false;
+    };
+    let [relation, column] = parts.as_slice() else {
+        return false;
+    };
+    let column = ident_key(column);
+    scope.get(&ident_key(relation)).is_some_and(|bound| {
+        bound
+            .outputs
+            .iter()
+            .any(|output| output.caller_sized && output.name.as_deref() == Some(column.as_str()))
+    })
 }

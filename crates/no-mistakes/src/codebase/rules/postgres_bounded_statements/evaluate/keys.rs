@@ -97,6 +97,10 @@ pub(super) fn prepare(
         .collect();
     let mut prepared: Keys = (0..item.pin_alternatives.max(1))
         .map(|alternative| {
+            // A rejected alternative matches no row, so it needs no catalog key.
+            if item.rejected_alternatives.contains(&alternative) {
+                return vec![vec![vec![vec![]]]];
+            }
             keys.iter()
                 .map(|key| {
                     key.iter()

@@ -20,14 +20,23 @@ pub(super) fn push(items: &mut [SqlBoundItem]) {
         if !pins.is_empty() {
             if let SqlBoundItemKind::Query(query) = &mut item.kind {
                 let mut planned: BTreeMap<Vec<usize>, Vec<(String, SqlBoundPin)>> = BTreeMap::new();
+                let mut rejections = Vec::new();
                 for pin in &pins {
                     let Some(ordinal) = ordinal(query, &aliases, &pin.column) else {
                         continue;
                     };
                     let mut path = Vec::new();
-                    plan(query, ordinal, pin, &mut path, &mut planned);
+                    plan(
+                        query,
+                        ordinal,
+                        pin,
+                        &mut path,
+                        &mut planned,
+                        &mut rejections,
+                    );
                 }
                 apply(query, alternatives, &planned);
+                null_arm::apply(query, alternatives, &rejections);
             }
         }
         // Copied onto the base column. A pin left here is not a separate bound.
@@ -73,7 +82,11 @@ fn plan(
     pin: &SqlBoundPin,
     path: &mut Vec<usize>,
     planned: &mut BTreeMap<Vec<usize>, Vec<(String, SqlBoundPin)>>,
+    rejections: &mut Vec<(Vec<usize>, Option<usize>)>,
 ) {
+    if null_arm::note(query, output, pin, path, rejections) {
+        return;
+    }
     if let Some((index, column)) = query
         .outputs
         .get(output)
@@ -96,7 +109,7 @@ fn plan(
             return;
         };
         path.push(index);
-        plan(inner, next, pin, path, planned);
+        plan(inner, next, pin, path, planned, rejections);
         path.pop();
         return;
     }
@@ -106,7 +119,7 @@ fn plan(
     for index in 0..query.items.len() {
         if let SqlBoundItemKind::Query(inner) = &query.items[index].kind {
             path.push(index);
-            plan(inner, output, pin, path, planned);
+            plan(inner, output, pin, path, planned, rejections);
             path.pop();
         }
     }
@@ -174,6 +187,8 @@ fn item_at<'a>(query: &'a mut SqlBoundQuery, path: &[usize]) -> Option<&'a mut S
         _ => None,
     }
 }
+
+mod null_arm;
 
 #[cfg(test)]
 mod tests;

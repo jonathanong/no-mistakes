@@ -1,0 +1,17 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema.json
+      sqlInclude:
+        - sql/record.sql
+        - sql/record-open.sql
+        - sql/unnest.sql
+        - sql/unnest-open.sql
+      include:
+        - sql/record.sql
+        - sql/record-open.sql
+        - sql/unnest.sql
+        - sql/unnest-open.sql

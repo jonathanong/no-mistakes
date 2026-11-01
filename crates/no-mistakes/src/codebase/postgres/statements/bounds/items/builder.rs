@@ -148,6 +148,7 @@ impl<'a> Builder<'a> {
                 &mut self.items,
             );
         }
+        super::equijoin::imply(&mut self.items);
         super::derived_pins::push(&mut self.items);
         self.items
     }
