@@ -2,6 +2,18 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 use std::path::PathBuf;
 
 #[test]
+fn postgres_low_executor_aliases_check_json_snapshot() {
+    let root = rules_path("postgres-no-offset", "fixture", "low-executor-aliases");
+    assert_saved_fixture(
+        "postgres_low_executor_aliases",
+        &[
+            ("low", root.clone(), root.join(".no-mistakes.yml")),
+            ("max", root.clone(), root.join(".no-mistakes-max.yml")),
+        ],
+    );
+}
+
+#[test]
 fn postgres_no_offset_check_json_snapshot() {
     let rule = "postgres-no-offset";
     // `loose_selector_low` matches `loose_selector_max`.

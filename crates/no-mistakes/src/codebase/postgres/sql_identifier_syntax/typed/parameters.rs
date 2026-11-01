@@ -22,6 +22,18 @@ impl Typed {
         ty: Option<&TSType<'_>>,
         initializer: Option<&Expression<'_>>,
     ) {
+        if let (BindingPattern::BindingIdentifier(_), Some(TSType::TSFunctionType(callback))) =
+            (pattern, ty)
+        {
+            if callback.params.items.iter().any(|parameter| {
+                parameter
+                    .type_annotation
+                    .as_ref()
+                    .is_some_and(|annotation| self.direct_type(&annotation.type_annotation))
+            }) {
+                return;
+            }
+        }
         if let Some(initializer) = initializer {
             self.default_parameter(pattern, ty, initializer);
             return;

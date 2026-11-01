@@ -66,6 +66,29 @@ pub(super) fn project(
                 let Some(owner) = owner else {
                     continue;
                 };
+                if callbacks::blocks(&catalog, path, &application, models, owner) {
+                    continue;
+                }
+                if typed::accepts(
+                    &catalog,
+                    path,
+                    &application,
+                    models,
+                    owner,
+                    call.span,
+                    executors,
+                ) {
+                    updates.push((
+                        path.clone(),
+                        application.clone(),
+                        call.span,
+                        Arc::new(Recovered {
+                            nonexecuting: true,
+                            ..Default::default()
+                        }),
+                    ));
+                    continue;
+                }
                 let recovered = completed.entry(owner.span).or_insert_with(|| {
                     Engine::new(&catalog, &mut cache, Limits::default())
                         .transport(path, owner, executors)
@@ -87,3 +110,7 @@ pub(super) fn project(
     }
     updates
 }
+
+mod typed;
+
+mod callbacks;

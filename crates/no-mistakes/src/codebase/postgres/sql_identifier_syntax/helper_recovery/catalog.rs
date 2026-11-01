@@ -36,13 +36,33 @@ impl PreparedCatalog<'_> {
         module.diagnostics.is_empty().then_some(module)
     }
     pub fn binding(&self, file: &Path, id: usize) -> Option<Key> {
-        self.resolve_binding(file, id, &mut Vec::new())
+        self.resolve_binding(file, id, &mut Vec::new(), false)
+    }
+    pub fn typed_parameters(
+        &self,
+        file: &Path,
+        id: usize,
+        profile: &super::super::EmbeddedSqlOptions,
+    ) -> Option<(&[Option<usize>], &crate::fx::FxHashSet<usize>)> {
+        let (receiver, parameters) = self.typed_signature(file, id)?;
+        Some((parameters, receiver.executors.get(profile)?))
+    }
+    pub fn typed_signature(
+        &self,
+        file: &Path,
+        id: usize,
+    ) -> Option<(&super::FileModels, &[Option<usize>])> {
+        let key = self.resolve_binding(file, id, &mut Vec::new(), true)?;
+        let receiver = &self.files.get(&key.file)?.sql_identifier_syntax.recovery;
+        let parameters = receiver.signatures.get(&key.callable)?;
+        (!receiver.dynamic_scope).then_some((receiver, parameters.as_slice()))
     }
     fn resolve_binding(
         &self,
         file: &Path,
         id: usize,
         visited: &mut Vec<(PathBuf, String)>,
+        signatures: bool,
     ) -> Option<Key> {
         let facts = self.files.get(file)?;
         let models = &facts.sql_identifier_syntax.recovery;
@@ -50,7 +70,11 @@ impl PreparedCatalog<'_> {
             return None;
         }
         let module = self.module(file)?;
-        if let Some(callable) = models.binding_functions.get(&id) {
+        if let Some(callable) = models.binding_functions.get(&id).or_else(|| {
+            signatures
+                .then(|| models.signature_functions.get(&id))
+                .flatten()
+        }) {
             return callable.map(|callable| Key {
                 file: file.to_path_buf(),
                 callable,
@@ -71,9 +95,15 @@ impl PreparedCatalog<'_> {
             return None;
         }
         let target = (self.resolve)(&import.specifier, file)?;
-        self.export(&target, &binding.imported, visited)
+        self.export(&target, &binding.imported, visited, signatures)
     }
-    fn export(&self, file: &Path, name: &str, visited: &mut Vec<(PathBuf, String)>) -> Option<Key> {
+    fn export(
+        &self,
+        file: &Path,
+        name: &str,
+        visited: &mut Vec<(PathBuf, String)>,
+        signatures: bool,
+    ) -> Option<Key> {
         let step = (file.to_path_buf(), name.to_string());
         if visited.len() >= 8 || visited.contains(&step) {
             return None;
@@ -90,7 +120,7 @@ impl PreparedCatalog<'_> {
         }
         if let Some(specifier) = &export.specifier {
             let target = (self.resolve)(specifier, file)?;
-            self.export(&target, &export.local, visited)
+            self.export(&target, &export.local, visited, signatures)
         } else {
             let mut bindings = module.bindings.iter().filter(|binding| {
                 binding.name == export.local && binding.scope_id == 0 && binding.runtime
@@ -99,7 +129,7 @@ impl PreparedCatalog<'_> {
             if bindings.next().is_some() {
                 return None;
             }
-            self.resolve_binding(file, binding.id, visited)
+            self.resolve_binding(file, binding.id, visited, signatures)
         }
     }
 }

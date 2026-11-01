@@ -1,0 +1,22 @@
+effort: max
+unanalyzable: advise
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read]
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, TransactionQuery]
+      include: ['src/**/*.mts']
+      exclude: ['src/excluded.mts']
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read]
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, TransactionQuery]
+      include: ['src/**/*.mts']
+      exclude: ['src/excluded.mts']
+      schemaCatalogPath: schema.json

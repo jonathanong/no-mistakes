@@ -8,6 +8,7 @@ mod construction;
 pub(super) mod iterator;
 mod locals;
 mod project;
+mod signatures;
 mod transports;
 mod validation;
 pub(crate) use project::project;
@@ -21,7 +22,7 @@ pub(crate) mod lower;
 use super::{span, Span};
 use crate::codebase::dependencies::extract::CallableId;
 use crate::fx::FxHashMap;
-use oxc_ast::ast::{Argument, CallExpression, Function};
+use oxc_ast::ast::{Argument, CallExpression};
 
 #[derive(Clone)]
 pub(crate) struct FunctionModel {
@@ -58,6 +59,9 @@ pub(crate) struct FileModels {
     pub binding_functions: FxHashMap<usize, Option<CallableId>>,
     pub argument_owners: FxHashMap<Span, usize>,
     pub functions: FxHashMap<CallableId, FunctionModel>,
+    pub signatures: FxHashMap<CallableId, Vec<Option<usize>>>,
+    pub callbacks: FxHashMap<usize, Vec<Option<usize>>>,
+    pub signature_functions: FxHashMap<usize, Option<CallableId>>,
     pub calls: Vec<CallModel>,
     pub locals: FxHashMap<usize, LocalModel>,
     pub executors:
@@ -72,39 +76,6 @@ impl FileModels {
         ctx: &lower::Context<'_>,
     ) {
         locals::collect(self, declaration, ctx);
-    }
-    pub fn arrow(
-        &mut self,
-        function: &oxc_ast::ast::ArrowFunctionExpression<'_>,
-        ctx: &lower::Context<'_>,
-    ) {
-        if let Some(lowered) = lower::arrow(function, ctx) {
-            let id = CallableId(function.span.start);
-            self.functions.insert(
-                id,
-                FunctionModel {
-                    id,
-                    span: span(function.span),
-                    binding: None,
-                    lowered,
-                },
-            );
-        }
-    }
-    pub fn function(&mut self, function: &Function<'_>, ctx: &lower::Context<'_>) {
-        let Some(lowered) = lower::function(function, ctx) else {
-            return;
-        };
-        let id = CallableId(function.span.start);
-        self.functions.insert(
-            id,
-            FunctionModel {
-                id,
-                span: span(function.span),
-                binding: function.id.as_ref().and_then(|id| ctx.bindings.id(id.span)),
-                lowered,
-            },
-        );
     }
     pub fn call(
         &mut self,

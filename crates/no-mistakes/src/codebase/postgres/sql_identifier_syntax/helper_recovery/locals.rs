@@ -20,6 +20,14 @@ pub(super) fn collect(
         let Some(id) = ctx.bindings.id(binding.span) else {
             continue;
         };
+        let callable = match crate::codebase::ts_source::unwrap_ts_wrappers(initializer) {
+            oxc_ast::ast::Expression::ArrowFunctionExpression(value) => Some(value.span.start),
+            oxc_ast::ast::Expression::FunctionExpression(value) => Some(value.span.start),
+            _ => None,
+        };
+        if let Some(callable) = callable {
+            models.signature_binding(id, super::CallableId(callable));
+        }
         let local = LocalModel {
             declaration: span(declarator.span),
             initializer: span(initializer.span()),

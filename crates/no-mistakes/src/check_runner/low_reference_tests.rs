@@ -174,6 +174,9 @@ fn typed_executor_low_adopters_ignore_erased_uses_and_keep_statement_locations()
 #[path = "low_executor_transport_tests.rs"]
 mod low_executor_transport_tests;
 
+#[path = "low_executor_alias_tests.rs"]
+mod low_executor_alias_tests;
+
 #[path = "low_helper_recovery_tests.rs"]
 mod low_helper_recovery_tests;
 

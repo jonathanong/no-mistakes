@@ -98,6 +98,17 @@ unsupported factory executors, unproven type receivers, and CommonJS loaders are
 Erased type references create no findings. Supported typed parameter calls share
 the named executor contract; unsupported SQL and runtime escapes are diagnosed
 at their own use. See [executor bindings](../postgres-facts/executor-bindings.md).
+Passing a proven executor directly to a resolved helper's parameter annotated
+with a configured imported executor type is transport at low effort. The
+helper's SQL calls are checked where they occur. An untyped parameter, a
+different parameter type, or an unresolved helper retains uncertainty; an
+executor type on the argument alone does not clear the escape. Explicit callback
+signatures accepting an executor qualify too, provided the actual callback's
+receiving parameter has a configured executor type. Untyped inline or named
+callbacks retain uncertainty. Supported local type aliases,
+`typeof` proven executor values, and
+`Awaited<ReturnType<typeof configuredFactory>>` retain executor identity;
+unrelated or shadowed types and cyclic aliases do not.
 A single local `const run = query` executor alias also remains unanalyzable;
 its diagnostic uses the invocation line so a disable-next-line comment above
 `run(sql)` suppresses that call.

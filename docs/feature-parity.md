@@ -169,6 +169,15 @@ proof, while other mutations retain conservative provenance. Unknown provenance 
 [mutable SQL registries](rules/postgres-no-mutable-sql-registry.md) and
 [unbounded SQL identifiers](rules/postgres-no-unbounded-sql-identifier.md).
 
+The shared low-effort SQL syntax proof resolves local executor type aliases,
+`typeof` proven executor values, and configured factory type queries such as
+`Awaited<ReturnType<typeof beginTransaction>>`. The identifier and transformed
+UUID rules also recognize a direct executor handoff to a resolved typed helper
+or an explicitly typed callback. SQL and opaque uses in the helper remain
+independent obligations. CLI and async Node checks share these proofs; maximum
+effort keeps its existing analysis. See
+[executor bindings](postgres-facts/executor-bindings.md).
+
 Opt-in [`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md)
 uses explicit test and helper globs to reject
 executed PostgreSQL schema or server-state changes and `pg_sleep`. It shares
