@@ -6,15 +6,6 @@ pub(crate) struct ImportClassification {
 }
 
 impl ImportClassification {
-    #[cfg(test)]
-    pub(crate) fn unresolved() -> Self {
-        Self {
-            resolver_target: None,
-            workspace_target: None,
-            workspace_recognized: false,
-        }
-    }
-
     pub(crate) fn preferred_path(&self) -> Option<&Path> {
         self.resolver_target
             .as_deref()
@@ -54,3 +45,7 @@ impl ImportResolutionCache {
         self.final_entries.clear();
     }
 }
+
+#[cfg(test)]
+#[path = "resolver_types_tests.rs"]
+mod resolver_type_tests;
