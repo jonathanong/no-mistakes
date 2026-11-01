@@ -88,72 +88,88 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/query.mts",
-          "line": 150,
-          "message": "src/query.mts:150: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "line": 148,
+          "message": "src/query.mts:148: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "return query(statement);",
           "target": "uuid-predicates"
         },
         {
           "file": "src/query.mts",
-          "line": 150,
-          "message": "src/query.mts:150: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "line": 148,
+          "message": "src/query.mts:148: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "return query(statement);",
           "target": "identifier-provenance"
         },
         {
           "file": "src/query.mts",
-          "line": 155,
-          "message": "src/query.mts:155: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "line": 168,
+          "message": "src/query.mts:168: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "return query(statement);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 168,
+          "message": "src/query.mts:168: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 173,
+          "message": "src/query.mts:173: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "return query(dynamicName(relation));",
           "target": "uuid-predicates"
         },
         {
           "file": "src/query.mts",
-          "line": 155,
-          "message": "src/query.mts:155: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "line": 173,
+          "message": "src/query.mts:173: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "return query(dynamicName(relation));",
           "target": "identifier-provenance"
         },
         {
           "file": "src/query.mts",
-          "line": 159,
-          "message": "src/query.mts:159: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
+          "line": 177,
+          "message": "src/query.mts:177: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "read(`SELECT ${columns} FROM users`);",
           "target": "uuid-predicates"
         },
         {
           "file": "src/query.mts",
-          "line": 160,
-          "message": "src/query.mts:160: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
+          "line": 178,
+          "message": "src/query.mts:178: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "read(`SELECT * FROM ${plan.table}`);",
           "target": "uuid-predicates"
         },
         {
           "file": "src/query.mts",
-          "line": 160,
-          "message": "src/query.mts:160: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "line": 178,
+          "message": "src/query.mts:178: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "read(`SELECT * FROM ${plan.table}`);",
           "target": "identifier-provenance"
         },
         {
           "file": "src/query.mts",
-          "line": 161,
-          "message": "src/query.mts:161: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
+          "line": 179,
+          "message": "src/query.mts:179: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "read(`SELECT * FROM ${tempTable}`);",
           "target": "uuid-predicates"
         },
         {
           "file": "src/query.mts",
-          "line": 161,
-          "message": "src/query.mts:161: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "line": 179,
+          "message": "src/query.mts:179: postgres-no-unbounded-sql-identifier application #0 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "read(`SELECT * FROM ${tempTable}`);",
           "target": "identifier-provenance"
@@ -294,8 +310,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/query.mts",
-          "line": 162,
-          "message": "src/query.mts:162: WHERE applies lower to UUID column users.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "line": 180,
+          "message": "src/query.mts:180: WHERE applies lower to UUID column users.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "read('SELECT id FROM users WHERE lower(id::text) = $1');",
           "target": "users.id"
@@ -310,24 +326,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "src/query.mts",
-          "line": 159,
-          "message": "src/query.mts:159: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: opaque-sql-tail; known SQL prefix \"SELECT sql_placeholder_1 FROM users\"",
+          "line": 177,
+          "message": "src/query.mts:177: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: opaque-sql-tail; known SQL prefix \"SELECT sql_placeholder_1 FROM users\"",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "read(`SELECT ${columns} FROM users`);",
           "target": "uuid-predicates"
         },
         {
           "file": "src/query.mts",
-          "line": 160,
-          "message": "src/query.mts:160: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: opaque-sql-tail; known SQL prefix \"SELECT * FROM sql_placeholder_1\"",
+          "line": 178,
+          "message": "src/query.mts:178: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: opaque-sql-tail; known SQL prefix \"SELECT * FROM sql_placeholder_1\"",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "read(`SELECT * FROM ${plan.table}`);",
           "target": "uuid-predicates"
         },
         {
           "file": "src/query.mts",
-          "line": 161,
-          "message": "src/query.mts:161: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: opaque-sql-tail; known SQL prefix \"SELECT * FROM sql_placeholder_1\"",
+          "line": 179,
+          "message": "src/query.mts:179: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: opaque-sql-tail; known SQL prefix \"SELECT * FROM sql_placeholder_1\"",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "read(`SELECT * FROM ${tempTable}`);",
           "target": "uuid-predicates"
@@ -348,8 +364,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/query.mts",
-          "line": 162,
-          "message": "src/query.mts:162: WHERE applies lower to UUID column users.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "line": 180,
+          "message": "src/query.mts:180: WHERE applies lower to UUID column users.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "read('SELECT id FROM users WHERE lower(id::text) = $1');",
           "target": "users.id"

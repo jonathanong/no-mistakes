@@ -70,4 +70,8 @@ impl<'a> Visit<'a> for Probe {
         self.0 = true;
         walk::walk_tagged_template_expression(self, node);
     }
+    fn visit_assignment_expression(&mut self, node: &oxc_ast::ast::AssignmentExpression<'a>) {
+        self.0 = true;
+        walk::walk_assignment_expression(self, node);
+    }
 }

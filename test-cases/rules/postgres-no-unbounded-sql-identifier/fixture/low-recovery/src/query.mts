@@ -131,6 +131,24 @@ function looped(query: QueryExecutor, values: string[]) {
 }
 looped(read, ids);
 
+function ordered(query: QueryExecutor) {
+  const statement = sql``;
+  for (let index = 0; index < 1; statement.append(sql` FROM users`)) {
+    statement.append(sql`SELECT id`);
+  }
+  return query(statement);
+}
+ordered(read);
+
+function assigned(query: QueryExecutor, name: string) {
+  const statement = sql`SELECT 1`;
+  [name].forEach(() => {
+    statement.text = name;
+  });
+  return query(statement);
+}
+assigned(read, table);
+
 function conditional(query: QueryExecutor, filter: { status?: string }) {
   const { status = 'open' } = filter;
   return query(sql`SELECT id FROM users WHERE status = ${status}`);

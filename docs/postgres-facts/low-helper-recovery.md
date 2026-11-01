@@ -41,8 +41,10 @@ a returned promise is not SQL until an appropriate modeled await unwraps it.
 A return expression that does not build SQL, such as a comparison, a boolean,
 an index, or a method result, does not discard SQL already executed in that
 helper. One pass of `for`, `for-of`, `for-in`, `while`, and `do-while` is
-included, so an `.append` inside that pass can be proven. Generators stay
-outside the subset.
+included, so an `.append` inside that pass can be proven. A `for` pass runs
+the body before the update. A callback that assigns is opaque, so it cannot
+hide a write to SQL text. An increment in a loop update stays a pure value.
+Generators stay outside the subset.
 
 A configured executor passed into a helper is cleared only when the helper's
 supported paths prove its uses. Returning or storing an executor in an opaque

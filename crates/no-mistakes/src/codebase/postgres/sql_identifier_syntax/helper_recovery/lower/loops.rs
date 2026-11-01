@@ -44,10 +44,11 @@ fn c_for(scope: &mut Scope<'_>, statement: &oxc_ast::ast::ForStatement<'_>) -> V
     if let Some(test) = &statement.test {
         out.push(Stmt::Expr(effect(scope, test)));
     }
+    let mut out = extend_body(scope, &statement.body, out);
     if let Some(update) = &statement.update {
         out.push(Stmt::Expr(effect(scope, update)));
     }
-    extend_body(scope, &statement.body, out)
+    out
 }
 
 fn for_each(
