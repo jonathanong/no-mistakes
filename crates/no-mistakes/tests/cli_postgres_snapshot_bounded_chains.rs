@@ -36,9 +36,21 @@ fn postgres_bounded_statements_chains_check_json_snapshot() {
         // not trusted; the builtin projection keeps it
         ("reuse_sibling_function", reuse, "bounded-reuse-sibling.yml"),
         ("reuse_shape1_function", reuse, "bounded-reuse-shape1.yml"),
-        ("reuse_shape1_builtin", reuse, "bounded-reuse-shape1-builtin.yml"),
-        ("reuse_shape1_no_limit", reuse, "bounded-reuse-shape1-nolimit.yml"),
-        ("reuse_shape1_unpinned", reuse, "bounded-reuse-shape1-unpinned.yml"),
+        (
+            "reuse_shape1_builtin",
+            reuse,
+            "bounded-reuse-shape1-builtin.yml",
+        ),
+        (
+            "reuse_shape1_no_limit",
+            reuse,
+            "bounded-reuse-shape1-nolimit.yml",
+        ),
+        (
+            "reuse_shape1_unpinned",
+            reuse,
+            "bounded-reuse-shape1-unpinned.yml",
+        ),
     ]
     .map(|(label, root, config)| {
         (
