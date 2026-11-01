@@ -1,0 +1,275 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "issue_2988": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "catalog-resolution/sql/view-suppression.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements -- this view is intentionally unbounded here.",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/pin-query-read-preservation.sql",
+          "line": 16,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/rejecting-having-projection.sql",
+          "line": 15,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress-file.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 11,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 14,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "UPDATE -- no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 16,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 19,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "DELETE -- no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 22,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "FROM invoices; -- no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 3,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "SELECT id FROM invoices; -- no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 6,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/suppress.sql",
+          "line": 9,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "SELECT id -- no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/wrapped-statement-suppression.sql",
+          "line": 1,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements -- outer EXPLAIN owns the executed write.",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/wrapped-statement-suppression.sql",
+          "line": 12,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements -- inner keyword directives still work.",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/wrapped-statement-suppression.sql",
+          "line": 15,
+          "message": "directive names disabled or out-of-scope rule `postgres-explicit-columns`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-explicit-columns -- other rules do not suppress this write.",
+          "target": "postgres-explicit-columns"
+        },
+        {
+          "file": "sql/wrapped-statement-suppression.sql",
+          "line": 5,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements -- WITH owns its later UPDATE.",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "sql/wrapped-statement-suppression.sql",
+          "line": 9,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "WITH chosen AS (SELECT 1) -- no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "src/statement-suppressions.mts",
+          "line": 12,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "await query('UPDATE' + // no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "src/statement-suppressions.mts",
+          "line": 14,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "src/statement-suppressions.mts",
+          "line": 17,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "await query('DELETE' + // no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "src/statement-suppressions.mts",
+          "line": 4,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "src/statement-suppressions.mts",
+          "line": 7,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "await query('SELECT id' + // no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "src/statement-suppressions.mts",
+          "line": 9,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "src/wrapped-statement-suppression.mts",
+          "line": 4,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        },
+        {
+          "file": "src/wrapped-statement-suppression.mts",
+          "line": 6,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "await query('WITH chosen AS (SELECT 1)' + // no-mistakes-disable-line postgres-bounded-statements",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/issue-2988.mts",
+          "line": 102,
+          "message": "src/issue-2988.mts:102: SELECT can return every row of u; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM u",
+          "target": "table:u"
+        },
+        {
+          "file": "src/issue-2988.mts",
+          "line": 118,
+          "message": "src/issue-2988.mts:118: SELECT can return every row of m; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM m sel",
+          "target": "table:m"
+        },
+        {
+          "file": "src/issue-2988.mts",
+          "line": 132,
+          "message": "src/issue-2988.mts:132: SELECT can return every row of m2; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM m2 sel",
+          "target": "table:m2"
+        },
+        {
+          "file": "src/issue-2988.mts",
+          "line": 25,
+          "message": "src/issue-2988.mts:25: SELECT can return every row of m; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM m",
+          "target": "table:m"
+        },
+        {
+          "file": "src/issue-2988.mts",
+          "line": 36,
+          "message": "src/issue-2988.mts:36: SELECT can return every row of m; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM m",
+          "target": "table:m"
+        },
+        {
+          "file": "src/issue-2988.mts",
+          "line": 75,
+          "message": "src/issue-2988.mts:75: SELECT can return every row of m; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM m",
+          "target": "table:m"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

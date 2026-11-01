@@ -70,6 +70,12 @@ set operation). A statement is bounded when any of these holds:
   earlier FROM items is sized per row of them. A capped result can size a keyed join
   only after qualified references resolve to independently bounded preceding drivers.
   Unknown local scopes and bare correlations stay conservative; cycles supply no seed.
+  A correlated equality on a unique-key column inside the lateral (primary key, unique
+  index, or a partial unique index whose predicate the lateral repeats) is one row per
+  driver row. When every driver is itself bounded, the lateral is bounded without a
+  `LIMIT`; an unbounded driver, a missing predicate, or a non-unique partial index
+  still reports. `ARRAY(SELECT ...)` in a select list is one array value per row and
+  is not treated as an expanding call, while an unknown function still is.
   The relations inside it are still judged. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
   the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d
 LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees

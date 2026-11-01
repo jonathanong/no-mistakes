@@ -1,0 +1,148 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "m": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "ended_at": {
+          "dataType": "timestamptz",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "m_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "m_active": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ],
+          "predicate": "(ended_at IS NULL)"
+        }
+      }
+    },
+    "m2": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "ended_at": {
+          "dataType": "timestamptz",
+          "nullable": true
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "m2_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "m2_active": {
+          "accessMethod": "btree",
+          "unique": false,
+          "primary": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ],
+          "predicate": "(ended_at IS NULL)"
+        }
+      }
+    },
+    "u": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "u_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -89,3 +89,5 @@ SELECT to_timestamp($1);
 SELECT translate($1);
 SELECT trunc($1);
 SELECT upper($1);
+SELECT uuid_extract_timestamp($1);
+SELECT uuid_extract_version($1);

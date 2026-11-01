@@ -92,4 +92,6 @@ pub(super) const SCALAR: &[&str] = &[
     "translate",
     "trunc",
     "upper",
+    "uuid_extract_timestamp",
+    "uuid_extract_version",
 ];

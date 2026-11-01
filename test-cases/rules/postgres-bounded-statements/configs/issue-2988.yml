@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      unanalyzableSql: ignore
+      importSpecifier: "@example/db"
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor]
+      schemaCatalogPath: schema-2988.json
+      include: [src/issue-2988.mts]
