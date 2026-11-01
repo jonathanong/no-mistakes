@@ -8,12 +8,19 @@ use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use std::collections::BTreeSet;
 use std::path::Path;
 
+mod binding_tag;
 mod bindings;
 mod env;
+mod identifier_holes;
+mod identifier_positions;
+mod interpolations;
+mod outside;
 mod search;
 pub(crate) use bindings::Bindings;
 pub(crate) use env::is_process_specifier;
 use env::{env_from_chain, env_key, process_env_key};
+pub(crate) use identifier_positions::scans_identifier;
+pub(crate) use interpolations::interpolations;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Provenance {
@@ -31,29 +38,21 @@ pub(crate) enum Provenance {
     },
 }
 
-pub(crate) fn interpolations(
+pub(crate) fn identifier_sources<'a>(
     graph: &DepGraph,
-    facts: &CheckFactMap,
-    call: &SqlCall<'_>,
-    bindings: &Bindings<'_>,
+    facts: &'a CheckFactMap,
+    call: &SqlCall<'a>,
+    bindings: &Bindings<'a>,
 ) -> BTreeSet<Provenance> {
-    let mut out = BTreeSet::new();
-    let Some(ts) = facts.get_ts_facts(&call.file) else {
+    if let Some((holes, outside_holes)) = identifier_holes::split(facts, call, bindings) {
+        let mut out = BTreeSet::new();
+        for hole in holes {
+            classify(graph, facts, &call.file, hole, &mut out, bindings);
+        }
+        outside::retain(graph, facts, call, bindings, &outside_holes, &mut out);
         return out;
-    };
-    for value_call in &ts.value_flow.calls {
-        if !contains(call.span, (value_call.offset, value_call.end)) {
-            continue;
-        }
-        if (value_call.offset, value_call.end) == call.span {
-            for argument in value_call.arguments.iter() {
-                classify(graph, facts, &call.file, argument, &mut out, bindings);
-            }
-            continue;
-        }
-        classify_call(graph, facts, &call.file, value_call, &mut out, bindings);
     }
-    out
+    interpolations(graph, facts, call, bindings)
 }
 
 pub(crate) fn is_process_env(expr: &ValueExpression) -> bool {
@@ -143,7 +142,8 @@ fn classify_call(
     out: &mut BTreeSet<Provenance>,
     bindings: &Bindings<'_>,
 ) {
-    if is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee)
+    if binding_tag::is_bind_tag(bindings, file, value_call)
+        || is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee)
         || closed_map_lookup(facts, file, value_call)
     {
         return;

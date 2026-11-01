@@ -1,5 +1,7 @@
 use super::*;
 use crate::codebase::dependencies::extract::{ValueBinding, ValueFlowFacts};
+
+mod flow;
 use crate::fx::{fx_map, FxHashMap, FxHashSet};
 type RowMemberKey<'a> = (&'a Path, usize, &'a str, &'a str);
 /// Borrowed syntactic indexes; neither value resolution nor another graph.

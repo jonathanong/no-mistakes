@@ -72,6 +72,46 @@ A helper call around those values is reported unless the callee is a proven
 finite validator. Interpolations come from prepared template-expression facts,
 not a lexical `${...}` scan of the call span.
 
+A value used only as a bind parameter is never the identifier source.
+At max effort, every `${}` in a template tagged with the `sql-template-strings`
+default or `SQL` import and passed directly to the executor is a bind, so that
+call has no identifier source, including `SELECT` list values and destructured
+or call-derived locals. The saved `pass-sql-template-binds` fixture covers it;
+`fail-sql-template-raw` keeps raw interpolation in a plain template string.
+A hole is a bind in every position of such a template, including `FROM
+unnest(${ids}::uuid[])`, `= ANY(${ids})`, and a call nested inside a hole
+(`${xs.map(...)}`). Arguments after a tagged first argument (`{ query }`) are
+options, not SQL text. The saved `pass-sql-template-function-args` fixture
+covers these. In a plain template only a hole inside a relation name token
+(`${t}`, `${t}__votes`, `audit_${t}`, `schema.${t}`) occupies a relation; a hole
+inside a function-call argument list in `FROM` is a value
+(`pass-raw-function-args`), while `FROM ${t} JOIN unnest(...)` still reports
+`t` (`fail-raw-relation-with-function-join`).
+The same holds for every `sql-template-strings` template in an `.append()`
+chain, including the chain head and ``.append(sql`...`)`` parts
+(`pass-sql-template-append-chain`). Only a raw `.append(expr)` argument that is
+not such a tagged template stays an identifier candidate
+(`fail-sql-template-append-raw`). A parameter or local named like the tag
+shadows the import and is not the library tag (`fail-sql-template-shadowed-tag`).
+A hole glued to an identifier prefix or suffix (`${table}__votes`,
+`audit_${table}`) still occupies the relation name and is reported even when
+another hole in the statement is a finite relation (`fail-glued-identifier-hole`).
+A call with no interpolation produces no finding, including a static SQL
+string and a dynamic SQL argument that is not itself interpolated. A call
+whose interpolations are only binds produces no finding either.
+Outside an identifier position, a hole is dropped only when its provenance
+is a plain function parameter, the known bind value. Every other hole stays
+a source when the same call also interpolates an identifier: the parser
+cannot tell that placeholder from a bind. That includes an imported
+env-derived export, a namespace member of that export, and a field returned
+by a helper. An imported literal export is finite, so it is not a source.
+The named source for a
+positional identifier is the expression in a relation, a `SELECT`,
+`ORDER BY`, or `GROUP BY` column, an `INSERT` column list, or an `UPDATE`
+assignment target. That includes a column or table taken from a helper that
+returns a storage config when the interpolated field flows from an unbounded
+parameter. The finding names that interpolated expression.
+
 ## Analysis
 
 ### Effort
@@ -246,8 +286,8 @@ export function list() {
 }
 ```
 
-A bind-value interpolation (`WHERE tenant = ${process.env.SCHEMA}`), an HTTP
-`req.query(...)`, or a recovered finite helper stays silent.
+A call whose only interpolation is a bind (`WHERE tenant = ${process.env.SCHEMA}`),
+an HTTP `req.query(...)`, or a recovered finite helper stays silent.
 `${(process.env.UNUSED, "public")}` also stays silent because the final operand
 is finite.
 
@@ -265,7 +305,10 @@ export function list() {
 So are `${identity(process.env.SCHEMA)}`, `${process.env.SCHEMA.toLowerCase()}`,
 `${process.env["SCHEMA"]}`, `${env.SCHEMA}` after `import { env } from
 "node:process"`, `${req.params.schema}`, `${result.rows[0].schema}`, and
-`${("public", process.env.SCHEMA)}`.
+`${("public", process.env.SCHEMA)}`. So is `${process.env.COLUMN}` in
+`WHERE`, `JOIN ON`, a function argument, `HAVING`, `RETURNING`, or
+`ON CONFLICT` when the same call also interpolates an identifier such as
+`${table}`. A plain parameter beside that environment value stays a bind.
 
 ## Closed domains
 

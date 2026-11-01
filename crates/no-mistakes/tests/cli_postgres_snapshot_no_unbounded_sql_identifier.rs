@@ -146,6 +146,32 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
         &config,
         &["fail-array-row-unmatched-overwrites"],
     );
+    // Bind values are not identifier sources. Targets:
+    // fail-table-with-binds: table;
+    // fail-helper-column: entityColumn and table;
+    // fail-limit-cursor-bind: name.
+    push(
+        &mut owned,
+        rule,
+        &config,
+        &[
+            "fail-table-with-binds",
+            "fail-helper-column",
+            "fail-limit-cursor-bind",
+        ],
+    );
+    // A hole glued to an identifier suffix or prefix still occupies the name.
+    // fail-glued-identifier-hole reports table at lines 6, 16, and 20.
+    push(&mut owned, rule, &config, &["fail-glued-identifier-hole"]);
+    // Env and config holes outside identifier positions stay findings.
+    // Each call also names table. A plain parameter beside them does not.
+    // Imported env config, a namespace member, and a helper return stay.
+    // An imported literal export does not.
+    push(&mut owned, rule, &config, &["fail-env-in-where"]);
+    // No finding: a static call, a dynamic call with no interpolation,
+    // calls whose only interpolations or arguments are binds, and a
+    // conditional relation name with parameter binds.
+    push(&mut owned, rule, &config, &["pass-static-or-bind-only"]);
     // Closed registries, stripped uuid names, and dominating throw guards are empty.
     // fail-guard-outside-branch keeps the query after the branch.
     // fail-uuid-unstripped-or-suffix keeps unstripped, single replace, and a suffix.
@@ -173,6 +199,38 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "fail-nested-map-get",
             "fail-mutated-registry",
             "fail-shadowed-random-uuid",
+        ],
+    );
+    // Every hole of a sql-template-strings part in an append chain is a bind
+    // (pass-sql-template-append-chain). A raw append argument stays a
+    // candidate: fail-sql-template-append-raw reports table only. A parameter
+    // or local named like the tag shadows the import: fail-sql-template-shadowed-tag.
+    // sql-template-strings holes are binds: pass-sql-template-binds is empty.
+    // fail-sql-template-raw keeps tableUnions and batchColumn in a plain string.
+    let factory = rules_path(rule, "configs", "factory.yml");
+    push(
+        &mut owned,
+        rule,
+        &factory,
+        &[
+            "pass-sql-template-binds",
+            "fail-sql-template-raw",
+            "pass-sql-template-append-chain",
+            "fail-sql-template-append-raw",
+            "fail-sql-template-shadowed-tag",
+            "pass-sql-template-function-args",
+        ],
+    );
+    // Function-call arguments in FROM, JOIN, or ANY are values, not relation
+    // names. pass-raw-function-args binds them; fail-raw-relation-with-function-join
+    // keeps reporting table (lines 4, 8, 12) while the unnest arguments stay quiet.
+    push(
+        &mut owned,
+        rule,
+        &factory,
+        &[
+            "pass-raw-function-args",
+            "fail-raw-relation-with-function-join",
         ],
     );
     let assertions = rules_path(rule, "configs", "finite-domain-assertions.yml");

@@ -62,6 +62,12 @@ fn relation_placeholders_are_identifier_interpolations() {
         identifier_placeholder(&call("SELECT id FROM sql_placeholder_1.users")),
         Some(true)
     );
+    for glued in [
+        "SELECT id FROM audit_sql_placeholder_1",
+        "SELECT id FROM sql_placeholder_1__votes",
+    ] {
+        assert_eq!(identifier_placeholder(&call(glued)), Some(true));
+    }
     assert_eq!(
         identifier_placeholder(&call("SELECT id FROM users WHERE id = sql_placeholder_1")),
         Some(false)
