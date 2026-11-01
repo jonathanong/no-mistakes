@@ -28,6 +28,7 @@ impl ImportCollector {
         }
         self.note_instance_class(declarator);
         if let Some(init) = &declarator.init {
+            self.note_registry_alias(init);
             self.record_callable_initializer(declarator, immutable, init);
             let value = if self
                 .unreachable_value_binding_after
@@ -137,6 +138,9 @@ impl ImportCollector {
                     .return_offsets
                     .entry(owner)
                     .or_insert(statement.span.end);
+            }
+            if let Some(argument) = &statement.argument {
+                self.note_returned_registry(argument);
             }
             self.note_value_return(statement);
         }

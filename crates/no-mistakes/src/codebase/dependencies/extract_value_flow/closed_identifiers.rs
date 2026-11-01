@@ -159,6 +159,8 @@ impl ImportCollector {
 mod names;
 #[path = "closed_identifier_registries.rs"]
 mod registries;
+#[path = "closed_identifier_escapes.rs"]
+mod registry_escapes;
 #[path = "closed_identifier_mutations.rs"]
 mod registry_mutations;
 

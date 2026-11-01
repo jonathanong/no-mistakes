@@ -75,3 +75,39 @@ export function objectAssign(kind: string) {
 
 void mut;
 void addLater;
+
+const ALIAS_MAP = new Map([["a", "users"]]);
+const alias = ALIAS_MAP;
+alias.set("b", process.env.T);
+
+const PASSED = new Map([["a", "users"]]);
+function fill(m: Map<string, string>) {
+  m.set("z", process.env.T);
+}
+fill(PASSED);
+
+const RETURNED = new Map([["a", "users"]]);
+function leak() {
+  return RETURNED;
+}
+
+const EXPORTED = new Map([["a", "users"]]);
+export { EXPORTED };
+
+export function aliased(kind: string) {
+  return query(`SELECT id FROM ${ALIAS_MAP.get(kind)}`);
+}
+
+export function passed(kind: string) {
+  return query(`SELECT id FROM ${PASSED.get(kind)}`);
+}
+
+export function returned(kind: string) {
+  return query(`SELECT id FROM ${RETURNED.get(kind)}`);
+}
+
+export function exported(kind: string) {
+  return query(`SELECT id FROM ${EXPORTED.get(kind)}`);
+}
+
+void leak;

@@ -278,7 +278,10 @@ set the scan can see:
   bounded. A registry with any non-literal, spread, or `process.env` value
   stays unbounded. A later `set`, `add`, `push`, element write, or
   `Object.assign` on that registry, including inside another function, ends
-  the proof.
+  the proof. Binding another name to that registry, passing it into a call
+  other than a read (`get`, `has`, `includes`, `indexOf`, `map`,
+  `Object.freeze`, `Object.keys`), returning it, or `export { registry }`
+  also ends the proof.
 - `.get` on a `const` `Map` built only from string-literal pairs, including a
   frozen map, until that map is mutated.
 - A temporary name that is a non-empty literal prefix plus `randomUUID()`

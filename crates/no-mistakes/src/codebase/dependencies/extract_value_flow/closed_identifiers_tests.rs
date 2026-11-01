@@ -35,7 +35,8 @@ fn closed_domain_facts_reject_open_shapes() {
             "TABLES",
         ]
     );
-    assert!(unique_closed_collection(
+    // good() passes KEEP_SET to assertWhitelistedSqlIdentifier.
+    assert!(!unique_closed_collection(
         &flow,
         "KEEP_SET",
         RegistryKind::Set
@@ -151,6 +152,8 @@ fn closed_domain_facts_reject_open_shapes() {
     assert!(skipped.finite_identifier_guards.is_empty());
 }
 
+#[path = "closed_identifier_escape_tests.rs"]
+mod escape_tests;
 #[path = "closed_identifier_mutation_tests.rs"]
 mod mutation_tests;
 

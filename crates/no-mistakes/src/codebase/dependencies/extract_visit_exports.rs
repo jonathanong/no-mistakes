@@ -32,6 +32,7 @@ impl ImportCollector {
                         module_export_name_name(&specifier.local),
                         module_export_name_name(&specifier.exported),
                     ) {
+                        self.note_exported_registry(local.as_ref());
                         self.record_local_export_binding(local, exported);
                     }
                     if let ModuleExportName::IdentifierName(identifier) = &specifier.local {

@@ -15,6 +15,7 @@ impl super::super::super::ImportCollector {
         if let Some(name) = mutating_receiver(call).or_else(|| assign_target(call)) {
             self.record_registry_mutation(&name);
         }
+        self.note_registry_argument_escape(call);
     }
 
     pub(super) fn bounded_source(&self, init: &Expression<'_>) -> Option<Option<(String, usize)>> {
@@ -75,7 +76,7 @@ impl super::super::super::ImportCollector {
         }
     }
 
-    fn record_registry_mutation(&mut self, name: &str) {
+    pub(super) fn record_registry_mutation(&mut self, name: &str) {
         let Some(scope) = self.callee_binding_scope(name) else {
             return;
         };
