@@ -152,7 +152,8 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
     // fail-open-object-member keeps a registry value that reads process.env.
     // fail-nested-map-get keeps a get reached through another object.
     // fail-mutated-registry keeps direct writes and any registry use outside a
-    // member read, for-of right-hand side, or spread.
+    // member read, for-of right-hand side, or spread. A computed call callee
+    // is a read only for a string-literal read-only method.
     // fail-shadowed-random-uuid keeps a local or non-crypto randomUUID.
     push(
         &mut owned,

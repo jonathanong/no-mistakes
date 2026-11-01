@@ -157,3 +157,41 @@ export function nestedArgument(kind: string) {
 export function defaultExport(kind: string) {
   return query(`SELECT id FROM ${DEFAULT_REG.get(kind)}`);
 }
+
+const A = new Map([["a", "users"]]);
+A["set"]("b", process.env.T);
+
+const B = new Map([["a", "users"]]);
+B["clear"]();
+
+const C = new Map([["a", "users"]]);
+const m = "set";
+C[m]("b", process.env.T);
+
+const D = ["users"];
+D["push"](process.env.T);
+
+const E = new Set(["users"]);
+E["add"](process.env.T);
+
+export function computedSet(kind: string) {
+  return query(`SELECT id FROM ${A.get(kind)}`);
+}
+
+export function computedClear(kind: string) {
+  return query(`SELECT id FROM ${B.get(kind)}`);
+}
+
+export function computedDynamic(kind: string) {
+  return query(`SELECT id FROM ${C.get(kind)}`);
+}
+
+export function computedPush(table: string) {
+  if (!D.includes(table)) throw new Error("table");
+  return query(`SELECT id FROM ${table}`);
+}
+
+export function computedAdd(table: string) {
+  if (!E.has(table)) throw new Error("table");
+  return query(`SELECT id FROM ${table}`);
+}

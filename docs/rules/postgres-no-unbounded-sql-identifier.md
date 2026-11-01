@@ -280,7 +280,10 @@ set the scan can see:
   `Object.assign` on that registry, including inside another function, ends
   the proof. Any other use of the registry ends the proof too. A use stays
   inside the proof only when the registry is the object of a member read,
-  the right-hand side of `for...of`, or a spread (`...registry`). An alias,
+  the right-hand side of `for...of`, or a spread (`...registry`). A computed
+  member that is a call callee stays inside only when its key is a string
+  literal naming a read-only method such as `get`, `has`, or `includes`; any
+  other key, including a non-literal key, is an escape. An alias,
   a call argument, a wrapper object or array, a return, an arrow that
   returns the registry, `export { registry }`, `export default`, and
   `export const` of the registry all end the proof.

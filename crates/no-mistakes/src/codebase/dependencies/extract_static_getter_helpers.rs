@@ -16,7 +16,7 @@ fn visit_computed_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
     member: &ComputedMemberExpression<'a>,
 ) {
-    collector.mark_member_object_registry(&member.object);
+    collector.mark_computed_member_registry(member);
     if let Expression::StringLiteral(property) =
         crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression)
     {

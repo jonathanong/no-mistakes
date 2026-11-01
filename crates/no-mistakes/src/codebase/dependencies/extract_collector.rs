@@ -136,6 +136,7 @@ struct ImportCollector {
     class_scopes: FxHashSet<String>,
     export_depth: usize,
     closed_registry_reads: FxHashSet<u32>,
+    closed_registry_call_callee: Option<u32>,
     has_unknown_top_level_call: bool,
     anonymous_scope_count: usize,
     known_function_scopes: FxHashSet<String>,

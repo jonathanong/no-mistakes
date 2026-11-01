@@ -1,6 +1,35 @@
 use oxc_ast::ast::{
-    Argument, ArrayExpressionElement, Expression, IdentifierReference, ObjectPropertyKind,
+    Argument, ArrayExpressionElement, CallExpression, ChainElement, ComputedMemberExpression,
+    Expression, IdentifierReference, ObjectPropertyKind,
 };
+use oxc_span::GetSpan;
+
+const READ_ONLY_METHODS: &[&str] = &[
+    "at",
+    "concat",
+    "entries",
+    "every",
+    "filter",
+    "find",
+    "findIndex",
+    "flat",
+    "flatMap",
+    "forEach",
+    "get",
+    "has",
+    "includes",
+    "indexOf",
+    "join",
+    "keys",
+    "map",
+    "reduce",
+    "reduceRight",
+    "slice",
+    "some",
+    "toString",
+    "valueOf",
+    "values",
+];
 
 impl super::super::super::ImportCollector {
     pub(in super::super::super) fn mark_closed_registry_allowance(
@@ -12,7 +41,6 @@ impl super::super::super::ImportCollector {
         }
         match expr {
             Expression::StaticMemberExpression(member) => mark_read(self, &member.object),
-            Expression::ComputedMemberExpression(member) => mark_read(self, &member.object),
             Expression::CallExpression(call) => mark_spreads(self, &call.arguments),
             Expression::NewExpression(new) => mark_spreads(self, &new.arguments),
             Expression::ArrayExpression(array) => {
@@ -45,6 +73,34 @@ impl super::super::super::ImportCollector {
         }
     }
 
+    pub(in super::super::super) fn mark_computed_member_registry(
+        &mut self,
+        member: &ComputedMemberExpression<'_>,
+    ) {
+        if !self.collect_value_flow {
+            return;
+        }
+        if self.closed_registry_call_callee == Some(member.span.start)
+            && !computed_key_is_read_only(&member.expression)
+        {
+            return;
+        }
+        mark_read(self, &member.object);
+    }
+
+    pub(in super::super::super) fn begin_closed_registry_call(
+        &mut self,
+        call: &CallExpression<'_>,
+    ) -> Option<u32> {
+        let previous = self.closed_registry_call_callee;
+        self.closed_registry_call_callee = Some(callee_start(&call.callee));
+        previous
+    }
+
+    pub(in super::super::super) fn end_closed_registry_call(&mut self, previous: Option<u32>) {
+        self.closed_registry_call_callee = previous;
+    }
+
     pub(in super::super::super) fn mark_argument_spreads(&mut self, arguments: &[Argument<'_>]) {
         if self.collect_value_flow {
             mark_spreads(self, arguments);
@@ -66,6 +122,27 @@ impl super::super::super::ImportCollector {
             return;
         }
         self.record_registry_mutation(name);
+    }
+}
+
+fn computed_key_is_read_only(key: &Expression<'_>) -> bool {
+    let Expression::StringLiteral(property) = crate::codebase::ts_source::unwrap_ts_wrappers(key)
+    else {
+        return false;
+    };
+    READ_ONLY_METHODS.contains(&crate::ast::js_literal(property).as_ref())
+}
+
+fn callee_start(callee: &Expression<'_>) -> u32 {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(callee) {
+        Expression::ChainExpression(chain) => match &chain.expression {
+            ChainElement::CallExpression(call) => callee_start(&call.callee),
+            ChainElement::StaticMemberExpression(member) => member.span.start,
+            ChainElement::ComputedMemberExpression(member) => member.span.start,
+            ChainElement::PrivateFieldExpression(member) => member.span.start,
+            ChainElement::TSNonNullExpression(inner) => callee_start(&inner.expression),
+        },
+        other => other.span().start,
     }
 }
 
