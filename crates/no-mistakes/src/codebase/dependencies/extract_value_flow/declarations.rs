@@ -11,6 +11,10 @@ pub enum ValueType {
     Reference(String),
     Member(Box<ValueType>, String),
     Object(FxHashMap<String, ValueType>),
+    /// The `number` or `bigint` keyword.
+    Number,
+    /// `(typeof NAME)[number]`: an element of a value's array type.
+    Element(String),
     Unknown,
 }
 

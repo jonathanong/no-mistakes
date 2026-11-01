@@ -465,3 +465,29 @@ fn flows_unbounded_follows_parameter_containers_and_returns() {
     assert!(!harness.unbounded("from_missing_name"));
     assert!(!harness.unbounded("from_unknown_callee"));
 }
+
+#[test]
+fn parameter_lookup_is_scoped_to_the_reference() {
+    let mut other = parameter("table");
+    other.scope = 7;
+    let mut numeric = parameter("count");
+    numeric.scope = 8;
+    numeric.type_reference = Some(crate::codebase::dependencies::extract::ValueType::Number);
+    let case = Harness::new(TsFileFacts {
+        value_flow: ValueFlowFacts {
+            parameters: vec![other, numeric],
+            ..ValueFlowFacts::default()
+        },
+        ..TsFileFacts::default()
+    });
+    let bindings = Bindings::new(&case.facts);
+    assert!(bindings.parameter(&case.file, 7, "table"));
+    assert!(!bindings.parameter(&case.file, 9, "table"));
+    assert!(bindings.parameter(&case.file, 0, "table"));
+    assert!(!bindings.parameter(&case.file, 8, "count"));
+    assert!(!bindings.parameter(&case.file, 7, "missing"));
+    assert!(!bindings.closed_parameter(&case.file, 7, "table"));
+    assert!(bindings.closed_parameter(&case.file, 8, "count"));
+    assert!(!bindings.closed_parameter(&case.file, 0, "count"));
+    assert!(!bindings.closed_parameter(&case.file, 8, "missing"));
+}

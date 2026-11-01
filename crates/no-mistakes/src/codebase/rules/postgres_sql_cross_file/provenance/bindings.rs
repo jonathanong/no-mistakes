@@ -1,13 +1,17 @@
 use super::*;
 use crate::codebase::dependencies::extract::{ValueBinding, ValueFlowFacts};
 
+mod closed_types;
 mod flow;
+pub(crate) use closed_types::literal_array;
+
 use crate::fx::{fx_map, FxHashMap, FxHashSet};
 type RowMemberKey<'a> = (&'a Path, usize, &'a str, &'a str);
 /// Borrowed syntactic indexes; neither value resolution nor another graph.
 pub(crate) struct Bindings<'a> {
     pub(crate) routes: super::super::graph::RegistryRoutes<'a>,
     pub(super) facts: &'a CheckFactMap,
+    graph: Option<&'a DepGraph>,
     values: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
     calls: FxHashMap<&'a Path, FxHashSet<(u32, u32)>>,
     overwrites: FxHashMap<RowMemberKey<'a>, FxHashSet<(u32, u32)>>,
@@ -17,6 +21,7 @@ impl<'a> Bindings<'a> {
     pub(crate) fn new(facts: &'a CheckFactMap) -> Self {
         let mut result = Self {
             facts,
+            graph: None,
             routes: super::super::graph::RegistryRoutes::new(facts),
             calls: fx_map(),
             values: fx_map(),
@@ -37,6 +42,10 @@ impl<'a> Bindings<'a> {
             values.sort_by_key(|binding| binding.declared_at);
         }
         result
+    }
+    pub(crate) fn with_graph(mut self, graph: &'a DepGraph) -> Self {
+        self.graph = Some(graph);
+        self
     }
     pub(crate) fn with_calls(facts: &'a CheckFactMap, calls: &'a [SqlCall<'_>]) -> Self {
         let mut index = Self::new(facts);

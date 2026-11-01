@@ -109,8 +109,19 @@ impl Visitor for RelationPlaceholder {
 
 fn object_has_placeholder(name: &ObjectName) -> bool {
     name.0.iter().any(|part| match part {
-        ObjectNamePart::Identifier(ident) => ident.value.contains("sql_placeholder_"),
+        ObjectNamePart::Identifier(ident) => indexed_marker(&ident.value),
         _ => false,
+    })
+}
+
+/// A generated marker is `sql_placeholder_` followed by its numeric index; a
+/// relation merely named like one (`audit_sql_placeholder_archive`) is not.
+fn indexed_marker(name: &str) -> bool {
+    name.match_indices("sql_placeholder_").any(|(at, marker)| {
+        name[at + marker.len()..]
+            .bytes()
+            .next()
+            .is_some_and(|byte| byte.is_ascii_digit())
     })
 }
 

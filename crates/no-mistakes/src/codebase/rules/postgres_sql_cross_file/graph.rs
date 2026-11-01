@@ -5,7 +5,9 @@ mod resolve;
 mod route_index;
 mod route_targets;
 mod routes;
-pub(crate) use resolve::{unique_export, unique_namespace_member, UniqueExport};
+pub(crate) use resolve::{
+    unique_export, unique_namespace_member, unique_type_export, UniqueExport,
+};
 pub(crate) use route_index::RegistryRoutes;
 pub(crate) use routes::registry_route;
 

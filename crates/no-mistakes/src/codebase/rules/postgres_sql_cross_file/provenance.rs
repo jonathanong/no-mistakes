@@ -16,7 +16,7 @@ mod identifier_positions;
 mod interpolations;
 mod outside;
 mod search;
-pub(crate) use bindings::Bindings;
+pub(crate) use bindings::{literal_array, Bindings};
 pub(crate) use env::is_process_specifier;
 use env::{env_from_chain, env_key, process_env_key};
 pub(crate) use identifier_positions::scans_identifier;

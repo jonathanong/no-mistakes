@@ -91,11 +91,18 @@ The same holds for every `sql-template-strings` template in an `.append()`
 chain, including the chain head and ``.append(sql`...`)`` parts
 (`pass-sql-template-append-chain`). Only a raw `.append(expr)` argument that is
 not such a tagged template stays an identifier candidate
-(`fail-sql-template-append-raw`). A parameter or local named like the tag
-shadows the import and is not the library tag (`fail-sql-template-shadowed-tag`).
+(`fail-sql-template-append-raw`). A parameter, local, `function` declaration, loop variable, or `catch`
+binding named like the tag shadows the import in its own scope and is not the
+library tag (`fail-sql-template-shadowed-tag`,
+`fail-sql-template-shadowed-declarations`); a parameter of another function
+does not (`pass-sql-template-sibling-parameter`).
 A hole glued to an identifier prefix or suffix (`${table}__votes`,
 `audit_${table}`) still occupies the relation name and is reported even when
 another hole in the statement is a finite relation (`fail-glued-identifier-hole`).
+A relation literally named like the internal placeholder
+(`audit_sql_placeholder_archive`) is a user relation, not an interpolation
+(`pass-user-named-placeholder-table`); a literal digit after a hole
+(`${schema}2`) is not part of its index (`fail-glued-digit-suffix`).
 A call with no interpolation produces no finding, including a static SQL
 string and a dynamic SQL argument that is not itself interpolated. A call
 whose interpolations are only binds produces no finding either.
@@ -353,6 +360,32 @@ set the scan can see:
   the zero-based index of the value that helper validates. `name` and
   `argument` are both required. A later assignment to that same binding ends
   the proof.
+
+- A parameter annotated `number` or `bigint`, interpolated directly
+  (`events_${n}`) or beside a catalog name (`${table}__p_${yyyy}_${mm}`). A
+  `string` parameter, or a string glued to a numeric suffix, stays unbounded
+  (`fail-open-string-parameter`).
+- A parameter annotated `(typeof CATALOG)[number]`, directly or through a type
+  alias imported from the catalog's module, where `CATALOG` is an array literal
+  without a `process.env` value. The proof is the array the type points at, not
+  the annotation: a `string` alias or a catalog holding `process.env` stays
+  unbounded. A local `const t = table` alias of such a parameter, and a loop
+  variable over an exported `as const` catalog, are bounded too
+  (`pass-exported-catalog`, `pass-catalog-numeric-suffix`,
+  `pass-catalog-local-alias`).
+- A local built by `.join(...)`, or by `.map(...)`, `.filter(...)`, and
+  `.slice(...)` chains ending in `.join(...)`, over a closed array (local, or
+  an exported array literal). A `.map` callback may return only its own
+  parameters, members of them, and literal text; a callback that reads any
+  outer value stays unbounded (`pass-catalog-map-join`,
+  `fail-catalog-open-callback`). Cross-file writes to an exported array are
+  [`postgres-no-mutable-sql-registry`](postgres-no-mutable-sql-registry.md)
+  findings.
+
+Parameter provenance is scoped to the reference. A parameter named `table` in
+one function does not make a loop variable or alias named `table` in another
+function unbounded; a name that resolves to a plain local binding still matches
+a same-named parameter elsewhere in the file, so existing findings are kept.
 
 ```yaml
 finiteDomainAssertions:

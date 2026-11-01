@@ -31,7 +31,7 @@ impl ValueFlowResolution<'_, '_> {
         visited: &mut FxHashSet<(std::path::PathBuf, String)>,
     ) -> FlowValue {
         match shape {
-            ValueType::Unknown => FlowValue::Unknown,
+            ValueType::Unknown | ValueType::Number | ValueType::Element(_) => FlowValue::Unknown,
             ValueType::Object(properties) => FlowValue::TypedObject {
                 executor: Box::new(FlowValue::Unknown),
                 properties: properties

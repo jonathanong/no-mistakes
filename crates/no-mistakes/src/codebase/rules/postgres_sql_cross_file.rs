@@ -9,13 +9,13 @@ mod validators;
 
 pub(crate) use expressions::walk_expression;
 pub(crate) use graph::{
-    graph_plan, registry_route, unique_export, unique_namespace_member, RegistryRoutes,
-    UniqueExport,
+    graph_plan, registry_route, unique_export, unique_namespace_member, unique_type_export,
+    RegistryRoutes, UniqueExport,
 };
 pub(crate) use options::{compile, CompiledOptions, Options};
 pub(crate) use provenance::{
-    identifier_sources, interpolations, is_process_env, is_process_specifier, scans_identifier,
-    Bindings, Provenance,
+    identifier_sources, interpolations, is_process_env, is_process_specifier, literal_array,
+    scans_identifier, Bindings, Provenance,
 };
 pub(crate) use sql::{identifier_placeholder, sql_calls, SqlCall};
 

@@ -219,6 +219,9 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "fail-sql-template-append-raw",
             "fail-sql-template-shadowed-tag",
             "pass-sql-template-function-args",
+            "pass-sql-template-sibling-parameter",
+            "pass-sql-template-statement-append",
+            "fail-sql-template-shadowed-declarations",
         ],
     );
     // Function-call arguments in FROM, JOIN, or ANY are values, not relation
@@ -231,6 +234,29 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
         &[
             "pass-raw-function-args",
             "fail-raw-relation-with-function-join",
+        ],
+    );
+    // Closed domains. A catalog-typed or numeric parameter, a catalog name
+    // plus numeric suffixes, a local alias of either, and map/join over an
+    // `as const` list are bounded. fail-open-string-parameter keeps `table`
+    // at lines 4 and 8 and the alias `t` at 13; fail-catalog-open-callback
+    // keeps refs 6, list 11, and t 19. fail-glued-digit-suffix reports only
+    // schema (line 4). Shadowing is scoped to the tag call:
+    // fail-sql-template-shadowed-declarations reports table at 8, 13, and 21.
+    push(
+        &mut owned,
+        rule,
+        &config,
+        &[
+            "pass-exported-catalog",
+            "pass-catalog-numeric-suffix",
+            "pass-numeric-parameter",
+            "pass-catalog-local-alias",
+            "pass-catalog-map-join",
+            "pass-user-named-placeholder-table",
+            "fail-open-string-parameter",
+            "fail-catalog-open-callback",
+            "fail-glued-digit-suffix",
         ],
     );
     let assertions = rules_path(rule, "configs", "finite-domain-assertions.yml");

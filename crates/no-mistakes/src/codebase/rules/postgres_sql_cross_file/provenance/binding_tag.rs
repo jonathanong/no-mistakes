@@ -16,7 +16,7 @@ pub(super) fn is_bind_tag(bindings: &Bindings<'_>, file: &Path, value_call: &Val
         return false;
     }
     let name = value_call.source_callee.as_str();
-    if bindings.parameter(file, name) || local(bindings, file, name, &value_call.callee) {
+    if shadowed(bindings, file, name, &value_call.callee) {
         return false;
     }
     bindings.facts.get_ts_facts(file).is_some_and(|ts| {
@@ -68,9 +68,18 @@ pub(super) fn leads_with_bind_tag(
         })
 }
 
-fn local(bindings: &Bindings<'_>, file: &Path, name: &str, callee: &ValueExpression) -> bool {
-    matches!(callee, ValueExpression::Named { scope, offset, .. }
-        if bindings.value(file, scope.unwrap_or(0), name, *offset).is_some())
+/// A parameter, function declaration, loop or catch binding, or local in scope
+/// of the call. The callee's resolved scope is the nearest local that declares
+/// the name; scope 0 and an unresolved scope are the module, whose import the
+/// tag refers to.
+fn shadowed(bindings: &Bindings<'_>, file: &Path, name: &str, callee: &ValueExpression) -> bool {
+    let ValueExpression::Named { scope, offset, .. } = callee else {
+        return false;
+    };
+    scope.is_some_and(|scope| scope != 0)
+        || bindings
+            .value(file, scope.unwrap_or(0), name, *offset)
+            .is_some()
 }
 
 #[cfg(test)]
