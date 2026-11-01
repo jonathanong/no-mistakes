@@ -35,6 +35,39 @@ pub(super) fn is_bind_tag(bindings: &Bindings<'_>, file: &Path, value_call: &Val
     })
 }
 
+/// Spans of the bind-tag calls; every call nested in one is a bind expression.
+pub(super) fn bind_spans(
+    bindings: &Bindings<'_>,
+    file: &Path,
+    calls: &[ValueCall],
+) -> Vec<(u32, u32)> {
+    let tags = calls
+        .iter()
+        .filter(|call| is_bind_tag(bindings, file, call));
+    tags.map(|call| (call.offset, call.end)).collect()
+}
+
+/// An executor call whose first argument is a tagged template (or a chain
+/// headed by one) carries only options after it, never SQL text.
+pub(super) fn leads_with_bind_tag(
+    bindings: &Bindings<'_>,
+    file: &Path,
+    calls: &[ValueCall],
+    expr: &ValueExpression,
+) -> bool {
+    let ValueExpression::Call(start, end) = expr else {
+        return false;
+    };
+    calls
+        .iter()
+        .find(|call| call.offset == *start && call.end == *end)
+        .is_some_and(|call| {
+            is_bind_tag(bindings, file, call)
+                || matches!(&call.callee, ValueExpression::Member(inner, _)
+                    if leads_with_bind_tag(bindings, file, calls, inner))
+        })
+}
+
 fn local(bindings: &Bindings<'_>, file: &Path, name: &str, callee: &ValueExpression) -> bool {
     matches!(callee, ValueExpression::Named { scope, offset, .. }
         if bindings.value(file, scope.unwrap_or(0), name, *offset).is_some())

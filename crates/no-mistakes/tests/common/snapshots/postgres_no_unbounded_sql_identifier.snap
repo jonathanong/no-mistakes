@@ -1454,6 +1454,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "fail_raw_relation_with_function_join": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 12,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`SELECT id FROM public.${table}`);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 4,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`SELECT p.id FROM ${table} p JOIN unnest($1::uuid[]) AS u(id) ON u.id = p.id`, [ids]);",
+          "target": "table"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 8,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "await query(`SELECT p.id FROM ${table} p JOIN unnest(${ids}::uuid[]) AS u(id) ON u.id = p.id`);",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail_reassigned_guard": {
     "exitCode": 1,
     "report": {
@@ -2177,6 +2217,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "pass_raw_function_args": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "pass_set_throw_guard": {
     "exitCode": 1,
     "report": {
@@ -2221,6 +2273,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "pass_sql_template_binds": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_sql_template_function_args": {
     "exitCode": 0,
     "report": {
       "advisories": [],

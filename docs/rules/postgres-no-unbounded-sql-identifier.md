@@ -78,6 +78,15 @@ default or `SQL` import and passed directly to the executor is a bind, so that
 call has no identifier source, including `SELECT` list values and destructured
 or call-derived locals. The saved `pass-sql-template-binds` fixture covers it;
 `fail-sql-template-raw` keeps raw interpolation in a plain template string.
+A hole is a bind in every position of such a template, including `FROM
+unnest(${ids}::uuid[])`, `= ANY(${ids})`, and a call nested inside a hole
+(`${xs.map(...)}`). Arguments after a tagged first argument (`{ query }`) are
+options, not SQL text. The saved `pass-sql-template-function-args` fixture
+covers these. In a plain template only a hole inside a relation name token
+(`${t}`, `${t}__votes`, `audit_${t}`, `schema.${t}`) occupies a relation; a hole
+inside a function-call argument list in `FROM` is a value
+(`pass-raw-function-args`), while `FROM ${t} JOIN unnest(...)` still reports
+`t` (`fail-raw-relation-with-function-join`).
 The same holds for every `sql-template-strings` template in an `.append()`
 chain, including the chain head and ``.append(sql`...`)`` parts
 (`pass-sql-template-append-chain`). Only a raw `.append(expr)` argument that is

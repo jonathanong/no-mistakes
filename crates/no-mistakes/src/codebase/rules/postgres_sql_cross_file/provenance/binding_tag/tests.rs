@@ -124,3 +124,59 @@ fn plain_calls_and_shadowed_tags_do_not_bind() {
     let template = tag(vec![ValueExpression::Unknown], named());
     assert!(!verdict(&template, default(), vec![local()]));
 }
+
+#[test]
+fn bind_spans_and_leading_tag_follow_the_tag_call() {
+    use super::{bind_spans, leads_with_bind_tag};
+    let call = tag(vec![ValueExpression::Unknown], named());
+    let chained = ValueCall {
+        offset: 0,
+        end: 100,
+        callee: ValueExpression::Member(
+            Arc::new(ValueExpression::Call(call.offset, call.end)),
+            "append".to_string(),
+        ),
+        ..tag(vec![], named())
+    };
+    let calls = vec![call, chained];
+    let path = PathBuf::from("query.ts");
+    let ts = TsFileFacts {
+        imported_bindings: vec![import(MODULE, ImportedBindingKind::Default, "default")],
+        ..TsFileFacts::default()
+    };
+    let mut facts = CheckFactMap::default();
+    facts.files.push(path.clone());
+    facts.ts.insert(
+        path.clone(),
+        Arc::new(CheckFileFacts {
+            ts: Arc::new(ts),
+            ..CheckFileFacts::default()
+        }),
+    );
+    let bindings = Bindings::new(&facts);
+    assert_eq!(bind_spans(&bindings, &path, &calls), vec![(10, 90)]);
+    assert!(leads_with_bind_tag(
+        &bindings,
+        &path,
+        &calls,
+        &ValueExpression::Call(10, 90)
+    ));
+    assert!(leads_with_bind_tag(
+        &bindings,
+        &path,
+        &calls,
+        &ValueExpression::Call(0, 100)
+    ));
+    assert!(!leads_with_bind_tag(
+        &bindings,
+        &path,
+        &calls,
+        &ValueExpression::Call(1, 2)
+    ));
+    assert!(!leads_with_bind_tag(
+        &bindings,
+        &path,
+        &calls,
+        &ValueExpression::Unknown
+    ));
+}

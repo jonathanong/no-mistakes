@@ -218,6 +218,19 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "pass-sql-template-append-chain",
             "fail-sql-template-append-raw",
             "fail-sql-template-shadowed-tag",
+            "pass-sql-template-function-args",
+        ],
+    );
+    // Function-call arguments in FROM, JOIN, or ANY are values, not relation
+    // names. pass-raw-function-args binds them; fail-raw-relation-with-function-join
+    // keeps reporting table (lines 4, 8, 12) while the unnest arguments stay quiet.
+    push(
+        &mut owned,
+        rule,
+        &factory,
+        &[
+            "pass-raw-function-args",
+            "fail-raw-relation-with-function-join",
         ],
     );
     let assertions = rules_path(rule, "configs", "finite-domain-assertions.yml");

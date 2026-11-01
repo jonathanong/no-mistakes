@@ -164,3 +164,21 @@ fn glued_prefix_and_suffix_still_mark_the_hole() {
     };
     assert_eq!(aligned(&call), Some((BTreeSet::from([1, 2, 3, 4]), 4)));
 }
+
+#[test]
+fn function_call_arguments_are_not_relation_names() {
+    for sql in [
+        "SELECT t FROM UNNEST(sql_placeholder_1::uuid[]) AS input(t)",
+        "SELECT c.k FROM unnest(sql_placeholder_1::text[], sql_placeholder_2::uuid[]) WITH ORDINALITY AS c (k, i)",
+        "SELECT g FROM generate_series(1, sql_placeholder_1) g",
+        "WITH p AS (SELECT id FROM posts WHERE id = ANY(sql_placeholder_1::uuid[])) SELECT id FROM p",
+    ] {
+        let (relations, columns) = collected(sql);
+        assert!(relations.is_empty(), "{sql}");
+        assert!(columns.is_empty(), "{sql}");
+    }
+    let (relations, _) = collected(
+        "SELECT 1 FROM sql_placeholder_1 JOIN unnest(sql_placeholder_2::uuid[]) AS u(id) ON true JOIN schema.sql_placeholder_3 ON true",
+    );
+    assert_eq!(relations, BTreeSet::from([1, 3]));
+}
