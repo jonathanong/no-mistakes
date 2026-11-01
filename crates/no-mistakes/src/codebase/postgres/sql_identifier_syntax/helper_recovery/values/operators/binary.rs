@@ -46,14 +46,23 @@ impl Engine<'_> {
         Some(out)
     }
     fn concatenate(&mut self, left: &Value, right: &Value) -> Option<Value> {
-        let (Value::Text(left), Value::Text(right)) = (left, right) else {
+        if let (Value::Text(left), Value::Text(right)) = (left, right) {
+            let bytes = left.raw.sql.len().checked_add(right.raw.sql.len())?;
+            self.sql_bytes(bytes)?;
+            let mut text = left.clone();
+            text.append(right.clone())?;
+            return Some(Value::Text(text));
+        }
+        // `limit + 1` is a bind or a return value. Mixed text still concatenates
+        // only when both sides are text; anything else that carries SQL fails.
+        if left.blocks_sql_data()
+            || right.blocks_sql_data()
+            || left.contains_executor()
+            || right.contains_executor()
+        {
             return None;
-        };
-        let bytes = left.raw.sql.len().checked_add(right.raw.sql.len())?;
-        self.sql_bytes(bytes)?;
-        let mut text = left.clone();
-        text.append(right.clone())?;
-        Some(Value::Text(text))
+        }
+        Some(Value::Scalar)
     }
 }
 

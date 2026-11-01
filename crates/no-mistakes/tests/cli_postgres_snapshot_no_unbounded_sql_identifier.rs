@@ -168,3 +168,19 @@ fn postgres_low_typed_transports_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_low_recovery_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "low-recovery",
+    );
+    assert_saved_fixture(
+        "postgres_low_recovery",
+        &[
+            ("low", root.clone(), root.join(".no-mistakes-low.yml")),
+            ("max", root.clone(), root.join(".no-mistakes-max.yml")),
+        ],
+    );
+}

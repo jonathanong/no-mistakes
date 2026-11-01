@@ -9,16 +9,25 @@ impl Engine<'_> {
     ) -> Option<Vec<(State, Value)>> {
         let mut out = Vec::new();
         for (state, values) in self.all(&[object, key], state)? {
-            let [Value::Object(props), Value::Text(key)] = values.as_slice() else {
+            let [target, key_value] = values.as_slice() else {
+                return None;
+            };
+            if let (Value::Object(props), Value::Text(key)) = (target, key_value) {
+                // Own entries only: erased unions never authorize inherited keys.
+                if let Some((_, value)) = props.iter().rev().find(|(name, _)| name == &key.raw.sql)
+                {
+                    out.push((state, value.clone()));
+                } else {
+                    self.failures += 1;
+                }
+                continue;
+            }
+            // `rows[0]` is data. Indexing SQL text, a builder, or an executor is not.
+            if target.blocks_sql_data() {
                 self.failures += 1;
                 continue;
-            };
-            // Own entries only: erased unions never authorize inherited keys.
-            if let Some((_, value)) = props.iter().rev().find(|(name, _)| name == &key.raw.sql) {
-                out.push((state, value.clone()));
-            } else {
-                self.failures += 1;
             }
+            out.push((state, Value::Scalar));
         }
         Some(out)
     }

@@ -1,0 +1,25 @@
+effort: max
+unanalyzable: advise
+effects:
+  postgres:
+    typedExecutors:
+      - { module: '@example/types', export: QueryExecutor }
+      - { module: '@example/types', export: QueryOptions }
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read, write]
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ['src/**/*.mts']
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read, write]
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ['src/**/*.mts']
+      schemaCatalogPath: schema.json

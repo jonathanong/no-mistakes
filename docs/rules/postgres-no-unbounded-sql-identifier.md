@@ -112,6 +112,22 @@ unrelated or shadowed types and cyclic aliases do not.
 A single local `const run = query` executor alias also remains unanalyzable;
 its diagnostic uses the invocation line so a disable-next-line comment above
 `run(sql)` suppresses that call.
+A called local `const` initialized with `??` or `||`, where every alternative is a
+configured executor or the `.query` field of a configured executor type, is that
+executor. Each call still has to prove its SQL. `read(sql, { query })` and
+`write(sql, { query })` pass that field's executor through without a separate
+escape, and the SQL argument is still checked. `execute(options?.query ?? read)`
+is the same when `execute`'s parameter has a configured executor type. An
+options-bag parameter listed in `executorTypeNames` is an escape only where
+`.query` is read or the parameter is forwarded; a function that only reads other
+fields stays quiet. Return expressions that do not build SQL, including
+comparisons, `!==`, `.length + 1`, indexing, `.map`, `Boolean`, and `?.` member
+reads, do not make a callee with proven SQL unanalyzable. One `for`, `for-of`,
+`for-in`, `while`, or `do-while` pass is modeled, so `.append` of a proven
+fragment inside that pass can be proven. `${count + 1}` in a parameterized tag is
+a bind value. Dynamic relation names, including temp tables and `plan.table`,
+stay unanalyzable. A select-list interpolation that is not a relation name stays
+unanalyzable for the uuid-predicate rule.
 Configured typed callbacks and supported factory bindings share the literal SQL
 contract described in [executor bindings](../postgres-facts/executor-bindings.md).
 Companion receiver arguments are exempt only for helpers selected by

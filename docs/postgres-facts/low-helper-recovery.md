@@ -38,6 +38,11 @@ fragments; generated binds are renumbered without rewriting authored text.
 Helper arguments retain their physical source locations for findings and
 suppression comments. Exact async helpers and `await` are modeled explicitly:
 a returned promise is not SQL until an appropriate modeled await unwraps it.
+A return expression that does not build SQL, such as a comparison, a boolean,
+an index, or a method result, does not discard SQL already executed in that
+helper. One pass of `for`, `for-of`, `for-in`, `while`, and `do-while` is
+included, so an `.append` inside that pass can be proven. Generators stay
+outside the subset.
 
 A configured executor passed into a helper is cleared only when the helper's
 supported paths prove its uses. Returning or storing an executor in an opaque
@@ -75,7 +80,7 @@ the same semantic cost as uncached results. Cycles or exhausted limits remain
 uncertain; they are never assumed safe.
 
 This subset does not infer mutable, exported, or opaque captured globals.
-It does not model generators, loops, arbitrary switches or callback bodies,
+It does not model generators, arbitrary switches, or callback bodies,
 mutation of caller-owned builders, rest/spread arguments, computed object
 definitions, unknown await behavior, or unresolved/ambiguous exports. Imported
 helpers must already have facts in the selected low-effort scope; analysis does

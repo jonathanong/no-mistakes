@@ -70,6 +70,11 @@ pub(super) fn block(scope: &mut Scope<'_>, statements: &[Statement<'_>]) -> Opti
             Statement::ThrowStatement(statement) => {
                 result.push(Stmt::Expr(scope.raise(&statement.argument)))
             }
+            Statement::ForStatement(_)
+            | Statement::ForInStatement(_)
+            | Statement::ForOfStatement(_)
+            | Statement::WhileStatement(_)
+            | Statement::DoWhileStatement(_) => result.extend(super::loops::lower(scope, node)),
             _ => result.push(Stmt::Opaque),
         }
     }

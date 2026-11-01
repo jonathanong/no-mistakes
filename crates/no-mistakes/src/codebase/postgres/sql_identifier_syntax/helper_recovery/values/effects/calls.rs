@@ -1,4 +1,25 @@
 impl Engine<'_> {
+    pub(super) fn closed_scalar(
+        &mut self,
+        args: &[Expr],
+        state: State,
+        reject_sql: bool,
+    ) -> Option<Vec<(State, Value)>> {
+        let mut out = Vec::new();
+        for (state, values) in self.all(&args.iter().collect::<Vec<_>>(), state)? {
+            if reject_sql
+                && values.iter().any(|value| {
+                    value.blocks_sql_data() || value.contains_executor()
+                })
+            {
+                self.failures += 1;
+                continue;
+            }
+            out.push((state, Value::Scalar));
+        }
+        Some(out)
+    }
+
     fn await_result(&mut self, args: &[Expr], state: State) -> Option<Vec<(State, Value)>> {
         let [argument] = args else {
             return None;

@@ -81,6 +81,13 @@ wrapper when `beginTransaction` is a configured factory import. These proofs
 follow lexical binding identities; same-spelled unrelated imports, shadowed
 utility types, cycles, and mutable or
 unproven values do not establish executor ownership.
+At low effort for `postgres-no-unbounded-sql-identifier` and
+`postgres-no-transformed-uuid-predicates`, a called `const` initialized with
+`??` or `||` of configured executors or `.query` fields is that executor, and
+the SQL at each call is still checked. A single `const alias = query` or
+`const guarded = options.query` stays unanalyzable. An options bag passed as
+`{ query }` to a configured executor is not a separate escape. An options-bag
+parameter is an escape only where `.query` is read or the parameter is forwarded.
 The four SQL structure low rules also support
 [bounded helper and builder recovery](low-helper-recovery.md): a helper transport
 is cleared only after its executor uses are analyzed. Opaque helpers and
