@@ -7,6 +7,6 @@ rules:
       schemaCatalogPath: schema.json
       executorNames: [query, read, write]
       # Keep this recovery-only config independent of the statement-suppression fixture.
-      exclude: ['src/jobs.ts', 'src/templates.mts', 'src/statement-suppressions.mts', 'src/wrapped-statement-suppression.mts']
+      exclude: ['src/jobs.ts', 'src/templates.mts', 'src/statement-suppressions.mts', 'src/wrapped-statement-suppression.mts', 'src/issue-2961-lines.mts']
       sqlInclude: ['sql/broken.sql']
       unanalyzableSql: ignore

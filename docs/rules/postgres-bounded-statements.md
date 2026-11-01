@@ -298,6 +298,44 @@ WHERE id IN (SELECT id FROM sessions WHERE expires_at < now() ORDER BY id LIMIT 
 
 If the table is small and fixed, add an `allow` entry with a reason.
 
+## Shapes that stay bounded
+
+A capped CTE keeps its bound for a later statement. That includes a join on a non-`id` unique key, a one-row candidate, and a derived `LIMIT 1` subquery:
+
+```sql
+WITH c AS (SELECT email FROM accounts ORDER BY email LIMIT $1)
+UPDATE accounts AS a SET name = 'n' FROM c WHERE a.email = c.email;
+```
+
+`INSERT ... RETURNING` yields one row per source row. A `VALUES` list or a capped `SELECT` keeps that cap for the statement that uses the returned key. An uncapped `SELECT` source does not.
+
+`jsonb_to_recordset($1)` and `jsonb_populate_recordset(NULL, $1)` are caller-bounded, the same as `jsonb_array_elements($1)`, when the argument is a caller-supplied value.
+
+A pin on a derived `UNION ALL` table reaches each arm that projects that column. Pins on a constant projection stay on the arm that actually reads the column:
+
+```sql
+SELECT 1 FROM (
+  SELECT id, email FROM accounts
+  UNION ALL
+  SELECT id, email FROM accounts
+) binding
+WHERE binding.id = ANY($1) OR binding.email = ANY($2);
+```
+
+The same pin reaches a base column projected through an inner derived table:
+
+```sql
+SELECT 1 FROM (
+  SELECT q.id AS id, q.email AS email
+  FROM (SELECT id, email FROM accounts) q
+) binding
+WHERE binding.id = ANY($1) OR binding.email = ANY($2);
+```
+
+`ANY(ARRAY[one scalar])` is equality with that scalar. A nested `ARRAY[ARRAY[...]]` or a constructor with several elements is not. A bare column such as `id = $1` resolves to the `UPDATE` target when the other items do not project that column and the catalog names a single owner. A derived table's column-alias list is the complete set of names it exposes, so `src(account_id)` does not claim `id`. A positional alias on a base table does hide the catalog columns, and then a bare `id` stays unproven. A wildcard CTE does not prove that either.
+
+`DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A multi-line template, including `head + tail` where each const is its own template, reports the source line that contains the SQL.
+
 ## Analysis
 
 Raw SQL parse failures retain each failing statement's first code token. Separate

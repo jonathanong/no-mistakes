@@ -30,6 +30,8 @@ mod cli_postgres_executor_obligations;
 mod cli_postgres_non_call_references;
 #[path = "cli_postgres_snapshot_array_columns.rs"]
 mod cli_postgres_snapshot_array_columns;
+#[path = "cli_postgres_snapshot_bounded_false_positives.rs"]
+mod cli_postgres_snapshot_bounded_false_positives;
 #[path = "cli_postgres_snapshot_bounded_statements.rs"]
 mod cli_postgres_snapshot_bounded_statements;
 #[path = "cli_postgres_snapshot_bounded_statements_more.rs"]

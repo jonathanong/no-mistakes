@@ -1,5 +1,6 @@
 mod alternatives;
 mod builder;
+mod derived_pins;
 use super::super::value::PlaceholderPositions;
 use super::{start, Scope};
 use crate::codebase::postgres::idents::ident_key;

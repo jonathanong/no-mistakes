@@ -1,7 +1,7 @@
 use super::super::super::value::PlaceholderPositions;
 use super::super::using::Using;
 use super::super::{pins, Scope};
-use crate::codebase::postgres::statements::SqlBoundItem;
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
 use sqlparser::ast::{Expr, JoinOperator, TableWithJoins};
 
 /// Gathers FROM items and the join conditions that restrict them, then resolves the pins.
@@ -119,6 +119,12 @@ impl<'a> Builder<'a> {
             pins::collect_evidence(selection, &resolver, &all, &mut conjuncts, &mut nonnull);
         }
         for (item, pin) in found {
+            if !matches!(
+                &self.items[item].kind,
+                SqlBoundItemKind::Table(_) | SqlBoundItemKind::Query(_)
+            ) {
+                continue;
+            }
             if !self.items[item].pins.contains(&pin) {
                 self.items[item].pins.push(pin);
             }
@@ -142,6 +148,7 @@ impl<'a> Builder<'a> {
                 &mut self.items,
             );
         }
+        super::derived_pins::push(&mut self.items);
         self.items
     }
 }

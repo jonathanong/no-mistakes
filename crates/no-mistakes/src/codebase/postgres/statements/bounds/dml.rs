@@ -83,6 +83,23 @@ pub(super) fn returning_bound(
     let mut projection_scope = scope.clone();
     projection_scope.table_tokens = None;
     let projection_scope = super::query::with_scope(query, &projection_scope, positions);
+    // RETURNING yields one row per inserted source row. The source query, not the target
+    // table, is what a later statement can pin.
+    if let Statement::Insert(insert) = statement {
+        if insert
+            .returning
+            .as_ref()
+            .is_some_and(|items| !items.is_empty())
+        {
+            let source = insert.source.as_deref()?;
+            return Some(super::query::bound_query(
+                source,
+                &projection_scope,
+                positions,
+            ));
+        }
+        return None;
+    }
     match statement {
         Statement::Update(update)
             if update

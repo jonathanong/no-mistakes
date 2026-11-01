@@ -61,6 +61,24 @@ fn legacy_executor_call(
         }
         _ => {
             let (sql, kind) = classify_init(argument, true, visitor);
+            let mut sql_source_positions = super::compose::helper_provenance(argument, visitor)
+                .map(|provenance| provenance.positions)
+                .or_else(|| super::compose::parameter_source_positions(argument, visitor))
+                .unwrap_or_else(|| {
+                    super::super::super::source_positions::for_expression(
+                        argument,
+                        visitor.source,
+                        call.span.start as usize,
+                        line,
+                    )
+                });
+            if let Some(positions) = sql
+                .as_deref()
+                .filter(|_| sql_source_positions.is_empty())
+                .and_then(|text| super::compose::binding_source_positions(argument, visitor, text))
+            {
+                sql_source_positions = positions;
+            }
             let (sql_text, recovered_placeholder_positions) = sql
                 .map(super::super::super::placeholders::publish_placeholders_with_positions)
                 .map_or_else(
@@ -78,17 +96,7 @@ fn legacy_executor_call(
                     kind
                 },
                 declaration_line: None,
-                sql_source_positions: super::compose::helper_provenance(argument, visitor)
-                    .map(|provenance| provenance.positions)
-                    .or_else(|| super::compose::parameter_source_positions(argument, visitor))
-                    .unwrap_or_else(|| {
-                        super::super::super::source_positions::for_expression(
-                            argument,
-                            visitor.source,
-                            call.span.start as usize,
-                            line,
-                        )
-                    }),
+                sql_source_positions,
                 recovered_placeholder_positions,
             }
         }

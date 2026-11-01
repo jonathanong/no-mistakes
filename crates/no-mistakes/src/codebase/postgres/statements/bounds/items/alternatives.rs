@@ -1,7 +1,7 @@
 //! Preserve disjunctive key proofs without pooling columns from different branches.
 use super::super::{pins, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
-use crate::codebase::postgres::statements::SqlBoundItem;
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
 use sqlparser::ast::{BinaryOperator, Expr};
 
 // DNF may grow exponentially. Larger expressions retain only ordinary conjunctive pins.
@@ -37,6 +37,12 @@ pub(super) fn collect(
             );
         }
         for (index, mut pin) in found {
+            if !matches!(
+                &items[index].kind,
+                SqlBoundItemKind::Table(_) | SqlBoundItemKind::Query(_)
+            ) {
+                continue;
+            }
             pin.alternative = Some(alternative);
             if !items[index].pins.contains(&pin) {
                 items[index].pins.push(pin);

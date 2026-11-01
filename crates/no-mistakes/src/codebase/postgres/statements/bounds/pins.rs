@@ -41,7 +41,9 @@ pub(super) fn extract(
             }),
         ) = (resolver.column(column), sourced)
         {
-            if restricted.contains(&item) && resolver.is_table(item) {
+            // Derived items keep the pin so a later pass can follow the projected column.
+            // Opaque and caller-sized items are dropped when the pins are attached.
+            if restricted.contains(&item) {
                 out.push((
                     item,
                     SqlBoundPin {
