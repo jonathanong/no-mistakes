@@ -31,15 +31,19 @@ pub(super) fn retain(
 fn derived(bindings: &Bindings<'_>, file: &Path, item: &Provenance) -> bool {
     match item {
         Provenance::ProcessEnv(_) => true,
-        Provenance::Namespace { .. } => false,
+        // Export resolution drops a finite namespace member.
+        Provenance::Namespace { .. } => true,
         Provenance::Reference {
             name,
             scope,
             offset,
-            ..
+            members,
         } => {
             bindings.env_alias(file, *scope, name, *offset)
                 || bindings.query_projection(file, *scope, name, *offset)
+                || bindings.imported_value(file, name)
+                || (bindings.flows_member_unbounded(file, *scope, name, *offset, members)
+                    && !bindings.parameter(file, name))
                 || (bindings.flows_unbounded(file, *scope, name, *offset)
                     && !bindings.parameter(file, name))
         }

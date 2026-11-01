@@ -33,6 +33,37 @@ impl Bindings<'_> {
         })
     }
 
+    pub(crate) fn imported_value(&self, file: &Path, name: &str) -> bool {
+        self.facts.get_ts_facts(file).is_some_and(|ts| {
+            ts.imported_bindings
+                .iter()
+                .any(|binding| !binding.is_type_only && binding.local == name)
+        })
+    }
+
+    pub(crate) fn flows_member_unbounded(
+        &self,
+        file: &Path,
+        scope: usize,
+        name: &str,
+        at: u32,
+        members: &[String],
+    ) -> bool {
+        let [key] = members else {
+            return false;
+        };
+        let mut seen = Seen {
+            bindings: FxHashSet::default(),
+            calls: FxHashSet::default(),
+        };
+        let Some(binding) = self.value(file, scope, name, at) else {
+            return false;
+        };
+        seen.bindings
+            .insert((binding.scope, binding.name.clone(), binding.declared_at));
+        self.member_unbounded(file, &binding.value, key, &mut seen)
+    }
+
     fn expr_unbounded(&self, file: &Path, value: &ValueExpression, seen: &mut Seen) -> bool {
         if self.env(file, value, &[]).is_some() {
             return true;

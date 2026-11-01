@@ -54,6 +54,23 @@ fn outside_holes_keep_env_config_and_drop_parameters() {
             is_type_only: false,
         }],
         &[],
+        vec![Provenance::Namespace {
+            local: "ns".into(),
+            exported: "table".into(),
+            members: vec!["table".into()],
+        }],
+    );
+    expect(
         vec![],
+        named("plain"),
+        vec![ImportedBinding {
+            specifier: "./config".into(),
+            local: "plain".into(),
+            imported: "plain".into(),
+            kind: ImportedBindingKind::Named,
+            is_type_only: false,
+        }],
+        &[],
+        vec![reference("plain")],
     );
 }

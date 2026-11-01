@@ -81,7 +81,10 @@ A plain parameter or other unproven value in a comparison, `LIMIT`,
 An environment value, a query projection, or another non-parameter value
 that flows from an unbounded source in one of those positions still is when
 the same call also interpolates an identifier: the parser cannot tell that
-placeholder from a bind. The named source for a
+placeholder from a bind. That includes an imported env-derived export, a
+namespace member of that export, and a field returned by a helper whose
+value reads `process.env`. An imported literal in the same position is not
+a source. The named source for a
 positional identifier is the expression in a relation, a `SELECT`,
 `ORDER BY`, or `GROUP BY` column, an `INSERT` column list, or an `UPDATE`
 assignment target. That includes a column or table taken from a helper that

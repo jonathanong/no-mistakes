@@ -162,6 +162,8 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
     );
     // Env and config holes outside identifier positions stay findings.
     // Each call also names table. Plain parameters beside them do not.
+    // Imported env config, a namespace member, and a helper-returned env
+    // field stay. An imported literal and a literal helper field do not.
     push(&mut owned, rule, &config, &["fail-env-in-where"]);
     // No finding: a static call, a dynamic call with no interpolation,
     // calls whose only interpolations or arguments are binds, and a
