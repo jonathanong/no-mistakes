@@ -49,7 +49,7 @@ impl DepGraph {
         let target = Path::new(EXTERNAL_MOCK_SENTINEL);
         let full = input.ready
             && input.root != target
-            && self.mock_factory_is_full(input.factories, target, input.facts)
+            && self.mock_factory_is_full(input.factories, input.root, target, input.facts)
             && input.factory_span.is_none_or(|span| {
                 self.mock_factory_imports_are_full(
                     input.root,

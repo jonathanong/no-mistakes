@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      unknownCalls: ignore
+      roots:
+        - file: src/factory-impure-arg.test.mts
+        - file: src/factory-other-fn.test.mts
+      targets:
+        - moduleExport: { module: external-analyzer, export: analyzeProject }

@@ -1,0 +1,83 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "impure": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/through.mts",
+          "import": "analyzeProject",
+          "line": 3,
+          "message": "forbidden call (application #1): module export `external-analyzer#analyzeProject`",
+          "rule": "forbidden-calls",
+          "sourceLine": "analyzeProject()",
+          "target": "module export `external-analyzer#analyzeProject`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mocked": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_mock": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/through.mts",
+          "import": "analyzeProject",
+          "line": 3,
+          "message": "forbidden call (application #1): module export `external-analyzer#analyzeProject`",
+          "rule": "forbidden-calls",
+          "sourceLine": "analyzeProject()",
+          "target": "module export `external-analyzer#analyzeProject`"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "other_module": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/through.mts",
+          "import": "analyzeProject",
+          "line": 3,
+          "message": "forbidden call (application #1): module export `external-analyzer#analyzeProject`",
+          "rule": "forbidden-calls",
+          "sourceLine": "analyzeProject()",
+          "target": "module export `external-analyzer#analyzeProject`"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

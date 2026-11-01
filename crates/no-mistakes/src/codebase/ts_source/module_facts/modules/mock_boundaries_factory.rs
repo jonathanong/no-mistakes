@@ -114,6 +114,22 @@ fn literal_value(value: &Expression<'_>) -> bool {
             .iter()
             .all(|element| element.as_expression().is_some_and(literal_value)),
         Expression::TemplateLiteral(template) => template.expressions.is_empty(),
+        Expression::CallExpression(call) => framework_fn(call),
         other => other.is_literal(),
     }
+}
+
+fn framework_fn(call: &CallExpression<'_>) -> bool {
+    let Some(member) = call.callee.get_inner_expression().as_member_expression() else {
+        return false;
+    };
+    matches!(member.object().get_inner_expression(), Expression::Identifier(id) if matches!(id.name.as_str(), "vi" | "jest"))
+        && member
+            .static_property_name()
+            .is_some_and(|name| name.as_str() == Some("fn"))
+        && !call.optional
+        && call
+            .arguments
+            .iter()
+            .all(|argument| argument.as_expression().is_some_and(literal_value))
 }

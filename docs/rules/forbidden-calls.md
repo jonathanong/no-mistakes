@@ -165,7 +165,7 @@ Partial or uncertain mocks retain the real implementation: `importActual`,
 `requireActual`, `importOriginal`, dynamic specifiers, `vi.doMock`, conditional
 registrations, conflicting registrations, spreads and opaque factories cannot
 prove replacement. Proven factories declare no parameters and return an explicit object whose
-property values are literals or arrow/function expressions; captured original-module references and helpers that depend
+property values are literals, arrow/function expressions, or `vi.fn(...)`/`jest.fn(...)` calls whose arguments are themselves such values; captured original-module references and helpers that depend
 on it also keep the real code reachable. Calls to unmodeled external or global
 functions or unresolved captured imports inside a factory cannot prove
 isolation and retain the real code. Repository helpers with runtime imports,
@@ -179,7 +179,9 @@ calls that reach that export only through the mocked module. The mock specifier
 is resolved the same way as an import: relative specifiers and package names
 (including a workspace package such as `no-mistakes` and an export such as
 `analyzeProject`) are the same module when they resolve to the same file. An
-unresolved package specifier matches that same specifier. A call is kept when
+unresolved package specifier matches that same specifier. This holds for
+external packages and factory mocks too, including a factory whose replacement is
+defined as a helper in the mocking test file. A call is kept when
 the mock names a different module, or when any import path from the call to the
 export avoids the mocked module (a package subpath or direct file import that
 skips a mocked package entry). Calls in the file that declares the mock stay
