@@ -187,4 +187,9 @@ pub struct ValueFlowFacts {
     pub type_shapes: FxHashMap<String, ValueType>,
     pub async_callables: FxHashSet<CallableId>,
     pub generator_callables: FxHashSet<CallableId>,
+    pub(crate) closed_string_registries: Vec<closed_identifiers::ClosedStringRegistry>,
+    pub(crate) registry_mutations: Vec<closed_identifiers::RegistryMutation>,
+    pub(crate) bounded_bindings: Vec<closed_identifiers::BoundedBinding>,
+    pub(crate) finite_identifier_guards: Vec<closed_identifiers::FiniteIdentifierGuard>,
+    pub(crate) identifier_writes: Vec<closed_identifiers::IdentifierWrite>,
 }

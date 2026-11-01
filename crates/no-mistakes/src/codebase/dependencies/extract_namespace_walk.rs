@@ -74,6 +74,7 @@ fn visit_identifier_reference_with_namespaces(
     collector: &mut ImportCollector,
     identifier: &IdentifierReference<'_>,
 ) {
+    collector.note_closed_registry_occurrence(identifier);
     collector.note_namespace_value_use(identifier);
     collector.push_value_symbol_reference(identifier.name.to_string());
     walk::walk_identifier_reference(collector, identifier);

@@ -37,6 +37,7 @@ fn visit_expression_with_annex_b_initializer<'a>(
     collector: &mut ImportCollector,
     expression: &Expression<'a>,
 ) {
+    collector.mark_closed_registry_allowance(expression);
     if let Some((_, outer_conditional, outer_receiver_conditional, outer_receiver_depth)) = collector
         .annex_b_for_in_initializer
         .filter(|(span, _, _, _)| !collector.suppress_imports && *span == expression.span())

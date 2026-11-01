@@ -84,7 +84,9 @@ fn has_unknown_relation(
 ) -> bool {
     query.items.iter().any(|item| match &item.kind {
         SqlBoundItemKind::Table(name) => {
-            catalog.bounded_relation(name).is_none() && views.get(name, catalog).is_none()
+            catalog.bounded_relation(name).is_none()
+                && views.get(name, catalog).is_none()
+                && super::super::evaluate::visible_key(catalog, name).is_none()
         }
         SqlBoundItemKind::Query(inner) => has_unknown_relation(inner, catalog, views),
         _ => false,

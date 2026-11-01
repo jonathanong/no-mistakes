@@ -33,11 +33,9 @@ fn postgres_bounded_statements_check_json_snapshot() {
         ("catalog_resolution_key_operators", "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution", "catalog_resolution_key_operators.yml"),
         // only view:public.unbounded_archive on line 3
         ("catalog_resolution_view_bounds", "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution", "catalog_resolution_view_bounds.yml"),
-        // advisory policy must not emit a bounded-statement finding
+        // an unconfigured catalog view is an unsized relation, in every unanalyzable policy
         ("catalog_resolution_view_unconfigured_advise", "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution", "catalog_resolution_view_unconfigured_advise.yml"),
-        // ignore policy must not emit a bounded-statement finding
         ("catalog_resolution_view_unconfigured_ignore", "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution", "catalog_resolution_view_unconfigured_ignore.yml"),
-        // fail policy still has no bounded-statement finding for the unknown view
         ("catalog_resolution_view_unconfigured_fail", "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution", "catalog_resolution_view_unconfigured_fail.yml"),
         // must stay empty
         ("catalog_resolution_view_allow", "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution", "catalog_resolution_view_allow.yml"),

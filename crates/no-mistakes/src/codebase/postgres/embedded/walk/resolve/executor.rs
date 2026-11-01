@@ -79,6 +79,15 @@ fn legacy_executor_call(
             {
                 sql_source_positions = positions;
             }
+            if let Some(positions) = sql
+                .as_deref()
+                .filter(|_| sql_source_positions.is_empty())
+                .and_then(|text| {
+                    super::compose::append_chain_source_positions(argument, visitor, text)
+                })
+            {
+                sql_source_positions = positions;
+            }
             let (sql_text, recovered_placeholder_positions) = sql
                 .map(super::super::super::placeholders::publish_placeholders_with_positions)
                 .map_or_else(

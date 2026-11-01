@@ -159,7 +159,11 @@ Opt-in `postgres-no-mutable-sql-registry` and
 and `Object.defineProperty`) and unbounded identifier interpolations
 (`process.env`, imported config, request parameters, query rows, and
 non-finite wrappers) through prepared import, value-flow, and embedded-SQL
-facts plus the canonical graph. CLI `check`, Node `check()`,
+facts plus the canonical graph. At max effort, closed literal registries
+(local or imported, until a member mutation), hyphen-stripped `randomUUID`
+names imported from `node:crypto` or `crypto`, dominating closed-set throw
+guards until the guarded binding is written, and configured
+`finiteDomainAssertions` are bounded. CLI `check`, Node `check()`,
 and batched `analyzeProject()` share findings. Immutable array-destructured
 query rows retain source provenance; comma expressions retain their final
 operand's value provenance. A direct adjacent scalar overwrite can prove one

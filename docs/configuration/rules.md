@@ -114,7 +114,11 @@ shared `unanalyzable` policy and accepts the legacy `unanalyzableSql` spelling.
 
 `postgres-bounded-statements` also accepts application-local `options.viewBounds`,
 a map from catalog view names to `bounded` or `unbounded`. It declares each
-selected view's cardinality contract; views without a policy remain unknown.
+selected view's cardinality contract. A catalog view with no entry is an unsized
+relation when its definition projects a base table primary key one-to-one; a
+keyed read is then bounded like a table. Every other catalog view stays an
+unknown-relation advisory and is not a finding. Names the catalog does not
+contain, and a bare name shared by a table and a view, remain unknown.
 See [catalog views](../rules/postgres-bounded-statements.md#catalog-views) for
 identity validation, examples and suppression.
 
@@ -390,7 +394,7 @@ unanalyzable when executor ownership is unresolved. They follow the selected
 `unanalyzable` policy, including at low effort. Use a supported explicitly typed
 parameter to make the receiver eligible for SQL analysis.
 
-`postgres-no-unbounded-sql-identifier` also supports [low effort](../rules/postgres-no-unbounded-sql-identifier.md#effort): direct SQL literals/templates or one lexical const, with unsupported syntax routed through the shared unanalyzable policy. No partner rule is required.
+`postgres-no-unbounded-sql-identifier` also supports [low effort](../rules/postgres-no-unbounded-sql-identifier.md#effort): direct SQL literals/templates or one lexical const, with unsupported syntax routed through the shared unanalyzable policy. No partner rule is required. At max effort, `options.finiteDomainAssertions` names helpers that prove one argument is a finite SQL identifier. See [closed domains](../rules/postgres-no-unbounded-sql-identifier.md#closed-domains).
 
 [`postgres-no-mutable-sql-registry`](../rules/postgres-no-mutable-sql-registry.md#effort)
 also supports `effort: low`. Literal SQL and templates without relation-name

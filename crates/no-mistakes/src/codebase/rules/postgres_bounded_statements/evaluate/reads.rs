@@ -69,17 +69,15 @@ pub(super) fn relation_offender(
     catalog: &SchemaCatalog,
     views: &ViewBounds,
 ) -> Option<Offender> {
-    if let Some((view, ViewBoundMode::Unbounded)) = views.get(name, catalog) {
-        return Some(Offender {
-            table: view.name.clone(),
-            object: CatalogObjectRef::View(view.name.clone()),
-            line,
-            column,
-            blocking_input: false,
-        });
+    if let Some((view, mode)) = views.get(name, catalog) {
+        if mode == ViewBoundMode::Bounded {
+            return None;
+        }
+        return Some(view_offender(&view.name, line, column));
     }
-    if views.get(name, catalog).is_some() {
-        return None;
+    if let Some(view) = catalog.view_relation(name) {
+        return super::view_key::visible_key(catalog, name)
+            .map(|_| view_offender(&view.name, line, column));
     }
     let table = catalog.bounded_relation(name)?;
     Some(Offender {
@@ -89,4 +87,14 @@ pub(super) fn relation_offender(
         column,
         blocking_input: false,
     })
+}
+
+fn view_offender(name: &str, line: usize, column: usize) -> Offender {
+    Offender {
+        table: name.to_string(),
+        object: CatalogObjectRef::View(name.to_string()),
+        line,
+        column,
+        blocking_input: false,
+    }
 }

@@ -287,6 +287,56 @@ So are `${identity(process.env.SCHEMA)}`, `${process.env.SCHEMA.toLowerCase()}`,
 `ON CONFLICT` when the same call also interpolates an identifier such as
 `${table}`. A plain parameter beside that environment value stays a bind.
 
+## Closed domains
+
+At max effort, an interpolation is bounded when the value is drawn from a finite
+set the scan can see:
+
+- A `const` object or array declared in this file, or imported from a literal
+  export, whose values are string literals, including `as const` and
+  `Object.freeze` of that literal. `TABLE_MAP[kind]` and `TABLE_MAP.user` are
+  bounded. A registry with any non-literal, spread, or `process.env` value
+  stays unbounded. A later `set`, `add`, `push`, element write, or
+  `Object.assign` on that registry, including inside another function, ends
+  the proof. Any other use of the registry ends the proof too. A use stays
+  inside the proof only when the registry is the object of a member read,
+  the right-hand side of `for...of`, or a spread (`...registry`). A computed
+  member that is a call callee stays inside only when its key is a string
+  literal naming a read-only method such as `get`, `has`, or `includes`; any
+  other key, including a non-literal key, is an escape. An alias,
+  a call argument, a wrapper object or array, a return, an arrow that
+  returns the registry, `export { registry }`, `export default`, and
+  `export const` of the registry all end the proof.
+- `.get` on a `const` `Map` built only from string-literal pairs, including a
+  frozen map, until that map is mutated.
+- A temporary name that is a non-empty literal prefix plus `randomUUID()`
+  imported from `node:crypto` or `crypto`, or `crypto.randomUUID()` when
+  `crypto` is that module's default or namespace import, or is undeclared.
+  Hyphens must be removed by `replaceAll("-", "")` or `replace(/-/g, "")`.
+  A local `randomUUID` or `crypto`, an import of `crypto` from another
+  module, an unstripped UUID, `.replace("-", "")`, or any other dynamic part
+  stays unbounded.
+- A value dominated by `if (!ALLOWED.has(value)) throw` or
+  `if (!ALLOWED_LIST.includes(value)) throw` in the same callable. `ALLOWED`
+  must be one `const` `Set` of string literals, and `ALLOWED_LIST` one `const`
+  array of string literals. The guard ends at the next assignment to that
+  same binding (`=`, `+=`, `for (name of ...)`, or a destructuring
+  assignment). A guard inside a branch does not cover a query after that
+  branch. A regex test is not a finite domain. An inner `const` that shadows
+  the guarded name stays unbounded.
+- A direct call, before the query, to a helper listed in
+  `finiteDomainAssertions`. The match is the helper name and argument index;
+  the helper body is not inspected, so the helper must throw. `argument` is
+  the zero-based index of the value that helper validates. `name` and
+  `argument` are both required. A later assignment to that same binding ends
+  the proof.
+
+```yaml
+finiteDomainAssertions:
+  - name: assertWhitelistedSqlIdentifier
+    argument: 0
+```
+
 ## Fix
 
 Map accepted runtime values to literal schemas with a switch whose default
@@ -297,8 +347,9 @@ throws, then interpolate that helper. Keep values in tagged binds.
 `importSpecifier` defaults to empty and must be set (or set `executorNames`) to
 select executor calls when the rule does not inherit a project postgres block.
 `executorNames` defaults to `query`, `read`, and `write` when a specifier is
-set. `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default
-to empty. `include` and `exclude` default to empty (all indexable files).
+set. `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, and
+`finiteDomainAssertions` default to empty. `include` and `exclude` default to
+empty (all indexable files). See [Closed domains](#closed-domains).
 
 ## Suppression
 

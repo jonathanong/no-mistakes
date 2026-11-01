@@ -169,6 +169,48 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
     // calls whose only interpolations or arguments are binds, and a
     // conditional relation name with parameter binds.
     push(&mut owned, rule, &config, &["pass-static-or-bind-only"]);
+    // Closed registries, stripped uuid names, and dominating throw guards are empty.
+    // fail-guard-outside-branch keeps the query after the branch.
+    // fail-uuid-unstripped-or-suffix keeps unstripped, single replace, and a suffix.
+    // fail-open-object-member keeps a registry value that reads process.env.
+    // fail-nested-map-get keeps a get reached through another object.
+    // fail-mutated-registry keeps direct writes and any registry use outside a
+    // member read, for-of right-hand side, or spread. A computed call callee
+    // is a read only for a string-literal read-only method.
+    // fail-shadowed-random-uuid keeps a local or non-crypto randomUUID.
+    push(
+        &mut owned,
+        rule,
+        &config,
+        &[
+            "pass-closed-object-registry",
+            "pass-closed-array-registry",
+            "pass-closed-frozen-registry",
+            "pass-closed-map",
+            "pass-uuid-temp-name",
+            "pass-set-throw-guard",
+            "pass-includes-throw-guard",
+            "fail-guard-outside-branch",
+            "fail-uuid-unstripped-or-suffix",
+            "fail-open-object-member",
+            "fail-nested-map-get",
+            "fail-mutated-registry",
+            "fail-shadowed-random-uuid",
+        ],
+    );
+    let assertions = rules_path(rule, "configs", "finite-domain-assertions.yml");
+    // The assertion helper is bounded. A regex test and an open set stay findings.
+    push(
+        &mut owned,
+        rule,
+        &assertions,
+        &[
+            "pass-finite-domain-assertion",
+            "fail-regex-only-guard",
+            "fail-open-set-guard",
+            "fail-reassigned-guard",
+        ],
+    );
     let cases: Vec<(&str, PathBuf, PathBuf)> = owned
         .iter()
         .map(|(label, root, config)| (label.as_str(), root.clone(), config.clone()))

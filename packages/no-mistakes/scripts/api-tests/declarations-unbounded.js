@@ -17,6 +17,7 @@ test("unbounded SQL identifier options expose shared analysis policy", () => {
   assert.match(types, /unanalyzable\?: Unanalyzable;/);
   assert.match(types, /unanalyzableSql\?: Unanalyzable;/);
   assert.match(types, /trustedSqlTags\?: \{ module: string; name: string \}\[\];/);
+  assert.match(types, /finiteDomainAssertions\?: \{ name: string; argument: number \}\[\];/);
   assert.ok(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
       'export type * from "./postgres-unbounded-identifier-types";',

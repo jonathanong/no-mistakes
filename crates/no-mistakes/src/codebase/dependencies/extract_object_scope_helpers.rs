@@ -9,6 +9,7 @@ fn walk_object_values_with_parent_scope<'a>(
                 walk_object_property_value_with_parent_scope(collector, parent, property);
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
+                collector.mark_member_object_registry(&spread.argument);
                 collector.visit_expression(&spread.argument);
             }
         }
