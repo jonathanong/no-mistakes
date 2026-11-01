@@ -195,6 +195,7 @@ fn production_export_rule_requests_shared_symbol_selectors_and_full_universe() {
     });
     let plan = try_canonical_graph_plan(&config).unwrap().unwrap();
     assert!(plan.symbol_import_selectors);
+    assert!(plan.extends);
     assert!(canonical_graph_requires_full_file_universe(&config));
     assert!(super::super::any_codebase_rule_enabled(&config));
 }

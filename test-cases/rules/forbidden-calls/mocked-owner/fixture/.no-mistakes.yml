@@ -1,0 +1,21 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      unknownCalls: ignore
+      roots:
+        - file: src/owner-mock.test.mts
+        - file: src/other-mock.test.mts
+        - file: src/avoid-mock.test.mts
+        - file: src/direct-mock.test.mts
+        - file: src/relative-mock.test.mts
+        - file: src/barrel-mock.test.mts
+        - file: src/external-mock.test.mts
+        - file: src/jest-owner-mock.test.mts
+      targets:
+        - moduleExport: { module: no-mistakes, export: analyzeProject }
+        - moduleExport: { module: external-analyzer, export: analyzeProject }
+        - function: { file: packages/no-mistakes/src/analyze.mts, symbol: analyzeProject }
+        - function: { file: src/local-owner.mts, symbol: analyzeProject }

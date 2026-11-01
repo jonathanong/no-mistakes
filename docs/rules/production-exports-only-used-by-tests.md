@@ -26,6 +26,19 @@ Likewise, `getRequestClientInfo` or `createFlowProducer` imported only by a conf
 test helper is reported. A production import of a different export from the same
 file does not establish production use of the reported symbol.
 
+## Class extensions
+
+An exported class extended by another exported class in a production root is a
+production use, even when no other production file imports it. That includes a
+same-file `export class Child extends Base`, a resolved cross-file `extends`
+edge, `export default class Base`, and `class Base {}` followed by
+`export { Base }`. Declaration emit of the subclass names the base, so the base
+cannot be made private. The base is that class declaration: a same-named class
+in another namespace does not count. A subclass that is not exported, or that
+lives only in a configured test or test helper, does not count. `implements`
+and `interface extends` are not class extensions. Type-position references to a
+class remain production use.
+
 ## Counterexample
 
 ```ts
@@ -242,6 +255,40 @@ reads:
 - `proxy` at the project root or `src/` (Next.js 16): `default`, `proxy`, and
   `config`.
 - `instrumentation-client` at the project root or `src/`: `onRouterTransitionStart`.
+
+## Bundler script entrypoints
+
+A source file named as a positional argument of `esbuild`, `tsup`, `vite`,
+`rollup`, `webpack`, or `wrangler` in a `package.json` script is a production
+entry. The path is resolved relative to the `package.json` that contains the
+script, and the manifest is the analysis root or a directory above a discovered
+source file. Every export of that file, including `export default`, is a
+production use, even when the only other importer is a configured test.
+
+Commands split on `&&`, `||`, `;`, and newlines. The bundler may be a path whose
+basename is one of those tools (`node_modules/.bin/esbuild`). A flag, including
+`--outfile=dist/worker.js`, is not an entry. The separate value of `-o`,
+`--outfile`, `--outdir`, `--out-dir`, `--out`, `--config`, `-c`, `--format`,
+`--platform`, `--target`, or `--tsconfig` is not an entry. `node`, environment
+assignments, globs, unquoted expansions, paths outside the analysis root, and a
+command with an unbalanced quote are not entries. A `package.json` that is not
+JSON contributes no entry.
+
+```json
+{
+  "scripts": {
+    "build:worker": "esbuild src/worker.mts --bundle --outfile=dist/worker.js"
+  }
+}
+```
+
+```ts
+// src/worker.mts
+export default { ready: true };
+```
+
+The same file with no bundler script, imported only by a configured test, is
+reported.
 
 ## Incomplete analysis
 

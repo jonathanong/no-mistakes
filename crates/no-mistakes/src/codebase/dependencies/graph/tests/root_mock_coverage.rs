@@ -197,7 +197,7 @@ fn bounded_mock_walk_honors_a_one_node_depth_cap() {
         root.to_path_buf(),
         RootMockBoundaries {
             blocked: [PathBuf::from("/repo/blocked.ts")].into_iter().collect(),
-            factories: Vec::new(),
+            ..Default::default()
         },
     );
     let selected = graph.call_source_nodes_with_root_mocks(&[NodeId::file(root)], Some(1));

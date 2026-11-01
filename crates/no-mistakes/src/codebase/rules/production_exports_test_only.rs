@@ -1,6 +1,8 @@
 //! Production exports whose syntactic consumers all belong to configured tests.
 mod config;
+mod extends;
 mod nextjs;
+mod script_entries;
 mod selector_advisories;
 mod selector_gaps;
 mod traversal;
@@ -22,6 +24,7 @@ pub const RULE_ID: &str = "production-exports-only-used-by-tests";
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| GraphBuildPlan {
         symbol_import_selectors: true,
+        extends: true,
         ..Default::default()
     })
 }
@@ -40,7 +43,9 @@ pub(crate) fn check_with_graph(
         let filter = RulePathFilter::new(&root, config, application)?;
         let policy = config.effective_rule_analysis(application)?.unanalyzable;
         let files = facts.graph_file_universe();
+        let entries = script_entries::ScriptEntries::collect(&root, files);
         let nextjs_roots = nextjs::project_roots(&root, config);
+        let bases = extends::ProductionBases::collect(graph, |path| options.production(path));
         for (file, line, reason) in &incomplete {
             diagnostics.unanalyzable(policy, uncertain(&root, application, file, *line, reason));
         }
@@ -73,12 +78,15 @@ pub(crate) fn check_with_graph(
                         &export.name
                     };
                     // Next.js reads these names. Other exports on the same file stay in scope.
-                    if nextjs::consumed_export(file, &nextjs_roots, name) {
+                    if entries.exempts(file, nextjs::consumed_export(file, &nextjs_roots, name)) {
                         continue;
                     }
                     let mut consumers = traversal::consumers(graph, file, name);
                     let undetermined = consumers.settle(&export.kind, |file| options.test(file));
                     if consumers.files.iter().any(|file| !options.test(file)) {
+                        continue;
+                    }
+                    if bases.extends_class(ts, file, export) {
                         continue;
                     }
                     if !consumers.unknown.is_empty() {

@@ -3,10 +3,12 @@ use super::config::{self, Options, Traversal};
 use super::findings::finding_for_site_with_arguments;
 use super::roots;
 use super::RULE_ID;
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId, ResolvedCallSite};
+use crate::codebase::dependencies::graph::{
+    mock_reach_keeps, DepGraph, GraphBuildPlan, NodeId, ResolvedCallSite,
+};
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
-use crate::fx::{FxHashMap, FxHashSet};
+use crate::fx::FxHashMap;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -96,7 +98,13 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         target_roots: &target_roots,
     })?;
     let path_filter = super::super::path_filter::RulePathFilter::new(root, config, application)?;
-    let source_nodes = reachable_source_nodes(graph, &roots, options);
+    let mock_reach = matches!(options.traversal, Traversal::Transitive)
+        .then(|| graph.mock_export_reach(&roots, options.max_depth));
+    let source_nodes = if let Some(reach) = &mock_reach {
+        reach.sources()
+    } else {
+        roots.iter().cloned().collect()
+    };
     let invocations = allowed_invocations(&options.invocations);
     let label = application.name.as_deref().map_or_else(
         || format!("application #{index}"),
@@ -119,6 +127,11 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
                     .or_insert_with(|| matches_path(&path_filter, &site.file))
         })
         .filter(|site| source_nodes.contains(&site_source_node(site)))
+        .filter(|site| {
+            mock_reach.as_ref().is_none_or(|reach| {
+                mock_reach_keeps(reach, &site_source_node(site), &site.file, site.offset)
+            })
+        })
         .filter_map(|site| {
             finding_for_site_with_arguments(
                 root,
@@ -168,15 +181,4 @@ fn root_files(roots: &[NodeId]) -> Vec<PathBuf> {
     files.sort();
     files.dedup();
     files
-}
-
-fn reachable_source_nodes(
-    graph: &DepGraph,
-    roots: &[NodeId],
-    options: &Options,
-) -> FxHashSet<NodeId> {
-    if matches!(options.traversal, Traversal::Transitive) {
-        return graph.call_source_nodes_with_root_mocks(roots, options.max_depth);
-    }
-    roots.iter().cloned().collect()
 }

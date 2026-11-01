@@ -45,3 +45,7 @@ impl ImportResolutionCache {
         self.final_entries.clear();
     }
 }
+
+#[cfg(test)]
+#[path = "resolver_types_tests.rs"]
+mod resolver_type_tests;

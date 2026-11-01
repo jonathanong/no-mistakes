@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "build:worker": "esbuild src/worker.mts --bundle --outfile=dist/worker.js"
+  }
+}

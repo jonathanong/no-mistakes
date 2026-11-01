@@ -1,7 +1,9 @@
 #[derive(Default)]
 struct RootMockBoundaries {
     blocked: FxHashSet<PathBuf>,
+    modules: FxHashSet<MockedModule>,
     factories: Vec<NodeId>,
+    suppressed: FxHashSet<(PathBuf, u32)>,
 }
 
 impl DepGraph {
@@ -71,6 +73,7 @@ impl DepGraph {
             })
             .collect();
         let mut candidates: FxHashMap<PathBuf, bool> = fx_map();
+        let mut external: FxHashMap<MockedModule, bool> = fx_map();
         let mut boundaries = RootMockBoundaries::default();
         for call in &module.module_mock_calls {
             let factories: Vec<_> = call
@@ -88,12 +91,29 @@ impl DepGraph {
             if call.hoisted {
                 boundaries.factories.extend(factories.iter().cloned());
             }
+            let factory_known = call
+                .factory_span
+                .as_ref()
+                .is_none_or(|span| scopes.contains_key(&span.start));
             let Some(target) = call
                 .specifier
                 .as_deref()
                 .and_then(|specifier| resolver.resolve(specifier, path))
                 .and_then(|target| inputs.graph_files.visible_path(&target))
             else {
+                if let Some((module_id, full)) = self.external_replaced_module(ExternalMock {
+                    specifier: call.specifier.as_deref(),
+                    factory_span: call.factory_span.as_ref(),
+                    factories: &factories,
+                    root: path,
+                    facts,
+                    resolver,
+                    files: inputs.graph_files,
+                    module,
+                    ready: safe && bypasses.is_empty() && factory_known && call.full,
+                }) {
+                    *external.entry(module_id).or_insert(true) &= full;
+                }
                 continue;
             };
             let manual = (call.hoisted && call.automock)
@@ -116,10 +136,6 @@ impl DepGraph {
             if let Some((_, nodes)) = &initializers {
                 boundaries.factories.extend(nodes.iter().cloned());
             }
-            let factory_known = call
-                .factory_span
-                .as_ref()
-                .is_none_or(|span| scopes.contains_key(&span.start));
             let full = inputs.plan.imports
                 && target != path
                 && safe
@@ -145,13 +161,16 @@ impl DepGraph {
                 });
             *candidates.entry(target.to_path_buf()).or_insert(true) &= full;
         }
-        boundaries.blocked.extend(
-            candidates
-                .into_iter()
-                .filter_map(|(target, full)| full.then_some(target)),
-        );
-        boundaries.factories.sort();
-        boundaries.factories.dedup();
-        (!boundaries.blocked.is_empty() || !boundaries.factories.is_empty()).then_some(boundaries)
+        self.finish_file_mocks(
+            path,
+            FileMockDraft {
+                boundaries,
+                candidates,
+                external,
+            },
+            facts,
+            resolver,
+            inputs.graph_files,
+        )
     }
 }

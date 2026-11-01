@@ -11,6 +11,8 @@ mod check_json_case;
 mod cli_pkgcfg_snapshot_config_path_references;
 #[path = "cli_pkgcfg_snapshot_forbidden_calls.rs"]
 mod cli_pkgcfg_snapshot_forbidden_calls;
+#[path = "cli_pkgcfg_snapshot_forbidden_calls_mocks.rs"]
+mod cli_pkgcfg_snapshot_forbidden_calls_mocks;
 #[path = "cli_pkgcfg_snapshot_forbidden_dependencies.rs"]
 mod cli_pkgcfg_snapshot_forbidden_dependencies;
 #[path = "cli_pkgcfg_snapshot_forbidden_lint_suppressions.rs"]

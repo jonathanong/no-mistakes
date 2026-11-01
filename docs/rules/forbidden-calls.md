@@ -174,6 +174,20 @@ evaluate dependency initializers or imported getter values. Shadowed local `vi`/
 not framework mocks. These boundaries affect this rule's transitive selection,
 not the canonical graph or other call-graph consumers.
 
+A root that fully mocks the module owning a forbidden export does not report
+calls that reach that export only through the mocked module. The mock specifier
+is resolved the same way as an import: relative specifiers and package names
+(including a workspace package such as `no-mistakes` and an export such as
+`analyzeProject`) are the same module when they resolve to the same file. An
+unresolved package specifier matches that same specifier. A call is kept when
+the mock names a different module, or when any import path from the call to the
+export avoids the mocked module (a package subpath or direct file import that
+skips a mocked package entry). Calls in the file that declares the mock stay
+reported, including a direct import of the mocked export next to `vi.mock`:
+keeping that finding prefers recall over assuming the hoisted mock replaced
+that binding. The same full-mock proof applies to `jest.mock`. These boundaries
+still affect only this rule's transitive selection, not the canonical graph.
+
 Static external namespace and default-import chains such as `ns.a.b()` expose
 their full module export path. Select `{ module: some-pkg, export: a.b }` for
 a namespace import or `export: default.a.b` for a default import. This names
