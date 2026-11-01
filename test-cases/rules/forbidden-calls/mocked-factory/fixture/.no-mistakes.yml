@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      unknownCalls: ignore
+      roots:
+        - file: src/factory-vifn.test.mts
+        - file: src/factory-later.test.mts
+        - file: src/factory-plain.test.mts
+        - file: src/implemented.test.mts
+      targets:
+        - moduleExport: { module: external-analyzer, export: analyzeProject }

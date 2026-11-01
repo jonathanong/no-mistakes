@@ -31,7 +31,8 @@ impl DepGraph {
                     .any(|binding| referenced.contains(&binding.binding_id))
             })
             .all(|import| {
-                resolver
+                matches!(import.specifier.as_str(), "vitest" | "@jest/globals")
+                    ||                 resolver
                     .resolve(&import.specifier, path)
                     .and_then(|file| graph_files.visible_path(&file))
                     .is_some_and(|file| !self.import_reaches_mock(file, target))

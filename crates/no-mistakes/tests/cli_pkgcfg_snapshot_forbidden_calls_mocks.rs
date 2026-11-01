@@ -8,3 +8,21 @@ fn forbidden_calls_mocked_owner_json_matches_snapshot() {
         &[("mocked_owner", root.clone(), root.join(".no-mistakes.yml"))],
     );
 }
+
+#[test]
+fn forbidden_calls_mocked_factory_json_matches_snapshot() {
+    let root = rules_path("forbidden-calls", "mocked-factory", "fixture");
+    assert_saved_fixture(
+        "forbidden_calls_mocked_factory",
+        &[
+            ("mocked", root.clone(), root.join(".no-mistakes.yml")),
+            ("no_mock", root.clone(), root.join("fail-no-mock.yml")),
+            (
+                "other_module",
+                root.clone(),
+                root.join("fail-other-module.yml"),
+            ),
+            ("impure", root.clone(), root.join("fail-impure.yml")),
+        ],
+    );
+}

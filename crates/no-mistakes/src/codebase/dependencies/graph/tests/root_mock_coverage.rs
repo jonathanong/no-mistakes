@@ -121,6 +121,7 @@ fn mock_factory_rejects_non_file_sources_and_missing_facts() {
     let graph = mock_graph(fx_map());
     assert!(!graph.mock_factory_is_full(
         &[module],
+        Path::new("/repo/root.ts"),
         Path::new("/repo/target.ts"),
         &TsFactMap::new()
     ));
@@ -128,6 +129,7 @@ fn mock_factory_rejects_non_file_sources_and_missing_facts() {
     let factory = NodeId::file("/repo/factory.ts");
     assert!(!graph.mock_factory_is_full(
         &[factory],
+        Path::new("/repo/root.ts"),
         Path::new("/repo/target.ts"),
         &TsFactMap::new()
     ));
@@ -150,6 +152,7 @@ fn mock_factory_rejects_non_file_sources_and_missing_facts() {
         prepared.insert(PathBuf::from("/repo/factory.ts"), incomplete);
         assert!(!graph.mock_factory_is_full(
             &[NodeId::file("/repo/factory.ts")],
+            Path::new("/repo/root.ts"),
             Path::new("/repo/target.ts"),
             &prepared
         ));

@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      unknownCalls: ignore
+      roots:
+        - file: src/no-mock.test.mts
+      targets:
+        - moduleExport: { module: external-analyzer, export: analyzeProject }

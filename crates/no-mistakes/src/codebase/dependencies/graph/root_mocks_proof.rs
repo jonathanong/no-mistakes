@@ -2,6 +2,7 @@ impl DepGraph {
     fn mock_factory_is_full(
         &self,
         factories: &[NodeId],
+        root: &Path,
         target: &Path,
         facts: &dyn TsFactLookup,
     ) -> bool {
@@ -29,7 +30,8 @@ impl DepGraph {
             let Some(module) = &file.module_bindings else {
                 return false;
             };
-            if owners.iter().any(|owner| !factory_nodes.contains(*owner))
+            if path != root
+                && owners.iter().any(|owner| !factory_nodes.contains(*owner))
                 && (module.imports.iter().any(|import| !import.type_only)
                     || !module.loads.is_empty()
                     || !module.diagnostics.is_empty())
@@ -47,8 +49,9 @@ impl DepGraph {
                 if !owners.contains(&owner) {
                     return true;
                 }
-                !site.has_unknown_target()
-                    && !site.targets().any(|candidate| {
+                framework_mock_fn(site)
+                    || !site.has_unknown_target()
+                        && !site.targets().any(|candidate| {
                         matches!(
                             candidate.target,
                             KnownCallTargetRef::Global { .. }
@@ -97,4 +100,16 @@ fn root_mock_dynamic_bypass(site: &ResolvedCallSite) -> bool {
             }
         )
     })
+}
+
+fn framework_mock_fn(site: &ResolvedCallSite) -> bool {
+    matches!(site.source_callee.as_str(), "vi.fn" | "jest.fn")
+        && site.targets().count() > 0
+        && site.targets().all(|candidate| match candidate.target {
+            KnownCallTargetRef::Global { name } => name == site.source_callee,
+            KnownCallTargetRef::ModuleExport { specifier, .. } => {
+                matches!(specifier, "vitest" | "@jest/globals")
+            }
+            _ => false,
+        })
 }

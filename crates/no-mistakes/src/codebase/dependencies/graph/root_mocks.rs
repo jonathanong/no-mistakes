@@ -148,7 +148,7 @@ impl DepGraph {
                 && manual.is_none()
                 && initializers.as_ref().is_none_or(|(safe, _)| *safe)
                 && factory_known
-                && self.mock_factory_is_full(&factories, target, facts)
+                && self.mock_factory_is_full(&factories, path, target, facts)
                 && call.factory_span.as_ref().is_none_or(|span| {
                     self.mock_factory_imports_are_full(
                         path,
