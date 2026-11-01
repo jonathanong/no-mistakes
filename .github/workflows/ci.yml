@@ -684,7 +684,7 @@ jobs:
     name: Rust tests and coverage
     runs-on: ubuntu-latest
     # Include coverage exports, uploads and post-job cache cleanup after tests.
-    timeout-minutes: 25
+    timeout-minutes: 30
     permissions:
       id-token: write
     steps:
@@ -736,7 +736,7 @@ jobs:
         run: bash .github/scripts/rust-disk-usage.sh "after Rust test build" target
 
       - name: Run Rust tests for coverage
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
