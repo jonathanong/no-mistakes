@@ -32,7 +32,7 @@ pub(super) fn retain(
 /// stays, and later export resolution drops a finite member.
 fn retained(bindings: &Bindings<'_>, file: &Path, item: &Provenance) -> bool {
     match item {
-        Provenance::Reference { name, .. } => !bindings.parameter(file, name),
+        Provenance::Reference { name, scope, .. } => !bindings.plain_parameter(file, *scope, name),
         _ => true,
     }
 }

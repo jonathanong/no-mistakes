@@ -667,6 +667,60 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table"
         },
         {
+          "file": "src/scoped.ts",
+          "import": "cfg",
+          "line": 14,
+          "message": "Unbounded identifier source `cfg` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE a = ${cfg.v} AND id = ${uid}`);",
+          "target": "cfg"
+        },
+        {
+          "file": "src/scoped.ts",
+          "import": "col",
+          "line": 5,
+          "message": "Unbounded identifier source `col` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE a = ${col} AND id = ${uid}`);",
+          "target": "col"
+        },
+        {
+          "file": "src/scoped.ts",
+          "import": "d",
+          "line": 22,
+          "message": "Unbounded identifier source `d` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE a = ${d}`);",
+          "target": "d"
+        },
+        {
+          "file": "src/scoped.ts",
+          "import": "table",
+          "line": 14,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE a = ${cfg.v} AND id = ${uid}`);",
+          "target": "table"
+        },
+        {
+          "file": "src/scoped.ts",
+          "import": "table",
+          "line": 22,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE a = ${d}`);",
+          "target": "table"
+        },
+        {
+          "file": "src/scoped.ts",
+          "import": "table",
+          "line": 5,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE a = ${col} AND id = ${uid}`);",
+          "target": "table"
+        },
+        {
           "file": "src/where-config.ts",
           "import": "c",
           "line": 31,

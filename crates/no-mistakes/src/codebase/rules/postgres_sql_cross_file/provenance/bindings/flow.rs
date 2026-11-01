@@ -33,6 +33,24 @@ impl Bindings<'_> {
         })
     }
 
+    /// A parameter in this exact scope whose default holds no unbounded source.
+    pub(crate) fn plain_parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
+        self.facts.get_ts_facts(file).is_some_and(|ts| {
+            ts.value_flow.parameters.iter().any(|parameter| {
+                parameter.scope == scope
+                    && parameter.name == name
+                    && !self.expr_unbounded(
+                        file,
+                        &parameter.default,
+                        &mut Seen {
+                            bindings: FxHashSet::default(),
+                            calls: FxHashSet::default(),
+                        },
+                    )
+            })
+        })
+    }
+
     fn expr_unbounded(&self, file: &Path, value: &ValueExpression, seen: &mut Seen) -> bool {
         if self.env(file, value, &[]).is_some() {
             return true;
