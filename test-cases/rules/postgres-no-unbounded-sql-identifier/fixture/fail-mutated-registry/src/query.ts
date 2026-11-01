@@ -111,3 +111,49 @@ export function exported(kind: string) {
 }
 
 void leak;
+
+const WRAPPER = new Map([["a", "users"]]);
+const holder = { WRAPPER };
+holder.WRAPPER.set("b", process.env.T);
+
+const ARRAY_ALIAS = new Map([["a", "users"]]);
+const [zz] = [ARRAY_ALIAS];
+zz.set("b", process.env.T);
+
+export const EXPORTED_CONST = new Map([["a", "users"]]);
+
+const ARROW = new Map([["a", "users"]]);
+export const getArrow = () => ARROW;
+
+const NESTED_ARG = new Map([["a", "users"]]);
+function sink(value: object) {
+  void value;
+}
+sink({ m: NESTED_ARG });
+
+const DEFAULT_REG = new Map([["a", "users"]]);
+export default DEFAULT_REG;
+
+export function wrapped(kind: string) {
+  return query(`SELECT id FROM ${WRAPPER.get(kind)}`);
+}
+
+export function arrayAlias(kind: string) {
+  return query(`SELECT id FROM ${ARRAY_ALIAS.get(kind)}`);
+}
+
+export function exportedConst(kind: string) {
+  return query(`SELECT id FROM ${EXPORTED_CONST.get(kind)}`);
+}
+
+export function arrowReturned(kind: string) {
+  return query(`SELECT id FROM ${ARROW.get(kind)}`);
+}
+
+export function nestedArgument(kind: string) {
+  return query(`SELECT id FROM ${NESTED_ARG.get(kind)}`);
+}
+
+export function defaultExport(kind: string) {
+  return query(`SELECT id FROM ${DEFAULT_REG.get(kind)}`);
+}

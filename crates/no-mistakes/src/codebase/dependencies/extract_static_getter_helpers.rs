@@ -2,6 +2,7 @@ fn visit_static_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
     member: &StaticMemberExpression<'a>,
 ) {
+    collector.mark_member_object_registry(&member.object);
     collector.note_selected_member(&member.object, member.property.name.as_str());
     if let Some(name) = simple_static_member_name(member) {
         record_static_getter_read(collector, member.span.start, &name);
@@ -15,6 +16,7 @@ fn visit_computed_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
     member: &ComputedMemberExpression<'a>,
 ) {
+    collector.mark_member_object_registry(&member.object);
     if let Expression::StringLiteral(property) =
         crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression)
     {

@@ -74,6 +74,7 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
         if self.export_depth > 0 && self.function_stack.is_empty() {
             for name in binding_names(&declarator.id) {
+                self.note_exported_registry(&name);
                 self.record_local_export_binding(name.clone(), name);
             }
         }
