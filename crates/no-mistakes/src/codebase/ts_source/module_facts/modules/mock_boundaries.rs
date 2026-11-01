@@ -4,6 +4,8 @@ use super::*;
 mod bindings;
 #[path = "mock_boundaries_factory.rs"]
 mod factory;
+#[path = "mock_boundaries_hoisted.rs"]
+mod hoisted;
 
 pub(super) fn collect(
     call: &CallExpression<'_>,
@@ -24,6 +26,14 @@ pub(super) fn collect(
         .and_then(|expression| match expression.get_inner_expression() {
             Expression::StringLiteral(literal) => {
                 Some(crate::ast::js_literal(literal).into_owned())
+            }
+            Expression::ImportExpression(import) if import.options.is_none() => {
+                match import.source.get_inner_expression() {
+                    Expression::StringLiteral(literal) => {
+                        Some(crate::ast::js_literal(literal).into_owned())
+                    }
+                    _ => None,
+                }
             }
             _ => None,
         });
@@ -46,7 +56,7 @@ pub(super) fn collect(
         && specifier.is_some()
         && match call.arguments.len() {
             1 => true,
-            2 => replacement.is_some_and(factory::isolated),
+            2 => replacement.is_some_and(|value| factory::isolated(value, semantic)),
             _ => false,
         };
     facts.module_mock_calls.push(ModuleMockCall {

@@ -23,6 +23,7 @@ fn forbidden_calls_mocked_factory_json_matches_snapshot() {
                 root.join("fail-other-module.yml"),
             ),
             ("impure", root.clone(), root.join("fail-impure.yml")),
+            ("hoisted", root.clone(), root.join("fail-hoisted.yml")),
         ],
     );
 }

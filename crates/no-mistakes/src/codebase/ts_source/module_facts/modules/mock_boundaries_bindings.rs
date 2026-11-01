@@ -18,7 +18,7 @@ pub(super) fn mock_method<'a>(
     Some((method, member.optional()))
 }
 
-fn mock_binding(object: &IdentifierReference<'_>, semantic: &Semantic<'_>) -> bool {
+pub(super) fn mock_binding(object: &IdentifierReference<'_>, semantic: &Semantic<'_>) -> bool {
     let Some(reference) = object.reference_id.get() else {
         return false;
     };

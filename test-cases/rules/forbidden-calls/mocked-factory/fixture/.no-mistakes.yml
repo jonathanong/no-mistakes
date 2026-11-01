@@ -10,5 +10,8 @@ rules:
         - file: src/factory-later.test.mts
         - file: src/factory-plain.test.mts
         - file: src/implemented.test.mts
+        - file: src/hoisted-typed.test.mts
+        - file: src/hoisted-block.test.mts
+        - file: src/hoisted-return.test.mts
       targets:
         - moduleExport: { module: external-analyzer, export: analyzeProject }

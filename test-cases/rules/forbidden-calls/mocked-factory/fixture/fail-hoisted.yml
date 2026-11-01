@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: transitive
+      unknownCalls: ignore
+      roots:
+        - file: src/hoisted-let.test.mts
+        - file: src/hoisted-not-object.test.mts
+        - file: src/hoisted-real-value.test.mts
+        - file: src/hoisted-plain-spread.test.mts
+      targets:
+        - moduleExport: { module: external-analyzer, export: analyzeProject }
