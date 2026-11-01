@@ -113,6 +113,17 @@ fn malformed_unicode_escapes_do_not_panic() {
             "{raw}"
         );
     }
+    for (raw, decoded) in [
+        ("\\u12xy", "xy"),
+        ("\\u{41", "{41"),
+        ("\\x4", "4z"),
+        ("\\", "\\"),
+    ] {
+        assert_eq!(
+            super::origins::piece(raw, decoded, 0, false).len(),
+            decoded.len()
+        );
+    }
 }
 #[test]
 fn multiline_placeholder_and_following_quasi_have_distinct_physical_lines() {

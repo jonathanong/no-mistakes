@@ -17,7 +17,10 @@ pub(super) fn width(raw: &str, raw_mode: bool) -> usize {
     if raw_mode || !raw.starts_with('\\') {
         return raw.chars().next().unwrap().len_utf8();
     }
-    match raw.as_bytes()[1] {
+    let Some(&next) = raw.as_bytes().get(1) else {
+        return raw.len();
+    };
+    match next {
         b'x' => 4,
         b'u' if raw.as_bytes().get(2) == Some(&b'{') => raw.find('}').map_or(2, |end| end + 1),
         b'u' => {
@@ -37,7 +40,7 @@ pub(super) fn width(raw: &str, raw_mode: bool) -> usize {
             }
         }
         b'0'..=b'7' => {
-            let maximum = if raw.as_bytes()[1] <= b'3' { 3 } else { 2 };
+            let maximum = if next <= b'3' { 3 } else { 2 };
             1 + raw.as_bytes()[1..]
                 .iter()
                 .take(maximum)
