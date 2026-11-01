@@ -160,8 +160,12 @@ Statement kinds are judged independently: a data-modifying CTE is its own `UPDAT
 `DELETE` (judged when `statements` includes it), and the `SELECT` that reads its
 `RETURNING` rows is not unbounded because of it. One returned row per
 modified row carries its bound only when the mutation target is itself bounded.
-A primary-key join against that bounded `RETURNING` source can bound a later
-mutation; an unbounded data-modifying CTE does not supply this proof.
+That projection keeps a key pin when every sibling it names is a capped query,
+including `WITH page AS MATERIALIZED (... LIMIT $n FOR UPDATE)` joined through
+`ANY(ARRAY[page.column])` on each primary-key column. An uncapped sibling is
+dropped and does not supply the proof. A primary-key join against that bounded
+`RETURNING` source can bound a later mutation; an unbounded data-modifying CTE
+does not supply this proof.
 
 A **unique key** is a primary key, unique constraint, or unique index in the catalog
 that is valid, ready, live and immediate, using the default equality semantics.
@@ -232,16 +236,20 @@ Table inheritance (`INHERITS`) is not modeled: the unique key of a parent is ass
 hold across its children, although PostgreSQL does not enforce it there. Partitioning is
 modeled; use it instead of inheritance, or keep inheritance parents out of this rule.
 
-Relations the catalog does not describe (views, relations created in the same script) and
+Relations the catalog does not describe (relations created in the same script) and
 relations spelled with another schema (`audit.accounts` when the catalog is for `public`)
-are not judged, and they bound nothing. A relation is found by the name PostgreSQL reads:
+are not judged, and they bound nothing. A catalog view is judged: without
+`viewBounds: bounded` it is an unsized relation, and a statement cap can still
+bound that read. A bare name shared by a table and a view stays unknown.
+A relation is found by the name PostgreSQL reads:
 an unquoted name folds to lower case and a quoted one (`"Order Items"`) is exact: an unknown relation can supply every
 value of a column pinned to it, so a catalog table joined to one is still reported unless
 something else bounds it. The rule checks every complete version of a branching
 executor call, including nested trusted SQL fragments and conditional appends.
 A bound on one version does not bound another: choosing between a key-pinned
 SELECT and an unbounded SELECT reports the unbounded path. Up to 16 versions
-are recovered; findings retain each branch fragment's physical source line.
+are recovered; findings retain each branch fragment's physical source line,
+including each argument of a fluent append chain.
 See [finite SQL alternatives](../postgres-facts.md#finite-sql-alternatives).
 A statement whose complete versions cannot be recovered statically (`SQL could
 not be analyzed`, or `executed SQL is not statically recoverable`) fails closed.

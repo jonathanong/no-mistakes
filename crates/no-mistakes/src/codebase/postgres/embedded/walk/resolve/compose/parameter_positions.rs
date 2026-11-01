@@ -79,6 +79,27 @@ pub(in crate::codebase::postgres::embedded::walk::resolve) fn binding_source_pos
     if !mentions_binding(expr) {
         return None;
     }
+    recovered_positions(expr, visitor, sql)
+}
+
+/// `sql`...`.append(...)` recovers text through the chain, which drops positions.
+/// Attach those positions to the call when the expression itself recorded none.
+pub(in crate::codebase::postgres::embedded::walk::resolve) fn append_chain_source_positions(
+    expr: &Expression<'_>,
+    visitor: &ScopeVisitor<'_>,
+    sql: &str,
+) -> Option<Vec<crate::codebase::postgres::embedded::EmbeddedSqlSourcePosition>> {
+    if !is_append_chain(expr) {
+        return None;
+    }
+    recovered_positions(expr, visitor, sql)
+}
+
+fn recovered_positions(
+    expr: &Expression<'_>,
+    visitor: &ScopeVisitor<'_>,
+    sql: &str,
+) -> Option<Vec<crate::codebase::postgres::embedded::EmbeddedSqlSourcePosition>> {
     let recovered = super::resolve_chain_recovered(expr, visitor)?;
     if recovered.sql != sql {
         return None;
@@ -100,6 +121,16 @@ pub(in crate::codebase::postgres::embedded::walk::resolve) fn binding_source_pos
         );
     }
     Some(positions)
+}
+
+fn is_append_chain(expr: &Expression<'_>) -> bool {
+    let Expression::CallExpression(call) = unwrap_ts_wrappers(expr) else {
+        return false;
+    };
+    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+        return false;
+    };
+    member.property.name == "append"
 }
 
 fn mentions_binding(expr: &Expression<'_>) -> bool {

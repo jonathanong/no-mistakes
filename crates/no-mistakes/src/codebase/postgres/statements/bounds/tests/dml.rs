@@ -6,7 +6,7 @@ use sqlparser::{
 };
 use std::path::PathBuf;
 
-fn fixture(name: &str) -> String {
+pub(super) fn fixture(name: &str) -> String {
     std::fs::read_to_string(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/postgres-bounded-statements/fixture/sql")
@@ -47,3 +47,5 @@ fn delete_without_from_keyword_keeps_the_target_row_cap() {
     assert_eq!(facts[0].kind, SqlBoundKind::Delete);
     assert!(facts[0].query.capped);
 }
+
+mod returning_projection;

@@ -12,7 +12,6 @@ fn values_and_opaque_items_are_not_unknown_relations() {
     };
     assert!(!super::has_unknown_relation(
         &query,
-        &SchemaCatalog::default(),
-        &super::ViewBounds::default()
+        &SchemaCatalog::default()
     ));
 }

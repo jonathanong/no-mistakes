@@ -61,9 +61,11 @@ the rule does not infer a bound from a view's definition.
   A bounded view can also size another relation through a unique-key join.
 - `unbounded` treats the view as an unsized relation. A statement cap can bound
   it; otherwise the finding targets `view:<catalog-name>`.
-- Views without a policy retain their `unknown-relation` verdicts. Use
-  `unanalyzableSql: advise` for residual advice and `--include-sql-verdicts` to
-  inspect the individual verdicts.
+- A catalog view with no `viewBounds` entry is the same unsized relation. The
+  rule does not invent columns or keys from the view definition, so a join does
+  not bound it. Names the catalog does not contain, and a bare name shared by a
+  table and a view, stay `unknown-relation`. Use `unanalyzableSql: advise` for
+  that residual advice and `--include-sql-verdicts` to inspect the verdicts.
 
 Each key must resolve to one catalog view. Missing names, ambiguous bare names,
 table/view collisions and duplicate aliases for one view are configuration
@@ -334,7 +336,9 @@ WHERE binding.id = ANY($1) OR binding.email = ANY($2);
 
 `ANY(ARRAY[one scalar])` is equality with that scalar. A nested `ARRAY[ARRAY[...]]` or a constructor with several elements is not. A bare column such as `id = $1` resolves to the `UPDATE` target when the other items do not project that column and the catalog names a single owner. A derived table's column-alias list is the complete set of names it exposes, so `src(account_id)` does not claim `id`. A positional alias on a base table does hide the catalog columns, and then a bare `id` stays unproven. A wildcard CTE does not prove that either.
 
-`DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A multi-line template, including `head + tail` where each const is its own template, reports the source line that contains the SQL.
+`DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A positional `LIMIT $n` inside `WITH page AS MATERIALIZED (... LIMIT $n)` caps that page. A data-modifying CTE joined to the page on the target's whole primary key, including `column = ANY(ARRAY[page.column])` for each key column, stays bounded, and the outer `SELECT` of its `RETURNING` rows keeps that proof. The same statement without the `LIMIT` still reports the target.
+
+A multi-line template reports the source line that contains the SQL. That includes `head + tail`, where each const is its own template, and a fluent append chain: each appended fragment keeps its own source line.
 
 ## Analysis
 

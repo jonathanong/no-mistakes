@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql
+      schemaCatalogPath: schema-2961-remainder.json
+      executorNames: [read, query]
+      unanalyzableSql: advise
+      viewBounds:
+        dispute_parties: bounded
+      include:
+        - src/issue-2961-append.mts
+        - src/issue-2961-page.mts
+        - src/issue-2961-views.mts

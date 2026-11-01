@@ -1,0 +1,147 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "messages": {
+      "relationKind": "table",
+      "columns": {
+        "owner_id": {"dataType": "uuid", "nullable": false},
+        "id": {"dataType": "uuid", "nullable": false},
+        "source_id": {"dataType": "uuid", "nullable": false},
+        "deleted_at": {"dataType": "timestamptz", "nullable": true}
+      },
+      "primaryKey": {"columns": ["owner_id", "id"]},
+      "indexes": {
+        "messages_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [
+            {"column": "owner_id", "expression": "owner_id"},
+            {"column": "id", "expression": "id"}
+          ]
+        }
+      }
+    },
+    "disputes": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false},
+        "item_id": {"dataType": "uuid", "nullable": false},
+        "group_id": {"dataType": "uuid", "nullable": true},
+        "party_id": {"dataType": "uuid", "nullable": true},
+        "status": {"dataType": "text", "nullable": false}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "disputes_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "items": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "items_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "groups": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false},
+        "active": {"dataType": "boolean", "nullable": false}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "groups_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "settlements": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false},
+        "dispute_id": {"dataType": "uuid", "nullable": false}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "settlements_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "active_accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "active_accounts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    }
+  },
+  "views": {
+    "dispute_parties": {
+      "materialized": false,
+      "definition": "SELECT party_id FROM disputes"
+    },
+    "view_users_public": {
+      "materialized": false,
+      "definition": "SELECT id FROM items"
+    },
+    "active_accounts": {
+      "materialized": false,
+      "definition": "SELECT id FROM active_accounts"
+    }
+  }
+}
