@@ -77,6 +77,8 @@ impl<'a> Visit<'a> for Facts<'_> {
         self.immutable = matches!(
             declaration.kind,
             oxc_ast::ast::VariableDeclarationKind::Const
+                | oxc_ast::ast::VariableDeclarationKind::Using
+                | oxc_ast::ast::VariableDeclarationKind::AwaitUsing
         );
         walk::walk_variable_declaration(self, declaration);
         self.immutable = previous;

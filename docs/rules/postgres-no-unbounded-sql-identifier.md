@@ -107,14 +107,18 @@ signatures accepting an executor qualify too, provided the actual callback's
 receiving parameter has a configured executor type. Untyped inline or named
 callbacks retain uncertainty. Supported local type aliases,
 `typeof` proven executor values, and
-`Awaited<ReturnType<typeof configuredFactory>>` retain executor identity;
-unrelated or shadowed types and cyclic aliases do not.
+`Awaited<ReturnType<typeof configuredFactory>>` retain executor identity.
+An immutable `const`, `using`, or `await using` factory binding is a proven
+value for `typeof`. Unrelated or shadowed types and cyclic aliases do not.
 A single local `const run = query` executor alias also remains unanalyzable;
 its diagnostic uses the invocation line so a disable-next-line comment above
 `run(sql)` suppresses that call.
-A called local `const` initialized with `??` or `||`, where every alternative is a
-configured executor or the `.query` field of a configured executor type, is that
-executor. Each call still has to prove its SQL. `read(sql, { query })` and
+A called local `const` initialized with `??` or `||` is an executor only when
+one side is a configured executor or is typed as one, including a `.query`
+field. A non-query field coalesced with a data helper is not an executor call.
+Where every alternative is a configured executor or the `.query` field of a
+configured executor type, the binding is that executor. Each call still has to
+prove its SQL. `read(sql, { query })` and
 `write(sql, { query })` pass that field's executor through without a separate
 escape, and the SQL argument is still checked. `execute(options?.query ?? read)`
 is the same when `execute`'s parameter has a configured executor type. An

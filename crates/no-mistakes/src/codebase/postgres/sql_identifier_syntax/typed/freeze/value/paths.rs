@@ -51,6 +51,11 @@ impl Taint {
             return self;
         };
         let open = self.latent();
+        // A sibling of `.query` is not an executor. Members reached through `.query` stay open.
+        let executor_bag = self
+            .paths
+            .iter()
+            .any(|path| path.first().is_some_and(|part| part == "query"));
         self.producers = self
             .producers
             .into_iter()
@@ -103,6 +108,8 @@ impl Taint {
             .collect();
         if open && matches!(key, "query" | "call" | "apply" | "bind") {
             self.paths.insert(Vec::new());
+        } else if open && executor_bag {
+            self.open.retain(|path| !path.is_empty());
         }
         self
     }

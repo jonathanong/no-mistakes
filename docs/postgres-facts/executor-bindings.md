@@ -77,13 +77,18 @@ insufficient.
 The shared low SQL syntax projection resolves local type aliases referring to a
 configured executor type, `typeof` a proven executor value, or
 `ReturnType<typeof beginTransaction>` with an optional built-in `Awaited`
-wrapper when `beginTransaction` is a configured factory import. These proofs
+wrapper when `beginTransaction` is a configured factory import. An immutable
+`const`, `using`, or `await using` factory binding is a proven value for that
+`typeof` query. These proofs
 follow lexical binding identities; same-spelled unrelated imports, shadowed
 utility types, cycles, and mutable or
 unproven values do not establish executor ownership.
 At low effort for `postgres-no-unbounded-sql-identifier` and
 `postgres-no-transformed-uuid-predicates`, a called `const` initialized with
-`??` or `||` of configured executors or `.query` fields is that executor, and
+`??` or `||` is an executor only when one side is a configured executor or is
+typed as one, including a `.query` field. A non-query field of an options bag
+coalesced with a data helper is not an executor call. When every alternative
+is a configured executor or `.query` field, the binding is that executor, and
 the SQL at each call is still checked. A single `const alias = query` or
 `const guarded = options.query` stays unanalyzable. An options bag passed as
 `{ query }` to a configured executor is not a separate escape. An options-bag
