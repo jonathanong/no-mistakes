@@ -29,16 +29,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "privacy.mts",
-          "line": 12,
-          "message": "privacy.mts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
-          "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "read(query)",
-          "target": "test-state-mutation"
-        },
-        {
-          "file": "privacy.mts",
           "line": 21,
-          "message": "privacy.mts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, opaque-sql-tail, unresolved-sql-fragment",
+          "message": "privacy.mts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL, sql-variants-truncated",
           "rule": "postgres-no-test-state-mutation",
           "sourceLine": "read(query)",
           "target": "test-state-mutation"
