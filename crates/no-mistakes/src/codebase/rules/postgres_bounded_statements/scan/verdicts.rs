@@ -54,7 +54,7 @@ fn judge(
         .iter()
         .filter(|bound| kind_name(bound.kind) == check)
     {
-        if has_unknown_relation(&bound.query, catalog) {
+        if has_unknown_relation(&bound.query, catalog, views) {
             unknown_relation = true;
         }
         let evaluate = if statement.variant_locations.is_some() {
@@ -77,12 +77,18 @@ fn judge(
     }
 }
 
-fn has_unknown_relation(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> bool {
+fn has_unknown_relation(
+    query: &SqlBoundQuery,
+    catalog: &SchemaCatalog,
+    views: &ViewBounds,
+) -> bool {
     query.items.iter().any(|item| match &item.kind {
         SqlBoundItemKind::Table(name) => {
-            catalog.bounded_relation(name).is_none() && catalog.view_relation(name).is_none()
+            catalog.bounded_relation(name).is_none()
+                && views.get(name, catalog).is_none()
+                && super::super::evaluate::visible_key(catalog, name).is_none()
         }
-        SqlBoundItemKind::Query(inner) => has_unknown_relation(inner, catalog),
+        SqlBoundItemKind::Query(inner) => has_unknown_relation(inner, catalog, views),
         _ => false,
     })
 }

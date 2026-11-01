@@ -167,6 +167,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "select"
         },
         {
+          "file": "src/issue-2961-views.mts",
+          "line": 64,
+          "message": "src/issue-2961-views.mts:64: postgres-bounded-statements application #0 has unresolved SQL for select: unknown-relation",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(\"SELECT n FROM view_counts\");",
+          "target": "select"
+        },
+        {
+          "file": "src/issue-2961-views.mts",
+          "line": 68,
+          "message": "src/issue-2961-views.mts:68: postgres-bounded-statements application #0 has unresolved SQL for select: unknown-relation",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(\"SELECT status FROM view_status\");",
+          "target": "select"
+        },
+        {
           "file": "src/statement-suppressions.mts",
           "line": 12,
           "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
@@ -238,10 +254,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/issue-2961-append.mts",
-          "line": 58,
-          "message": "src/issue-2961-append.mts:58: statement can scan unbounded rows from roots table:disputes, table:groups, table:items; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "line": 109,
+          "message": "src/issue-2961-append.mts:109: statement can scan unbounded rows from roots table:disputes, table:items, view:view_feeds (includes SQL appended from src/issue-2961-append.mts:104, src/issue-2961-append.mts:105, src/issue-2961-append.mts:110); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
-          "sourceLine": "JOIN items i ON i.id = d.item_id",
+          "sourceLine": "return read(",
+          "target": "table:disputes, table:items, view:view_feeds"
+        },
+        {
+          "file": "src/issue-2961-append.mts",
+          "line": 93,
+          "message": "src/issue-2961-append.mts:93: statement can scan unbounded rows from roots table:disputes, table:groups, table:items (includes SQL appended from src/issue-2961-append.mts:58, src/issue-2961-append.mts:59, src/issue-2961-append.mts:96); add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return read(",
           "target": "table:disputes, table:groups, table:items"
         },
         {
@@ -254,11 +278,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/issue-2961-views.mts",
+          "line": 24,
+          "message": "src/issue-2961-views.mts:24: Select can read unbounded rows from view view_feeds; add a row cap or configure viewBounds as bounded only when its result is finite",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(\"SELECT id FROM view_feeds\");",
+          "target": "view:view_feeds"
+        },
+        {
+          "file": "src/issue-2961-views.mts",
           "line": 4,
           "message": "src/issue-2961-views.mts:4: Select can read unbounded rows from view view_users_public; add a row cap or configure viewBounds as bounded only when its result is finite",
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(\"SELECT id FROM view_users_public\");",
           "target": "view:view_users_public"
+        },
+        {
+          "file": "src/issue-2961-views.mts",
+          "line": 58,
+          "message": "src/issue-2961-views.mts:58: SELECT can return every row of items; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "\"SELECT l.id FROM logs l JOIN items i ON true LEFT JOIN view_people v ON v.id = l.person_id WHERE l.id = $1\",",
+          "target": "table:items"
         }
       ],
       "warnings": []

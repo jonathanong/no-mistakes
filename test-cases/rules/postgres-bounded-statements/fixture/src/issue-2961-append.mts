@@ -98,3 +98,17 @@ export function fanout(id: string) {
       .append(sql` WHERE d.item_id = ${id} ORDER BY d.id DESC`),
   );
 }
+
+const OPEN_JOINS = sql`
+LEFT JOIN view_status s ON s.status = d.status
+JOIN view_feeds f ON f.owner_id = d.id
+JOIN items i ON true
+`;
+
+export function openFanout(id: string) {
+  return read(
+    sql`SELECT d.id FROM disputes d `
+      .append(OPEN_JOINS)
+      .append(sql` WHERE d.status = ${id}`),
+  );
+}

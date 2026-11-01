@@ -238,9 +238,14 @@ modeled; use it instead of inheritance, or keep inheritance parents out of this 
 
 Relations the catalog does not describe (relations created in the same script) and
 relations spelled with another schema (`audit.accounts` when the catalog is for `public`)
-are not judged, and they bound nothing. A catalog view is judged: without
-`viewBounds: bounded` it is an unsized relation, and a statement cap can still
-bound that read. A bare name shared by a table and a view stays unknown.
+are not judged, and they bound nothing. A catalog view with no `viewBounds`
+entry is an unsized relation when its definition projects a base table's primary
+key one-to-one, including `SELECT base.*` and a `LEFT JOIN` that pins the other
+table's primary key. A keyed read is then bounded like a table. A view whose key
+cannot be derived stays `unknown-relation` and is not a finding. `viewBounds:
+unbounded` is still an unsized relation even when a key could be derived, and a
+statement cap can still bound that read. `viewBounds: bounded` is trusted without
+reading the definition. A bare name shared by a table and a view stays unknown.
 A relation is found by the name PostgreSQL reads:
 an unquoted name folds to lower case and a quoted one (`"Order Items"`) is exact: an unknown relation can supply every
 value of a column pinned to it, so a catalog table joined to one is still reported unless

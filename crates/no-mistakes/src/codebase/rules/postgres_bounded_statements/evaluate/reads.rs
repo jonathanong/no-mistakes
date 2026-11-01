@@ -76,7 +76,8 @@ pub(super) fn relation_offender(
         return Some(view_offender(&view.name, line, column));
     }
     if let Some(view) = catalog.view_relation(name) {
-        return Some(view_offender(&view.name, line, column));
+        return super::view_key::visible_key(catalog, name)
+            .map(|_| view_offender(&view.name, line, column));
     }
     let table = catalog.bounded_relation(name)?;
     Some(Offender {

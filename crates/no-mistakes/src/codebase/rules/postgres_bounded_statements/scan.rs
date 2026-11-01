@@ -112,7 +112,7 @@ pub(super) fn scan(
                     ),
                 );
             }
-            groups.collect(&mut findings, group_start, file, bound);
+            groups.collect(&mut findings, group_start, file, bound_index, bound);
         }
     }
     groups.finish(&mut findings, root, sources, &opts.allow);

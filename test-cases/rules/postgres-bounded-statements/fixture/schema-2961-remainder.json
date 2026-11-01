@@ -128,6 +128,107 @@
           "keys": [{"column": "id", "expression": "id"}]
         }
       }
+    },
+    "feeds": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false},
+        "owner_id": {"dataType": "uuid", "nullable": false}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "feeds_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "base": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false},
+        "owner_id": {"dataType": "uuid", "nullable": false}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "base_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "things": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false},
+        "updated_by_id": {"dataType": "uuid", "nullable": false}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "things_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "people": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false},
+        "name": {"dataType": "text", "nullable": false},
+        "group_id": {"dataType": "uuid", "nullable": true}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "people_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "logs": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false},
+        "person_id": {"dataType": "uuid", "nullable": true}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "logs_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
     }
   },
   "views": {
@@ -142,6 +243,50 @@
     "active_accounts": {
       "materialized": false,
       "definition": "SELECT id FROM active_accounts"
+    },
+    "view_feeds": {
+      "materialized": false,
+      "definition": "SELECT * FROM feeds"
+    },
+    "view_base": {
+      "materialized": false,
+      "definition": "SELECT id, owner_id FROM base"
+    },
+    "view_people": {
+      "materialized": false,
+      "definition": "SELECT people.id, people.name FROM people LEFT JOIN groups ON groups.id = people.group_id"
+    },
+    "view_items": {
+      "materialized": false,
+      "definition": "SELECT id FROM items"
+    },
+    "view_counts": {
+      "materialized": false,
+      "definition": "SELECT count(*) AS n FROM items"
+    },
+    "view_status": {
+      "materialized": false,
+      "definition": "SELECT status FROM disputes"
+    },
+    "view_union": {
+      "materialized": false,
+      "definition": "SELECT id FROM items UNION ALL SELECT id FROM items"
+    },
+    "view_distinct": {
+      "materialized": false,
+      "definition": "SELECT DISTINCT id FROM items"
+    },
+    "view_grouped": {
+      "materialized": false,
+      "definition": "SELECT id FROM items GROUP BY id"
+    },
+    "view_limited": {
+      "materialized": false,
+      "definition": "SELECT id FROM items LIMIT 1"
+    },
+    "view_inner": {
+      "materialized": false,
+      "definition": "SELECT people.id FROM people INNER JOIN groups ON groups.id = people.group_id"
     }
   }
 }
