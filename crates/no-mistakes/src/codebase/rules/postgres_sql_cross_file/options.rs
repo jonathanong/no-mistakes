@@ -13,12 +13,21 @@ pub(crate) struct Options {
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
+    pub(crate) finite_domain_assertions: Vec<FiniteDomainAssertion>,
+}
+
+#[derive(Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct FiniteDomainAssertion {
+    pub(crate) name: String,
+    pub(crate) argument: usize,
 }
 
 pub(crate) struct CompiledOptions {
     pub(crate) include: GlobMatcher,
     pub(crate) exclude: GlobMatcher,
     pub(crate) embedded: EmbeddedSqlOptions,
+    pub(crate) finite_domain_assertions: Vec<FiniteDomainAssertion>,
 }
 
 impl CompiledOptions {
@@ -37,6 +46,7 @@ pub(crate) fn compile(rule_id: &str, opts: &Options) -> Result<CompiledOptions> 
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_trusted_sql_tags(&opts.trusted_sql_tags),
+        finite_domain_assertions: opts.finite_domain_assertions.clone(),
     })
 }
 

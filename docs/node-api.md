@@ -396,7 +396,7 @@ See [Live phase progress](node-api/progress.md).
 
 See [Effect alternatives](node-api/effect-alternatives.md).
 
-`check()` and `analyzeProject()` also honor low effort for [`postgres-no-unbounded-sql-identifier`](rules/postgres-no-unbounded-sql-identifier.md#effort). Import the exported `PostgresNoUnboundedSqlIdentifierOptions` type for its configuration. Unsupported syntax uses the same report/advisory/ignore policy in CLI and async Node reports.
+`check()` and `analyzeProject()` also honor low effort for [`postgres-no-unbounded-sql-identifier`](rules/postgres-no-unbounded-sql-identifier.md#effort). Import the exported `PostgresNoUnboundedSqlIdentifierOptions` type for its configuration, including `finiteDomainAssertions`. Unsupported syntax uses the same report/advisory/ignore policy in CLI and async Node reports.
 
 For `postgres-require-query-annotation`, these async reports share the CLI's
 low-effort finite conditional heads, finite explicit helper returns, safe

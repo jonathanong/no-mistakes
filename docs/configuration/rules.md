@@ -390,7 +390,7 @@ unanalyzable when executor ownership is unresolved. They follow the selected
 `unanalyzable` policy, including at low effort. Use a supported explicitly typed
 parameter to make the receiver eligible for SQL analysis.
 
-`postgres-no-unbounded-sql-identifier` also supports [low effort](../rules/postgres-no-unbounded-sql-identifier.md#effort): direct SQL literals/templates or one lexical const, with unsupported syntax routed through the shared unanalyzable policy. No partner rule is required.
+`postgres-no-unbounded-sql-identifier` also supports [low effort](../rules/postgres-no-unbounded-sql-identifier.md#effort): direct SQL literals/templates or one lexical const, with unsupported syntax routed through the shared unanalyzable policy. No partner rule is required. At max effort, `options.finiteDomainAssertions` names helpers that prove one argument is a finite SQL identifier. See [closed domains](../rules/postgres-no-unbounded-sql-identifier.md#closed-domains).
 
 [`postgres-no-mutable-sql-registry`](../rules/postgres-no-mutable-sql-registry.md#effort)
 also supports `effort: low`. Literal SQL and templates without relation-name

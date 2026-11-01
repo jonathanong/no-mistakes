@@ -9,6 +9,7 @@ export interface PostgresNoUnboundedSqlIdentifierOptions {
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
   trustedSqlTags?: { module: string; name: string }[];
+  finiteDomainAssertions?: { name: string; argument: number }[];
   effort?: Effort;
   unanalyzable?: Unanalyzable;
   unanalyzableSql?: Unanalyzable;

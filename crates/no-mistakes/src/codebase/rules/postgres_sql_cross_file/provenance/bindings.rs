@@ -63,7 +63,7 @@ impl<'a> Bindings<'a> {
                 .push(binding);
         }
     }
-    pub(super) fn value(
+    pub(crate) fn value(
         &self,
         file: &Path,
         scope: usize,

@@ -193,5 +193,7 @@ mod phase_changed_roots;
 #[path = "extract_value_flow/phase_changed_roots_tests.rs"]
 mod phase_changed_roots_tests;
 
+#[path = "extract_value_flow/closed_identifiers.rs"]
+pub(super) mod closed_identifiers;
 #[path = "extract_value_flow/row_literal_overwrites.rs"]
 mod row_literal_overwrites;

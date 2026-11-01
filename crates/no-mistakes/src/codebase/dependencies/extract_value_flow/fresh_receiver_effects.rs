@@ -128,8 +128,11 @@ impl FreshReceiverEffects {
 }
 impl ImportCollector {
     pub(in super::super) fn visit_receiver_call(&mut self, call: &CallExpression<'_>) {
+        let previous = self.begin_closed_registry_call(call);
+        self.mark_argument_spreads(&call.arguments);
         self.record_unknown_fresh_call(call.span.end);
         visit_call_expression_per_item(self, call);
+        self.end_closed_registry_call(previous);
         self.record_descriptor_call(call.span.end);
     }
     pub(in super::super) fn visit_receiver_tagged(
