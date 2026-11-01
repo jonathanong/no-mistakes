@@ -96,6 +96,7 @@ pub(super) fn projection_can_expand(function: &Function) -> bool {
         || is_aggregate(name)
         || builtin(name, FIXED_ONE_ROW)
         || conditional_form(function)
+        || array_subquery(function)
     {
         return false;
     }
@@ -112,6 +113,14 @@ pub(super) fn projection_traversal_boundary(function: &Function) -> bool {
         || (conditional_form(function)
             && object_name_ident(&function.name)
                 .is_some_and(|ident| ident_key(ident) == "coalesce"))
+}
+
+/// `ARRAY(SELECT ...)` collapses its subquery into one array value per row.
+fn array_subquery(function: &Function) -> bool {
+    matches!(function.args, FunctionArguments::Subquery(_))
+        && function.name.0.len() == 1
+        && object_name_ident(&function.name)
+            .is_some_and(|ident| ident.quote_style.is_none() && ident_key(ident) == "array")
 }
 
 pub(super) fn conditional_form(function: &Function) -> bool {

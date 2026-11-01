@@ -26,6 +26,18 @@ fn postgres_bounded_statements_issue_2961_snapshot() {
 }
 
 #[test]
+fn postgres_bounded_statements_issue_2988_snapshot() {
+    assert_saved_fixture(
+        "postgres_bounded_statements_issue_2988",
+        &[(
+            "issue_2988",
+            repo_rel("test-cases/rules/postgres-bounded-statements/fixture"),
+            rules_path("postgres-bounded-statements", "configs", "issue-2988.yml"),
+        )],
+    );
+}
+
+#[test]
 fn postgres_bounded_statements_issue_2961_remainder_snapshot() {
     assert_saved_fixture(
         "postgres_bounded_statements_issue_2961_remainder",

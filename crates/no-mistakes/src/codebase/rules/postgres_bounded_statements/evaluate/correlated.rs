@@ -1,7 +1,9 @@
 use super::super::view_bounds::ViewBounds;
 use super::{lateral, qualified, Evaluation};
+use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlBoundQuery};
 use crate::codebase::postgres::SchemaCatalog;
+use sqlparser::ast::Expr;
 use std::borrow::Cow;
 
 pub(super) fn nested(
@@ -36,12 +38,30 @@ fn project<'a>(
         let Some(table) = catalog.bounded_relation(name) else {
             continue;
         };
+        let partial = catalog
+            .bounded_unique_indexes(name)
+            .iter()
+            .flat_map(|index| index.keys.iter())
+            .filter_map(|key| match unwrap_expr(key) {
+                Expr::Identifier(ident) => Some(ident_key(ident)),
+                _ => None,
+            });
+        let unique_columns: Vec<String> = catalog
+            .unique_keys(name)
+            .into_iter()
+            .flatten()
+            .chain(partial)
+            .collect();
         for (pin_index, pin) in item.pins.iter().enumerate() {
             if pin.expression.is_some()
-                || !views.keys.columns(&table.name).any(|column| {
-                    super::super::arrays::key_visible(table, &item.column_aliases, column)
-                        == Some(pin.column.as_str())
-                })
+                || !views
+                    .keys
+                    .columns(&table.name)
+                    .chain(unique_columns.iter().map(String::as_str))
+                    .any(|column| {
+                        super::super::arrays::key_visible(table, &item.column_aliases, column)
+                            == Some(pin.column.as_str())
+                    })
             {
                 continue;
             }

@@ -124,6 +124,6 @@ fn correlated_declared_columns_require_a_known_lateral_driver() {
             .map(|fact| evaluate::offenders_with_views(fact, &catalog, views).len())
             .collect::<Vec<_>>()
     };
-    assert_eq!(count(&ViewBounds::default()), [1, 2, 1, 1, 1]);
+    assert_eq!(count(&ViewBounds::default()), [1, 2, 1, 1, 0]);
     assert_eq!(count(&declared), [0, 1, 1, 1, 0]);
 }

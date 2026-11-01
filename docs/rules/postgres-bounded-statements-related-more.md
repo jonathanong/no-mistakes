@@ -48,7 +48,8 @@ PostgreSQL 12 need explicit `pg_catalog` qualification: `gen_random_uuid` (Postg
 `regexp_count`, `regexp_instr`, `regexp_substr` (PostgreSQL 15), and the PostgreSQL 18 UUID
 generators. Bare calls remain opaque because an older server can resolve them
 to user-defined set-returning functions. Known older scalar builtins retain their
-bare-name heuristic; an explicit `LIMIT` can still bound an unknown projection.
+bare-name heuristic; an explicit `LIMIT` can still bound an unknown projection. `uuid_extract_timestamp` and `uuid_extract_version` (PostgreSQL 17) are
+trusted scalar names by bare name, like `lower` or `now`.
 See the [PostgreSQL 13 release notes](https://www.postgresql.org/docs/release/13.0/)
 and [PostgreSQL 15 release notes](https://www.postgresql.org/docs/15/release-15.htm).
 
