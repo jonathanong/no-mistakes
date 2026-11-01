@@ -88,16 +88,22 @@ fn opaque_queries(source: &SqlPinSource, query: &SqlBoundQuery) -> bool {
 }
 
 /// A select-list SRF sits beside the scanned tables and does not size them.
-/// `alias_explicit` with no alias is that marker.
+/// `alias_explicit` with no alias is that marker. A lone opaque item is a
+/// recursive placeholder, not a recordset fed by a relation.
 fn recordset_carrier(query: &SqlBoundQuery) -> bool {
     if query.items.iter().any(projection_expander) {
         return false;
     }
-    query.items.iter().any(|item| match &item.kind {
+    let carries = |item: &SqlBoundItem| match &item.kind {
         SqlBoundItemKind::Opaque => true,
         SqlBoundItemKind::Query(inner) => recordset_carrier(inner),
         _ => false,
-    })
+    };
+    query.items.iter().any(carries)
+        && query.items.iter().any(|item| {
+            matches!(item.kind, SqlBoundItemKind::Table(_))
+                || matches!(&item.kind, SqlBoundItemKind::Query(inner) if recordset_carrier(inner))
+        })
 }
 
 fn projection_expander(item: &SqlBoundItem) -> bool {
