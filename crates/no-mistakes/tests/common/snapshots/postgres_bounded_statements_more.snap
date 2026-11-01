@@ -5208,14 +5208,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/finite-array.sql",
-          "line": 11,
-          "message": "sql/finite-array.sql:11: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE accounts a SET name = 'x' FROM (SELECT account_id FROM orders LIMIT 1) o WHERE a.id = ANY(ARRAY[o.account_id]);",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/finite-array.sql",
           "line": 12,
           "message": "sql/finite-array.sql:12: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",

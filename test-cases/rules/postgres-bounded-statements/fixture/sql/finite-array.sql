@@ -6,7 +6,7 @@ UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.id = ANY(AR
 UPDATE accounts a SET name = 'x' FROM orders o WHERE o.id = $1 AND a.id = ANY(ARRAY[o.account_ids, $2]);
 UPDATE accounts a SET name = 'x' FROM orders o WHERE a.id = ANY(ARRAY[o.account_id, $2]);
 UPDATE accounts a SET name = 'x' WHERE a.id = ANY(ARRAY[a.id, $1]);
--- Renamed/derived/unknown sources cannot borrow a base column's scalar type by spelling.
+-- Renamed and unknown tables cannot borrow a scalar type by spelling. A capped derived column is equality.
 UPDATE accounts a SET name = 'x' FROM orders o(account_id, id) WHERE o.id = $1 AND a.id = ANY(ARRAY[o.account_id]);
 UPDATE accounts a SET name = 'x' FROM (SELECT account_id FROM orders LIMIT 1) o WHERE a.id = ANY(ARRAY[o.account_id]);
 UPDATE accounts a SET name = 'x' FROM missing_orders o WHERE o.id = $1 AND a.id = ANY(ARRAY[o.account_id]);
