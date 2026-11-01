@@ -170,7 +170,8 @@ proof, while other mutations retain conservative provenance. Unknown provenance 
 [unbounded SQL identifiers](rules/postgres-no-unbounded-sql-identifier.md).
 
 The shared low-effort SQL syntax proof resolves local executor type aliases,
-`typeof` proven executor values, and configured factory type queries such as
+`typeof` proven executor values (including an immutable `const`, `using`, or
+`await using` factory binding), and configured factory type queries such as
 `Awaited<ReturnType<typeof beginTransaction>>`. The identifier and transformed
 UUID rules also recognize a direct executor handoff to a resolved typed helper
 or an explicitly typed callback. SQL and opaque uses in the helper remain

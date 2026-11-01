@@ -119,11 +119,15 @@ executor qualify too, provided the actual callback's receiving parameter has a
 configured executor type. Untyped inline or named callbacks retain uncertainty.
 Supported local type aliases, `typeof` proven executor
 values, and `Awaited<ReturnType<typeof configuredFactory>>` retain executor
-identity; unrelated or shadowed types and cyclic aliases do not.
+identity. An immutable `const`, `using`, or `await using` factory binding is a
+proven value for `typeof`. Unrelated or shadowed types and cyclic aliases do not.
 Plain templates with no interpolation and `sql` templates whose interpolations
 are only binds are proven on those parameters. A called `const` chosen with `??`
-or `||` from a configured executor or a `.query` field, and an executor passed
-as `{ query }` to `read` or `write`, use the same proof. The SQL at the call is
+or `||` is an executor only when one side is a configured executor or is typed
+as one, including a `.query` field. A non-query field coalesced with a data
+helper is not an executor call. When every alternative is a configured executor
+or a `.query` field, the binding is that executor. An executor passed as
+`{ query }` to `read` or `write` uses the same proof. The SQL at the call is
 still checked. An options-bag parameter is an escape only where `.query` is read
 or the parameter is forwarded. Return expressions that do not build SQL, one
 loop pass, and expression binds such as `${count + 1}` do not make proven SQL

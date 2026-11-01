@@ -51,6 +51,16 @@ impl Taint {
             return self;
         };
         let open = self.latent();
+        // A non-query field is not itself an executor. A later `.query` on it stays reachable.
+        let executor_bag = self
+            .paths
+            .iter()
+            .any(|path| path.first().is_some_and(|part| part == "query"));
+        let open_member = matches!(key, "query" | "call" | "apply" | "bind")
+            && self
+                .open
+                .iter()
+                .any(|path| path.len() == 1 && path[0] == key);
         self.producers = self
             .producers
             .into_iter()
@@ -101,8 +111,11 @@ impl Taint {
                 }
             })
             .collect();
-        if open && matches!(key, "query" | "call" | "apply" | "bind") {
+        if (open || open_member) && matches!(key, "query" | "call" | "apply" | "bind") {
             self.paths.insert(Vec::new());
+        } else if open && executor_bag {
+            self.open.retain(|path| !path.is_empty());
+            self.open.insert(vec!["query".into()]);
         }
         self
     }
