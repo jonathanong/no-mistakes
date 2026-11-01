@@ -6,7 +6,7 @@ use std::ops::ControlFlow;
 
 mod walk;
 
-pub(crate) fn scans_identifier(call: &EmbeddedSqlCall) -> bool {
+pub(super) fn scans_identifier(call: &EmbeddedSqlCall) -> bool {
     if super::super::sql::identifier_placeholder(call) == Some(true) {
         return true;
     }

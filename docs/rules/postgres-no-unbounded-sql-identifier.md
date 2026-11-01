@@ -73,6 +73,11 @@ finite validator. Interpolations come from prepared template-expression facts,
 not a lexical `${...}` scan of the call span.
 
 A value used only as a bind parameter is never the identifier source.
+At max effort, every `${}` in a template tagged with the `sql-template-strings`
+default or `SQL` import and passed directly to the executor is a bind, so that
+call has no identifier source, including `SELECT` list values and destructured
+or call-derived locals. The saved `pass-sql-template-binds` fixture covers it;
+`fail-sql-template-raw` keeps raw interpolation in a plain template string.
 A call with no interpolation produces no finding, including a static SQL
 string and a dynamic SQL argument that is not itself interpolated. A call
 whose interpolations are only binds produces no finding either.

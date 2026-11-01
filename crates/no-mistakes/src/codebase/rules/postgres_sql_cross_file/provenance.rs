@@ -8,16 +8,17 @@ use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use std::collections::BTreeSet;
 use std::path::Path;
 
+mod binding_tag;
 mod bindings;
 mod env;
 mod identifier_holes;
 mod identifier_positions;
 mod outside;
 mod search;
+pub(crate) use binding_tag::scans_identifier;
 pub(crate) use bindings::Bindings;
 pub(crate) use env::is_process_specifier;
 use env::{env_from_chain, env_key, process_env_key};
-pub(crate) use identifier_positions::scans_identifier;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Provenance {

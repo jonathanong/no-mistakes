@@ -198,6 +198,15 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "fail-shadowed-random-uuid",
         ],
     );
+    // sql-template-strings holes are binds: pass-sql-template-binds is empty.
+    // fail-sql-template-raw keeps tableUnions and batchColumn in a plain string.
+    let factory = rules_path(rule, "configs", "factory.yml");
+    push(
+        &mut owned,
+        rule,
+        &factory,
+        &["pass-sql-template-binds", "fail-sql-template-raw"],
+    );
     let assertions = rules_path(rule, "configs", "finite-domain-assertions.yml");
     // The assertion helper is bounded. A regex test and an open set stay findings.
     push(
