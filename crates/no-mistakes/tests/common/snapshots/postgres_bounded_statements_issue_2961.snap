@@ -286,6 +286,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/issue-2961-lines.mts",
+          "line": 28,
+          "message": "src/issue-2961-lines.mts:28: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM invoices",
+          "target": "table:invoices"
+        },
+        {
+          "file": "src/issue-2961-lines.mts",
           "line": 6,
           "message": "src/issue-2961-lines.mts:6: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",

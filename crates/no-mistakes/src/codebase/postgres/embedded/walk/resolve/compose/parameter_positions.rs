@@ -80,7 +80,26 @@ pub(in crate::codebase::postgres::embedded::walk::resolve) fn binding_source_pos
         return None;
     }
     let recovered = super::resolve_chain_recovered(expr, visitor)?;
-    (recovered.sql == sql).then_some(recovered.positions)
+    if recovered.sql != sql {
+        return None;
+    }
+    let mut positions = recovered.positions;
+    // A fragment with no recorded position is still anchored at its declaration.
+    let anchored = positions
+        .first()
+        .is_some_and(|position| position.sql_line == 1 && position.sql_column == 1);
+    if !anchored {
+        positions.insert(
+            0,
+            crate::codebase::postgres::embedded::EmbeddedSqlSourcePosition {
+                sql_line: 1,
+                sql_column: 1,
+                source_line: recovered.line,
+                source_path: None,
+            },
+        );
+    }
+    Some(positions)
 }
 
 fn mentions_binding(expr: &Expression<'_>) -> bool {

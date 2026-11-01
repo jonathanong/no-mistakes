@@ -22,3 +22,14 @@ WHERE paid_at IS NULL
 export function concatenated() {
   return read(head + tail)
 }
+
+const lead = `
+SELECT id
+FROM invoices
+`
+const rest = `
+WHERE paid_at IS NULL
+`
+export function leadTable() {
+  return read(lead + rest)
+}
