@@ -1,4 +1,4 @@
-//! Env and config holes that sit outside an identifier position.
+//! Holes that sit outside an identifier position.
 use super::super::SqlCall;
 use super::bindings::Bindings;
 use super::classify;
@@ -23,30 +23,17 @@ pub(super) fn retain(
         out.extend(
             extra
                 .into_iter()
-                .filter(|item| derived(bindings, &call.file, item)),
+                .filter(|item| retained(bindings, &call.file, item)),
         );
     }
 }
 
-fn derived(bindings: &Bindings<'_>, file: &Path, item: &Provenance) -> bool {
+/// A plain function parameter is the known bind value. Every other provenance
+/// stays, and later export resolution drops a finite member.
+fn retained(bindings: &Bindings<'_>, file: &Path, item: &Provenance) -> bool {
     match item {
-        Provenance::ProcessEnv(_) => true,
-        // Export resolution drops a finite namespace member.
-        Provenance::Namespace { .. } => true,
-        Provenance::Reference {
-            name,
-            scope,
-            offset,
-            members,
-        } => {
-            bindings.env_alias(file, *scope, name, *offset)
-                || bindings.query_projection(file, *scope, name, *offset)
-                || bindings.imported_value(file, name)
-                || (bindings.flows_member_unbounded(file, *scope, name, *offset, members)
-                    && !bindings.parameter(file, name))
-                || (bindings.flows_unbounded(file, *scope, name, *offset)
-                    && !bindings.parameter(file, name))
-        }
+        Provenance::Reference { name, .. } => !bindings.parameter(file, name),
+        _ => true,
     }
 }
 

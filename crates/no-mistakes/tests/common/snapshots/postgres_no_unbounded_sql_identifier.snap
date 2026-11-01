@@ -686,6 +686,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/where-config.ts",
+          "import": "fixed",
+          "line": 40,
+          "message": "Unbounded identifier source `fixed` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT id FROM ${table} WHERE a = ${fixed.v} AND id = ${uid}`);",
+          "target": "fixed"
+        },
+        {
+          "file": "src/where-config.ts",
           "import": "ns",
           "line": 14,
           "message": "Unbounded identifier source `src/env-config.ts` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",

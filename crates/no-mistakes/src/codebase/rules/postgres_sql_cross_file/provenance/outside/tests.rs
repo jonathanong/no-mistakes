@@ -41,7 +41,7 @@ fn outside_holes_keep_env_config_and_drop_parameters() {
         named("flag"),
         vec![],
         &[],
-        vec![],
+        vec![reference("flag")],
     );
     expect(
         vec![],
