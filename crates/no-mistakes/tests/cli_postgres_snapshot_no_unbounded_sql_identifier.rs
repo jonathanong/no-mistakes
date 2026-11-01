@@ -160,6 +160,9 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "fail-limit-cursor-bind",
         ],
     );
+    // A hole glued to an identifier suffix or prefix still occupies the name.
+    // fail-glued-identifier-hole reports table at lines 6, 16, and 20.
+    push(&mut owned, rule, &config, &["fail-glued-identifier-hole"]);
     // Env and config holes outside identifier positions stay findings.
     // Each call also names table. A plain parameter beside them does not.
     // Imported env config, a namespace member, and a helper return stay.
@@ -198,6 +201,10 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "fail-shadowed-random-uuid",
         ],
     );
+    // Every hole of a sql-template-strings part in an append chain is a bind
+    // (pass-sql-template-append-chain). A raw append argument stays a
+    // candidate: fail-sql-template-append-raw reports table only. A parameter
+    // or local named like the tag shadows the import: fail-sql-template-shadowed-tag.
     // sql-template-strings holes are binds: pass-sql-template-binds is empty.
     // fail-sql-template-raw keeps tableUnions and batchColumn in a plain string.
     let factory = rules_path(rule, "configs", "factory.yml");
@@ -205,7 +212,13 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
         &mut owned,
         rule,
         &factory,
-        &["pass-sql-template-binds", "fail-sql-template-raw"],
+        &[
+            "pass-sql-template-binds",
+            "fail-sql-template-raw",
+            "pass-sql-template-append-chain",
+            "fail-sql-template-append-raw",
+            "fail-sql-template-shadowed-tag",
+        ],
     );
     let assertions = rules_path(rule, "configs", "finite-domain-assertions.yml");
     // The assertion helper is bounded. A regex test and an open set stay findings.

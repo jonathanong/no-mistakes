@@ -109,7 +109,7 @@ impl Visitor for RelationPlaceholder {
 
 fn object_has_placeholder(name: &ObjectName) -> bool {
     name.0.iter().any(|part| match part {
-        ObjectNamePart::Identifier(ident) => ident.value.starts_with("sql_placeholder_"),
+        ObjectNamePart::Identifier(ident) => ident.value.contains("sql_placeholder_"),
         _ => false,
     })
 }

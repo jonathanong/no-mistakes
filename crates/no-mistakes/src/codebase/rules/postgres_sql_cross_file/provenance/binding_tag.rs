@@ -1,45 +1,29 @@
 //! A `sql-template-strings` tag binds every interpolation; none is raw SQL text.
-use super::super::SqlCall;
-use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::extract::{ImportedBindingKind, ValueExpression};
+use super::bindings::Bindings;
+use crate::codebase::dependencies::extract::{ImportedBindingKind, ValueCall, ValueExpression};
 use crate::codebase::dependencies::graph::TsFactLookup;
+use std::path::Path;
 
 const MODULE: &str = "sql-template-strings";
 
-/// Whether `call` can name an identifier source at all. A call that passes a
-/// `sql-template-strings` template binds every hole, so it never can.
-pub(crate) fn scans_identifier(facts: &CheckFactMap, call: &SqlCall<'_>) -> bool {
-    super::identifier_positions::scans_identifier(call.call) && !binds_only(facts, call)
-}
-
-/// True when the executor's SQL argument is a tagged template from the
-/// `sql-template-strings` default or `SQL` import. Chained `.append(raw)`,
-/// plain template literals, and locals holding a template are not.
-pub(crate) fn binds_only(facts: &CheckFactMap, call: &SqlCall<'_>) -> bool {
-    let Some(ts) = facts.get_ts_facts(&call.file) else {
+/// True when `value_call` is a template tagged with the `sql-template-strings`
+/// default or `SQL` import. Every hole is a bind, including those of a chain
+/// head or `.append(sql\`..\`)` part; raw `.append(expr)` arguments are not
+/// tagged calls and stay candidates. A parameter or local with the tag's name
+/// shadows the import, so it is not the library tag.
+pub(super) fn is_bind_tag(bindings: &Bindings<'_>, file: &Path, value_call: &ValueCall) -> bool {
+    if !matches!(value_call.arguments.first(), Some(ValueExpression::Unknown)) {
         return false;
-    };
-    let calls = &ts.value_flow.calls;
-    let Some(outer) = calls
-        .iter()
-        .find(|value_call| (value_call.offset, value_call.end) == call.span)
-    else {
+    }
+    let name = value_call.source_callee.as_str();
+    if bindings.parameter(file, name) || local(bindings, file, name, &value_call.callee) {
         return false;
-    };
-    let Some(ValueExpression::Call(start, end)) = outer.arguments.first() else {
-        return false;
-    };
-    let Some(tagged) = calls
-        .iter()
-        .find(|value_call| (value_call.offset, value_call.end) == (*start, *end))
-    else {
-        return false;
-    };
-    matches!(tagged.arguments.first(), Some(ValueExpression::Unknown))
-        && ts.imported_bindings.iter().any(|import| {
+    }
+    bindings.facts.get_ts_facts(file).is_some_and(|ts| {
+        ts.imported_bindings.iter().any(|import| {
             import.specifier == MODULE
                 && !import.is_type_only
-                && import.local == tagged.source_callee
+                && import.local == name
                 && match import.kind {
                     ImportedBindingKind::Default => true,
                     ImportedBindingKind::Named => {
@@ -48,6 +32,12 @@ pub(crate) fn binds_only(facts: &CheckFactMap, call: &SqlCall<'_>) -> bool {
                     ImportedBindingKind::Namespace => false,
                 }
         })
+    })
+}
+
+fn local(bindings: &Bindings<'_>, file: &Path, name: &str, callee: &ValueExpression) -> bool {
+    matches!(callee, ValueExpression::Named { scope, offset, .. }
+        if bindings.value(file, scope.unwrap_or(0), name, *offset).is_some())
 }
 
 #[cfg(test)]

@@ -15,10 +15,10 @@ mod identifier_holes;
 mod identifier_positions;
 mod outside;
 mod search;
-pub(crate) use binding_tag::scans_identifier;
 pub(crate) use bindings::Bindings;
 pub(crate) use env::is_process_specifier;
 use env::{env_from_chain, env_key, process_env_key};
+pub(crate) use identifier_positions::scans_identifier;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Provenance {
@@ -165,7 +165,8 @@ fn classify_call(
     out: &mut BTreeSet<Provenance>,
     bindings: &Bindings<'_>,
 ) {
-    if is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee)
+    if binding_tag::is_bind_tag(bindings, file, value_call)
+        || is_finite_validator(graph, facts, &bindings.routes, file, &value_call.callee)
         || closed_map_lookup(facts, file, value_call)
     {
         return;

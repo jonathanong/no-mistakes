@@ -78,6 +78,15 @@ default or `SQL` import and passed directly to the executor is a bind, so that
 call has no identifier source, including `SELECT` list values and destructured
 or call-derived locals. The saved `pass-sql-template-binds` fixture covers it;
 `fail-sql-template-raw` keeps raw interpolation in a plain template string.
+The same holds for every `sql-template-strings` template in an `.append()`
+chain, including the chain head and ``.append(sql`...`)`` parts
+(`pass-sql-template-append-chain`). Only a raw `.append(expr)` argument that is
+not such a tagged template stays an identifier candidate
+(`fail-sql-template-append-raw`). A parameter or local named like the tag
+shadows the import and is not the library tag (`fail-sql-template-shadowed-tag`).
+A hole glued to an identifier prefix or suffix (`${table}__votes`,
+`audit_${table}`) still occupies the relation name and is reported even when
+another hole in the statement is a finite relation (`fail-glued-identifier-hole`).
 A call with no interpolation produces no finding, including a static SQL
 string and a dynamic SQL argument that is not itself interpolated. A call
 whose interpolations are only binds produces no finding either.

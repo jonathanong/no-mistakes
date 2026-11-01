@@ -152,3 +152,15 @@ fn column_only_text_scans_and_unparsed_text_does_not_align() {
     call.sql_text = Some("%%%".to_string());
     assert!(aligned(&call).is_none());
 }
+
+#[test]
+fn glued_prefix_and_suffix_still_mark_the_hole() {
+    let call = EmbeddedSqlCall {
+        sql_text: Some(
+            "SELECT id FROM sql_placeholder_1__votes JOIN audit_sql_placeholder_2 ON true JOIN sql_placeholder_3_sql_placeholder_4 ON true"
+                .to_string(),
+        ),
+        ..EmbeddedSqlCall::default()
+    };
+    assert_eq!(aligned(&call), Some((BTreeSet::from([1, 2, 3, 4]), 4)));
+}

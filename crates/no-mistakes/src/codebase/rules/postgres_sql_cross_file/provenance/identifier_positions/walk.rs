@@ -161,13 +161,20 @@ fn note_bare(expr: &Expr, out: &mut BTreeSet<u32>) {
     }
 }
 
+/// Every placeholder in the identifier, so `sql_placeholder_1__votes` and
+/// `audit_sql_placeholder_1` still mark hole 1 as occupying the name.
 fn note_ident(ident: &Ident, out: &mut BTreeSet<u32>) {
-    let Some(rest) = ident.value.strip_prefix("sql_placeholder_") else {
-        return;
-    };
-    if let Ok(index) = rest.parse::<u32>() {
-        if index > 0 {
-            out.insert(index);
+    let mut rest = ident.value.as_str();
+    while let Some(at) = rest.find(MARKER) {
+        let after = &rest[at + MARKER.len()..];
+        let digits = after.bytes().take_while(u8::is_ascii_digit).count();
+        if let Ok(index) = after[..digits].parse::<u32>() {
+            if index > 0 {
+                out.insert(index);
+            }
         }
+        rest = &after[digits..];
     }
 }
+
+const MARKER: &str = "sql_placeholder_";

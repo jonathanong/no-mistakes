@@ -66,7 +66,7 @@ fn scan(
     let bindings = Bindings::with_calls(facts, &calls);
     for call in &calls {
         candidates += 1;
-        if !scans_identifier(facts, call) {
+        if !scans_identifier(call.call) {
             continue;
         }
         for provenance in identifier_sources(graph, facts, call, &bindings) {
