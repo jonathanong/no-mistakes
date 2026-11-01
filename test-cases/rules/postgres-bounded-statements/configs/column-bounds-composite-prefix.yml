@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema-column-bounds.json
+      columnBounds:
+        memberships.account_id:
+          reason: At most 20 memberships per account enforced by application
+      sqlInclude: [sql/column-bounds-composite-prefix.sql]
+      include: [sql/column-bounds-composite-prefix.sql]

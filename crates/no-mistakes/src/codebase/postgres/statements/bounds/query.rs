@@ -6,6 +6,7 @@ use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Statement};
 mod blocking;
 mod compact;
 mod outputs;
+mod recursive_depth;
 mod recursive_order;
 mod set;
 mod with_scope;

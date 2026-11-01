@@ -77,6 +77,36 @@ remains unknown; use the qualified relation name.
 `allow` and line/file suppressions apply to view findings using `view:<name>`.
 See the [saved policy example](../../test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-bounds.yml).
 
+### Per-column bounds
+
+`columnBounds` defaults to `{}`. It declares an application-owned maximum fan-out
+for a catalog column, even when that column is not unique:
+
+```yaml
+columnBounds:
+  orders.account_id:
+    reason: "Each account has at most 20 orders enforced by the application policy"
+```
+
+With this declaration, `WHERE account_id = $1` and
+`WHERE account_id = ANY($1::uuid[])` can bound `orders` using the same
+caller-bounded key proof as a unique key. A declared column also suffices when
+it is only a prefix of a composite unique key; the declaration asserts the
+remaining fan-out is bounded. These proofs apply to `UPDATE` and `DELETE`
+targets as well as `SELECT` inputs. This is an unchecked assertion about
+fan-out; the rule does not enforce the application policy. Keep a concrete
+maximum in that policy and explain it in the required nonempty `reason`.
+
+A non-unique column without a declaration still produces a finding. A declared
+column does not make `WHERE account_id > $1` bounded, exempt an unrestricted
+scan, or make `ANY(SELECT account_id FROM orders)` bounded. Every key set must
+itself be bounded; joins must still satisfy the relation-bound proof.
+
+Each key must resolve to one catalog table column. Missing or ambiguous tables,
+missing columns, and duplicate aliases for the same column are configuration
+errors. Use a qualified table name when a bare name is ambiguous. These are
+rule-local assertions, separate from schema uniqueness and `viewBounds`.
+
 ### Executor configuration
 
 Omitting both `importSpecifier` and `executorNames` is a configuration error.
@@ -274,6 +304,65 @@ Raw SQL parse failures retain each failing statement's first code token. Separat
 statements produce separate findings, and a `no-mistakes-disable-next-line`
 directive immediately above one statement suppresses that failure independently.
 Successfully parsed sibling statements remain analyzable.
+
+### Cascading relation findings
+
+A descendant walk can expose several unbounded relations, including repeated
+reads of the same table. The rule emits one finding per analyzed statement,
+listing its unbounded roots in sorted order. For multiple roots, `target` is a
+comma-separated list of catalog object refs, such as
+`table:accounts, table:orders`. A single root keeps its ordinary object ref.
+Independent statements remain separate, even on the same source line. SQL
+alternatives from one executor statement share the union of their unbounded
+roots. The finding sits at the executed statement, not at a shared fragment
+that the statement appends from another function or file: callers that append
+the same fragment each get their own finding, and a directive at one caller
+suppresses only that caller. When a root comes from an appended fragment, the
+message names the fragment's location. A statement made only of appended
+fragments is reported at its executor call.
+
+`allow` entries are applied per root and still report stale entries. A
+relation-line suppression suppresses that relation before the remaining roots
+are grouped; a statement-start suppression covers the whole statement.
+
+### Depth-capped recursive CTEs
+
+A `UNION ALL` recursive CTE can be bounded when its anchor is bounded and every
+recursive step joins through a catalog primary or unique key. The depth output
+must start at a numeric literal, increase by a positive integer literal each
+step, and have a conjunctive `<` or `<=` cap against a parameter or numeric
+literal (reversed comparisons also work):
+
+```sql
+WITH RECURSIVE walk(id, depth) AS (
+  SELECT id, 0 FROM accounts WHERE id = $1
+  UNION ALL
+  SELECT a.id, w.depth + 1
+  FROM accounts a JOIN walk w ON a.id = w.id
+  WHERE w.depth < $2
+)
+SELECT id FROM walk;
+```
+
+Without the cap, a cycle can revisit the same key forever, so the recursive
+lookup remains reported. A non-increasing depth, a cap bypassed by `OR`, an
+unbounded anchor, or a non-key join also retains its findings.
+
+### Correlated builder fragments
+
+SQL fragments appended into an executed statement are checked in the recovered
+outer statement. A correlated predicate such as `WHERE x = target.placement_id`
+is not judged as a separate executable statement. A declared non-unique column
+can use a direct qualified outer equality when the local scope is known and the
+preceding outer driver is proven bounded. A bounded outer statement can
+therefore pass, while an unrestricted outer scan still produces a finding.
+Unknown qualifiers, local self-reads, and undeclared non-unique columns retain
+their conservative findings.
+
+If the outer SQL cannot be recovered, the existing uncertainty policy applies;
+set `unanalyzable: advise` for a non-failing advisory. The rule does not invent
+a standalone relation violation for a fragment whose outer context is unknown.
+The default `report` policy still reports the unrecoverable executed SQL.
 
 ### Effort
 

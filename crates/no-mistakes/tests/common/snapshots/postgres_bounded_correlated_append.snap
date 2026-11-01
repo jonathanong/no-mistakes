@@ -1,0 +1,76 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "recovered": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 14,
+          "message": "src/query.ts:14: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "const statement = sql`SELECT target.id FROM accounts target",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "undeclared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 14,
+          "message": "src/query.ts:14: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "const statement = sql`SELECT target.id FROM accounts target",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN LATERAL (SELECT x.id FROM orders x `;",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unrecoverable_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/unrecoverable.ts",
+          "line": 8,
+          "message": "src/unrecoverable.ts:8: postgres-bounded-statements application #0 has unresolved SQL for delete, select, update: opaque-sql-tail, unresolved-sql-fragment",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(statement);",
+          "target": "delete, select, update"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

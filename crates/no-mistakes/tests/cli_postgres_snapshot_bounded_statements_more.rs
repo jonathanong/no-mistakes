@@ -13,6 +13,21 @@ fn repo_rel(rel: &str) -> PathBuf {
 fn postgres_bounded_statements_more_check_json_snapshot() {
     let cases = [
         (
+            "column_bounds_composite_prefix",
+            "test-cases/rules/postgres-bounded-statements/fixture/column-policy",
+            "column-bounds-composite-prefix.yml",
+        ),
+        (
+            "declared_column_bounds",
+            "test-cases/rules/postgres-bounded-statements/fixture/column-policy",
+            "column-bounds.yml",
+        ),
+        (
+            "recursive_depth",
+            "test-cases/rules/postgres-bounded-statements/fixture/column-policy",
+            "recursive-depth.yml",
+        ),
+        (
             "oversized_cte_compaction_does_not_invent_reads_from_capped_or_opaque_sources_ove",
             "test-cases/rules/postgres-bounded-statements/fixture",
             "oversized_cte_compaction_does_not_invent_reads_from_capped_or_opaque_sources_ove.yml",

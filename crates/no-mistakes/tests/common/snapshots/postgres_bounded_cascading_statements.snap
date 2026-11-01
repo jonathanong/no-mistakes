@@ -1,0 +1,163 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries.sql",
+          "line": 4,
+          "message": "queries.sql:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT child.id FROM accounts child",
+          "target": "table:accounts"
+        },
+        {
+          "file": "queries.sql",
+          "line": 9,
+          "message": "queries.sql:9: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a JOIN orders o ON o.account_id = a.id;",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "roots": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries.sql",
+          "line": 4,
+          "message": "queries.sql:4: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT child.id FROM accounts child",
+          "target": "table:accounts, table:orders"
+        },
+        {
+          "file": "queries.sql",
+          "line": 9,
+          "message": "queries.sql:9: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a JOIN orders o ON o.account_id = a.id;",
+          "target": "table:accounts, table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_legacy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT a.id FROM accounts a CROSS JOIN accounts b`);",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_variants": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: statement can scan unbounded rows from roots table:accounts; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT a.id FROM accounts a CROSS JOIN accounts b ${flag ? sql`/* first */` : sql`/* second */`}`);",
+          "target": "table:accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "suppression.sql",
+          "line": 1,
+          "message": "suppression.sql:1: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a",
+          "target": "table:accounts"
+        },
+        {
+          "file": "suppression.sql",
+          "line": 4,
+          "message": "suppression.sql:4: SELECT can return every row of invoices; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a JOIN orders o ON o.account_id = a.id; SELECT id FROM invoices;",
+          "target": "table:invoices"
+        },
+        {
+          "file": "suppression.sql",
+          "line": 4,
+          "message": "suppression.sql:4: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM accounts a JOIN orders o ON o.account_id = a.id; SELECT id FROM invoices;",
+          "target": "table:accounts, table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "variants": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.ts",
+          "line": 4,
+          "message": "query.ts:4: statement can scan unbounded rows from roots table:accounts, table:invoices, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "const statement = sql`SELECT a.id FROM accounts a`;",
+          "target": "table:accounts, table:invoices, table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

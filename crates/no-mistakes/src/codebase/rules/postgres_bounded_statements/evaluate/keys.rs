@@ -26,6 +26,7 @@ pub(super) fn prepare(
     subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     catalog: &SchemaCatalog,
+    declared: &super::super::column_bounds::ColumnBounds,
 ) -> Keys {
     let SqlBoundItemKind::Table(name) = &item.kind else {
         return Vec::new();
@@ -36,6 +37,11 @@ pub(super) fn prepare(
     let mut keys: Vec<Vec<(String, String)>> = catalog
         .unique_keys(name)
         .into_iter()
+        .chain(
+            declared
+                .columns(&table.name)
+                .map(|column| vec![column.to_owned()]),
+        )
         .filter_map(|key| {
             key.into_iter()
                 .map(|physical| {

@@ -80,6 +80,23 @@ impl Resolver {
         self.source_excluding(value, Some(pinned))
     }
 
+    pub(in super::super) fn correlated_source(&self, value: &Expr) -> Option<Sourced> {
+        let Expr::CompoundIdentifier(parts) = unwrap_expr(value) else {
+            return None;
+        };
+        if parts.len() != 2 || self.column(value).is_some() {
+            return None;
+        }
+        Some(Sourced {
+            source: SqlPinSource::Value,
+            reads: Vec::new(),
+            qualified_reads: vec![SqlQualifiedRead {
+                qualifier: parts[0].to_string(),
+                scopes: Vec::new(),
+            }],
+        })
+    }
+
     /// Stored-array syntax retains self-owned dependencies without finite-key credit.
     pub(in super::super) fn stored_source(&self, value: &Expr) -> Option<Sourced> {
         self.source_excluding(value, None)

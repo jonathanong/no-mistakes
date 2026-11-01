@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema.json
+      columnBounds:
+        orders.account_id:
+          reason: At most 20 orders per account enforced by application
+      sqlInclude: [sql/column-bounds.sql]
+      include: [sql/column-bounds.sql]

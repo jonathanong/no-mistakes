@@ -140,18 +140,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "cases/a_bound_propagates_across_joins_on_unique_keys_3.sql",
           "line": 1,
-          "message": "cases/a_bound_propagates_across_joins_on_unique_keys_3.sql:1: SELECT can return every row of order_lines; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "cases/a_bound_propagates_across_joins_on_unique_keys_3.sql:1: statement can scan unbounded rows from roots table:order_lines, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.account_id = a.id JOIN order_lines l ON l.order_id = o.id WHERE a.id = $1;",
-          "target": "table:order_lines"
-        },
-        {
-          "file": "cases/a_bound_propagates_across_joins_on_unique_keys_3.sql",
-          "line": 1,
-          "message": "cases/a_bound_propagates_across_joins_on_unique_keys_3.sql:1: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.account_id = a.id JOIN order_lines l ON l.order_id = o.id WHERE a.id = $1;",
-          "target": "table:orders"
+          "target": "table:order_lines, table:orders"
         }
       ],
       "warnings": []
@@ -1347,18 +1339,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "cases/a_relation_reached_by_several_arms_is_reported_once.sql",
           "line": 1,
-          "message": "cases/a_relation_reached_by_several_arms_is_reported_once.sql:1: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "cases/a_relation_reached_by_several_arms_is_reported_once.sql:1: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT * FROM orders UNION ALL SELECT * FROM accounts UNION ALL SELECT * FROM orders;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "cases/a_relation_reached_by_several_arms_is_reported_once.sql",
-          "line": 1,
-          "message": "cases/a_relation_reached_by_several_arms_is_reported_once.sql:1: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT * FROM orders UNION ALL SELECT * FROM accounts UNION ALL SELECT * FROM orders;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -3729,18 +3713,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "cases/bounded_items_bound_the_relations_pinned_to_them.sql",
           "line": 1,
-          "message": "cases/bounded_items_bound_the_relations_pinned_to_them.sql:1: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "cases/bounded_items_bound_the_relations_pinned_to_them.sql:1: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM orders o, accounts a WHERE a.id = o.id AND o.id = a.id;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "cases/bounded_items_bound_the_relations_pinned_to_them.sql",
-          "line": 1,
-          "message": "cases/bounded_items_bound_the_relations_pinned_to_them.sql:1: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM orders o, accounts a WHERE a.id = o.id AND o.id = a.id;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -3758,18 +3734,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "cases/bounded_items_bound_the_relations_pinned_to_them_3.sql",
           "line": 1,
-          "message": "cases/bounded_items_bound_the_relations_pinned_to_them_3.sql:1: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "cases/bounded_items_bound_the_relations_pinned_to_them_3.sql:1: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "WITH c AS (SELECT id FROM orders) SELECT 1 FROM c JOIN accounts a ON a.id = c.id;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "cases/bounded_items_bound_the_relations_pinned_to_them_3.sql",
-          "line": 1,
-          "message": "cases/bounded_items_bound_the_relations_pinned_to_them_3.sql:1: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "WITH c AS (SELECT id FROM orders) SELECT 1 FROM c JOIN accounts a ON a.id = c.id;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -4151,34 +4119,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/key-operators.sql",
           "line": 6,
-          "message": "sql/key-operators.sql:6: SELECT can return every row of public.customer_accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-operators.sql:6: statement can scan unbounded rows from roots table:public.customer_accounts, table:public.owner_jobs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = email_intake_id;",
-          "target": "table:public.customer_accounts"
-        },
-        {
-          "file": "sql/key-operators.sql",
-          "line": 6,
-          "message": "sql/key-operators.sql:6: SELECT can return every row of public.owner_jobs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = email_intake_id;",
-          "target": "table:public.owner_jobs"
+          "target": "table:public.customer_accounts, table:public.owner_jobs"
         },
         {
           "file": "sql/key-operators.sql",
           "line": 8,
-          "message": "sql/key-operators.sql:8: SELECT can return every row of public.customer_accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-operators.sql:8: statement can scan unbounded rows from roots table:public.customer_accounts, table:public.owner_jobs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = customer_id;",
-          "target": "table:public.customer_accounts"
-        },
-        {
-          "file": "sql/key-operators.sql",
-          "line": 8,
-          "message": "sql/key-operators.sql:8: SELECT can return every row of public.owner_jobs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = customer_id;",
-          "target": "table:public.owner_jobs"
+          "target": "table:public.customer_accounts, table:public.owner_jobs"
         }
       ],
       "warnings": []
@@ -4221,18 +4173,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/key-resolution.sql",
           "line": 5,
-          "message": "sql/key-resolution.sql:5: SELECT can return every row of public.ambiguous_left; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-resolution.sql:5: statement can scan unbounded rows from roots table:public.ambiguous_left, table:public.ambiguous_right; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.ambiguous_left AS l JOIN public.ambiguous_right AS r ON l.id = r.id WHERE email_intake_id = $1;",
-          "target": "table:public.ambiguous_left"
-        },
-        {
-          "file": "sql/key-resolution.sql",
-          "line": 5,
-          "message": "sql/key-resolution.sql:5: SELECT can return every row of public.ambiguous_right; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.ambiguous_left AS l JOIN public.ambiguous_right AS r ON l.id = r.id WHERE email_intake_id = $1;",
-          "target": "table:public.ambiguous_right"
+          "target": "table:public.ambiguous_left, table:public.ambiguous_right"
         },
         {
           "file": "sql/key-resolution.sql",
@@ -6907,18 +6851,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/temporary-shadow-drop-database.sql",
           "line": 6,
-          "message": "sql/temporary-shadow-drop-database.sql:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/temporary-shadow-drop-database.sql:6: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/temporary-shadow-drop-database.sql",
-          "line": 6,
-          "message": "sql/temporary-shadow-drop-database.sql:6: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -10264,18 +10200,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "cases/join_using_bounds_like_on.sql",
           "line": 1,
-          "message": "cases/join_using_bounds_like_on.sql:1: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "cases/join_using_bounds_like_on.sql:1: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a LEFT JOIN orders o USING (id) WHERE o.status = $1;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "cases/join_using_bounds_like_on.sql",
-          "line": 1,
-          "message": "cases/join_using_bounds_like_on.sql:1: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a LEFT JOIN orders o USING (id) WHERE o.status = $1;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -10543,98 +10471,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/key-operators.sql",
           "line": 1,
-          "message": "sql/key-operators.sql:1: SELECT can return every row of public.customer_accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-operators.sql:1: statement can scan unbounded rows from roots table:public.customer_accounts, table:public.owner_jobs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id IS NOT DISTINCT FROM $1;",
-          "target": "table:public.customer_accounts"
-        },
-        {
-          "file": "sql/key-operators.sql",
-          "line": 1,
-          "message": "sql/key-operators.sql:1: SELECT can return every row of public.owner_jobs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id IS NOT DISTINCT FROM $1;",
-          "target": "table:public.owner_jobs"
+          "target": "table:public.customer_accounts, table:public.owner_jobs"
         },
         {
           "file": "sql/key-operators.sql",
           "line": 2,
-          "message": "sql/key-operators.sql:2: SELECT can return every row of public.customer_accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-operators.sql:2: statement can scan unbounded rows from roots table:public.customer_accounts, table:public.owner_jobs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id IN ($1, $2);",
-          "target": "table:public.customer_accounts"
-        },
-        {
-          "file": "sql/key-operators.sql",
-          "line": 2,
-          "message": "sql/key-operators.sql:2: SELECT can return every row of public.owner_jobs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id IN ($1, $2);",
-          "target": "table:public.owner_jobs"
+          "target": "table:public.customer_accounts, table:public.owner_jobs"
         },
         {
           "file": "sql/key-operators.sql",
           "line": 3,
-          "message": "sql/key-operators.sql:3: SELECT can return every row of public.customer_accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-operators.sql:3: statement can scan unbounded rows from roots table:public.customer_accounts, table:public.owner_jobs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = ANY($1::uuid[]);",
-          "target": "table:public.customer_accounts"
-        },
-        {
-          "file": "sql/key-operators.sql",
-          "line": 3,
-          "message": "sql/key-operators.sql:3: SELECT can return every row of public.owner_jobs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = ANY($1::uuid[]);",
-          "target": "table:public.owner_jobs"
+          "target": "table:public.customer_accounts, table:public.owner_jobs"
         },
         {
           "file": "sql/key-operators.sql",
           "line": 4,
-          "message": "sql/key-operators.sql:4: SELECT can return every row of public.customer_accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-operators.sql:4: statement can scan unbounded rows from roots table:public.customer_accounts, table:public.owner_jobs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id IN (SELECT $1::uuid);",
-          "target": "table:public.customer_accounts"
-        },
-        {
-          "file": "sql/key-operators.sql",
-          "line": 4,
-          "message": "sql/key-operators.sql:4: SELECT can return every row of public.owner_jobs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id IN (SELECT $1::uuid);",
-          "target": "table:public.owner_jobs"
+          "target": "table:public.customer_accounts, table:public.owner_jobs"
         },
         {
           "file": "sql/key-operators.sql",
           "line": 6,
-          "message": "sql/key-operators.sql:6: SELECT can return every row of public.customer_accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-operators.sql:6: statement can scan unbounded rows from roots table:public.customer_accounts, table:public.owner_jobs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = email_intake_id;",
-          "target": "table:public.customer_accounts"
-        },
-        {
-          "file": "sql/key-operators.sql",
-          "line": 6,
-          "message": "sql/key-operators.sql:6: SELECT can return every row of public.owner_jobs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = email_intake_id;",
-          "target": "table:public.owner_jobs"
+          "target": "table:public.customer_accounts, table:public.owner_jobs"
         },
         {
           "file": "sql/key-operators.sql",
           "line": 8,
-          "message": "sql/key-operators.sql:8: SELECT can return every row of public.customer_accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-operators.sql:8: statement can scan unbounded rows from roots table:public.customer_accounts, table:public.owner_jobs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = customer_id;",
-          "target": "table:public.customer_accounts"
-        },
-        {
-          "file": "sql/key-operators.sql",
-          "line": 8,
-          "message": "sql/key-operators.sql:8: SELECT can return every row of public.owner_jobs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = customer_id;",
-          "target": "table:public.owner_jobs"
+          "target": "table:public.customer_accounts, table:public.owner_jobs"
         }
       ],
       "warnings": []
@@ -10677,18 +10557,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/key-resolution.sql",
           "line": 2,
-          "message": "sql/key-resolution.sql:2: SELECT can return every row of public.customer_accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/key-resolution.sql:2: statement can scan unbounded rows from roots table:public.customer_accounts, table:public.owner_jobs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = $1;",
-          "target": "table:public.customer_accounts"
-        },
-        {
-          "file": "sql/key-resolution.sql",
-          "line": 2,
-          "message": "sql/key-resolution.sql:2: SELECT can return every row of public.owner_jobs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM public.customer_accounts AS c JOIN public.owner_jobs AS j ON j.customer_id = c.id WHERE email_intake_id = $1;",
-          "target": "table:public.owner_jobs"
+          "target": "table:public.customer_accounts, table:public.owner_jobs"
         },
         {
           "file": "sql/key-resolution.sql",
@@ -12331,18 +12203,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "cases/offenders_carry_the_line_of_each_relation.sql",
           "line": 2,
-          "message": "cases/offenders_carry_the_line_of_each_relation.sql:2: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "cases/offenders_carry_the_line_of_each_relation.sql:2: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM orders o",
-          "target": "table:orders"
-        },
-        {
-          "file": "cases/offenders_carry_the_line_of_each_relation.sql",
-          "line": 3,
-          "message": "cases/offenders_carry_the_line_of_each_relation.sql:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "JOIN accounts a ON a.name = o.status;",
-          "target": "table:accounts"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -16679,34 +16543,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/compacted-pin-query-reads.sql",
           "line": 2,
-          "message": "sql/compacted-pin-query-reads.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/compacted-pin-query-reads.sql:2: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "WITH c0 AS (SELECT a.id FROM accounts a WHERE a.id IN (SELECT o.id FROM orders o)),",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/compacted-pin-query-reads.sql",
-          "line": 2,
-          "message": "sql/compacted-pin-query-reads.sql:2: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "WITH c0 AS (SELECT a.id FROM accounts a WHERE a.id IN (SELECT o.id FROM orders o)),",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/compacted-pin-query-reads.sql",
           "line": 28,
-          "message": "sql/compacted-pin-query-reads.sql:28: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/compacted-pin-query-reads.sql:28: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "WITH c0 AS (SELECT a.id FROM accounts a WHERE a.id IN (SELECT o.id FROM orders o WHERE o.account_id = a.id)),",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/compacted-pin-query-reads.sql",
-          "line": 28,
-          "message": "sql/compacted-pin-query-reads.sql:28: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "WITH c0 AS (SELECT a.id FROM accounts a WHERE a.id IN (SELECT o.id FROM orders o WHERE o.account_id = a.id)),",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -16933,18 +16781,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/pin-query-read-preservation.sql",
           "line": 2,
-          "message": "sql/pin-query-read-preservation.sql:2: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/pin-query-read-preservation.sql:2: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT * FROM accounts a WHERE a.id IN (SELECT o.id FROM orders o WHERE o.account_id = a.id);",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/pin-query-read-preservation.sql",
-          "line": 2,
-          "message": "sql/pin-query-read-preservation.sql:2: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT * FROM accounts a WHERE a.id IN (SELECT o.id FROM orders o WHERE o.account_id = a.id);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/pin-query-read-preservation.sql",
@@ -16965,18 +16805,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/pin-query-read-preservation.sql",
           "line": 5,
-          "message": "sql/pin-query-read-preservation.sql:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/pin-query-read-preservation.sql:5: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT * FROM accounts a WHERE a.id = ANY(SELECT o.id FROM orders o WHERE o.account_id = a.id);",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/pin-query-read-preservation.sql",
-          "line": 5,
-          "message": "sql/pin-query-read-preservation.sql:5: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT * FROM accounts a WHERE a.id = ANY(SELECT o.id FROM orders o WHERE o.account_id = a.id);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/pin-query-read-preservation.sql",
@@ -19187,18 +19019,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/temporary-shadow-recreate-table.sql",
           "line": 9,
-          "message": "sql/temporary-shadow-recreate-table.sql:9: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/temporary-shadow-recreate-table.sql:9: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/temporary-shadow-recreate-table.sql",
-          "line": 9,
-          "message": "sql/temporary-shadow-recreate-table.sql:9: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -20353,18 +20177,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/recursive-table-qualified-union.sql",
           "line": 3,
-          "message": "sql/recursive-table-qualified-union.sql:3: SELECT can return every row of billing.accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/recursive-table-qualified-union.sql:3: statement can scan unbounded rows from roots table:accounts, table:billing.accounts; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "TABLE billing.accounts UNION ALL SELECT * FROM accounts",
-          "target": "table:billing.accounts"
-        },
-        {
-          "file": "sql/recursive-table-qualified-union.sql",
-          "line": 4,
-          "message": "sql/recursive-table-qualified-union.sql:4: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "), accounts AS (SELECT * FROM public.accounts)",
-          "target": "table:accounts"
+          "target": "table:accounts, table:billing.accounts"
         }
       ],
       "warnings": []
@@ -20591,18 +20407,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/recursive-table-quoted-union.sql",
           "line": 5,
-          "message": "sql/recursive-table-quoted-union.sql:5: SELECT can return every row of \"billing.accounts\"; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/recursive-table-quoted-union.sql:5: statement can scan unbounded rows from roots table:\"billing.accounts\", table:accounts; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "TABLE \"billing.accounts\" UNION ALL SELECT * FROM accounts",
-          "target": "table:\"billing.accounts\""
-        },
-        {
-          "file": "sql/recursive-table-quoted-union.sql",
-          "line": 6,
-          "message": "sql/recursive-table-quoted-union.sql:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "), accounts AS (TABLE public.accounts)",
-          "target": "table:accounts"
+          "target": "table:\"billing.accounts\", table:accounts"
         }
       ],
       "warnings": []
@@ -22288,18 +22096,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/cte-returning/auxiliary-unbounded.sql",
           "line": 2,
-          "message": "sql/cte-returning/auxiliary-unbounded.sql:2: UPDATE can change every row of orders; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "message": "sql/cte-returning/auxiliary-unbounded.sql:2: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE orders SET status = 'processed' FROM accounts a",
-          "target": "table:orders"
-        },
-        {
-          "file": "sql/cte-returning/auxiliary-unbounded.sql",
-          "line": 5,
-          "message": "sql/cte-returning/auxiliary-unbounded.sql:5: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE accounts SET name = 'updated' FROM updated WHERE accounts.id = updated.batch_id;",
-          "target": "table:accounts"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -23419,18 +23219,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/cte-returning/nested-with-namesake.sql",
           "line": 5,
-          "message": "sql/cte-returning/nested-with-namesake.sql:5: UPDATE can change every row of orders; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "message": "sql/cte-returning/nested-with-namesake.sql:5: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE orders SET status = 'processed'",
-          "target": "table:orders"
-        },
-        {
-          "file": "sql/cte-returning/nested-with-namesake.sql",
-          "line": 9,
-          "message": "sql/cte-returning/nested-with-namesake.sql:9: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE accounts SET name = 'updated' FROM updated WHERE accounts.id = updated.batch_id;",
-          "target": "table:accounts"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -24559,18 +24351,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/cte-returning/unbounded-update.sql",
           "line": 2,
-          "message": "sql/cte-returning/unbounded-update.sql:2: UPDATE can change every row of orders; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "message": "sql/cte-returning/unbounded-update.sql:2: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE orders SET status = 'processed' WHERE orders.status = 'queued' RETURNING account_id AS batch_id",
-          "target": "table:orders"
-        },
-        {
-          "file": "sql/cte-returning/unbounded-update.sql",
-          "line": 4,
-          "message": "sql/cte-returning/unbounded-update.sql:4: UPDATE can change every row of accounts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "UPDATE accounts SET name = 'updated' FROM updated WHERE accounts.id = updated.batch_id;",
-          "target": "table:accounts"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -25248,18 +25032,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/scalar-case-projection.sql",
           "line": 10,
-          "message": "sql/scalar-case-projection.sql:10: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/scalar-case-projection.sql:10: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts JOIN (SELECT CASE WHEN $1 THEN app.scalar(o.id) ELSE o.id END AS id FROM orders o) d ON accounts.id = d.id;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/scalar-case-projection.sql",
-          "line": 10,
-          "message": "sql/scalar-case-projection.sql:10: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts JOIN (SELECT CASE WHEN $1 THEN app.scalar(o.id) ELSE o.id END AS id FROM orders o) d ON accounts.id = d.id;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/scalar-case-projection.sql",
@@ -29731,18 +29507,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/pin-subquery-offenders.sql",
           "line": 3,
-          "message": "sql/pin-subquery-offenders.sql:3: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/pin-subquery-offenders.sql:3: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts WHERE id IN (SELECT account_id FROM orders);",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/pin-subquery-offenders.sql",
-          "line": 3,
-          "message": "sql/pin-subquery-offenders.sql:3: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts WHERE id IN (SELECT account_id FROM orders);",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []
@@ -30236,34 +30004,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/temporary-shadow-drop-unknown.sql",
           "line": 14,
-          "message": "sql/temporary-shadow-drop-unknown.sql:14: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/temporary-shadow-drop-unknown.sql:14: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/temporary-shadow-drop-unknown.sql",
-          "line": 14,
-          "message": "sql/temporary-shadow-drop-unknown.sql:14: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         },
         {
           "file": "sql/temporary-shadow-drop-unknown.sql",
           "line": 7,
-          "message": "sql/temporary-shadow-drop-unknown.sql:7: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "message": "sql/temporary-shadow-drop-unknown.sql:7: statement can scan unbounded rows from roots table:accounts, table:orders; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/temporary-shadow-drop-unknown.sql",
-          "line": 7,
-          "message": "sql/temporary-shadow-drop-unknown.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON o.id = a.id WHERE a.id = $1;",
-          "target": "table:orders"
+          "target": "table:accounts, table:orders"
         }
       ],
       "warnings": []

@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: [src/unrecoverable.ts]
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{module: "@example/db", name: sql}]
+      schemaCatalogPath: schema.json
+      unanalyzableSql: advise

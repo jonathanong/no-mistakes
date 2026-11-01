@@ -4,6 +4,7 @@ use crate::codebase::postgres::statements::{
     SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
+mod correlated;
 mod keys;
 mod lateral;
 mod outer_reads;
@@ -100,11 +101,9 @@ fn evaluate(
     let nested: Vec<Option<Evaluation>> = query
         .items
         .iter()
-        .map(|item| match &item.kind {
-            SqlBoundItemKind::Query(inner) => {
-                Some(evaluate(inner, catalog, views, precise_columns))
-            }
-            _ => None,
+        .enumerate()
+        .map(|(index, item)| {
+            correlated::nested(item, &query.items[..index], catalog, views, precise_columns)
         })
         .collect();
     // Whether each IN-subquery pin is itself bounded; the other pin sources need no evaluation.
@@ -167,6 +166,7 @@ fn evaluate(
                 &pin_subqueries[index],
                 &pin_arrays[index],
                 catalog,
+                &views.keys,
             )
         })
         .collect();
