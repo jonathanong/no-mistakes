@@ -13,6 +13,7 @@ rules:
         - sql/issue-2961-unqualified-column.sql
         - sql/issue-2961-delete-array.sql
         - sql/issue-2961-counterexamples.sql
+        - sql/issue-2961-derived-reach.sql
       include:
         - src/issue-2961-lines.mts
         - sql/issue-2961-bounded-source.sql
@@ -21,3 +22,4 @@ rules:
         - sql/issue-2961-unqualified-column.sql
         - sql/issue-2961-delete-array.sql
         - sql/issue-2961-counterexamples.sql
+        - sql/issue-2961-derived-reach.sql

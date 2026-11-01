@@ -262,6 +262,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/issue-2961-counterexamples.sql",
+          "line": 38,
+          "message": "sql/issue-2961-counterexamples.sql:38: UPDATE can change every row of orders; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE orders SET account_id = $2",
+          "target": "table:orders"
+        },
+        {
+          "file": "sql/issue-2961-counterexamples.sql",
           "line": 7,
           "message": "sql/issue-2961-counterexamples.sql:7: UPDATE can change every row of orders; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",

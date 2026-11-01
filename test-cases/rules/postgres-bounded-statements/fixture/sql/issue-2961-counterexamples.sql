@@ -33,3 +33,8 @@ UPDATE orders SET account_id = $2
 FROM cand
 INNER JOIN accounts ON accounts.email = cand.email
 WHERE orders.account_id = accounts.id;
+
+-- A positional alias on a base table hides its catalog columns, so bare id is not proven.
+UPDATE orders SET account_id = $2
+FROM accounts a(id, email, name)
+WHERE id = $1;

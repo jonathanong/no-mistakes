@@ -73,8 +73,8 @@ pub(super) fn finite_array(
 }
 
 fn equality_leaf(sourced: &Sourced, resolver: &Resolver) -> bool {
+    // A value is caller-sized without this check. Only a non-table column becomes equality.
     match &sourced.source {
-        SqlPinSource::Value => true,
         SqlPinSource::Items(items) => items.iter().all(|item| !resolver.is_table(*item)),
         _ => false,
     }

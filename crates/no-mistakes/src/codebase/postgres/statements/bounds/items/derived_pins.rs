@@ -18,19 +18,17 @@ pub(super) fn push(items: &mut [SqlBoundItem]) {
             .cloned()
             .collect();
         if !pins.is_empty() {
-            let SqlBoundItemKind::Query(query) = &mut item.kind else {
-                item.pins.clear();
-                continue;
-            };
-            let mut planned: BTreeMap<Vec<usize>, Vec<(String, SqlBoundPin)>> = BTreeMap::new();
-            for pin in &pins {
-                let Some(ordinal) = ordinal(query, &aliases, &pin.column) else {
-                    continue;
-                };
-                let mut path = Vec::new();
-                plan(query, ordinal, pin, &mut path, &mut planned);
+            if let SqlBoundItemKind::Query(query) = &mut item.kind {
+                let mut planned: BTreeMap<Vec<usize>, Vec<(String, SqlBoundPin)>> = BTreeMap::new();
+                for pin in &pins {
+                    let Some(ordinal) = ordinal(query, &aliases, &pin.column) else {
+                        continue;
+                    };
+                    let mut path = Vec::new();
+                    plan(query, ordinal, pin, &mut path, &mut planned);
+                }
+                apply(query, alternatives, &planned);
             }
-            apply(query, alternatives, &planned);
         }
         // Copied onto the base column. A pin left here is not a separate bound.
         item.pins.clear();
@@ -94,18 +92,7 @@ fn plan(
             path.pop();
             return;
         }
-        let aliases = query
-            .items
-            .get(index)
-            .filter(|item| matches!(item.kind, SqlBoundItemKind::Query(_)))
-            .map(|item| item.column_aliases.clone());
-        let Some(aliases) = aliases else {
-            return;
-        };
-        let SqlBoundItemKind::Query(inner) = &query.items[index].kind else {
-            return;
-        };
-        let Some(next) = ordinal(inner, &aliases, &column) else {
+        let Some((inner, next)) = projected_query(query, index, &column) else {
             return;
         };
         path.push(index);
@@ -117,13 +104,25 @@ fn plan(
         return;
     }
     for index in 0..query.items.len() {
-        let SqlBoundItemKind::Query(inner) = &query.items[index].kind else {
-            continue;
-        };
-        path.push(index);
-        plan(inner, output, pin, path, planned);
-        path.pop();
+        if let SqlBoundItemKind::Query(inner) = &query.items[index].kind {
+            path.push(index);
+            plan(inner, output, pin, path, planned);
+            path.pop();
+        }
     }
+}
+
+/// `source_column` names the inner output. A caller-sized item has no output to follow.
+fn projected_query<'a>(
+    query: &'a SqlBoundQuery,
+    index: usize,
+    column: &str,
+) -> Option<(&'a SqlBoundQuery, usize)> {
+    let item = query.items.get(index)?;
+    let SqlBoundItemKind::Query(inner) = &item.kind else {
+        return None;
+    };
+    ordinal(inner, &item.column_aliases, column).map(|next| (inner, next))
 }
 
 fn set_operation(query: &SqlBoundQuery) -> bool {
@@ -175,3 +174,6 @@ fn item_at<'a>(query: &'a mut SqlBoundQuery, path: &[usize]) -> Option<&'a mut S
         _ => None,
     }
 }
+
+#[cfg(test)]
+mod tests;

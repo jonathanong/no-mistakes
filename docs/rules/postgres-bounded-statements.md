@@ -322,7 +322,17 @@ SELECT 1 FROM (
 WHERE binding.id = ANY($1) OR binding.email = ANY($2);
 ```
 
-`ANY(ARRAY[one scalar])` is equality with that scalar. A nested `ARRAY[ARRAY[...]]` or a constructor with several elements is not. A bare column such as `id = $1` resolves to the `UPDATE` target when the other items do not project that column and the catalog names a single owner. A wildcard CTE does not prove that.
+The same pin reaches a base column projected through an inner derived table:
+
+```sql
+SELECT 1 FROM (
+  SELECT q.id AS id, q.email AS email
+  FROM (SELECT id, email FROM accounts) q
+) binding
+WHERE binding.id = ANY($1) OR binding.email = ANY($2);
+```
+
+`ANY(ARRAY[one scalar])` is equality with that scalar. A nested `ARRAY[ARRAY[...]]` or a constructor with several elements is not. A bare column such as `id = $1` resolves to the `UPDATE` target when the other items do not project that column and the catalog names a single owner. A derived table's column-alias list is the complete set of names it exposes, so `src(account_id)` does not claim `id`. A positional alias on a base table does hide the catalog columns, and then a bare `id` stays unproven. A wildcard CTE does not prove that either.
 
 `DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A multi-line template, including `head + tail` where each const is its own template, reports the source line that contains the SQL.
 

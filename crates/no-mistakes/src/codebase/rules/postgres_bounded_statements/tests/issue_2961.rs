@@ -39,6 +39,7 @@ fn issue_2961_accepted_shapes_stay_bounded() {
         "issue-2961-any-array.sql",
         "issue-2961-unqualified-column.sql",
         "issue-2961-delete-array.sql",
+        "issue-2961-derived-reach.sql",
     ] {
         assert_clear(name);
     }
@@ -52,6 +53,7 @@ fn issue_2961_counterexamples_stay_unbounded() {
         SqlBoundKind::Update,
         SqlBoundKind::Update,
         SqlBoundKind::Select,
+        SqlBoundKind::Update,
         SqlBoundKind::Update,
     ];
     let catalog = catalog();
