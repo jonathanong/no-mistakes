@@ -182,3 +182,28 @@ fn function_call_arguments_are_not_relation_names() {
     );
     assert_eq!(relations, BTreeSet::from([1, 3]));
 }
+
+#[test]
+fn literal_digits_after_a_marker_are_delimited_by_ordinal() {
+    assert_eq!(
+        delimit_markers("FROM sql_placeholder_12"),
+        "FROM sql_placeholder_1_2"
+    );
+    assert_eq!(
+        delimit_markers("sql_placeholder_1 sql_placeholder_2 sql_placeholder_3"),
+        "sql_placeholder_1 sql_placeholder_2 sql_placeholder_3"
+    );
+    assert_eq!(
+        delimit_markers("sql_placeholder_1 sql_placeholder_23"),
+        "sql_placeholder_1 sql_placeholder_2_3"
+    );
+    assert_eq!(delimit_markers("sql_placeholder_5"), "sql_placeholder_5");
+    assert_eq!(delimit_markers("no markers"), "no markers");
+    let call = EmbeddedSqlCall {
+        sql_text: Some("SELECT 1 FROM sql_placeholder_12".to_string()),
+        ..EmbeddedSqlCall::default()
+    };
+    let (identifiers, max) = aligned(&call).expect("aligned");
+    assert_eq!(identifiers.into_iter().collect::<Vec<_>>(), vec![1]);
+    assert_eq!(max, 1);
+}

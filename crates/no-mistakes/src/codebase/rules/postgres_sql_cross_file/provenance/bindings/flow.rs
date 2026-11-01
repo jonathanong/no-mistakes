@@ -17,20 +17,49 @@ impl Bindings<'_> {
             calls: FxHashSet::default(),
         };
         let Some(binding) = self.value(file, scope, name, at) else {
-            return self.parameter(file, name);
+            return self.parameter(file, scope, name);
         };
         seen.bindings
             .insert((binding.scope, binding.name.clone(), binding.declared_at));
         self.expr_unbounded(file, &binding.value, &mut seen)
     }
 
-    pub(crate) fn parameter(&self, file: &Path, name: &str) -> bool {
-        self.facts.get_ts_facts(file).is_some_and(|ts| {
-            ts.value_flow
-                .parameters
-                .iter()
-                .any(|parameter| parameter.name == name)
-        })
+    /// An open parameter named `name` visible from `scope`. A parameter of that
+    /// exact scope decides; another function's parameter of the same name does
+    /// not. An unresolved scope (0) keeps the file-wide name match. A
+    /// `number`-annotated parameter is not an identifier source.
+    pub(crate) fn parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
+        let Some(ts) = self.facts.get_ts_facts(file) else {
+            return false;
+        };
+        let mut named = ts
+            .value_flow
+            .parameters
+            .iter()
+            .filter(|parameter| parameter.name == name)
+            .peekable();
+        if scope == 0 {
+            return named.peek().is_some();
+        }
+        named
+            .filter(|parameter| parameter.scope == scope)
+            .any(|parameter| !self.closed_type(file, parameter))
+    }
+
+    /// Every parameter of this exact scope and name is numeric or catalog typed.
+    pub(crate) fn closed_parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
+        let Some(ts) = self.facts.get_ts_facts(file) else {
+            return false;
+        };
+        let mut named = ts
+            .value_flow
+            .parameters
+            .iter()
+            .filter(|parameter| parameter.name == name && parameter.scope == scope)
+            .peekable();
+        scope != 0
+            && named.peek().is_some()
+            && named.all(|parameter| self.closed_type(file, parameter))
     }
 
     /// A parameter in this exact scope whose default holds no unbounded source.
@@ -85,7 +114,7 @@ impl Bindings<'_> {
         seen: &mut Seen,
     ) -> bool {
         let Some(binding) = self.value(file, scope, name, at) else {
-            return self.parameter(file, name);
+            return self.parameter(file, scope, name);
         };
         let key = (binding.scope, binding.name.clone(), binding.declared_at);
         if !seen.bindings.insert(key.clone()) {

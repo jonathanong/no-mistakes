@@ -154,3 +154,13 @@ fn sql_calls_skip_missing_projections_and_http_query_collisions() {
     );
     assert!(sql_calls(root, &opts, &facts).is_empty());
 }
+
+#[test]
+fn only_indexed_markers_are_placeholders() {
+    assert!(indexed_marker("sql_placeholder_1"));
+    assert!(indexed_marker("audit_sql_placeholder_12__votes"));
+    assert!(indexed_marker("sql_placeholder_archive_sql_placeholder_2"));
+    assert!(!indexed_marker("audit_sql_placeholder_archive"));
+    assert!(!indexed_marker("sql_placeholder_"));
+    assert!(!indexed_marker("votes"));
+}

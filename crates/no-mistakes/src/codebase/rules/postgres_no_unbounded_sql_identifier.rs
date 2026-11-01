@@ -63,7 +63,7 @@ fn scan(
     let mut candidates = 0;
     let mut sinks = 0;
     let calls = sql_calls(root, opts, facts);
-    let bindings = Bindings::with_calls(facts, &calls);
+    let bindings = Bindings::with_calls(facts, &calls).with_graph(graph);
     for call in &calls {
         candidates += 1;
         if !scans_identifier(call.call) {
@@ -88,7 +88,14 @@ fn scan(
                     continue;
                 }
             }
-            if closed::proven(opts, facts, &bindings, call, &provenance) {
+            if let Provenance::Reference { name, scope, .. } = &provenance {
+                if bindings.closed_parameter(&call.file, *scope, name) {
+                    continue;
+                }
+            }
+            if closed::proven(opts, facts, &bindings, call, &provenance)
+                || closed_calls::proven(graph, facts, &bindings, call, &provenance)
+            {
                 continue;
             }
             if let Some(finding) =
@@ -124,7 +131,9 @@ fn identifier_finding(
                 Some(format!("process.env.{key}")),
             ))
         }
-        Provenance::Reference { name, .. } => named_finding(root, graph, facts, routes, call, name),
+        Provenance::Reference { name, scope, .. } => {
+            named_finding(root, graph, facts, routes, call, (*scope, name))
+        }
         Provenance::Namespace {
             local, exported, ..
         } => {
@@ -140,9 +149,9 @@ fn named_finding(
     facts: &CheckFactMap,
     routes: &RegistryRoutes<'_>,
     call: &SqlCall<'_>,
-    name: &str,
+    (scope, name): (usize, &str),
 ) -> Option<RuleFinding> {
-    if local_env_alias(facts, &call.file, name) || parameter(facts, &call.file, name) {
+    if local_env_alias(facts, &call.file, name) || parameter(facts, &call.file, scope, name) {
         return Some(message(root, call, name, Some(name.to_string())));
     }
     if query_result_binding(facts, &call.file, name) {
@@ -153,21 +162,6 @@ fn named_finding(
         return None;
     }
     imported_unbounded(root, facts, call, unique.producer, &unique.exported, name)
-}
-
-fn imported_unbounded(
-    root: &Path,
-    facts: &CheckFactMap,
-    call: &SqlCall<'_>,
-    producer: std::path::PathBuf,
-    exported: &str,
-    name: &str,
-) -> Option<RuleFinding> {
-    if !export_is_unbounded(facts, &producer, exported) {
-        return None;
-    }
-    let producer = relative_slash_path(root, &producer);
-    Some(message(root, call, &producer, Some(name.to_string())))
 }
 
 fn message(root: &Path, call: &SqlCall<'_>, producer: &str, import: Option<String>) -> RuleFinding {
@@ -190,7 +184,8 @@ pub(super) fn diagnostic_message(producer: &str) -> String {
 mod tests;
 
 mod closed;
+mod closed_calls;
 mod local_sources;
 use local_sources::{
-    export_is_unbounded, local_env_alias, parameter, query_result_binding, shadowed_process,
+    imported_unbounded, local_env_alias, parameter, query_result_binding, shadowed_process,
 };

@@ -29,6 +29,41 @@ pub(crate) fn unique_export(
     unique_from_imports(graph, facts, importer, &binding.imported)
 }
 
+/// A type imported (possibly type-only) under `local`, resolved to the one
+/// directly imported module that exports it. Re-exports are not followed.
+pub(crate) fn unique_type_export(
+    graph: &DepGraph,
+    facts: &CheckFactMap,
+    importer: &Path,
+    local: &str,
+) -> Option<UniqueExport> {
+    let ts = facts.get_ts_facts(importer)?;
+    let binding = ts
+        .imported_bindings
+        .iter()
+        .find(|binding| binding.local == local && binding.kind != ImportedBindingKind::Namespace)?;
+    let mut producers: Vec<PathBuf> = import_files(graph, importer)
+        .into_iter()
+        .filter(|target| {
+            facts.get_ts_facts(target).is_some_and(|ts| {
+                ts.value_flow
+                    .type_exports
+                    .iter()
+                    .any(|export| export.exported == binding.imported)
+            })
+        })
+        .collect();
+    producers.sort();
+    producers.dedup();
+    let [producer] = producers.as_slice() else {
+        return None;
+    };
+    Some(UniqueExport {
+        producer: producer.clone(),
+        exported: binding.imported.clone(),
+    })
+}
+
 pub(crate) fn unique_namespace_member(
     graph: &DepGraph,
     facts: &CheckFactMap,

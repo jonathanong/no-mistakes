@@ -10,7 +10,7 @@ pub(crate) fn scans_identifier(call: &EmbeddedSqlCall) -> bool {
     if super::super::sql::identifier_placeholder(call) == Some(true) {
         return true;
     }
-    texts(call).into_iter().any(|sql| {
+    texts(call).iter().any(|sql| {
         parse_postgres_sql(sql).is_ok_and(|statements| !indexes(&statements).columns.is_empty())
     })
 }
@@ -24,7 +24,7 @@ pub(super) fn aligned(call: &EmbeddedSqlCall) -> Option<(BTreeSet<u32>, usize)> 
     }
     let mut max_index = 0usize;
     let mut identifiers = BTreeSet::new();
-    for sql in texts {
+    for sql in &texts {
         max_index = max_index.max(max_in_text(sql));
         let statements = parse_postgres_sql(sql).ok()?;
         let found = indexes(&statements);
@@ -37,15 +37,46 @@ pub(super) fn aligned(call: &EmbeddedSqlCall) -> Option<(BTreeSet<u32>, usize)> 
     Some((identifiers, max_index))
 }
 
-fn texts(call: &EmbeddedSqlCall) -> Vec<&str> {
+fn texts(call: &EmbeddedSqlCall) -> Vec<String> {
     if call.variants.is_empty() {
-        call.sql_text.iter().map(String::as_str).collect()
+        call.sql_text
+            .iter()
+            .map(|sql| delimit_markers(sql))
+            .collect()
     } else {
         call.variants
             .iter()
-            .map(|variant| variant.sql_text.as_str())
+            .map(|variant| delimit_markers(&variant.sql_text))
             .collect()
     }
+}
+
+/// Markers are numbered 1, 2, ... in text order, so a digit run that extends
+/// the expected ordinal is the next literal digit (`${schema}2` reads
+/// `sql_placeholder_12`): split it with an underscore.
+fn delimit_markers(sql: &str) -> String {
+    let marker = "sql_placeholder_";
+    let mut out = String::with_capacity(sql.len());
+    let mut rest = sql;
+    let mut ordinal = 0usize;
+    while let Some(at) = rest.find(marker) {
+        let after = &rest[at + marker.len()..];
+        let digits = after.bytes().take_while(u8::is_ascii_digit).count();
+        ordinal += 1;
+        let expected = ordinal.to_string();
+        let keep = if digits > expected.len() && after.starts_with(&expected) {
+            expected.len()
+        } else {
+            digits
+        };
+        out.push_str(&rest[..at + marker.len() + keep]);
+        if keep < digits {
+            out.push('_');
+        }
+        rest = &after[keep..];
+    }
+    out.push_str(rest);
+    out
 }
 
 fn max_in_text(sql: &str) -> usize {

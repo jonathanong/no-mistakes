@@ -55,6 +55,9 @@ impl ImportCollector {
                 ValueType::Reference(name)
             }
             TSType::TSIndexedAccessType(indexed) => {
+                if let Some(name) = element_of_typeof(indexed) {
+                    return ValueType::Element(name);
+                }
                 if let TSType::TSLiteralType(literal) = &indexed.index_type {
                     if let oxc_ast::ast::TSLiteral::StringLiteral(key) = &literal.literal {
                         return ValueType::Member(
@@ -84,7 +87,26 @@ impl ImportCollector {
                 }
                 ValueType::Object(properties)
             }
+            TSType::TSNumberKeyword(_) | TSType::TSBigIntKeyword(_) => ValueType::Number,
             _ => ValueType::Unknown,
         }
+    }
+}
+
+fn element_of_typeof(indexed: &oxc_ast::ast::TSIndexedAccessType<'_>) -> Option<String> {
+    use oxc_ast::ast::{TSType, TSTypeQueryExprName};
+    if !matches!(indexed.index_type, TSType::TSNumberKeyword(_)) {
+        return None;
+    }
+    let mut object = &indexed.object_type;
+    while let TSType::TSParenthesizedType(inner) = object {
+        object = &inner.type_annotation;
+    }
+    let TSType::TSTypeQuery(query) = object else {
+        return None;
+    };
+    match &query.expr_name {
+        TSTypeQueryExprName::IdentifierReference(identifier) => Some(identifier.name.to_string()),
+        _ => None,
     }
 }

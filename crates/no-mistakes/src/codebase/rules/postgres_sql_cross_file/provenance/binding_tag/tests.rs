@@ -37,6 +37,15 @@ fn import(specifier: &str, kind: ImportedBindingKind, imported: &str) -> Importe
 fn named() -> ValueExpression {
     ValueExpression::Named {
         name: "sql".to_string(),
+        scope: None,
+        offset: 10,
+        context: None,
+    }
+}
+
+fn scoped() -> ValueExpression {
+    ValueExpression::Named {
+        name: "sql".to_string(),
         scope: Some(1),
         offset: 10,
         context: None,
@@ -121,8 +130,14 @@ fn plain_calls_and_shadowed_tags_do_not_bind() {
     assert!(!verdict(&plain, default(), vec![]));
     let empty = tag(vec![], named());
     assert!(!verdict(&empty, default(), vec![]));
-    let template = tag(vec![ValueExpression::Unknown], named());
+    let template = tag(vec![ValueExpression::Unknown], scoped());
     assert!(!verdict(&template, default(), vec![local()]));
+    assert!(!verdict(&template, default(), vec![]));
+    assert!(verdict(
+        &tag(vec![ValueExpression::Unknown], named()),
+        default(),
+        vec![local()]
+    ));
 }
 
 #[test]

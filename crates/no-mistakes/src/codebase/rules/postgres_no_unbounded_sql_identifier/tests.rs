@@ -1,4 +1,5 @@
-use super::{export_is_unbounded, identifier_finding};
+use super::identifier_finding;
+use super::local_sources::export_is_unbounded;
 
 // Output cases moved to cli_postgres_snapshot_no_unbounded_sql_identifier.
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
