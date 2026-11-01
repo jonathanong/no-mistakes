@@ -120,6 +120,15 @@ configured executor type. Untyped inline or named callbacks retain uncertainty.
 Supported local type aliases, `typeof` proven executor
 values, and `Awaited<ReturnType<typeof configuredFactory>>` retain executor
 identity; unrelated or shadowed types and cyclic aliases do not.
+Plain templates with no interpolation and `sql` templates whose interpolations
+are only binds are proven on those parameters. A called `const` chosen with `??`
+or `||` from a configured executor or a `.query` field, and an executor passed
+as `{ query }` to `read` or `write`, use the same proof. The SQL at the call is
+still checked. An options-bag parameter is an escape only where `.query` is read
+or the parameter is forwarded. Return expressions that do not build SQL, one
+loop pass, and expression binds such as `${count + 1}` do not make proven SQL
+unanalyzable. Dynamic relation names, including temp tables, column lists, and
+`plan.table`, stay unanalyzable.
 JavaScript escapes and other construction follow the
 unanalyzable policy. At `effort: max`, it also analyzes supported prepared SQL
 builders and helper-returned statements. Unanalyzable or dynamic query text

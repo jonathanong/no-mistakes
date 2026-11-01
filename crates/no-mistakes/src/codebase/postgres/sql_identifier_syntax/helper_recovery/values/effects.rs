@@ -85,6 +85,12 @@ impl Engine<'_> {
         if name == "operation:await" {
             return self.await_result(args, state);
         }
+        if name == "operation:ord" {
+            return self.closed_scalar(args, state, false);
+        }
+        if name == "operation:data" || name.starts_with("operation:method@") {
+            return self.closed_scalar(args, state, true);
+        }
         if let Some(at) = name.strip_prefix("operation:throw:") {
             let (start, end) = at.split_once(':')?;
             return self.raise(args, state, (start.parse().ok()?, end.parse().ok()?));

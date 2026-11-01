@@ -16,6 +16,7 @@ function unboundCall() {
   return unboundSqlFactory();
 }
 function unsupportedBinary() {
+  // A closed comparison may select either literal statement.
   return 1 < 2 ? "SELECT 1" : "SELECT 2";
 }
 function computedObject() {
@@ -53,7 +54,7 @@ read(spreadCall()); // ADVISE_SPREAD_CALL
 read(appendArity()); // ADVISE_APPEND_ARITY
 read(memberCall()); // ADVISE_MEMBER_CALLEE
 read(unboundCall()); // ADVISE_UNBOUND_CALLEE
-read(unsupportedBinary()); // ADVISE_BINARY
+read(unsupportedBinary()); // CLEAR_CLOSED_COMPARISON
 read(computedObject()); // ADVISE_COMPUTED_OBJECT
 read(numericObject()); // ADVISE_NUMERIC_OBJECT
 read(prototypeObject()); // ADVISE_PROTOTYPE_OBJECT

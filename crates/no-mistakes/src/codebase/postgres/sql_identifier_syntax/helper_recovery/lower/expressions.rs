@@ -47,11 +47,11 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
             scope.tags.insert(id);
             templates::lower(scope, &value.quasi, true)
         }
-        Expression::StaticMemberExpression(value) if !value.optional => Expr::Member(
+        Expression::StaticMemberExpression(value) => Expr::Member(
             Box::new(scope.expression(&value.object)),
             value.property.name.to_string(),
         ),
-        Expression::ComputedMemberExpression(value) if !value.optional => Expr::ComputedMember(
+        Expression::ComputedMemberExpression(value) => Expr::ComputedMember(
             Box::new(scope.expression(&value.object)),
             Box::new(scope.expression(&value.expression)),
         ),
@@ -71,7 +71,19 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
                 vec![scope.expression(&value.argument)],
             )
         }
-        Expression::CallExpression(call) if !call.optional => super::calls::lower(scope, call),
+        Expression::CallExpression(call) => super::calls::lower(scope, call),
+        Expression::ChainExpression(value) => match &value.expression {
+            oxc_ast::ast::ChainElement::CallExpression(call) => super::calls::lower(scope, call),
+            oxc_ast::ast::ChainElement::StaticMemberExpression(member) => Expr::Member(
+                Box::new(scope.expression(&member.object)),
+                member.property.name.to_string(),
+            ),
+            oxc_ast::ast::ChainElement::ComputedMemberExpression(member) => Expr::ComputedMember(
+                Box::new(scope.expression(&member.object)),
+                Box::new(scope.expression(&member.expression)),
+            ),
+            _ => Expr::Opaque,
+        },
 
         _ => Expr::Opaque,
     }

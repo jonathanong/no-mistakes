@@ -141,6 +141,11 @@ fn append_escapes(
                 || selection.detached_initializers.contains(&at)
                 || !usage.runtime
                 || selection.transports.contains(&at)
+                || syntax.choice_uses.contains(&at)
+                || syntax
+                    .metadata
+                    .runtime_callee(&at)
+                    .is_some_and(|call| syntax.choice_calls.contains(&call))
                 || syntax
                     .metadata
                     .belongs_to(&at, direct, &syntax.template_binds)

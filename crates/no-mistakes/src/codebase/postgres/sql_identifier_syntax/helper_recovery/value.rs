@@ -51,6 +51,11 @@ impl Value {
             } else {
                 Self::OpaqueMember
             }),
+            // A query result is data. SQL text and builders still fail closed.
+            Self::Promise(inner) => match inner.as_ref() {
+                Self::Text(_) | Self::Sql(_) | Self::Builder(_) => None,
+                other => other.member(name),
+            },
             // Nullish receiver evaluation throws rather than exposing a value.
             _ => None,
         }
@@ -94,6 +99,19 @@ impl Value {
                 }
             }
             _ => {}
+        }
+    }
+    pub fn blocks_sql_data(&self) -> bool {
+        match self {
+            Self::Text(_) | Self::Sql(_) | Self::Builder(_) => true,
+            Self::Promise(inner) => inner.blocks_sql_data(),
+            Self::Object(props) => props.iter().any(|(_, value)| value.blocks_sql_data()),
+            Self::Array(items) => items.iter().any(Self::blocks_sql_data),
+            Self::Constrained {
+                executor_payload, ..
+            } => *executor_payload,
+            Self::Executor | Self::MaybeExecutor => true,
+            _ => false,
         }
     }
     pub fn contains_executor(&self) -> bool {

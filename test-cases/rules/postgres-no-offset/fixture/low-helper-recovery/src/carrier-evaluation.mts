@@ -14,12 +14,12 @@ function escapedMember(query: QueryExecutor) {
 }
 read(escapedMember(read)); // ADVISE_MEMBER_CARRIER_ESCAPE
 
-// An opaque optional receiver remains uncertain; a typed fallback cannot prove every branch.
+// A called choice of the carrier field and a typed executor runs the local builder.
 export function optionalReceiver(options: QueryOptions, fallback: QueryExecutor) {
   const query = options.query ?? fallback;
   const statement = SQL`SELECT 1`;
   statement.append(SQL` WHERE true`);
-  query(statement); // ADVISE_OPTIONAL_LOCAL_BUILDER
+  query(statement); // CLEAR_OPTIONAL_LOCAL_BUILDER
 }
 
 // Direct configured query-member destructuring supplies an exact replay receiver.

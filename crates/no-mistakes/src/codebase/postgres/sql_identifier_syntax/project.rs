@@ -137,6 +137,7 @@ fn collect_with_declarations_and_demand(
     }
     aliases::detached::collect(program, module, profiles, &mut selections, &mut syntax);
     aliases::collect(program, module, &mut selections, &mut syntax);
+    super::choice::prepare(program, module, &mut selections, &mut syntax);
     syntax.visit_program(program);
     syntax.safe_parameterized = template_binds::safe_constants(module, &syntax.calls);
     let mut owners = FxHashMap::default();

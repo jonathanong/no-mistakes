@@ -83,6 +83,8 @@ struct Syntax<'source> {
     namespace_members: FxHashMap<Span, String>,
     aliases: FxHashMap<Span, usize>,
     alias_initializers: FxHashMap<Span, usize>,
+    choice_calls: FxHashSet<Span>,
+    choice_uses: FxHashSet<Span>,
 }
 fn chain(expression: &Expression<'_>) -> Option<(Span, Vec<String>)> {
     match unwrap_ts_wrappers(expression) {
@@ -103,6 +105,7 @@ fn chain(expression: &Expression<'_>) -> Option<(Span, Vec<String>)> {
         _ => None,
     }
 }
+mod choice;
 mod constants;
 pub(crate) mod helper_recovery;
 mod input;

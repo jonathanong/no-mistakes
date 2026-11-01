@@ -1,7 +1,9 @@
 //! Low-only closed lowering. Names in the shared IR are semantic binding slots.
+mod arguments;
 mod calls;
 mod expressions;
 mod forms;
+mod loops;
 mod parameters;
 mod statements;
 mod switch;

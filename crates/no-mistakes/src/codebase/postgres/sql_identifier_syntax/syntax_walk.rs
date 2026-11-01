@@ -94,13 +94,19 @@ impl<'a> Visit<'a> for Syntax<'_> {
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
         self.metadata.reference(span(value.span));
-        let callee = chain(&value.callee);
+        let choice = super::choice::take_call(self, &value.callee);
+        let chosen = choice.is_some();
+        if chosen {
+            self.choice_calls.insert(span(value.span));
+        }
+        let callee = choice.or_else(|| chain(&value.callee));
         let unproven_member = self.scoped_member_advisory
             && callee.as_ref().is_some_and(|(_, parts)| {
                 parts.len() > 1 && parts.last().is_some_and(|name| name == "query")
             })
             && !value.arguments.is_empty();
-        let selected = self.detached_calls.contains(&span(value.span))
+        let selected = chosen
+            || self.detached_calls.contains(&span(value.span))
             || callee
                 .as_ref()
                 .is_some_and(|(root, parts)| self.selected_callee(root, parts))
@@ -110,7 +116,8 @@ impl<'a> Visit<'a> for Syntax<'_> {
         if selected {
             self.calls.push(Call {
                 span: span(value.span),
-                input: if self.detached_calls.contains(&span(value.span))
+                input: if chosen
+                    || self.detached_calls.contains(&span(value.span))
                     || callee.as_ref().is_some_and(|(root, parts)| {
                         (parts.len() == 1 && self.targets.contains(root))
                             || (parts.len() == 2
