@@ -120,6 +120,7 @@ impl ImportCollector {
                 && collect_helpers::direct_arrow(&call.callee),
         };
         self.note_array_push(&value_call, true);
+        self.note_closed_registry_call(call);
         self.value_flow.calls.push(value_call);
     }
 }

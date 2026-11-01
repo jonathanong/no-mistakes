@@ -1,4 +1,4 @@
-use super::{unique_closed_collection, GuardKind, RegistryKind, SetMethod};
+use super::{unique_closed_collection, GuardKind, GuardSubject, RegistryKind, SetMethod};
 use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
@@ -21,6 +21,7 @@ fn closed_domain_facts_reject_open_shapes() {
     assert_eq!(
         names,
         [
+            "ADD_SET",
             "ALLOWED",
             "KEEP_ARRAY",
             "KEEP_FROZEN",
@@ -29,6 +30,7 @@ fn closed_domain_facts_reject_open_shapes() {
             "KEEP_OBJECT",
             "KEEP_SET",
             "KEEP_TEMPLATE",
+            "MUT_MAP",
             "TABLES",
             "TABLES",
         ]
@@ -73,6 +75,20 @@ fn closed_domain_facts_reject_open_shapes() {
         "missing",
         RegistryKind::Set
     ));
+    assert!(!unique_closed_collection(
+        &flow,
+        "MUT_MAP",
+        RegistryKind::Map
+    ));
+    assert!(!unique_closed_collection(
+        &flow,
+        "ADD_SET",
+        RegistryKind::Set
+    ));
+    assert!(flow
+        .registry_mutations
+        .iter()
+        .any(|mutation| mutation.name == "MUT_MAP"));
     let mut bounded: Vec<_> = flow
         .bounded_bindings
         .iter()
@@ -81,9 +97,29 @@ fn closed_domain_facts_reject_open_shapes() {
     bounded.sort_unstable();
     assert_eq!(
         bounded,
-        ["copied", "copiedStatic", "fromArray", "fromMap", "goodName"]
+        [
+            "copied",
+            "copiedStatic",
+            "cryptoName",
+            "fromArray",
+            "fromMap",
+            "goodName",
+        ]
     );
-    assert_eq!(flow.finite_identifier_guards.len(), 6);
+    assert_eq!(flow.finite_identifier_guards.len(), 7);
+    let reassigned = flow
+        .finite_identifier_guards
+        .iter()
+        .find(|guard| guard.name == "u")
+        .expect("reassigned guard");
+    assert!(matches!(
+        reassigned.subject,
+        Some(GuardSubject::Parameter { .. })
+    ));
+    assert!(flow
+        .identifier_writes
+        .iter()
+        .any(|write| { write.name == "u" && write.at > reassigned.from }));
     assert!(flow.finite_identifier_guards.iter().any(|guard| {
         guard.name == "ALLOWED"
             && matches!(

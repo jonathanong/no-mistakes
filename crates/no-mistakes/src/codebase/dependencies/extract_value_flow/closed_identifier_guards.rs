@@ -83,6 +83,7 @@ impl ImportCollector {
     }
 
     fn push_identifier_guard(&mut self, name: String, from: u32, until: u32, kind: GuardKind) {
+        let subject = self.guard_subject(&name, from);
         self.value_flow
             .finite_identifier_guards
             .push(FiniteIdentifierGuard {
@@ -91,7 +92,31 @@ impl ImportCollector {
                 from,
                 until,
                 kind,
+                subject,
             });
+    }
+
+    fn guard_subject(&self, name: &str, at: u32) -> Option<GuardSubject> {
+        let scope = self.callee_binding_scope(name)?;
+        if let Some(binding) = self.value_flow.bindings.iter().rev().find(|binding| {
+            binding.scope == scope
+                && binding.name == name
+                && binding.declared_at <= at
+                && binding.invalidated_at.is_none_or(|end| at < end)
+        }) {
+            return Some(GuardSubject::Binding {
+                scope,
+                declared_at: binding.declared_at,
+            });
+        }
+        self.value_flow.parameters.iter().find_map(|parameter| {
+            (parameter.scope == scope && parameter.name == name && parameter.projection.is_empty())
+                .then_some(GuardSubject::Parameter {
+                    scope,
+                    owner: parameter.owner,
+                    index: parameter.index,
+                })
+        })
     }
 }
 

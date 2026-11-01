@@ -1,8 +1,8 @@
+        import { randomUUID } from "node:crypto";
         declare const extra: string;
         declare const kind: string;
         declare const suffix: string;
         declare const obj: { assertWhitelistedSqlIdentifier(value: string): void };
-        declare function randomUUID(...args: string[]): string;
         declare function id(): string;
         declare function assertWhitelistedSqlIdentifier(...args: unknown[]): void;
 
@@ -19,6 +19,9 @@
         const fromArray = KEEP_ARRAY[0];
         const fromMap = KEEP_MAP.get(kind);
         const goodName = "tmp_" + randomUUID().replace(/-/g, "");
+        const cryptoName = "tmp_" + crypto.randomUUID().replace(/-/g, "");
+        const MUT_MAP = new Map([["user", "users"]]);
+        MUT_MAP.set("extra", "posts");
 
         const EMPTY_OBJECT = {};
         const EMPTY_ARRAY = [];
@@ -56,6 +59,18 @@
         const computedReplace = `tmp_${randomUUID()["replaceAll"]("-", "")}`;
         const otherMethod = `tmp_${randomUUID().concat("-", "")}`;
 
+        function reassigned(u: string) {
+          if (!KEEP_SET.has(u)) throw new Error("x");
+          u = "posts";
+          return u;
+        }
+        function localUuid() {
+          const randomUUID = () => "local";
+          const localName = "tmp_" + randomUUID().replace(/-/g, "");
+          const crypto = { randomUUID: () => "local" };
+          const localCrypto = "tmp_" + crypto.randomUUID().replace(/-/g, "");
+          return localName + localCrypto;
+        }
         function shadow(ALLOWED: string) {
           if (!ALLOWED.has(ALLOWED)) throw new Error("x");
         }
@@ -82,8 +97,9 @@
         function optional(table: string) {
           if (!KEEP_SET?.has(table)) throw new Error("x");
         }
+        const ADD_SET = new Set(["users"]);
         function wrongMethod(table: string) {
-          if (!KEEP_SET.add(table)) throw new Error("x");
+          if (!ADD_SET.add(table)) throw new Error("x");
         }
         function wrongArity(table: string) {
           if (!KEEP_SET.has(table, table)) throw new Error("x");
@@ -117,6 +133,11 @@
         function bareHas(table: string) {
           if (!allowed(table)) throw new Error("x");
         }
+        void reassigned;
+        void localUuid;
+        void cryptoName;
+        void MUT_MAP;
+        void ADD_SET;
         void shadow;
         void second;
         void useTables;

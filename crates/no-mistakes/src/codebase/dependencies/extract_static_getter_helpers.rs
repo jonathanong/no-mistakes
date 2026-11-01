@@ -117,6 +117,7 @@ fn visit_assignment_expression_with_calls<'a>(
     assignment: &AssignmentExpression<'a>,
 ) {
     collector.record_replacement_assignment(assignment);
+    collector.note_closed_registry_write(&assignment.left, assignment.span.start);
     if collector.collect_value_flow {
         visit_assignment_expression_with_receiver_effects(collector, assignment);
         return;

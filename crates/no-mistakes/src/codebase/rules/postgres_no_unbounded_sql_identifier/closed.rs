@@ -1,7 +1,8 @@
 use super::super::postgres_sql_cross_file::CompiledOptions;
 use super::*;
 use crate::codebase::dependencies::extract::{
-    unique_closed_collection, GuardKind, RegistryKind, SetMethod, ValueFlowFacts,
+    unique_closed_collection, FiniteIdentifierGuard, GuardKind, GuardSubject, RegistryKind,
+    SetMethod, ValueFlowFacts,
 };
 
 pub(super) fn proven(
@@ -45,7 +46,58 @@ pub(super) fn proven(
             && guard.context == context
             && call.span.0 >= guard.from
             && call.span.0 < guard.until
+            && guard_subject_holds(flow, bindings, &call.file, name, *scope, *offset, guard)
+            && !written_since(flow, guard, call.span.0)
             && guard_applies(opts, flow, &guard.kind)
+    })
+}
+
+fn guard_subject_holds(
+    flow: &ValueFlowFacts,
+    bindings: &Bindings<'_>,
+    file: &std::path::Path,
+    name: &str,
+    scope: usize,
+    offset: u32,
+    guard: &FiniteIdentifierGuard,
+) -> bool {
+    match guard.subject {
+        Some(GuardSubject::Binding {
+            scope: guard_scope,
+            declared_at,
+        }) => bindings
+            .value(file, scope, name, offset)
+            .is_some_and(|binding| {
+                binding.scope == guard_scope && binding.declared_at == declared_at
+            }),
+        Some(GuardSubject::Parameter {
+            scope: guard_scope,
+            owner,
+            index,
+        }) => {
+            scope == guard_scope
+                && bindings.value(file, scope, name, offset).is_none()
+                && flow.parameters.iter().any(|parameter| {
+                    parameter.owner == owner
+                        && parameter.index == index
+                        && parameter.scope == guard_scope
+                        && parameter.name == name
+                })
+        }
+        None => false,
+    }
+}
+
+fn written_since(flow: &ValueFlowFacts, guard: &FiniteIdentifierGuard, use_at: u32) -> bool {
+    let scope = match guard.subject {
+        Some(GuardSubject::Binding { scope, .. } | GuardSubject::Parameter { scope, .. }) => scope,
+        None => return false,
+    };
+    flow.identifier_writes.iter().any(|write| {
+        write.scope == scope
+            && write.name == guard.name
+            && write.at > guard.from
+            && write.at < use_at
     })
 }
 
@@ -57,6 +109,11 @@ fn bounded(
         item.name == binding.name
             && item.scope == binding.scope
             && item.declared_at == binding.declared_at
+            && item.source.as_ref().is_none_or(|(name, scope)| {
+                flow.registry_mutations
+                    .iter()
+                    .all(|mutation| &mutation.name != name || mutation.scope != *scope)
+            })
     })
 }
 
@@ -65,6 +122,13 @@ fn registry_member(
     binding: &crate::codebase::dependencies::extract::ValueBinding,
     key: &str,
 ) -> bool {
+    if flow
+        .registry_mutations
+        .iter()
+        .any(|mutation| mutation.name == binding.name && mutation.scope == binding.scope)
+    {
+        return false;
+    }
     flow.closed_string_registries.iter().any(|registry| {
         registry.kind == RegistryKind::Object
             && registry.name == binding.name

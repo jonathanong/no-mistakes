@@ -27,6 +27,7 @@ pub(crate) struct BoundedBinding {
     pub(crate) name: String,
     pub(crate) scope: usize,
     pub(crate) declared_at: u32,
+    pub(crate) source: Option<(String, usize)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -36,6 +37,7 @@ pub(crate) struct FiniteIdentifierGuard {
     pub(crate) from: u32,
     pub(crate) until: u32,
     pub(crate) kind: GuardKind,
+    pub(crate) subject: Option<GuardSubject>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -54,6 +56,32 @@ pub(crate) enum GuardKind {
 pub(crate) enum SetMethod {
     Has,
     Includes,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RegistryMutation {
+    pub(crate) name: String,
+    pub(crate) scope: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct IdentifierWrite {
+    pub(crate) scope: usize,
+    pub(crate) name: String,
+    pub(crate) at: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum GuardSubject {
+    Binding {
+        scope: usize,
+        declared_at: u32,
+    },
+    Parameter {
+        scope: usize,
+        owner: CallableId,
+        index: usize,
+    },
 }
 
 pub(crate) fn unique_closed_collection(
@@ -76,6 +104,13 @@ pub(crate) fn unique_closed_collection(
     let [binding] = matched.as_slice() else {
         return false;
     };
+    if flow
+        .registry_mutations
+        .iter()
+        .any(|mutation| mutation.name == binding.name && mutation.scope == binding.scope)
+    {
+        return false;
+    }
     flow.closed_string_registries.iter().any(|registry| {
         registry.kind == kind
             && registry.name == binding.name
@@ -109,27 +144,14 @@ impl ImportCollector {
                     kind,
                 });
         }
-        if self.bounded_initializer(init) {
+        if let Some(source) = self.bounded_source(init) {
             self.value_flow.bounded_bindings.push(BoundedBinding {
                 name,
                 scope,
                 declared_at,
+                source,
             });
         }
-    }
-
-    fn bounded_initializer(&self, init: &Expression<'_>) -> bool {
-        if names::stripped_temp_name(init) {
-            return true;
-        }
-        if let Some(map) = names::map_get_receiver(init) {
-            return unique_closed_collection(&self.value_flow, &map, RegistryKind::Map);
-        }
-        if let Some(object) = names::member_object(init) {
-            return unique_closed_collection(&self.value_flow, &object, RegistryKind::Object)
-                || unique_closed_collection(&self.value_flow, &object, RegistryKind::Array);
-        }
-        false
     }
 }
 
@@ -137,6 +159,8 @@ impl ImportCollector {
 mod names;
 #[path = "closed_identifier_registries.rs"]
 mod registries;
+#[path = "closed_identifier_mutations.rs"]
+mod registry_mutations;
 
 pub(super) fn plain_call<'a>(expr: &'a Expression<'a>) -> Option<&'a CallExpression<'a>> {
     let expr = crate::codebase::ts_source::unwrap_ts_wrappers(expr);

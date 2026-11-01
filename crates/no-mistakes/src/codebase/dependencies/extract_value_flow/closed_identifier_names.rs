@@ -1,4 +1,3 @@
-use super::super::super::simple_callee_name;
 use super::{literal_string, plain_call};
 use oxc_ast::ast::{Argument, Expression, RegExpFlags};
 use oxc_syntax::operator::BinaryOperator;
@@ -25,45 +24,42 @@ pub(super) fn map_get_receiver(expr: &Expression<'_>) -> Option<String> {
     identifier_name(&member.object)
 }
 
-fn identifier_name(expr: &Expression<'_>) -> Option<String> {
-    match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
-        Expression::Identifier(identifier) => Some(identifier.name.to_string()),
-        _ => None,
-    }
-}
-
-pub(super) fn stripped_temp_name(expr: &Expression<'_>) -> bool {
+pub(super) fn stripped_temp_name(
+    expr: &Expression<'_>,
+    trusted_uuid: &impl Fn(&Expression<'_>) -> bool,
+) -> bool {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
         Expression::TemplateLiteral(template) => {
             // A parsed template has one more quasi than it has holes.
             let first = &template.quasis[0];
             !template.expressions.is_empty()
                 && !crate::ast::template_quasi_text(first).is_empty()
-                && template.expressions.iter().all(stripped_uuid)
+                && template
+                    .expressions
+                    .iter()
+                    .all(|hole| stripped_uuid(hole, trusted_uuid))
         }
         Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
             literal_string(&binary.left).is_some_and(|text| !text.is_empty())
-                && stripped_uuid(&binary.right)
+                && stripped_uuid(&binary.right, trusted_uuid)
         }
         _ => false,
     }
 }
 
-fn stripped_uuid(expr: &Expression<'_>) -> bool {
-    strip_hyphens(expr).is_some_and(bare_random_uuid)
+fn stripped_uuid(expr: &Expression<'_>, trusted_uuid: &impl Fn(&Expression<'_>) -> bool) -> bool {
+    strip_hyphens(expr).is_some_and(|call| zero_arg_call(call) && trusted_uuid(call))
 }
 
-fn bare_random_uuid(expr: &Expression<'_>) -> bool {
-    let Some(call) = plain_call(expr) else {
-        return false;
-    };
-    if !call.arguments.is_empty() {
-        return false;
+fn zero_arg_call(expr: &Expression<'_>) -> bool {
+    plain_call(expr).is_some_and(|call| call.arguments.is_empty())
+}
+
+pub(super) fn identifier_name(expr: &Expression<'_>) -> Option<String> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
+        Expression::Identifier(identifier) => Some(identifier.name.to_string()),
+        _ => None,
     }
-    matches!(
-        simple_callee_name(&call.callee).as_deref(),
-        Some("randomUUID" | "crypto.randomUUID")
-    )
 }
 
 fn strip_hyphens<'a>(expr: &'a Expression<'a>) -> Option<&'a Expression<'a>> {

@@ -151,6 +151,8 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
     // fail-uuid-unstripped-or-suffix keeps unstripped, single replace, and a suffix.
     // fail-open-object-member keeps a registry value that reads process.env.
     // fail-nested-map-get keeps a get reached through another object.
+    // fail-mutated-registry keeps map, set, array, element, and assign writes.
+    // fail-shadowed-random-uuid keeps a local or non-crypto randomUUID.
     push(
         &mut owned,
         rule,
@@ -167,6 +169,8 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "fail-uuid-unstripped-or-suffix",
             "fail-open-object-member",
             "fail-nested-map-get",
+            "fail-mutated-registry",
+            "fail-shadowed-random-uuid",
         ],
     );
     let assertions = rules_path(rule, "configs", "finite-domain-assertions.yml");
@@ -179,6 +183,7 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
             "pass-finite-domain-assertion",
             "fail-regex-only-guard",
             "fail-open-set-guard",
+            "fail-reassigned-guard",
         ],
     );
     let cases: Vec<(&str, PathBuf, PathBuf)> = owned

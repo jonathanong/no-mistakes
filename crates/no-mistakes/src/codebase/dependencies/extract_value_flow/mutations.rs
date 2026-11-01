@@ -20,6 +20,15 @@ impl ImportCollector {
         let (base, member) = name
             .split_once('.')
             .map_or((name, false), |(base, _)| (base, true));
+        if !member && self.collect_value_flow {
+            self.value_flow
+                .identifier_writes
+                .push(super::closed_identifiers::IdentifierWrite {
+                    scope,
+                    name: base.to_string(),
+                    at: offset,
+                });
+        }
         if !member {
             self.note_guarded_parameter_write(scope, base, offset, completed_at);
         }
