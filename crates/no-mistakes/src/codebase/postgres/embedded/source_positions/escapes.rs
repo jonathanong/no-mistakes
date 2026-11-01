@@ -17,12 +17,17 @@ pub(super) fn width(raw: &str, raw_mode: bool) -> usize {
     if raw_mode || !raw.starts_with('\\') {
         return raw.chars().next().unwrap().len_utf8();
     }
-    match raw.as_bytes()[1] {
+    let Some(&next) = raw.as_bytes().get(1) else {
+        return raw.len();
+    };
+    match next {
         b'x' => 4,
-        b'u' if raw.as_bytes().get(2) == Some(&b'{') => raw.find('}').unwrap() + 1,
+        b'u' if raw.as_bytes().get(2) == Some(&b'{') => raw.find('}').map_or(2, |end| end + 1),
         b'u' => {
-            let high = u32::from_str_radix(&raw[2..6], 16).unwrap();
-            if (0xD800..=0xDBFF).contains(&high)
+            let high = raw
+                .get(2..6)
+                .and_then(|value| u32::from_str_radix(value, 16).ok());
+            if high.is_some_and(|high| (0xD800..=0xDBFF).contains(&high))
                 && raw.get(6..8) == Some("\\u")
                 && raw
                     .get(8..12)
@@ -35,7 +40,7 @@ pub(super) fn width(raw: &str, raw_mode: bool) -> usize {
             }
         }
         b'0'..=b'7' => {
-            let maximum = if raw.as_bytes()[1] <= b'3' { 3 } else { 2 };
+            let maximum = if next <= b'3' { 3 } else { 2 };
             1 + raw.as_bytes()[1..]
                 .iter()
                 .take(maximum)
@@ -61,7 +66,9 @@ pub(super) fn extra_characters(raw: &str, width: usize, raw_mode: bool) -> usize
 fn unicode_escape_unit(raw: &str, width: usize) -> Option<u32> {
     // A braced escape such as `\u{41}` can also be six bytes wide.
     if raw.as_bytes().get(2) == Some(&b'{') {
-        return Some(u32::from_str_radix(&raw[3..width - 1], 16).unwrap());
+        return u32::from_str_radix(raw.get(3..width.checked_sub(1)?)?, 16).ok();
     }
-    (width == 6).then(|| u32::from_str_radix(&raw[2..6], 16).unwrap())
+    (width == 6)
+        .then(|| u32::from_str_radix(raw.get(2..6)?, 16).ok())
+        .flatten()
 }

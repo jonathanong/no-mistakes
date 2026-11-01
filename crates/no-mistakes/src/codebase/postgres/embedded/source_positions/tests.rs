@@ -104,6 +104,28 @@ fn high_leading_legacy_octal_keeps_raw_and_cooked_characters_aligned() {
     assert_eq!(super::escapes::width("\\377", false), 4);
 }
 #[test]
+fn malformed_unicode_escapes_do_not_panic() {
+    for raw in ["\\u{}", "\\u{zz}", "\\u{41", "\\uzzzz", "\\u12", "\\u{}x"] {
+        let width = super::escapes::width(raw, false);
+        assert_eq!(
+            super::escapes::extra_characters(raw, width, false),
+            0,
+            "{raw}"
+        );
+    }
+    for (raw, decoded) in [
+        ("\\u12xy", "xy"),
+        ("\\u{41", "{41"),
+        ("\\x4", "4z"),
+        ("\\", "\\"),
+    ] {
+        assert_eq!(
+            super::origins::piece(raw, decoded, 0, false).len(),
+            decoded.len()
+        );
+    }
+}
+#[test]
 fn multiline_placeholder_and_following_quasi_have_distinct_physical_lines() {
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded/source-position-interpolation.ts");

@@ -17,13 +17,17 @@ pub(in crate::codebase::postgres::embedded) fn piece(
     for character in decoded.chars() {
         if extra == 0 {
             if !raw_mode {
-                while let Some(width) = escapes::continuation(&raw[at..]) {
+                while let Some(width) = raw.get(at..).and_then(escapes::continuation) {
                     at += width;
                 }
             }
+            let Some(rest) = raw.get(at..).filter(|rest| !rest.is_empty()) else {
+                out.extend(std::iter::repeat_n(origin, character.len_utf8()));
+                continue;
+            };
             origin = start + at as u32;
-            let width = escapes::width(&raw[at..], raw_mode);
-            extra = escapes::extra_characters(&raw[at..], width, raw_mode);
+            let width = escapes::width(rest, raw_mode);
+            extra = escapes::extra_characters(rest, width, raw_mode);
             at += width;
         } else {
             extra -= 1;
