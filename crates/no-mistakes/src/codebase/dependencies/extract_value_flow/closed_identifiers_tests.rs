@@ -151,6 +151,9 @@ fn closed_domain_facts_reject_open_shapes() {
     assert!(skipped.finite_identifier_guards.is_empty());
 }
 
+#[path = "closed_identifier_mutation_tests.rs"]
+mod mutation_tests;
+
 fn parse_flow(
     source: &str,
     collect_value_flow: bool,
