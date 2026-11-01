@@ -9,15 +9,6 @@ use std::path::Path;
 
 use super::super::SqlCall;
 
-#[cfg(test)]
-pub(super) fn selected<'a>(
-    facts: &'a CheckFactMap,
-    call: &SqlCall<'a>,
-    bindings: &Bindings<'a>,
-) -> Option<Vec<&'a ValueExpression>> {
-    split(facts, call, bindings).map(|(selected, _)| selected)
-}
-
 /// Identifier-position holes, then every other hole. `None` when placeholder
 /// indexes cannot be aligned, so the caller classifies every hole instead.
 pub(super) fn split<'a>(

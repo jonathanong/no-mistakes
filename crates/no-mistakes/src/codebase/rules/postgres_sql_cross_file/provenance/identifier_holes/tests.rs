@@ -1,11 +1,20 @@
+use super::super::super::SqlCall;
 use super::super::bindings::Bindings;
-use super::selected;
+use super::split;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::extract::{ValueCall, ValueExpression, ValueFlowFacts};
 use crate::codebase::postgres::EmbeddedSqlCall;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::PathBuf;
 use std::sync::Arc;
+
+fn selected<'a>(
+    facts: &'a CheckFactMap,
+    call: &SqlCall<'a>,
+    bindings: &Bindings<'a>,
+) -> Option<Vec<&'a ValueExpression>> {
+    split(facts, call, bindings).map(|(holes, _)| holes)
+}
 
 fn named(name: &str) -> ValueExpression {
     ValueExpression::Named {
