@@ -33,15 +33,15 @@
   "devDependencies": {
     "@emnapi/core": "^1.11.3",
     "@emnapi/runtime": "^1.11.3",
-    "@storybook/addon-vitest": "10.6.2",
-    "@storybook/react": "10.6.2",
-    "@storybook/react-vite": "10.6.2",
+    "@storybook/addon-vitest": "10.6.4",
+    "@storybook/react": "10.6.4",
+    "@storybook/react-vite": "10.6.4",
     "@vitest/browser-playwright": "5.0.5",
     "@vitest/coverage-v8": "^5.0.5",
     "cspell": "^10.4.0",
     "eslint": "^10.13.0",
     "husky": "^9.1.7",
-    "jscpd": "5.4.1",
+    "jscpd": "5.4.2",
     "oxfmt": "^0.74.0",
     "oxlint": "^1.89.0",
     "oxlint-tsgolint": "7.0.2005",
@@ -49,7 +49,7 @@
     "pr-shepherd": "^1.0.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "storybook": "10.6.2",
+    "storybook": "10.6.4",
     "vitest": "^5.0.5"
   },
   "engines": {
