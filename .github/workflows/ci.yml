@@ -151,7 +151,7 @@ jobs:
 
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
           cache: true
@@ -166,7 +166,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
 
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -289,7 +289,7 @@ jobs:
 
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
           cache: true
@@ -303,7 +303,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           key: packages
 
@@ -340,7 +340,7 @@ jobs:
 
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
           cache: true
@@ -354,7 +354,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
 
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -453,7 +453,7 @@ jobs:
 
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
           cache: true
@@ -520,7 +520,7 @@ jobs:
 
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
           cache: true
@@ -534,7 +534,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           key: native-${{ matrix.target }}
 
@@ -666,7 +666,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           shared-key: standalone-lib
 
@@ -700,11 +700,11 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
 
       - name: Install cargo-llvm-cov
         timeout-minutes: 5
-        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
+        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.32
         with:
           # The profile-reuse helper depends on the 0.9.0 report glob and reuse behavior.
           tool: cargo-llvm-cov@0.9.0
@@ -769,7 +769,7 @@ jobs:
 
       - name: Install cargo-crap
         timeout-minutes: 5
-        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
+        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.32
         with:
           tool: cargo-crap
 
@@ -920,7 +920,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           key: ast-analysis
 
@@ -1001,7 +1001,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           key: bench-${{ runner.arch }}
 
@@ -1272,7 +1272,7 @@ jobs:
         # A cache hit finishes quickly. The first run on this runner, and the
         # first run after a libc6 update, installs valgrind and libc6-dbg.
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@821a40cd6c80e3cfe387caf55668287addd808da # v5.5.0
+        uses: CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062 # v5.6.0
         with:
           mode: ${{ matrix.mode }}
           # actions/cache versions entries by path, so this also keys the cache by libc6.
@@ -1292,7 +1292,7 @@ jobs:
       - name: Run unique frontend lifecycle memory controls
         if: ${{ env.BENCHMARK_SELECTED == 'true' && matrix.mode == 'memory' && matrix.benchmark-shard == 'language-frontends' }}
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@821a40cd6c80e3cfe387caf55668287addd808da # v5.5.0
+        uses: CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062 # v5.6.0
         with:
           mode: memory
           runner-version: "5.4.0"
@@ -1371,7 +1371,7 @@ jobs:
       - name: Measure the declared eight fresh processes
         id: samples
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@821a40cd6c80e3cfe387caf55668287addd808da # v5.5.0
+        uses: CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062 # v5.6.0
         env:
           TMPDIR: ${{ runner.temp }}/frontend-lifecycle-smoke/profiles
           CODSPEED_SKIP_UPLOAD: "true"
