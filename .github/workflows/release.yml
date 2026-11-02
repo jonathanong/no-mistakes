@@ -71,7 +71,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           install: false
 
@@ -238,13 +238,13 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           install: false
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           prefix-key: v1-rust-release
           shared-key: validate
@@ -417,7 +417,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           install: false
 
@@ -563,7 +563,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           prefix-key: v1-rust-release
           shared-key: release-${{ matrix.target }}
@@ -746,7 +746,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           install: false
 
@@ -967,7 +967,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           install: false
 
@@ -1031,7 +1031,7 @@ jobs:
 
       - name: Set up pnpm
         timeout-minutes: 2
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           install: false
 
