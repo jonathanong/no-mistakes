@@ -14,7 +14,7 @@ impl DepGraph {
         resolver: &dyn ImportResolution,
     ) {
         let Some(facts) = facts else { return };
-        self.root_mock_boundaries = inputs
+        let mut drafts: Vec<_> = inputs
             .graph_files
             .indexable()
             .par_iter()
@@ -23,6 +23,22 @@ impl DepGraph {
                     .map(|boundaries| (path.clone(), boundaries))
             })
             .collect();
+        if drafts.iter().any(|(_, draft)| !draft.modules.is_empty()) {
+            let index = self.build_mock_site_index(facts, resolver, inputs.graph_files);
+            drafts.par_iter_mut().for_each(|(path, draft)| {
+                if !draft.modules.is_empty() {
+                    draft.suppressed = self.calls_through_mocked_modules(
+                        path,
+                        &draft.modules,
+                        facts,
+                        resolver,
+                        inputs.graph_files,
+                        &index,
+                    );
+                }
+            });
+        }
+        self.root_mock_boundaries = drafts.into_iter().collect();
     }
 
     fn project_file_mocks(
@@ -161,16 +177,10 @@ impl DepGraph {
                 });
             *candidates.entry(target.to_path_buf()).or_insert(true) &= full;
         }
-        self.finish_file_mocks(
-            path,
-            FileMockDraft {
-                boundaries,
-                candidates,
-                external,
-            },
-            facts,
-            resolver,
-            inputs.graph_files,
-        )
+        self.finish_file_mocks(FileMockDraft {
+            boundaries,
+            candidates,
+            external,
+        })
     }
 }

@@ -23,6 +23,7 @@ struct Chain<'a> {
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
     files: &'a GraphFiles,
+    memo: Option<&'a ModuleMemo>,
 }
 
 type ExportSeen = FxHashSet<(PathBuf, String)>;
@@ -70,15 +71,24 @@ impl DepGraph {
         facts: &dyn TsFactLookup,
         resolver: &dyn ImportResolution,
         files: &GraphFiles,
+        index: &MockSiteIndex,
     ) -> FxHashSet<(PathBuf, u32)> {
         let chain = Chain {
             modules,
             facts,
             resolver,
             files,
+            memo: Some(&index.memo),
         };
+        let candidates: std::collections::BTreeSet<usize> = modules
+            .iter()
+            .filter_map(|module| index.sites.get(module))
+            .flatten()
+            .copied()
+            .collect();
+        let sites = self.resolved_call_sites();
         let mut suppressed = fx_set();
-        for site in self.resolved_call_sites() {
+        for site in candidates.into_iter().map(|index| &sites[index]) {
             if site.file.as_path() == root || !site_replaced(site, &chain) {
                 continue;
             }
@@ -163,14 +173,11 @@ fn follow(
 }
 
 fn module_id(chain: &Chain<'_>, specifier: &str, from: &Path) -> MockedModule {
-    match chain.resolver.resolve(specifier, from) {
-        Some(path) => chain
-            .files
-            .visible_path(&path)
-            .map(|visible| MockedModule::File(visible.to_path_buf()))
-            .unwrap_or_else(|| {
-                MockedModule::File(crate::codebase::ts_resolver::normalize_path(&path))
-            }),
-        None => MockedModule::Specifier(specifier.to_string()),
+    if let Some(id) = chain
+        .memo
+        .and_then(|memo| memo.get(&(from.to_path_buf(), specifier.to_string())))
+    {
+        return id.clone();
     }
+    resolve_module(chain.resolver, chain.files, specifier, from)
 }
