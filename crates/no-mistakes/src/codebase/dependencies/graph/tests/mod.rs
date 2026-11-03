@@ -165,6 +165,7 @@ mod receiver_escape_shapes;
 mod receiver_escapes;
 mod root_mock_coverage;
 mod root_mock_export_hop;
+mod root_mock_site_index;
 mod unique_execution_phases;
 
 #[path = "mutable_receiver_bindings.rs"]

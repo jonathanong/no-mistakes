@@ -219,6 +219,7 @@ fn file_mock_follow_covers_external_cycles_and_parse_errors() {
         facts: &facts,
         resolver: &resolver,
         files: &files,
+        memo: None,
     };
     assert!(matches!(
         module_id(&chain, "hidden.mts", Path::new("/tmp/from.mts")),

@@ -7,11 +7,7 @@ struct FileMockDraft {
 impl DepGraph {
     fn finish_file_mocks(
         &self,
-        path: &Path,
         draft: FileMockDraft,
-        facts: &dyn TsFactLookup,
-        resolver: &dyn ImportResolution,
-        files: &GraphFiles,
     ) -> Option<RootMockBoundaries> {
         let FileMockDraft {
             mut boundaries,
@@ -31,21 +27,11 @@ impl DepGraph {
                 boundaries.modules.insert(module_id);
             }
         }
-        if !boundaries.modules.is_empty() {
-            boundaries.suppressed = self.calls_through_mocked_modules(
-                path,
-                &boundaries.modules,
-                facts,
-                resolver,
-                files,
-            );
-        }
         boundaries.factories.sort();
         boundaries.factories.dedup();
         (!boundaries.blocked.is_empty()
             || !boundaries.factories.is_empty()
-            || !boundaries.modules.is_empty()
-            || !boundaries.suppressed.is_empty())
+            || !boundaries.modules.is_empty())
         .then_some(boundaries)
     }
 }

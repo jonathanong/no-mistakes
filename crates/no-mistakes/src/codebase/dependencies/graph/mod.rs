@@ -82,6 +82,7 @@ include!("root_mocks_proof.rs");
 include!("root_mocks_imports.rs");
 include!("root_mocks_walk.rs");
 include!("root_mocks_export_guard.rs");
+include!("root_mocks_site_index.rs");
 include!("root_mocks_export_hop.rs");
 include!("root_mocks_export_reach.rs");
 mod edge_route_imports;
