@@ -216,6 +216,9 @@ pub struct TestProjectPolicy {
     #[serde(skip)]
     #[doc(hidden)]
     pub declaration_path: Option<std::path::PathBuf>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub setup_declaration_paths: Vec<std::path::PathBuf>,
     #[serde(rename = "integration_suites")]
     pub integration_suites: BTreeMap<String, Vec<String>>,
 }

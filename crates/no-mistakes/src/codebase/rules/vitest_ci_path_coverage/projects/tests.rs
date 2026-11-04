@@ -221,6 +221,7 @@ fn needs_config_projects_covers_config_and_policy_branches() {
             integration_suites: BTreeMap::new(),
             setup_files: Vec::new(),
             declaration_path: None,
+            setup_declaration_paths: Vec::new(),
         },
     );
     assert!(
@@ -282,6 +283,7 @@ fn coverage_units_cover_missing_project_and_explicit_project_branches() {
             integration_suites: BTreeMap::new(),
             setup_files: Vec::new(),
             declaration_path: None,
+            setup_declaration_paths: Vec::new(),
         },
     );
     let units = coverage_units(
@@ -311,6 +313,7 @@ fn coverage_units_merges_explicit_projects_without_loading_config_when_not_neede
             integration_suites: BTreeMap::new(),
             setup_files: Vec::new(),
             declaration_path: None,
+            setup_declaration_paths: Vec::new(),
         },
     );
 

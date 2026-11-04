@@ -1,0 +1,5 @@
+vitest:
+  projects:
+    unit:
+      setup_files:
+        - setup/first.ts

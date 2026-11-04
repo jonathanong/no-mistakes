@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    projects:
+      unit:
+        include:
+          - src/**/*.test.ts
