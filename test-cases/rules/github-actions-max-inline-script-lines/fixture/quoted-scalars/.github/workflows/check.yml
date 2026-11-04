@@ -1,0 +1,44 @@
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: "echo one
+          echo line
+          echo line
+          "
+      - run: "echo one
+          echo line
+          echo line
+          echo line
+          "
+      - run: "
+          echo one
+          echo two
+          echo three"
+      - run: "echo one
+          echo two
+          echo three
+          echo four"
+      - run: 'echo one
+          echo line
+          echo line
+          '
+      - run: 'echo one
+          echo line
+          echo line
+          echo line
+          '
+      - run: '
+          echo one
+          echo two
+          echo three'
+      - run: 'echo one
+          echo two
+          echo three
+          echo four'
+      - run: 'echo ''quoted''
+          echo two
+          echo three'
+      - run: "echo \"quoted\"
+          echo two
+          echo three"

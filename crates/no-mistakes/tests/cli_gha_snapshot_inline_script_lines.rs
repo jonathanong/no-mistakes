@@ -46,3 +46,18 @@ fn invalid_max_lines_is_rejected() {
         "{text}"
     );
 }
+
+#[test]
+fn github_actions_inline_script_scalars_json_matches_snapshot() {
+    let cases: Vec<_> = ["quoted-scalars", "block-comments"]
+        .into_iter()
+        .map(|fixture| {
+            (
+                fixture,
+                rules_path(RULE, "fixture", fixture),
+                rules_path(RULE, "configs", "three.yml"),
+            )
+        })
+        .collect();
+    assert_saved_fixture("github_actions_inline_script_scalars", &cases);
+}

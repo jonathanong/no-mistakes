@@ -2,7 +2,11 @@ use super::super::yaml_parse::BlockRole;
 use super::super::yaml_text::is_github_script;
 use super::Scanner;
 
+mod scalar;
+
 pub(crate) struct StepScript {
+    pub(crate) job: String,
+    pub(crate) step: usize,
     pub(crate) line: usize,
     pub(crate) count: usize,
     pub(crate) github_script: bool,
@@ -35,6 +39,8 @@ impl ScriptCollector {
 
     pub(super) fn flush(
         &mut self,
+        job: &str,
+        step: usize,
         uses: Option<&str>,
         runs: &[(usize, String)],
         scripts: &[(usize, String)],
@@ -52,8 +58,10 @@ impl ScriptCollector {
             }
             if let Some((line, supported)) = header {
                 self.collected.push(StepScript {
+                    job: job.to_string(),
+                    step,
                     line,
-                    count: count_lines(body, source_lines),
+                    count: scalar::count_lines(line, body, source_lines),
                     github_script,
                     supported,
                 });
@@ -64,22 +72,8 @@ impl ScriptCollector {
 
 pub(crate) fn step_script_lines(source: &str, action: bool) -> Vec<StepScript> {
     let lines: Vec<_> = source.lines().collect();
-    let mut scanner = Scanner::from_lines(&lines, action, action, false);
+    let mut scanner = Scanner::from_lines(&lines, action, action, true);
     scanner.scripts.enabled = true;
     scanner.scan();
     scanner.scripts.collected
-}
-
-fn count_lines(body: &[(usize, String)], source_lines: &[&str]) -> usize {
-    let mut count = 0;
-    let mut continued = false;
-    for (line, text) in body {
-        if !text.trim().is_empty() && !continued {
-            count += 1;
-        }
-        continued = source_lines
-            .get(line - 1)
-            .is_some_and(|text| text.ends_with('\\'));
-    }
-    count
 }

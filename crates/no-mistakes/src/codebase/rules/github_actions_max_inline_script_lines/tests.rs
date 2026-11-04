@@ -48,3 +48,14 @@ fn standalone_rejects_nonpositive_limits() {
         .to_string()
         .contains("maxLines must be a positive integer"));
 }
+
+#[test]
+fn scalar_delimiters_and_yaml_comments_do_not_count() {
+    for (name, expected) in [("quoted-scalars", 4), ("block-comments", 11)] {
+        let findings = check(&fixture(name), &config("three")).unwrap();
+        assert_eq!(findings.len(), expected, "{name}: {findings:?}");
+        for finding in findings {
+            assert!(finding.message.contains("4 non-blank"), "{finding:?}");
+        }
+    }
+}

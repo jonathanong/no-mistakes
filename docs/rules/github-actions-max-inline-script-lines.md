@@ -15,13 +15,18 @@ Counts non-blank lines in the YAML script body, including comment-only script
 lines. A physical line ending in `\` joins the next line, so a continued command
 counts once. A space after the backslash prevents continuation. Blank lines do not
 count; a blank continuation target ends that continuation. Heredoc delimiters,
-heredoc contents, and `${{ }}` expressions count as ordinary body lines. Literal (`|`) and folded (`>`) block scalars use their original body lines before
-YAML folding, with the same continuation joining. The script key and blank lines do not count. Single-line scalar scripts
-count as one line. A script with exactly the limit passes. Findings point to the `run:`
-or `script:` key, include the count and limit, and explain the extraction fix.
+heredoc contents, and `${{ }}` expressions count as ordinary body lines. Literal (`|`)
+and folded (`>`) block scalars use their original body lines before YAML folding,
+with the same continuation joining. The script key, YAML quote delimiters, and blank
+lines do not count. YAML comments indented less than a block scalar's content do not
+count; comments at its content indentation remain script lines, including with explicit
+indentation indicators. Single-line scalar scripts count as one line. A script with
+exactly the limit passes. Findings point to the `run:` or `script:` key, include the
+count and limit, and explain the extraction fix.
 
 Malformed YAML and script bodies whose locations cannot be aligned (for example flow-style
-steps or aliases) produce a finding asking for ordinary block-style YAML.
+steps or aliases) produce a finding asking for ordinary block-style YAML. Other scripts
+in the same file are still checked at their own source locations.
 
 ## Options
 

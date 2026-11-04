@@ -1,0 +1,115 @@
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: |
+            echo line
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: |
+            echo one
+            echo two
+            echo three
+            # script comment
+      - run: >
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: >
+            echo line
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: >
+            echo one
+            echo two
+            echo three
+            # script comment
+      - run: |4
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: |4
+            echo line
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: |4
+            echo one
+            echo two
+            echo three
+            # script comment
+      - run: >4-
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: >4-
+            echo line
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: >4-
+            echo one
+            echo two
+            echo three
+            # script comment
+      - run: |-4
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: |-4
+            echo line
+            echo line
+            echo line
+            echo line
+          # YAML comment below body indentation
+        # YAML comment beside run
+      - run: |-4
+            echo one
+            echo two
+            echo three
+            # script comment
+      - uses: actions/github-script@v7
+        with:
+          script: |2
+            console.log('one')
+            console.log('two')
+            console.log('three')
+           # YAML comment below explicit indentation
+          # YAML comment beside script
+      - uses: actions/github-script@v7
+        with:
+          script: |2
+            console.log('one')
+            console.log('two')
+            console.log('three')
+            // script comment
+           # YAML comment below explicit indentation
+      -    run: |2
+             echo one
+             echo two
+             echo three
+            # YAML comment below body indentation
