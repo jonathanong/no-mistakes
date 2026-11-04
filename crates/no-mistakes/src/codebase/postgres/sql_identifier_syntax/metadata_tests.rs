@@ -3,6 +3,14 @@ use std::path::PathBuf;
 fn callable_factory_executors_retain_values_builder_inputs() {
     let root =
         crate::test_support::rule_fixture_root("postgres-no-offset").join("low-values-executors");
+    let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
+    let nested_sink_line = source
+        .lines()
+        .enumerate()
+        .skip_while(|(_, line)| !line.starts_with("export async function nestedSqlArgument("))
+        .find(|(_, line)| line.trim() == "return query(statement);")
+        .map(|(index, _)| index + 1)
+        .expect("saved nested factory case has an executor sink");
     let options = crate::napi_api::options::test_json_arg(serde_json::json!({
         "root": root,
     }));
@@ -37,6 +45,19 @@ fn callable_factory_executors_retain_values_builder_inputs() {
     }
     for line in [18, 45, 51, 57] {
         assert!(rows.iter().any(|row| row["line"] == line), "{report}");
+    }
+    for rule in [
+        "postgres-no-offset",
+        "postgres-no-unbounded-sql-identifier",
+        "postgres-no-mutable-sql-registry",
+    ] {
+        assert_eq!(
+            rows.iter()
+                .filter(|row| row["line"] == nested_sink_line && row["rule"] == rule)
+                .count(),
+            1,
+            "{rule} at nested sink: {report}"
+        );
     }
     let findings = report["rules"].as_array().unwrap();
     assert_eq!(findings.len(), 2, "{report}");
