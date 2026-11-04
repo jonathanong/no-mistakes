@@ -12,7 +12,7 @@ jobs:
          # external YAML comment at indentation 9
       - run: &over >-2
           echo one
-          echo two
+          # this script comment must count
           echo three
           echo four
          # external YAML comment at indentation 9
