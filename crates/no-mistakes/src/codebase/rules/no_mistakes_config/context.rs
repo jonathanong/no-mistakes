@@ -169,3 +169,7 @@ fn location_line(
     }
     None
 }
+
+#[cfg(test)]
+#[path = "context_tests.rs"]
+mod tests;
