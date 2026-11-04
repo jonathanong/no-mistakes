@@ -51,11 +51,30 @@ fn standalone_rejects_nonpositive_limits() {
 
 #[test]
 fn scalar_delimiters_and_yaml_comments_do_not_count() {
-    for (name, expected) in [("quoted-scalars", 4), ("block-comments", 11)] {
+    for (name, expected) in [("quoted-scalars", 6), ("block-comments", 11)] {
         let findings = check(&fixture(name), &config("three")).unwrap();
         assert_eq!(findings.len(), expected, "{name}: {findings:?}");
         for finding in findings {
             assert!(finding.message.contains("4 non-blank"), "{finding:?}");
         }
+    }
+}
+
+#[test]
+fn quoted_scalar_comments_preserve_the_following_script_locations() {
+    let root = fixture("quoted-scalars");
+    let findings = check(&root, &config("three")).unwrap();
+    let source = std::fs::read_to_string(root.join(".github/workflows/check.yml")).unwrap();
+    let expected: Vec<_> = source
+        .lines()
+        .enumerate()
+        .filter(|(_, line)| line.trim() == "- run: |")
+        .map(|(index, _)| index + 1)
+        .collect();
+    assert_eq!(expected.len(), 2);
+    for line in expected {
+        assert!(findings.iter().any(|finding| {
+            finding.line == line && finding.message.starts_with("Inline script has 4 non-blank")
+        }));
     }
 }

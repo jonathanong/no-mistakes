@@ -42,3 +42,21 @@ jobs:
       - run: "echo \"quoted\"
           echo two
           echo three"
+      - run: 'echo ''quoted''
+          echo two
+          echo three
+          ' # YAML's trailing note
+      - run: |
+          echo one
+          echo two
+          echo three
+          echo four
+      - run: "echo \"quoted\"
+          echo two
+          echo three
+          " # YAML "trailing note
+      - run: |
+          echo one
+          echo two
+          echo three
+          echo four

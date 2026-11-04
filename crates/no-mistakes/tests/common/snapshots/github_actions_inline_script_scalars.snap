@@ -124,6 +124,20 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/check.yml",
+          "line": 49,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- run: |"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 58,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- run: |"
+        },
+        {
+          "file": ".github/workflows/check.yml",
           "line": 9,
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
           "rule": "github-actions-max-inline-script-lines",

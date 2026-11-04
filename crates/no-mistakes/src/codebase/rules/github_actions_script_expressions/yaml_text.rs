@@ -84,26 +84,21 @@ pub(super) fn leading_indent(line: &str) -> usize {
         .count()
 }
 
-pub(super) fn ends_inside_quote(text: &str, mut inside: bool, quote: char) -> bool {
-    let mut escaped = false;
-    for ch in text.chars() {
-        if !inside {
-            if ch == quote {
-                inside = true;
+pub(super) fn ends_inside_quote(text: &str, inside: bool, quote: char) -> bool {
+    let mut chars = text.chars().peekable();
+    if !inside && !chars.by_ref().any(|ch| ch == quote) {
+        return false;
+    }
+    while let Some(ch) = chars.next() {
+        if quote == '"' && ch == '\\' {
+            chars.next();
+        } else if ch == quote {
+            if quote == '\'' && chars.peek() == Some(&'\'') {
+                chars.next();
+            } else {
+                return false;
             }
-            continue;
-        }
-        if escaped {
-            escaped = false;
-            continue;
-        }
-        if ch == '\\' {
-            escaped = true;
-            continue;
-        }
-        if ch == quote {
-            inside = false;
         }
     }
-    inside
+    true
 }
