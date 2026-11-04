@@ -1,7 +1,5 @@
 use super::Settings;
-use crate::config::find_automatic_config_path_from_visible;
 use crate::config::resolve;
-use crate::config::v2::load_v2_config;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -12,8 +10,6 @@ use helpers::{default_selector_attributes, default_selector_test_excludes};
 
 #[path = "load/loaded_v2.rs"]
 mod loaded_v2;
-
-const V2_STEMS: &[&str] = &[".no-mistakes"];
 
 pub(super) fn load_settings_from_visible(
     root: &Path,
@@ -57,7 +53,7 @@ fn load_explicit(
     if !resolved.exists() {
         anyhow::bail!("config file does not exist: {}", resolved.display());
     }
-    let v2 = load_v2_config(root, Some(&resolved))?;
+    let v2 = load_config_from_snapshot(root, Some(&resolved), visible_paths)?;
     if has_v2_playwright_settings(&v2) {
         return loaded_v2::settings_from_v2(
             root,
@@ -78,11 +74,7 @@ fn load_discovered_v2(
     app: Option<String>,
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Option<Settings>> {
-    let paths = visible_paths.paths_for(root);
-    let Some(path) = find_automatic_config_path_from_visible(root, V2_STEMS, &paths)? else {
-        return Ok(None);
-    };
-    let v2 = load_v2_config(root, Some(&path))?;
+    let v2 = load_config_from_snapshot(root, None, visible_paths)?;
     if has_v2_playwright_settings(&v2) {
         return loaded_v2::settings_from_v2(
             root,
@@ -95,6 +87,16 @@ fn load_discovered_v2(
         .map(Some);
     }
     Ok(None)
+}
+
+fn load_config_from_snapshot(
+    root: &Path,
+    config: Option<&Path>,
+    visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
+) -> Result<crate::config::v2::NoMistakesConfig> {
+    let paths = visible_paths.paths_for(root);
+    let sources = visible_paths.source_store_for(root);
+    crate::config::v2::load_v2_config_from_source_store(root, config, &paths, &sources)
 }
 
 pub(super) fn settings_from_loaded_v2(

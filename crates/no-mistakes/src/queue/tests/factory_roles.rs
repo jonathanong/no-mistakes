@@ -77,6 +77,18 @@ fn configured_factory_roles_resolve_aliases_and_name_dead_jobs() {
 }
 
 #[test]
+fn empty_queue_glob_finding_uses_fragment_file_and_line() {
+    let report = analyze_project(&fixture("fragment-glob"), None, &[]).unwrap();
+    let finding = report
+        .check
+        .iter()
+        .find(|finding| finding.kind == "empty-glob")
+        .expect("missing queue glob should be reported");
+    assert_eq!(finding.file, ".no-mistakes/projects/backend.yml");
+    assert_eq!(finding.line, 5);
+}
+
+#[test]
 fn cycle_walk_visits_a_queue_that_does_not_enqueue() {
     let root = PathBuf::from("/repo");
     let file = root.join("workers/side.ts");
