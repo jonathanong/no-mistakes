@@ -149,6 +149,12 @@ and unrelated framework changes do not invalidate the selected framework.
 Changed-file-only input and unreadable old configuration fail open to the
 normal global-config fallback.
 
+CI path filters for config-dependent validation should include the four root
+config filenames and `.no-mistakes/**`, so edits to fragments run those jobs.
+See the [split-config migration guide](https://github.com/jonathanong/no-mistakes/blob/main/docs/migrations/split-no-mistakes-config.md)
+for a filter example and for replacing direct config readers with the merged
+declared view.
+
 For Playwright, a changed Next.js page selects specs that navigate to it — including
 specs whose navigation path interpolates an unresolvable value (e.g.
 `` `/user/${userId}` `` or `'/user/' + id`), which matches the page's dynamic

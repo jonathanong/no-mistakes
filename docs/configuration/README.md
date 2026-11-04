@@ -12,14 +12,23 @@ subdirectories below a section are organizational only. Fragment files accept
 the same `.yaml`, `.yml`, `.json`, and `.jsonc` extensions as the root config.
 
 The optional root config is merged first, followed by fragment files in sorted
-relative-path order. Mappings deep-merge and lists concatenate. Repeating a
-scalar key or merging incompatible value types is an error that identifies the
-source files; values are never silently overwritten. Unknown section names,
+relative-path order; each file's original list order is retained. Mappings
+deep-merge and lists concatenate. Top-level scalar settings stay in the root
+file because they have no section directory. Repeating a scalar key or merging
+incompatible value types is an error that identifies the source files; values
+are never silently overwritten. Duplicate named entries in a list section
+across fragment files are errors that identify both files. Existing duplicate
+validation for a single config file remains in force. Unknown section names,
 unrecognized file extensions (except dotfiles and Markdown files), and config
 files placed directly in `.no-mistakes/` are errors. Paths inside fragments,
 including project roots and test paths, remain relative to the repository root.
 An explicit `--config <file>` loads exactly that file and does not load
 `.no-mistakes/` fragments.
+
+When splitting an existing config, keep top-level scalar values inline and move
+section contents into matching fragment directories. See the
+[split-config migration guide](../migrations/split-no-mistakes-config.md) for
+how to update code that reads the config and CI path filters.
 
 ```yaml
 projects:
@@ -122,6 +131,7 @@ position use line 1 rather than an inferred line.
 ## Topics
 
 - [Discovery](discovery.md)
+- [Splitting a config file](../migrations/split-no-mistakes-config.md)
 - [Projects](projects.md)
 - [Tests and selectors](tests.md)
 - [Queues](queues.md)

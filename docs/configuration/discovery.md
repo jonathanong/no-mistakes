@@ -12,14 +12,22 @@ Discovery order:
 The `.no-mistakes/` directory splits top-level sections: for example,
 `.no-mistakes/rules/db.yml` contributes to `rules`, without an outer `rules:`
 key. Subdirectories only organize files. Root configuration is processed
-first; fragments follow in sorted relative-path order. Maps deep-merge and
-lists concatenate. Repeated scalar keys and type mismatches are errors. Unknown
-section directories, unsupported extensions, and config files directly inside
-`.no-mistakes/` are errors. Dotfiles and Markdown files in section directories
-are ignored. Fragment paths resolve from the repository root.
+first; fragments follow in sorted relative-path order, with each file's list
+order preserved. Maps deep-merge and lists concatenate. Top-level scalar
+settings stay in the root file. Repeated scalar keys, type mismatches, and
+duplicate named entries in a list section across fragments are errors naming
+their source files. Existing single-file duplicate validation remains in
+force. Unknown section directories, unsupported extensions, and config files
+directly inside `.no-mistakes/` are errors. Dotfiles and Markdown files in
+section directories are ignored. Fragment paths resolve from the repository
+root.
 
 An explicit `--config <path>` selects one file only and does not include
 `.no-mistakes/` fragments.
+
+Fragment discovery uses the same Git-visible inventory as other automatic
+configuration. Ensure each fragment is tracked or otherwise visible to Git;
+ignored, untracked fragments do not contribute to the merged config.
 
 If multiple files with the same discovered stem exist under `--root`, loading
 fails so agents do not guess which config is authoritative.
