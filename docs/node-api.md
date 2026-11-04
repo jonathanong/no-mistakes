@@ -35,6 +35,13 @@ use the shared `unanalyzable` policy; definite inherited write grants remain
 findings under every policy. The rule adds no function, option, or report
 type, so `check()` remains the runtime entrypoint.
 
+`query-reached-per-item` accepts `exemptCappedCursorPageReads` in the rule's
+YAML `options`, selected by `check({ root, config })` or an `analyzeProject()`
+check report. It defaults to `false` and shares CLI behavior. The exported
+`QueryReachedPerItemOptions` and `QueryReachedPerItemAllowEntry` describe that
+configuration; the async runtime entrypoints and report fields are unchanged.
+See the [cursor exemption contract](rules/query-reached-per-item.md#capped-sequential-page-reads).
+
 ```js
 const { analyzeProject } = require("no-mistakes");
 (async () => {

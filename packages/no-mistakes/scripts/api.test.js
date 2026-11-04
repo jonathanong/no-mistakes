@@ -176,3 +176,20 @@ test("check timings have named public types", () => {
   assert.match(report, /timings\?: CheckTiming\[\]/);
   assert.match(options, /timings\?: boolean/);
 });
+
+test("per-item query configuration exports optional capped cursor exemption", () => {
+  const declarations = readFileSync(join(packageRoot, "query-reached-per-item-types.d.ts"), "utf8");
+  assert.match(declarations, /export interface QueryReachedPerItemOptions/);
+  assert.match(declarations, /effects: string\[\];/);
+  assert.match(declarations, /allow\?: QueryReachedPerItemAllowEntry\[\];/);
+  assert.match(declarations, /exemptCappedCursorPageReads\?: boolean;/);
+  assert.match(declarations, /export interface QueryReachedPerItemAllowEntry/);
+  assert.match(declarations, /file: string;/);
+  assert.match(declarations, /callee\?: string;/);
+  assert.match(declarations, /line\?: number;/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./query-reached-per-item-types";',
+    ),
+  );
+});

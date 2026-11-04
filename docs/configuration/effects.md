@@ -168,3 +168,11 @@ The per-item rule is enabled separately and must select configured family names
 with `options.effects`. Nothing is scanned as a database effect by default.
 Use `options.allow` for a reviewed baseline of existing per-item callsites, and
 normal rule suppression directives for documented exceptions.
+
+For sequential paging, the rule option
+`options.exemptCappedCursorPageReads: true` exempts a proven page-read call in a
+counted, capped `for` loop when an argument reads an outer variable reassigned
+from that same call's result. It defaults to `false` and belongs under the rule's
+`options`, alongside `effects` and `allow`, rather than under the effect family.
+Other calls that reach effects in that loop remain reportable. See the
+[cursor dependency requirements](../rules/query-reached-per-item.md#capped-sequential-page-reads).

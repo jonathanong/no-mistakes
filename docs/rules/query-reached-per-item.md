@@ -65,10 +65,11 @@ rules:
       allow: []
 ```
 
-| Option    | Default | Behavior                                                                                                      |
-| --------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `effects` | Empty   | Required non-empty list of configured effect family names.                                                    |
-| `allow`   | Empty   | Existing callsites to exempt by repository-relative `file`, optional `callee`, and optional one-based `line`. |
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `effects` | Empty | Required non-empty list of configured effect family names. |
+| `allow` | Empty | Existing callsites to exempt by repository-relative `file`, optional `callee`, and optional one-based `line`. |
+| `exemptCappedCursorPageReads` | `false` | Exempt only proven sequential page reads in counted cursor loops. |
 
 Effect `targets` match resolved module/export bindings, including aliased
 imports, namespace members, static lexical aliases, and named callbacks. The
@@ -121,6 +122,45 @@ library convention; configure exact exported type and factory/member paths.
 Use exact `{file, callee, line}` entries as a reviewed rollout baseline. Omit
 `line` to allow that callee throughout one file; omit `callee` to allow the file.
 Remove baseline entries as helpers gain batch equivalents.
+
+### Capped sequential page reads
+
+Set `options.exemptCappedCursorPageReads: true` when each page read needs the
+previous page's continuation value. The default is `false`; omitting the option
+or explicitly setting it to `false` preserves existing findings.
+
+```yaml
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]
+      exemptCappedCursorPageReads: true
+```
+
+With a configured `postgres` effect family, this page read is exempt:
+
+```ts
+let continuation = initialToken;
+for (let attempt = 0; attempt < maxPages; attempt++) {
+  const result = await readPage({ after: continuation });
+  await handle(result.items);
+  continuation = result.next;
+  if (!continuation) break;
+}
+```
+
+The exemption requires a counted `for` with an explicit counter comparison
+against a bound, which may be non-literal. A call argument must read a variable
+declared outside that loop, and the same loop body must reassign that variable
+from that call's result. Names do not matter. Conditional object spreads such
+as `...(continuation ? { after: continuation } : {})` count as argument reads.
+
+Only the proven page-read call is exempt. The handler still reports if it
+reaches an effect; effects in the page helper's own loops still report at those
+loops. `for...of`, `for...in`, callbacks, `while`, `do`, uncapped loops, offset
+arithmetic, and assignments from another call remain reportable. Aliases,
+destructuring, and spreads that do not prove this dependency remain reportable.
 
 ## Valid example
 
@@ -181,9 +221,11 @@ The report traces the callback's `getUser` call to the configured `read` sink.
 ## Fix
 
 Use a batch twin of the helper, fold the lookup into the parent query, or add a
-reviewed allow entry or suppression when sequential paging, ordered writes, or
-rate limits require the per-item behavior. For transaction-client sinks, merge
-the statements or batch them on that client.
+reviewed allow entry or suppression when ordered writes or rate limits require
+the per-item behavior. For sequential paging, enable
+`exemptCappedCursorPageReads` when the capped loop proves the continuation
+dependency described above; otherwise use a reviewed allowance or suppression.
+For transaction-client sinks, merge the statements or batch them on that client.
 
 ## Analysis
 
