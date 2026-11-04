@@ -20,7 +20,8 @@ pub(super) fn span(file: &SqlStatementFileFacts, bound_index: usize) -> Option<S
         .filter(|(index, _, _)| *index == bound_index)
         .map(|(_, _, site)| locations.position(site.clone()))
         .collect();
-    let all_appended = !positions.is_empty()
+    let all_appended = !locations.append_sites.is_empty()
+        && !positions.is_empty()
         && positions.iter().all(|position| {
             position.is_some_and(|position| {
                 position.source_path.as_deref().unwrap_or(&file.path)

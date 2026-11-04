@@ -19,6 +19,12 @@ fn missing_relation_locations_prevent_the_all_appended_proof() {
         variant_locations: Some(locations),
         ..Default::default()
     };
+    assert_eq!(only_appended(&[span(&file, 0).unwrap()]), None);
+    file.variant_locations
+        .as_mut()
+        .unwrap()
+        .append_sites
+        .push(4);
     assert_eq!(only_appended(&[span(&file, 0).unwrap()]), Some(20));
     file.variant_locations.as_mut().unwrap().bound_tables.push((
         0,
@@ -28,4 +34,52 @@ fn missing_relation_locations_prevent_the_all_appended_proof() {
     let incomplete = span(&file, 0).unwrap();
     assert_eq!(incomplete.relations, [(5, 4)]);
     assert_eq!(only_appended(&[incomplete]), None);
+}
+
+fn statements(relative: &str) -> Vec<SqlStatementFileFacts> {
+    use crate::codebase::postgres::embedded::{
+        extract_embedded_sql_from_source, EmbeddedSqlOptions, TrustedSqlTag,
+    };
+    let path = crate::test_support::rule_fixture_root("postgres-bounded-statements").join(relative);
+    let source = std::fs::read_to_string(&path).unwrap();
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]).with_trusted_sql_tags(&[
+        TrustedSqlTag {
+            module: "@example/db".into(),
+            name: "sql".into(),
+        },
+    ]);
+    let file = extract_embedded_sql_from_source(&path, &source, &options);
+    crate::codebase::postgres::collect::dml::embedded_call_facts_with_locations(
+        &file, true, false, true,
+    )
+}
+
+#[test]
+fn full_from_callers_keep_explicit_append_metadata() {
+    let files = statements("../variants/shared-fragment/src/full-from.ts");
+    let mut calls = Vec::new();
+    for file in &files {
+        let locations = file.variant_locations.as_ref().unwrap();
+        if [38, 42].contains(&locations.original_call_line) {
+            assert!(!locations.append_sites.is_empty());
+            calls.push(only_appended(&[span(file, 0).unwrap()]).unwrap());
+        }
+    }
+    calls.sort_unstable();
+    assert_eq!(calls, [38, 42]);
+}
+
+#[test]
+fn direct_escaped_newlines_and_concatenation_do_not_prove_builder_appends() {
+    let files = statements("src/issue-2961-lines.mts");
+    assert_eq!(files.len(), 4);
+    for file in &files {
+        assert!(file
+            .variant_locations
+            .as_ref()
+            .unwrap()
+            .append_sites
+            .is_empty());
+        assert_eq!(only_appended(&[span(file, 0).unwrap()]), None);
+    }
 }
