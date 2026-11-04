@@ -1017,6 +1017,8 @@ jobs:
 
       - name: Build CPU benchmarks
         timeout-minutes: 30
+        env:
+          CARGO_BUILD_JOBS: "2"
         run: >-
           bash .github/scripts/with-resource-samples.sh
           cargo codspeed build
