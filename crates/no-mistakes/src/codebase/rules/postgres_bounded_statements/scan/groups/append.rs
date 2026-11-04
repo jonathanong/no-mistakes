@@ -1,4 +1,5 @@
 //! Move a grouped finding onto the call when its earliest root is an appended fragment.
+use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::SqlStatementFileFacts;
 use crate::codebase::rules::LocatedRuleFinding;
 
@@ -19,14 +20,13 @@ pub(super) fn span(file: &SqlStatementFileFacts, bound_index: usize) -> Option<S
             }
             let position = locations.position(site.clone())?;
             same_file(position.source_path.as_ref(), &file.path).then_some((
-                position.sql_line,
-                position.sql_column,
                 position.source_line,
                 shift(position.source_line, position.sql_line),
             ))
         })
         .collect();
-    let opening_shift = relations.iter().min().map(|(_, _, _, shift)| *shift)?;
+    let opening = locations.position(SqlFactSite::Origin)?;
+    let opening_shift = shift(opening.source_line, opening.sql_line);
     let recorded = locations.original_call_line as usize;
     let call_line = if recorded > 0 {
         recorded
@@ -36,10 +36,7 @@ pub(super) fn span(file: &SqlStatementFileFacts, bound_index: usize) -> Option<S
     Some(Span {
         call_line,
         opening_shift,
-        relations: relations
-            .into_iter()
-            .map(|(_, _, source_line, shift)| (source_line, shift))
-            .collect(),
+        relations,
     })
 }
 

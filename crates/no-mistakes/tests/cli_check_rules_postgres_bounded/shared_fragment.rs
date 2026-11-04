@@ -16,6 +16,10 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
         lines_of(".no-mistakes.yml"),
         [
             ("src/first.ts".to_string(), 5),
+            ("src/full-from.ts".to_string(), 9),
+            ("src/full-from.ts".to_string(), 15),
+            ("src/full-from.ts".to_string(), 21),
+            ("src/full-from.ts".to_string(), 34),
             ("src/second.ts".to_string(), 5),
             ("src/third.ts".to_string(), 7)
         ]
@@ -51,5 +55,42 @@ fn shared_fragment_check_json_snapshot() {
     crate::check_json_snapshot::assert_saved_fixture(
         "postgres_bounded_shared_fragment",
         &[("callers", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}
+
+#[test]
+fn same_file_full_from_fragments_keep_both_callers_and_ignore_a_suppressed_opening_root() {
+    let found = findings_of(check_in(
+        &fixture_dir("variants/shared-fragment"),
+        ".no-mistakes.yml",
+    ));
+    let found: Vec<_> = found
+        .into_iter()
+        .filter(|(file, _, _)| file == "src/full-from.ts")
+        .collect();
+    assert_eq!(
+        found,
+        [
+            (
+                "src/full-from.ts".to_string(),
+                9,
+                "table:accounts, table:orders".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                15,
+                "table:accounts, table:orders".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                21,
+                "table:invoices, table:orders".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                34,
+                "table:invoices".to_string()
+            ),
+        ]
     );
 }

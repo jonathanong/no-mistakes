@@ -388,8 +388,10 @@ finding's earliest root is in that fragment rather than in the statement's
 opening template. The finding is then one report on the executing call, and the
 message names the fragment. A grouped finding that starts in the opening
 template keeps that line. When a root comes from an appended fragment, the
-message names the fragment's location. A statement made only of appended
-fragments is reported at its executor call.
+message names the earliest contributing line in each fragment file once. A
+grouped statement made only of appended fragments is reported at each executor
+call, even when several callers append the same full `FROM` fragment.
+Suppressed roots do not determine the remaining group's location.
 
 `allow` entries are applied per root and still report stale entries. A
 relation-line suppression suppresses that relation before the remaining roots
