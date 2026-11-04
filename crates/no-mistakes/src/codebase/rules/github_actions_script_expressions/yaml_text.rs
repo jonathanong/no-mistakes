@@ -41,7 +41,7 @@ pub(super) fn is_block_header(value: &str) -> bool {
     )
 }
 
-fn strip_anchor(value: &str) -> &str {
+pub(super) fn strip_anchor(value: &str) -> &str {
     let Some(rest) = value.strip_prefix('&') else {
         return value;
     };

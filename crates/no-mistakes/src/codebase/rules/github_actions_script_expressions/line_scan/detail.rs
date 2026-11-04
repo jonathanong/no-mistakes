@@ -58,6 +58,7 @@ pub(super) fn begin_step(scanner: &mut Scanner<'_>, line: usize) {
     scanner.step += 1;
     scanner.uses_line = None;
     scanner.item_line = Some(line);
+    scanner.scripts.note_step(&scanner.job, scanner.step, line);
 }
 
 pub(super) fn note_uses(scanner: &mut Scanner<'_>, line: usize) {
@@ -104,6 +105,13 @@ pub(super) fn push_line(scanner: &mut Scanner<'_>, role: BlockRole, line_no: usi
     let slot = match role {
         BlockRole::Run => &mut scanner.run_lines,
         BlockRole::Script => &mut scanner.script_lines,
+        BlockRole::Uses => {
+            if let Some(uses) = &mut scanner.uses {
+                uses.push('\n');
+                uses.push_str(text.trim());
+            }
+            return;
+        }
         BlockRole::Other => return,
     };
     slot.push((line_no, text.to_string()));

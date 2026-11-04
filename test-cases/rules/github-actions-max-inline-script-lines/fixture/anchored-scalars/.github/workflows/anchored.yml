@@ -1,0 +1,18 @@
+name: Anchored scalars
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: &exact |2-
+          echo one
+          # this script comment counts
+          echo two \
+          echo three
+         # external YAML comment at indentation 9
+      - run: &over >-2
+          echo one
+          # this script comment must count
+          echo three
+          echo four
+         # external YAML comment at indentation 9

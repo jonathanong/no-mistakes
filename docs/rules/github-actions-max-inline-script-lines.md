@@ -20,13 +20,26 @@ and folded (`>`) block scalars use their original body lines before YAML folding
 with the same continuation joining. The script key, YAML quote delimiters, and blank
 lines do not count. YAML comments indented less than a block scalar's content do not
 count; comments at its content indentation remain script lines, including with explicit
-indentation indicators. Single-line scalar scripts count as one line. A script with
-exactly the limit passes. Findings point to the `run:` or `script:` key, include the
-count and limit, and explain the extraction fix.
+indentation indicators and anchors, regardless of the order of the chomping and indentation
+modifiers. For example, with a `run:` key indented eight spaces and `run: &script |2-`,
+content starts at indentation ten: a YAML comment at indentation nine is outside the script,
+while a comment at indentation ten is part of it and counts. Single-line scalar scripts
+count as one line. A script with exactly the limit passes. Findings point to the `run:` or
+`script:` key, include the count and limit, and explain the extraction fix.
 
-Malformed YAML and script bodies whose locations cannot be aligned (for example flow-style
-steps or aliases) produce a finding asking for ordinary block-style YAML. Other scripts
-in the same file are still checked at their own source locations.
+Literal (`|`) and folded (`>`) block scalars used as the step's `uses` value are recognized
+as action references after YAML chomping and folding. Thus `actions/github-script@v7` is
+recognized whether written as a plain value or a block scalar, and whether `with.script`
+appears before or after `uses` in the step mapping. Findings for these steps still point to
+the `with.script` key and count its body using the same rules as a `run:` body.
+
+Malformed YAML produces a parse diagnostic. Script bodies whose locations cannot be aligned
+(for example aliases) produce a finding asking for ordinary block-style YAML. In a block-style
+steps list, an unsupported flow mapping (`- { ... }`) is reported at its declaration line.
+Put a `no-mistakes-disable-next-line` directive
+immediately above the flow-style step, or use `no-mistakes-disable-line` on the step line,
+to suppress that diagnostic. Matched scripts keep their `run:` or `script:` key location,
+and other scripts in the same file are still checked at their own source locations.
 
 ## Options
 
@@ -107,7 +120,15 @@ justified exception, put the YAML directive immediately above `run:`, even when
 `name:` appears earlier in the step.
 
 Suppression caveat: a directive on the step's `name:` or `uses:` does
-not suppress a finding on a later script key.
+not suppress a finding on a later script key. For unsupported flow-style steps, the
+diagnostic is attached to the step declaration, so put the directive immediately above
+that declaration instead. For example:
+
+```yaml
+# no-mistakes-disable-next-line github-actions-max-inline-script-lines
+- { run: 'echo one; echo two; echo three; echo four' }
+- { run: 'echo one; echo two; echo three; echo four' } # no-mistakes-disable-line github-actions-max-inline-script-lines
+```
 
 ## Related rules
 

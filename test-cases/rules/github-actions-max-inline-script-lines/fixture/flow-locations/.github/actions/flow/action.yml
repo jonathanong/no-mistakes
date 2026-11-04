@@ -1,0 +1,18 @@
+name: Flow action
+runs:
+  using: composite
+  steps:
+    - { name: unsupported flow run, run: 'echo one; echo two; echo three; echo four' }
+    # no-mistakes-disable-next-line github-actions-max-inline-script-lines
+    - { name: next-line flow run suppression, run: 'echo one; echo two; echo three; echo four' }
+    - { name: inline flow run suppression, run: 'echo one; echo two; echo three; echo four' } # no-mistakes-disable-line github-actions-max-inline-script-lines
+    - { uses: actions/github-script@v7, with: { script: 'return 1' } }
+    # no-mistakes-disable-next-line github-actions-max-inline-script-lines
+    - { uses: actions/github-script@v7, with: { script: 'return 1' } }
+    - { name: inline flow github-script suppression, uses: actions/github-script@v7, with: { script: 'return 1' } } # no-mistakes-disable-line github-actions-max-inline-script-lines
+    - shell: bash
+      run: |
+        echo one
+        echo two
+        echo three
+        echo four

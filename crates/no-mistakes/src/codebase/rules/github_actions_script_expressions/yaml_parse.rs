@@ -19,6 +19,7 @@ pub(super) enum Kind {
 pub(super) enum BlockRole {
     Run,
     Script,
+    Uses,
     Other,
 }
 
@@ -40,6 +41,8 @@ pub(super) struct Parsed {
 pub(super) fn script_role(key: &str, parent: Option<Kind>) -> Option<BlockRole> {
     if key == "run" && parent == Some(Kind::Step) {
         Some(BlockRole::Run)
+    } else if key == "uses" && parent == Some(Kind::Step) {
+        Some(BlockRole::Uses)
     } else if key == "script" && parent == Some(Kind::With) {
         Some(BlockRole::Script)
     } else {

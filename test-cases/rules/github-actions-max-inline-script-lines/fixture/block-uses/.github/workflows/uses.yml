@@ -1,0 +1,44 @@
+name: Block uses
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            return 1;
+            return 2;
+            return 3;
+      - uses: |
+          actions/github-script@v7
+        with:
+          script: >-
+            return 1;
+            return 2;
+            return 3;
+      - uses: >-
+          actions/github-script@v7
+        with:
+          script: |
+            return 1;
+            return 2;
+            return 3;
+            return 4;
+      - uses: |-
+          actions/github-script@v7
+        with:
+          # no-mistakes-disable-next-line github-actions-max-inline-script-lines
+          script: |
+            return 1;
+            return 2;
+            return 3;
+            return 4;
+      - with:
+          script: |
+            return 1;
+            return 2;
+            return 3;
+            return 4;
+        uses: |+
+          actions/github-script@v7

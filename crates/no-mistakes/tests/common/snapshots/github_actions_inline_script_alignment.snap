@@ -13,13 +13,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": ".github/actions/after/action.yml",
-          "line": 1,
-          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
-          "rule": "github-actions-max-inline-script-lines",
-          "sourceLine": "name: mixed"
-        },
-        {
-          "file": ".github/actions/after/action.yml",
           "line": 12,
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. Use $GITHUB_ACTION_PATH for a script beside the action; a repo-relative path depends on the caller's checkout.",
           "rule": "github-actions-max-inline-script-lines",
@@ -27,6 +20,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/actions/after/action.yml",
+          "line": 17,
+          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- {uses: actions/github-script@v7, with: {script: \"hidden();\"}}"
+        },
+        {
+          "file": ".github/actions/after/action.yml",
           "line": 5,
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. Use $GITHUB_ACTION_PATH for a script beside the action; a repo-relative path depends on the caller's checkout.",
           "rule": "github-actions-max-inline-script-lines",
@@ -34,17 +34,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/actions/before/action.yml",
-          "line": 1,
-          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
-          "rule": "github-actions-max-inline-script-lines",
-          "sourceLine": "name: mixed"
-        },
-        {
-          "file": ".github/actions/before/action.yml",
           "line": 13,
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. Use $GITHUB_ACTION_PATH for a script beside the action; a repo-relative path depends on the caller's checkout.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": "script: |"
+        },
+        {
+          "file": ".github/actions/before/action.yml",
+          "line": 5,
+          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- {uses: actions/github-script@v7, with: {script: \"hidden();\"}}"
         },
         {
           "file": ".github/actions/before/action.yml",
@@ -55,10 +55,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/actions/between/action.yml",
-          "line": 1,
+          "line": 10,
           "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
           "rule": "github-actions-max-inline-script-lines",
-          "sourceLine": "name: mixed"
+          "sourceLine": "- {uses: actions/github-script@v7, with: {script: \"hidden();\"}}"
         },
         {
           "file": ".github/actions/between/action.yml",
@@ -76,13 +76,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/after.yml",
-          "line": 1,
-          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
-          "rule": "github-actions-max-inline-script-lines",
-          "sourceLine": "name: mixed"
-        },
-        {
-          "file": ".github/workflows/after.yml",
           "line": 13,
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
           "rule": "github-actions-max-inline-script-lines",
@@ -90,17 +83,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/after.yml",
+          "line": 18,
+          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- {run: \"echo hidden\"}"
+        },
+        {
+          "file": ".github/workflows/after.yml",
           "line": 6,
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": "- run: |"
-        },
-        {
-          "file": ".github/workflows/aliases.yml",
-          "line": 1,
-          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
-          "rule": "github-actions-max-inline-script-lines",
-          "sourceLine": "name: aliases"
         },
         {
           "file": ".github/workflows/aliases.yml",
@@ -108,6 +101,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": "- run: |"
+        },
+        {
+          "file": ".github/workflows/aliases.yml",
+          "line": 15,
+          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- *step"
         },
         {
           "file": ".github/workflows/aliases.yml",
@@ -146,17 +146,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/before.yml",
-          "line": 1,
-          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
-          "rule": "github-actions-max-inline-script-lines",
-          "sourceLine": "name: mixed"
-        },
-        {
-          "file": ".github/workflows/before.yml",
           "line": 14,
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": "script: |"
+        },
+        {
+          "file": ".github/workflows/before.yml",
+          "line": 6,
+          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- {run: \"echo hidden\"}"
         },
         {
           "file": ".github/workflows/before.yml",
@@ -167,10 +167,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/between.yml",
-          "line": 1,
+          "line": 11,
           "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
           "rule": "github-actions-max-inline-script-lines",
-          "sourceLine": "name: mixed"
+          "sourceLine": "- {run: \"echo hidden\"}"
         },
         {
           "file": ".github/workflows/between.yml",

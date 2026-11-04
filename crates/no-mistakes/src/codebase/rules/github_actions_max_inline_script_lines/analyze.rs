@@ -1,4 +1,4 @@
-use super::{finding, step_script_lines, RuleFinding, StepScript};
+use super::{finding, step_script_lines, RuleFinding, ScriptScan, StepScript};
 use crate::fx::FxHashMap;
 use serde_yaml::Value;
 
@@ -31,7 +31,11 @@ pub(super) fn check_source(rel: &str, source: &str, action: bool, max: usize) ->
             );
         }
     }
-    let mut scripts: FxHashMap<_, _> = step_script_lines(source, action)
+    let ScriptScan {
+        scripts,
+        step_lines,
+    } = step_script_lines(source, action);
+    let mut scripts: FxHashMap<_, _> = scripts
         .into_iter()
         .map(|script| {
             (
@@ -45,7 +49,13 @@ pub(super) fn check_source(rel: &str, source: &str, action: bool, max: usize) ->
     for key in expected {
         match scripts.remove(&key) {
             Some(script) if script.supported => aligned.push(script),
-            script => findings.push(unaligned(rel, script.map_or(1, |script| script.line))),
+            script => {
+                let fallback = step_lines.get(&(key.0, key.1)).copied().unwrap_or(1);
+                findings.push(unaligned(
+                    rel,
+                    script.map_or(fallback, |script| script.line),
+                ));
+            }
         }
     }
     findings.extend(

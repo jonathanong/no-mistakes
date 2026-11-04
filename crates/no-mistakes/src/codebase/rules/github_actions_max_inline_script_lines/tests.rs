@@ -78,3 +78,55 @@ fn quoted_scalar_comments_preserve_the_following_script_locations() {
         }));
     }
 }
+
+#[test]
+fn flow_step_locations_honor_suppressions_without_losing_neighbors() {
+    let root = fixture("flow-locations");
+    let findings = check(&root, &config("three")).unwrap();
+    assert_eq!(findings.len(), 7, "{findings:?}");
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|f| f.message.starts_with("Script body"))
+            .count(),
+        4
+    );
+    for finding in findings {
+        assert!(!finding.file.contains("file-suppressed"));
+        let source = std::fs::read_to_string(root.join(&finding.file)).unwrap();
+        let line = source.lines().nth(finding.line - 1).unwrap().trim();
+        if finding.message.starts_with("Script body") {
+            assert!(line.starts_with("- {"), "{finding:?}: {line}");
+            assert!(!line.contains("no-mistakes-disable"));
+        } else {
+            assert!(
+                line == "- run: |" || line == "run: |",
+                "{finding:?}: {line}"
+            );
+            assert!(finding.message.contains("4 non-blank lines"));
+        }
+    }
+}
+
+#[test]
+fn block_action_references_and_anchored_bodies_keep_exact_boundaries() {
+    for (name, count) in [("block-uses", 4), ("anchored-scalars", 2)] {
+        let root = fixture(name);
+        let findings = check(&root, &config("three")).unwrap();
+        assert_eq!(findings.len(), count, "{name}: {findings:?}");
+        for finding in findings {
+            assert!(
+                finding.message.starts_with("Inline script has 4 non-blank"),
+                "{finding:?}"
+            );
+            let source = std::fs::read_to_string(root.join(&finding.file)).unwrap();
+            let line = source.lines().nth(finding.line - 1).unwrap().trim();
+            assert!(
+                line.starts_with("script:")
+                    || line.starts_with("- run:")
+                    || line.starts_with("run:"),
+                "{finding:?}: {line}"
+            );
+        }
+    }
+}
