@@ -19,11 +19,14 @@ pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
+mod fragment_validation;
 mod fragments;
 mod selection;
 pub(crate) use selection::{load_v2_config_from_selected_source_store, select_config_from_visible};
 mod provenance;
-pub(crate) use fragments::{parse_sources_quiet, ConfigDocument, ConfigSelection};
+pub(crate) use fragments::{
+    classify_fragment, parse_sources_quiet, ConfigDocument, ConfigSelection,
+};
 mod check_commands;
 mod deprecations;
 mod json_relation_map_keys;
