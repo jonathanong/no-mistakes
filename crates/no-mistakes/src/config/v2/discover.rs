@@ -19,6 +19,11 @@ pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
+mod fragments;
+mod selection;
+pub(crate) use selection::{load_v2_config_from_selected_source_store, select_config_from_visible};
+mod provenance;
+pub(crate) use fragments::{parse_sources_quiet, ConfigDocument, ConfigSelection};
 mod check_commands;
 mod deprecations;
 mod json_relation_map_keys;
@@ -47,15 +52,17 @@ pub(crate) fn load_v2_config_with_path(
     root: &Path,
     cli_config: Option<&Path>,
 ) -> Result<(NoMistakesConfig, Option<PathBuf>)> {
-    if cli_config.is_some() {
-        return load_v2_config_with_path_from_visible(root, cli_config, &[]);
+    if cli_config.is_some() || !root.join(".no-mistakes").is_dir() {
+        if cli_config.is_some() {
+            return load_v2_config_with_path_from_visible(root, cli_config, &[]);
+        }
+        if let Some((path, source)) = find_by_stems(root, V2_STEMS)? {
+            return Ok((parse_v2_config(&source, &path)?, Some(path)));
+        }
+        return Ok((NoMistakesConfig::default(), None));
     }
-
-    if let Some((path, source)) = find_by_stems(root, V2_STEMS)? {
-        return Ok((parse_v2_config(&source, &path)?, Some(path)));
-    }
-
-    Ok((NoMistakesConfig::default(), None))
+    let visible = crate::codebase::ts_source::discover_visible_paths(root);
+    load_v2_config_with_path_from_visible(root, None, &visible)
 }
 
 /// Load config while reusing a request's canonical visible-path candidates.
@@ -86,12 +93,10 @@ pub(crate) fn load_v2_config_with_path_from_visible(
         return Ok((parse_v2_config(&source, &resolved)?, Some(resolved)));
     }
 
-    if let Some(path) = find_automatic_config_path_from_visible(root, V2_STEMS, visible_paths)? {
-        let source = std::fs::read_to_string(&path)?;
-        return Ok((parse_v2_config(&source, &path)?, Some(path)));
-    }
-
-    Ok((NoMistakesConfig::default(), None))
+    let selection = select_config_from_visible(root, None, visible_paths)?;
+    let config =
+        selection::load_selection(root, &selection, |path| Ok(std::fs::read_to_string(path)?))?;
+    Ok((config, selection.primary))
 }
 
 #[doc(hidden)]
@@ -101,21 +106,8 @@ pub(crate) fn load_v2_config_from_source_store(
     visible_paths: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<NoMistakesConfig> {
-    let path = effective_v2_config_path_from_visible(root, cli_config, visible_paths)?;
-    load_v2_config_from_selected_source_store(path.as_deref(), sources)
-}
-
-pub(crate) fn load_v2_config_from_selected_source_store(
-    path: Option<&Path>,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<NoMistakesConfig> {
-    let Some(path) = path else {
-        return Ok(NoMistakesConfig::default());
-    };
-    let source = sources
-        .read_path(path)
-        .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))?;
-    parse_v2_config(&source, path)
+    let selection = select_config_from_visible(root, cli_config, visible_paths)?;
+    load_v2_config_from_selected_source_store(root, &selection, sources)
 }
 
 pub(crate) fn effective_v2_config_path_from_visible(
@@ -148,7 +140,12 @@ pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMista
     rule_keys::validate(source, path)?;
     let mut config = parse_config::<NoMistakesConfig>(source, path)?;
     validate_v2_config(&config, path).map_err(|error| path_globs::annotate(error, source, path))?;
-    super::postgres_project_scope::materialize(&mut config)?;
+    finish_config(&mut config, path)?;
+    Ok(config)
+}
+
+fn finish_config(config: &mut NoMistakesConfig, path: &Path) -> Result<()> {
+    super::postgres_project_scope::materialize(config)?;
     config.materialize_analysis_defaults()?;
     for policy in config.tests.vitest.projects.values_mut() {
         if !policy.setup_files.is_empty() {
@@ -157,7 +154,7 @@ pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMista
     }
     config.loaded_config_path =
         super::schema::loaded_path::LoadedConfigPath(Some(path.to_path_buf()));
-    Ok(config)
+    Ok(())
 }
 
 /// Return the directory that contains the effective config for `root`.
@@ -173,5 +170,7 @@ pub(super) fn find_by_stems(root: &Path, stems: &[&str]) -> Result<Option<(PathB
     Ok(Some((path, source)))
 }
 
+#[cfg(test)]
+mod fragment_tests;
 #[cfg(test)]
 mod tests;
