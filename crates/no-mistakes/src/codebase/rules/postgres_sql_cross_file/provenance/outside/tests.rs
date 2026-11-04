@@ -33,6 +33,13 @@ fn outside_holes_keep_env_config_and_drop_parameters() {
         named("col"),
         vec![],
         &[],
+        vec![],
+    );
+    expect(
+        vec![binding("col", named("unknown"))],
+        named("col"),
+        vec![],
+        &[],
         vec![reference("col")],
     );
     expect(vec![], named("uid"), vec![], &[], vec![]);
