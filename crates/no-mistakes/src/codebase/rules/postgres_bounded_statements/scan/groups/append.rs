@@ -18,16 +18,19 @@ pub(super) fn span(file: &SqlStatementFileFacts, bound_index: usize) -> Option<S
         .bound_tables
         .iter()
         .filter(|(index, _, _)| *index == bound_index)
-        .filter_map(|(_, _, site)| locations.position(site.clone()))
+        .map(|(_, _, site)| locations.position(site.clone()))
         .collect();
     let all_appended = !positions.is_empty()
         && positions.iter().all(|position| {
-            position.source_path.as_deref().unwrap_or(&file.path)
-                != opening.source_path.as_deref().unwrap_or(&file.path)
-                || shift(position.source_line, position.sql_line) != opening_shift
+            position.is_some_and(|position| {
+                position.source_path.as_deref().unwrap_or(&file.path)
+                    != opening.source_path.as_deref().unwrap_or(&file.path)
+                    || shift(position.source_line, position.sql_line) != opening_shift
+            })
         });
     let relations = positions
         .into_iter()
+        .flatten()
         .filter_map(|position| {
             same_file(position.source_path.as_ref(), &file.path).then_some((
                 position.source_line,
@@ -100,3 +103,6 @@ fn same_file(path: Option<&std::path::PathBuf>, file: &std::path::Path) -> bool 
 fn shift(source_line: usize, sql_line: usize) -> i64 {
     source_line as i64 - sql_line as i64
 }
+
+#[cfg(test)]
+mod tests;
