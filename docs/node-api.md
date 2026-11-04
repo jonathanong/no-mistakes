@@ -530,6 +530,6 @@ Generated PostgreSQL catalogs include optional `functions[signature].returnsSet`
 
 `github-actions-max-inline-script-lines` is available through asynchronous `check()` and
 `analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
-Its positive integer `maxLines` option defaults to 10 and counts nonblank physical YAML
+Its positive integer `maxLines` option defaults to 10 and counts non-blank physical YAML
 script-body lines in workflows and composite actions. See the
 [rule documentation](rules/github-actions-max-inline-script-lines.md).
