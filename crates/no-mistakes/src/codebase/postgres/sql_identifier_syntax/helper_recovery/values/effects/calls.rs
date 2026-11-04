@@ -1,4 +1,18 @@
 impl Engine<'_> {
+    fn factory_result(&mut self, args: &[Expr], state: State) -> Option<Vec<(State, Value)>> {
+        let mut out = Vec::new();
+        for (state, values) in self.all(&args.iter().collect::<Vec<_>>(), state)? {
+            if values
+                .iter()
+                .any(|value| value.blocks_sql_data() || value.contains_executor())
+            {
+                self.failures += 1;
+                continue;
+            }
+            out.push((state, Value::Executor));
+        }
+        Some(out)
+    }
     pub(super) fn closed_scalar(
         &mut self,
         args: &[Expr],
@@ -8,9 +22,9 @@ impl Engine<'_> {
         let mut out = Vec::new();
         for (state, values) in self.all(&args.iter().collect::<Vec<_>>(), state)? {
             if reject_sql
-                && values.iter().any(|value| {
-                    value.blocks_sql_data() || value.contains_executor()
-                })
+                && values
+                    .iter()
+                    .any(|value| value.blocks_sql_data() || value.contains_executor())
             {
                 self.failures += 1;
                 continue;
@@ -28,7 +42,11 @@ impl Engine<'_> {
         for (state, value) in self.expression(argument, state)? {
             let value = match value {
                 Value::Promise(value) => *value,
-                Value::Text(_) | Value::Bool(_) | Value::Null | Value::Undefined => value,
+                Value::Text(_)
+                | Value::Bool(_)
+                | Value::Null
+                | Value::Undefined
+                | Value::Executor => value,
                 _ => {
                     self.failures += 1;
                     continue;

@@ -15,6 +15,12 @@ configured names no scanned file imports; it appears in `check()` results like a
 other finding. See the
 [executor migration notes](../migrations/explicit-postgres-executors.md).
 
+Low-effort `check()` and `analyzeProject()` checks can replay configured factory
+initializers before local SQL-builder appends, including bind-only VALUES-list
+loops. Factory argument effects remain checked; opaque arguments and escaping
+SQL or executor values retain uncertainty. See
+[bounded helper recovery](../postgres-facts/low-helper-recovery.md).
+
 `postgres-require-query-annotation` traces straight-line SQL helpers and callback
 forwarding through the same prepared project facts used by `check()` and
 `analyzeProject()`. Both APIs share the requested TS/JS parse and keep resolution

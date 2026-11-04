@@ -11,6 +11,12 @@ impl Syntax<'_> {
         source: &str,
     ) {
         if self.recover_helpers {
+            self.recovery.factories = output
+                .profiles
+                .iter()
+                .zip(selections)
+                .map(|((profile, _), selection)| (profile.clone(), selection.factories.clone()))
+                .collect();
             if retain(module, selections, output, &self.recovery) {
                 self.recovery.validate(&self.template_binds);
                 self.recovery.trim_bodies(module, output);

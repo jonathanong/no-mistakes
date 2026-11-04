@@ -162,6 +162,20 @@ impl Catalog for PreparedCatalog<'_> {
             })
             .is_some_and(|executors| executors.contains(&binding))
     }
+    fn factory(&self, from: &Path, binding: usize) -> bool {
+        self.module(from).is_some()
+            && self.files.get(from).is_some_and(|file| {
+                let models = &file.sql_identifier_syntax.recovery;
+                !models.dynamic_scope
+                    && !models.writes.contains(&binding)
+                    && self.profile.is_some_and(|profile| {
+                        models
+                            .factories
+                            .get(profile)
+                            .is_some_and(|ids| ids.contains(&binding))
+                    })
+            })
+    }
     fn callee(&self, from: &Path, binding: usize) -> Option<Key> {
         self.binding(from, binding)
     }
