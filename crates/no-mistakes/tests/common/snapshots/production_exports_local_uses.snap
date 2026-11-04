@@ -109,6 +109,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/values.mts",
+          "line": 18,
+          "message": "production export `pureWrite` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export let pureWrite = 0;",
+          "target": "pureWrite"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 20,
+          "message": "production export `readWrite` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export let readWrite = 0;",
+          "target": "readWrite"
+        },
+        {
+          "file": "src/values.mts",
           "line": 3,
           "message": "production export `read` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
@@ -183,6 +199,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const shadowed = 7;",
           "target": "shadowed"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 18,
+          "message": "production export `pureWrite` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export let pureWrite = 0;",
+          "target": "pureWrite"
         },
         {
           "file": "src/values.mts",

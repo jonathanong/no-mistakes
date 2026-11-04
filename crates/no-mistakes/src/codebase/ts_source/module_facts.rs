@@ -60,6 +60,7 @@ pub(crate) fn extract_from_semantic(
                 BindingReference {
                     span: semantic.nodes().kind(reference.node_id()).span().into(),
                     runtime: flags.is_value() && !flags.is_value_as_type(),
+                    read: flags.is_read(),
                     type_only: flags.is_type() || flags.is_value_as_type(),
                 }
             })

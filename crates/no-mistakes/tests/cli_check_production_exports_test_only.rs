@@ -371,7 +371,7 @@ fn local_uses_check_json_snapshot() {
     let disabled: serde_json::Value = serde_json::from_slice(&disabled.stdout).unwrap();
     let explicit_off: serde_json::Value = serde_json::from_slice(&explicit_off.stdout).unwrap();
     assert_eq!(disabled["rules"], explicit_off["rules"]);
-    assert_eq!(disabled["rules"].as_array().unwrap().len(), 16);
+    assert_eq!(disabled["rules"].as_array().unwrap().len(), 18);
     let enabled = check_config("local-uses", "enabled.yml");
     let enabled: serde_json::Value = serde_json::from_slice(&enabled.stdout).unwrap();
     let targets: Vec<_> = enabled["rules"]
@@ -389,7 +389,8 @@ fn local_uses_check_json_snapshot() {
             "onlyExport",
             "listed",
             "publicAlias",
-            "shadowed"
+            "shadowed",
+            "pureWrite"
         ]
     );
     crate::check_json_snapshot::assert_saved_fixture(

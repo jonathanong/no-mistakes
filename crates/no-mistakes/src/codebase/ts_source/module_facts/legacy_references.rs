@@ -47,6 +47,7 @@ pub(super) fn collect(
                 BindingReference {
                     span: semantic.nodes().kind(reference.node_id()).span().into(),
                     runtime: usage.is_value() && !usage.is_value_as_type(),
+                    read: reference.flags().is_read(),
                     type_only: usage.is_type() || usage.is_value_as_type(),
                 },
             ));

@@ -15,3 +15,7 @@ function inner(shadowed: number) { return shadowed; }
 export function recursive() { return recursive(); }
 export const typeQuery = 8;
 type Query = typeof typeQuery;
+export let pureWrite = 0;
+pureWrite = 1;
+export let readWrite = 0;
+readWrite += 1;

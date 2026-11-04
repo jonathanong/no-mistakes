@@ -33,7 +33,7 @@ pub(super) fn exports(ts: &TsFileFacts) -> FxHashSet<String> {
         .iter()
         .filter(|(name, binding)| {
             binding.references.iter().any(|reference| {
-                (reference.runtime || reference.type_only)
+                ((reference.runtime && reference.read) || reference.type_only)
                     && !export_references.get(**name).is_some_and(|spans| {
                         spans.iter().any(|span| contains(*span, reference.span))
                     })
@@ -54,9 +54,4 @@ fn contains(outer: ModuleSpan, inner: ModuleSpan) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn absent_prepared_bindings_do_not_exempt_exports() {
-        assert!(super::exports(&Default::default()).is_empty());
-    }
-}
+mod tests;

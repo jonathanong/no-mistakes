@@ -20,6 +20,8 @@ pub struct BindingReference {
     pub span: ModuleSpan,
     pub runtime: bool,
     pub type_only: bool,
+    #[serde(skip)]
+    pub(crate) read: bool,
 }
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]

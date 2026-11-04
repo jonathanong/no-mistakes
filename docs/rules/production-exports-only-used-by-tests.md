@@ -44,8 +44,9 @@ With this option, `export function helper() {}; helper();` is valid even when
 only tests import `helper`. The counterexample `export const helper = 1` remains
 reported when its only consumers are tests: declaring or exporting a binding is
 not a use. Neither `export { helper }`, an aliased export, a bare
-`export default helper`, nor a re-export establishes internal use. A reference
-to a same-named shadowed binding also does not count. Remove the export or move
+`export default helper`, nor a re-export establishes internal use. A pure write such as `helper = value` is not a read and does not count; a
+read-modify-write such as `helper += value` does. A reference to a same-named
+shadowed binding also does not count. Remove the export or move
 test-only code to a configured helper root to fix these findings.
 
 ## Class extensions
