@@ -1,0 +1,29 @@
+jobs:
+  build:
+    steps:
+      - name: Exactly three with digit before strip
+        run: |2-
+          echo one
+          echo two
+          echo three
+      - name: Exactly three with digit before keep
+        run: >2+
+          echo one
+          echo two
+          echo three
+      - name: Exactly three with strip before digit
+        run: |-2
+          echo one
+          echo two
+          echo three
+      - name: Exactly three with keep before digit
+        run: >+2
+          echo one
+          echo two
+          echo three
+      - name: Four with digit before strip still reports
+        run: |2-
+          echo one
+          echo two
+          echo three
+          echo four

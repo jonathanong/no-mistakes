@@ -120,6 +120,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": "run: echo one \\"
+        },
+        {
+          "file": ".github/workflows/scalar-modifiers.yml",
+          "line": 25,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |2-"
         }
       ],
       "warnings": []

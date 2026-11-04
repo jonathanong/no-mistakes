@@ -32,11 +32,13 @@ pub(super) fn is_block_header(value: &str) -> bool {
         return false;
     }
     let rest = chars.as_str().trim();
-    let rest = rest
-        .strip_prefix('+')
-        .or_else(|| rest.strip_prefix('-'))
-        .unwrap_or(rest);
-    rest.chars().all(|ch| ch.is_ascii_digit())
+    matches!(
+        rest.as_bytes(),
+        [] | [b'+' | b'-']
+            | [b'1'..=b'9']
+            | [b'+' | b'-', b'1'..=b'9']
+            | [b'1'..=b'9', b'+' | b'-']
+    )
 }
 
 fn strip_anchor(value: &str) -> &str {
