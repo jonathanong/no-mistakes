@@ -192,7 +192,12 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
     // No finding: a static call, a dynamic call with no interpolation,
     // calls whose only interpolations or arguments are binds, and a
     // conditional relation name with parameter binds.
-    push(&mut owned, rule, &config, &["pass-static-or-bind-only"]);
+    push(
+        &mut owned,
+        rule,
+        &config,
+        &["pass-static-or-bind-only", "pass-sql-template-plain-call"],
+    );
     // Closed registries, stripped uuid names, and dominating throw guards are empty.
     // fail-guard-outside-branch keeps the query after the branch.
     // fail-uuid-unstripped-or-suffix keeps unstripped, single replace, and a suffix.

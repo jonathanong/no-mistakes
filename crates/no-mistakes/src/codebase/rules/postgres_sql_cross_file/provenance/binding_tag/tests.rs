@@ -128,11 +128,6 @@ fn plain_calls_and_shadowed_tags_do_not_bind() {
         named(),
     );
     assert!(!verdict(&plain, default(), vec![]));
-    let literal = tag(
-        vec![ValueExpression::String("SELECT id FROM accounts".into())],
-        named(),
-    );
-    assert!(!verdict(&literal, default(), vec![]));
     let empty = tag(vec![], named());
     assert!(!verdict(&empty, default(), vec![]));
     let template = tag(vec![ValueExpression::Unknown], scoped());
@@ -198,5 +193,31 @@ fn bind_spans_and_leading_tag_follow_the_tag_call() {
         &path,
         &calls,
         &ValueExpression::Unknown
+    ));
+}
+
+#[test]
+fn plain_literal_calls_share_the_tag_shape_without_interpolations() {
+    let path = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+        .join("pass-sql-template-plain-call/src/query.ts");
+    let source = std::fs::read_to_string(path).unwrap();
+    let allocator = oxc_allocator::Allocator::default();
+    let parsed = oxc_parser::Parser::new(&allocator, &source, oxc_span::SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty());
+    let facts = crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands(
+        &parsed.program, &source, false, false, true,
+    );
+    let call = facts
+        .value_flow
+        .calls
+        .iter()
+        .find(|call| call.source_callee == "sql")
+        .unwrap();
+    assert_eq!(call.arguments.as_slice(), &[ValueExpression::Unknown]);
+    assert!(call.last_argument_literal);
+    assert!(verdict(
+        call,
+        facts.imported_bindings.clone(),
+        facts.value_flow.bindings.clone()
     ));
 }
