@@ -35,6 +35,8 @@ import type {
   ResolveCheckResult,
   ResolveCheckBatchResult,
   ResolvedConfig,
+  ConfigResolveOptions,
+  DeclaredConfig,
   GraphEdge,
   PlaywrightOptions,
   PlaywrightCoverageReport,
@@ -133,8 +135,14 @@ export function check(
   options?: WithInvocationOptions<CheckOptions>,
 ): Promise<WithInvocationResult<CheckReport>>;
 export function resolveConfig(
-  options?: WithInvocationOptions<ProjectOptions>,
+  options: WithInvocationOptions<ConfigResolveOptions & { view: "declared" }>,
+): Promise<WithInvocationResult<DeclaredConfig>>;
+export function resolveConfig(
+  options?: WithInvocationOptions<ConfigResolveOptions & { view?: "resolved" }>,
 ): Promise<WithInvocationResult<ResolvedConfig>>;
+export function resolveConfig(
+  options: WithInvocationOptions<ConfigResolveOptions>,
+): Promise<WithInvocationResult<ResolvedConfig | DeclaredConfig>>;
 export function validateMermaidMarkdown(
   options: WithInvocationOptions<MermaidValidationOptions>,
 ): Promise<WithInvocationResult<MermaidValidationResult>>;

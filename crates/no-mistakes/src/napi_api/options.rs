@@ -31,6 +31,22 @@ pub(crate) struct ProjectOptions {
     pub(crate) include: Option<String>,
 }
 
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub(crate) struct ConfigResolveOptions {
+    #[serde(flatten)]
+    pub(crate) project: ProjectOptions,
+    pub(crate) view: ConfigResolveView,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) enum ConfigResolveView {
+    #[default]
+    Resolved,
+    Declared,
+}
+
 include!("options_flow_tests.rs");
 
 include!("options_query.rs");

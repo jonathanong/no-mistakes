@@ -1,0 +1,5 @@
+rules:
+  - rule: rust-max-lines-per-file
+    name: root-policy
+    options:
+      srcMax: 100

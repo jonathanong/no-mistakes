@@ -1,4 +1,4 @@
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use no_mistakes::config::resolved::resolve_config;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -21,14 +21,33 @@ struct ResolveArgs {
     root: PathBuf,
     #[arg(long)]
     config: Option<PathBuf>,
+    #[arg(long, value_enum, default_value = "resolved")]
+    view: ConfigView,
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+enum ConfigView {
+    Resolved,
+    Declared,
 }
 
 pub fn run(args: ConfigArgs) -> anyhow::Result<ExitCode> {
     match args.command {
         ConfigCommand::Resolve(resolve) => {
-            let report = resolve_config(&resolve.root, resolve.config.as_deref())?;
+            let output = match resolve.view {
+                ConfigView::Resolved => serde_json::to_string(&resolve_config(
+                    &resolve.root,
+                    resolve.config.as_deref(),
+                )?)?,
+                ConfigView::Declared => {
+                    serde_json::to_string(&no_mistakes::config::v2::declared_config(
+                        &resolve.root,
+                        resolve.config.as_deref(),
+                    )?)?
+                }
+            };
             no_mistakes::invocation::commit_timeout()?;
-            println!("{}", serde_json::to_string(&report)?);
+            println!("{output}");
             Ok(ExitCode::SUCCESS)
         }
     }

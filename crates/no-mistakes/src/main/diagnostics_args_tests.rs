@@ -170,3 +170,24 @@ fn check_effort_is_optional_and_accepts_only_implemented_levels() {
     }
     assert!(Cli::try_parse_from(["no-mistakes", "check", "--effort", "medium"]).is_err());
 }
+
+#[test]
+fn config_declared_view_accepts_diagnostics_at_every_boundary() {
+    for insertion in 1..=3 {
+        let mut argv = vec![
+            "no-mistakes",
+            "config",
+            "resolve",
+            "--view",
+            "declared",
+            "--root",
+            ".",
+        ];
+        argv.insert(insertion, "--timings");
+        assert!(Cli::try_parse_from(argv).is_ok());
+    }
+    let error = Cli::try_parse_from(["no-mistakes", "config", "resolve", "--view", "unknown"])
+        .err()
+        .unwrap();
+    assert_eq!(error.kind(), ErrorKind::InvalidValue);
+}

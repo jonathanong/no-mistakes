@@ -40,7 +40,10 @@ test(
     const dependencyRequire = createRequire(require.resolve("@storybook/react"));
     const ts = dependencyRequire("typescript");
     const program = ts.createProgram(
-      [join(repositoryRoot, "fixtures", "node-api", "executed-postgres-sql", "public.mts")],
+      [
+        join(repositoryRoot, "fixtures", "node-api", "executed-postgres-sql", "public.mts"),
+        join(repositoryRoot, "fixtures", "node-api", "declared-config", "public.mts"),
+      ],
       {
         noEmit: true,
         strict: true,
@@ -187,4 +190,21 @@ test("graph declarations expose GitHub Actions workflow relationships and virtua
   ]) {
     assert.match(flowDeclarations, pattern);
   }
+});
+
+
+test("declared configuration exposes named types and overloads without widening shared options", () => {
+  const declarations = readFileSync(join(packageRoot, "resolve-config-types.d.ts"), "utf8");
+  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  for (const name of ["DeclaredConfig", "DeclaredRule", "DeclaredConfigObject", "ConfigResolveOptions"]) {
+    assert.match(declarations, new RegExp(`export interface ${name}\\b`));
+  }
+  assert.match(declarations, /export type DeclaredConfigValue =/);
+  assert.match(declarations, /export type ConfigResolveView = "resolved" \| "declared";/);
+  assert.match(declarations, /rules\?: DeclaredRule\[\];/);
+  assert.match(index, /ConfigResolveOptions & \{ view: "declared" \}/);
+  assert.match(index, /Promise<WithInvocationResult<DeclaredConfig>>/);
+  const shared = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const project = shared.split("export interface ProjectOptions {")[1].split("\n}")[0];
+  assert.doesNotMatch(project, /view\??:/);
 });
