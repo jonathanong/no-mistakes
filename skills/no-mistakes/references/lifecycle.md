@@ -67,7 +67,8 @@ For package additions, compare direct importers with each nearest
 `package.json` and verify that each importer declares the dependency directly.
 
 A rule entry with `severity: advisory` reports its findings under `advisories`
-without failing; read them anyway, and switch the rule to `error` once clean.
+without failing; read them anyway, because one can point at a real bug, and
+switch the rule to `error` once clean.
 Rule entries reject unknown keys.
 
 Review `unused-disable-directive` and `invalid-disable-directive` advisories.
