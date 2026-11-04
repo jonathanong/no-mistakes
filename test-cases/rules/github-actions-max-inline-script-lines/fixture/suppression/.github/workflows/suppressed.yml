@@ -1,0 +1,22 @@
+jobs:
+  build:
+    steps:
+      # no-mistakes-disable-next-line github-actions-max-inline-script-lines
+      - run: |
+          one
+          two
+          three
+          four
+      - run: | # no-mistakes-disable-line github-actions-max-inline-script-lines
+          one
+          two
+          three
+          four
+      - uses: actions/github-script@v7
+        with:
+          # no-mistakes-disable-next-line github-actions-max-inline-script-lines
+          script: |
+            one
+            two
+            three
+            four

@@ -5,6 +5,8 @@ use super::yaml_parse::{
 use super::yaml_text::{block_continues, normalize_uses, scan_block_line};
 
 mod detail;
+mod scripts;
+pub(crate) use scripts::{step_script_lines, StepScript};
 
 pub(crate) use detail::{step_run_lines, step_uses_lines, StepRun, StepUse};
 
@@ -21,6 +23,7 @@ pub(super) struct Scanner<'a> {
     composite: bool,
     pub(super) locate: bool,
     pub(super) collect_runs: bool,
+    scripts: scripts::ScriptCollector,
     frames: Vec<Frame>,
     pub(super) open_quote: Option<(BlockRole, char)>,
     pub(super) uses: Option<String>,
@@ -48,6 +51,7 @@ impl<'a> Scanner<'a> {
             composite,
             locate,
             collect_runs: false,
+            scripts: scripts::ScriptCollector::default(),
             frames: Vec::new(),
             open_quote: None,
             uses: None,
@@ -91,7 +95,7 @@ impl<'a> Scanner<'a> {
             if let Some(parsed) = parse_line(line) {
                 self.apply(parsed, index);
             } else if self.locate {
-                self.note_unparsed_item(line, line_no);
+                detail::note_unparsed_item(self, line, line_no);
             }
             index += 1;
         }
@@ -120,6 +124,7 @@ impl<'a> Scanner<'a> {
             }
         }
         let role = script_role(key, parent);
+        self.scripts.note_header(role, index + 1);
         if parsed.block {
             self.frames.push(Frame {
                 indent: parsed.key_indent,
@@ -181,20 +186,5 @@ impl<'a> Scanner<'a> {
 
     pub(super) fn parent(&self) -> Option<Kind> {
         self.frames.last().map(|frame| frame.kind)
-    }
-
-    // serde counts every sequence entry. Values this parser skips still occupy a step.
-    fn note_unparsed_item(&mut self, line: &str, line_no: usize) {
-        let Some(scope) = detail::item_scope(line) else {
-            return;
-        };
-        self.pop_until(scope, true);
-        if self.parent() == Some(Kind::Steps) {
-            detail::begin_step(self, line_no);
-            self.frames.push(Frame {
-                indent: scope,
-                kind: Kind::Step,
-            });
-        }
     }
 }

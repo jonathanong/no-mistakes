@@ -204,3 +204,6 @@ mod cli_manifest_unanalyzable;
 
 #[path = "cli_coverage_assertion_owners.rs"]
 mod cli_coverage_assertion_owners;
+
+#[path = "cli_gha_snapshot_inline_script_lines.rs"]
+mod cli_gha_snapshot_inline_script_lines;

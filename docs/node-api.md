@@ -527,3 +527,9 @@ needed.
 `check({ timings: true })` returns ordered `timings` entries with `label`, `durationMs`, and `parallel`. Rule entries follow their phase, slowest first; combined passes are labeled accordingly. Parallel durations overlap.
 
 Generated PostgreSQL catalogs include optional `functions[signature].returnsSet` evidence. `check()` uses it for `postgres-bounded-statements` LIMIT proofs; when metadata is absent, a parseable catalog `CREATE FUNCTION ... RETURNS type` declaration can prove scalar cardinality. Unknown, malformed and set-returning declarations stay conservative, matching the CLI.
+
+`github-actions-max-inline-script-lines` is available through asynchronous `check()` and
+`analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
+Its positive integer `maxLines` option defaults to 10 and counts nonblank physical YAML
+script-body lines in workflows and composite actions. See the
+[rule documentation](rules/github-actions-max-inline-script-lines.md).

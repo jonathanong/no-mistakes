@@ -192,3 +192,11 @@ fn review_found_doc_regressions_stay_fixed() {
     assert!(why.contains("Three jobs"));
     assert!(why.contains("Mistakes this prevents"));
 }
+
+#[test]
+fn github_actions_max_inline_script_lines_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES;
+    assert_eq!(rule, "github-actions-max-inline-script-lines");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
+}

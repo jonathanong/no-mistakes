@@ -425,3 +425,15 @@ lint disables are separate opt-ins through `directives` and
 `banBlanketDisable`; neither widens the configured file scope.
 
 For [`production-exports-only-used-by-tests`](../rules/production-exports-only-used-by-tests.md), configure nonempty `options.productionRoots` and at least one of `options.testGlobs` or `options.testHelperRoots`. `options.ignoreExportsUsedInFile: true` counts same-file value/type references to exported bindings; the default is `false`. These root-relative scopes are explicit: no production/test naming defaults are inferred. The rule follows the shared `options.unanalyzable` policy (default `report`); exports without known consumers are ignored.
+
+For [`github-actions-max-inline-script-lines`](../rules/github-actions-max-inline-script-lines.md),
+`maxLines` is a positive integer (default `10`). It counts nonblank physical body lines,
+including folded YAML scalars, in workflow/composite `run` and github-script bodies.
+
+```yaml
+rules:
+  - rule: github-actions-max-inline-script-lines
+    scope: repository
+    options:
+      maxLines: 3
+```
