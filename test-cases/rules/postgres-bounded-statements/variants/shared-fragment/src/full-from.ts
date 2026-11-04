@@ -58,3 +58,8 @@ export function boundedOpening(id: string) {
 export function directSingleRoot() {
   return query(sql`SELECT id FROM invoices`);
 }
+
+export function escapedOpening() {
+  const statement = sql`SELECT id\nFROM invoices`;
+  return query(statement.append(sql` ORDER BY id`));
+}

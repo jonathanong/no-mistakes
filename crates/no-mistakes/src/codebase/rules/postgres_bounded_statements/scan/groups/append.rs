@@ -26,7 +26,7 @@ pub(super) fn span(file: &SqlStatementFileFacts, bound_index: usize) -> Option<S
             position.is_some_and(|position| {
                 position.source_path.as_deref().unwrap_or(&file.path)
                     != opening.source_path.as_deref().unwrap_or(&file.path)
-                    || shift(position.source_line, position.sql_line) != opening_shift
+                    || position.source_line < opening.source_line
             })
         });
     let relations = positions

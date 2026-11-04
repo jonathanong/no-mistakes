@@ -11,6 +11,11 @@ fn missing_relation_locations_prevent_the_all_appended_proof() {
     };
     let mapped = SqlFactSite::BoundRelation(0, 1);
     locations.insert(SqlFactSite::Origin, 1, 1);
+    locations
+        .positions
+        .get_mut(&SqlFactSite::Origin)
+        .unwrap()
+        .source_line = 10;
     locations.insert(mapped.clone(), 1, 1);
     locations.positions.get_mut(&mapped).unwrap().source_line = 5;
     locations.bound_tables.push((0, "invoices".into(), mapped));
@@ -82,4 +87,20 @@ fn direct_escaped_newlines_and_concatenation_do_not_prove_builder_appends() {
             .is_empty());
         assert_eq!(only_appended(&[span(file, 0).unwrap()]), None);
     }
+}
+
+#[test]
+fn an_explicit_append_does_not_relocate_an_escaped_opening_relation() {
+    let files = statements("../variants/shared-fragment/src/full-from.ts");
+    let file = files
+        .iter()
+        .find(|file| file.variant_locations.as_ref().unwrap().original_call_line == 64)
+        .unwrap();
+    assert!(!file
+        .variant_locations
+        .as_ref()
+        .unwrap()
+        .append_sites
+        .is_empty());
+    assert_eq!(only_appended(&[span(file, 0).unwrap()]), None);
 }

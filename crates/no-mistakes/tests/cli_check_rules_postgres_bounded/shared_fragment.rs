@@ -23,6 +23,7 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
             ("src/full-from.ts".to_string(), 42),
             ("src/full-from.ts".to_string(), 51),
             ("src/full-from.ts".to_string(), 59),
+            ("src/full-from.ts".to_string(), 63),
             ("src/second.ts".to_string(), 5),
             ("src/third.ts".to_string(), 7)
         ]
@@ -109,6 +110,11 @@ fn same_file_full_from_fragments_keep_both_callers_and_ignore_a_suppressed_openi
                 59,
                 "table:invoices".to_string()
             ),
+            (
+                "src/full-from.ts".to_string(),
+                63,
+                "table:invoices".to_string()
+            ),
         ]
     );
 }
@@ -133,7 +139,7 @@ fn full_from_single_root_callers_do_not_merge_or_override_opening_relations() {
     assert!(!findings
         .iter()
         .any(|finding| finding["file"] == "src/full-from.ts" && finding["line"] == 47));
-    for line in [51, 59] {
+    for line in [51, 59, 63] {
         let finding = findings
             .iter()
             .find(|finding| finding["file"] == "src/full-from.ts" && finding["line"] == line)
