@@ -49,6 +49,7 @@ pub(super) fn recover(
                 enumerated: false,
                 choices: Vec::new(),
                 append_sites: vec![fragment.append_site],
+                first_append_offset: Some(0),
                 append_decisions: Vec::new(),
                 decision_offs: Vec::new(),
                 variants_truncated: false,
@@ -57,8 +58,10 @@ pub(super) fn recover(
             // each already-capped SQL version cannot increase the count.
             for version in &mut versions {
                 version.append_sql(&suffix);
+                let boundary = version.first_append_offset;
+                visitor.mark_append(std::slice::from_mut(version), fragment.append_site);
+                version.first_append_offset = boundary;
             }
-            visitor.mark_append(&mut versions, fragment.append_site);
         }
         Some(versions)
     })())

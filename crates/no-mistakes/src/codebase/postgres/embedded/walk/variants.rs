@@ -22,6 +22,7 @@ mod recovery;
 mod state;
 pub(super) mod switch;
 mod template;
+mod text;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) enum ValueKind {
@@ -43,6 +44,7 @@ pub(super) struct Recovered {
     pub enumerated: bool,
     pub choices: Vec<(u64, u32)>,
     pub append_sites: Vec<u32>,
+    pub first_append_offset: Option<usize>,
     pub append_decisions: Vec<u64>,
     pub decision_offs: Vec<(u64, u32, u32)>,
     pub variants_truncated: bool,
@@ -60,6 +62,7 @@ impl Recovered {
             enumerated: false,
             choices: Vec::new(),
             append_sites: Vec::new(),
+            first_append_offset: None,
             append_decisions: Vec::new(),
             decision_offs: Vec::new(),
             variants_truncated: false,
@@ -75,38 +78,6 @@ impl Recovered {
     pub(super) fn nullish(&self) -> Option<bool> {
         (self.value != ValueKind::UnknownFalsy).then_some(self.value == ValueKind::Null)
     }
-    fn append_sql(&mut self, suffix: &Self) {
-        if self.sql.is_empty() && self.positions.is_empty() {
-            self.line = suffix.line;
-        }
-        let offset = placeholders::count_placeholders(&self.sql);
-        self.origins.extend(origins::rewrite(
-            &suffix.sql,
-            &suffix.origins,
-            offset,
-            false,
-        ));
-        let mut positions = suffix.positions.clone();
-        super::resolve::append::positions::renumber(&mut positions, &suffix.sql, offset);
-        super::resolve::append::positions::append(
-            &mut self.positions,
-            &self.sql,
-            self.line,
-            suffix.line,
-            &positions,
-        );
-        self.sql
-            .push_str(&placeholders::renumber_placeholders(&suffix.sql, offset));
-        self.merge_append_sites(suffix);
-        self.fragment |= suffix.fragment;
-        self.enumerated |= suffix.enumerated;
-        self.variants_truncated |= suffix.variants_truncated;
-        for choice in &suffix.choices {
-            if !self.choices.contains(choice) {
-                self.choices.push(*choice);
-            }
-        }
-    }
     pub(super) fn merge_append_sites(&mut self, other: &Self) {
         self.variants_truncated |= other.variants_truncated;
         self.append_decisions.extend(&other.append_decisions);
@@ -121,9 +92,18 @@ impl Recovered {
             }
         }
     }
+    pub(super) fn merge_alternative(&mut self, other: &Self) {
+        self.first_append_offset = self
+            .first_append_offset
+            .zip(other.first_append_offset)
+            .map(|(left, right)| left.max(right));
+        self.merge_append_sites(other);
+    }
     pub(super) fn same_value(&self, other: &Self) -> bool {
         let mut left = self.clone();
         let mut right = other.clone();
+        left.first_append_offset = None;
+        right.first_append_offset = None;
         left.append_sites.clear();
         right.append_sites.clear();
         left.append_decisions.clear();
@@ -136,6 +116,9 @@ impl Recovered {
     }
     pub(super) fn publish(self) -> EmbeddedSqlVariant {
         debug_assert_eq!(self.origins.len(), self.sql.len());
+        let first_append_offset = self
+            .first_append_offset
+            .map(|at| placeholders::publish_placeholders(self.sql[..at].to_owned()).len());
         let sql_source_offsets = origins::rewrite(&self.sql, &self.origins, 0, true);
         let (sql_text, recovered_placeholder_positions) =
             placeholders::publish_placeholders_with_positions(self.sql);
@@ -146,6 +129,7 @@ impl Recovered {
             sql_source_positions: self.positions,
             recovered_placeholder_positions,
             append_sites: self.append_sites,
+            first_append_offset,
             variants_truncated: self.variants_truncated,
         }
     }

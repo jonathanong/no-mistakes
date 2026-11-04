@@ -42,6 +42,7 @@ fn variant(sql: &str) -> EmbeddedSqlVariant {
         sql_source_positions: Vec::new(),
         recovered_placeholder_positions: Vec::new(),
         append_sites: Vec::new(),
+        first_append_offset: None,
     }
 }
 

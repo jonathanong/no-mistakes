@@ -63,3 +63,33 @@ export function escapedOpening() {
   const statement = sql`SELECT id\nFROM invoices`;
   return query(statement.append(sql` ORDER BY id`));
 }
+
+export function firstLaterFragment() {
+  return query(sql`SELECT id`.append(laterFromSql()));
+}
+
+export function secondLaterFragment() {
+  return query(sql`SELECT id`.append(laterFromSql()));
+}
+
+function laterFromSql() {
+  return sql` FROM invoices`;
+}
+
+export function emptyOpening() {
+  return query(sql``.append(laterStatementSql()));
+}
+
+export function secondEmptyOpening() {
+  return query(sql``.append(laterStatementSql()));
+}
+
+function laterStatementSql() {
+  return sql`SELECT id FROM invoices`;
+}
+
+export function physicalNewlineOpening() {
+  const statement = sql`SELECT id
+    FROM invoices`;
+  return query(statement.append(sql` ORDER BY id`));
+}

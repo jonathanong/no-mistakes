@@ -24,6 +24,13 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
             ("src/full-from.ts".to_string(), 51),
             ("src/full-from.ts".to_string(), 59),
             ("src/full-from.ts".to_string(), 63),
+            ("src/full-from.ts".to_string(), 68),
+            ("src/full-from.ts".to_string(), 72),
+            ("src/full-from.ts".to_string(), 80),
+            ("src/full-from.ts".to_string(), 84),
+            ("src/full-from.ts".to_string(), 93),
+            ("src/imported-full-from.ts".to_string(), 5),
+            ("src/imported-full-from.ts".to_string(), 9),
             ("src/second.ts".to_string(), 5),
             ("src/third.ts".to_string(), 7)
         ]
@@ -115,6 +122,31 @@ fn same_file_full_from_fragments_keep_both_callers_and_ignore_a_suppressed_openi
                 63,
                 "table:invoices".to_string()
             ),
+            (
+                "src/full-from.ts".to_string(),
+                68,
+                "table:invoices".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                72,
+                "table:invoices".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                80,
+                "table:invoices".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                84,
+                "table:invoices".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                93,
+                "table:invoices".to_string()
+            ),
         ]
     );
 }
@@ -139,7 +171,7 @@ fn full_from_single_root_callers_do_not_merge_or_override_opening_relations() {
     assert!(!findings
         .iter()
         .any(|finding| finding["file"] == "src/full-from.ts" && finding["line"] == 47));
-    for line in [51, 59, 63] {
+    for line in [51, 59, 63, 93] {
         let finding = findings
             .iter()
             .find(|finding| finding["file"] == "src/full-from.ts" && finding["line"] == line)
@@ -150,4 +182,52 @@ fn full_from_single_root_callers_do_not_merge_or_override_opening_relations() {
             .unwrap()
             .contains("includes SQL appended"));
     }
+}
+
+#[test]
+fn full_from_callers_survive_later_helper_declarations_and_empty_openings() {
+    let found = findings_of(check_in(
+        &fixture_dir("variants/shared-fragment"),
+        ".no-mistakes.yml",
+    ));
+    for line in [68, 72, 80, 84] {
+        assert!(
+            found.contains(&(
+                "src/full-from.ts".to_string(),
+                line,
+                "table:invoices".to_string()
+            )),
+            "{found:?}"
+        );
+    }
+    assert!(!found
+        .iter()
+        .any(|(file, line, _)| file == "src/full-from.ts" && [76, 88, 94].contains(line)));
+}
+
+#[test]
+fn helper_splicing_preserves_single_root_append_boundaries() {
+    let found = findings_of(check_in(
+        &fixture_dir("variants/shared-fragment"),
+        ".no-mistakes.yml",
+    ));
+    let found: Vec<_> = found
+        .into_iter()
+        .filter(|(file, _, _)| file == "src/imported-full-from.ts")
+        .collect();
+    assert_eq!(
+        found,
+        [
+            (
+                "src/imported-full-from.ts".to_string(),
+                5,
+                "table:invoices".to_string()
+            ),
+            (
+                "src/imported-full-from.ts".to_string(),
+                9,
+                "table:invoices".to_string()
+            ),
+        ]
+    );
 }

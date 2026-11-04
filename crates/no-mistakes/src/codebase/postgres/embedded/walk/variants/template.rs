@@ -39,6 +39,7 @@ pub(super) fn recover(
                             value.origins = vec![expr.span().start; value.sql.len()];
                             value.positions.clear();
                             value.append_sites.clear();
+                            value.first_append_offset = None;
                             value.append_decisions.clear();
                             value.decision_offs.clear();
                             value.line =

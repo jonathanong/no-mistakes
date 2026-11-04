@@ -11,6 +11,7 @@ impl ScopeVisitor<'_> {
         let offs = self.append_decision_offs.borrow();
         for value in values {
             value.enumerated = true;
+            value.first_append_offset = Some(0);
             if !value.append_sites.contains(&site) {
                 value.append_sites.push(site);
             }

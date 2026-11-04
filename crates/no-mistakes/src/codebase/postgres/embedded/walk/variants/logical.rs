@@ -112,6 +112,7 @@ fn absent(mut value: Recovered) -> Recovered {
     value.origins.clear();
     value.positions.clear();
     value.append_sites.clear();
+    value.first_append_offset = None;
     value.append_decisions.clear();
     value.fragment = true;
     // The SQL fragment is absent, but && still returns its original falsy

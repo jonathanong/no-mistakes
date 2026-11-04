@@ -30,6 +30,11 @@ fn missing_relation_locations_prevent_the_all_appended_proof() {
         .unwrap()
         .append_sites
         .push(4);
+    assert_eq!(only_appended(&[span(&file, 0).unwrap()]), None);
+    file.variant_locations
+        .as_mut()
+        .unwrap()
+        .first_append_position = Some((1, 1));
     assert_eq!(only_appended(&[span(&file, 0).unwrap()]), Some(20));
     file.variant_locations.as_mut().unwrap().bound_tables.push((
         0,
@@ -103,4 +108,30 @@ fn an_explicit_append_does_not_relocate_an_escaped_opening_relation() {
         .append_sites
         .is_empty());
     assert_eq!(only_appended(&[span(file, 0).unwrap()]), None);
+}
+
+#[test]
+fn append_boundaries_ignore_helper_order_and_empty_openings() {
+    let files = statements("../variants/shared-fragment/src/full-from.ts");
+    for line in [68, 72, 80, 84] {
+        let file = files
+            .iter()
+            .find(|file| file.variant_locations.as_ref().unwrap().original_call_line == line)
+            .unwrap();
+        assert_eq!(
+            only_appended(&[span(file, 0).unwrap()]),
+            Some(line as usize)
+        );
+    }
+    let physical = files
+        .iter()
+        .find(|file| file.variant_locations.as_ref().unwrap().original_call_line == 94)
+        .unwrap();
+    assert!(physical
+        .variant_locations
+        .as_ref()
+        .unwrap()
+        .first_append_position
+        .is_some());
+    assert_eq!(only_appended(&[span(physical, 0).unwrap()]), None);
 }

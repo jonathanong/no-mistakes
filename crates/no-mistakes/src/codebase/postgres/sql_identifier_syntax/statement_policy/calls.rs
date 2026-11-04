@@ -61,6 +61,7 @@ pub(super) fn recovered(call: &SqlCall, proof: &Recovered) -> EmbeddedSqlCall {
                 sql_source_positions: sql.positions.clone(),
                 recovered_placeholder_positions: Vec::new(),
                 append_sites: Vec::new(),
+                first_append_offset: None,
                 variants_truncated: !proof.complete(),
             })
             .collect(),
