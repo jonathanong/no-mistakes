@@ -59,7 +59,7 @@ fn statements(relative: &str) -> Vec<SqlStatementFileFacts> {
         },
     ]);
     let file = extract_embedded_sql_from_source(&path, &source, &options);
-    crate::codebase::postgres::embedded_call_facts_with_locations(&file, true, false, true)
+    crate::codebase::postgres::tests::embedded_call_facts_with_locations(&file, true, false, true)
 }
 
 #[test]
