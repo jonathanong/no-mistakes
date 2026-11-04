@@ -35,10 +35,13 @@ fn bundler_scripts_resolve_positional_entries_and_skip_outputs() {
         [
             "packages/nested/src/nested.mts",
             "src/and.mts",
+            "src/env-pipe.mts",
             "src/env.mts",
             "src/esbuild.mts",
+            "src/injected.mts",
             "src/nl.mts",
             "src/or.mts",
+            "src/pipe-before.mts",
             "src/quoted name.mts",
             "src/rollup.mts",
             "src/semi.mts",

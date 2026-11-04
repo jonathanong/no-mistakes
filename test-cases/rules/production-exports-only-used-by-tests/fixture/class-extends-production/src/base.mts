@@ -14,3 +14,6 @@ export class Constructed {
   constructor() {}
 }
 export class Sub extends Constructed {}
+
+export class ExpressionBase {}
+export const C = class extends ExpressionBase {};

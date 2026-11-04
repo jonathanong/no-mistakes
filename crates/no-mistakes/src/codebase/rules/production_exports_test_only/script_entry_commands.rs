@@ -20,7 +20,7 @@ pub(super) fn command_segments(script: &str) -> Vec<String> {
             continue;
         }
         let paired = matches!(character, '&' | '|') && chars.peek() == Some(&character);
-        if paired || character == ';' || character == '\n' {
+        if paired || matches!(character, '|' | ';' | '\n') {
             if paired {
                 chars.next();
             }
@@ -59,12 +59,43 @@ pub(super) fn positional_entries(segment: &str) -> Vec<String> {
     let Some(words) = split_quoted_words(segment, Whitespace::Unicode) else {
         return Vec::new();
     };
-    let mut bundler = false;
+    let mut command_seen = false;
     let mut skip_value = false;
+    let mut inject_value = false;
     let mut entries = Vec::new();
     for word in words {
+        if !command_seen {
+            if is_environment_assignment(&word) {
+                continue;
+            }
+            command_seen = true;
+            if !is_bundler(&word) {
+                return Vec::new();
+            }
+            continue;
+        }
         if skip_value {
             skip_value = false;
+            continue;
+        }
+        if inject_value {
+            inject_value = false;
+            if is_code_path(&word) {
+                entries.push(word);
+            }
+            continue;
+        }
+        if word == "--inject" {
+            inject_value = true;
+            continue;
+        }
+        if let Some(path) = word
+            .strip_prefix("--inject:")
+            .or_else(|| word.strip_prefix("--inject="))
+        {
+            if is_code_path(path) {
+                entries.push(path.to_owned());
+            }
             continue;
         }
         if is_environment_assignment(&word) || word.starts_with('-') {
@@ -73,11 +104,7 @@ pub(super) fn positional_entries(segment: &str) -> Vec<String> {
             }
             continue;
         }
-        if is_bundler(&word) {
-            bundler = true;
-            continue;
-        }
-        if bundler && is_code_path(&word) {
+        if is_code_path(&word) {
             entries.push(word);
         }
     }

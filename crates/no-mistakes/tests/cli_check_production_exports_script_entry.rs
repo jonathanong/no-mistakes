@@ -20,3 +20,20 @@ fn production_exports_script_entry_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn production_exports_script_entry_command_positions_match_snapshot() {
+    let root = rules_path(
+        "production-exports-only-used-by-tests",
+        "fixture",
+        "script-entry-shapes",
+    );
+    assert_saved_fixture(
+        "production_exports_script_entry_command_positions",
+        &[(
+            "command_positions",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}
