@@ -14,7 +14,7 @@ fn report(root: &Path, command: &[&str]) -> (Option<i32>, serde_json::Value) {
         .arg(root)
         .output()
         .unwrap();
-    if command.starts_with(&["config", "resolve"]) {
+    if command.starts_with(&["config", "resolve"]) || command.starts_with(&["tests", "plan"]) {
         return (
             output.status.code(),
             serde_json::from_slice(&output.stdout).unwrap(),
@@ -92,5 +92,51 @@ fn declared_view_retains_inline_values_and_deterministic_entry_order() {
     assert_eq!(
         report(&empty, &["config", "resolve", "--view", "declared"]),
         (Some(0), serde_json::json!({}))
+    );
+}
+
+#[test]
+fn split_and_single_file_trigger_plans_are_identical() {
+    let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/test-plan");
+    let command = [
+        "tests",
+        "plan",
+        "vitest",
+        "--changed-file",
+        "migrations/001.sql",
+        "--format",
+        "json",
+    ];
+    let single = report(&base.join("target-scoped-triggers"), &command);
+    let split = report(&base.join("config-fragments"), &command);
+    assert_eq!(single, split);
+    assert_eq!(split.0, Some(0));
+    assert_eq!(
+        split.1["selected_tests"][0]["test_file"],
+        "src/db/db.test.ts"
+    );
+    assert_eq!(
+        split.1["selected_tests"][0]["targets"][0]["project"],
+        "database"
+    );
+}
+
+#[test]
+fn deprecated_fragment_warnings_name_the_declaring_file() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/config-fragments-aliases/all-frameworks");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["config", "resolve", "--root"])
+        .arg(root)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{:?}", output.stderr);
+    let warnings = String::from_utf8(output.stderr).unwrap().replace('\\', "/");
+    assert!(
+        warnings.contains(".no-mistakes/testPlan/all.yml"),
+        "{warnings}"
+    );
+    assert!(
+        warnings.contains("playwright.dependencies") && warnings.contains("vitest.dependencies")
     );
 }

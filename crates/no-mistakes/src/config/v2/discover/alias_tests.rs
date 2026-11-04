@@ -69,3 +69,45 @@ fn deprecated_list_triggers_keep_fragment_paths_and_lines() {
     assert_eq!(finding.file, ".no-mistakes/test_plan/extra.yml");
     assert_eq!(finding.line, 5);
 }
+
+#[test]
+fn all_supported_frameworks_retain_deprecated_aliases() {
+    let root = fixture("all-frameworks");
+    let config = super::load_v2_config(&root, None).unwrap();
+    let plan = &config.test_plan;
+    let frameworks = [
+        &plan.dotnet,
+        &plan.playwright,
+        &plan.vitest,
+        &plan.swift,
+        &plan.python,
+        &plan.go,
+        &plan.cargo,
+        &plan.rails,
+        &plan.php,
+        &plan.java,
+        &plan.kotlin,
+        &plan.elixir,
+        &plan.dart,
+        &plan.jest,
+    ];
+    assert!(frameworks
+        .iter()
+        .all(|framework| framework.deprecated_dependencies_key));
+    assert_eq!(
+        plan.vitest.full_suite_triggers.ignore_changed_tests.len(),
+        1
+    );
+    let declared = super::declared_config(&root, None).unwrap();
+    assert!(declared["testPlan"]["custom"]
+        .get("fullSuiteTriggers")
+        .is_some());
+}
+
+#[test]
+fn same_file_alias_collisions_remain_invalid_in_declared_and_typed_views() {
+    let root = fixture("same-file");
+    assert!(super::load_v2_config(&root, None).is_err());
+    let error = super::declared_config(&root, None).unwrap_err().to_string();
+    assert!(error.contains("aliases") && error.contains(".no-mistakes.yml"));
+}

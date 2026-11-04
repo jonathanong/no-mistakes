@@ -17,6 +17,13 @@ pub(super) fn record_provenance(
             for (key, value) in mapping {
                 if let Some(key) = key.as_str() {
                     let canonical = super::aliases::canonical_key(&global, key);
+                    if canonical != key {
+                        provenance.insert(
+                            global.clone().key(key),
+                            path.to_path_buf(),
+                            local.clone().key(key),
+                        );
+                    }
                     record_provenance(
                         value,
                         global.clone().key(&canonical),

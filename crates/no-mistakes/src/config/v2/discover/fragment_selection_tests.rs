@@ -180,3 +180,11 @@ fn root_directory_documentation_is_not_a_config_fragment() {
         serde_json::json!({})
     );
 }
+
+#[test]
+fn hidden_organization_does_not_hide_section_files_or_unknown_sections() {
+    let config = super::declared_config(&fixture("hidden-organization"), None).unwrap();
+    assert_eq!(config["rules"][0]["name"], "hidden-group");
+    let error = super::declared_config(&fixture("hidden-unknown"), None).unwrap_err();
+    assert!(error.to_string().contains("unknown config section `rule`"));
+}

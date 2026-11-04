@@ -49,14 +49,11 @@ pub(crate) fn classify_fragment(root: &Path, path: &Path) -> Result<Option<Strin
         return Ok(None);
     };
     let parts: Vec<_> = relative.components().collect();
-    if parts
-        .iter()
-        .any(|part| part.as_os_str().to_string_lossy().starts_with('.'))
-    {
-        return Ok(None);
-    }
+    let dotfile = path
+        .file_name()
+        .is_some_and(|name| name.to_string_lossy().starts_with('.'));
     if parts.len() < 2 {
-        if path.extension().is_some_and(|extension| extension == "md") {
+        if dotfile || path.extension().is_some_and(|extension| extension == "md") {
             return Ok(None);
         }
         anyhow::bail!(
@@ -70,7 +67,7 @@ pub(crate) fn classify_fragment(root: &Path, path: &Path) -> Result<Option<Strin
         anyhow::bail!("unknown config section `{section}`: {}", path.display());
     }
     let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
-    if extension == "md" {
+    if dotfile || extension == "md" {
         return Ok(None);
     }
     if !crate::config::CONFIG_EXTENSIONS.contains(&extension) {

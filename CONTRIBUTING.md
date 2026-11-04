@@ -48,6 +48,17 @@ complexity gate runs `cargo crap --workspace --missing optimistic --fail-above
 --threshold 30 --summary` without LCOV: assuming full coverage makes CRAP equal
 cyclomatic complexity, including source omitted from the coverage report.
 
+The optimistic check does not replace the coverage-aware CRAP gate. After a
+crate-scoped coverage run, export LCOV and check the changed crate:
+
+```sh
+cargo llvm-cov report --lcov --output-path /tmp/no-mistakes-lcov.info
+cargo crap -p no-mistakes --lcov /tmp/no-mistakes-lcov.info --missing skip --fail-above --threshold 30
+```
+
+Conditional framework dispatch needs fixture coverage for every supported branch,
+even when its cyclomatic complexity is below 30.
+
 Run `pnpm run lint:duplicates` to check for copied blocks of at least 30 lines
 and functions with at least 80% structural similarity. CI runs the same jscpd
 check and fails on any reported clone. See the [duplication guide](docs/development/code-duplication.md)

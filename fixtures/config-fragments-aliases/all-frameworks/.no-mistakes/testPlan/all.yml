@@ -1,0 +1,31 @@
+dotnet:
+  dependencies: []
+playwright:
+  dependencies: []
+vitest:
+  dependencies:
+    ignore_changed_tests: [playwright]
+swift:
+  dependencies: []
+python:
+  dependencies: []
+go:
+  dependencies: []
+cargo:
+  dependencies: []
+rails:
+  dependencies: []
+php:
+  dependencies: []
+java:
+  dependencies: []
+kotlin:
+  dependencies: []
+elixir:
+  dependencies: []
+dart:
+  dependencies: []
+jest:
+  dependencies: []
+custom:
+  dependencies: []
