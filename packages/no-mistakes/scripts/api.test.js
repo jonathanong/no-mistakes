@@ -145,6 +145,7 @@ test("production export test-only options require explicit production and test s
   assert.match(declaration, /productionRoots: string\[\];/);
   assert.match(declaration, /testGlobs\?: string\[\];/);
   assert.match(declaration, /testHelperRoots\?: string\[\];/);
+  assert.match(declaration, /ignoreExportsUsedInFile\?: boolean;/);
   assert.match(declaration, /unanalyzable\?: Unanalyzable;/);
   assert.ok(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(

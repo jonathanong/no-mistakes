@@ -362,3 +362,42 @@ fn dynamic_imports_check_json_snapshot() {
         )],
     );
 }
+
+#[test]
+fn local_uses_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(RULE, "fixture", "local-uses");
+    let disabled = check("local-uses");
+    let explicit_off = check_config("local-uses", "explicit-off.yml");
+    let disabled: serde_json::Value = serde_json::from_slice(&disabled.stdout).unwrap();
+    let explicit_off: serde_json::Value = serde_json::from_slice(&explicit_off.stdout).unwrap();
+    assert_eq!(disabled["rules"], explicit_off["rules"]);
+    assert_eq!(disabled["rules"].as_array().unwrap().len(), 16);
+    let enabled = check_config("local-uses", "enabled.yml");
+    let enabled: serde_json::Value = serde_json::from_slice(&enabled.stdout).unwrap();
+    let targets: Vec<_> = enabled["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["target"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        targets,
+        [
+            "defaultOnly",
+            "ExportOnlyType",
+            "ShadowedType",
+            "onlyExport",
+            "listed",
+            "publicAlias",
+            "shadowed"
+        ]
+    );
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_local_uses",
+        &[
+            ("default_off", root.clone(), root.join(".no-mistakes.yml")),
+            ("enabled", root.clone(), root.join("enabled.yml")),
+            ("invalid", root.clone(), root.join("invalid.yml")),
+        ],
+    );
+}

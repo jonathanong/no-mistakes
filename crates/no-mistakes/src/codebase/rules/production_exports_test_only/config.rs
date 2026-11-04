@@ -13,9 +13,11 @@ struct Options {
     production_roots: Vec<String>,
     test_globs: Vec<String>,
     test_helper_roots: Vec<String>,
+    ignore_exports_used_in_file: bool,
 }
 
 pub(super) struct Selection {
+    pub(super) ignore_exports_used_in_file: bool,
     root: PathBuf,
     production_roots: Vec<PathBuf>,
     tests: GlobMatcher,
@@ -48,6 +50,7 @@ impl Selection {
             }
         }
         Ok(Self {
+            ignore_exports_used_in_file: options.ignore_exports_used_in_file,
             root: root.to_path_buf(),
             production_roots: roots(root, options.production_roots),
             tests: GlobMatcher::new(&options.test_globs, &format!("{RULE_ID} options.testGlobs"))?,

@@ -6,6 +6,7 @@ mod script_entries;
 mod selector_advisories;
 mod selector_gaps;
 mod traversal;
+mod used_in_file;
 
 use super::analysis_policy::AnalysisDiagnostics;
 use super::path_filter::RulePathFilter;
@@ -68,6 +69,9 @@ pub(crate) fn check_with_graph(
                 else {
                     return chunk;
                 };
+                let local_uses = options
+                    .ignore_exports_used_in_file
+                    .then(|| used_in_file::exports(ts));
                 for export in &symbols.exports {
                     if forwarded(symbols, export) {
                         continue;
@@ -77,6 +81,9 @@ pub(crate) fn check_with_graph(
                     } else {
                         &export.name
                     };
+                    if local_uses.as_ref().is_some_and(|uses| uses.contains(name)) {
+                        continue;
+                    }
                     // Next.js reads these names. Other exports on the same file stay in scope.
                     if entries.exempts(file, nextjs::consumed_export(file, &nextjs_roots, name)) {
                         continue;

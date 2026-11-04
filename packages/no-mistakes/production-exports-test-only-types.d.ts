@@ -8,6 +8,8 @@ export interface ProductionExportsOnlyUsedByTestsOptions {
   testGlobs?: string[];
   /** Explicit test-only helper directories or files; no names are inferred. */
   testHelperRoots?: string[];
+  /** Count same-file value/type uses of exported bindings; default: false. */
+  ignoreExportsUsedInFile?: boolean;
   /** Uncertain symbol consumers follow the shared policy; default: report. */
   unanalyzable?: Unanalyzable;
 }

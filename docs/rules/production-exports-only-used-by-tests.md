@@ -26,6 +26,28 @@ Likewise, `getRequestClientInfo` or `createFlowProducer` imported only by a conf
 test helper is reported. A production import of a different export from the same
 file does not establish production use of the reported symbol.
 
+## Uses inside the declaring file
+
+`options.ignoreExportsUsedInFile` defaults to `false`, preserving findings when
+only tests import an export even if its production file uses it internally.
+Set it to `true` to count a call, value read, recursive call, or type-position
+reference to the exported binding in its own configured production root:
+
+```yaml
+options:
+  productionRoots: [src]
+  testGlobs: ["tests/**/*.test.mts"]
+  ignoreExportsUsedInFile: true
+```
+
+With this option, `export function helper() {}; helper();` is valid even when
+only tests import `helper`. The counterexample `export const helper = 1` remains
+reported when its only consumers are tests: declaring or exporting a binding is
+not a use. Neither `export { helper }`, an aliased export, a bare
+`export default helper`, nor a re-export establishes internal use. A reference
+to a same-named shadowed binding also does not count. Remove the export or move
+test-only code to a configured helper root to fix these findings.
+
 ## Class extensions
 
 An exported class extended by another exported class in a production root is a
