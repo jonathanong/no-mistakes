@@ -81,6 +81,22 @@ pub(super) fn sources(
     imports: Vec<ImportedBinding>,
     spans: &[(u32, u32)],
 ) -> std::collections::BTreeSet<Provenance> {
+    sources_with_parameters(
+        bindings,
+        outside,
+        imports,
+        spans,
+        vec![parameter("table"), parameter("uid"), parameter("free")],
+    )
+}
+
+pub(super) fn sources_with_parameters(
+    bindings: Vec<ValueBinding>,
+    outside: ValueExpression,
+    imports: Vec<ImportedBinding>,
+    spans: &[(u32, u32)],
+    parameters: Vec<ValueParameter>,
+) -> std::collections::BTreeSet<Provenance> {
     let file = PathBuf::from("query.ts");
     let mut facts = CheckFactMap::default();
     facts.files.push(file.clone());
@@ -90,7 +106,7 @@ pub(super) fn sources(
             ts: Arc::new(TsFileFacts {
                 imported_bindings: imports,
                 value_flow: ValueFlowFacts {
-                    parameters: vec![parameter("table"), parameter("uid"), parameter("free")],
+                    parameters,
                     bindings,
                     calls: vec![call(outside)],
                     ..ValueFlowFacts::default()

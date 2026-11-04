@@ -107,6 +107,8 @@ export interface PostgresCompleteCatalogTable extends Omit<PostgresCatalogTable,
 }
 /** Keyed by name and identity arguments, such as `touch()` or `over(a integer)`. */
 export interface PostgresCatalogFunction {
+  /** Whether the function returns a set (`pg_proc.proretset`); older snapshots fall back to declared RETURNS types. */
+  returnsSet?: boolean;
   /** `pg_get_functiondef` text. */
   definition: string;
 }

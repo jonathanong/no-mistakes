@@ -1,5 +1,4 @@
-use super::sentinel;
-use super::split::{compose, split};
+mod fill;
 use super::unpublish::{unpublish, unpublish_origins};
 use crate::codebase::postgres::embedded::placeholders::publish_placeholders_with_positions;
 use crate::codebase::postgres::embedded::walk::resolve::functions::provenance::RecoveredSql;
@@ -8,6 +7,7 @@ use crate::codebase::postgres::embedded::{
     EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS,
 };
 use crate::fx::FxHashMap;
+use fill::fill_all;
 
 /// Every alternative text of each hole, by the site index the walk gave it.
 type Holes = FxHashMap<usize, Vec<RecoveredSql>>;
@@ -109,11 +109,12 @@ fn splice_variant(variant: &EmbeddedSqlVariant, holes: &Holes) -> Option<Vec<Emb
         positions: variant.sql_source_positions.clone(),
     };
     Some(
-        fill_all(&caller, holes)?
+        fill::fill_with_boundaries(&caller, holes, fill::internal_boundary(variant))?
             .into_iter()
-            .map(|joined| {
+            .map(|(joined, boundary)| {
                 let mut filled = publish_variant(joined, variant.append_sites.clone());
                 filled.variants_truncated = variant.variants_truncated;
+                filled.first_append_offset = boundary;
                 filled
             })
             .collect(),
@@ -131,58 +132,7 @@ fn publish_variant(joined: RecoveredSql, append_sites: Vec<u32>) -> EmbeddedSqlV
         sql_source_positions: joined.positions,
         recovered_placeholder_positions,
         append_sites,
+        first_append_offset: None,
         variants_truncated: false,
     }
-}
-
-/// `caller` with every hole replaced by each combination of its alternatives.
-/// A hole that appears twice takes the same alternative both times.
-fn fill_all(caller: &RecoveredSql, holes: &Holes) -> Option<Vec<RecoveredSql>> {
-    let markers = sentinel::find_all(&caller.sql);
-    let mut sites: Vec<usize> = markers.iter().map(|(_, site)| *site).collect();
-    sites.sort_unstable();
-    sites.dedup();
-    let mut combos: Vec<Vec<&RecoveredSql>> = vec![Vec::new()];
-    for site in &sites {
-        let alternatives = holes.get(site).filter(|texts| !texts.is_empty())?;
-        let mut next = Vec::with_capacity(combos.len() * alternatives.len());
-        for combo in &combos {
-            for text in alternatives {
-                let mut extended = combo.clone();
-                extended.push(text);
-                next.push(extended);
-            }
-        }
-        if next.len() > MAX_EMBEDDED_SQL_VARIANTS {
-            return None;
-        }
-        combos = next;
-    }
-    let ranges = markers
-        .iter()
-        .map(|(range, _)| range.clone())
-        .collect::<Vec<_>>();
-    let (pieces, _) = split(caller, &ranges);
-    // Which combination slot fills each marker, in text order.
-    let slots: Vec<usize> = markers
-        .iter()
-        .map(|(_, site)| {
-            sites
-                .binary_search(site)
-                .expect("every marker's site is collected")
-        })
-        .collect();
-    combos
-        .iter()
-        .map(|combo| {
-            let mut parts = Vec::with_capacity(pieces.len() * 2);
-            let mut pieces = pieces.iter().cloned();
-            parts.extend(pieces.next());
-            for (slot, piece) in slots.iter().zip(pieces) {
-                parts.push(combo[*slot].clone());
-                parts.push(piece);
-            }
-            compose(parts)
-        })
-        .collect()
 }

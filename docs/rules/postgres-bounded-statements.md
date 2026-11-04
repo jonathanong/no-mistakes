@@ -329,7 +329,7 @@ UPDATE accounts AS a SET name = 'n' FROM c WHERE a.email = c.email;
 
 A `LIMIT` on a CTE bounds the rest of that statement when each later data-modifying CTE writes rows identified by a complete primary key of the capped rows. A non-unique join inside the capped CTE does not reopen those later writes. The same statement without the `LIMIT` still reports.
 
-A call to a function the rule cannot prove scalar in the capped CTE's select list (`fn_remaining(g.id) AS rem`) may return a set that skips input rows, so the `LIMIT` is not trusted and the statement reports the CTE's tables; a builtin scalar such as `lower(g.note)` keeps the cap. Tracked in #2979.
+A call to a function the rule cannot prove scalar in the capped CTE's select list (`fn_remaining(g.id) AS rem`) may return a set that skips input rows, so the `LIMIT` is not trusted and the statement reports the CTE's tables. Generated catalogs record `functions[signature].returnsSet` from `pg_proc.proretset`. When every recorded overload of a function is declared non-set, a projected call preserves the cap, including calls in `ORDER BY`. The rule first uses `returnsSet` metadata; when it is absent, a complete, parseable `CREATE FUNCTION ... RETURNS type` definition supplies the same scalar proof. `RETURNS SETOF type` and `RETURNS TABLE (...)` keep the finding, including when they contradict `returnsSet: false`; `returnsSet: true` also always keeps it. An unknown function, malformed or unresolved declaration, or any set-returning or unknown overload stays conservative. Bare names use the selected catalog schema; a qualified declaration and call must match the catalog identity. A builtin scalar such as `lower(g.note)` needs no catalog evidence. Removing the `LIMIT` or the complete-key pin still reports even with scalar-function evidence. Catalog-dependent proofs retain the original embedded SQL source locations, including imported fragments, so line suppressions still apply to the physical relation line.
 
 Rows from `jsonb_to_recordset($1)` stay caller-bounded as they pass through later primary-key updates, including a final read of the returned keys. When that recordset reads a table column instead of a caller value, the finding names the table that supplied the document, not the primary-key target. `INSERT ... RETURNING` of a caller-supplied array, then `CROSS JOIN LATERAL unnest(cte.column)` matched back by primary key, is the same caller bound. An array taken from a table is not.
 
@@ -362,7 +362,7 @@ Declared `columnBounds` follow that push. A predicate on the derived column reac
 
 `DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A positional `LIMIT $n` inside `WITH page AS MATERIALIZED (... LIMIT $n)` caps that page. A data-modifying CTE joined to the page on the target's whole primary key, including `column = ANY(ARRAY[page.column])` for each key column, stays bounded, and the outer `SELECT` of its `RETURNING` rows keeps that proof. The same statement without the `LIMIT` still reports the target.
 
-A multi-line template reports the source line that contains the SQL. That includes `head + tail`, where each const is its own template. A single-root finding keeps that relation's source line, including inside a fluent append. A grouped finding keeps the opening template's line when its earliest root is there. When the earliest root is an appended fragment instead, the finding is reported once, on the executing call, and the message names that fragment.
+A multi-line template reports the source line that contains the SQL. That includes `head + tail`, where each const is its own template. A single-root finding keeps that relation's source line, including inside a fluent append, when the opening template contains a relation. When the opening template has no relation and every relation comes from explicit builder appends, the finding is reported at each executor call, including for a single root. Prepared SQL append boundaries distinguish opening relations from appended roots regardless of escaped newlines, empty openings, or helper declaration order. A grouped finding keeps the opening template's line when its earliest root is there. When the earliest root is an appended fragment instead, the finding is reported once, on the executing call, and the message names that fragment.
 
 ## Analysis
 
@@ -388,8 +388,11 @@ finding's earliest root is in that fragment rather than in the statement's
 opening template. The finding is then one report on the executing call, and the
 message names the fragment. A grouped finding that starts in the opening
 template keeps that line. When a root comes from an appended fragment, the
-message names the fragment's location. A statement made only of appended
-fragments is reported at its executor call.
+message names the earliest contributing line in each fragment file once. A
+statement made only of appended fragments is reported at each executor call,
+even for a single root when several callers append the same full `FROM`
+fragment. A bounded relation in the opening template preserves the usual
+single-root relation location. Suppressed roots do not determine the remaining group's location.
 
 `allow` entries are applied per root and still report stale entries. A
 relation-line suppression suppresses that relation before the remaining roots

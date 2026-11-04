@@ -57,11 +57,11 @@ impl Groups {
     ) {
         for (_, group) in self.0 {
             let executor = crate::codebase::ts_source::relative_slash_path(root, &group.executor);
-            let relocate_line = append::relocate(&group.spans, &group.findings.0, &executor);
             let mut findings = group.findings;
             merge(
                 &mut findings,
-                (&executor, group.call_line, relocate_line),
+                (&executor, group.call_line),
+                &group.spans,
                 root,
                 sources,
                 allow,
@@ -73,12 +73,13 @@ impl Groups {
 
 fn merge(
     output: &mut PostgresFindings,
-    (executor, call_line, relocate_line): (&str, Option<usize>, Option<usize>),
+    (executor, call_line): (&str, Option<usize>),
+    spans: &[append::Span],
     root: &Path,
     sources: &SourceStore,
     allow: &AllowList,
 ) {
-    if output.len() < 2 {
+    if output.0.is_empty() {
         return;
     }
     let mut group = Vec::new();
@@ -100,32 +101,41 @@ fn merge(
             group.push(located);
         }
     }
-    if group.len() < 2 {
+    let appended_call = append::only_appended(spans);
+    if group.len() < 2 && (group.is_empty() || appended_call.is_none()) {
         output.0.extend(group);
         return;
     }
+    let relocate_line = if group.len() == 1 {
+        appended_call
+    } else {
+        append::relocate(spans, &group, executor)
+    };
     group.sort();
     let roots: BTreeSet<_> = group
         .iter()
         .filter_map(|located| located.finding.target.clone())
         .collect();
     let targets = roots.into_iter().collect::<Vec<_>>().join(", ");
-    let mut fragments: BTreeSet<_> = group
-        .iter()
-        .filter(|located| located.finding.file != executor)
-        .map(|located| format!("{}:{}", located.finding.file, located.finding.line))
-        .collect();
     let local = group
         .iter()
         .position(|located| located.finding.file == executor);
     let relocate = relocate_line.filter(|_| local.is_some());
-    if relocate.is_some() {
-        for located in &group {
-            if located.finding.file == executor {
-                fragments.insert(format!("{}:{}", located.finding.file, located.finding.line));
-            }
+    let mut fragments = BTreeMap::<&str, usize>::new();
+    for located in &group {
+        let finding = &located.finding;
+        if finding.file != executor || relocate.is_some_and(|line| finding.line != line) {
+            fragments
+                .entry(&finding.file)
+                .and_modify(|line| *line = (*line).min(finding.line))
+                .or_insert(finding.line);
         }
     }
+    let fragments = fragments
+        .into_iter()
+        .map(|(file, line)| format!("{file}:{line}"))
+        .collect::<Vec<_>>()
+        .join(", ");
     let mut located: LocatedRuleFinding = group.remove(local.unwrap_or(0));
     let finding = &mut located.finding;
     if local.is_none() {
@@ -134,14 +144,10 @@ fn merge(
     } else if let Some(line) = relocate {
         finding.line = line.max(1);
     }
-    if let Some(line) = relocate {
-        fragments.remove(&format!("{}:{}", finding.file, line));
-    }
     finding.target = Some(targets.clone());
     let note = if fragments.is_empty() {
         String::new()
     } else {
-        let fragments = fragments.into_iter().collect::<Vec<_>>().join(", ");
         format!(" (includes SQL appended from {fragments})")
     };
     finding.message = format!(

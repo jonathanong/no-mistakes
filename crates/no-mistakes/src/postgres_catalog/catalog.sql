@@ -118,7 +118,7 @@ WITH selected AS (
 ), functions AS (
   -- pg_get_functiondef fails on aggregates and does not describe window functions: prokind f/p only.
   SELECT quote_ident(p.proname) || '(' || pg_get_function_identity_arguments(p.oid) || ')' AS key,
-    jsonb_build_object('definition', pg_get_functiondef(p.oid)) AS value
+    jsonb_build_object('definition', pg_get_functiondef(p.oid), 'returnsSet', p.proretset) AS value
   FROM pg_proc p JOIN selected s ON s.oid = p.pronamespace
   WHERE p.prokind IN ('f', 'p') AND NOT EXISTS (SELECT 1 FROM extension_members e
                                                 WHERE e.classid = 'pg_proc'::regclass AND e.objid = p.oid)

@@ -18,6 +18,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         tables.insert(normalize_table_name(&name), arbiter::arbiter_table(&table));
         model_tables.insert(normalize_table_name(&name), model);
     }
+    let functions = functions(snapshot.functions, snapshot.schema.as_deref());
     Ok(SchemaCatalog {
         coverage: snapshot.coverage,
         schema: snapshot.schema,
@@ -26,7 +27,8 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         tables,
         model_tables,
         relation_fallback: Default::default(),
-        functions: functions(snapshot.functions),
+        functions,
+        scalar_function_names: Default::default(),
         enums: enums(snapshot.enums),
         views: views(snapshot.views),
         view_fallback: Default::default(),
@@ -36,14 +38,20 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
 
 fn functions(
     functions: BTreeMap<String, super::snapshot::SnapshotFunction>,
+    schema: Option<&str>,
 ) -> BTreeMap<String, CatalogFunction> {
     functions
         .into_iter()
         .map(|(key, function)| {
-            (
-                key.clone(),
-                function_from_definition(&key, &function.definition),
-            )
+            let mut catalog_function = function_from_definition(&key, &function.definition);
+            catalog_function.returns_set = super::function_cardinality::resolve(
+                function.returns_set,
+                &function.definition,
+                &catalog_function.name,
+                &catalog_function.return_contract,
+                schema,
+            );
+            (key, catalog_function)
         })
         .collect()
 }

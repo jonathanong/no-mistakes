@@ -256,3 +256,33 @@ fn index(expect: IndexExpect<'_>) -> CatalogIndexInfo {
         definition: expect.definition.to_string(),
     }
 }
+
+#[test]
+fn function_set_metadata_preserves_known_and_legacy_values() {
+    assert!(load_fixture("full.json")
+        .unwrap()
+        .scalar_function_names()
+        .is_empty());
+    let catalog = load_fixture("returns-set.json").unwrap();
+    let functions = catalog
+        .functions()
+        .map(|f| (f.key.as_str(), f.returns_set))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    assert_eq!(functions["known_scalar()"], Some(false));
+    assert_eq!(functions["known_set()"], Some(true));
+    assert_eq!(functions["legacy_set()"], Some(true));
+    let names = catalog.scalar_function_names();
+    assert!(std::sync::Arc::ptr_eq(
+        &names,
+        &catalog.scalar_function_names()
+    ));
+    assert!(names.contains(&vec!["known_scalar".into()]));
+    assert!(names.contains(&vec!["public".into(), "known_scalar".into()]));
+    assert!(names.contains(&vec!["Mixed".into()]));
+    assert!(names.contains(&vec!["other".into(), "external".into()]));
+    assert!(!names.contains(&vec!["external".into()]));
+    for name in ["known_set", "legacy_set", "mixed", "unknown"] {
+        assert!(!names.contains(&vec![name.into()]));
+        assert!(!names.contains(&vec!["public".into(), name.into()]));
+    }
+}

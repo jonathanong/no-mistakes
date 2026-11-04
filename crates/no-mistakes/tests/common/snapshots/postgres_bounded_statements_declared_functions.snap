@@ -1,0 +1,560 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "declared-cte-body-text": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-cte-conflict": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-conflict.sql",
+          "line": 4,
+          "message": "sql/declared-cte-conflict.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-explicit-set": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-explicit-set.sql",
+          "line": 4,
+          "message": "sql/declared-cte-explicit-set.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-foreign": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-foreign.sql",
+          "line": 4,
+          "message": "sql/declared-cte-foreign.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-malformed.sql",
+          "line": 4,
+          "message": "sql/declared-cte-malformed.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-mixed.sql",
+          "line": 4,
+          "message": "sql/declared-cte-mixed.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-qualified": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-cte-scalar": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-cte-set": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-set.sql",
+          "line": 4,
+          "message": "sql/declared-cte-set.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-table": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-table.sql",
+          "line": 4,
+          "message": "sql/declared-cte-table.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-unknown": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-unknown.sql",
+          "line": 4,
+          "message": "sql/declared-cte-unknown.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-unknown-overload": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-unknown-overload.sql",
+          "line": 4,
+          "message": "sql/declared-cte-unknown-overload.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-wrong-name": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-wrong-name.sql",
+          "line": 4,
+          "message": "sql/declared-cte-wrong-name.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-cte-wrong-schema": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-cte-wrong-schema.sql",
+          "line": 4,
+          "message": "sql/declared-cte-wrong-schema.sql:4: statement can scan unbounded rows from roots table:grants, table:states, table:subs; add a row cap, match complete unique keys or declared bounded columns, or allow each root with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g JOIN subs s ON s.source_id = g.source_id JOIN states st ON st.source_id = g.source_id CROSS JOIN locked",
+          "target": "table:grants, table:states, table:subs"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-body-text": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-select-conflict": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-conflict.sql",
+          "line": 2,
+          "message": "sql/declared-select-conflict.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-explicit-set": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-explicit-set.sql",
+          "line": 2,
+          "message": "sql/declared-select-explicit-set.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-foreign": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-foreign.sql",
+          "line": 2,
+          "message": "sql/declared-select-foreign.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-malformed.sql",
+          "line": 2,
+          "message": "sql/declared-select-malformed.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-mixed.sql",
+          "line": 2,
+          "message": "sql/declared-select-mixed.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-qualified": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-select-scalar": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "declared-select-set": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-set.sql",
+          "line": 2,
+          "message": "sql/declared-select-set.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-set-no-limit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-set-no-limit.sql",
+          "line": 2,
+          "message": "sql/declared-select-set-no-limit.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-table": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-table.sql",
+          "line": 2,
+          "message": "sql/declared-select-table.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-unknown": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-unknown.sql",
+          "line": 2,
+          "message": "sql/declared-select-unknown.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-unknown-overload": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-unknown-overload.sql",
+          "line": 2,
+          "message": "sql/declared-select-unknown-overload.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-wrong-name": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-wrong-name.sql",
+          "line": 2,
+          "message": "sql/declared-select-wrong-name.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "declared-select-wrong-schema": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/declared-select-wrong-schema.sql",
+          "line": 2,
+          "message": "sql/declared-select-wrong-schema.sql:2: SELECT can return every row of grants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM grants g",
+          "target": "table:grants"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

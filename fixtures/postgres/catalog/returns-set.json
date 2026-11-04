@@ -1,0 +1,41 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "functions": {
+    "known_scalar()": {
+      "definition": "CREATE FUNCTION known_scalar() RETURNS integer LANGUAGE sql AS 'SELECT 1'",
+      "returnsSet": false
+    },
+    "known_set()": {
+      "definition": "CREATE FUNCTION known_set() RETURNS SETOF integer LANGUAGE sql AS 'SELECT 1'",
+      "returnsSet": true
+    },
+    "legacy_set()": {
+      "definition": "CREATE FUNCTION legacy_set() RETURNS SETOF integer LANGUAGE sql AS 'SELECT 1'"
+    },
+    "mixed(integer)": {
+      "definition": "",
+      "returnsSet": false
+    },
+    "mixed(text)": {
+      "definition": "",
+      "returnsSet": true
+    },
+    "unknown(integer)": {
+      "definition": "",
+      "returnsSet": false
+    },
+    "unknown(text)": {
+      "definition": ""
+    },
+    "other.external()": {
+      "definition": "",
+      "returnsSet": false
+    },
+    "\"Mixed\"()": {
+      "definition": "",
+      "returnsSet": false
+    }
+  },
+  "schema": "public"
+}

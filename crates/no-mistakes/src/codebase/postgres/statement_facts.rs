@@ -20,37 +20,13 @@ pub use select::{
     SqlColumnClause, SqlColumnUseFact, SqlCountExistenceFact, SqlExistsSetOpFact,
     SqlRelationPredicateFact, SqlSelectFact, SqlStarProjectionFact,
 };
-use sqlparser::ast::Statement;
-use std::collections::BTreeSet;
 use std::path::PathBuf;
 pub use transformed::{SqlTransformedColumnClause, SqlTransformedColumnUseFact};
 pub use writes::{SqlWriteColumns, SqlWriteFact};
-
-/// Prepared, source-ordered lifecycle inputs for catalog-dependent SQL bounds.
-/// The SQL AST and view reads are collected once; each catalog only projects them.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-#[doc(hidden)]
-pub struct SqlLifecycleFacts {
-    pub(crate) raw_bounds: Vec<SqlBoundFact>,
-    pub(crate) batches: Vec<SqlLifecycleBatch>,
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct SqlLifecycleBatch {
-    pub source: Statement,
-    pub steps: Vec<SqlLifecycleStep>,
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct SqlLifecycleStep {
-    pub statement: Statement,
-    pub first_bound: usize,
-    pub last_bound: usize,
-    pub view_reads: Option<SqlViewReads>,
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct SqlViewReads {
-    pub query: SqlBoundQuery,
-    pub names: BTreeSet<String>,
-}
+mod lifecycle;
+pub use lifecycle::SqlLifecycleFacts;
+pub(crate) use lifecycle::{SqlBoundSourceLines, SqlFunctionBounds};
+pub(crate) use lifecycle::{SqlLifecycleBatch, SqlLifecycleStep, SqlViewReads};
 
 /// Statement facts for one SQL source (file or embedded call).
 #[derive(Clone, PartialEq, Eq, Default)]

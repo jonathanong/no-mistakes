@@ -68,6 +68,7 @@ CREATE TABLE event_refs (
 CREATE TABLE deferred (v integer UNIQUE DEFERRABLE INITIALLY DEFERRED);
 
 -- Function kinds and overloads: aggregates are out of scope, procedures are in.
+CREATE FUNCTION numbers() RETURNS SETOF integer LANGUAGE sql AS 'SELECT 1';
 CREATE FUNCTION over(a integer) RETURNS integer LANGUAGE sql AS 'SELECT a';
 CREATE FUNCTION over(a text) RETURNS text LANGUAGE sql AS 'SELECT a';
 CREATE FUNCTION over(a tone, b other.shade) RETURNS text LANGUAGE sql AS 'SELECT a::text';

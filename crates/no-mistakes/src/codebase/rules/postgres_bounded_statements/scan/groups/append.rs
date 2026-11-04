@@ -1,32 +1,42 @@
-//! Move a grouped finding onto the call when its earliest root is an appended fragment.
+//! Attribute appended SQL findings to their executing calls.
+use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::SqlStatementFileFacts;
 use crate::codebase::rules::LocatedRuleFinding;
 
 pub(super) struct Span {
     call_line: usize,
     opening_shift: i64,
+    all_appended: bool,
     relations: Vec<(usize, i64)>,
 }
 
 pub(super) fn span(file: &SqlStatementFileFacts, bound_index: usize) -> Option<Span> {
     let locations = file.variant_locations.as_ref()?;
-    let relations: Vec<_> = locations
+    let opening = locations.position(SqlFactSite::Origin)?;
+    let opening_shift = shift(opening.source_line, opening.sql_line);
+    let positions: Vec<_> = locations
         .bound_tables
         .iter()
-        .filter_map(|(index, _, site)| {
-            if *index != bound_index {
-                return None;
-            }
-            let position = locations.position(site.clone())?;
+        .filter(|(index, _, _)| *index == bound_index)
+        .map(|(_, _, site)| locations.position(site.clone()))
+        .collect();
+    let all_appended = !positions.is_empty()
+        && locations.first_append_position.is_some_and(|boundary| {
+            positions.iter().all(|position| {
+                position
+                    .is_some_and(|position| (position.sql_line, position.sql_column) >= boundary)
+            })
+        });
+    let relations = positions
+        .into_iter()
+        .flatten()
+        .filter_map(|position| {
             same_file(position.source_path.as_ref(), &file.path).then_some((
-                position.sql_line,
-                position.sql_column,
                 position.source_line,
                 shift(position.source_line, position.sql_line),
             ))
         })
         .collect();
-    let opening_shift = relations.iter().min().map(|(_, _, _, shift)| *shift)?;
     let recorded = locations.original_call_line as usize;
     let call_line = if recorded > 0 {
         recorded
@@ -36,11 +46,19 @@ pub(super) fn span(file: &SqlStatementFileFacts, bound_index: usize) -> Option<S
     Some(Span {
         call_line,
         opening_shift,
-        relations: relations
-            .into_iter()
-            .map(|(_, _, source_line, shift)| (source_line, shift))
-            .collect(),
+        all_appended,
+        relations,
     })
+}
+
+pub(super) fn only_appended(spans: &[Span]) -> Option<usize> {
+    (!spans.is_empty() && spans.iter().all(|span| span.all_appended))
+        .then(|| {
+            spans
+                .iter()
+                .find_map(|span| (span.call_line > 0).then_some(span.call_line))
+        })
+        .flatten()
 }
 
 /// The call line when every relation on the group's earliest line sits outside the opening template.
@@ -84,3 +102,6 @@ fn same_file(path: Option<&std::path::PathBuf>, file: &std::path::Path) -> bool 
 fn shift(source_line: usize, sql_line: usize) -> i64 {
     source_line as i64 - sql_line as i64
 }
+
+#[cfg(test)]
+mod tests;

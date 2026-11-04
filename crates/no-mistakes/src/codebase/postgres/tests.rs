@@ -65,3 +65,4 @@ pub(crate) fn fixture_rule_options(yaml: &str) -> serde_yaml::Value {
         .or_insert_with(|| serde_yaml::Value::String("@example/db".into()));
     options
 }
+pub(crate) use super::collect::dml::embedded_call_facts_with_locations;

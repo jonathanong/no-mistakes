@@ -140,6 +140,7 @@ pub(super) struct SnapshotPartition {
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct SnapshotFunction {
     pub(super) definition: String,
+    pub(super) returns_set: Option<bool>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

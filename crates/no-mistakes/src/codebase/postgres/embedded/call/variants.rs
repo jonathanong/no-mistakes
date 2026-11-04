@@ -15,6 +15,7 @@ pub struct EmbeddedSqlVariant {
     pub recovered_placeholder_positions: Vec<(u32, u32)>,
     /// Private append occurrences that contributed SQL to this alternative.
     pub(crate) append_sites: Vec<u32>,
+    pub(crate) first_append_offset: Option<usize>,
     /// Feasible append outcomes remain beyond the site cap or sampled loop iterations.
     pub(crate) variants_truncated: bool,
 }
@@ -35,6 +36,10 @@ impl EmbeddedSqlVariant {
                 values.push(value.clone());
                 values.len() - 1
             });
+        values[index].first_append_offset = values[index]
+            .first_append_offset
+            .zip(value.first_append_offset)
+            .map(|(left, right)| left.max(right));
         values[index].variants_truncated |= value.variants_truncated;
         for site in value.append_sites {
             if !values[index].append_sites.contains(&site) {

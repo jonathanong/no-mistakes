@@ -24,13 +24,16 @@
   "formatVersion": 2,
   "functions": {
     "fn_reject_account_delete()": {
-      "definition": "CREATE OR REPLACE FUNCTION catalog_demo.fn_reject_account_delete()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN RAISE EXCEPTION 'rows are immutable' USING ERRCODE = '23514'; END\n$function$\n"
+      "definition": "CREATE OR REPLACE FUNCTION catalog_demo.fn_reject_account_delete()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN RAISE EXCEPTION 'rows are immutable' USING ERRCODE = '23514'; END\n$function$\n",
+      "returnsSet": false
     },
     "fn_reject_order_delete()": {
-      "definition": "CREATE OR REPLACE FUNCTION catalog_demo.fn_reject_order_delete()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN RAISE EXCEPTION 'rows are immutable' USING ERRCODE = '23514'; END\n$function$\n"
+      "definition": "CREATE OR REPLACE FUNCTION catalog_demo.fn_reject_order_delete()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN RAISE EXCEPTION 'rows are immutable' USING ERRCODE = '23514'; END\n$function$\n",
+      "returnsSet": false
     },
     "fn_touch_updated_at()": {
-      "definition": "CREATE OR REPLACE FUNCTION catalog_demo.fn_touch_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  NEW.updated_at := now();\n  RETURN NEW;\nEND\n$function$\n"
+      "definition": "CREATE OR REPLACE FUNCTION catalog_demo.fn_touch_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  NEW.updated_at := now();\n  RETURN NEW;\nEND\n$function$\n",
+      "returnsSet": false
     }
   },
   "schema": "catalog_demo",

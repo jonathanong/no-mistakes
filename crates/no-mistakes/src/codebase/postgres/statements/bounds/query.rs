@@ -65,7 +65,7 @@ fn bound_body_observed(
         bound.input_mode = SqlBoundInputMode::Skipped;
     } else if (super::super::limit::is_limited_at(query, positions)
         || super::scalar_limit::is_limited(query, scope, positions))
-        && limit_bounds_input(query)
+        && limit_bounds_input(query, scope)
     {
         if let Some(mut blocking) = blocking_statuses(&query.body) {
             cap_streaming_arms(&query.body, &mut bound, &mut blocking);
@@ -83,7 +83,7 @@ fn bound_body_observed(
     bound
 }
 
-fn limit_bounds_input(query: &Query) -> bool {
+fn limit_bounds_input(query: &Query, scope: &Scope) -> bool {
     // WHERE has already removed the input, or grouping has reduced it to the rule's
     // established one-group case before the projected set function runs.
     if let SetExpr::Select(select) = &*query.body {
@@ -93,15 +93,16 @@ fn limit_bounds_input(query: &Query) -> bool {
             return true;
         }
     }
-    !projection_may_erase_input(&query.body) && !super::aggregate::order_may_erase_input(query)
+    !projection_may_erase_input(&query.body, scope)
+        && !super::aggregate::order_may_erase_input(query, scope)
 }
 
-fn projection_may_erase_input(set: &SetExpr) -> bool {
+fn projection_may_erase_input(set: &SetExpr, scope: &Scope) -> bool {
     match set {
-        SetExpr::Select(select) => super::aggregate::projection_may_erase_input(select),
-        SetExpr::Query(query) => projection_may_erase_input(&query.body),
+        SetExpr::Select(select) => super::aggregate::projection_may_erase_input(select, scope),
+        SetExpr::Query(query) => projection_may_erase_input(&query.body, scope),
         SetExpr::SetOperation { left, right, .. } => {
-            projection_may_erase_input(left) || projection_may_erase_input(right)
+            projection_may_erase_input(left, scope) || projection_may_erase_input(right, scope)
         }
         _ => false,
     }

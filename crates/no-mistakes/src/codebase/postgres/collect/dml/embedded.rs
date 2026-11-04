@@ -102,6 +102,20 @@ pub(super) fn embedded_call_facts_with_json_writes(
                     .and_then(|span| file.imported_call_lines.get(span))
                     .cloned()
                     .unwrap_or_default();
+                locations.first_append_position = call
+                    .variants
+                    .first()
+                    .and_then(|variant| variant.first_append_offset)
+                    .and_then(|at| sql.get(..at))
+                    .map(|prefix| {
+                        prefix.chars().fold((1, 1), |(line, column), character| {
+                            if character == '\n' {
+                                (line + 1, 1)
+                            } else {
+                                (line, column + 1)
+                            }
+                        })
+                    });
                 locations.append_sites = call
                     .variants
                     .first()

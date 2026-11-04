@@ -10,6 +10,7 @@ pub(super) fn function_from_definition(key: &str, definition: &str) -> CatalogFu
         name,
         signature,
         language: language(definition, body_span),
+        returns_set: None,
         returns_trigger: returns_clause(&plain, "trigger"),
         returns_event_trigger: returns_clause(&plain, "event_trigger"),
         definition: definition.to_string(),

@@ -82,7 +82,7 @@ partitioned table in the schema:
   replica role, is left out, because the definition text does not say so.
 
 It also holds the schema's functions and procedures (`pg_get_functiondef`
-text, keyed by name and identity arguments so every overload has its own stable
+text and `returnsSet` from `pg_proc.proretset`, keyed by name and identity arguments so every overload has its own stable
 key, such as `over(a integer)` and `over(a text)`), enums with their values in
 sort order, and views and materialized views (`pg_get_viewdef` text and comment).
 Enums directly used by scalar columns or as array elements are also included when

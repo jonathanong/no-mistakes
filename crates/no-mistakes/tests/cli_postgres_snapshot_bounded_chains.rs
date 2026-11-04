@@ -51,6 +51,47 @@ fn postgres_bounded_statements_chains_check_json_snapshot() {
             reuse,
             "bounded-reuse-shape1-unpinned.yml",
         ),
+        (
+            "catalog_shape1_scalar",
+            reuse,
+            "bounded-reuse-shape1-scalar.yml",
+        ),
+        (
+            "catalog_shape1_nolimit_scalar",
+            reuse,
+            "bounded-reuse-shape1-nolimit-scalar.yml",
+        ),
+        (
+            "catalog_shape1_unpinned_scalar",
+            reuse,
+            "bounded-reuse-shape1-unpinned-scalar.yml",
+        ),
+        (
+            "catalog_sibling_scalar",
+            reuse,
+            "bounded-reuse-sibling-scalar.yml",
+        ),
+        ("catalog_shape1_set", reuse, "bounded-reuse-shape1-set.yml"),
+        (
+            "catalog_shape1_mixed",
+            reuse,
+            "bounded-reuse-shape1-mixed.yml",
+        ),
+        (
+            "catalog_shape1_order_scalar",
+            reuse,
+            "bounded-reuse-shape1-order-scalar.yml",
+        ),
+        (
+            "catalog_shape1_qualified_scalar",
+            reuse,
+            "bounded-reuse-shape1-qualified-scalar.yml",
+        ),
+        (
+            "catalog_shape1_foreign_scalar",
+            reuse,
+            "bounded-reuse-shape1-foreign-scalar.yml",
+        ),
     ]
     .map(|(label, root, config)| {
         (

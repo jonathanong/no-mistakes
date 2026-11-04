@@ -104,6 +104,8 @@ words:
   - Pipfile
   - pkey
   - pnpm
+  - proretset
+  - SETOF
   - pulldown
   - pubspec
   - pytest

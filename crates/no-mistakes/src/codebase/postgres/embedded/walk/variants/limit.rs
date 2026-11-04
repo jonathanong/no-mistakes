@@ -16,7 +16,7 @@ pub(super) fn bounded(values: Vec<Recovered>) -> Option<Vec<Recovered>> {
                 unique.push(value.clone());
                 unique.len() - 1
             });
-        unique[index].merge_append_sites(&value);
+        unique[index].merge_alternative(&value);
         normalize(&mut unique[index]);
     }
     if unique.len() > 1 && unique.iter().any(|value| !value.append_sites.is_empty()) {
@@ -124,7 +124,7 @@ pub(super) fn binary_alternatives(
             let other = right.remove(index);
             value.choices.retain(|(other, _)| *other != id);
             value.enumerated |= other.enumerated;
-            value.merge_append_sites(&other);
+            value.merge_alternative(&other);
             // Removing the last choice must not collapse a recovered append
             // back to legacy text and discard its physical contributing sites.
             value.enumerated |= !value.append_sites.is_empty();

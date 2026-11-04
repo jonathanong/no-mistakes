@@ -71,6 +71,7 @@ pub struct SqlVariantLocations {
     /// The parse failure overlaps a conflict statement or the CTE that encloses it.
     pub conflict_failure_overlaps: bool,
     pub(crate) append_sites: Vec<u32>,
+    pub(crate) first_append_position: Option<(usize, usize)>,
     /// Source lines, in the executor's file, of the imported-helper calls whose
     /// text this statement contains.
     pub(crate) caller_lines: Vec<u32>,

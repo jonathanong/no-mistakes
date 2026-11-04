@@ -2,6 +2,7 @@
 pub(super) use bounds::TableTokenIndex;
 
 mod bounds;
+pub(in crate::codebase::postgres) use bounds::TableTokenCursor;
 mod conflict;
 mod dedupe;
 mod exists;
