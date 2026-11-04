@@ -1,0 +1,3 @@
+commands:
+  build:
+    run: second

@@ -59,21 +59,8 @@ pub(crate) fn classify_fragment(root: &Path, path: &Path) -> Result<Option<Strin
             path.display()
         );
     }
-    let sections = [
-        "filesystem",
-        "infra",
-        "projects",
-        "queues",
-        "effects",
-        "tests",
-        "testPlan",
-        "rules",
-        "ci",
-        "checks",
-        "reactTraits",
-    ];
     let section = parts[0].as_os_str().to_string_lossy();
-    if !sections.contains(&section.as_ref()) {
+    if !super::sections::SECTIONS.contains(&section.as_ref()) {
         anyhow::bail!("unknown config section `{section}`: {}", path.display());
     }
     let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");

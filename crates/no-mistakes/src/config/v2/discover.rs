@@ -21,6 +21,7 @@ pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
 
 mod fragment_validation;
 mod fragments;
+mod sections;
 mod selection;
 pub(crate) use selection::{load_v2_config_from_selected_source_store, select_config_from_visible};
 mod provenance;
@@ -173,6 +174,8 @@ pub(super) fn find_by_stems(root: &Path, stems: &[&str]) -> Result<Option<(PathB
     Ok(Some((path, source)))
 }
 
+#[cfg(test)]
+mod fragment_selection_tests;
 #[cfg(test)]
 mod fragment_tests;
 #[cfg(test)]

@@ -35,17 +35,23 @@ pub(super) fn finish(
     })?;
     super::finish_config(config, path)?;
     for (name, policy) in &mut config.tests.vitest.projects {
-        if !policy.setup_files.is_empty() {
-            let key = ConfigPath::default()
-                .key("tests")
-                .key("vitest")
-                .key("projects")
-                .key(name)
-                .key("setup_files")
-                .index(0);
-            if let Some((path, _)) = config.config_provenance.origin(&key) {
-                policy.declaration_path = Some(crate::codebase::ts_resolver::normalize_path(path));
-            }
+        let key = ConfigPath::default()
+            .key("tests")
+            .key("vitest")
+            .key("projects")
+            .key(name)
+            .key("setup_files");
+        policy.setup_declaration_paths = (0..policy.setup_files.len())
+            .map(|index| {
+                config
+                    .config_provenance
+                    .origin(&key.clone().index(index))
+                    .map(|(path, _)| crate::codebase::ts_resolver::normalize_path(path))
+                    .unwrap_or_else(|| crate::codebase::ts_resolver::normalize_path(path))
+            })
+            .collect();
+        if let Some(first) = policy.setup_declaration_paths.first() {
+            policy.declaration_path = Some(first.clone());
         }
     }
     Ok(())
