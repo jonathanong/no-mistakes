@@ -152,6 +152,12 @@ impl<'a> Scanner<'a> {
         }
         if let Some(role) = role {
             detail::record_inline(self, role, index + 1, &parsed.value);
+            if self.scripts.collects_plain(&parsed.value) {
+                self.frames.push(Frame {
+                    indent: parsed.key_indent,
+                    kind: Kind::Block(role, false),
+                });
+            }
         }
     }
 

@@ -35,8 +35,9 @@ pub(super) fn check_source(rel: &str, source: &str, action: bool, max: usize) ->
     {
         return vec![finding(rel, 1, "Script bodies could not be aligned to source locations; rewrite anchors, aliases, and flow-style steps as ordinary block-style run or with.script bodies so inline script length can be checked.".into())];
     }
+    let context = fix_context(action, &value["on"]);
     scripts.into_iter().filter(|script| script.count > max).map(|StepScript { line, count, .. }|
-        finding(rel, line, format!("Inline script has {count} non-blank lines, exceeding maxLines {max}; move it into a file and call that file so it can be linted and tested independently."))
+        finding(rel, line, format!("Inline script has {count} non-blank lines, exceeding maxLines {max}; move it into a file and call that file so it can be linted and tested independently.{context}"))
     ).collect()
 }
 
@@ -59,4 +60,27 @@ fn collect_steps(steps: &Value, expected: &mut Vec<bool>) {
             expected.push(true);
         }
     }
+}
+
+fn fix_context(action: bool, triggers: &Value) -> &'static str {
+    if action {
+        return " Use $GITHUB_ACTION_PATH for a script beside the action; a repo-relative path depends on the caller's checkout.";
+    }
+    if ["workflow_run", "pull_request_target"]
+        .iter()
+        .any(|event| has_event(triggers, event))
+    {
+        return " The moved script must come from the trusted ref, never the PR head.";
+    }
+    ""
+}
+
+fn has_event(triggers: &Value, event: &str) -> bool {
+    triggers.as_str() == Some(event)
+        || triggers
+            .as_sequence()
+            .is_some_and(|events| events.iter().any(|value| value.as_str() == Some(event)))
+        || triggers
+            .as_mapping()
+            .is_some_and(|events| events.contains_key(Value::String(event.into())))
 }

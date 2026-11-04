@@ -14,14 +14,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/actions/prepare/action.yaml",
           "line": 13,
-          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. Use $GITHUB_ACTION_PATH for a script beside the action; a repo-relative path depends on the caller's checkout.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": "script: >"
         },
         {
           "file": ".github/actions/prepare/action.yaml",
           "line": 6,
-          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. Use $GITHUB_ACTION_PATH for a script beside the action; a repo-relative path depends on the caller's checkout.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": "run: |"
         },
@@ -45,6 +45,81 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": "script: |"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "contexts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/pull-request-target.yml",
+          "line": 6,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. The moved script must come from the trusted ref, never the PR head.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/trigger-list.yml",
+          "line": 6,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. The moved script must come from the trusted ref, never the PR head.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/workflow-run.yml",
+          "line": 9,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. The moved script must come from the trusted ref, never the PR head.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "continuations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/continued.yml",
+          "line": 13,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/continued.yml",
+          "line": 27,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/continued.yml",
+          "line": 33,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/continued.yml",
+          "line": 39,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: echo one \\"
         }
       ],
       "warnings": []

@@ -1,0 +1,13 @@
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+jobs:
+  report:
+    steps:
+      - name: Render a report
+        run: |
+          cat <<'REPORT'
+          build result
+          REPORT
+          echo '${{ github.run_id }}'

@@ -20,3 +20,10 @@ jobs:
             two
             three
             four
+      - name: Runs before checkout
+        # no-mistakes-disable-next-line github-actions-max-inline-script-lines
+        run: |
+          echo one
+          echo two
+          echo three
+          echo four

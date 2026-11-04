@@ -9,6 +9,8 @@ fn github_actions_max_inline_script_lines_json_matches_snapshot() {
         ("suppression", "three"),
         ("default", "default"),
         ("unsupported", "three"),
+        ("continuations", "three"),
+        ("contexts", "three"),
     ]
     .into_iter()
     .map(|(fixture, config)| {

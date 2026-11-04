@@ -18,6 +18,10 @@ pub(super) struct ScriptCollector {
 }
 
 impl ScriptCollector {
+    pub(super) fn collects_plain(&self, value: &str) -> bool {
+        self.enabled && !value.starts_with(['\'', '"'])
+    }
+
     pub(super) fn note_header(&mut self, role: Option<BlockRole>, line: usize, value: &str) {
         if !self.enabled {
             return;
@@ -34,6 +38,7 @@ impl ScriptCollector {
         uses: Option<&str>,
         runs: &[(usize, String)],
         scripts: &[(usize, String)],
+        source_lines: &[&str],
     ) {
         if !self.enabled {
             return;
@@ -48,10 +53,7 @@ impl ScriptCollector {
             if let Some((line, supported)) = header {
                 self.collected.push(StepScript {
                     line,
-                    count: body
-                        .iter()
-                        .filter(|(_, text)| !text.trim().is_empty())
-                        .count(),
+                    count: count_lines(body, source_lines),
                     github_script,
                     supported,
                 });
@@ -66,4 +68,18 @@ pub(crate) fn step_script_lines(source: &str, action: bool) -> Vec<StepScript> {
     scanner.scripts.enabled = true;
     scanner.scan();
     scanner.scripts.collected
+}
+
+fn count_lines(body: &[(usize, String)], source_lines: &[&str]) -> usize {
+    let mut count = 0;
+    let mut continued = false;
+    for (line, text) in body {
+        if !text.trim().is_empty() && !continued {
+            count += 1;
+        }
+        continued = source_lines
+            .get(line - 1)
+            .is_some_and(|text| text.ends_with('\\'));
+    }
+    count
 }
