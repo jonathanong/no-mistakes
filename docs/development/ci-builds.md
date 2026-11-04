@@ -38,7 +38,7 @@ reports with the sibling compiled CLI, including SQL advisory aggregation.
 The Linux JavaScript job builds the CLI before the addon so both artifacts are
 available to these parity tests, as in the native platform matrix.
 
-<!-- cspell:ignore pkgcfg -->
+<!-- cspell:ignore libtest pkgcfg RUSTC -->
 
 The native macOS and Windows jobs also run `suite_cli_postgres` tests matching
 `cli_postgres_snapshot_` and `cli_mrf_snapshot_`, and `suite_cli_package_config`
@@ -103,7 +103,7 @@ Cargo package step. The former 15-minute combined budget left too little time
 for packaging, npm checks, and cleanup; splitting the job does not shorten the
 remaining source-check budget.
 
-The Rust coverage job has a 25-minute aggregate deadline. In the same observed
+The Rust coverage job has a 30-minute aggregate deadline. In the same observed
 run, all 14,669 Rust tests, documentation tests, snapshot auditing, and coverage
 quality gates passed, and Codecov upload finished about 19 minutes 48 seconds
 after the first runner log. The former 20-minute job deadline then cancelled
@@ -117,6 +117,22 @@ then moves only root-level raw coverage inputs to a run-specific directory under
 `RUNNER_TEMP`. This keeps later summary exports from merging those profiles
 again, avoids collisions in the cached Cargo target directory, and leaves the
 merged profile available to `cargo llvm-cov report`.
+
+To investigate slow Rust tests, the CI log reports elapsed time for each test
+binary. For individual library test timings under coverage, run the following
+locally with the same toolchain and a dedicated target directory:
+
+```sh
+RUSTC_BOOTSTRAP=1 cargo llvm-cov --locked -p no-mistakes --all-features --lib --no-report -- \
+  -Z unstable-options --report-time --skip test_run_without_test_argv_uses_real_cli_args
+```
+
+The unstable libtest timing option is diagnostic only; CI retains the normal
+test command. The skip excludes two tests that intentionally parse the actual
+process arguments and would reject the timing flags. Configure the test PostgreSQL
+URL as in CI to include live catalog cases. Record worker count, host load, and
+tool versions when comparing runs: individual elapsed times overlap under parallel
+execution and do not add up to the binary's elapsed time.
 
 ## Hosted measurement
 

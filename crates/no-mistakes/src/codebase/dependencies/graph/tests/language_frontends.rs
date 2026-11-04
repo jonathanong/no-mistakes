@@ -19,7 +19,6 @@ fn collect_language_frontend_edges_for_test(
         &session,
     )
 }
-
 fn lang_fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -27,22 +26,21 @@ fn lang_fixture(name: &str) -> PathBuf {
             .join(name),
     )
 }
-
 fn lang_files(root: &Path) -> Vec<PathBuf> {
-    let repo = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."),
-    );
-    crate::codebase::ts_source::discover_visible_paths(&repo)
-        .into_iter()
-        .map(|path| {
-            let absolute = if path.is_absolute() {
-                path
-            } else {
-                repo.join(path)
-            };
-            crate::codebase::ts_resolver::normalize_path(&absolute)
+    static FILES: std::sync::OnceLock<Vec<PathBuf>> = std::sync::OnceLock::new();
+    FILES
+        .get_or_init(|| {
+            let repo = crate::codebase::ts_resolver::normalize_path(
+                &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."),
+            );
+            crate::codebase::ts_source::discover_visible_paths(&repo)
+                .into_iter()
+                .map(|path| crate::codebase::ts_resolver::normalize_path(&repo.join(path)))
+                .collect()
         })
+        .iter()
         .filter(|path| path.starts_with(root))
+        .cloned()
         .collect()
 }
 
