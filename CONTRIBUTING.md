@@ -59,6 +59,11 @@ cargo crap -p no-mistakes --lcov /tmp/no-mistakes-lcov.info --missing skip --fai
 Conditional framework dispatch needs fixture coverage for every supported branch,
 even when its cyclomatic complexity is below 30.
 
+Check coverage of added lines separately from whole-project coverage. Passing the
+project floor does not establish the Codecov patch floor; inspect the changed
+lines in LCOV and cover error diagnostics with saved invalid fixtures before
+handoff. Wait for the patch check to finish after the workflow coverage job passes.
+
 Run `pnpm run lint:duplicates` to check for copied blocks of at least 30 lines
 and functions with at least 80% structural similarity. CI runs the same jscpd
 check and fails on any reported clone. See the [duplication guide](docs/development/code-duplication.md)

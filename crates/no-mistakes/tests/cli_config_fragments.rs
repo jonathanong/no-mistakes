@@ -140,3 +140,23 @@ fn deprecated_fragment_warnings_name_the_declaring_file() {
         warnings.contains("playwright.dependencies") && warnings.contains("vitest.dependencies")
     );
 }
+
+#[test]
+fn both_config_views_reject_invalid_fragment_values() {
+    let root =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/config-fragments/invalid-type");
+    for view in ["resolved", "declared"] {
+        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["config", "resolve", "--view", view, "--root"])
+            .arg(&root)
+            .output()
+            .unwrap();
+        assert!(!output.status.success(), "{view}");
+        assert!(output.stdout.is_empty(), "{view}");
+        let error = String::from_utf8(output.stderr).unwrap().replace('\\', "/");
+        assert!(
+            error.contains(".no-mistakes/tests/bad.yml:4:"),
+            "{view}: {error}"
+        );
+    }
+}
