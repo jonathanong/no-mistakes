@@ -19,6 +19,7 @@ pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
+mod aliases;
 mod fragment_validation;
 mod fragments;
 mod sections;
@@ -180,3 +181,6 @@ mod fragment_selection_tests;
 mod fragment_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod alias_tests;

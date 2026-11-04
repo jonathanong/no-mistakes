@@ -85,7 +85,7 @@ impl<'a> Context<'a> {
                 let line = self
                     .sources
                     .config_locations(path)
-                    .and_then(|locations| locations.line(&local))
+                    .and_then(|locations| location_line(&locations, &local, self.config))
                     .unwrap_or(1);
                 (
                     crate::codebase::ts_source::relative_slash_path(self.root, path),
@@ -126,7 +126,19 @@ fn location_line(
     }
     // These are declared loader aliases/shapes, not a search for matching text.
     if !is_plan {
-        return None;
+        let mut shortened = ConfigPath::default();
+        for (index, part) in parts.iter().enumerate() {
+            if matches!(part, Segment::Key(key) if key == "triggers")
+                && matches!(parts.get(index.wrapping_sub(1)), Some(Segment::Key(key)) if key == "dependencies" || key == "fullSuiteTriggers")
+            {
+                continue;
+            }
+            shortened = match part {
+                Segment::Key(key) => shortened.key(key),
+                Segment::Index(index) => shortened.index(*index),
+            };
+        }
+        return locations.line(&shortened);
     }
     for alias in [false, true] {
         for legacy in [false, true] {

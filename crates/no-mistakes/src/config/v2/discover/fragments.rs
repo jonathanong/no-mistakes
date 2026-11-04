@@ -89,45 +89,55 @@ pub(crate) fn parse_sources_quiet(
     let mut merged = Value::Mapping(Mapping::new());
     let mut origins = BTreeMap::new();
     let mut provenance = ConfigProvenance::default();
+    let mut deprecated = Vec::new();
     for document in documents {
         if document.section.is_some() && classify_fragment(root, &document.path)?.is_none() {
             continue;
         }
         super::fragment_validation::validate_document(document)?;
         let value: Value = crate::config::parse_config(&document.source, &document.path)?;
+        deprecated.extend(super::aliases::deprecated_frameworks(
+            &value,
+            document.section.as_deref(),
+        ));
         let (global, local) = if let Some(section) = &document.section {
-            (ConfigPath::default().key(section), ConfigPath::default())
+            (
+                ConfigPath::default().key(super::aliases::canonical_key(
+                    &ConfigPath::default(),
+                    section,
+                )),
+                ConfigPath::default(),
+            )
         } else {
             (ConfigPath::default(), ConfigPath::default())
         };
         let existing = if let Some(section) = &document.section {
-            merged
-                .as_mapping()
-                .and_then(|map| map.get(Value::String(section.clone())))
+            merged.as_mapping().and_then(|map| {
+                map.get(Value::String(super::aliases::canonical_key(
+                    &ConfigPath::default(),
+                    section,
+                )))
+            })
         } else {
             Some(&merged)
         };
         record_provenance(
             &value,
-            global,
+            global.clone(),
             local,
             existing,
             &document.path,
             &mut provenance,
         );
-        let value = if let Some(section) = &document.section {
-            let mut mapping = Mapping::new();
-            mapping.insert(Value::String(section.clone()), value);
-            Value::Mapping(mapping)
-        } else {
-            value
-        };
+        let value = super::aliases::normalize(value, &global, &document.path)?;
+        let value = super::aliases::wrap_section(value, document.section.as_deref());
         merge(&mut merged, value, "", &document.path, &mut origins)?;
     }
     let mut config: NoMistakesConfig =
         super::fragment_validation::deserialize(merged, &provenance, documents)?;
     let path = documents.first().map(|d| d.path.as_path()).unwrap_or(root);
     config.config_provenance = provenance;
+    super::aliases::mark_deprecated(&mut config, &deprecated);
     super::fragment_validation::finish(&mut config, documents, path)?;
     Ok(config)
 }

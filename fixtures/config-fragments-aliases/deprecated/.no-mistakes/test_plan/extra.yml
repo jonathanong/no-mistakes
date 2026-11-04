@@ -1,0 +1,5 @@
+vitest:
+  dependencies:
+    - name: legacy
+      paths:
+        - missing-old.ts

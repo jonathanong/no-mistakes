@@ -1,0 +1,6 @@
+vitest:
+  environments:
+    ci:
+      groups:
+        - type: sample
+          sample_when_limited: true

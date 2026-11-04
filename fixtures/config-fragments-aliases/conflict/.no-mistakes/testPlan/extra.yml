@@ -1,0 +1,4 @@
+vitest:
+  environments:
+    ci:
+      globalConfigFallback: false
