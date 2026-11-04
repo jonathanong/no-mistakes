@@ -1,0 +1,2 @@
+- rule: unique-exports
+  serverity: error

@@ -72,3 +72,16 @@ fn supported_keys_match_the_serialized_rule_entry() {
     supported.sort();
     assert_eq!(keys, supported);
 }
+
+#[test]
+fn fragment_unknown_keeps_raw_validation_and_location() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/config-v2/split-provenance/fixture/unknown/.no-mistakes/rules/policy.yml",
+    );
+    let source = std::fs::read_to_string(&path).unwrap();
+    let error = super::validate_fragment(&source, &path, "rules")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("unknown key `serverity`"), "{error}");
+    assert!(error.contains(&format!("{}:2:", path.display())), "{error}");
+}

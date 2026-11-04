@@ -67,3 +67,27 @@ fn unrelated_option_shapes_do_not_mask_duplicates_in_the_real_loader() {
         );
     }
 }
+
+#[test]
+fn fragment_duplicate_keeps_raw_validation_and_location() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/split-provenance/fixture/duplicate/.no-mistakes/rules/policy.yml");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let error = super::validate_fragment(&source, &path, "rules")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("duplicate key accountId"), "{error}");
+    assert!(error.contains(&format!("{}:5:", path.display())), "{error}");
+}
+
+#[test]
+fn fragment_duplicate_json_keeps_raw_validation_and_location() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/split-provenance/fixture/duplicate-json/.no-mistakes/rules/policy.json");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let error = super::validate_fragment(&source, &path, "rules")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("duplicate key accountId"), "{error}");
+    assert!(error.contains(&format!("{}:5:", path.display())), "{error}");
+}

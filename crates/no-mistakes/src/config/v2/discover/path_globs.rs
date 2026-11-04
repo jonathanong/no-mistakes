@@ -63,6 +63,21 @@ pub(super) fn annotate(
     anyhow::anyhow!("{}:{line}: {error}", path.display())
 }
 
+pub(super) fn annotate_with_origin(
+    error: anyhow::Error,
+    origin: impl FnOnce(
+        &crate::config::source_locations::ConfigPath,
+    ) -> Option<(std::path::PathBuf, usize)>,
+) -> anyhow::Error {
+    let Some(invalid) = error.downcast_ref::<InvalidGlob>() else {
+        return error;
+    };
+    let Some((path, line)) = origin(&invalid.origin) else {
+        return error;
+    };
+    anyhow::anyhow!("{}:{line}: {error}", path.display())
+}
+
 pub(super) fn validate_playwright_selector_wrappers(
     wrappers: &[PlaywrightSelectorWrapper],
 ) -> Result<()> {

@@ -7,16 +7,18 @@ use std::sync::Arc;
 
 pub(super) struct Context<'a> {
     config: &'a NoMistakesConfig,
+    root: &'a Path,
+    sources: &'a SourceStore,
     file: String,
     locations: Option<Arc<ConfigLocations>>,
 }
 
 impl<'a> Context<'a> {
     pub(super) fn new(
-        root: &Path,
+        root: &'a Path,
         config: &'a NoMistakesConfig,
         files: &[PathBuf],
-        sources: &SourceStore,
+        sources: &'a SourceStore,
     ) -> Self {
         let file = config
             .loaded_config_path
@@ -31,13 +33,15 @@ impl<'a> Context<'a> {
             .and_then(|path| sources.config_locations(path));
         Self {
             config,
+            root,
+            sources,
             file,
             locations,
         }
     }
 
     pub(super) fn origins(&self) -> bool {
-        self.locations.is_some()
+        self.locations.is_some() || !self.config.config_provenance.is_empty()
     }
 
     pub(super) fn field(&self, key: &str) -> Field {
@@ -72,9 +76,26 @@ impl<'a> Context<'a> {
             .zip(field.origin.as_ref())
             .and_then(|(locations, path)| location_line(locations, path, self.config))
             .unwrap_or(1);
+        let authored = field
+            .origin
+            .as_ref()
+            .and_then(|path| self.config.config_provenance.origin(path));
+        let (file, line) = authored
+            .map(|(path, local)| {
+                let line = self
+                    .sources
+                    .config_locations(path)
+                    .and_then(|locations| locations.line(&local))
+                    .unwrap_or(1);
+                (
+                    crate::codebase::ts_source::relative_slash_path(self.root, path),
+                    line,
+                )
+            })
+            .unwrap_or_else(|| (self.file.clone(), line));
         RuleFinding {
             rule: RULE_ID.to_string(),
-            file: self.file.clone(),
+            file,
             line,
             message: format!("{label}{detail}"),
             import: None,

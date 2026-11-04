@@ -71,7 +71,12 @@ pub(crate) fn check_with_files(
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
-            Ok(scan_with_config(root, config, &opts, &files))
+            Ok(scan_with_config_file(
+                root,
+                &opts,
+                &files,
+                super::configured_root::config_file_for_rule(root, config, rule),
+            ))
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -122,6 +127,20 @@ pub(crate) fn scan_with_config(
     opts: &Options,
     files: &[PathBuf],
 ) -> Vec<RuleFinding> {
+    scan_with_config_file(
+        root,
+        opts,
+        files,
+        super::configured_root::config_file_for_finding(root, config),
+    )
+}
+
+fn scan_with_config_file(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    config_file: String,
+) -> Vec<RuleFinding> {
     if opts.roots.is_empty() {
         return Vec::new();
     }
@@ -140,7 +159,7 @@ pub(crate) fn scan_with_config(
         globs,
         file_set: files.iter().collect(),
         files,
-        config_file: super::configured_root::config_file_for_finding(root, config),
+        config_file,
     };
     opts.roots
         .par_iter()

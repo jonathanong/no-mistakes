@@ -39,7 +39,7 @@ pub(crate) fn check_with_files(
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
-            let config_file = super::configured_root::config_file_for_finding(root, config);
+            let config_file = super::configured_root::config_file_for_rule(root, config, rule);
             Ok(scan(root, &opts, &files, &config_file))
         })
         .collect();

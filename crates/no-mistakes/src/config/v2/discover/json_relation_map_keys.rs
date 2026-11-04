@@ -19,6 +19,16 @@ pub(super) fn validate(source: &str, path: &Path) -> Result<()> {
         ),
         _ => None,
     };
+    reject_duplicate(duplicate)
+}
+
+mod fragment;
+
+pub(super) fn validate_fragment(source: &str, path: &Path, section: &str) -> Result<()> {
+    fragment::validate(source, path, section)
+}
+
+fn reject_duplicate(duplicate: Option<String>) -> Result<()> {
     if let Some(key) = duplicate {
         anyhow::bail!("{RULE_ID} option keyColumnMap: duplicate key {key}");
     }
@@ -86,13 +96,20 @@ impl<'de> Deserialize<'de> for Keys {
 
 fn yaml_duplicate(source: &str) -> Option<String> {
     // Syntax/type errors remain the responsibility of the ordinary config parser.
-    serde_yaml::from_str::<Config>(source)
-        .ok()?
-        .rules
+    yaml_rules_duplicate(serde_yaml::from_str::<Config>(source).ok()?.rules)
+}
+
+fn yaml_rules_duplicate(rules: Vec<Rule>) -> Option<String> {
+    yaml_rules_duplicate_at(rules).map(|(_, key)| key)
+}
+
+fn yaml_rules_duplicate_at(rules: Vec<Rule>) -> Option<(usize, String)> {
+    rules
         .into_iter()
-        .filter(|rule| rule.rule == RULE_ID)
-        .find_map(|rule| match rule.options? {
-            OptionsInput::Mapping(options) => options.key_column_map.0,
+        .enumerate()
+        .filter(|(_, rule)| rule.rule == RULE_ID)
+        .find_map(|(index, rule)| match rule.options? {
+            OptionsInput::Mapping(options) => options.key_column_map.0.map(|key| (index, key)),
             OptionsInput::Other(_) => None,
         })
 }
@@ -108,14 +125,22 @@ fn property<'a, 'source>(value: &'a Value<'source>, key: &str) -> Option<&'a Val
 }
 
 fn json_duplicate(source: &str, comments: bool) -> Option<String> {
+    json_duplicate_input(source, comments, false).map(|(_, key)| key)
+}
+
+fn json_duplicate_input(source: &str, comments: bool, fragment: bool) -> Option<(usize, String)> {
     let mut options = crate::config::jsonc_parse_options();
     options.allow_comments = comments;
     options.allow_trailing_commas = comments;
     let value = jsonc_parser::parse_to_ast(source, &Default::default(), &options)
         .ok()?
         .value?;
-    let rules = property(&value, "rules")?.as_array()?;
-    for rule in &rules.elements {
+    let rules = if fragment {
+        value.as_array()?
+    } else {
+        property(&value, "rules")?.as_array()?
+    };
+    for (index, rule) in rules.elements.iter().enumerate() {
         let selected = property(rule, "rule")
             .and_then(Value::as_string_lit)
             .is_some_and(|rule| rule.value == RULE_ID);
@@ -132,7 +157,7 @@ fn json_duplicate(source: &str, comments: bool) -> Option<String> {
         for entry in &mapping.properties {
             let key = entry.name.as_str();
             if !keys.insert(key) {
-                return Some(key.to_string());
+                return Some((index, key.to_string()));
             }
         }
     }

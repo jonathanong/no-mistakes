@@ -184,3 +184,17 @@ fn deprecated_dependencies_keep_authored_locations_and_loader_precedence() {
         );
     }
 }
+
+#[test]
+fn split_config_findings_use_fragment_local_locations() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/split-provenance/fixture/anchors");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+    let finding = findings
+        .iter()
+        .find(|finding| finding.message.contains("gone/**/*.ts"))
+        .unwrap();
+    assert_eq!(finding.file, ".no-mistakes/rules/policies.yml");
+    assert_eq!(finding.line, 7);
+}

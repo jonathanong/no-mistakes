@@ -1,0 +1,7 @@
+- rule: production-dependency-declarations
+  options:
+    workspaceRoots:
+      - packages
+- rule: unique-exports
+  exclude:
+    - gone/**/*.ts

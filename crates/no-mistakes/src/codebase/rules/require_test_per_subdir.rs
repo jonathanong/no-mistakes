@@ -37,7 +37,12 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
                 .flat_map(|r| discover_files(r, skip))
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, config, &opts, &files)
+            scan(
+                root,
+                &opts,
+                &files,
+                &super::configured_root::config_file_for_rule(root, config, rule),
+            )
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -66,7 +71,12 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, config, &opts, &files)
+            scan(
+                root,
+                &opts,
+                &files,
+                &super::configured_root::config_file_for_rule(root, config, rule),
+            )
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -76,15 +86,14 @@ pub(crate) fn check_with_files(
 
 fn scan(
     root: &Path,
-    config: &NoMistakesConfig,
     opts: &Options,
     files: &[PathBuf],
+    config_file: &str,
 ) -> Result<Vec<RuleFinding>> {
     let test_glob_str = opts.test_glob.as_deref().unwrap_or(DEFAULT_TEST_GLOB);
     let glob = Glob::new(test_glob_str)?.compile_matcher();
     let exclude_set: HashSet<&str> = opts.exclude_dirs.iter().map(String::as_str).collect();
     let mut findings = Vec::new();
-    let config_file = super::configured_root::config_file_for_finding(root, config);
 
     for rule_root in &opts.roots {
         let abs_root = super::configured_root::normalize_configured_root(root, rule_root);

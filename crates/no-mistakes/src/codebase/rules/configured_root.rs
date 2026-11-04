@@ -53,6 +53,27 @@ pub(crate) fn config_file_for_finding(
     repository_relative(root, path)
 }
 
+pub(crate) fn config_file_for_rule(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+) -> String {
+    let origin = config
+        .rules
+        .iter()
+        .position(|entry| std::ptr::eq(entry, rule))
+        .and_then(|index| {
+            config.config_provenance.origin(
+                &crate::config::source_locations::ConfigPath::default()
+                    .key("rules")
+                    .index(index),
+            )
+        });
+    origin
+        .map(|(path, _)| repository_relative(root, path))
+        .unwrap_or_else(|| config_file_for_finding(root, config))
+}
+
 fn repository_relative(root: &Path, path: &Path) -> String {
     if let Some(relative) = slash_relative(root, path) {
         return relative;
