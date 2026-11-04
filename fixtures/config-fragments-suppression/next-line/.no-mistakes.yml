@@ -1,0 +1,3 @@
+rules:
+  - rule: no-mistakes-config
+    scope: repository

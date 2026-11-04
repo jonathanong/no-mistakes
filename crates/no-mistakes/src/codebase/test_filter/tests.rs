@@ -29,6 +29,7 @@ fn configured_suite_filters_keep_explicit_globs_when_project_config_fails_to_loa
             )]),
             setup_files: Vec::new(),
             declaration_path: None,
+            setup_declaration_paths: Vec::new(),
         },
     );
     config.tests.vitest.projects.insert(
@@ -63,6 +64,7 @@ fn configured_suite_filters_use_explicit_globs_without_loading_project_config() 
             )]),
             setup_files: Vec::new(),
             declaration_path: None,
+            setup_declaration_paths: Vec::new(),
         },
     );
 

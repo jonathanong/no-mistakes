@@ -98,7 +98,7 @@ pub(crate) fn check_with_prepared(
                 .iter()
                 .map(|path| relative_slash_path(root, path))
                 .collect::<BTreeSet<_>>();
-            Ok(scan_application(
+            let mut findings = scan_application(
                 &opts,
                 &tracked,
                 &candidates,
@@ -106,7 +106,9 @@ pub(crate) fn check_with_prepared(
                 &local_projects,
                 &non_enforcing,
                 &config_file,
-            ))
+            );
+            diagnostics::annotate(root, config, rule, prepared.sources, &mut findings);
+            Ok(findings)
         })
         .collect();
     let mut findings = all?.into_iter().flatten().collect::<Vec<_>>();
@@ -184,17 +186,8 @@ fn local_typechecked_projects(config: &NoMistakesConfig) -> BTreeSet<String> {
         .collect()
 }
 
-fn config_file(root: &Path, config_path: Option<&Path>) -> String {
-    config_path.map_or_else(
-        || ".no-mistakes.yml".to_string(),
-        |path| {
-            relative_slash_path(
-                &crate::codebase::ts_resolver::normalize_path(root),
-                &crate::codebase::ts_resolver::normalize_path(path),
-            )
-        },
-    )
-}
+mod diagnostics;
+use diagnostics::config_file;
 
 #[cfg(test)]
 mod tests;

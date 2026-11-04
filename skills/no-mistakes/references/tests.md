@@ -143,10 +143,17 @@ run through normal graph selection. Add `includeChangedTests: true` only to a
 structured trigger that intentionally expands from changed tests. Legacy
 full-suite trigger behavior is unchanged.
 
-Revision and inline-diff plans compare `.no-mistakes.yml`/`.yaml` semantically
-per framework, so formatting-only edits and unrelated framework changes do not
-invalidate the selected framework. Changed-file-only input and unreadable old
-configuration fail open to the normal global-config fallback.
+Revision and inline-diff plans compare the root `.no-mistakes` config and
+`.no-mistakes/` fragments semantically per framework, so formatting-only edits
+and unrelated framework changes do not invalidate the selected framework.
+Changed-file-only input and unreadable old configuration fail open to the
+normal global-config fallback.
+
+CI path filters for config-dependent validation should include the four root
+config filenames and `.no-mistakes/**`, so edits to fragments run those jobs.
+See the [split-config migration guide](https://github.com/jonathanong/no-mistakes/blob/main/docs/migrations/split-no-mistakes-config.md)
+for a filter example and for replacing direct config readers with the merged
+declared view.
 
 For Playwright, a changed Next.js page selects specs that navigate to it — including
 specs whose navigation path interpolates an unresolvable value (e.g.

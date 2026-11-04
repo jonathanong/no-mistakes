@@ -116,7 +116,13 @@ fn analyze_project_inner<T>(
     crate::invocation::check_timeout()?;
     let mut facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), root);
     if let Some(config) = loaded_config.as_ref() {
-        crate::queue::globs::record_empty_globs(root, config.as_ref(), &files, &mut facts);
+        crate::queue::globs::record_empty_globs(
+            root,
+            config.as_ref(),
+            &sources,
+            &files,
+            &mut facts,
+        );
     }
 
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(

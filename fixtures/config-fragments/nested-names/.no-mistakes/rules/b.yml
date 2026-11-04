@@ -1,0 +1,5 @@
+- rule: rust-max-lines-per-file
+  name: second
+  options:
+    nested:
+      - name: shared

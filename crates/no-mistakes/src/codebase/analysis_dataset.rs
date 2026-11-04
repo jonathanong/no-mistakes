@@ -3,21 +3,21 @@ use std::sync::Arc;
 
 use manifest_cache::ManifestCache;
 
+mod identity;
 mod manifest_cache;
+use identity::manifest_key;
 
 type LoadedConfig = (Arc<crate::config::v2::NoMistakesConfig>, Option<PathBuf>);
 
 /// Immutable request-scoped ownership boundary for discovered files and source text.
 ///
-/// Derived facts, graphs, and indexes live in the request contexts that consume this
-/// dataset. The dataset itself never persists state beyond that request.
 pub(crate) struct AnalysisDataset {
     root: PathBuf,
     observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
     visible_paths: Arc<super::ts_source::VisiblePathSnapshot>,
     root_sources: Arc<super::ts_source::SourceStore>,
     workspace: std::sync::OnceLock<Arc<super::workspaces::IndexedWorkspaceMap>>,
-    config_path: ManifestCache<Option<PathBuf>>,
+    config_path: ManifestCache<crate::config::v2::discover::ConfigSelection>,
     config: ManifestCache<crate::config::v2::NoMistakesConfig>,
     tsconfig: ManifestCache<super::ts_resolver::TsConfig>,
 }
@@ -81,17 +81,10 @@ impl AnalysisDataset {
         let visible_paths = self.paths_for(&self.root);
         let selector_key = manifest_key(&self.root, config_path);
         let selected = self.config_path.load(selector_key, || {
-            crate::config::v2::effective_v2_config_path_from_visible(
-                &self.root,
-                config_path,
-                &visible_paths,
-            )
-            .map(Arc::new)
-            .map_err(|error| Arc::<str>::from(format!("{error:#}")))
+            crate::config::v2::select_config_from_visible(&self.root, config_path, &visible_paths)
+                .map(Arc::new)
+                .map_err(|error| Arc::<str>::from(format!("{error:#}")))
         });
-        // Path selection can fail before there is a config source to parse.
-        // It still participates in the request's memoized diagnostics: count
-        // its first failure once and report subsequent callers as cache hits.
         if selected.value.is_err() {
             if selected.loaded {
                 self.increment("manifest.errors", 1);
@@ -102,12 +95,18 @@ impl AnalysisDataset {
         let effective_path = selected
             .value
             .map_err(|error| anyhow::anyhow!(error.to_string()))?;
-        let key = effective_path
-            .as_deref()
-            .map(super::ts_resolver::normalize_path);
+        let key = if effective_path.fragments.is_empty() {
+            effective_path
+                .primary
+                .as_deref()
+                .map(super::ts_resolver::normalize_path)
+        } else {
+            manifest_key(&self.root, config_path)
+        };
         let loaded = self.config.load(key, || {
             crate::config::v2::load_v2_config_from_selected_source_store(
-                effective_path.as_deref(),
+                &self.root,
+                &effective_path,
                 &self.root_sources,
             )
             .map(Arc::new)
@@ -124,7 +123,15 @@ impl AnalysisDataset {
         let config = loaded
             .value
             .map_err(|error| anyhow::anyhow!(error.to_string()))?;
-        Ok((config, effective_path.as_deref().map(Path::to_path_buf)))
+        Ok((
+            config,
+            effective_path.primary.clone().or_else(|| {
+                effective_path
+                    .fragments
+                    .first()
+                    .map(|(path, _)| path.clone())
+            }),
+        ))
     }
 
     pub(crate) fn tsconfig(
@@ -187,17 +194,6 @@ impl AnalysisDataset {
             observer.increment(metric, amount);
         }
     }
-}
-
-fn manifest_key(root: &Path, path: Option<&Path>) -> Option<PathBuf> {
-    path.map(|path| {
-        let path = if path.is_absolute() {
-            path.to_path_buf()
-        } else {
-            root.join(path)
-        };
-        super::ts_resolver::normalize_path(&path)
-    })
 }
 
 #[cfg(test)]

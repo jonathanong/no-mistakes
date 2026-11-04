@@ -13,6 +13,20 @@ pub(super) fn validate(source: &str, path: &Path) -> Result<()> {
     let Some(Value::Sequence(rules)) = top.get("rules") else {
         return Ok(());
     };
+    validate_rules(source, path, rules, false)
+}
+
+pub(super) fn validate_fragment(source: &str, path: &Path, section: &str) -> Result<()> {
+    if section != "rules" {
+        return Ok(());
+    }
+    let Ok(Value::Sequence(rules)) = crate::config::parse_config::<Value>(source, path) else {
+        return Ok(());
+    };
+    validate_rules(source, path, &rules, true)
+}
+
+fn validate_rules(source: &str, path: &Path, rules: &[Value], fragment: bool) -> Result<()> {
     for (index, rule) in rules.iter().enumerate() {
         let Value::Mapping(entry) = rule else {
             continue;
@@ -27,7 +41,12 @@ pub(super) fn validate(source: &str, path: &Path) -> Result<()> {
             let id = entry.get("rule").and_then(Value::as_str).unwrap_or("?");
             let location = ConfigLocations::parse(source, path)
                 .and_then(|locations| {
-                    locations.line(&ConfigPath::default().key("rules").index(index).key(&name))
+                    let origin = if fragment {
+                        ConfigPath::default()
+                    } else {
+                        ConfigPath::default().key("rules")
+                    };
+                    locations.line(&origin.index(index).key(&name))
                 })
                 .unwrap_or(1);
             let hint = if name == "<<" {

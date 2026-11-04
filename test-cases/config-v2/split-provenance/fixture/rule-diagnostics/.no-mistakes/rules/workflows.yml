@@ -1,0 +1,7 @@
+- rule: workflow-topology-policy
+  options:
+    secretInventory:
+      repository:
+        - UNUSED_TOKEN
+      reportUnused: true
+  scope: repository

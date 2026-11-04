@@ -5,7 +5,7 @@ use std::path::Path;
 use super::v2::schema::{
     NoMistakesConfig, PlaywrightAppBinding, PlaywrightTestConfig, RewriteRule,
 };
-use super::v2::{frontend_apps, load_v2_config_with_path, FrontendApp};
+use super::v2::{frontend_apps, load_v2_config_from_source_store, FrontendApp};
 
 #[path = "resolve/triggers.rs"]
 mod triggers;
@@ -74,11 +74,14 @@ pub struct ResolvedFrameworkTriggers {
 }
 
 pub fn resolve_config(root: &Path, config: Option<&Path>) -> Result<ResolvedConfig> {
-    let (config, config_path) = load_v2_config_with_path(root, config)?;
-    let visible = crate::codebase::ts_source::discover_visible_paths(root);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let visible = snapshot.paths_for(root);
+    let sources = snapshot.source_store_for(root);
+    let config = load_v2_config_from_source_store(root, config, &visible, &sources)?;
+    let config_path = config.loaded_config_path.relative_to(root);
     let apps = frontend_apps(root, &config, &visible)?;
     Ok(ResolvedConfig {
-        config_path: config_path.map(|path| display_rel(root, &path)),
+        config_path,
         playwright: resolved_playwright(&config, &apps),
         frontend_apps: apps.into_iter().map(resolved_app).collect(),
         vitest_full_suite_triggers: resolved_vitest_triggers(&config),
@@ -158,13 +161,10 @@ fn resolved_playwright_app(
     }
 }
 
-fn display_rel(root: &Path, path: &Path) -> String {
-    path.strip_prefix(root)
-        .unwrap_or(path)
-        .to_string_lossy()
-        .replace('\\', "/")
-}
-
 #[cfg(test)]
 #[path = "resolve/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "resolve/declared_tests.rs"]
+mod declared_tests;

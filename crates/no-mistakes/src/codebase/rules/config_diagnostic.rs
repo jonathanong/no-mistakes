@@ -16,7 +16,7 @@ const FALLBACK_FILE: &str = ".no-mistakes.yml";
 pub(crate) struct ConfigAnchor {
     file: String,
     locations: Option<Arc<ConfigLocations>>,
-    index: Option<usize>,
+    rule_path: Option<ConfigPath>,
 }
 
 impl ConfigAnchor {
@@ -42,10 +42,21 @@ impl ConfigAnchor {
             .rules
             .iter()
             .position(|candidate| std::ptr::eq(candidate, rule));
+        let rule_path = index.map(|index| ConfigPath::default().key("rules").index(index));
+        if let Some((path, local)) = rule_path
+            .as_ref()
+            .and_then(|path| config.config_provenance.origin(path))
+        {
+            return Self {
+                file: crate::codebase::ts_source::relative_slash_path(root, path),
+                locations: sources.and_then(|sources| sources.config_locations(path)),
+                rule_path: Some(local),
+            };
+        }
         Self {
             file,
             locations,
-            index,
+            rule_path,
         }
     }
 
@@ -53,7 +64,7 @@ impl ConfigAnchor {
         Self {
             file: FALLBACK_FILE.to_string(),
             locations: None,
-            index: None,
+            rule_path: None,
         }
     }
 
@@ -72,10 +83,10 @@ impl ConfigAnchor {
         nested_key: &str,
         item: usize,
     ) -> usize {
-        let Some(rule) = self.index else { return 1 };
-        let path = ConfigPath::default()
-            .key("rules")
-            .index(rule)
+        let Some(rule) = self.rule_path.clone() else {
+            return 1;
+        };
+        let path = rule
             .key("options")
             .key(key)
             .index(index)
@@ -126,14 +137,10 @@ impl ConfigAnchor {
         let Some(locations) = self.locations.as_deref() else {
             return 1;
         };
-        let Some(index) = self.index else {
+        let Some(rule) = self.rule_path.clone() else {
             return 1;
         };
-        let mut path = ConfigPath::default()
-            .key("rules")
-            .index(index)
-            .key("options")
-            .key(key);
+        let mut path = rule.clone().key("options").key(key);
         if let Some(item) = item {
             path = path.index(item);
         }
@@ -141,7 +148,6 @@ impl ConfigAnchor {
             return line;
         }
         // A missing key is reported on the rule entry, not on line 1.
-        let rule = ConfigPath::default().key("rules").index(index);
         locations
             .line(&rule.clone().key("rule"))
             .or_else(|| locations.line(&rule))

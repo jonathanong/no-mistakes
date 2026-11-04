@@ -210,3 +210,6 @@ mod cli_gha_snapshot_inline_script_lines;
 
 #[path = "cli_gha_snapshot_inline_script_alignment.rs"]
 mod cli_gha_snapshot_inline_script_alignment;
+
+#[path = "cli_config_fragments.rs"]
+mod cli_config_fragments;

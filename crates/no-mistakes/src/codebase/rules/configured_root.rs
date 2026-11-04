@@ -53,6 +53,27 @@ pub(crate) fn config_file_for_finding(
     repository_relative(root, path)
 }
 
+pub(crate) fn config_file_for_rule(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+) -> String {
+    let origin = config
+        .rules
+        .iter()
+        .position(|entry| std::ptr::eq(entry, rule))
+        .and_then(|index| {
+            config.config_provenance.origin(
+                &crate::config::source_locations::ConfigPath::default()
+                    .key("rules")
+                    .index(index),
+            )
+        });
+    origin
+        .map(|(path, _)| repository_relative(root, path))
+        .unwrap_or_else(|| config_file_for_finding(root, config))
+}
+
 fn repository_relative(root: &Path, path: &Path) -> String {
     if let Some(relative) = slash_relative(root, path) {
         return relative;
@@ -75,6 +96,37 @@ fn without_verbatim_prefix(path: &str) -> String {
         return path.to_string();
     };
     rest.strip_prefix("UNC/").unwrap_or(rest).to_string()
+}
+
+pub(crate) fn run_with_origin<O: serde::de::DeserializeOwned + Default>(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[PathBuf],
+    rule_id: &str,
+    enabled: impl Fn(&O) -> bool + Sync,
+    scan: impl Fn(&Path, &O, &[PathBuf], &str) -> anyhow::Result<Vec<RuleFinding>> + Sync,
+) -> anyhow::Result<Vec<RuleFinding>> {
+    use rayon::prelude::*;
+    let groups: anyhow::Result<Vec<_>> = config
+        .rule_applications(rule_id)
+        .into_par_iter()
+        .map(|rule| {
+            let options = rule.try_rule_options()?;
+            if !enabled(&options) {
+                return Ok(Vec::new());
+            }
+            let selected = super::selected_files::selected_rule_files(root, config, rule, files)?;
+            scan(
+                root,
+                &options,
+                &selected,
+                &config_file_for_rule(root, config, rule),
+            )
+        })
+        .collect();
+    let mut findings = groups?.into_iter().flatten().collect();
+    super::sort_findings(&mut findings);
+    Ok(findings)
 }
 
 #[cfg(test)]

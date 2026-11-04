@@ -1,0 +1,4 @@
+- rule: unique-exports
+  enabled: false
+  exclude:
+    - gone/**/*.ts # no-mistakes-disable-line no-mistakes-config

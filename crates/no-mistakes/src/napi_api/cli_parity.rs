@@ -2,9 +2,9 @@ use std::path::{Path, PathBuf};
 
 use super::options::{
     parse_options_value, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
-    CiTopologyImpactOptions, CiTopologyOptions, FetchesOptions, ImpactedChecksOptions,
-    ProjectOptions, TestsAuditOptions, TestsImpactOptions, TestsPlanDocumentOptions,
-    TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
+    CiTopologyImpactOptions, CiTopologyOptions, ConfigResolveOptions, ConfigResolveView,
+    FetchesOptions, ImpactedChecksOptions, ProjectOptions, TestsAuditOptions, TestsImpactOptions,
+    TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 
@@ -39,14 +39,18 @@ pub(crate) fn fetches_json_impl(options: serde_json::Value) -> napi::Result<Stri
 }
 
 pub(crate) fn resolve_config_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let report = crate::config::resolved::resolve_config(
-        &root,
-        options.config.map(PathBuf::from).as_deref(),
-    )
-    .map_err(to_napi_error)?;
-    to_pretty_json(&report)
+    let options = parse_options_value::<ConfigResolveOptions>(options)?;
+    let root = resolve_project_root(options.project.root.as_deref()).map_err(to_napi_error)?;
+    let config = options.project.config.map(PathBuf::from);
+    match options.view {
+        ConfigResolveView::Resolved => to_pretty_json(
+            &crate::config::resolved::resolve_config(&root, config.as_deref())
+                .map_err(to_napi_error)?,
+        ),
+        ConfigResolveView::Declared => to_pretty_json(
+            &crate::config::v2::declared_config(&root, config.as_deref()).map_err(to_napi_error)?,
+        ),
+    }
 }
 
 pub(crate) fn tests_plan_json_impl(options: serde_json::Value) -> napi::Result<String> {

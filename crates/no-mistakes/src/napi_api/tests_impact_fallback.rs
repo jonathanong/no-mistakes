@@ -64,6 +64,7 @@ fn tests_plan_json_diff_only_fallback_matches_cli_opt_in_semantics() {
 }
 
 include!("tests_impact_fallback/config_provenance.rs");
+include!("tests_impact_fallback/config_fragments.rs");
 
 #[test]
 fn tests_plan_json_resolves_explicit_relative_tsconfig_under_request_root() {

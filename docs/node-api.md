@@ -279,7 +279,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
 | `check`                                    | `check(options)` (including configured `forbidden-lint-suppressions`)                                                                                                                                                                                                                                                           |
-| `config resolve`                           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
+| `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
 | `effects`                                  | `effects(options)`                                                                                                                                                                                                                                                         |
@@ -351,7 +351,7 @@ remain failures. See
 | `registryExtension` | `registryExtension(options)` |
 | `related` | `related(options)` |
 | `resolveCheck` | `resolveCheck(options)` |
-| `resolveConfig` | `resolveConfig(options)` |
+| `resolveConfig` | `resolveConfig(options)` returns the existing resolved report; `resolveConfig({ view: "declared" })` returns `DeclaredConfig` through the same async `resolveConfigJson` binding. |
 | `lockStatus` | `lockStatus()` |
 | `rscCallers` | `rscCallers(options)` |
 | `swiftImporters` | `swiftImporters(options)` |
@@ -540,3 +540,29 @@ Generated PostgreSQL catalogs include optional `functions[signature].returnsSet`
 Its positive integer `maxLines` option defaults to 10 and counts non-blank YAML
 script-body lines, joining backslash continuations, in workflows and composite actions. See the
 [rule documentation](rules/github-actions-max-inline-script-lines.md).
+
+### Source-level merged configuration
+
+```ts
+import { resolveConfig, type DeclaredConfig, type DeclaredRule } from "no-mistakes";
+
+const config: DeclaredConfig = await resolveConfig({ root: ".", view: "declared" });
+const policy: DeclaredRule | undefined = config.rules?.find(
+  (entry) => entry.rule === "rust-max-lines-per-file" && entry.name === "source-policy",
+);
+```
+
+The declared view returns the source-level merged object directly, with canonical
+aliases and no defaults, path expansion, or inherited rule materialization.
+No config returns `{}`. The root file comes first; fragment lists concatenate in
+sorted relative-path order. That order is stable and part of the API contract.
+Explicit `config` selects one file and excludes fragments. Relative path strings
+remain relative to the repository root.
+
+`ConfigResolveOptions`, `ConfigResolveView`, `DeclaredConfig`, `DeclaredRule`,
+`DeclaredConfigValue`, and `DeclaredConfigObject` are exported types. Rule options
+use the recursive value type because authored options can be objects, arrays,
+scalars, or null. Omitting `view`, or passing `view: "resolved"`, retains the
+existing `ResolvedConfig` return shape. Readers that parse YAML or match its raw
+text should use the declared view before splitting configuration; CI path filters
+that name the root config must also cover `.no-mistakes/**`.

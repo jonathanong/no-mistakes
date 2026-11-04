@@ -1,0 +1,8 @@
+[
+  { "rule": "postgres-json-relation-ids", "options": {
+    "keyColumnMap": {
+      "accountId": "account_id",
+      "accountId": "other_id"
+    }
+  }}
+]

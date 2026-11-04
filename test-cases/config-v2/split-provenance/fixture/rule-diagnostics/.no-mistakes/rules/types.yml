@@ -1,0 +1,4 @@
+- rule: tsconfig-gate-coverage
+  options:
+    allowProjects:
+      missing/tsconfig.json: obsolete project

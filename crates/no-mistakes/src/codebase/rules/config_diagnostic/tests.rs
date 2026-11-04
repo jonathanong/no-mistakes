@@ -52,3 +52,26 @@ fn a_loaded_path_without_a_source_store_keeps_line_one() {
     assert_eq!(finding.file, "check.yml");
     assert_eq!(finding.line, 1);
 }
+
+#[test]
+fn split_rule_options_keep_the_fragment_file_and_local_index() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/split-provenance/fixture/anchors");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    let anchor = ConfigAnchor::resolve(&root, &config, Some(&sources), &config.rules[1]);
+    let finding = anchor.emit(
+        "production-dependency-declarations",
+        anchor.option_item_line("workspaceRoots", 0),
+        "message".to_string(),
+        None,
+        None,
+    );
+    assert_eq!(finding.file, ".no-mistakes/rules/policies.yml");
+    assert_eq!(finding.line, 4);
+    assert_eq!(anchor.option_line("missing"), 1);
+    assert_eq!(
+        super::super::configured_root::config_file_for_rule(&root, &config, &config.rules[1]),
+        ".no-mistakes/rules/policies.yml"
+    );
+}

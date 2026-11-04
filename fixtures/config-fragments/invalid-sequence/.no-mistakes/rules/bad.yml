@@ -1,0 +1,3 @@
+- rule: rust-max-lines-per-file
+  include:
+    - true

@@ -5,6 +5,7 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod extract;
+mod no_mistakes;
 mod oxlint;
 mod pnpm;
 #[cfg(test)]
@@ -70,7 +71,7 @@ fn scan_file(
     for extracted in matched
         .iter()
         .filter(|preset| *preset == &"no-mistakes")
-        .flat_map(|_| extract::no_mistakes(context.config))
+        .flat_map(|_| no_mistakes::extract(context.config, path))
     {
         push_missing(
             context.root,

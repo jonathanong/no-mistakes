@@ -64,7 +64,7 @@ paths:
 | `syncpack`               | `.syncpackrc.json`                                                          | `source` globs                                                                        |
 | `coverage-rules`         | `.coverage-rules.yml`                                                       | `rules[].paths`                                                                       |
 | `pnpm-workspace-filters` | `.github/workflows/*.{yml,yaml}` and `.github/actions/**/action.{yml,yaml}` | `pnpm --filter ./path...` selectors in shell commands                                 |
-| `no-mistakes`            | root `.no-mistakes.yml` / `.no-mistakes.yaml`                              | schema-known project, test config, TestPlan trigger, and rule-option paths             |
+| `no-mistakes`            | root `.no-mistakes.{yaml,yml,json,jsonc}` and `.no-mistakes/` fragments     | schema-known project, test config, TestPlan trigger, and rule-option paths             |
 
 Counterexample: `config/app.yml` contains `paths.requiredFiles:
 ["missing.json"]`, and `config/missing.json` does not exist. Or

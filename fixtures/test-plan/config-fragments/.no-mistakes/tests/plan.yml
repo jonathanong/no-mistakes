@@ -1,0 +1,4 @@
+vitest:
+  configs: vitest.config.mts
+playwright:
+  configs: playwright.config.mts

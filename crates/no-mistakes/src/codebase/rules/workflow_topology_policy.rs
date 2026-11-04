@@ -82,12 +82,23 @@ pub(crate) fn check_prepared(
             .transpose()?;
         findings.extend(evaluate::lint(inputs.topology(), &opts, &concurrency));
         if let Some(inventory) = inventory {
+            let authored = config
+                .rules
+                .iter()
+                .position(|entry| std::ptr::eq(entry, rule))
+                .and_then(|index| {
+                    config.config_provenance.origin(
+                        &crate::config::source_locations::ConfigPath::default()
+                            .key("rules")
+                            .index(index),
+                    )
+                });
             findings.extend(secret_inventory::lint(
                 root,
                 inputs,
                 sources,
                 &inventory,
-                config_path,
+                authored.map(|(path, _)| path).or(config_path),
             ));
         }
     }

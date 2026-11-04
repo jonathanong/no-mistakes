@@ -31,6 +31,8 @@ pub(crate) struct ProjectOptions {
     pub(crate) include: Option<String>,
 }
 
+include!("options_config_resolve.rs");
+
 include!("options_flow_tests.rs");
 
 include!("options_query.rs");

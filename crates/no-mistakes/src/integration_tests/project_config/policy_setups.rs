@@ -15,7 +15,13 @@ pub(crate) fn dependencies(root: &Path, policy: &TestProjectPolicy) -> Vec<Vites
     policy
         .setup_files
         .iter()
-        .map(|raw| {
+        .enumerate()
+        .map(|(index, raw)| {
+            let declaration = policy
+                .setup_declaration_paths
+                .get(index)
+                .map(|path| root.join(path))
+                .unwrap_or_else(|| declaration.clone());
             let relative = Path::new(raw);
             let path = crate::codebase::ts_resolver::normalize_path(&root.join(relative));
             let specifier = format!(
@@ -40,3 +46,7 @@ pub(crate) fn dependencies(root: &Path, policy: &TestProjectPolicy) -> Vec<Vites
         })
         .collect()
 }
+
+#[cfg(test)]
+#[path = "policy_setups_tests.rs"]
+mod tests;

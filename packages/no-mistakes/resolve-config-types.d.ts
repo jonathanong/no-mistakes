@@ -1,3 +1,4 @@
+import type { ProjectOptions } from "./traversal-types";
 import type { TestPlanFramework } from "./test-types";
 
 export interface ResolvedConfig {
@@ -77,4 +78,31 @@ export interface ResolvedTrigger {
 export interface ResolvedFrameworkTriggers {
   framework: TestPlanFramework;
   triggers: ResolvedTrigger[];
+}
+
+/** Select the existing resolved report or the source-level merged declarations. */
+export type ConfigResolveView = "resolved" | "declared";
+export interface ConfigResolveOptions extends ProjectOptions {
+  view?: ConfigResolveView;
+}
+
+/** JSON-compatible source values; omitted properties remain omitted. */
+export type DeclaredConfigValue =
+  | null
+  | boolean
+  | number
+  | string
+  | DeclaredConfigValue[]
+  | DeclaredConfigObject;
+export interface DeclaredConfigObject {
+  [key: string]: DeclaredConfigValue | undefined;
+}
+export interface DeclaredRule extends DeclaredConfigObject {
+  rule?: string;
+  name?: string | null;
+  options?: DeclaredConfigValue;
+}
+/** Canonical source-level merge, before defaults, expansion, or materialization. */
+export interface DeclaredConfig extends DeclaredConfigObject {
+  rules?: DeclaredRule[];
 }

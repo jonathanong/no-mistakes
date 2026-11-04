@@ -1,0 +1,4 @@
+vitest:
+  projects:
+    app:
+      setup_files: 42

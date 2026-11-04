@@ -1,0 +1,65 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "provenance": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes/rules/policies.yml",
+          "line": 7,
+          "message": "rules[2] (unique-exports).exclude[0]: glob `gone/**/*.ts` matches no tracked files",
+          "rule": "no-mistakes-config",
+          "sourceLine": "- gone/**/*.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "single": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lib.rs",
+          "line": 1,
+          "message": "3 code lines (max 2) - split into smaller modules",
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "pub fn first() {}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "split": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lib.rs",
+          "line": 1,
+          "message": "3 code lines (max 2) - split into smaller modules",
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "pub fn first() {}"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

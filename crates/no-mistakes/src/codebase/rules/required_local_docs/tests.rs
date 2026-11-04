@@ -1,4 +1,5 @@
 use super::doc_section::scan_doc_section_with_sources;
+use super::test_support::scan_with_config;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},

@@ -1,0 +1,5 @@
+test_plan:
+  vitest:
+    environments:
+      ci:
+        global_config_fallback: true

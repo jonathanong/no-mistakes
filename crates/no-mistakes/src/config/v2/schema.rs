@@ -13,6 +13,8 @@ mod ci_checks;
 mod effects;
 mod infra_config;
 pub mod loaded_path;
+mod provenance;
+pub use provenance::ConfigProvenance;
 pub(crate) mod postgres_executors;
 mod project_postgres;
 mod queues;
@@ -81,6 +83,8 @@ pub struct NoMistakesConfig {
     /// Config file the loader read. Not part of the declared configuration.
     #[serde(skip, default)]
     pub loaded_config_path: loaded_path::LoadedConfigPath,
+    #[serde(skip, default)]
+    pub config_provenance: ConfigProvenance,
     /// GitHub Actions workflow analysis configuration (`no-mistakes ci`).
     pub ci: CiConfig,
     /// Changed-file validation command mappings (`no-mistakes impacted-checks`).

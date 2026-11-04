@@ -18,6 +18,10 @@ async function assertProxyDomains(api) {
     },
   );
   assert.equal((await api.resolveConfig({ root: "." })).command, "resolveConfig");
+  assert.deepEqual((await api.resolveConfig({ root: ".", view: "declared" })).options, {
+    root: ".",
+    view: "declared",
+  });
   assert.equal((await api.lockStatus()).command, "lockStatus");
   assert.deepEqual(
     await api.validateMermaidMarkdown({ content: "diagram source", file: "docs/design.md" }),

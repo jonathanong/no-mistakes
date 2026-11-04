@@ -86,10 +86,12 @@ impl PreparedTestPlanInputs {
             args.config.as_deref(),
             &root_visible_paths,
         )?;
-        let config = no_mistakes::config::v2::load_v2_config_from_visible(
+        let sources = visible_paths.source_store_for(&root);
+        let config = no_mistakes::config::v2::load_v2_config_from_source_store(
             &root,
             args.config.as_deref(),
             &root_visible_paths,
+            &sources,
         )?;
         let collected = collect_changed_files(&args, &root)?;
 

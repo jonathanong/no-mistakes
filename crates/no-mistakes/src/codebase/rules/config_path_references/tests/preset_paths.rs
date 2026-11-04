@@ -186,6 +186,26 @@ rules:
         ".no-mistakes.yml",
         ".no-mistakes.yml"
     ));
+    for path in [
+        ".no-mistakes/rules/base.yml",
+        ".no-mistakes/tests/vitest/base.yaml",
+        ".no-mistakes/checks/paths.json",
+        ".no-mistakes/effects/workers.jsonc",
+        ".no-mistakes.json",
+        ".no-mistakes.jsonc",
+    ] {
+        assert!(presets::matches_preset("no-mistakes", path, path), "{path}");
+    }
+    for path in [
+        "packages/.no-mistakes/rules/base.yml",
+        ".no-mistakes/rules/README.md",
+        ".no-mistakes/rules/base.toml",
+    ] {
+        assert!(
+            !presets::matches_preset("no-mistakes", path, path),
+            "{path}"
+        );
+    }
     assert!(!presets::matches_preset(
         "no-mistakes",
         ".no-mistakes.yml",

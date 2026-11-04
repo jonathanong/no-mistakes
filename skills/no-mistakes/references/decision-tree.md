@@ -88,7 +88,7 @@ What are you trying to find?
 │   └─ no-mistakes tests targets vitest web/app/users/users.test.ts --format commands
 │
 ├─ Effective resolved config
-│   └─ no-mistakes config resolve
+│   └─ no-mistakes config resolve [--view declared]
 │
 ├─ Workflow env definitions and references
 │   └─ no-mistakes ci env GITHUB_TOKEN --format json
