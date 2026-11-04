@@ -1,0 +1,253 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default_off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/default-only.mts",
+          "line": 2,
+          "message": "production export `defaultOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default defaultOnly;",
+          "target": "defaultOnly"
+        },
+        {
+          "file": "src/default-recursive.mts",
+          "line": 1,
+          "message": "production export `recurse` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default function recurse() { return recurse(); }",
+          "target": "recurse"
+        },
+        {
+          "file": "src/default-used.mts",
+          "line": 3,
+          "message": "production export `default` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default (defaultUsed);",
+          "target": "default"
+        },
+        {
+          "file": "src/types.mts",
+          "line": 1,
+          "message": "production export `UsedType` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type UsedType = { value: number };",
+          "target": "UsedType"
+        },
+        {
+          "file": "src/types.mts",
+          "line": 3,
+          "message": "production export `UsedInterface` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export interface UsedInterface { value: number }",
+          "target": "UsedInterface"
+        },
+        {
+          "file": "src/types.mts",
+          "line": 5,
+          "message": "production export `ExportOnlyType` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type ExportOnlyType = string;",
+          "target": "ExportOnlyType"
+        },
+        {
+          "file": "src/types.mts",
+          "line": 6,
+          "message": "production export `ShadowedType` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type ShadowedType = number;",
+          "target": "ShadowedType"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 1,
+          "message": "production export `called` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function called() { return 1; }",
+          "target": "called"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 11,
+          "message": "production export `publicUsedAlias` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export { usedAlias as publicUsedAlias };",
+          "target": "publicUsedAlias"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 13,
+          "message": "production export `shadowed` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const shadowed = 7;",
+          "target": "shadowed"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 15,
+          "message": "production export `recursive` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function recursive() { return recursive(); }",
+          "target": "recursive"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 16,
+          "message": "production export `typeQuery` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const typeQuery = 8;",
+          "target": "typeQuery"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 18,
+          "message": "production export `pureWrite` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export let pureWrite = 0;",
+          "target": "pureWrite"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 20,
+          "message": "production export `readWrite` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export let readWrite = 0;",
+          "target": "readWrite"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 3,
+          "message": "production export `read` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const read = 2;",
+          "target": "read"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 5,
+          "message": "production export `onlyExport` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const onlyExport = 3;",
+          "target": "onlyExport"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 7,
+          "message": "production export `listed` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export { listed };",
+          "target": "listed"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 9,
+          "message": "production export `publicAlias` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export { aliased as publicAlias };",
+          "target": "publicAlias"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/default-only.mts",
+          "line": 2,
+          "message": "production export `defaultOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default defaultOnly;",
+          "target": "defaultOnly"
+        },
+        {
+          "file": "src/types.mts",
+          "line": 5,
+          "message": "production export `ExportOnlyType` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type ExportOnlyType = string;",
+          "target": "ExportOnlyType"
+        },
+        {
+          "file": "src/types.mts",
+          "line": 6,
+          "message": "production export `ShadowedType` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type ShadowedType = number;",
+          "target": "ShadowedType"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 13,
+          "message": "production export `shadowed` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const shadowed = 7;",
+          "target": "shadowed"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 18,
+          "message": "production export `pureWrite` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export let pureWrite = 0;",
+          "target": "pureWrite"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 5,
+          "message": "production export `onlyExport` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const onlyExport = 3;",
+          "target": "onlyExport"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 7,
+          "message": "production export `listed` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export { listed };",
+          "target": "listed"
+        },
+        {
+          "file": "src/values.mts",
+          "line": 9,
+          "message": "production export `publicAlias` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export { aliased as publicAlias };",
+          "target": "publicAlias"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "warning: rules check skipped: invalid options for rule `production-exports-only-used-by-tests` at options.ignoreExportsUsedInFile: invalid type: string \"yes\", expected a boolean"
+      ]
+    }
+  }
+}
