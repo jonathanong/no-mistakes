@@ -32,7 +32,7 @@ pub(crate) fn select_fragments(root: &Path, visible: &[PathBuf]) -> Result<Vec<(
         } else {
             root.join(path)
         };
-        if let Some(section) = classify(root, &absolute)? {
+        if let Some(section) = classify_fragment(root, &absolute)? {
             files.push((absolute, section));
         }
     }
@@ -40,7 +40,7 @@ pub(crate) fn select_fragments(root: &Path, visible: &[PathBuf]) -> Result<Vec<(
     Ok(files)
 }
 
-fn classify(root: &Path, path: &Path) -> Result<Option<String>> {
+pub(crate) fn classify_fragment(root: &Path, path: &Path) -> Result<Option<String>> {
     let directory = root.join(".no-mistakes");
     let Ok(relative) = path.strip_prefix(&directory) else {
         return Ok(None);
@@ -94,7 +94,7 @@ pub(crate) fn parse_sources_quiet(
         return super::parse_v2_config_quiet(&documents[0].source, &documents[0].path);
     }
     for document in documents {
-        let section = classify(root, &document.path)?;
+        let section = classify_fragment(root, &document.path)?;
         if section.is_some() && section != document.section {
             anyhow::bail!("incorrect config section for {}", document.path.display());
         }
@@ -103,9 +103,10 @@ pub(crate) fn parse_sources_quiet(
     let mut origins = BTreeMap::new();
     let mut provenance = ConfigProvenance::default();
     for document in documents {
-        if document.section.is_some() && classify(root, &document.path)?.is_none() {
+        if document.section.is_some() && classify_fragment(root, &document.path)?.is_none() {
             continue;
         }
+        super::fragment_validation::validate_document(document)?;
         let value: Value = crate::config::parse_config(&document.source, &document.path)?;
         let (global, local) = if let Some(section) = &document.section {
             (ConfigPath::default().key(section), ConfigPath::default())
@@ -140,20 +141,7 @@ pub(crate) fn parse_sources_quiet(
         serde_yaml::from_value(merged).context("failed to deserialize merged configuration")?;
     let path = documents.first().map(|d| d.path.as_path()).unwrap_or(root);
     config.config_provenance = provenance;
-    super::finish_config(&mut config, path)?;
-    for (name, policy) in &mut config.tests.vitest.projects {
-        if !policy.setup_files.is_empty() {
-            let key = ConfigPath::default()
-                .key("tests")
-                .key("vitest")
-                .key("projects")
-                .key(name)
-                .key("setupFiles");
-            if let Some((path, _)) = config.config_provenance.origin(&key) {
-                policy.declaration_path = Some(crate::codebase::ts_resolver::normalize_path(path));
-            }
-        }
-    }
+    super::fragment_validation::finish(&mut config, documents, path)?;
     Ok(config)
 }
 
