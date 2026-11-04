@@ -24,7 +24,11 @@ impl DepGraph {
             })
             .collect();
         if drafts.iter().any(|(_, draft)| !draft.modules.is_empty()) {
-            let index = self.build_mock_site_index(facts, resolver, inputs.graph_files);
+            let modules = drafts
+                .iter()
+                .flat_map(|(_, draft)| draft.modules.iter().cloned())
+                .collect();
+            let index = self.build_mock_site_index(facts, resolver, inputs.graph_files, &modules);
             drafts.par_iter_mut().for_each(|(path, draft)| {
                 if !draft.modules.is_empty() {
                     draft.suppressed = self.calls_through_mocked_modules(

@@ -168,7 +168,8 @@ fn indexed_sites_keep_next_and_star_suppression_semantics() {
         calls: AtomicUsize::new(0),
     };
     let files = GraphFiles::from_files(vec![path("a.mts")]);
-    let index = graph.build_mock_site_index(&facts, &resolver, &files);
+    let requested = modules(&["impl.mts", "l.mts", "r.mts"]);
+    let index = graph.build_mock_site_index(&facts, &resolver, &files, &requested);
     let context = (&facts, &resolver, &files, &index);
     assert_eq!(
         suppressed(&graph, "root-a.mts", &["impl.mts"], context),
@@ -196,7 +197,8 @@ fn resolver_calls_do_not_scale_with_test_roots() {
         calls: AtomicUsize::new(0),
     };
     let files = GraphFiles::from_files(vec![path("a.mts")]);
-    let index = graph.build_mock_site_index(&facts, &resolver, &files);
+    let requested = modules(&["impl.mts", "l.mts", "r.mts"]);
+    let index = graph.build_mock_site_index(&facts, &resolver, &files, &requested);
     let context = (&facts, &resolver, &files, &index);
     suppressed(&graph, "root-a.mts", &["impl.mts"], context);
     let after_one = resolver.calls.load(Ordering::SeqCst);
@@ -205,4 +207,37 @@ fn resolver_calls_do_not_scale_with_test_roots() {
         suppressed(&graph, root, &["impl.mts", "l.mts", "r.mts"], context);
     }
     assert_eq!(resolver.calls.load(Ordering::SeqCst), after_one);
+}
+
+#[test]
+fn postings_only_retain_requested_modules_without_pruning_export_walks() {
+    let mut graph = graph();
+    for name in ["impl.mts", "unmocked.mts"] {
+        let mut direct = site(
+            "direct.mts",
+            "unused",
+            graph.resolved_call_sites.len() as u32,
+        );
+        direct.target = ResolvedCallTarget::RepositoryFunction {
+            file: path(name),
+            scope: "run".into(),
+        };
+        graph.resolved_call_sites.push(direct);
+    }
+    graph
+        .resolved_call_sites
+        .push(site("external.mts", "package", 5));
+    let facts = fact_map();
+    let resolver = CountingResolver {
+        calls: AtomicUsize::new(0),
+    };
+    let files = GraphFiles::from_files(vec![path("a.mts")]);
+    let mut requested = modules(&["impl.mts"]);
+    requested.insert(MockedModule::Specifier("package".into()));
+    let index = graph.build_mock_site_index(&facts, &resolver, &files, &requested);
+    assert_eq!(index.sites.len(), 2);
+    assert_eq!(index.sites[&MockedModule::File(path("impl.mts"))], [0, 3]);
+    assert_eq!(index.sites[&MockedModule::Specifier("package".into())], [5]);
+    assert_eq!(index.sites.values().map(Vec::len).sum::<usize>(), 3);
+    assert!(resolver.calls.load(Ordering::SeqCst) > 0);
 }

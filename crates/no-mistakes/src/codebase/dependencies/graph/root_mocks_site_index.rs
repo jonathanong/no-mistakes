@@ -10,6 +10,7 @@ struct Collect<'a> {
     resolver: &'a dyn ImportResolution,
     files: &'a GraphFiles,
     memo: &'a mut ModuleMemo,
+    requested: &'a FxHashSet<MockedModule>,
     out: &'a mut FxHashSet<MockedModule>,
 }
 
@@ -36,6 +37,7 @@ impl DepGraph {
         facts: &dyn TsFactLookup,
         resolver: &dyn ImportResolution,
         files: &GraphFiles,
+        requested: &FxHashSet<MockedModule>,
     ) -> MockSiteIndex {
         let (memo, mut pairs) = self
             .resolved_call_sites()
@@ -51,6 +53,7 @@ impl DepGraph {
                             resolver,
                             files,
                             memo: &mut memo,
+                            requested,
                             out: &mut out,
                         };
                         for candidate in site.targets() {
@@ -79,6 +82,12 @@ impl DepGraph {
 }
 
 impl Collect<'_> {
+    fn retain(&mut self, module: MockedModule) {
+        if self.requested.contains(&module) {
+            self.out.insert(module);
+        }
+    }
+
     fn target(&mut self, from: &Path, target: KnownCallTargetRef<'_>) {
         match target {
             KnownCallTargetRef::ModuleExport {
@@ -87,7 +96,7 @@ impl Collect<'_> {
                 ..
             } => self.walk(from, specifier, export_path, &mut fx_set()),
             KnownCallTargetRef::RepositoryFunction { file, .. } => {
-                self.out.insert(MockedModule::File(file.to_path_buf()));
+                self.retain(MockedModule::File(file.to_path_buf()));
             }
             KnownCallTargetRef::Global { .. } => {}
         }
@@ -106,7 +115,7 @@ impl Collect<'_> {
                 id
             }
         };
-        self.out.insert(id.clone());
+        self.retain(id.clone());
         let MockedModule::File(path) = id else { return };
         if !seen.insert((path.clone(), export.to_string())) {
             return;
