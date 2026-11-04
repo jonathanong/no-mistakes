@@ -124,7 +124,7 @@ impl<'a> Scanner<'a> {
             }
         }
         let role = script_role(key, parent);
-        self.scripts.note_header(role, index + 1);
+        self.scripts.note_header(role, index + 1, &parsed.value);
         if parsed.block {
             self.frames.push(Frame {
                 indent: parsed.key_indent,

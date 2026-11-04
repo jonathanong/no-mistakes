@@ -92,6 +92,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": ".github/workflows/alias.yml",
+          "line": 1,
+          "message": "Script bodies could not be aligned to source locations; rewrite anchors, aliases, and flow-style steps as ordinary block-style run or with.script bodies so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "env:"
+        },
+        {
           "file": ".github/workflows/flow.yml",
           "line": 1,
           "message": "Script bodies could not be aligned to source locations; rewrite anchors, aliases, and flow-style steps as ordinary block-style run or with.script bodies so inline script length can be checked.",

@@ -6,24 +6,25 @@ pub(crate) struct StepScript {
     pub(crate) line: usize,
     pub(crate) count: usize,
     pub(crate) github_script: bool,
+    pub(crate) supported: bool,
 }
 
 #[derive(Default)]
 pub(super) struct ScriptCollector {
     enabled: bool,
-    run: Option<usize>,
-    script: Option<usize>,
+    run: Option<(usize, bool)>,
+    script: Option<(usize, bool)>,
     collected: Vec<StepScript>,
 }
 
 impl ScriptCollector {
-    pub(super) fn note_header(&mut self, role: Option<BlockRole>, line: usize) {
+    pub(super) fn note_header(&mut self, role: Option<BlockRole>, line: usize, value: &str) {
         if !self.enabled {
             return;
         }
         match role {
-            Some(BlockRole::Run) => self.run = Some(line),
-            Some(BlockRole::Script) => self.script = Some(line),
+            Some(BlockRole::Run) => self.run = Some((line, !value.starts_with(['*', '&']))),
+            Some(BlockRole::Script) => self.script = Some((line, !value.starts_with(['*', '&']))),
             _ => {}
         }
     }
@@ -44,7 +45,7 @@ impl ScriptCollector {
             if github_script && !uses.is_some_and(is_github_script) {
                 continue;
             }
-            if let Some(line) = header {
+            if let Some((line, supported)) = header {
                 self.collected.push(StepScript {
                     line,
                     count: body
@@ -52,6 +53,7 @@ impl ScriptCollector {
                         .filter(|(_, text)| !text.trim().is_empty())
                         .count(),
                     github_script,
+                    supported,
                 });
             }
         }

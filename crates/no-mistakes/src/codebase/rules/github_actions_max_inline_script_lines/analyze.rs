@@ -31,7 +31,7 @@ pub(super) fn check_source(rel: &str, source: &str, action: bool, max: usize) ->
         || expected
             .iter()
             .zip(&scripts)
-            .any(|(kind, script)| *kind != script.github_script)
+            .any(|(kind, script)| *kind != script.github_script || !script.supported)
     {
         return vec![finding(rel, 1, "Script bodies could not be aligned to source locations; rewrite anchors, aliases, and flow-style steps as ordinary block-style run or with.script bodies so inline script length can be checked.".into())];
     }
