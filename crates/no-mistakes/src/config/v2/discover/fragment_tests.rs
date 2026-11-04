@@ -54,3 +54,125 @@ fn mismatched_fragment_types_report_both_files() {
         .to_string();
     assert!(error.contains(".no-mistakes.yml") && error.contains("checks/a.yml"));
 }
+
+#[test]
+fn invalid_fragment_globs_point_to_the_authored_line() {
+    let root = fixture("invalid-glob");
+    let path = root.join(".no-mistakes/projects/bad.yml");
+    let error = load_v2_config_with_path_from_visible(&root, None, &[path])
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains(".no-mistakes/projects/bad.yml:3:"),
+        "{error}"
+    );
+    assert!(
+        error.contains("projects.app.include[0]: contains invalid glob `[`"),
+        "{error}"
+    );
+}
+
+#[test]
+fn fragment_validation_preserves_non_glob_errors() {
+    let root = fixture("invalid-rule");
+    let path = root.join(".no-mistakes/rules/bad.yml");
+    let error = load_v2_config_with_path_from_visible(&root, None, &[path])
+        .unwrap_err()
+        .to_string();
+    assert_eq!(error, "rules[0].rule is required");
+}
+
+#[test]
+fn typed_sequence_errors_point_to_the_fragment_item() {
+    let root = fixture("invalid-sequence");
+    let path = root.join(".no-mistakes/rules/bad.yml");
+    let error = load_v2_config_with_path_from_visible(&root, None, &[path])
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(".no-mistakes/rules/bad.yml:3:"), "{error}");
+    assert!(error.contains("rules[0].include[0]"), "{error}");
+}
+
+#[test]
+fn relative_visible_fragment_paths_are_rooted_and_selected() {
+    let root = fixture("valid");
+    let visible = [PathBuf::from(".no-mistakes/rules/nested/extra.yml")];
+    let selected = super::fragments::select_fragments(&root, &visible).unwrap();
+    assert_eq!(selected, [(root.join(&visible[0]), "rules".into())]);
+}
+
+#[test]
+fn malformed_rules_fragment_keeps_the_typed_shape_error() {
+    let root = fixture("rules-mapping");
+    let path = root.join(".no-mistakes/rules/bad.yml");
+    let error = load_v2_config_with_path_from_visible(&root, None, &[path])
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(".no-mistakes/rules/bad.yml:1:"), "{error}");
+    assert!(
+        error.contains("rules: invalid type: map, expected a sequence"),
+        "{error}"
+    );
+}
+
+#[test]
+fn non_string_fragment_keys_preserve_typed_errors() {
+    let root = fixture("non-string-key");
+    let path = root.join(".no-mistakes/projects/bad.yml");
+    let error = load_v2_config_with_path_from_visible(&root, None, &[path])
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains(".no-mistakes/projects/bad.yml:1:"),
+        "{error}"
+    );
+    assert!(error.contains("expected a string"), "{error}");
+}
+
+#[test]
+fn historical_documents_reject_mismatched_section_metadata() {
+    let root = fixture("valid");
+    let path = root.join(".no-mistakes/rules/nested/extra.yml");
+    let document = ConfigDocument {
+        source: std::fs::read_to_string(&path).unwrap(),
+        path,
+        section: Some("checks".into()),
+    };
+    let error = parse_sources_quiet(&root, &[document])
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("incorrect config section"), "{error}");
+}
+
+#[test]
+fn historical_ignored_documents_do_not_contribute_config() {
+    let root = fixture("cases");
+    let documents: Vec<_> = ["readme.md", ".ignored"]
+        .into_iter()
+        .map(|name| {
+            let path = root.join(".no-mistakes/rules").join(name);
+            ConfigDocument {
+                source: std::fs::read_to_string(&path).unwrap(),
+                path,
+                section: Some("rules".into()),
+            }
+        })
+        .collect();
+    let config = parse_sources_quiet(&root, &documents).unwrap();
+    assert!(config.rules.is_empty());
+}
+
+#[test]
+fn duplicate_relation_keys_fail_before_fragment_deserialization() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/split-provenance/fixture/duplicate-json");
+    let path = root.join(".no-mistakes/rules/policy.json");
+    let error = load_v2_config_with_path_from_visible(&root, None, &[path])
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains(".no-mistakes/rules/policy.json:5:"),
+        "{error}"
+    );
+    assert!(error.contains("duplicate key accountId"), "{error}");
+}
