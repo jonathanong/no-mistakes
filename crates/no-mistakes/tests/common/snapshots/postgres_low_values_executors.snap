@@ -175,6 +175,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "identifier-provenance"
         },
         {
+          "file": "src/query.mts",
+          "line": 69,
+          "message": "src/query.mts:69: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 69,
+          "message": "src/query.mts:69: postgres-no-offset application #0 has unresolved SQL for offset: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 69,
+          "message": "src/query.mts:69: postgres-no-unbounded-sql-identifier application #1 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
           "file": "src/reassigned.mts",
           "line": 8,
           "message": "src/reassigned.mts:8: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",

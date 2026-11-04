@@ -62,3 +62,9 @@ export async function argumentEffect(ownerId: string, userIds: string[]) {
   for (const userId of userIds) statement.append(sql`, (1, ${userId})`);
   return query(statement);
 }
+export async function nestedSqlArgument(ownerId: string, userId: string) {
+  await using query = await beginTransaction([sql`SELECT 1 OFFSET 9`]);
+  const statement = sql`INSERT INTO group_members (group_id, user_id) VALUES (1, ${ownerId})`;
+  statement.append(sql`, (1, ${userId})`);
+  return query(statement);
+}
