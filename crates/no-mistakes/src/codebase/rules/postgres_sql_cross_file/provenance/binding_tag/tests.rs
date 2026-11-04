@@ -128,6 +128,11 @@ fn plain_calls_and_shadowed_tags_do_not_bind() {
         named(),
     );
     assert!(!verdict(&plain, default(), vec![]));
+    let literal = tag(
+        vec![ValueExpression::String("SELECT id FROM accounts".into())],
+        named(),
+    );
+    assert!(!verdict(&literal, default(), vec![]));
     let empty = tag(vec![], named());
     assert!(!verdict(&empty, default(), vec![]));
     let template = tag(vec![ValueExpression::Unknown], scoped());

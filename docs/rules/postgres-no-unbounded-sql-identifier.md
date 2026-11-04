@@ -107,7 +107,11 @@ A call with no interpolation produces no finding, including a static SQL
 string and a dynamic SQL argument that is not itself interpolated. A call
 whose interpolations are only binds produces no finding either.
 Outside an identifier position, a hole is dropped only when its provenance
-is a plain function parameter, the known bind value. Every other hole stays
+is a plain function parameter or an immutable local alias chain that only
+forwards that parameter, the known bind value. This does not drop aliases used
+in identifier positions, member reads, environment-derived aliases, reassigned
+locals, or unknown call results (`fail-identifier-with-bind-alias`,
+`fail-outside-alias-sources`). Every other hole stays
 a source when the same call also interpolates an identifier: the parser
 cannot tell that placeholder from a bind. That includes an imported
 env-derived export, a namespace member of that export, and a field returned

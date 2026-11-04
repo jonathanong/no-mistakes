@@ -74,3 +74,64 @@ fn outside_holes_keep_env_config_and_drop_parameters() {
         vec![reference("plain")],
     );
 }
+
+#[test]
+fn outside_holes_drop_immutable_parameter_alias_chains() {
+    expect(
+        vec![binding("alias", named("uid"))],
+        named("alias"),
+        vec![],
+        &[],
+        vec![],
+    );
+    expect(
+        vec![
+            binding("first", named("uid")),
+            binding("second", named("first")),
+        ],
+        named("second"),
+        vec![],
+        &[],
+        vec![],
+    );
+}
+
+#[test]
+fn outside_aliases_keep_mutation_cycles_members_and_non_parameters() {
+    let mut mutable = binding("alias", named("uid"));
+    mutable.immutable = false;
+    let mut invalidated = binding("alias", named("uid"));
+    invalidated.invalidated_at = Some(3);
+    for bindings in [
+        vec![mutable],
+        vec![invalidated],
+        vec![
+            binding("alias", named("cycle")),
+            binding("cycle", named("alias")),
+        ],
+        vec![binding(
+            "alias",
+            ValueExpression::Member(Arc::new(named("uid")), "column".into()),
+        )],
+        vec![binding("alias", process_env("COLUMN"))],
+    ] {
+        expect(
+            bindings,
+            named("alias"),
+            vec![],
+            &[],
+            vec![reference("alias")],
+        );
+    }
+    let mut member = reference("alias");
+    if let Provenance::Reference { members, .. } = &mut member {
+        members.push("column".into());
+    }
+    expect(
+        vec![binding("alias", named("uid"))],
+        ValueExpression::Member(Arc::new(named("alias")), "column".into()),
+        vec![],
+        &[],
+        vec![member],
+    );
+}
