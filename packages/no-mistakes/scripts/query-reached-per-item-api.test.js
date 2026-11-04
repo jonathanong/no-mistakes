@@ -232,6 +232,8 @@ test(
     assert.deepEqual(callsIn(original, "src/proven.ts"), ["handle", "read"]);
     assert.deepEqual(callsIn(enabled, "src/proven.ts"), ["handle"]);
     assert.deepEqual(callsIn(enabled, "src/page-read.ts"), ["read"]);
+    assert.deepEqual(callsIn(enabled, "src/conditional_spread.ts"), []);
+    assert.deepEqual(callsIn(enabled, "src/var_bound_initializer.ts"), ["read"]);
     assert.ok(enabled.rules.length < original.rules.length);
     for (const [config, expected] of [
       [undefined, original],

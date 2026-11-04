@@ -2,6 +2,7 @@ fn visit_for_statement_with_scope<'a>(
     collector: &mut ImportCollector,
     statement: &oxc_ast::ast::ForStatement<'a>,
 ) {
+    collector.record_capped_cursor_reads(statement);
     collector.record_per_item_range(
         statement.body.span(),
         collector.current_function_id(),

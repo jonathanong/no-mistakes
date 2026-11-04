@@ -1,0 +1,1736 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/alias_input.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const alias = token; const chunk = await read(alias); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/aliased_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); const alias = chunk; token = alias.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/aliased_result_write.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); alias = chunk; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/assigned_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); Object.assign(chunk, {next: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/callback.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via run/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; await Promise.all(items.map(async item => { const chunk = await read(token); token = chunk.next; }));",
+          "target": "postgres: run/<anonymous:1> → read"
+        },
+        {
+          "file": "src/caught_bound_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "try { maximum = Infinity; } catch {} const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/class_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "class Reset { static run() { token = 0; } } Reset.run(); const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/closure_read.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: () => token}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/computed_key.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token, [maximum]: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/condition_only.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(token ? {from: 0} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/conditional_spread.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(token ? {from: token} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/conditional_write.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); if (maximum) token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/constructed_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); new Mutator(chunk); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/continue_path.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); if (!chunk) continue; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/counter_source.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = attempt; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/deleted_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); delete chunk.next; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/destructured_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const {next} = await read(token); token = next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/do_loop.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: do `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; do { const chunk = await read(token); token = chunk.next; } while (maximum);",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/dynamic_result_receiver.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); (maximum ? chunk : other).reset(); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/escaped_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); mutate(chunk); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/extra_write.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { token = undefined; const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/for_in.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-in `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (const item in items) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/for_of.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (const item of items) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/forin_write.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { for (token in items) {} const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/forof_write.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { for (token of items) {} const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/function_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "function reset() { token = 0; } reset(); const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/helper_loop.ts",
+          "import": "pageRead",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `pageRead` reaches `postgres` via run → pageRead → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await pageRead(token, items); token = chunk.next; }",
+          "target": "postgres: run → pageRead → read"
+        },
+        {
+          "file": "src/mutated_cap.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; maximum++; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/mutated_counter.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; attempt = 0; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nested_do_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "do { token = 0; } while (false); const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nested_while_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "while (maximum) { maximum = Infinity; break; } const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/no_increment.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum;) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/no_read.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({token: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nonfinite_bound.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read(token);",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nonfinite_initializer.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read(token);",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/numeric_cap.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < 5; attempt++) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/offset.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token = 0; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token += 10; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/outer_callback.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(items.map(async item => { let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; } }));",
+          "target": "postgres: run/<anonymous:1> → read"
+        },
+        {
+          "file": "src/outer_counted.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let outer = 0; outer < maximum; outer++) { let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; } }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/outer_item.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) { let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; } }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/overwritten.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token, from: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/page-read.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via pageRead → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) await read(item);",
+          "target": "postgres: pageRead → read"
+        },
+        {
+          "file": "src/proven.ts",
+          "import": "handle",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `handle` reaches `postgres` via run → handle",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token}); await handle(chunk.rows); token = chunk.next; if (!token) break; }",
+          "target": "postgres: run → handle"
+        },
+        {
+          "file": "src/proven.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token}); await handle(chunk.rows); token = chunk.next; if (!token) break; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/reassigned_result.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { let chunk = await read(token); chunk = await read(0); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/reassigned_result.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { let chunk = await read(token); chunk = await read(0); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/receiver_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); chunk.reset(); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/shadow.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { let token = 0; const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/spread_cursor.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...token}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/spread_overwrite.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(token ? {from: token} : {}), ...options}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/spread_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = {...await read(token)}; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/tagged_result_escape.ts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read(token); mutate`${chunk}`; token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unawaited.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/uncapped.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (;;) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unknown_spread.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token, ...options}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unreachable_branch.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: false ? token : 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unreachable_spread.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(false ? {from: token} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unrelated_branch.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: maximum ? token : 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unrelated_spread.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(maximum ? {from: token} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/var_bound_initializer.ts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read({from: token});",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/while_loop.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; while (maximum) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/wrong_counter.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; maximum < 5; attempt++) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/wrong_source.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); const other = await read(0); token = other.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/wrong_source.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); const other = await read(0); token = other.next; }",
+          "target": "postgres: run → read"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/alias_input.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const alias = token; const chunk = await read(alias); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/aliased_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); const alias = chunk; token = alias.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/aliased_result_write.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); alias = chunk; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/assigned_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); Object.assign(chunk, {next: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/callback.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via run/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; await Promise.all(items.map(async item => { const chunk = await read(token); token = chunk.next; }));",
+          "target": "postgres: run/<anonymous:1> → read"
+        },
+        {
+          "file": "src/caught_bound_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "try { maximum = Infinity; } catch {} const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/class_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "class Reset { static run() { token = 0; } } Reset.run(); const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/closure_read.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: () => token}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/computed_key.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token, [maximum]: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/condition_only.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(token ? {from: 0} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/conditional_spread.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(token ? {from: token} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/conditional_write.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); if (maximum) token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/constructed_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); new Mutator(chunk); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/continue_path.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); if (!chunk) continue; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/counter_source.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = attempt; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/deleted_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); delete chunk.next; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/destructured_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const {next} = await read(token); token = next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/do_loop.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: do `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; do { const chunk = await read(token); token = chunk.next; } while (maximum);",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/dynamic_result_receiver.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); (maximum ? chunk : other).reset(); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/escaped_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); mutate(chunk); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/extra_write.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { token = undefined; const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/for_in.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-in `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (const item in items) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/for_of.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (const item of items) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/forin_write.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { for (token in items) {} const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/forof_write.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { for (token of items) {} const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/function_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "function reset() { token = 0; } reset(); const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/helper_loop.ts",
+          "import": "pageRead",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `pageRead` reaches `postgres` via run → pageRead → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await pageRead(token, items); token = chunk.next; }",
+          "target": "postgres: run → pageRead → read"
+        },
+        {
+          "file": "src/mutated_cap.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; maximum++; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/mutated_counter.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; attempt = 0; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nested_do_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "do { token = 0; } while (false); const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nested_while_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "while (maximum) { maximum = Infinity; break; } const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/no_increment.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum;) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/no_read.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({token: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nonfinite_bound.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read(token);",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nonfinite_initializer.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read(token);",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/numeric_cap.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < 5; attempt++) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/offset.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token = 0; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token += 10; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/outer_callback.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(items.map(async item => { let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; } }));",
+          "target": "postgres: run/<anonymous:1> → read"
+        },
+        {
+          "file": "src/outer_counted.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let outer = 0; outer < maximum; outer++) { let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; } }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/outer_item.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) { let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; } }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/overwritten.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token, from: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/page-read.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via pageRead → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) await read(item);",
+          "target": "postgres: pageRead → read"
+        },
+        {
+          "file": "src/proven.ts",
+          "import": "handle",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `handle` reaches `postgres` via run → handle",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token}); await handle(chunk.rows); token = chunk.next; if (!token) break; }",
+          "target": "postgres: run → handle"
+        },
+        {
+          "file": "src/proven.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token}); await handle(chunk.rows); token = chunk.next; if (!token) break; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/reassigned_result.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { let chunk = await read(token); chunk = await read(0); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/reassigned_result.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { let chunk = await read(token); chunk = await read(0); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/receiver_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); chunk.reset(); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/shadow.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { let token = 0; const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/spread_cursor.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...token}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/spread_overwrite.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(token ? {from: token} : {}), ...options}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/spread_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = {...await read(token)}; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/tagged_result_escape.ts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read(token); mutate`${chunk}`; token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unawaited.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/uncapped.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (;;) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unknown_spread.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token, ...options}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unreachable_branch.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: false ? token : 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unreachable_spread.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(false ? {from: token} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unrelated_branch.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: maximum ? token : 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unrelated_spread.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(maximum ? {from: token} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/var_bound_initializer.ts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read({from: token});",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/while_loop.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; while (maximum) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/wrong_counter.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; maximum < 5; attempt++) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/wrong_source.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); const other = await read(0); token = other.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/wrong_source.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); const other = await read(0); token = other.next; }",
+          "target": "postgres: run → read"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "on": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/alias_input.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const alias = token; const chunk = await read(alias); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/aliased_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); const alias = chunk; token = alias.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/aliased_result_write.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); alias = chunk; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/assigned_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); Object.assign(chunk, {next: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/callback.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: map callback `read` reaches `postgres` via run/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; await Promise.all(items.map(async item => { const chunk = await read(token); token = chunk.next; }));",
+          "target": "postgres: run/<anonymous:1> → read"
+        },
+        {
+          "file": "src/caught_bound_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "try { maximum = Infinity; } catch {} const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/class_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "class Reset { static run() { token = 0; } } Reset.run(); const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/closure_read.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: () => token}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/computed_key.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token, [maximum]: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/condition_only.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(token ? {from: 0} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/conditional_write.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); if (maximum) token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/constructed_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); new Mutator(chunk); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/continue_path.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); if (!chunk) continue; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/counter_source.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = attempt; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/deleted_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); delete chunk.next; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/destructured_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const {next} = await read(token); token = next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/do_loop.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: do `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; do { const chunk = await read(token); token = chunk.next; } while (maximum);",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/dynamic_result_receiver.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); (maximum ? chunk : other).reset(); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/escaped_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); mutate(chunk); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/extra_write.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { token = undefined; const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/for_in.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-in `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (const item in items) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/for_of.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (const item of items) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/forin_write.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { for (token in items) {} const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/forof_write.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { for (token of items) {} const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/function_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "function reset() { token = 0; } reset(); const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/mutated_cap.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; maximum++; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/mutated_counter.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; attempt = 0; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nested_do_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "do { token = 0; } while (false); const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nested_while_mutation.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "while (maximum) { maximum = Infinity; break; } const chunk = await read(token); token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/no_increment.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum;) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/no_read.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({token: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nonfinite_bound.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read(token);",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/nonfinite_initializer.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read(token);",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/offset.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token = 0; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token += 10; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/outer_callback.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run/<anonymous:1> → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await Promise.all(items.map(async item => { let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; } }));",
+          "target": "postgres: run/<anonymous:1> → read"
+        },
+        {
+          "file": "src/outer_counted.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (let outer = 0; outer < maximum; outer++) { let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; } }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/outer_item.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) { let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); token = chunk.next; } }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/overwritten.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token, from: 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/page-read.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `read` reaches `postgres` via pageRead → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "for (const item of items) await read(item);",
+          "target": "postgres: pageRead → read"
+        },
+        {
+          "file": "src/proven.ts",
+          "import": "handle",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `handle` reaches `postgres` via run → handle",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token}); await handle(chunk.rows); token = chunk.next; if (!token) break; }",
+          "target": "postgres: run → handle"
+        },
+        {
+          "file": "src/reassigned_result.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { let chunk = await read(token); chunk = await read(0); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/reassigned_result.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { let chunk = await read(token); chunk = await read(0); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/receiver_result.ts",
+          "import": "read",
+          "line": 5,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); chunk.reset(); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/shadow.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { let token = 0; const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/spread_cursor.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...token}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/spread_overwrite.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(token ? {from: token} : {}), ...options}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/spread_result.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = {...await read(token)}; token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/tagged_result_escape.ts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read(token); mutate`${chunk}`; token = chunk.next;",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unawaited.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/uncapped.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (;;) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unknown_spread.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: token, ...options}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unreachable_branch.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: false ? token : 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unreachable_spread.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(false ? {from: token} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unrelated_branch.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({from: maximum ? token : 0}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/unrelated_spread.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read({...(maximum ? {from: token} : {})}); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/var_bound_initializer.ts",
+          "import": "read",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "const chunk = await read({from: token});",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/while_loop.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: while `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; while (maximum) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/wrong_counter.ts",
+          "import": "read",
+          "line": 3,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; maximum < 5; attempt++) { const chunk = await read(token); token = chunk.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/wrong_source.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 1)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); const other = await read(0); token = other.next; }",
+          "target": "postgres: run → read"
+        },
+        {
+          "file": "src/wrong_source.ts",
+          "import": "read",
+          "line": 4,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `read` reaches `postgres` via run → read (occurrence 2)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "let token; for (let attempt = 0; attempt < maximum; attempt++) { const chunk = await read(token); const other = await read(0); token = other.next; }",
+          "target": "postgres: run → read"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

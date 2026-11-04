@@ -156,6 +156,15 @@ declared outside that loop, and the same loop body must reassign that variable
 from that call's result. Names do not matter. Conditional object spreads such
 as `...(continuation ? { after: continuation } : {})` count as argument reads.
 
+The current proof accepts an increasing `let` counter with a finite numeric
+initializer, `<` or `<=` against a finite numeric literal or identifier, and `++`.
+The page result must be a direct awaited call assigned to one `const`, followed
+by an unconditional assignment from a static property of that result. Shadowing, extra writes,
+unknown spreads, result mutation or escape, and surrounding per-item contexts
+keep the call reported.
+The continuation must have a simple outer `let` or `var` declaration;
+parameters and destructured declarations remain reported.
+
 Only the proven page-read call is exempt. The handler still reports if it
 reaches an effect; effects in the page helper's own loops still report at those
 loops. `for...of`, `for...in`, callbacks, `while`, `do`, uncapped loops, offset

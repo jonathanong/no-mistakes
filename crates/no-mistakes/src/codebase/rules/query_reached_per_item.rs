@@ -100,7 +100,8 @@ pub(crate) fn check_with_graph(
             roots.retain(|node| excluded.binary_search(node).is_err());
             let reachable = traces::reachable(graph, &roots, &sinks, &excluded);
             for (site, position) in candidates {
-                if !filter.is_match(&site.file)
+                if (options.exempt_capped_cursor_page_reads && position.capped_cursor_page_read)
+                    || !filter.is_match(&site.file)
                     || exempt(effect, &site.source_callee)
                     || excluded.binary_search(&source_node(site)).is_ok()
                     || (site.targets().len() > 0
