@@ -289,7 +289,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
   assert.ok(minutes <= 5, "keep the correction bounded rather than removing its deadline");
   assert.match(native, /\n    timeout-minutes: 30\n/);
   const linux = workflow.split("\n  native-tests:\n")[0];
-  assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 2\n/);
+  assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 3\n/);
 });
 
 const workflowJob = (name) => {

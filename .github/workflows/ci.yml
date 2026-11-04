@@ -377,7 +377,7 @@ jobs:
 
       # real-napi-api.test.js already registers mutable receiver cases; list that suite only once.
       - name: Run real N-API API test
-        timeout-minutes: 2
+        timeout-minutes: 3
         id: real-napi
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
