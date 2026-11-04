@@ -4,3 +4,4 @@
       repository:
         - UNUSED_TOKEN
       reportUnused: true
+  scope: repository

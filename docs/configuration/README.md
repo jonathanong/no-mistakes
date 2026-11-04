@@ -7,7 +7,7 @@ For automatic discovery, a repository can also split sections into a
 `.no-mistakes/` directory. Each direct child names a top-level section, such as
 `.no-mistakes/rules/` or `.no-mistakes/tests/`; files below that directory
 contain fragments of that section without repeating its outer key. For
-example, a file in `.no-mistakes/rules/` starts with a rule entry or list. Any
+example, a file in `.no-mistakes/rules/` contains a list of rule entries. Any
 subdirectories below a section are organizational only. Fragment files accept
 the same `.yaml`, `.yml`, `.json`, and `.jsonc` extensions as the root config.
 

@@ -128,8 +128,14 @@ impl PreparedTestPlanRequest {
         let trigger_file =
             config_invalidation::changed_config_path(&self.args, &self.root, &self.collected)?;
         let comparison = self.config_invalidation.get_or_init(|| {
-            config_invalidation::compare_changed_config(&self.args, &self.root, &self.collected)
-                .map_err(|error| format!("{error:#}"))
+            config_invalidation::compare_changed_config(
+                &self.args,
+                &self.root,
+                &self.collected,
+                self.root_visible_paths(),
+                &self.sources,
+            )
+            .map_err(|error| format!("{error:#}"))
         });
         match comparison {
             Ok(Some(invalidation)) if invalidation.framework_changed(framework) => {

@@ -1,5 +1,7 @@
+use super::super::BaseDir;
 use super::oxlint;
 use super::types::is_optional_glob;
+use super::types::Extracted;
 use serde_yaml::Value;
 
 pub(crate) fn matches_preset(preset: &str, filename: &str, rel: &str) -> bool {
@@ -25,8 +27,7 @@ fn is_no_mistakes_config_path(rel: &str) -> bool {
     let supported_extension = [".yaml", ".yml", ".json", ".jsonc"]
         .iter()
         .any(|extension| rel.ends_with(extension));
-    (rel
-        .strip_prefix(".no-mistakes/")
+    (rel.strip_prefix(".no-mistakes/")
         .is_some_and(|fragment| fragment.split('/').count() >= 2)
         || rel == ".no-mistakes.yml"
         || rel == ".no-mistakes.yaml"

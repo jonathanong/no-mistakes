@@ -73,12 +73,12 @@ fn invalid_paths_and_duplicate_scalars_name_the_sources() {
     let root = fixture("scalar");
     let paths = [
         root.join(".no-mistakes.yml"),
-        root.join(".no-mistakes/checks/one.yml"),
+        root.join(".no-mistakes/projects/one.yml"),
     ];
     let error = load_v2_config_with_path_from_visible(&root, None, &paths)
         .unwrap_err()
         .to_string();
-    assert!(error.contains(".no-mistakes.yml") && error.contains("checks/one.yml"));
+    assert!(error.contains(".no-mistakes.yml") && error.contains("projects/one.yml"));
 }
 
 #[test]
@@ -89,4 +89,74 @@ fn typed_fragment_errors_point_to_authored_file_and_line() {
         .unwrap_err()
         .to_string();
     assert!(error.contains(".no-mistakes/tests/bad.yml:4"), "{error}");
+}
+
+#[test]
+fn an_empty_root_config_can_be_extended_by_fragments() {
+    let root = fixture("empty-root");
+    let visible = [".no-mistakes.yml", ".no-mistakes/rules/empty.yml"].map(|file| root.join(file));
+    let (config, _) = load_v2_config_with_path_from_visible(&root, None, &visible).unwrap();
+    assert!(config.rules.is_empty());
+}
+
+#[test]
+fn declared_config_preserves_root_and_sorted_fragment_order() {
+    let root = fixture("names");
+    let config = super::declared_config(&root, None).unwrap();
+    assert_eq!(config["effort"], "low");
+    let names: Vec<_> = config["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|rule| rule["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["root", "alpha", "beta"]);
+}
+
+#[test]
+fn named_duplicates_only_conflict_across_documents() {
+    let root = fixture("names-duplicate");
+    let a = root.join(".no-mistakes/rules/a.yml");
+    let b = root.join(".no-mistakes/rules/b.yml");
+    assert_eq!(
+        load_v2_config_with_path_from_visible(&root, None, std::slice::from_ref(&a))
+            .unwrap()
+            .0
+            .rules
+            .len(),
+        2
+    );
+    let error = load_v2_config_with_path_from_visible(&root, None, &[a, b])
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("rules/a.yml") && error.contains("rules/b.yml"));
+}
+
+#[test]
+fn nested_named_lists_belong_to_their_own_appended_rule() {
+    let root = fixture("nested-names");
+    let paths = [
+        root.join(".no-mistakes/rules/a.yml"),
+        root.join(".no-mistakes/rules/b.yml"),
+    ];
+    let (config, _) = load_v2_config_with_path_from_visible(&root, None, &paths).unwrap();
+    assert_eq!(config.rules.len(), 2);
+}
+
+#[test]
+fn scalar_section_folders_are_rejected_and_explicit_files_remain_whole() {
+    let root = fixture("scalar-section");
+    let error = load_v2_config_with_path_from_visible(
+        &root,
+        None,
+        &[root.join(".no-mistakes/effort/value.yml")],
+    )
+    .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("unknown config section `effort`"));
+    let root = fixture("cases");
+    let config =
+        super::declared_config(&root, Some(&root.join(".no-mistakes/tests/custom.yml"))).unwrap();
+    assert_eq!(config["rules"].as_array().unwrap().len(), 1);
 }

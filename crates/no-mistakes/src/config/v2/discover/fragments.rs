@@ -41,7 +41,8 @@ pub(crate) fn select_fragments(root: &Path, visible: &[PathBuf]) -> Result<Vec<(
 }
 
 pub(crate) fn classify_fragment(root: &Path, path: &Path) -> Result<Option<String>> {
-    let directory = root.join(".no-mistakes");
+    let directory = crate::codebase::ts_resolver::normalize_path(&root.join(".no-mistakes"));
+    let path = crate::codebase::ts_resolver::normalize_path(path);
     let Ok(relative) = path.strip_prefix(&directory) else {
         return Ok(None);
     };
@@ -80,8 +81,26 @@ pub(crate) fn parse_sources_quiet(
     if documents.len() == 1 && documents[0].section.is_none() {
         return super::parse_v2_config_quiet(&documents[0].source, &documents[0].path);
     }
+    let (merged, provenance, deprecated) = merge_documents(root, documents)?;
+    let mut config: NoMistakesConfig =
+        super::fragment_validation::deserialize(merged, &provenance, documents)?;
+    let path = documents.first().map(|d| d.path.as_path()).unwrap_or(root);
+    config.config_provenance = provenance;
+    super::aliases::mark_deprecated(&mut config, &deprecated);
+    super::fragment_validation::finish(&mut config, documents, path)?;
+    Ok(config)
+}
+
+pub(super) fn merge_documents(
+    root: &Path,
+    documents: &[ConfigDocument],
+) -> Result<(Value, ConfigProvenance, Vec<String>)> {
     for document in documents {
-        let section = classify_fragment(root, &document.path)?;
+        let section = if document.section.is_some() {
+            classify_fragment(root, &document.path)?
+        } else {
+            None
+        };
         if section.is_some() && section != document.section {
             anyhow::bail!("incorrect config section for {}", document.path.display());
         }
@@ -90,12 +109,16 @@ pub(crate) fn parse_sources_quiet(
     let mut origins = BTreeMap::new();
     let mut provenance = ConfigProvenance::default();
     let mut deprecated = Vec::new();
+    let mut names = super::named_entries::NamedEntries::default();
     for document in documents {
         if document.section.is_some() && classify_fragment(root, &document.path)?.is_none() {
             continue;
         }
         super::fragment_validation::validate_document(document)?;
-        let value: Value = crate::config::parse_config(&document.source, &document.path)?;
+        let mut value: Value = crate::config::parse_config(&document.source, &document.path)?;
+        if value.is_null() && document.section.is_none() {
+            value = Value::Mapping(Mapping::new());
+        }
         deprecated.extend(super::aliases::deprecated_frameworks(
             &value,
             document.section.as_deref(),
@@ -131,63 +154,8 @@ pub(crate) fn parse_sources_quiet(
         );
         let value = super::aliases::normalize(value, &global, &document.path)?;
         let value = super::aliases::wrap_section(value, document.section.as_deref());
-        merge(&mut merged, value, "", &document.path, &mut origins)?;
+        names.check(&value, "", &document.path, Some(&merged))?;
+        super::merge_values::merge(&mut merged, value, "", &document.path, &mut origins)?;
     }
-    let mut config: NoMistakesConfig =
-        super::fragment_validation::deserialize(merged, &provenance, documents)?;
-    let path = documents.first().map(|d| d.path.as_path()).unwrap_or(root);
-    config.config_provenance = provenance;
-    super::aliases::mark_deprecated(&mut config, &deprecated);
-    super::fragment_validation::finish(&mut config, documents, path)?;
-    Ok(config)
-}
-
-fn merge(
-    target: &mut Value,
-    incoming: Value,
-    key: &str,
-    path: &Path,
-    origins: &mut BTreeMap<String, PathBuf>,
-) -> Result<()> {
-    match (target, incoming) {
-        (Value::Mapping(target), Value::Mapping(incoming)) => {
-            for (name, value) in incoming {
-                let child = format!("{key}/{}", name.as_str().unwrap_or("?"));
-                if let Some(existing) = target.get_mut(&name) {
-                    merge(existing, value, &child, path, origins)?;
-                } else {
-                    record(&value, &child, path, origins);
-                    target.insert(name, value);
-                }
-            }
-            Ok(())
-        }
-        (Value::Sequence(target), Value::Sequence(mut incoming)) => {
-            target.append(&mut incoming);
-            Ok(())
-        }
-        (_, _) => {
-            let previous = origins
-                .get(key)
-                .map_or_else(|| "unknown".to_string(), |p| p.display().to_string());
-            anyhow::bail!(
-                "conflicting config value `{key}` in {previous} and {}",
-                path.display()
-            )
-        }
-    }
-}
-
-fn record(value: &Value, key: &str, path: &Path, origins: &mut BTreeMap<String, PathBuf>) {
-    origins.insert(key.to_string(), path.to_path_buf());
-    if let Value::Mapping(mapping) = value {
-        for (name, value) in mapping {
-            record(
-                value,
-                &format!("{key}/{}", name.as_str().unwrap_or("?")),
-                path,
-                origins,
-            );
-        }
-    }
+    Ok((merged, provenance, deprecated))
 }

@@ -121,6 +121,7 @@ pub(crate) fn is_code_file(
         })
 }
 
+#[cfg(test)]
 pub(crate) fn scan_with_config(
     root: &Path,
     config: &NoMistakesConfig,

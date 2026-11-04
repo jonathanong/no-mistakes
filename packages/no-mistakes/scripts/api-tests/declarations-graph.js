@@ -192,11 +192,15 @@ test("graph declarations expose GitHub Actions workflow relationships and virtua
   }
 });
 
-
 test("declared configuration exposes named types and overloads without widening shared options", () => {
   const declarations = readFileSync(join(packageRoot, "resolve-config-types.d.ts"), "utf8");
   const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
-  for (const name of ["DeclaredConfig", "DeclaredRule", "DeclaredConfigObject", "ConfigResolveOptions"]) {
+  for (const name of [
+    "DeclaredConfig",
+    "DeclaredRule",
+    "DeclaredConfigObject",
+    "ConfigResolveOptions",
+  ]) {
     assert.match(declarations, new RegExp(`export interface ${name}\\b`));
   }
   assert.match(declarations, /export type DeclaredConfigValue =/);

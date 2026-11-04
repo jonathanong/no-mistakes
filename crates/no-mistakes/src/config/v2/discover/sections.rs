@@ -1,10 +1,4 @@
 pub(super) const SECTIONS: &[&str] = &[
-    "effort",
-    "unanalyzable",
-    "unanalyzableSql",
-    "reportUnusedDisableDirectives",
-    "frontendRoot",
-    "assertNoFetch",
     "test_plan",
     "filesystem",
     "infra",

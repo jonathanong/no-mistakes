@@ -1,0 +1,6 @@
+rules:
+  - rule: rust-max-lines-per-file
+    options:
+      srcMax: 2
+    include: [src/**/*.rs]
+    scope: repository

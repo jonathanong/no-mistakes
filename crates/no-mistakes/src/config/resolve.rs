@@ -166,4 +166,5 @@ fn resolved_playwright_app(
 mod tests;
 
 #[cfg(test)]
+#[path = "resolve/declared_tests.rs"]
 mod declared_tests;

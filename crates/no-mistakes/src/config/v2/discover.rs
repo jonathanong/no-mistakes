@@ -20,8 +20,12 @@ pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
 }
 
 mod aliases;
+mod declared;
 mod fragment_validation;
 mod fragments;
+mod merge_values;
+mod named_entries;
+pub use declared::declared_config;
 mod sections;
 mod selection;
 pub(crate) use selection::{load_v2_config_from_selected_source_store, select_config_from_visible};

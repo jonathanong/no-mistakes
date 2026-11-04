@@ -192,6 +192,7 @@ queues:
     super::super::globs::record_empty_globs(
         &root,
         &config,
+        &crate::codebase::rules::source_store_for_files(&[]),
         &[
             root.join("pkg/already/job.ts"),
             root.join("outside.ts"),

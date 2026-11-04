@@ -42,7 +42,9 @@ fn staged_ignored_nested_configs_share_the_request_source_read_identity() {
         .unwrap(),
         expected
     );
-    assert_eq!(sources.physical_read_count(), 1);
+    assert_eq!(sources.physical_read_count(), 2);
+    sources.read_path(&root.join(".no-mistakes.yml")).unwrap();
+    assert_eq!(sources.physical_read_count(), 2);
 }
 
 #[test]

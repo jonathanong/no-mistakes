@@ -87,7 +87,13 @@ export interface ConfigResolveOptions extends ProjectOptions {
 }
 
 /** JSON-compatible source values; omitted properties remain omitted. */
-export type DeclaredConfigValue = null | boolean | number | string | DeclaredConfigValue[] | DeclaredConfigObject;
+export type DeclaredConfigValue =
+  | null
+  | boolean
+  | number
+  | string
+  | DeclaredConfigValue[]
+  | DeclaredConfigObject;
 export interface DeclaredConfigObject {
   [key: string]: DeclaredConfigValue | undefined;
 }

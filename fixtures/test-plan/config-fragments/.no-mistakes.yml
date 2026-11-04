@@ -1,0 +1,5 @@
+projects:
+  database-resources:
+    root: .
+  union-resources:
+    root: .

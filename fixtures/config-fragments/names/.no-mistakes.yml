@@ -1,0 +1,4 @@
+effort: low
+rules:
+  - rule: rust-max-lines-per-file
+    name: root

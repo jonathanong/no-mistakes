@@ -201,7 +201,10 @@ rules:
         ".no-mistakes/rules/README.md",
         ".no-mistakes/rules/base.toml",
     ] {
-        assert!(!presets::matches_preset("no-mistakes", path, path), "{path}");
+        assert!(
+            !presets::matches_preset("no-mistakes", path, path),
+            "{path}"
+        );
     }
     assert!(!presets::matches_preset(
         "no-mistakes",

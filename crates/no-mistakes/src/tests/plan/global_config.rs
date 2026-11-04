@@ -35,10 +35,8 @@ pub(super) fn excluding_v2_config(
             return None;
         }
         let relative_changed = super::relative_path(root, file);
-        (!matches!(
-            relative_changed.as_str(),
-            ".no-mistakes.yml" | ".no-mistakes.yaml"
-        ) && is_global_config_path(root, file, &relative_changed))
+        (!crate::tests::config_invalidation::automatic_input(root, file)
+            && is_global_config_path(root, file, &relative_changed))
         .then(|| {
             (
                 format!("Global configuration file changed: {relative_changed}"),
@@ -49,6 +47,9 @@ pub(super) fn excluding_v2_config(
 }
 
 fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
+    if crate::tests::config_invalidation::automatic_input(root, absolute) {
+        return true;
+    }
     if matches!(
         relative,
         "package.json"

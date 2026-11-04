@@ -22,21 +22,7 @@ pub(super) fn load_selection(
     selection: &ConfigSelection,
     read: impl Fn(&Path) -> Result<String>,
 ) -> Result<NoMistakesConfig> {
-    let mut documents = Vec::new();
-    if let Some(path) = &selection.primary {
-        documents.push(ConfigDocument {
-            path: path.clone(),
-            section: None,
-            source: read(path)?,
-        });
-    }
-    for (path, section) in &selection.fragments {
-        documents.push(ConfigDocument {
-            path: path.clone(),
-            section: Some(section.clone()),
-            source: read(path)?,
-        });
-    }
+    let documents = read_documents(selection, read)?;
     if documents.is_empty() {
         return Ok(NoMistakesConfig::default());
     }
@@ -57,4 +43,26 @@ pub(crate) fn select_config_from_visible(
         Vec::new()
     };
     Ok(ConfigSelection { primary, fragments })
+}
+
+pub(super) fn read_documents(
+    selection: &ConfigSelection,
+    read: impl Fn(&Path) -> Result<String>,
+) -> Result<Vec<ConfigDocument>> {
+    let mut documents = Vec::new();
+    if let Some(path) = &selection.primary {
+        documents.push(ConfigDocument {
+            path: path.clone(),
+            section: None,
+            source: read(path)?,
+        });
+    }
+    for (path, section) in &selection.fragments {
+        documents.push(ConfigDocument {
+            path: path.clone(),
+            section: Some(section.clone()),
+            source: read(path)?,
+        });
+    }
+    Ok(documents)
 }

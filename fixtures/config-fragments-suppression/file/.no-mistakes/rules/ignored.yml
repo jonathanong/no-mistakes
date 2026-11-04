@@ -1,0 +1,5 @@
+# no-mistakes-disable-file no-mistakes-config
+- rule: unique-exports
+  enabled: false
+  exclude:
+    - gone/**/*.ts

@@ -63,16 +63,12 @@ fn record_empty_glob(
     let line = local
         .and_then(|local| sources.config_locations(&path)?.line(&local))
         .unwrap_or(1);
-    facts
-        .entry(path)
-        .or_default()
-        .checks
-        .push(LocalCheck {
-            line,
-            kind: "empty-glob".to_string(),
-            job: None,
-            message: format!("queue glob '{glob}' matches no files"),
-        });
+    facts.entry(path).or_default().checks.push(LocalCheck {
+        line,
+        kind: "empty-glob".to_string(),
+        job: None,
+        message: format!("queue glob '{glob}' matches no files"),
+    });
 }
 
 fn prefixed_one(root: &Option<String>, glob: &str) -> String {

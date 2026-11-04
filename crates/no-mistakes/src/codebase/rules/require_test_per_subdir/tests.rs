@@ -126,7 +126,13 @@ fn escaping_root_is_one_finding_and_skips_outside_files() {
     let opts: Options = config.rule_applications(RULE_ID)[0]
         .try_rule_options()
         .unwrap();
-    let findings = super::scan(&root, &config, &opts, &[inside.clone(), outside.clone()]).unwrap();
+    let findings = super::scan(
+        &root,
+        &opts,
+        &[inside.clone(), outside.clone()],
+        ".no-mistakes.yml",
+    )
+    .unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].file, ".no-mistakes.yml");
     assert!(

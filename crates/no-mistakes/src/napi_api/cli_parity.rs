@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use super::options::{
     parse_options_value, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
     CiTopologyImpactOptions, CiTopologyOptions, ConfigResolveOptions, ConfigResolveView,
-    FetchesOptions, ImpactedChecksOptions, TestsAuditOptions, TestsImpactOptions,
+    FetchesOptions, ImpactedChecksOptions, ProjectOptions, TestsAuditOptions, TestsImpactOptions,
     TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};

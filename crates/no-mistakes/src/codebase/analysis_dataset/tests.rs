@@ -170,3 +170,18 @@ fn concurrent_same_manifest_requests_parse_once_and_count_waiters_as_hits() {
     assert_eq!(work["manifest.parses"], 1);
     assert_eq!(work["manifest.cache_hits"], 15);
 }
+
+#[test]
+fn automatic_fragments_and_explicit_root_keep_distinct_cached_configurations() {
+    let root = repository_fixture("fixtures/config-fragments/valid");
+    let dataset = dataset(&root);
+    let automatic = dataset.config(None).unwrap();
+    let explicit = dataset
+        .config(Some(&root.join(".no-mistakes.yml")))
+        .unwrap();
+    assert_eq!(automatic.rules.len(), 2);
+    assert_eq!(explicit.rules.len(), 1);
+    assert!(!Arc::ptr_eq(&automatic, &explicit));
+    assert!(Arc::ptr_eq(&automatic, &dataset.config(None).unwrap()));
+    assert_eq!(dataset.sources_for(&root).physical_read_count(), 3);
+}

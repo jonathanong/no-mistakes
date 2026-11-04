@@ -19,6 +19,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::OnceLock;
 
+/// An empty configuration path selects automatic discovery, including fragments.
 pub fn assert_saved_fixture(name: &str, cases: &[(&str, PathBuf, PathBuf)]) {
     assert_saved_fixture_with_env(name, cases, &[]);
 }
@@ -54,14 +55,17 @@ pub fn assert_saved_fixture_with_env(
 
 fn run_normalized(root: &Path, config: &Path, jobs: usize, envs: &[(&str, &str)]) -> Value {
     let jobs_arg = jobs.to_string();
-    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+    let mut command = Command::new(env!("CARGO_BIN_EXE_no-mistakes"));
+    command
         .current_dir(root)
         .env_remove("RAYON_NUM_THREADS")
         .envs(envs.iter().copied())
         .args(["--jobs", &jobs_arg, "check", "--root"])
-        .arg(root)
-        .arg("--config")
-        .arg(config)
+        .arg(root);
+    if !config.as_os_str().is_empty() {
+        command.arg("--config").arg(config);
+    }
+    let output = command
         .args(["--format", "json"])
         .output()
         .unwrap_or_else(|error| panic!("run check: {error}"));

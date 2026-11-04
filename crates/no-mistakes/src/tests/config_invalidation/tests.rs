@@ -90,3 +90,34 @@ fn copied_config_reconstructs_the_after_endpoint_from_the_before_checkout() {
         )
     );
 }
+
+#[test]
+fn explicit_fragment_directory_file_is_still_a_whole_config_endpoint() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/test-plan/config-fragments");
+    let source = ConfigSource {
+        path: root.join(".no-mistakes/tests/custom.yml"),
+        source: std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap(),
+    };
+    let config = parse_endpoint(&root, vec![source], true).unwrap();
+    assert_eq!(config.projects.len(), 2);
+}
+
+#[test]
+fn ignored_fragment_documents_do_not_invalidate_configuration() {
+    let root = Path::new("/repo");
+    for path in [
+        ".no-mistakes/rules/README.md",
+        ".no-mistakes/rules/.draft.yml",
+    ] {
+        assert!(!automatic_input(root, &root.join(path)), "{path}");
+    }
+    assert!(automatic_input(
+        root,
+        &root.join(".no-mistakes/rule/typo.yml")
+    ));
+    assert!(automatic_input(
+        root,
+        &root.join(".no-mistakes/checks/unsupported.toml")
+    ));
+}
