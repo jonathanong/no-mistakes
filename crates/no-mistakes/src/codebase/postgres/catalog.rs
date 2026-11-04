@@ -12,6 +12,7 @@ mod fallback;
 mod findings;
 mod function;
 mod function_body;
+mod function_cardinality;
 mod function_clauses;
 mod function_comment;
 mod function_escape;

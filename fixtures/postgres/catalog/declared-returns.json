@@ -1,0 +1,51 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "functions": {
+    "fn_remaining(uuid)": {
+      "definition": "CREATE FUNCTION fn_remaining(uuid) RETURNS interval LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    },
+    "fn_set(uuid)": {
+      "definition": "CREATE FUNCTION fn_set(uuid) RETURNS SETOF interval LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    },
+    "fn_table(uuid)": {
+      "definition": "CREATE FUNCTION fn_table(uuid) RETURNS TABLE(value interval) LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    },
+    "fn_mixed(uuid)": {
+      "definition": "CREATE FUNCTION fn_mixed(uuid) RETURNS interval LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    },
+    "fn_mixed(text)": {
+      "definition": "CREATE FUNCTION fn_mixed(text) RETURNS SETOF interval LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    },
+    "fn_unknown_overload(uuid)": {
+      "definition": "CREATE FUNCTION fn_unknown_overload(uuid) RETURNS interval LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    },
+    "fn_unknown_overload(text)": {
+      "definition": ""
+    },
+    "fn_malformed(uuid)": {
+      "definition": "CREATE FUNCTION fn_malformed(uuid) RETURNS interval LANGUAGE"
+    },
+    "fn_wrong_name(uuid)": {
+      "definition": "CREATE FUNCTION different(uuid) RETURNS interval LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    },
+    "fn_explicit_set(uuid)": {
+      "definition": "CREATE FUNCTION fn_explicit_set(uuid) RETURNS interval LANGUAGE sql AS $$ SELECT interval '1 second' $$",
+      "returnsSet": true
+    },
+    "fn_conflict(uuid)": {
+      "definition": "CREATE FUNCTION fn_conflict(uuid) RETURNS SETOF interval LANGUAGE sql AS $$ SELECT interval '1 second' $$",
+      "returnsSet": false
+    },
+    "fn_body_text(uuid)": {
+      "definition": "CREATE FUNCTION fn_body_text(uuid) RETURNS interval LANGUAGE sql AS $$ SELECT interval '1 second' WHERE 'RETURNS SETOF interval' IS NOT NULL $$"
+    },
+    "fn_wrong_schema(uuid)": {
+      "definition": "CREATE FUNCTION other.fn_wrong_schema(uuid) RETURNS interval LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    },
+    "\"ScalarName\"(uuid)": {
+      "definition": "CREATE FUNCTION public.\"ScalarName\"(uuid) RETURNS interval LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    }
+  }
+}

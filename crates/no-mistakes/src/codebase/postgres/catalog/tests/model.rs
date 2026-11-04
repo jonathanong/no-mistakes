@@ -270,7 +270,7 @@ fn function_set_metadata_preserves_known_and_legacy_values() {
         .collect::<std::collections::BTreeMap<_, _>>();
     assert_eq!(functions["known_scalar()"], Some(false));
     assert_eq!(functions["known_set()"], Some(true));
-    assert_eq!(functions["legacy_set()"], None);
+    assert_eq!(functions["legacy_set()"], Some(true));
     let names = catalog.scalar_function_names();
     assert!(std::sync::Arc::ptr_eq(
         &names,

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema-declared.json
+      sqlInclude: [sql/declared-select-table.sql]
+      include: [sql/declared-select-table.sql]

@@ -20,7 +20,6 @@ pub use select::{
     SqlColumnClause, SqlColumnUseFact, SqlCountExistenceFact, SqlExistsSetOpFact,
     SqlRelationPredicateFact, SqlSelectFact, SqlStarProjectionFact,
 };
-use std::collections::BTreeSet;
 use std::path::PathBuf;
 pub use transformed::{SqlTransformedColumnClause, SqlTransformedColumnUseFact};
 pub use writes::{SqlWriteColumns, SqlWriteFact};
