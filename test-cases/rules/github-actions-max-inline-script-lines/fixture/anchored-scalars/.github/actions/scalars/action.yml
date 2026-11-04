@@ -1,0 +1,17 @@
+name: Anchored composite scalars
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: &exact >2-
+        echo one
+        # this script comment counts
+        echo two
+       # external YAML comment at indentation 7
+    - shell: bash
+      run: &over |2-
+        echo one
+        echo two
+        echo three
+        echo four
+       # external YAML comment at indentation 7

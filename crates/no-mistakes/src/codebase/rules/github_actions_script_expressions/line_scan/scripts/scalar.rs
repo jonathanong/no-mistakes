@@ -1,5 +1,5 @@
 use super::super::super::yaml_parse::parse_line;
-use super::super::super::yaml_text::leading_indent;
+use super::super::super::yaml_text::{leading_indent, strip_anchor};
 
 pub(super) fn count_lines(header: usize, body: &[(usize, String)], source_lines: &[&str]) -> usize {
     let raw = source_lines[header - 1];
@@ -28,6 +28,7 @@ pub(super) fn count_lines(header: usize, body: &[(usize, String)], source_lines:
 }
 
 fn block_indent(raw: &str, value: &str, body: &[(usize, String)]) -> Option<usize> {
+    let value = strip_anchor(value);
     if !value.starts_with(['|', '>']) {
         return None;
     }

@@ -13,7 +13,7 @@ mod yaml_parse;
 mod yaml_text;
 
 pub(crate) use line_scan::{
-    step_run_lines, step_script_lines, step_uses_lines, StepRun, StepScript, StepUse,
+    step_run_lines, step_script_lines, step_uses_lines, ScriptScan, StepRun, StepScript, StepUse,
 };
 
 pub const RULE_ID: &str = "github-actions-script-expressions";

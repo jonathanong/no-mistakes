@@ -1,6 +1,7 @@
 use super::super::yaml_parse::BlockRole;
 use super::super::yaml_text::is_github_script;
 use super::Scanner;
+use crate::fx::FxHashMap;
 
 mod scalar;
 
@@ -14,14 +15,28 @@ pub(crate) struct StepScript {
 }
 
 #[derive(Default)]
+pub(crate) struct ScriptScan {
+    pub(crate) scripts: Vec<StepScript>,
+    pub(crate) step_lines: FxHashMap<(String, usize), usize>,
+}
+
+#[derive(Default)]
 pub(super) struct ScriptCollector {
     enabled: bool,
     run: Option<(usize, bool)>,
     script: Option<(usize, bool)>,
-    collected: Vec<StepScript>,
+    collected: ScriptScan,
 }
 
 impl ScriptCollector {
+    pub(super) fn note_step(&mut self, job: &str, step: usize, line: usize) {
+        if self.enabled {
+            self.collected
+                .step_lines
+                .insert((job.to_string(), step), line);
+        }
+    }
+
     pub(super) fn collects_plain(&self, value: &str) -> bool {
         self.enabled && !value.starts_with(['\'', '"'])
     }
@@ -57,7 +72,7 @@ impl ScriptCollector {
                 continue;
             }
             if let Some((line, supported)) = header {
-                self.collected.push(StepScript {
+                self.collected.scripts.push(StepScript {
                     job: job.to_string(),
                     step,
                     line,
@@ -70,7 +85,7 @@ impl ScriptCollector {
     }
 }
 
-pub(crate) fn step_script_lines(source: &str, action: bool) -> Vec<StepScript> {
+pub(crate) fn step_script_lines(source: &str, action: bool) -> ScriptScan {
     let lines: Vec<_> = source.lines().collect();
     let mut scanner = Scanner::from_lines(&lines, action, action, true);
     scanner.scripts.enabled = true;

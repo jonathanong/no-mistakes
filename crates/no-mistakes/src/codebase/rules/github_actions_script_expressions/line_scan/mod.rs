@@ -1,12 +1,11 @@
 use super::hit::Hit;
-use super::yaml_parse::{
-    classify_key, next_is_child_key, parse_line, script_role, BlockRole, Frame, Kind, Parsed,
-};
-use super::yaml_text::{block_continues, normalize_uses, scan_block_line};
+use super::yaml_parse::{parse_line, BlockRole, Frame, Kind};
+use super::yaml_text::{block_continues, scan_block_line};
 
+mod apply;
 mod detail;
 mod scripts;
-pub(crate) use scripts::{step_script_lines, StepScript};
+pub(crate) use scripts::{step_script_lines, ScriptScan, StepScript};
 
 pub(crate) use detail::{step_run_lines, step_uses_lines, StepRun, StepUse};
 
@@ -100,65 +99,6 @@ impl<'a> Scanner<'a> {
             index += 1;
         }
         self.finish();
-    }
-
-    fn apply(&mut self, parsed: Parsed, index: usize) {
-        self.pop_until(parsed.scope, parsed.is_item);
-        if parsed.is_item && self.parent() == Some(Kind::Steps) {
-            detail::begin_step(self, index + 1);
-            self.frames.push(Frame {
-                indent: parsed.scope,
-                kind: Kind::Step,
-            });
-        }
-        let Some(key) = parsed.key.as_deref() else {
-            return;
-        };
-        let parent = self.parent();
-        if key == "uses" && parent == Some(Kind::Step) {
-            self.uses = Some(normalize_uses(&parsed.value));
-            detail::note_uses(self, index + 1);
-            // A folded or literal `uses` value is still this step's action reference.
-            if !parsed.block {
-                return;
-            }
-        }
-        let role = script_role(key, parent);
-        self.scripts.note_header(role, index + 1, &parsed.value);
-        if parsed.block {
-            self.frames.push(Frame {
-                indent: parsed.key_indent,
-                kind: Kind::Block(role.unwrap_or(BlockRole::Other), true),
-            });
-            return;
-        }
-        if parsed.nested {
-            if role.is_some() && !next_is_child_key(self.lines, index, parsed.key_indent) {
-                self.frames.push(Frame {
-                    indent: parsed.key_indent,
-                    kind: Kind::Block(role.unwrap_or(BlockRole::Other), false),
-                });
-            } else {
-                let kind = classify_key(key, parent, self.action, self.composite);
-                if kind == Kind::Job {
-                    detail::begin_job(self, key);
-                }
-                self.frames.push(Frame {
-                    indent: parsed.key_indent,
-                    kind,
-                });
-            }
-            return;
-        }
-        if let Some(role) = role {
-            detail::record_inline(self, role, index + 1, &parsed.value);
-            if self.scripts.collects_plain(&parsed.value) {
-                self.frames.push(Frame {
-                    indent: parsed.key_indent,
-                    kind: Kind::Block(role, false),
-                });
-            }
-        }
     }
 
     pub(super) fn pop_until(&mut self, scope: usize, is_item: bool) {
