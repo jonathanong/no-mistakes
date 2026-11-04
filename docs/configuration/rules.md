@@ -39,6 +39,10 @@ clean yet: enable it as `advisory`, burn the findings down, then remove the key
 or set `error`. Any other value is a config error listing `error` and
 `advisory`.
 
+Advisory changes whether a finding fails the run, not whether it matters. An
+exit code of 0 does not mean the code is clean, so read the `advisories` list
+and fix or suppress what it reports in the code you are changing.
+
 ```yaml
 rules:
   - rule: unique-exports
