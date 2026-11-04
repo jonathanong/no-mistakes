@@ -101,6 +101,9 @@ impl Engine<'_> {
             .split_once('.')
             .map_or((name, None), |(root, member)| (root, Some(member)));
         let id = slot.strip_prefix("binding:")?.parse().ok()?;
+        if member.is_none() && self.catalog.factory(self.file()?, id) {
+            return self.factory_result(args, state);
+        }
         let sink = match state.env.get(slot) {
             Some(Value::Executor | Value::MaybeExecutor) => true,
             Some(_) => false,

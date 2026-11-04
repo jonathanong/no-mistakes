@@ -11,10 +11,8 @@ impl Engine<'_> {
         let [argument] = args else {
             return None;
         };
-        if !self.effects {
-            // This mode proves returned SQL only. An abrupt path never supplies
-            // an operand to the requesting executor, regardless of its effects.
-            // Transport proofs separately account for those effects below.
+        if !self.effects || self.site.is_some() {
+            // Exact sinks exclude proven throws; see docs/postgres-facts/low-helper-recovery.md.
             if !self.catalog.value_throw(self.file()?, at) {
                 self.failures += 1;
             }

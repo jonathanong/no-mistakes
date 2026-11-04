@@ -1,0 +1,361 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/guarded.mts",
+          "line": 19,
+          "message": "src/guarded.mts:19: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 19,
+          "message": "src/guarded.mts:19: postgres-no-offset application #0 has unresolved SQL for offset: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 19,
+          "message": "src/guarded.mts:19: postgres-no-unbounded-sql-identifier application #1 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 22,
+          "message": "src/guarded.mts:22: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "if (userIds.length < 1) throw new Error(read);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 22,
+          "message": "src/guarded.mts:22: postgres-no-offset application #0 has unresolved SQL for offset: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "if (userIds.length < 1) throw new Error(read);",
+          "target": "offset"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 22,
+          "message": "src/guarded.mts:22: postgres-no-unbounded-sql-identifier application #1 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "if (userIds.length < 1) throw new Error(read);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 26,
+          "message": "src/guarded.mts:26: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 26,
+          "message": "src/guarded.mts:26: postgres-no-offset application #0 has unresolved SQL for offset: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 26,
+          "message": "src/guarded.mts:26: postgres-no-unbounded-sql-identifier application #1 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 18,
+          "message": "src/query.mts:18: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return read(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 18,
+          "message": "src/query.mts:18: postgres-no-offset application #0 has unresolved SQL for offset: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return read(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 18,
+          "message": "src/query.mts:18: postgres-no-unbounded-sql-identifier application #1 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 45,
+          "message": "src/query.mts:45: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 45,
+          "message": "src/query.mts:45: postgres-no-offset application #0 has unresolved SQL for offset: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 45,
+          "message": "src/query.mts:45: postgres-no-unbounded-sql-identifier application #1 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 51,
+          "message": "src/query.mts:51: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 51,
+          "message": "src/query.mts:51: postgres-no-offset application #0 has unresolved SQL for offset: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 51,
+          "message": "src/query.mts:51: postgres-no-unbounded-sql-identifier application #1 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 57,
+          "message": "src/query.mts:57: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 57,
+          "message": "src/query.mts:57: postgres-no-offset application #0 has unresolved SQL for offset: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 57,
+          "message": "src/query.mts:57: postgres-no-unbounded-sql-identifier application #1 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/reassigned.mts",
+          "line": 8,
+          "message": "src/reassigned.mts:8: postgres-no-mutable-sql-registry application #2 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-mutable-sql-registry",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        },
+        {
+          "file": "src/reassigned.mts",
+          "line": 8,
+          "message": "src/reassigned.mts:8: postgres-no-offset application #0 has unresolved SQL for offset: SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/reassigned.mts",
+          "line": 8,
+          "message": "src/reassigned.mts:8: postgres-no-unbounded-sql-identifier application #1 has unresolved SQL for identifier-provenance: SQL identifier provenance is unanalyzable at effort low; pass a literal SQL string or template directly to the imported executor, or through one local const; keep relation names literal and pass external data as bind values",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(statement);",
+          "target": "identifier-provenance"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/guarded.mts",
+          "line": 15,
+          "message": "src/guarded.mts:15: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "if (userIds.length < 1) throw new Error(await read(sql`SELECT 1 OFFSET 9`));",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 60,
+          "message": "src/query.mts:60: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "await using query = await beginTransaction(await read(sql`SELECT 1 OFFSET 8`));",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/guarded.mts",
+          "line": 10,
+          "message": "src/guarded.mts:10: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (sql_placeholder_1, sql_placeholder_2)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "await query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 19,
+          "message": "src/guarded.mts:19: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (1, sql_placeholder_1)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/guarded.mts",
+          "line": 26,
+          "message": "src/guarded.mts:26: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (1, sql_placeholder_1)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 11,
+          "message": "src/query.mts:11: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (sql_placeholder_1, sql_placeholder_2)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return read(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 18,
+          "message": "src/query.mts:18: postgres-no-offset application #0 has unresolved SQL for offset: opaque-sql-tail; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (1, 2)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return read(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 27,
+          "message": "src/query.mts:27: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (sql_placeholder_1, sql_placeholder_2)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return read(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 38,
+          "message": "src/query.mts:38: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (sql_placeholder_1, sql_placeholder_2)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "await query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 45,
+          "message": "src/query.mts:45: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (1, sql_placeholder_1)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 51,
+          "message": "src/query.mts:51: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (1, sql_placeholder_1)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 57,
+          "message": "src/query.mts:57: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (1, sql_placeholder_1)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 63,
+          "message": "src/query.mts:63: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (1, sql_placeholder_1)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/reassigned.mts",
+          "line": 8,
+          "message": "src/reassigned.mts:8: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (1, sql_placeholder_1)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        },
+        {
+          "file": "src/renamed.mts",
+          "line": 7,
+          "message": "src/renamed.mts:7: postgres-no-offset application #0 has unresolved SQL for offset: sql-variants-truncated; known SQL prefix \"INSERT INTO group_members (group_id, user_id) VALUES (1, sql_placeholder_1)\"",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(statement);",
+          "target": "offset"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/guarded.mts",
+          "line": 15,
+          "message": "src/guarded.mts:15: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "if (userIds.length < 1) throw new Error(await read(sql`SELECT 1 OFFSET 9`));",
+          "target": "offset"
+        },
+        {
+          "file": "src/query.mts",
+          "line": 60,
+          "message": "src/query.mts:60: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "await using query = await beginTransaction(await read(sql`SELECT 1 OFFSET 8`));",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

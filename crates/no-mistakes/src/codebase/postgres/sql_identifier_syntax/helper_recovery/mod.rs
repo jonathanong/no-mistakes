@@ -66,6 +66,8 @@ pub(crate) struct FileModels {
     pub locals: FxHashMap<usize, LocalModel>,
     pub executors:
         std::collections::BTreeMap<super::EmbeddedSqlOptions, crate::fx::FxHashSet<usize>>,
+    pub factories:
+        std::collections::BTreeMap<super::EmbeddedSqlOptions, crate::fx::FxHashSet<usize>>,
     pub sinks: std::collections::BTreeMap<super::EmbeddedSqlOptions, crate::fx::FxHashSet<Span>>,
     pub writes: crate::fx::FxHashSet<usize>,
 }

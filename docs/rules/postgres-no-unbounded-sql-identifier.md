@@ -157,6 +157,9 @@ callbacks retain uncertainty. Supported local type aliases,
 `Awaited<ReturnType<typeof configuredFactory>>` retain executor identity.
 An immutable `const`, `using`, or `await using` factory binding is a proven
 value for `typeof`. Unrelated or shadowed types and cyclic aliases do not.
+Configured factory bindings also support the same bounded caller replay for
+literal VALUES-list builders as imported executors. Factory arguments are
+evaluated and must not expose SQL builders or executor values to the factory.
 A single local `const run = query` executor alias also remains unanalyzable;
 its diagnostic uses the invocation line so a disable-next-line comment above
 `run(sql)` suppresses that call.

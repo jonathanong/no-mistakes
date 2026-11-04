@@ -34,6 +34,7 @@ pub(super) trait Catalog {
     fn function(&self, key: &Key) -> Option<&Lowered>;
     fn callee(&self, from: &Path, binding: usize) -> Option<Key>;
     fn sink(&self, from: &Path, binding: usize) -> bool;
+    fn factory(&self, from: &Path, binding: usize) -> bool;
     fn value_throw(&self, from: &Path, argument: super::Span) -> bool;
     fn local(&self, from: &Path, binding: usize, site: super::Span) -> Option<&Lowered>;
 }

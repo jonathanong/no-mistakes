@@ -1,4 +1,54 @@
 use std::path::PathBuf;
+#[test]
+fn callable_factory_executors_retain_values_builder_inputs() {
+    let root =
+        crate::test_support::rule_fixture_root("postgres-no-offset").join("low-values-executors");
+    let options = crate::napi_api::options::test_json_arg(serde_json::json!({
+        "root": root,
+    }));
+    let report: serde_json::Value =
+        serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap();
+    let rows = report["advisories"].as_array().unwrap();
+    let guarded = rows
+        .iter()
+        .filter(|row| row["file"] == "src/guarded.mts")
+        .collect::<Vec<_>>();
+    assert!(
+        guarded.iter().all(|row| row["line"].as_u64().unwrap() > 12),
+        "{report}"
+    );
+    for line in [19, 26] {
+        assert!(guarded.iter().any(|row| row["line"] == line), "{report}");
+    }
+    assert!(
+        rows.iter().all(|row| row["file"] != "src/renamed.mts"),
+        "{report}"
+    );
+    assert!(
+        rows.iter().any(|row| row["file"] == "src/reassigned.mts"),
+        "{report}"
+    );
+    let rows = rows
+        .iter()
+        .filter(|row| row["file"] == "src/query.mts")
+        .collect::<Vec<_>>();
+    for line in [4, 11, 27, 32, 38, 63] {
+        assert!(rows.iter().all(|row| row["line"] != line), "{report}");
+    }
+    for line in [18, 45, 51, 57] {
+        assert!(rows.iter().any(|row| row["line"] == line), "{report}");
+    }
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 2, "{report}");
+    for (file, line) in [("src/query.mts", 60), ("src/guarded.mts", 15)] {
+        assert!(
+            findings
+                .iter()
+                .any(|row| row["file"] == file && row["line"] == line),
+            "{report}"
+        );
+    }
+}
 fn fixture() -> PathBuf {
     crate::test_support::rule_fixture_root("postgres-no-offset").join("executor-metadata-low")
 }

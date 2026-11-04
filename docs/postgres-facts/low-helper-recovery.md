@@ -46,6 +46,20 @@ the body before the update. A callback that assigns is opaque, so it cannot
 hide a write to SQL text. An increment in a loop update stays a pure value.
 Generators stay outside the subset.
 
+Caller replay recognizes named imports configured in `executorFactoryNames`,
+including renamed imports and `await using` bindings. It evaluates factory
+arguments before establishing the executor. Unknown calls, SQL builders, and
+executor values in those arguments retain uncertainty. Reassigned factories
+also remain unproven. This lets a local factory executor consume an INSERT
+builder whose loop appends literal VALUES tuples with bind-only holes, under
+the same bounded replay as an imported executor. Maximum-effort extraction
+continues to mark unbounded append previews as truncated.
+
+An early throwing guard does not reach a later executor site. Caller replay
+uses the existing throw summary to exclude that branch only when its expression
+and source-visible callees contain no selected SQL or executor obligations.
+Transport proofs still evaluate exception payloads and retain executor escapes.
+
 A configured executor passed into a helper is cleared only when the helper's
 supported paths prove its uses. Returning or storing an executor in an opaque
 value, passing it to an unknown call, or calling it with unknown SQL retains an

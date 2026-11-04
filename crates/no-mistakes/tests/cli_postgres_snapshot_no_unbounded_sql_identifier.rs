@@ -1,6 +1,18 @@
 use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 use std::path::{Path, PathBuf};
 
+#[test]
+fn low_values_executors_check_json_snapshot() {
+    let root = rules_path("postgres-no-offset", "fixture", "low-values-executors");
+    assert_saved_fixture(
+        "postgres_low_values_executors",
+        &[
+            ("low", root.clone(), root.join(".no-mistakes.yml")),
+            ("max", root.clone(), root.join(".no-mistakes-max.yml")),
+        ],
+    );
+}
+
 fn push(
     cases: &mut Vec<(String, PathBuf, PathBuf)>,
     rule: &str,
