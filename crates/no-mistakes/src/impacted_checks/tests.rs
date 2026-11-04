@@ -487,7 +487,12 @@ fn impacted_fanout_prepares_and_builds_the_graph_once() {
         prepared.matches("VisiblePathSnapshot::new(&root)").count(),
         1
     );
-    assert_eq!(prepared.matches("load_v2_config_from_source_store(").count(), 1);
+    assert_eq!(
+        prepared
+            .matches("load_v2_config_from_source_store(")
+            .count(),
+        1
+    );
     assert_eq!(
         prepared.matches("resolve_tsconfig_from_visible(").count(),
         1

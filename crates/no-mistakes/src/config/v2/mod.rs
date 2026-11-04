@@ -13,8 +13,7 @@ pub use discover::{
 };
 pub(crate) use discover::{
     effective_v2_config_path_from_visible, load_v2_config_from_selected_source_store,
-    load_v2_config_from_source_store, load_v2_config_with_path,
-    select_config_from_visible,
+    load_v2_config_from_source_store, load_v2_config_with_path, select_config_from_visible,
 };
 pub use frontend_apps::{
     frontend_apps, frontend_apps_lenient, frontend_apps_or_default, FrontendApp,

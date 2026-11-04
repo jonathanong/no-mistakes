@@ -121,21 +121,6 @@ pub(crate) fn is_code_file(
         })
 }
 
-#[cfg(test)]
-pub(crate) fn scan_with_config(
-    root: &Path,
-    config: &NoMistakesConfig,
-    opts: &Options,
-    files: &[PathBuf],
-) -> Vec<RuleFinding> {
-    scan_with_config_file(
-        root,
-        opts,
-        files,
-        super::configured_root::config_file_for_finding(root, config),
-    )
-}
-
 fn scan_with_config_file(
     root: &Path,
     opts: &Options,
@@ -184,3 +169,6 @@ fn scan_root(root: &Path, root_rel: &Path, ctx: &scan_pkg::ScanCtx<'_>) -> Vec<R
 mod recall_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod test_support;
