@@ -192,6 +192,10 @@ jobs:
         timeout-minutes: 2
         run: node --test .github/scripts/rust-disk-usage.test.cjs
 
+      - name: Test resource sampling wrapper
+        timeout-minutes: 2
+        run: node --test .github/scripts/with-resource-samples.test.cjs
+
       - name: Test frontend memory accounting
         timeout-minutes: 2
         run: |
@@ -1014,6 +1018,7 @@ jobs:
       - name: Build CPU benchmarks
         timeout-minutes: 30
         run: >-
+          bash .github/scripts/with-resource-samples.sh
           cargo codspeed build
           -p no-mistakes
           --no-default-features
