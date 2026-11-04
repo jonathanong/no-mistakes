@@ -31,7 +31,9 @@ pub(super) fn run<'a>(
     for &(id, check) in CHECKS {
         if config.rule_configured(id) {
             // Consume findings and advisories together, without a second file scan.
-            output.append(check(root, config, files, sources, defer_suppression)?);
+            output.append(no_mistakes::perf_trace::filesystem_rule(id, || {
+                check(root, config, files, sources, defer_suppression)
+            })?);
             remaining.to_mut().rules.retain(|rule| rule.rule != id);
         }
     }

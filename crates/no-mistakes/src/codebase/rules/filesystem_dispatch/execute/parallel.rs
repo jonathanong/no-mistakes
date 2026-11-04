@@ -15,7 +15,7 @@ pub(in crate::codebase::rules::filesystem_dispatch) fn trace_rule<T>(
     crate::diagnostics::with_observer(sources.observer().cloned(), || {
         timing::trace_rule(
             sources.observer().map(|observer| observer.as_ref()),
-            || format!("rules.{rule_id}"),
+            || format!("analysis.filesystem_rules.{rule_id}"),
             run,
         )
     })

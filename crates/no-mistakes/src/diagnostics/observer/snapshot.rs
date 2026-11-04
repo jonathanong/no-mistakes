@@ -25,11 +25,23 @@ impl InvocationObserver {
             })
             .collect::<Vec<_>>();
         timings.sort_by(|a, b| {
-            (timing_order(&a.label), a.label.as_str(), a.kind).cmp(&(
-                timing_order(&b.label),
-                b.label.as_str(),
-                b.kind,
-            ))
+            let rank = timing_order(&a.label).cmp(&timing_order(&b.label));
+            if rank != std::cmp::Ordering::Equal {
+                return rank;
+            }
+            let is_rule = |label: &str| {
+                label.starts_with("analysis.rules.")
+                    || label.starts_with("analysis.filesystem_rules.")
+            };
+            match (is_rule(&a.label), is_rule(&b.label)) {
+                (true, true) => b
+                    .duration
+                    .cmp(&a.duration)
+                    .then_with(|| a.label.cmp(&b.label)),
+                (true, false) => std::cmp::Ordering::Greater,
+                (false, true) => std::cmp::Ordering::Less,
+                (false, false) => (a.label.as_str(), a.kind).cmp(&(b.label.as_str(), b.kind)),
+            }
         });
         DiagnosticsSnapshot {
             timings,

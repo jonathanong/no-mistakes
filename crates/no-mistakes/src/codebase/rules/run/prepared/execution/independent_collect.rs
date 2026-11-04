@@ -7,8 +7,10 @@ pub(super) fn dynamic_imports(req: &IndependentRuleRequest<'_>) -> Result<RuleCh
     if !rule_enabled(req.config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    let findings = crate::perf_trace::trace("rules.test_no_unmocked_dynamic_imports", || {
-        test_no_unmocked_dynamic_imports::check_with_prepared_facts_graph_and_session_with_suppression(
+    let findings = crate::perf_trace::rule(
+        "analysis.rules.test-no-unmocked-dynamic-imports",
+        || {
+            test_no_unmocked_dynamic_imports::check_with_prepared_facts_graph_and_session_with_suppression(
             test_no_unmocked_dynamic_imports::PreparedFactsGraphRequest {
                 root: req.root,
                 config: req.config,
@@ -22,7 +24,8 @@ pub(super) fn dynamic_imports(req: &IndependentRuleRequest<'_>) -> Result<RuleCh
                 defer_suppression: req.defer_suppression,
             },
         )
-    })?;
+        },
+    )?;
     Ok(RuleChunk {
         findings: findings.findings,
         suppression_sources: findings.suppression_sources,
@@ -34,7 +37,7 @@ pub(super) fn boundary(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     if !rule_enabled(req.config, SERVER_ROUTE_CLIENT_BOUNDARY) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    crate::perf_trace::trace("rules.server_route_client_boundary", || {
+    crate::perf_trace::rule("analysis.rules.server-route-client-boundary", || {
         let output = server_route_client_boundary::diagnostics_with_facts_for_aggregate(
             req.root,
             req.config,
@@ -53,7 +56,7 @@ pub(super) fn api_routes(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
     if !rule_enabled(req.config, NEXTJS_NO_API_ROUTES) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    crate::perf_trace::trace("rules.nextjs_no_api_routes", || {
+    crate::perf_trace::rule("analysis.rules.nextjs-no-api-routes", || {
         Ok(RuleChunk::from_findings(
             nextjs_no_api_routes::check_with_facts_for_aggregate(
                 req.root,
@@ -70,7 +73,7 @@ pub(super) fn caching(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     if !rule_enabled(req.config, NEXTJS_NO_CACHING) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    crate::perf_trace::trace("rules.nextjs_no_caching", || {
+    crate::perf_trace::rule("analysis.rules.nextjs-no-caching", || {
         let diagnostics = nextjs_no_caching::diagnostics_with_facts_for_aggregate(
             req.root,
             req.config,
@@ -88,7 +91,7 @@ pub(super) fn storybook(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     if !rule_enabled(req.config, REQUIRE_STORYBOOK_STORIES) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    crate::perf_trace::trace("rules.require_storybook_stories", || {
+    crate::perf_trace::rule("analysis.rules.require-storybook-stories", || {
         let diagnostics = storybook_findings(StorybookFindingsRequest {
             root: req.root,
             config: req.config,
@@ -109,20 +112,22 @@ pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
     if !crate::playwright::rules::configured(req.config) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    let output = crate::perf_trace::trace("rules.playwright", || match req.prepared_playwright {
-        Some(prepared) => crate::playwright::rules::check_with_prepared_facts_outcome(
-            req.root,
-            req.config_path,
-            req.config,
-            req.shared,
-            prepared,
-        ),
-        None => crate::playwright::rules::check_with_facts_outcome(
-            req.root,
-            req.config_path,
-            req.config,
-            req.shared,
-        ),
+    let output = crate::perf_trace::rule("analysis.rules.playwright-combined", || {
+        match req.prepared_playwright {
+            Some(prepared) => crate::playwright::rules::check_with_prepared_facts_outcome(
+                req.root,
+                req.config_path,
+                req.config,
+                req.shared,
+                prepared,
+            ),
+            None => crate::playwright::rules::check_with_facts_outcome(
+                req.root,
+                req.config_path,
+                req.config,
+                req.shared,
+            ),
+        }
     })?;
     Ok(RuleChunk {
         suppression_sources: std::iter::repeat_n(None, output.findings.len()).collect(),
@@ -151,14 +156,17 @@ pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk>
         .config
         .rule_configured(crate::codebase::rules::coverage_producer_assertion_owner::RULE_ID)
     {
-        let diagnostics = crate::codebase::rules::coverage_producer_assertion_owner::check(
-            req.root,
-            req.config,
-            req.dependency_graph
-                .expect("coverage ownership requires canonical graph"),
-            req.shared,
-            req.sources,
-        )?;
+        let diagnostics =
+            crate::perf_trace::rule("analysis.rules.coverage-producer-assertion-owner", || {
+                crate::codebase::rules::coverage_producer_assertion_owner::check(
+                    req.root,
+                    req.config,
+                    req.dependency_graph
+                        .expect("coverage ownership requires canonical graph"),
+                    req.shared,
+                    req.sources,
+                )
+            })?;
         chunk
             .suppression_sources
             .extend(std::iter::repeat_n(None, diagnostics.findings.len()));

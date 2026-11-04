@@ -1,3 +1,4 @@
+mod nextjs;
 use super::*;
 use no_mistakes::codebase::rules::analysis_policy::AnalysisDiagnostics;
 
@@ -17,27 +18,7 @@ pub(super) fn run(
     let mut remaining;
     let config = if config.rule_configured(rules::NEXTJS_REDIRECT_DESTINATIONS) {
         // Consume both channels in the rule pass; finalization must not scan configs again.
-        diagnostics = if let Some(resolver) = prepared.next_config_resolver {
-            rules::nextjs_redirect_destinations::diagnostics_prepared(
-                root,
-                config,
-                files,
-                &prepared.sources,
-                Some(prepared.snapshot),
-                resolver,
-                defer_suppression,
-            )?
-        } else {
-            // Legacy standalone callers own missing preparation at this boundary.
-            rules::nextjs_redirect_destinations::diagnostics_with_files_and_sources(
-                root,
-                config,
-                files,
-                &prepared.sources,
-                Some(prepared.snapshot),
-                defer_suppression,
-            )?
-        };
+        diagnostics = nextjs::run(root, config, files, &prepared, defer_suppression)?;
         remaining = config.clone();
         remaining
             .rules
@@ -48,16 +29,19 @@ pub(super) fn run(
     };
     let mut shell_remaining;
     let config = if config.rule_configured(rules::SHELLCHECK_RUNNER) {
-        diagnostics.append(
-            rules::shellcheck_runner::diagnostics_with_files_sources_and_snapshot(
-                root,
-                config,
-                files,
-                &prepared.sources,
-                prepared.snapshot,
-                defer_suppression,
-            )?,
-        );
+        diagnostics.append(no_mistakes::perf_trace::rule(
+            "analysis.filesystem_rules.shellcheck-runner",
+            || {
+                rules::shellcheck_runner::diagnostics_with_files_sources_and_snapshot(
+                    root,
+                    config,
+                    files,
+                    &prepared.sources,
+                    prepared.snapshot,
+                    defer_suppression,
+                )
+            },
+        )?);
         shell_remaining = config.clone();
         shell_remaining
             .rules
@@ -68,15 +52,18 @@ pub(super) fn run(
     };
     let mut without_version_pins;
     let config = if config.rule_configured(rules::VERSION_PIN_CONSISTENCY) {
-        diagnostics.append(
-            rules::version_pin_consistency::diagnostics_with_files_and_sources(
-                root,
-                config,
-                files,
-                &prepared.sources,
-                defer_suppression,
-            )?,
-        );
+        diagnostics.append(no_mistakes::perf_trace::rule(
+            "analysis.filesystem_rules.version-pin-consistency",
+            || {
+                rules::version_pin_consistency::diagnostics_with_files_and_sources(
+                    root,
+                    config,
+                    files,
+                    &prepared.sources,
+                    defer_suppression,
+                )
+            },
+        )?);
         without_version_pins = config.clone();
         without_version_pins
             .rules
@@ -87,15 +74,18 @@ pub(super) fn run(
     };
     let mut without_script_expressions;
     let config = if config.rule_configured(rules::github_actions_script_expressions::RULE_ID) {
-        diagnostics.append(
-            rules::github_actions_script_expressions::diagnostics_with_files_and_sources(
-                root,
-                config,
-                files,
-                &prepared.sources,
-                defer_suppression,
-            )?,
-        );
+        diagnostics.append(no_mistakes::perf_trace::rule(
+            "analysis.filesystem_rules.github-actions-script-expressions",
+            || {
+                rules::github_actions_script_expressions::diagnostics_with_files_and_sources(
+                    root,
+                    config,
+                    files,
+                    &prepared.sources,
+                    defer_suppression,
+                )
+            },
+        )?);
         without_script_expressions = config.clone();
         without_script_expressions
             .rules
@@ -110,15 +100,18 @@ pub(super) fn run(
     let config = config.as_ref();
     let mut without_manifest_fields;
     let config = if config.rule_configured(rules::PACKAGE_JSON_REQUIRED_FIELDS) {
-        diagnostics.append(
-            rules::package_json_required_fields::diagnostics_with_files_and_sources(
-                root,
-                config,
-                files,
-                &prepared.sources,
-                defer_suppression,
-            )?,
-        );
+        diagnostics.append(no_mistakes::perf_trace::rule(
+            "analysis.filesystem_rules.package-json-required-fields",
+            || {
+                rules::package_json_required_fields::diagnostics_with_files_and_sources(
+                    root,
+                    config,
+                    files,
+                    &prepared.sources,
+                    defer_suppression,
+                )
+            },
+        )?);
         without_manifest_fields = config.clone();
         without_manifest_fields
             .rules
@@ -133,12 +126,17 @@ pub(super) fn run(
         .iter()
         .any(|rule| rule.enabled && rules::file_diagnostics::handles(&rule.rule))
     {
-        diagnostics.append(rules::file_diagnostics::diagnostics_with_files_and_sources(
-            root,
-            config,
-            files,
-            &prepared.sources,
-            defer_suppression,
+        diagnostics.append(no_mistakes::perf_trace::rule(
+            "analysis.filesystem_rules.file-diagnostics-combined",
+            || {
+                rules::file_diagnostics::diagnostics_with_files_and_sources(
+                    root,
+                    config,
+                    files,
+                    &prepared.sources,
+                    defer_suppression,
+                )
+            },
         )?);
         remaining_required_files = config.clone();
         remaining_required_files

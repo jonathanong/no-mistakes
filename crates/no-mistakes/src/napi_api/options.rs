@@ -20,6 +20,7 @@ pub(crate) struct ProjectOptions {
     pub(crate) roots: Vec<String>,
     pub(crate) depth: Option<usize>,
     pub(crate) assert_no_fetch: bool,
+    pub(crate) timings: bool,
     pub(crate) include_suppressed: bool,
     pub(crate) include_runner_config_deadlines: bool,
     pub(crate) include_sql_verdicts: bool,

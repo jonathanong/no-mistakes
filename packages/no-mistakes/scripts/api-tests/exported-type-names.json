@@ -36,6 +36,7 @@
   "CheckKind",
   "CheckOptions",
   "CheckReport",
+  "CheckTiming",
   "CiEnvFile",
   "CiEnvLocation",
   "CiEnvOptions",

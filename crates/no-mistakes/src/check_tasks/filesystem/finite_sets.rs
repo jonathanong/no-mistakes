@@ -24,14 +24,17 @@ pub(super) fn run(
             defer_suppression,
         );
     }
-    let mut output = rules::finite_set_consistency::diagnostics_with_files_sources_and_facts(
-        root,
-        config,
-        files,
-        &prepared.sources,
-        facts,
-        defer_suppression,
-    )?;
+    let mut output =
+        no_mistakes::perf_trace::rule("analysis.filesystem_rules.finite-set-consistency", || {
+            rules::finite_set_consistency::diagnostics_with_files_sources_and_facts(
+                root,
+                config,
+                files,
+                &prepared.sources,
+                facts,
+                defer_suppression,
+            )
+        })?;
     // Keep both channels from this evaluation; the remaining dispatch must not
     // evaluate the same finite sets again to discover advisories at finalization.
     let mut remaining = config.clone();

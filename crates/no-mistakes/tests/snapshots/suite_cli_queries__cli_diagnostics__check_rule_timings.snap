@@ -1,0 +1,6 @@
+---
+source: crates/no-mistakes/tests/cli_diagnostics.rs
+expression: "labels.join(\"\\n\")"
+---
+[timing] analysis.filesystem_rules.test-no-dependency-pins: <timing> (parallel; non-additive)
+[timing] analysis.rules.forbidden-dependencies: <timing> (parallel; non-additive)

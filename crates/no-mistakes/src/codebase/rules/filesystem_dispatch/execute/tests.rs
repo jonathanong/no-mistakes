@@ -4,7 +4,7 @@ use crate::diagnostics::{InvocationObserver, TimingKind};
 use std::sync::Arc;
 
 #[test]
-fn trace_rule_records_only_verbose_observers() {
+fn trace_rule_records_enabled_observers() {
     let verbose = InvocationObserver::new(true);
     let sources = SourceStore::new_observed(
         Arc::new(FileInventory::from_paths(&[])),
@@ -22,15 +22,11 @@ fn trace_rule_records_only_verbose_observers() {
     assert_eq!(verbose.snapshot().work["test.rule.work"], 1);
     let timings = verbose.snapshot().timings;
     assert_eq!(timings.len(), 1);
-    assert_eq!(timings[0].label, "rules.special");
+    assert_eq!(timings[0].label, "analysis.filesystem_rules.special");
     assert_eq!(timings[0].kind, TimingKind::Parallel);
 
-    for observer in [None, Some(InvocationObserver::new(false))] {
-        let sources =
-            SourceStore::new_observed(Arc::new(FileInventory::from_paths(&[])), observer.clone());
-        assert_eq!(trace_rule(&sources, "untimed", || 7), 7);
-        assert!(observer.is_none_or(|observer| observer.snapshot().timings.is_empty()));
-    }
+    let sources = SourceStore::new_observed(Arc::new(FileInventory::from_paths(&[])), None);
+    assert_eq!(trace_rule(&sources, "untimed", || 7), 7);
 }
 
 #[test]
