@@ -246,6 +246,10 @@ reached through a workspace package name and one of its `exports` subpaths.
 
 ## Analysis
 
+Mock-boundary preparation retains call-site postings only for modules mocked by
+the selected roots. It still follows intermediate re-export modules, and shares
+resolver memoization across roots for the request.
+
 ### Effort
 
 Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
