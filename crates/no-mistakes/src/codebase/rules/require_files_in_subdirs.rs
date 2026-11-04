@@ -58,7 +58,7 @@ fn scan(
             findings.push(super::configured_root::escape_finding(
                 RULE_ID,
                 &spec.root,
-                &config_file,
+                config_file,
             ));
             continue;
         }

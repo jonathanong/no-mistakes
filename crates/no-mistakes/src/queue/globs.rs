@@ -23,7 +23,13 @@ pub(super) fn record_empty_globs(
             for (index, configured) in globs.iter().enumerate() {
                 let glob = prefixed_one(&project.root, configured);
                 if !glob_matches(&glob, &relative) {
-                    record_empty_glob(root, config, sources, name, field, index, &glob, facts);
+                    let key = crate::config::source_locations::ConfigPath::default()
+                        .key("projects")
+                        .key(name)
+                        .key("queues")
+                        .key(field)
+                        .index(index);
+                    record_empty_glob(root, config, sources, &key, &glob, facts);
                 }
             }
         }
@@ -34,21 +40,13 @@ fn record_empty_glob(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     sources: &crate::codebase::ts_source::SourceStore,
-    project: &str,
-    field: &str,
-    index: usize,
+    key: &crate::config::source_locations::ConfigPath,
     glob: &str,
     facts: &mut HashMap<PathBuf, FileFacts>,
 ) {
-    let key = crate::config::source_locations::ConfigPath::default()
-        .key("projects")
-        .key(project)
-        .key("queues")
-        .key(field)
-        .index(index);
     let (path, local) = config
         .config_provenance
-        .origin(&key)
+        .origin(key)
         .map(|(path, local)| (path.to_path_buf(), Some(local)))
         .unwrap_or_else(|| {
             (

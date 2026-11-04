@@ -38,6 +38,8 @@ const rule = config.rules?.find(
 );
 ```
 
+Load it once per policy or CI run and pass the returned object to its readers.
+
 The declared view merges source declarations without materializing defaults.
 Aliases are normalized to their canonical form. A repository with no config
 returns `{}`. List order is stable: root entries first, then fragment entries

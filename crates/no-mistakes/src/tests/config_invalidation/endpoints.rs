@@ -145,11 +145,11 @@ pub(super) fn parse_endpoint(
             source: source.source,
         });
     }
-    documents.sort_by(|a, b| {
-        a.section
-            .is_some()
-            .cmp(&b.section.is_some())
-            .then(a.path.cmp(&b.path))
+    documents.sort_by_cached_key(|document| {
+        (
+            document.section.is_some(),
+            crate::codebase::ts_source::relative_slash_path(root, &document.path),
+        )
     });
     if documents.iter().filter(|doc| doc.section.is_none()).count() > 1 {
         anyhow::bail!("multiple .no-mistakes config files are present in configuration endpoints")

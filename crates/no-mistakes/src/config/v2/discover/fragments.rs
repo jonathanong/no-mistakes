@@ -36,7 +36,9 @@ pub(crate) fn select_fragments(root: &Path, visible: &[PathBuf]) -> Result<Vec<(
             files.push((absolute, section));
         }
     }
-    files.sort_by(|a, b| a.0.cmp(&b.0));
+    files.sort_by_cached_key(|(path, _)| {
+        crate::codebase::ts_source::relative_slash_path(root, path)
+    });
     Ok(files)
 }
 

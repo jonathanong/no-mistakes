@@ -160,3 +160,15 @@ fn scalar_section_folders_are_rejected_and_explicit_files_remain_whole() {
         super::declared_config(&root, Some(&root.join(".no-mistakes/tests/custom.yml"))).unwrap();
     assert_eq!(config["rules"].as_array().unwrap().len(), 1);
 }
+
+#[test]
+fn relative_path_order_is_lexical_across_nested_folders() {
+    let config = super::declared_config(&fixture("path-order"), None).unwrap();
+    let names: Vec<_> = config["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|rule| rule["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["flat", "nested"]);
+}
