@@ -277,10 +277,10 @@ assignments, globs, unquoted expansions, paths outside the analysis root, and a
 command with an unbalanced quote are not entries. A `package.json` that is not
 JSON contributes no entry.
 
-The path supplied to `--inject`, including `--inject:path`, is treated as an
-entry. A class expression such as `export const C = class extends Base {}` does
-not suppress `Base`; a production class declaration such as
-`export class Child extends Base {}` does.
+The path supplied to `--inject` (as `--inject path`, `--inject:path`, or
+`--inject=path`) is treated as an entry. A class expression such as
+`export const C = class extends Base {}` does not suppress `Base`; a production
+class declaration such as `export class Child extends Base {}` does.
 
 ```json
 {
