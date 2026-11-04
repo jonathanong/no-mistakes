@@ -77,7 +77,7 @@ fn global_check_verbose_timings_reports_fine_grained_labels() {
 
     // Ensure core timing labels are present, including Playwright-related labels.
     for label in [
-        "rules.forbidden_dependencies:",
+        "analysis.rules.forbidden-dependencies:",
         "graph.imports:",
         "playwright.",
     ] {
@@ -98,7 +98,7 @@ fn global_check_verbose_timings_reports_fine_grained_labels() {
     );
     assert_eq!(err.matches("[timing] total:").count(), 1, "{err}");
     for label in [
-        "rules.forbidden_dependencies:",
+        "analysis.rules.forbidden-dependencies:",
         "graph.imports:",
         "playwright.",
     ] {
@@ -141,8 +141,8 @@ fn independent_codebase_rule_timing_is_opt_in() {
     assert_eq!(plain.status.code(), Some(1));
     assert_eq!(verbose.status.code(), plain.status.code());
     assert_eq!(verbose.stdout, plain.stdout);
-    assert!(!stderr(&plain).contains("rules.server_route_client_boundary:"));
-    assert!(stderr(&verbose).contains("rules.server_route_client_boundary:"));
+    assert!(!stderr(&plain).contains("analysis.rules.server-route-client-boundary:"));
+    assert!(stderr(&verbose).contains("analysis.rules.server-route-client-boundary:"));
 }
 
 #[test]
@@ -163,8 +163,8 @@ fn filesystem_rule_timing_uses_the_rule_id_and_is_opt_in() {
     assert_eq!(plain.status.code(), Some(1));
     assert_eq!(verbose.status.code(), plain.status.code());
     assert_eq!(verbose.stdout, plain.stdout);
-    assert!(!stderr(&plain).contains("rules.test-no-dependency-pins:"));
-    assert!(stderr(&verbose).contains("rules.test-no-dependency-pins:"));
+    assert!(!stderr(&plain).contains("analysis.filesystem_rules.test-no-dependency-pins:"));
+    assert!(stderr(&verbose).contains("analysis.filesystem_rules.test-no-dependency-pins:"));
 }
 
 fn without_diagnostics(stderr: &[u8]) -> Vec<u8> {
@@ -266,8 +266,8 @@ fn global_check_without_verbose_timings_omits_fine_grained_labels() {
     assert_eq!(output.status.code(), Some(1));
     let err = stderr(&output);
     assert!(
-        !err.contains("rules.forbidden_dependencies:") && !err.contains("graph.imports:"),
-        "verbose timing labels should not appear without --verbose-timings: {err}"
+        err.contains("analysis.rules.forbidden-dependencies:") && !err.contains("graph.imports:"),
+        "basic timings should include rules but omit verbose graph details: {err}"
     );
     assert!(
         !err.contains("[memory]"),
@@ -306,7 +306,10 @@ fn global_check_shares_app_selector_scan_between_playwright_rule_and_forbidden_d
     ]);
 
     let err = stderr(&output);
-    for label in ["rules.playwright:", "graph.playwright_selectors:"] {
+    for label in [
+        "analysis.rules.playwright-combined:",
+        "graph.playwright_selectors:",
+    ] {
         assert!(
             err.contains(label),
             "expected both the playwright rule and the forbidden-dependencies graph build to run: {err}"
@@ -404,4 +407,34 @@ fn progress_command_error_reaches_normal_stderr_when_the_progress_queue_is_occup
     let error = String::from_utf8(reader.join().unwrap()).unwrap();
     assert!(error.contains(expected.trim()), "{error}");
     assert!(child.wait_with_output().unwrap().stdout.is_empty());
+}
+
+#[test]
+fn check_rule_timing_snapshot_masks_values_and_order() {
+    let roots = [
+        fixture("codebase-analysis", "forbidden-dependencies-basic"),
+        fixture("rules", "test-no-dependency-pins").join("fail"),
+    ];
+    let mut labels = Vec::new();
+    for root in roots {
+        let output = run(&[
+            "check",
+            "--root",
+            root.to_str().unwrap(),
+            "--format",
+            "json",
+            "--timings",
+        ]);
+        for line in stderr(&output).lines() {
+            if line.starts_with("[timing] analysis.rules.")
+                || line.starts_with("[timing] analysis.filesystem_rules.")
+            {
+                let (label, elapsed) = line.split_once(": ").unwrap();
+                let (_, suffix) = elapsed.split_once("ms").unwrap();
+                labels.push(format!("{label}: <timing>{suffix}"));
+            }
+        }
+    }
+    labels.sort();
+    insta::assert_snapshot!("check_rule_timings", labels.join("\n"));
 }

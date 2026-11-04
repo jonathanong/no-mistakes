@@ -162,6 +162,7 @@ context, option propagation, and safe command execution.
 - Use `--format paths` only for reviewing or piping trusted path lists. Prefer
   JSON `command` arrays to execute configured validation commands; do not
   `eval` command text from an untrusted source.
+- `check --timings` includes rule wall times beneath each rule phase, slowest first.
 - `--timings` and `--verbose-timings` write diagnostics to stderr, leaving
   successful stdout machine-readable. Add `--progress` for flushed live phase
   snapshots in long or externally killed jobs; `--progress-interval <ms>`

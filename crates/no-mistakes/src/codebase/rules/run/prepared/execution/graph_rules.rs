@@ -2,22 +2,8 @@ use super::*;
 
 use crate::codebase::rules::test_no_live_repository_scan::Resolution;
 
-pub(super) struct GraphRuleRequest<'a> {
-    pub(super) root: &'a Path,
-    pub(super) config: &'a crate::config::v2::NoMistakesConfig,
-    pub(super) config_path: Option<&'a Path>,
-    pub(super) shared: &'a crate::codebase::check_facts::CheckFactMap,
-    pub(super) prepared_graph:
-        Option<&'a crate::codebase::dependencies::graph::PreparedGraphConfig>,
-    pub(super) dependency_graph: Option<&'a DepGraph>,
-    pub(super) inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
-    pub(super) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
-    pub(super) tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
-    pub(super) prepared_vitest_projects:
-        Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
-    pub(super) prepared_playwright_projects:
-        Option<&'a crate::codebase::rules::PreparedPlaywrightProjectCatalog>,
-}
+mod request;
+pub(super) use request::GraphRuleRequest;
 
 pub(super) fn graph_rule_findings(
     request: GraphRuleRequest<'_>,
@@ -38,52 +24,60 @@ pub(super) fn graph_rule_findings(
     let mut findings = Vec::new();
     let mut advisories = Vec::new();
     if config.rule_configured(crate::codebase::rules::PRODUCTION_EXPORTS_ONLY_USED_BY_TESTS) {
-        let diagnostics = crate::perf_trace::trace("rules.production_exports_test_only", || {
-            crate::codebase::rules::production_exports_test_only::check_with_graph(
-                root,
-                config,
-                dependency_graph
-                    .expect("production-exports-only-used-by-tests requires canonical graph"),
-                shared,
-            )
-        })?;
+        let diagnostics = crate::perf_trace::rule(
+            "analysis.rules.production-exports-only-used-by-tests",
+            || {
+                crate::codebase::rules::production_exports_test_only::check_with_graph(
+                    root,
+                    config,
+                    dependency_graph
+                        .expect("production-exports-only-used-by-tests requires canonical graph"),
+                    shared,
+                )
+            },
+        )?;
         findings.extend(diagnostics.findings);
         advisories.extend(diagnostics.advisories);
     }
     if rule_enabled(config, FORBIDDEN_CALLS) {
-        findings.extend(crate::perf_trace::trace("rules.forbidden_calls", || {
-            forbidden_calls::check_with_graph(
-                root,
-                config,
-                dependency_graph.expect("forbidden-calls requires canonical graph"),
-                prepared_vitest_projects,
-                prepared_playwright_projects,
-                shared.graph_file_universe(),
-                Some(shared),
-            )
-        })?);
+        findings.extend(crate::perf_trace::rule(
+            "analysis.rules.forbidden-calls",
+            || {
+                forbidden_calls::check_with_graph(
+                    root,
+                    config,
+                    dependency_graph.expect("forbidden-calls requires canonical graph"),
+                    prepared_vitest_projects,
+                    prepared_playwright_projects,
+                    shared.graph_file_universe(),
+                    Some(shared),
+                )
+            },
+        )?);
     }
     if rule_enabled(
         config,
         crate::codebase::rules::test_no_live_repository_scan::RULE_ID,
     ) {
-        let diagnostics = crate::perf_trace::trace("rules.test_no_live_repository_scan", || {
-            crate::codebase::rules::test_no_live_repository_scan::check_with_graph(
-                root,
-                config,
-                dependency_graph.expect("test-no-live-repository-scan requires canonical graph"),
-                prepared_vitest_projects,
-                shared.graph_file_universe(),
-                shared,
-                &Resolution::new(tsconfig_catalog, prepared_graph),
-            )
-        })?;
+        let diagnostics =
+            crate::perf_trace::rule("analysis.rules.test-no-live-repository-scan", || {
+                crate::codebase::rules::test_no_live_repository_scan::check_with_graph(
+                    root,
+                    config,
+                    dependency_graph
+                        .expect("test-no-live-repository-scan requires canonical graph"),
+                    prepared_vitest_projects,
+                    shared.graph_file_universe(),
+                    shared,
+                    &Resolution::new(tsconfig_catalog, prepared_graph),
+                )
+            })?;
         findings.extend(diagnostics.findings);
         advisories.extend(diagnostics.advisories);
     }
     if rule_enabled(config, FORBIDDEN_DEPENDENCIES) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.forbidden_dependencies",
+        findings.extend(crate::perf_trace::rule(
+            "analysis.rules.forbidden-dependencies",
             || {
                 forbidden_dependencies::check_with_prepared_facts_and_graph(
                     root,
@@ -101,8 +95,8 @@ pub(super) fn graph_rule_findings(
         )?);
     }
     if rule_enabled(config, REQUIRED_ENTRYPOINT_REACHABILITY) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.required_entrypoint_reachability",
+        findings.extend(crate::perf_trace::rule(
+            "analysis.rules.required-entrypoint-reachability",
             || {
                 required_entrypoint_reachability::check_with_graph_and_inferred(
                     root,
@@ -117,19 +111,20 @@ pub(super) fn graph_rule_findings(
         )?);
     }
     if rule_enabled(config, UNCONSTRUCTED_ERROR_CLASS) {
-        let diagnostics = crate::perf_trace::trace("rules.unconstructed_error_class", || {
-            unconstructed_error_class::check_with_graph(
-                root,
-                config,
-                dependency_graph.expect("unconstructed-error-class requires canonical graph"),
-            )
-        })?;
+        let diagnostics =
+            crate::perf_trace::rule("analysis.rules.unconstructed-error-class", || {
+                unconstructed_error_class::check_with_graph(
+                    root,
+                    config,
+                    dependency_graph.expect("unconstructed-error-class requires canonical graph"),
+                )
+            })?;
         findings.extend(diagnostics.findings);
         advisories.extend(diagnostics.advisories);
     }
     if rule_enabled(config, query_reached_per_item::RULE_ID) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.query_reached_per_item",
+        findings.extend(crate::perf_trace::rule(
+            "analysis.rules.query-reached-per-item",
             || {
                 query_reached_per_item::check_with_graph(
                     root,
@@ -144,8 +139,8 @@ pub(super) fn graph_rule_findings(
         config,
         crate::codebase::rules::POSTGRES_NO_MUTABLE_SQL_REGISTRY,
     ) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.postgres_no_mutable_sql_registry",
+        findings.extend(crate::perf_trace::rule(
+            "analysis.rules.postgres-no-mutable-sql-registry",
             || {
                 crate::codebase::rules::postgres_no_mutable_sql_registry::check_with_graph(
                     root,
@@ -169,8 +164,8 @@ pub(super) fn graph_rule_findings(
         config,
         crate::codebase::rules::POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,
     ) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.postgres_no_unbounded_sql_identifier",
+        findings.extend(crate::perf_trace::rule(
+            "analysis.rules.postgres-no-unbounded-sql-identifier",
             || {
                 crate::codebase::rules::postgres_no_unbounded_sql_identifier::check_with_graph(
                     root,

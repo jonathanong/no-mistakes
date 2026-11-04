@@ -7,7 +7,9 @@ no-mistakes --timings dependencies src/app.ts --format json
 no-mistakes tests plan vitest --verbose-timings --changed-file src/app.ts
 ```
 
-`--timings` emits phase durations. `--verbose-timings` implies `--timings` and
+`--timings` emits phase durations. For `check`, it also reports rule wall times
+beneath each rule phase, slowest first; combined passes are labeled as such.
+`--verbose-timings` implies `--timings` and
 also emits deterministic work counts for discovery, source reads, parsing,
 resolution, graph construction, traversal, and output. Diagnostics go only to
 stderr; stdout, structured output order, exit status, and actionable error text
@@ -256,8 +258,8 @@ runs memoize successful and failed discovery/read/parse operations in memory
 for the duration of that invocation only.
 
 The async Node API remains stderr-free. `impactedChecks({ timings: true })`
-retains its structured `{ phase, duration_ms }[]` response; other Node methods
-do not add timing fields. Repository-analysis calls accept `diagnosticsId` to
+retains its structured `{ phase, duration_ms }[]` response. `check({ timings: true })`
+returns phase and rule entries as `{ label, durationMs, parallel }[]`. Repository-analysis calls accept `diagnosticsId` to
 register live progress and `diagnosticsSnapshot({ id })` polls the same structured
 snapshot without acquiring the invocation lock. IDs must be unique while active;
 completion and failure remove them, and polling then returns `null`. Node calls

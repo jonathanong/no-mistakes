@@ -523,3 +523,5 @@ applications accept `columnBounds` through the existing asynchronous `check()` â
 `table.column` names to a required nonempty `reason`; CLI and Node use the same
 catalog validation and caller-bounded key proof. No separate runtime export is
 needed.
+
+`check({ timings: true })` returns ordered `timings` entries with `label`, `durationMs`, and `parallel`. Rule entries follow their phase, slowest first; combined passes are labeled accordingly. Parallel durations overlap.

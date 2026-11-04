@@ -23,12 +23,17 @@ pub(super) fn run<'a>(
     macro_rules! collect {
         ($module:ident) => {
             if config.rule_configured(rules::$module::RULE_ID) {
-                diagnostics.append(rules::$module::diagnostics_with_files_and_sources(
-                    root,
-                    config,
-                    files,
-                    sources,
-                    defer_suppression,
+                diagnostics.append(no_mistakes::perf_trace::filesystem_rule(
+                    rules::$module::RULE_ID,
+                    || {
+                        rules::$module::diagnostics_with_files_and_sources(
+                            root,
+                            config,
+                            files,
+                            sources,
+                            defer_suppression,
+                        )
+                    },
                 )?);
                 remaining
                     .rules

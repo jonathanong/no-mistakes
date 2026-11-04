@@ -360,3 +360,37 @@ fn concurrent_work_and_source_counts_preserve_exact_totals() {
     basic.record_source_read(std::path::Path::new("ignored.ts"));
     assert!(basic.source_read_snapshot().is_empty());
 }
+
+#[test]
+fn rule_timings_follow_their_phase_and_sort_slowest_first() {
+    let observer = InvocationObserver::new(false);
+    for (label, ms) in [
+        ("analysis.filesystem_rules.z", 1),
+        ("analysis.rules.b", 3),
+        ("analysis.rules.a", 3),
+        ("analysis.rules.slow", 5),
+        ("analysis.rules", 10),
+        ("analysis.filesystem_rules", 8),
+        ("analysis.filesystem_rules.slow", 4),
+    ] {
+        observer.record_duration(label, Duration::from_millis(ms), TimingKind::Parallel);
+    }
+    let labels: Vec<_> = observer
+        .snapshot()
+        .timings
+        .into_iter()
+        .map(|t| t.label)
+        .collect();
+    assert_eq!(
+        labels,
+        [
+            "analysis.rules",
+            "analysis.rules.slow",
+            "analysis.rules.a",
+            "analysis.rules.b",
+            "analysis.filesystem_rules",
+            "analysis.filesystem_rules.slow",
+            "analysis.filesystem_rules.z",
+        ]
+    );
+}

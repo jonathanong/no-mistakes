@@ -12,7 +12,16 @@ export interface AnalysisFallback {
   effective: Effort;
 }
 
+/** A wall-clock timing. Parallel entries overlap and must not be added. */
+export interface CheckTiming {
+  label: string;
+  durationMs: number;
+  parallel: boolean;
+}
+
 export interface CheckReport {
+  /** Present only when timings are requested. */
+  timings?: CheckTiming[];
   react: ReactViolation[];
   queues: QueueCheckFinding[];
   rules: RuleFinding[];

@@ -5,7 +5,7 @@ pub(super) fn trace_rule<T>(
     label: impl FnOnce() -> String,
     run: impl FnOnce() -> T,
 ) -> T {
-    match observer.filter(|observer| observer.detailed()) {
+    match observer {
         Some(observer) => observer.trace(&label(), TimingKind::Parallel, run),
         None => run(),
     }

@@ -38,6 +38,8 @@ const PREFIX_TIMING_ORDER: &[(&str, u16)] = &[
     ("resolve.", 51),
     ("graph.", 301),
     ("traversal.", 400),
+    ("analysis.rules.", 202),
+    ("analysis.filesystem_rules.", 205),
     ("analysis.", 500),
     ("rules.", 600),
     ("playwright.", 700),

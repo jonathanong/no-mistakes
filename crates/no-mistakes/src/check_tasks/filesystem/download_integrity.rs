@@ -24,12 +24,17 @@ pub(super) fn run(
             defer_suppression,
         );
     }
-    let mut output = rules::github_actions_download_integrity::diagnostics_with_files_and_sources(
-        root,
-        config,
-        files,
-        &prepared.sources,
-        defer_suppression,
+    let mut output = no_mistakes::perf_trace::rule(
+        "analysis.filesystem_rules.github-actions-download-integrity",
+        || {
+            rules::github_actions_download_integrity::diagnostics_with_files_and_sources(
+                root,
+                config,
+                files,
+                &prepared.sources,
+                defer_suppression,
+            )
+        },
     )?;
     // Consume both channels once at the rule boundary. The remaining dispatch
     // must not scan downloads again or rediscover advisories at finalization.

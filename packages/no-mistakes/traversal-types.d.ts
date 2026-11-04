@@ -185,6 +185,8 @@ export type Effort = "low" | "max";
 export type Unanalyzable = "report" | "advise" | "ignore";
 
 export interface CheckOptions extends ProjectOptions {
+  /** Include ordered phase and rule timings in the check report. */
+  timings?: boolean;
   /** Override configured rule effort for this check invocation. Defaults to `max`. */
   effort?: Effort;
   /** Add deterministic accounting for findings hidden by no-mistakes directives. */

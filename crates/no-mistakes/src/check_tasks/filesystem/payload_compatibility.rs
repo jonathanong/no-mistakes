@@ -24,12 +24,17 @@ pub(super) fn run(
             defer_suppression,
         );
     }
-    let mut output = rules::declared_payload_compatibility::diagnostics_with_files_and_sources(
-        root,
-        config,
-        files,
-        &prepared.sources,
-        defer_suppression,
+    let mut output = no_mistakes::perf_trace::rule(
+        "analysis.filesystem_rules.declared-payload-compatibility",
+        || {
+            rules::declared_payload_compatibility::diagnostics_with_files_and_sources(
+                root,
+                config,
+                files,
+                &prepared.sources,
+                defer_suppression,
+            )
+        },
     )?;
     // Keep both channels from this evaluation; the remaining dispatch must not
     // evaluate the same contracts again to discover advisories at finalization.

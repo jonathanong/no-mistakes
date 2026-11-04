@@ -43,5 +43,25 @@ pub fn trace<T>(label: &str, f: impl FnOnce() -> T) -> T {
     }
 }
 
+/// Record a check rule only when request diagnostics are enabled.
+pub fn rule<T>(label: &str, f: impl FnOnce() -> T) -> T {
+    match crate::diagnostics::current() {
+        Some(observer) => observer.trace(label, crate::diagnostics::TimingKind::Parallel, f),
+        None => f(),
+    }
+}
+
+/// Time a filesystem rule without formatting its label when diagnostics are off.
+pub fn filesystem_rule<T>(id: &str, f: impl FnOnce() -> T) -> T {
+    match crate::diagnostics::current() {
+        Some(observer) => observer.trace(
+            &format!("analysis.filesystem_rules.{id}"),
+            crate::diagnostics::TimingKind::Parallel,
+            f,
+        ),
+        None => f(),
+    }
+}
+
 #[cfg(test)]
 mod tests;

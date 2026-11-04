@@ -113,9 +113,10 @@ values map to `report`, and the shared `report` value maps to each rule's
 legacy parser spelling.
 
 The root-global `--timings` and `--verbose-timings` flags work here and on every
-other CLI leaf. Verbose mode implies timings, includes rule/graph/Playwright
-sub-phases and work counts, and marks overlapping check-domain spans as
-non-additive. See [Performance diagnostics](diagnostics.md).
+other CLI leaf. Basic check timings include rule wall times beneath each rule
+phase, slowest first with rule ID as the tie-breaker. Combined passes are
+labeled as such. Parallel durations overlap and are non-additive. Verbose mode
+implies timings and adds graph/Playwright sub-phases and work counts. See [Performance diagnostics](diagnostics.md).
 
 The opt-in [query-reached-per-item](../rules/query-reached-per-item.md) rule
 uses configured effect families and canonical call paths to identify repeated
@@ -188,8 +189,8 @@ On Unix, `--verbose-timings` ends its diagnostics with
 `getrusage(RUSAGE_SELF)` in KiB. This excludes descendant processes and is not a
 per-phase allocation total. Unsupported platforms omit the line. Basic timings
 and diagnostics-disabled runs do not sample memory. Individual configured
-codebase rules emit `rules.<id>` spans; filesystem rules retain
-`filesystem_rule.<id>`. Parallel span durations overlap.
+codebase rules emit `analysis.rules.<id>` spans; filesystem rules emit
+`analysis.filesystem_rules.<id>`. Parallel span durations overlap.
 
 `postgres-no-unbounded-sql-identifier` supports [`--effort low`](../rules/postgres-no-unbounded-sql-identifier.md#effort) with direct SQL syntax proofs and no call graph or cross-file provenance work. Its unknown inputs use `unanalyzable: report | advise | ignore`; proven environment relation inputs remain failures.
 
