@@ -1,0 +1,8 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "functions": {
+    "scalar()": {"definition": "", "returnsSet": false},
+    "public.qualified()": {"definition": "", "returnsSet": false}
+  }
+}

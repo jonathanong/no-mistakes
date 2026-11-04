@@ -1,5 +1,7 @@
 use super::super::Provenance;
-use super::harness::{binding, expect, named, process_env, reference};
+use super::harness::{
+    binding, expect, named, parameter, process_env, reference, sources_with_parameters,
+};
 use crate::codebase::dependencies::extract::{
     ImportedBinding, ImportedBindingKind, ValueExpression,
 };
@@ -140,5 +142,34 @@ fn outside_aliases_keep_mutation_cycles_members_and_non_parameters() {
         vec![],
         &[],
         vec![member],
+    );
+}
+
+#[test]
+fn outside_alias_keeps_the_parameter_value_at_capture_time() {
+    let mut uid = parameter("uid");
+    uid.invalidated_at = Some(5);
+    let sources = sources_with_parameters(
+        vec![binding("alias", named("uid"))],
+        named("alias"),
+        vec![],
+        &[],
+        vec![parameter("table"), uid.clone()],
+    );
+    assert_eq!(
+        sources,
+        std::collections::BTreeSet::from([reference("table")])
+    );
+    uid.invalidated_at = Some(3);
+    let sources = sources_with_parameters(
+        vec![binding("alias", named("uid"))],
+        named("alias"),
+        vec![],
+        &[],
+        vec![parameter("table"), uid],
+    );
+    assert_eq!(
+        sources,
+        std::collections::BTreeSet::from([reference("table"), reference("alias")])
     );
 }

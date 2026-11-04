@@ -48,3 +48,9 @@ export function defaultSource(table: string, value = process.env.COLUMN) {
   const alias = value;
   return query(`SELECT id FROM ${table} WHERE ${alias} = 1`);
 }
+
+export function parameterWriteAfterCapture(table: string, value: string) {
+  const alias = value;
+  value = process.env.COLUMN;
+  return query(`SELECT id FROM ${table} WHERE ${alias} = 1`);
+}

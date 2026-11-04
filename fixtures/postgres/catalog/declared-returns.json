@@ -46,6 +46,25 @@
     },
     "\"ScalarName\"(uuid)": {
       "definition": "CREATE FUNCTION public.\"ScalarName\"(uuid) RETURNS interval LANGUAGE sql AS $$ SELECT interval '1 second' $$"
+    },
+    "fn_out_only(OUT value integer)": {
+      "definition": "CREATE FUNCTION fn_out_only(OUT value integer) LANGUAGE sql AS $$ SELECT 1 $$"
+    },
+    "fn_non_function()": {
+      "definition": "SELECT 1"
+    },
+    "fn_multiple()": {
+      "definition": "CREATE FUNCTION fn_multiple() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$; SELECT 2"
+    },
+    "db.public.fn_three_key()": {
+      "definition": "CREATE FUNCTION db.public.fn_three_key() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$"
+    },
+    "fn_three_declared()": {
+      "definition": "CREATE FUNCTION db.public.fn_three_declared() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$"
+    },
+    "db.public.fn_known_scalar()": {
+      "definition": "",
+      "returnsSet": false
     }
   }
 }

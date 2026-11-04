@@ -35,3 +35,47 @@ fn declared_function_cardinality_keeps_uncertain_and_set_overloads() {
         assert!(!names.contains(&vec![name.into()]), "{name}");
     }
 }
+
+#[test]
+fn uncertain_definitions_and_invalid_qualified_names_are_not_scalar() {
+    let catalog = load_fixture("declared-returns.json").unwrap();
+    let functions = catalog
+        .functions()
+        .map(|f| (f.key.as_str(), f))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    for key in [
+        "fn_out_only(OUT value integer)",
+        "fn_non_function()",
+        "fn_multiple()",
+        "db.public.fn_three_key()",
+        "fn_three_declared()",
+    ] {
+        assert_eq!(functions[key].returns_set, None, "{key}");
+    }
+    let names = catalog.scalar_function_names();
+    assert!(!names.contains(&vec![
+        "db".into(),
+        "public".into(),
+        "fn_known_scalar".into()
+    ]));
+    let set = functions["fn_set(uuid)"];
+    assert_eq!(
+        super::super::function_cardinality::resolve(
+            None,
+            &set.definition,
+            &set.name,
+            "",
+            Some("public")
+        ),
+        Some(true)
+    );
+}
+
+#[test]
+fn scalar_metadata_without_a_catalog_schema_cannot_establish_names() {
+    let catalog = load_fixture("no-schema-scalar.json").unwrap();
+    assert!(catalog
+        .functions()
+        .all(|function| function.returns_set == Some(false)));
+    assert!(catalog.scalar_function_names().is_empty());
+}
