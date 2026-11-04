@@ -54,6 +54,8 @@ pub use catalog::{
     CatalogUnique, CatalogView, GeneratedKind, PartitionKey, PartitionKeyElement,
     PartitionStrategy, RelationKind, ResolvedArbiter, SchemaCatalog, TriggerEvent, TriggerTiming,
 };
+#[cfg(test)]
+pub(crate) use collect::dml::embedded_call_facts_with_locations;
 pub use collect::{
     collect_postgres_facts, collect_schema_facts, extract_embedded_sql_facts, extract_schema_facts,
     postgres_sql_paths,
