@@ -73,6 +73,8 @@ struct ImportCollector {
     collect_value_flow: bool,
     collect_per_item_calls: bool,
     per_item_calls: Vec<PerItemCall>,
+    capped_cursor_calls: FxHashSet<u32>,
+    mutable_cursor_bindings: FxHashMap<usize, FxHashSet<String>>,
     per_item_ranges: FxHashMap<Option<CallableId>, Vec<PerItemRange>>,
     unknown_calls: Vec<UnknownCall>,
     symbol_references: Vec<FunctionCall>,

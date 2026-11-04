@@ -173,7 +173,10 @@ For repeated query or cache calls hidden in helpers, enable
 [`query-reached-per-item`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/query-reached-per-item.md) with
 explicit effect families. It traces resolved per-item calls; dynamic targets
 cannot prove sink reachability. Use configured batch exemptions and reviewed
-callsite allowlists for rollout. CLI and async `check()` share the rule.
+callsite allowlists for rollout. For proven sequential page reads in counted,
+capped cursor loops, opt in to `options.exemptCappedCursorPageReads: true`;
+other calls and unproven dependencies remain reportable. It defaults to false.
+CLI and async `check()` share the rule.
 Receiver targets retained as possible still participate when a newly recovered
 escape adds unknown evidence; a match does not prove one runtime callee.
 Escaped-array history uses source offsets, which can differ from execution order

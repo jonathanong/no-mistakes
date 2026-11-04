@@ -140,3 +140,16 @@ fn required_local_docs_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn query_reached_per_item_capped_cursor_check_json_snapshot() {
+    let dir = "query-reached-per-item/capped-cursor";
+    assert_saved_fixture(
+        "query_reached_per_item_capped_cursor",
+        &[
+            rule("default", dir, ".no-mistakes.yml"),
+            rule("off", dir, "off.yml"),
+            rule("on", dir, "on.yml"),
+        ],
+    );
+}

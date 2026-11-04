@@ -9,6 +9,7 @@ use serde::Deserialize;
 pub(super) struct Options {
     pub(super) effects: Vec<String>,
     pub(super) allow: Vec<Allowance>,
+    pub(super) exempt_capped_cursor_page_reads: bool,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]

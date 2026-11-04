@@ -211,3 +211,46 @@ test(
     }
   },
 );
+
+test(
+  "compiled capped cursor options preserve defaults across CJS ESM and prepared checks",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item/capped-cursor");
+    const original = await cjs.check({ root });
+    assert.deepEqual(original.warnings, []);
+    assert.deepEqual(await cjs.check({ root, config: "off.yml" }), original);
+    const enabled = await cjs.check({ root, config: "on.yml" });
+    assert.deepEqual(enabled.warnings, []);
+    const callsIn = (report, file) =>
+      report.rules
+        .filter((finding) => finding.file === file)
+        .map((finding) => finding.import)
+        .sort();
+    assert.deepEqual(callsIn(original, "src/proven.ts"), ["handle", "read"]);
+    assert.deepEqual(callsIn(enabled, "src/proven.ts"), ["handle"]);
+    assert.deepEqual(callsIn(enabled, "src/page-read.ts"), ["read"]);
+    assert.deepEqual(callsIn(enabled, "src/conditional_spread.ts"), []);
+    assert.deepEqual(callsIn(enabled, "src/var_bound_initializer.ts"), ["read"]);
+    assert.ok(enabled.rules.length < original.rules.length);
+    for (const [config, expected] of [
+      [undefined, original],
+      ["off.yml", original],
+      ["on.yml", enabled],
+    ]) {
+      const options = { root, ...(config ? { config } : {}) };
+      const pending = esm.check(options);
+      assert.equal(typeof pending.then, "function");
+      assert.deepEqual(await pending, expected);
+      for (const api of [cjs, esm]) {
+        const prepared = await api.analyzeProject({
+          root,
+          reports: [{ type: "check", ...(config ? { config } : {}) }],
+        });
+        assert.deepEqual(prepared.reports[0].result, expected);
+      }
+    }
+  },
+);

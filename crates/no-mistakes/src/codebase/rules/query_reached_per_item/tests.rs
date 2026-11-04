@@ -370,3 +370,5 @@ pub(crate) mod sink_paths;
 
 #[path = "tests/sink_trace_parity.rs"]
 mod sink_trace_parity;
+
+mod capped_cursor;

@@ -284,6 +284,8 @@
   "QueryFileOptions",
   "QueryIncompleteFile",
   "QueryIncompleteReason",
+  "QueryReachedPerItemAllowEntry",
+  "QueryReachedPerItemOptions",
   "QueueCheckFinding",
   "QueueDiagnostic",
   "QueueDiagnosticSeverity",

@@ -8,6 +8,7 @@ pub struct PerItemCall {
     pub caller_id: Option<CallableId>,
     pub construct: String,
     pub is_callback: bool,
+    pub capped_cursor_page_read: bool,
 }
 
 struct PerItemRange {
@@ -31,7 +32,8 @@ impl ImportCollector {
             ) {
                 self.per_item_calls.push(PerItemCall { offset: call.offset, line: call.line,
                     callee: call.callee.clone(), caller_id: call.caller_id,
-                    construct: range.construct.clone(), is_callback: false });
+                    construct: range.construct.clone(), is_callback: false,
+                    capped_cursor_page_read: self.capped_cursor_calls.contains(&call.offset) });
             }
         }
     }
@@ -59,7 +61,7 @@ impl ImportCollector {
                     }
                     if self.collect_per_item_calls { self.per_item_calls.push(PerItemCall { offset: callback.span().start,
                         line: import_line_at(&self.line_starts, callback.span().start as usize),
-                        callee: name.clone(), caller_id: self.current_function_id(), construct, is_callback: true }); }
+                        callee: name.clone(), caller_id: self.current_function_id(), construct, is_callback: true, capped_cursor_page_read: false }); }
                 }
                 return Some((callback.span().start, name));
             }

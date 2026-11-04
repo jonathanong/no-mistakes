@@ -22,6 +22,8 @@ include!("extract_types.rs");
 #[path = "extract_value_flow.rs"]
 mod extract_value_flow;
 include!("extract_per_item.rs");
+include!("extract_capped_cursor.rs");
+include!("extract_capped_cursor_guards.rs");
 include!("extract_replacements.rs");
 
 include!("extract_import_facts.rs");
