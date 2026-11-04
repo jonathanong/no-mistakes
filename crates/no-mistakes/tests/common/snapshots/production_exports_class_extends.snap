@@ -3,14 +3,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
   "production": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/base.mts",
+          "line": 18,
+          "message": "production export `ExpressionBase` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export class ExpressionBase {}",
+          "target": "ExpressionBase"
+        }
+      ],
       "warnings": []
     }
   },

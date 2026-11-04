@@ -30,15 +30,31 @@ fn relative_entries(root: &Path, files: &[PathBuf]) -> Vec<String> {
 fn bundler_scripts_resolve_positional_entries_and_skip_outputs() {
     let root = fixture("script-entry-shapes");
     let nested = root.join("packages/nested/src/nested.mts");
+    let entries = relative_entries(&root, &[nested]);
+    for entry in [
+        "src/injected-equals.mts",
+        "src/injected.mts",
+        "src/injected-separate.mts",
+    ] {
+        assert!(
+            entries.iter().any(|found| found == entry),
+            "{entry}: {entries:?}"
+        );
+    }
     assert_eq!(
-        relative_entries(&root, &[nested]),
+        entries,
         [
             "packages/nested/src/nested.mts",
             "src/and.mts",
+            "src/env-pipe.mts",
             "src/env.mts",
             "src/esbuild.mts",
+            "src/injected-equals.mts",
+            "src/injected-separate.mts",
+            "src/injected.mts",
             "src/nl.mts",
             "src/or.mts",
+            "src/pipe-before.mts",
             "src/quoted name.mts",
             "src/rollup.mts",
             "src/semi.mts",

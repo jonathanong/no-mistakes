@@ -3,7 +3,14 @@ use super::findings;
 #[test]
 fn production_subclass_is_a_production_use() {
     let found = findings("class-extends-production");
-    assert!(found.is_empty(), "{found:#?}");
+    assert_eq!(
+        found
+            .iter()
+            .map(|row| row.target.as_deref().unwrap())
+            .collect::<Vec<_>>(),
+        ["ExpressionBase"],
+        "{found:#?}"
+    );
 }
 
 #[test]

@@ -288,7 +288,10 @@ script, and the manifest is the analysis root or a directory above a discovered
 source file. Every export of that file, including `export default`, is a
 production use, even when the only other importer is a configured test.
 
-Commands split on `&&`, `||`, `;`, and newlines. The bundler may be a path whose
+Commands split on `&&`, `||`, `|`, `;`, and newlines. Only a bundler in command
+position establishes that the command invokes a bundler; an argument named
+`vite` or another bundler does not. Calls through wrappers such as `npm exec
+vite` are not resolved. The bundler may be a path whose
 basename is one of those tools (`node_modules/.bin/esbuild`). A flag, including
 `--outfile=dist/worker.js`, is not an entry. The separate value of `-o`,
 `--outfile`, `--outdir`, `--out-dir`, `--out`, `--config`, `-c`, `--format`,
@@ -296,6 +299,11 @@ basename is one of those tools (`node_modules/.bin/esbuild`). A flag, including
 assignments, globs, unquoted expansions, paths outside the analysis root, and a
 command with an unbalanced quote are not entries. A `package.json` that is not
 JSON contributes no entry.
+
+The path supplied to `--inject` (as `--inject path`, `--inject:path`, or
+`--inject=path`) is treated as an entry. A class expression such as
+`export const C = class extends Base {}` does not suppress `Base`; a production
+class declaration such as `export class Child extends Base {}` does.
 
 ```json
 {
