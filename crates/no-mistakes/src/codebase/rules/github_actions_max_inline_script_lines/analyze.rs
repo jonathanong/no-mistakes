@@ -1,4 +1,5 @@
 use super::{finding, step_script_lines, RuleFinding, StepScript};
+use crate::fx::FxHashMap;
 use serde_yaml::Value;
 
 pub(super) fn check_source(rel: &str, source: &str, action: bool, max: usize) -> Vec<RuleFinding> {
@@ -20,44 +21,67 @@ pub(super) fn check_source(rel: &str, source: &str, action: bool, max: usize) ->
     }
     let mut expected = Vec::new();
     if action {
-        collect_steps(&value["runs"]["steps"], &mut expected);
+        collect_steps("", &value["runs"]["steps"], &mut expected);
     } else if let Some(jobs) = value["jobs"].as_mapping() {
-        for job in jobs.values() {
-            collect_steps(&job["steps"], &mut expected);
+        for (name, job) in jobs {
+            collect_steps(
+                name.as_str().unwrap_or_default(),
+                &job["steps"],
+                &mut expected,
+            );
         }
     }
-    let scripts = step_script_lines(source, action);
-    if expected.len() != scripts.len()
-        || expected
-            .iter()
-            .zip(&scripts)
-            .any(|(kind, script)| *kind != script.github_script || !script.supported)
-    {
-        return vec![finding(rel, 1, "Script bodies could not be aligned to source locations; rewrite anchors, aliases, and flow-style steps as ordinary block-style run or with.script bodies so inline script length can be checked.".into())];
+    let mut scripts: FxHashMap<_, _> = step_script_lines(source, action)
+        .into_iter()
+        .map(|script| {
+            (
+                (script.job.clone(), script.step, script.github_script),
+                script,
+            )
+        })
+        .collect();
+    let mut aligned = Vec::new();
+    let mut findings = Vec::new();
+    for key in expected {
+        match scripts.remove(&key) {
+            Some(script) if script.supported => aligned.push(script),
+            script => findings.push(unaligned(rel, script.map_or(1, |script| script.line))),
+        }
     }
+    findings.extend(
+        scripts
+            .into_values()
+            .map(|script| unaligned(rel, script.line)),
+    );
     let context = fix_context(action, &value["on"]);
-    scripts.into_iter().filter(|script| script.count > max).map(|StepScript { line, count, .. }|
+    findings.extend(aligned.into_iter().filter(|script| script.count > max).map(|StepScript { line, count, .. }|
         finding(rel, line, format!("Inline script has {count} non-blank lines, exceeding maxLines {max}; move it into a file and call that file so it can be linted and tested independently.{context}"))
-    ).collect()
+    ));
+    findings
 }
 
-fn collect_steps(steps: &Value, expected: &mut Vec<bool>) {
+fn unaligned(rel: &str, line: usize) -> RuleFinding {
+    finding(rel, line, "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.".into())
+}
+
+fn collect_steps(job: &str, steps: &Value, expected: &mut Vec<(String, usize, bool)>) {
     let Some(steps) = steps.as_sequence() else {
         return;
     };
-    for step in steps {
+    for (index, step) in steps.iter().enumerate() {
         if step["run"].as_str().is_some() {
-            expected.push(false);
+            expected.push((job.into(), index + 1, false));
         }
         if step["uses"].as_str().is_some_and(|uses| {
             uses.split('@')
                 .next()
                 .unwrap_or(uses)
+                .trim()
                 .trim_end_matches('/')
                 .eq_ignore_ascii_case("actions/github-script")
         }) && step["with"]["script"].as_str().is_some()
         {
-            expected.push(true);
+            expected.push((job.into(), index + 1, true));
         }
     }
 }

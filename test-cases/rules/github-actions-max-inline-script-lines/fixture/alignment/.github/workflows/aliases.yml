@@ -1,0 +1,33 @@
+name: aliases
+on: push
+template: &step {run: echo hidden}
+shared: &body |
+  echo hidden
+jobs:
+  build:
+    steps:
+      - run: *body
+      - run: |
+          echo one
+          echo two
+          echo three
+          echo four
+      - *step
+      - uses: " ACTIONS/GITHUB-SCRIPT/ @v7 "
+        with:
+          script: *body
+      - uses: " ACTIONS/GITHUB-SCRIPT/ @v7 "
+        with:
+          script: |
+            one();
+            two();
+            three();
+            four();
+      - run: &another echo hidden
+  final:
+    steps:
+      - run: |
+          echo one
+          echo two
+          echo three
+          echo four

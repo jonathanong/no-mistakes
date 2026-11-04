@@ -76,3 +76,6 @@ fn finding(file: &str, line: usize, message: String) -> RuleFinding {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod alignment_tests;

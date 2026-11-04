@@ -117,9 +117,14 @@ pub(super) fn flush_step(scanner: &mut Scanner<'_>) {
     let uses = scanner.uses.take();
     let run_lines = std::mem::take(&mut scanner.run_lines);
     let script_lines = std::mem::take(&mut scanner.script_lines);
-    scanner
-        .scripts
-        .flush(uses.as_deref(), &run_lines, &script_lines, scanner.lines);
+    scanner.scripts.flush(
+        &scanner.job,
+        scanner.step,
+        uses.as_deref(),
+        &run_lines,
+        &script_lines,
+        scanner.lines,
+    );
     for (line, text) in &run_lines {
         for expr in expressions(text) {
             scanner.hits.push(Hit {
