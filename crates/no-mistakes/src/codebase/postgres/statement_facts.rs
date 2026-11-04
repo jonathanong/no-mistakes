@@ -24,8 +24,8 @@ use std::path::PathBuf;
 pub use transformed::{SqlTransformedColumnClause, SqlTransformedColumnUseFact};
 pub use writes::{SqlWriteColumns, SqlWriteFact};
 mod lifecycle;
-pub(crate) use lifecycle::SqlFunctionBounds;
 pub use lifecycle::SqlLifecycleFacts;
+pub(crate) use lifecycle::{SqlBoundSourceLines, SqlFunctionBounds};
 pub(crate) use lifecycle::{SqlLifecycleBatch, SqlLifecycleStep, SqlViewReads};
 
 /// Statement facts for one SQL source (file or embedded call).

@@ -96,6 +96,9 @@ pub(crate) fn project_bounds<'a>(
                     .iter_mut()
                     .zip(&bounds[step.first_bound..step.last_bound])
                 {
+                    if let Some(source_lines) = &lifecycle.source_lines {
+                        projected.map_lines(&|line, column| source_lines.line(line, column));
+                    }
                     projected.statement_start = original.statement_start;
                 }
                 bounds[step.first_bound..step.last_bound].clone_from_slice(&projected);

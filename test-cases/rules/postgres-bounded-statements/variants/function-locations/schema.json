@@ -1,0 +1,19 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "columns": { "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 } },
+      "primaryKey": [["id"]]
+    }
+  },
+  "functions": {
+    "known_scalar(uuid)": {
+      "definition": "CREATE FUNCTION known_scalar(uuid) RETURNS uuid LANGUAGE sql AS $$ SELECT $1 $$"
+    },
+    "set_fn(uuid)": {
+      "definition": "CREATE FUNCTION set_fn(uuid) RETURNS SETOF uuid LANGUAGE sql AS $$ SELECT $1 $$"
+    }
+  }
+}

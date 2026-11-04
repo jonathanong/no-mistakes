@@ -11,19 +11,24 @@ pub(crate) fn rebase_embedded_lines(
         _ => call.declaration_line.unwrap_or(call.line),
     } as usize;
     facts.origin_line = base;
-    let shift = base.saturating_sub(1);
-    let source_line = |line: usize, column: usize| {
-        call.sql_source_positions
-            .partition_point(|position| {
-                (position.sql_line as usize, position.sql_column as usize) <= (line, column)
+    let source_lines = crate::codebase::postgres::statement_facts::SqlBoundSourceLines {
+        base_line: base,
+        origins: call
+            .sql_source_positions
+            .iter()
+            .map(|position| {
+                (
+                    position.sql_line as usize,
+                    position.sql_column as usize,
+                    position.source_line as usize,
+                )
             })
-            .checked_sub(1)
-            .map(|index| {
-                let position = &call.sql_source_positions[index];
-                position.source_line as usize + line - position.sql_line as usize
-            })
-            .unwrap_or_else(|| line.saturating_add(shift))
+            .collect(),
     };
+    let source_line = |line, column| source_lines.line(line, column);
+    if let Some(lifecycle) = &mut facts.lifecycle {
+        lifecycle.source_lines = Some(source_lines.clone());
+    }
     let mut locations = facts.variant_locations.take();
     if let Some(locations) = &mut locations {
         let sql = call.sql_text.as_deref().unwrap_or_default();
