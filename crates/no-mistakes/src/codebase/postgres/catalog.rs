@@ -27,6 +27,7 @@ mod partition;
 mod paths;
 mod relation_identity;
 mod resolve;
+mod scalar_functions;
 mod search_path;
 mod snapshot;
 mod table_scope;
@@ -67,6 +68,7 @@ pub struct SchemaCatalog {
     model_tables: BTreeMap<String, CatalogTable>,
     relation_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     functions: BTreeMap<String, CatalogFunction>,
+    scalar_function_names: std::sync::OnceLock<std::sync::Arc<BTreeSet<Vec<String>>>>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
     view_fallback: std::sync::OnceLock<fallback::RelationFallback>,

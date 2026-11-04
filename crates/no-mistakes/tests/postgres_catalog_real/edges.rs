@@ -157,6 +157,7 @@ fn only_functions_and_procedures_with_distinct_stable_overload_keys() {
         keys(&catalog["functions"]),
         [
             "do_it(IN a integer)",
+            "numbers()",
             "over(a integer)",
             "over(a text)",
             "over(a tone, b other.shade)",
@@ -170,6 +171,8 @@ fn only_functions_and_procedures_with_distinct_stable_overload_keys() {
         ),
         1
     );
+    assert_eq!(catalog["functions"]["numbers()"]["returnsSet"], true);
+    assert_eq!(catalog["functions"]["over(a integer)"]["returnsSet"], false);
     let procedure = catalog["functions"]["do_it(IN a integer)"]["definition"]
         .as_str()
         .unwrap();

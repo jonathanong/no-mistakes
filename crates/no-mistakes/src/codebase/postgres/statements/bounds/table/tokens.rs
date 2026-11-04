@@ -1,7 +1,10 @@
-use sqlparser::ast::{Ident, Table};
+use sqlparser::ast::Table;
 use sqlparser::tokenizer::{Location, Token, TokenWithSpan};
 
 mod identity;
+mod types;
+use types::{SourceDepth, SourceOperator};
+pub(in crate::codebase::postgres) use types::{SourceTable, TableTokenCursor};
 mod scan;
 #[cfg(test)]
 mod tests;
@@ -92,43 +95,6 @@ fn location(at: Location) -> (u64, u64) {
 
 fn first_after<T, K: Ord + Copy>(items: &[T], at: K, mut position: impl FnMut(&T) -> K) -> usize {
     items.partition_point(|item| position(item) <= at)
-}
-
-/// Source spellings for TABLE query arms. sqlparser's `Table` AST stores only word values,
-/// so a quoted mixed-case name needs the already prepared token stream to retain identity.
-#[derive(Default)]
-pub(in crate::codebase::postgres) struct TableTokenCursor {
-    names: Vec<SourceTable>,
-    operators: Vec<SourceOperator>,
-    froms: Vec<SourceOperator>,
-    depths: Vec<SourceDepth>,
-    next: usize,
-    last_at: Option<(usize, usize)>,
-    last_depth: usize,
-    last_operator: Option<(usize, usize)>,
-}
-
-#[derive(Clone)]
-struct SourceOperator {
-    at: (usize, usize),
-    depth: usize,
-}
-
-#[derive(Clone)]
-struct SourceDepth {
-    at: (usize, usize),
-    depth: usize,
-}
-
-#[derive(Clone)]
-pub(in crate::codebase::postgres) struct SourceTable {
-    schema: Option<String>,
-    table: String,
-    parts: Vec<Ident>,
-    pub(in crate::codebase::postgres) name: String,
-    pub(in crate::codebase::postgres) key: String,
-    pub(in crate::codebase::postgres) at: (usize, usize),
-    depth: usize,
 }
 
 impl TableTokenCursor {

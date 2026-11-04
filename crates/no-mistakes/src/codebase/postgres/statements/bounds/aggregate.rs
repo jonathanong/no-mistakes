@@ -36,25 +36,27 @@ pub(super) fn expands_from_data(
 
 /// A projected SRF may emit zero rows for each source row. A result LIMIT therefore cannot
 /// bound how many FROM rows must be read, even when the SRF's arguments are caller-sized.
-pub(super) fn projection_may_erase_input(select: &Select) -> bool {
+pub(super) fn projection_may_erase_input(select: &Select, scope: &super::Scope) -> bool {
     !select.from.is_empty()
         && projected(select)
             .iter()
-            .any(|expr| contains_expanding_call(expr))
+            .any(|expr| contains_expanding_call(expr, scope))
 }
 
-fn contains_expanding_call(expr: &Expr) -> bool {
+fn contains_expanding_call(expr: &Expr, scope: &super::Scope) -> bool {
     if let Expr::Function(function) = expr {
-        if projection_can_expand(function) {
+        if projection_can_expand(function) && !scope.scalar_function(&function.name) {
             return true;
         }
     }
     let mut found = false;
-    visit_child_exprs(expr, &mut |child| found |= contains_expanding_call(child));
+    visit_child_exprs(expr, &mut |child| {
+        found |= contains_expanding_call(child, scope)
+    });
     found
 }
 
-pub(super) fn order_may_erase_input(query: &Query) -> bool {
+pub(super) fn order_may_erase_input(query: &Query, scope: &super::Scope) -> bool {
     let Some(order) = &query.order_by else {
         return false;
     };
@@ -63,7 +65,7 @@ pub(super) fn order_may_erase_input(query: &Query) -> bool {
     };
     expressions
         .iter()
-        .any(|expression| contains_expanding_call(&expression.expr))
+        .any(|expression| contains_expanding_call(&expression.expr, scope))
 }
 
 /// An aggregate used only in `ORDER BY` (`SELECT 1 FROM t ORDER BY count(*)`) makes an ungrouped

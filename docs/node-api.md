@@ -525,3 +525,5 @@ catalog validation and caller-bounded key proof. No separate runtime export is
 needed.
 
 `check({ timings: true })` returns ordered `timings` entries with `label`, `durationMs`, and `parallel`. Rule entries follow their phase, slowest first; combined passes are labeled accordingly. Parallel durations overlap.
+
+Generated PostgreSQL catalogs include optional `functions[signature].returnsSet` evidence. `check()` uses it for `postgres-bounded-statements` LIMIT proofs; absent or ambiguous function cardinality stays conservative, matching the CLI.

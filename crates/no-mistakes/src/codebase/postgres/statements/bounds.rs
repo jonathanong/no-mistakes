@@ -5,6 +5,8 @@
 //! pure aggregate caps it. A rule decides, against a schema catalog, whether those pins make
 //! a relation single-row.
 mod aggregate;
+mod catalog_functions;
+pub(super) use catalog_functions::needs_catalog;
 mod compact_pins;
 mod dml;
 mod functions;
@@ -39,6 +41,7 @@ pub(super) fn is_aggregate(name: &sqlparser::ast::ObjectName) -> bool {
 pub(super) struct Scope {
     frame: Rc<ScopeFrame>,
     table_tokens: Option<Rc<RefCell<TableTokenCursor>>>,
+    scalar_functions: std::sync::Arc<BTreeSet<Vec<String>>>,
 }
 
 /// Immutable parent frames retain visible CTEs without copying their bound trees.

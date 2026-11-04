@@ -59,6 +59,8 @@ keys are SQL identifiers, quoted only where PostgreSQL requires it. Keys of `col
 the column lists of `primaryKey` and `foreignKeys`, and index key `column` are raw
 names. Unique-constraint `columns` and index key `expression` are written as SQL.
 A function key is its name plus identity arguments, such as `over(a integer)`.
+Function `returnsSet` records `pg_proc.proretset`; older snapshots may omit it,
+in which case whether the function returns a set is unknown.
 `ordinalPosition` is the 1-based position among live columns. The text from
 `pg_get_functiondef`, `pg_get_viewdef`, `pg_get_constraintdef`, `pg_get_triggerdef`
 and `format_type` is PostgreSQL's own and can differ between major versions.

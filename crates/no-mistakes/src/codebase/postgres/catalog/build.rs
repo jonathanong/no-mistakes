@@ -27,6 +27,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         model_tables,
         relation_fallback: Default::default(),
         functions: functions(snapshot.functions),
+        scalar_function_names: Default::default(),
         enums: enums(snapshot.enums),
         views: views(snapshot.views),
         view_fallback: Default::default(),
@@ -40,10 +41,9 @@ fn functions(
     functions
         .into_iter()
         .map(|(key, function)| {
-            (
-                key.clone(),
-                function_from_definition(&key, &function.definition),
-            )
+            let mut catalog_function = function_from_definition(&key, &function.definition);
+            catalog_function.returns_set = function.returns_set;
+            (key, catalog_function)
         })
         .collect()
 }

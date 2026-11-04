@@ -1,6 +1,7 @@
 //! Catalog-specific lifecycle projection reuses the one prepared SQL fact pass.
 use super::super::{bounds, value::PlaceholderPositions};
 use super::PreparedStatements;
+use crate::codebase::postgres::statement_facts::SqlFunctionBounds;
 use crate::codebase::postgres::statements::bounds::TemporaryRelations;
 use crate::codebase::postgres::{
     SchemaCatalog, SqlBoundFact, SqlLifecycleBatch, SqlLifecycleFacts, SqlLifecycleStep,
@@ -26,6 +27,11 @@ impl LifecycleBuilder {
         temporary: &TemporaryRelations,
         bounds: &mut Vec<SqlBoundFact>,
     ) -> (usize, Option<SqlViewReads>) {
+        let function_bounds = bounds::needs_catalog(statement).then(|| SqlFunctionBounds {
+            positions: positions.map(<[_]>::to_vec),
+            table_tokens: scope.table_cursor(),
+        });
+        self.conditional |= function_bounds.is_some();
         let first_bound = bounds.len();
         bounds::collect(statement, scope, positions, bounds);
         for bound in &mut bounds[first_bound..] {
@@ -40,6 +46,7 @@ impl LifecycleBuilder {
             first_bound,
             last_bound: first_bound + raw.len(),
             view_reads: view_reads.clone(),
+            function_bounds,
         });
         (first_bound, view_reads)
     }
@@ -66,8 +73,33 @@ pub(crate) fn project_bounds<'a>(
     let mut bounds = lifecycle.raw_bounds.clone();
     let mut temporary = TemporaryRelations::default();
     let mut prepared = PreparedStatements::default();
+    let scalar_functions = catalog.scalar_function_names();
     for batch in &lifecycle.batches {
         for step in &batch.steps {
+            if let Some(inputs) = step
+                .function_bounds
+                .as_ref()
+                .filter(|_| !scalar_functions.is_empty())
+            {
+                let scope = bounds::Scope::with_scalar_functions(
+                    inputs.table_tokens.clone(),
+                    scalar_functions.clone(),
+                );
+                let mut projected = Vec::new();
+                bounds::collect(
+                    &step.statement,
+                    &scope,
+                    inputs.positions.as_deref(),
+                    &mut projected,
+                );
+                for (projected, original) in projected
+                    .iter_mut()
+                    .zip(&bounds[step.first_bound..step.last_bound])
+                {
+                    projected.statement_start = original.statement_start;
+                }
+                bounds[step.first_bound..step.last_bound].clone_from_slice(&projected);
+            }
             prepared.apply(
                 &batch.source,
                 &step.statement,
