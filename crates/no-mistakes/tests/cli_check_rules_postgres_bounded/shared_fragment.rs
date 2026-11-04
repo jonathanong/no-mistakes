@@ -19,7 +19,10 @@ fn statements_appending_a_shared_fragment_are_reported_at_each_caller() {
             ("src/full-from.ts".to_string(), 9),
             ("src/full-from.ts".to_string(), 15),
             ("src/full-from.ts".to_string(), 21),
-            ("src/full-from.ts".to_string(), 34),
+            ("src/full-from.ts".to_string(), 38),
+            ("src/full-from.ts".to_string(), 42),
+            ("src/full-from.ts".to_string(), 51),
+            ("src/full-from.ts".to_string(), 59),
             ("src/second.ts".to_string(), 5),
             ("src/third.ts".to_string(), 7)
         ]
@@ -88,9 +91,57 @@ fn same_file_full_from_fragments_keep_both_callers_and_ignore_a_suppressed_openi
             ),
             (
                 "src/full-from.ts".to_string(),
-                34,
+                38,
+                "table:invoices".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                42,
+                "table:invoices".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                51,
+                "table:invoices".to_string()
+            ),
+            (
+                "src/full-from.ts".to_string(),
+                59,
                 "table:invoices".to_string()
             ),
         ]
     );
+}
+
+#[test]
+fn full_from_single_root_callers_do_not_merge_or_override_opening_relations() {
+    let root = fixture_dir("variants/shared-fragment");
+    let output = check_in(&root, ".no-mistakes.yml");
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    for line in [38, 42] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["file"] == "src/full-from.ts" && finding["line"] == line)
+            .unwrap();
+        assert_eq!(finding["target"], "table:invoices");
+        assert!(finding["message"]
+            .as_str()
+            .unwrap()
+            .contains("includes SQL appended from src/full-from.ts:34"));
+    }
+    assert!(!findings
+        .iter()
+        .any(|finding| finding["file"] == "src/full-from.ts" && finding["line"] == 47));
+    for line in [51, 59] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["file"] == "src/full-from.ts" && finding["line"] == line)
+            .unwrap();
+        assert_eq!(finding["target"], "table:invoices");
+        assert!(!finding["message"]
+            .as_str()
+            .unwrap()
+            .contains("includes SQL appended"));
+    }
 }

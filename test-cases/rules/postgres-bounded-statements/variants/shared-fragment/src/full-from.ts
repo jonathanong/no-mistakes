@@ -37,3 +37,24 @@ function singleRootFromSql() {
 export function singleRoot() {
   return query(sql`SELECT id`.append(singleRootFromSql()));
 }
+
+export function secondSingleRoot() {
+  return query(sql`SELECT id`.append(singleRootFromSql()));
+}
+
+export function suppressedSingleRoot() {
+  // no-mistakes-disable-next-line postgres-bounded-statements
+  return query(sql`SELECT id`.append(singleRootFromSql()));
+}
+
+function singleJoinSql() {
+  return sql` CROSS JOIN invoices i`;
+}
+
+export function boundedOpening(id: string) {
+  return query(sql`SELECT i.id FROM accounts a`.append(singleJoinSql()).append(sql` WHERE a.id = ${id}`));
+}
+
+export function directSingleRoot() {
+  return query(sql`SELECT id FROM invoices`);
+}

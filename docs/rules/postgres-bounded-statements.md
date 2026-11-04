@@ -362,7 +362,7 @@ Declared `columnBounds` follow that push. A predicate on the derived column reac
 
 `DELETE ... WHERE id = ANY(ARRAY(SELECT id FROM expired))` is bounded when `expired` itself is capped. An unbounded `UPDATE ... FROM candidate INNER JOIN ...` finding names the `UPDATE`. A positional `LIMIT $n` inside `WITH page AS MATERIALIZED (... LIMIT $n)` caps that page. A data-modifying CTE joined to the page on the target's whole primary key, including `column = ANY(ARRAY[page.column])` for each key column, stays bounded, and the outer `SELECT` of its `RETURNING` rows keeps that proof. The same statement without the `LIMIT` still reports the target.
 
-A multi-line template reports the source line that contains the SQL. That includes `head + tail`, where each const is its own template. A single-root finding keeps that relation's source line, including inside a fluent append. A grouped finding keeps the opening template's line when its earliest root is there. When the earliest root is an appended fragment instead, the finding is reported once, on the executing call, and the message names that fragment.
+A multi-line template reports the source line that contains the SQL. That includes `head + tail`, where each const is its own template. A single-root finding keeps that relation's source line, including inside a fluent append, when the opening template contains a relation. When the opening template has no relation and every relation comes from appended fragments, the finding is reported at each executor call, including for a single root. A grouped finding keeps the opening template's line when its earliest root is there. When the earliest root is an appended fragment instead, the finding is reported once, on the executing call, and the message names that fragment.
 
 ## Analysis
 
@@ -389,9 +389,10 @@ opening template. The finding is then one report on the executing call, and the
 message names the fragment. A grouped finding that starts in the opening
 template keeps that line. When a root comes from an appended fragment, the
 message names the earliest contributing line in each fragment file once. A
-grouped statement made only of appended fragments is reported at each executor
-call, even when several callers append the same full `FROM` fragment.
-Suppressed roots do not determine the remaining group's location.
+statement made only of appended fragments is reported at each executor call,
+even for a single root when several callers append the same full `FROM`
+fragment. A bounded relation in the opening template preserves the usual
+single-root relation location. Suppressed roots do not determine the remaining group's location.
 
 `allow` entries are applied per root and still report stale entries. A
 relation-line suppression suppresses that relation before the remaining roots

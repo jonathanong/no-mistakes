@@ -79,7 +79,7 @@ fn merge(
     sources: &SourceStore,
     allow: &AllowList,
 ) {
-    if output.len() < 2 {
+    if output.0.is_empty() {
         return;
     }
     let mut group = Vec::new();
@@ -101,11 +101,16 @@ fn merge(
             group.push(located);
         }
     }
-    if group.len() < 2 {
+    let appended_call = append::only_appended(spans);
+    if group.len() < 2 && (group.is_empty() || appended_call.is_none()) {
         output.0.extend(group);
         return;
     }
-    let relocate_line = append::relocate(spans, &group, executor);
+    let relocate_line = if group.len() == 1 {
+        appended_call
+    } else {
+        append::relocate(spans, &group, executor)
+    };
     group.sort();
     let roots: BTreeSet<_> = group
         .iter()
