@@ -25,12 +25,8 @@ fn trace_rule_records_enabled_observers() {
     assert_eq!(timings[0].label, "analysis.filesystem_rules.special");
     assert_eq!(timings[0].kind, TimingKind::Parallel);
 
-    for observer in [None::<std::sync::Arc<InvocationObserver>>] {
-        let sources =
-            SourceStore::new_observed(Arc::new(FileInventory::from_paths(&[])), observer.clone());
-        assert_eq!(trace_rule(&sources, "untimed", || 7), 7);
-        assert!(observer.is_none_or(|observer| observer.snapshot().timings.is_empty()));
-    }
+    let sources = SourceStore::new_observed(Arc::new(FileInventory::from_paths(&[])), None);
+    assert_eq!(trace_rule(&sources, "untimed", || 7), 7);
 }
 
 #[test]
