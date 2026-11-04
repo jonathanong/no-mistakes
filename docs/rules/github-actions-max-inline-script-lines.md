@@ -59,6 +59,7 @@ jobs:
 With the same limit, this four-line composite-action body fails:
 
 ```yaml
+# .github/actions/prepare/action.yml
 runs:
   using: composite
   steps:

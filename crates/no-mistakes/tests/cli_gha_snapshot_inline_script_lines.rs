@@ -11,6 +11,8 @@ fn github_actions_max_inline_script_lines_json_matches_snapshot() {
         ("unsupported", "three"),
         ("continuations", "three"),
         ("contexts", "three"),
+        ("unreadable", "three"),
+        ("no-scripts", "three"),
     ]
     .into_iter()
     .map(|(fixture, config)| {

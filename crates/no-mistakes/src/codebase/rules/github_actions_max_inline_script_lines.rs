@@ -26,7 +26,8 @@ impl Default for Options {
 super::borrowed_source_rule_entrypoints!();
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    super::check_sourced_standalone(root, config, check_with_files)
+    let root = crate::codebase::ts_resolver::normalize_path(root);
+    super::check_sourced_standalone(&root, config, check_with_files)
 }
 
 pub(crate) fn check_with_files_sources_and_deferred_suppression(
@@ -72,3 +73,6 @@ fn finding(file: &str, line: usize, message: String) -> RuleFinding {
         target: None,
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -1,0 +1,4 @@
+on: workflow_dispatch
+jobs:
+  reusable:
+    uses: example/shared/.github/workflows/build.yml@main

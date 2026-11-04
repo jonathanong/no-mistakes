@@ -152,6 +152,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "no-scripts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "suppression": {
     "exitCode": 0,
     "report": {
@@ -161,6 +173,25 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "unreadable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 2,
+          "message": "Cannot read GitHub Actions YAML as UTF-8 (invalid utf-8 sequence of 1 bytes from index 13); restore a readable file so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines"
+        }
+      ],
       "warnings": []
     }
   },
