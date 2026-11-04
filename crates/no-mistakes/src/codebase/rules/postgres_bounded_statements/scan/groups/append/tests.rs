@@ -1,6 +1,7 @@
 use super::{only_appended, span};
 use crate::codebase::postgres::statements::SqlFactSite;
-use crate::codebase::postgres::{SqlStatementFileFacts, SqlVariantLocations};
+use crate::codebase::postgres::statements::SqlVariantLocations;
+use crate::codebase::postgres::SqlStatementFileFacts;
 
 #[test]
 fn missing_relation_locations_prevent_the_all_appended_proof() {
