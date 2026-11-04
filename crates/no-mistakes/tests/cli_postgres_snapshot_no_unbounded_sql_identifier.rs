@@ -179,7 +179,16 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
     // Each call also names table. A plain parameter beside them does not.
     // Imported env config, a namespace member, and a helper return stay.
     // An imported literal export does not.
-    push(&mut owned, rule, &config, &["fail-env-in-where"]);
+    push(
+        &mut owned,
+        rule,
+        &config,
+        &[
+            "fail-env-in-where",
+            "fail-identifier-with-bind-alias",
+            "fail-outside-alias-sources",
+        ],
+    );
     // No finding: a static call, a dynamic call with no interpolation,
     // calls whose only interpolations or arguments are binds, and a
     // conditional relation name with parameter binds.
