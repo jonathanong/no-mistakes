@@ -25,6 +25,10 @@ impl ConfigPath {
         self
     }
 
+    pub(crate) fn pop(&mut self) -> Option<Segment> {
+        self.0.pop()
+    }
+
     pub(crate) fn as_slice(&self) -> &[Segment] {
         &self.0
     }

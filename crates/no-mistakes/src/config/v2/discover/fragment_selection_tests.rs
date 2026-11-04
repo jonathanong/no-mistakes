@@ -80,3 +80,13 @@ fn invalid_paths_and_duplicate_scalars_name_the_sources() {
         .to_string();
     assert!(error.contains(".no-mistakes.yml") && error.contains("checks/one.yml"));
 }
+
+#[test]
+fn typed_fragment_errors_point_to_authored_file_and_line() {
+    let root = fixture("invalid-type");
+    let path = root.join(".no-mistakes/tests/bad.yml");
+    let error = load_v2_config_with_path_from_visible(&root, None, &[path])
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(".no-mistakes/tests/bad.yml:4"), "{error}");
+}

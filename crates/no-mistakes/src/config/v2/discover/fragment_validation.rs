@@ -56,3 +56,30 @@ pub(super) fn finish(
     }
     Ok(())
 }
+
+pub(super) fn deserialize(
+    value: serde_yaml::Value,
+    provenance: &super::super::schema::ConfigProvenance,
+    documents: &[ConfigDocument],
+) -> Result<NoMistakesConfig> {
+    serde_path_to_error::deserialize(value).map_err(|error| {
+        let mut key = ConfigPath::default();
+        for segment in error.path() {
+            key = match segment {
+                serde_path_to_error::Segment::Map { key: name } => key.key(name),
+                serde_path_to_error::Segment::Seq { index } => key.index(*index),
+                serde_path_to_error::Segment::Enum { variant } => key.key(variant),
+                serde_path_to_error::Segment::Unknown => continue,
+            };
+        }
+        if let Some((path, local)) = provenance.origin(&key) {
+            if let Some(document) = documents.iter().find(|document| document.path == path) {
+                let line = ConfigLocations::parse(&document.source, path)
+                    .and_then(|locations| locations.line(&local))
+                    .unwrap_or(1);
+                return anyhow::anyhow!("{}:{line}: {error}", path.display());
+            }
+        }
+        anyhow::anyhow!("failed to deserialize merged configuration: {error}")
+    })
+}

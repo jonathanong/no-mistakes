@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use serde_yaml::{Mapping, Value};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -125,7 +125,7 @@ pub(crate) fn parse_sources_quiet(
         merge(&mut merged, value, "", &document.path, &mut origins)?;
     }
     let mut config: NoMistakesConfig =
-        serde_yaml::from_value(merged).context("failed to deserialize merged configuration")?;
+        super::fragment_validation::deserialize(merged, &provenance, documents)?;
     let path = documents.first().map(|d| d.path.as_path()).unwrap_or(root);
     config.config_provenance = provenance;
     super::fragment_validation::finish(&mut config, documents, path)?;

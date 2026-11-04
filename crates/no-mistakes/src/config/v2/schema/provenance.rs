@@ -1,8 +1,9 @@
 use crate::config::source_locations::{ConfigPath, Segment};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, Default)]
-pub struct ConfigProvenance(Vec<(ConfigPath, PathBuf, ConfigPath)>);
+pub struct ConfigProvenance(HashMap<ConfigPath, (PathBuf, ConfigPath)>);
 
 impl PartialEq for ConfigProvenance {
     fn eq(&self, _: &Self) -> bool {
@@ -15,16 +16,19 @@ impl ConfigProvenance {
         self.0.is_empty()
     }
     pub(crate) fn insert(&mut self, global: ConfigPath, path: PathBuf, local: ConfigPath) {
-        self.0.push((global, path, local));
+        self.0.insert(global, (path, local));
     }
     pub(crate) fn origin(&self, path: &ConfigPath) -> Option<(&Path, ConfigPath)> {
-        let (global, file, local) = self
-            .0
-            .iter()
-            .filter(|(global, _, _)| path.as_slice().starts_with(global.as_slice()))
-            .max_by_key(|(global, _, _)| global.as_slice().len())?;
+        let mut prefix = path.clone();
+        let mut suffix = Vec::new();
+        let (file, local) = loop {
+            if let Some(origin) = self.0.get(&prefix) {
+                break origin;
+            }
+            suffix.push(prefix.pop()?);
+        };
         let mut result = local.clone();
-        for segment in &path.as_slice()[global.as_slice().len()..] {
+        for segment in suffix.iter().rev() {
             result = match segment {
                 Segment::Key(key) => result.key(key),
                 Segment::Index(index) => result.index(*index),
