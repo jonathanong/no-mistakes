@@ -180,12 +180,12 @@ changed test and tests that depend on it through the ordinary graph. Set
 `includeChangedTests: true` on the specific structured trigger that should
 expand from changed tests. Legacy full-suite trigger forms are unchanged.
 
-For revision and inline-diff inputs, `.no-mistakes.yml`/`.yaml` changes are
-compared semantically per framework. Formatting-only changes do not invalidate
-tests, while a change to Vitest configuration does not invalidate Playwright
-and vice versa. Inputs that provide only a changed filename, or whose historical
-configuration cannot be reconstructed and parsed, conservatively retain the
-configured global fallback.
+For revision and inline-diff inputs, changes to the root `.no-mistakes` config
+and `.no-mistakes/` fragments are compared semantically per framework.
+Formatting-only changes do not invalidate tests, while a change to Vitest
+configuration does not invalidate Playwright and vice versa. Inputs that
+provide only a changed filename, or whose historical configuration cannot be
+reconstructed and parsed, conservatively retain the configured global fallback.
 
 For TypeScript and JavaScript workspaces, omitting `--tsconfig` resolves each
 import with the config that owns its importing file. A shared project change can

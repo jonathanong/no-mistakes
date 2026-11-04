@@ -18,7 +18,7 @@ pub(crate) enum Kind {
 
 pub(crate) struct Ref {
     pub(crate) field: String,
-    pub(super) origin: Option<crate::config::source_locations::ConfigPath>,
+    pub(crate) origin: Option<crate::config::source_locations::ConfigPath>,
     pub(super) rule_index: Option<usize>,
     pub(crate) kind: Kind,
     pub(crate) value: String,

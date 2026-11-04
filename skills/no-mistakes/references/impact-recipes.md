@@ -72,17 +72,18 @@ Use this before adding a new directory to `tests.playwright.selectorRoots` or
 before deciding whether selectors under a directory are intentionally uncovered.
 
 ```bash
-rg -n 'selectorRoots|selectorInclude|selectorExclude|testIdAttribute|testIds|componentTestIds' .no-mistakes.yml
+rg -n 'selectorRoots|selectorInclude|selectorExclude|testIdAttribute|testIds|componentTestIds' .no-mistakes.yml .no-mistakes
 rg -n 'data-pw=|data-testid=|dataPw|testId' web/path/to/candidate-root another/path/to/root
 ```
 
-Replace `.no-mistakes.yml` with the effective config path for the repository
-(`.no-mistakes.yml`, `.no-mistakes.yaml`, `.no-mistakes.json`,
-`.no-mistakes.jsonc`, or the explicit `--config` path). Replace the candidate
-root paths with directories from the current repository, and derive the selector
-grep terms from configured `selectors.testIds` and `selectors.componentTestIds`
-keys/values. The default example above only covers default-ish `data-pw`,
-`data-testid`, `dataPw`, and `testId` names.
+For a split automatic config, search both the root config and `.no-mistakes/`;
+the folder contains fragments without their outer section key. An explicit
+`--config` selects one file only. Use the effective config's paths relative to
+the repository root. Replace the candidate root paths with directories from the
+current repository, and derive selector grep terms from configured
+`selectors.testIds` and `selectors.componentTestIds` keys/values. The default
+example above only covers default-ish `data-pw`, `data-testid`, `dataPw`, and
+`testId` names.
 
 To preview uncovered selectors for new roots, first add the candidate
 directories to `tests.playwright.selectorRoots` and update `selectorInclude`

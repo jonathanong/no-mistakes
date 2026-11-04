@@ -137,12 +137,13 @@ Legacy path lists and target-scoped `paths` use ordered gitignore-style
 matching: a later `!` pattern excludes an earlier match, and a still-later
 positive pattern can include it again.
 
-Changes to `.no-mistakes.yml` or `.no-mistakes.yaml` invalidate only frameworks
-whose effective `testPlan` or `tests` configuration changed. Formatting-only
-edits do not trigger a suite. Revision and inline-diff inputs compare the old
-and new semantic configuration when both versions can be read; changed-file-only
-inputs and unreadable or malformed historical versions fail open to the normal
-global-config fallback behavior.
+Changes to the root `.no-mistakes` config or files under `.no-mistakes/`
+invalidate only frameworks whose effective `testPlan` or `tests` configuration
+changed. Formatting-only edits do not trigger a suite. Revision and inline-diff
+inputs compare the old and new semantic configuration, including fragments,
+when both versions can be read; changed-file-only inputs and unreadable or
+malformed historical versions fail open to the normal global-config fallback
+behavior.
 
 Dotnet and Swift plans use explicit config for source-graph targeting. When
 `tests plan dotnet` or `tests plan swift` can discover native tests but cannot

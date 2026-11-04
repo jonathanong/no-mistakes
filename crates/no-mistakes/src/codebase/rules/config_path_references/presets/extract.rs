@@ -1,8 +1,5 @@
-use super::super::BaseDir;
 use super::oxlint;
-use super::types::{is_optional_glob, Extracted};
-use crate::codebase::rules::no_mistakes_config::paths::{self, Kind};
-use crate::config::v2::NoMistakesConfig;
+use super::types::is_optional_glob;
 use serde_yaml::Value;
 
 pub(crate) fn matches_preset(preset: &str, filename: &str, rel: &str) -> bool {
@@ -19,9 +16,23 @@ pub(crate) fn matches_preset(preset: &str, filename: &str, rel: &str) -> bool {
                 || (rel.starts_with(".github/actions/") && rel.ends_with("/action.yml"))
                 || (rel.starts_with(".github/actions/") && rel.ends_with("/action.yaml"))
         }
-        "no-mistakes" => rel == ".no-mistakes.yml" || rel == ".no-mistakes.yaml",
+        "no-mistakes" => is_no_mistakes_config_path(rel),
         _ => false,
     }
+}
+
+fn is_no_mistakes_config_path(rel: &str) -> bool {
+    let supported_extension = [".yaml", ".yml", ".json", ".jsonc"]
+        .iter()
+        .any(|extension| rel.ends_with(extension));
+    (rel
+        .strip_prefix(".no-mistakes/")
+        .is_some_and(|fragment| fragment.split('/').count() >= 2)
+        || rel == ".no-mistakes.yml"
+        || rel == ".no-mistakes.yaml"
+        || rel == ".no-mistakes.json"
+        || rel == ".no-mistakes.jsonc")
+        && supported_extension
 }
 
 pub(crate) fn is_supported_preset(preset: &str) -> bool {
@@ -36,18 +47,6 @@ pub(crate) fn is_supported_preset(preset: &str) -> bool {
             | "pnpm-workspace-filters"
             | "no-mistakes"
     )
-}
-
-pub(crate) fn no_mistakes(config: &NoMistakesConfig) -> Vec<Extracted> {
-    paths::references(config)
-        .into_iter()
-        .map(|reference| Extracted {
-            field: reference.field,
-            value: reference.value,
-            allow_globs: reference.kind == Kind::Glob,
-            base_dir: BaseDir::Root,
-        })
-        .collect()
 }
 
 pub(crate) fn extract(preset: &str, value: &Value) -> Vec<Extracted> {

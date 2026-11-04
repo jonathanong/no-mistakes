@@ -1,7 +1,8 @@
 # config
 
-Inspect the effective `.no-mistakes.yml` after discovery and frontend-app
-resolution.
+Inspect the effective no-mistakes configuration after discovery, including
+automatically merged `.no-mistakes/` section fragments, and frontend-app
+resolution. An explicit `--config` path still selects exactly one file.
 
 ## Subcommands
 

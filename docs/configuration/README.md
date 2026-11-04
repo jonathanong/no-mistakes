@@ -3,6 +3,24 @@
 `no-mistakes` uses `.no-mistakes.yaml`, `.no-mistakes.yml`,
 `.no-mistakes.json`, or `.no-mistakes.jsonc`.
 
+For automatic discovery, a repository can also split sections into a
+`.no-mistakes/` directory. Each direct child names a top-level section, such as
+`.no-mistakes/rules/` or `.no-mistakes/tests/`; files below that directory
+contain fragments of that section without repeating its outer key. For
+example, a file in `.no-mistakes/rules/` starts with a rule entry or list. Any
+subdirectories below a section are organizational only. Fragment files accept
+the same `.yaml`, `.yml`, `.json`, and `.jsonc` extensions as the root config.
+
+The optional root config is merged first, followed by fragment files in sorted
+relative-path order. Mappings deep-merge and lists concatenate. Repeating a
+scalar key or merging incompatible value types is an error that identifies the
+source files; values are never silently overwritten. Unknown section names,
+unrecognized file extensions (except dotfiles and Markdown files), and config
+files placed directly in `.no-mistakes/` are errors. Paths inside fragments,
+including project roots and test paths, remain relative to the repository root.
+An explicit `--config <file>` loads exactly that file and does not load
+`.no-mistakes/` fragments.
+
 ```yaml
 projects:
   web:
