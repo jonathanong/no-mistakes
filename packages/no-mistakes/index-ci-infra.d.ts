@@ -5,10 +5,13 @@ import type {
   PostgresCompleteCatalog,
   PostgresOrderingCatalog,
 } from "./postgres-catalog-types";
-// CI, impacted-checks, data-flow, infra, and Swift API declarations, split
+// CI, configuration, impacted-checks, data-flow, infra, and Swift API declarations, split
 // out of `index.d.ts` to stay under the 200-line file limit.
 
 import type {
+  ConfigResolveOptions,
+  DeclaredConfig,
+  ResolvedConfig,
   CiEnvOptions,
   CiEnvReport,
   CiImpactOptions,
@@ -116,3 +119,13 @@ export function analyzeTypeScriptModules(
 
 /** Read-only report of the machine-wide invocation lock; never waits and takes no lock. */
 export function lockStatus(): Promise<import("./invocation-types").LockStatus>;
+
+export function resolveConfig(
+  options: WithInvocationOptions<ConfigResolveOptions & { view: "declared" }>,
+): Promise<WithInvocationResult<DeclaredConfig>>;
+export function resolveConfig(
+  options?: WithInvocationOptions<ConfigResolveOptions & { view?: "resolved" }>,
+): Promise<WithInvocationResult<ResolvedConfig>>;
+export function resolveConfig(
+  options: WithInvocationOptions<ConfigResolveOptions>,
+): Promise<WithInvocationResult<ResolvedConfig | DeclaredConfig>>;

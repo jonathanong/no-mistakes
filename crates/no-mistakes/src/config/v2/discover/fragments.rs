@@ -56,6 +56,9 @@ pub(crate) fn classify_fragment(root: &Path, path: &Path) -> Result<Option<Strin
         return Ok(None);
     }
     if parts.len() < 2 {
+        if path.extension().is_some_and(|extension| extension == "md") {
+            return Ok(None);
+        }
         anyhow::bail!(
             "config file directly inside {}: {}",
             directory.display(),

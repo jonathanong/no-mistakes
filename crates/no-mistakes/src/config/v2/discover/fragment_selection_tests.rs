@@ -172,3 +172,11 @@ fn relative_path_order_is_lexical_across_nested_folders() {
         .collect();
     assert_eq!(names, ["flat", "nested"]);
 }
+
+#[test]
+fn root_directory_documentation_is_not_a_config_fragment() {
+    assert_eq!(
+        super::declared_config(&fixture("readme"), None).unwrap(),
+        serde_json::json!({})
+    );
+}
