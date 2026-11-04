@@ -26,6 +26,7 @@ pub mod github_actions_docker_host_ports;
 pub mod github_actions_download_integrity;
 pub mod github_actions_job_permissions;
 pub mod github_actions_job_timeouts;
+pub mod github_actions_max_inline_script_lines;
 pub mod github_actions_pinned_hash;
 pub mod github_actions_script_expressions;
 pub mod github_actions_step_timeouts;

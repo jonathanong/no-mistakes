@@ -1,0 +1,42 @@
+on: push
+jobs:
+  build:
+    steps:
+      - name: Exactly three logical lines
+        run: |
+          printf '%s\n' \
+            one \
+            two
+          # Comments count.
+          echo three
+      - name: Four logical lines
+        run: |
+          printf '%s\n' \
+            one \
+            two
+          # Comments count.
+          echo three
+          echo four
+      - name: Blank continuation target
+        run: |
+          echo one \
+
+          echo two
+          echo three
+      - name: A backslash followed by space does not continue
+        run: |
+          echo one \ 
+          echo two
+          echo three
+          echo four
+      - name: Runs before checkout without an exemption
+        run: |
+          echo one
+          echo two
+          echo three
+          echo four
+      - name: Plain multiline scalar preserves its trailing space
+        run: echo one \ 
+          echo two
+          echo three
+          echo four

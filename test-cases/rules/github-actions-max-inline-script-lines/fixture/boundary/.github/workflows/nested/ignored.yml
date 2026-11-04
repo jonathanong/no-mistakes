@@ -1,0 +1,8 @@
+jobs:
+  build:
+    steps:
+      - run: |
+          one
+          two
+          three
+          four

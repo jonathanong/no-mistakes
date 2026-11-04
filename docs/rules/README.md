@@ -74,6 +74,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`github-actions-download-integrity`](github-actions-download-integrity.md)       | Flag `curl` and `wget` downloads that the same step does not verify.       |
 | [`github-actions-job-timeouts`](github-actions-job-timeouts.md)                   | Require literal job `timeout-minutes` and optional caps.                    |
 | [`github-actions-job-permissions`](github-actions-job-permissions.md)             | Report jobs that inherit explicit workflow-level token write permissions.    |
+| [`github-actions-max-inline-script-lines`](github-actions-max-inline-script-lines.md) | Keep workflow and composite-action scripts small enough to lint and test separately. |
 | [`github-actions-step-timeouts`](github-actions-step-timeouts.md)                 | Require bounded timeouts on executable workflow steps.                      |
 | [`github-actions-pinned-hash`](github-actions-pinned-hash.md)                 | Require every `uses:` step to be pinned to a commit SHA with a version comment. |
 | [`github-actions-script-expressions`](github-actions-script-expressions.md)   | Reject untrusted `${{ }}` expressions inside `run` and `actions/github-script` scripts. |

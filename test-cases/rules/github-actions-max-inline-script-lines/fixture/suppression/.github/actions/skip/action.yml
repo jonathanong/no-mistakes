@@ -1,0 +1,10 @@
+# no-mistakes-disable-file github-actions-max-inline-script-lines
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        one
+        two
+        three
+        four

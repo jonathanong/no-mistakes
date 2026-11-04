@@ -12,6 +12,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::GITHUB_ACTIONS_JOB_TIMEOUTS,
     rules::GITHUB_ACTIONS_JOB_PERMISSIONS,
     rules::GITHUB_ACTIONS_STEP_TIMEOUTS,
+    rules::GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES,
     rules::GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS,
     rules::github_actions_pinned_hash::RULE_ID,
     rules::github_actions_script_expressions::RULE_ID,

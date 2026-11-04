@@ -326,3 +326,8 @@ constants resolve; `unknownValues: "finding"` reports unresolved values.
 See [plugin options](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-plugin.md#vitest-timeout-cap).
 This file-specific capability uses the configured linter rather than a
 repository catalog scan.
+
+For `github-actions-max-inline-script-lines`, `maxLines` (default 10) counts non-blank
+body lines, joining backslash continuations, in workflow/composite `run` and `actions/github-script` scripts.
+Move oversized scripts into files and invoke them; see the
+[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-max-inline-script-lines.md).

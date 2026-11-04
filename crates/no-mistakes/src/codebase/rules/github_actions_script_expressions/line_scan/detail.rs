@@ -117,6 +117,14 @@ pub(super) fn flush_step(scanner: &mut Scanner<'_>) {
     let uses = scanner.uses.take();
     let run_lines = std::mem::take(&mut scanner.run_lines);
     let script_lines = std::mem::take(&mut scanner.script_lines);
+    scanner.scripts.flush(
+        &scanner.job,
+        scanner.step,
+        uses.as_deref(),
+        &run_lines,
+        &script_lines,
+        scanner.lines,
+    );
     for (line, text) in &run_lines {
         for expr in expressions(text) {
             scanner.hits.push(Hit {
@@ -159,3 +167,18 @@ mod stored_runs {
 
 #[cfg(test)]
 mod collect_runs_tests;
+
+// serde counts every sequence entry. Values this parser skips still occupy a step.
+pub(super) fn note_unparsed_item(scanner: &mut Scanner<'_>, line: &str, line_no: usize) {
+    let Some(scope) = item_scope(line) else {
+        return;
+    };
+    scanner.pop_until(scope, true);
+    if scanner.parent() == Some(super::super::yaml_parse::Kind::Steps) {
+        begin_step(scanner, line_no);
+        scanner.frames.push(super::super::yaml_parse::Frame {
+            indent: scope,
+            kind: super::super::yaml_parse::Kind::Step,
+        });
+    }
+}

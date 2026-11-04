@@ -1,0 +1,18 @@
+name: mixed
+on: push
+jobs:
+  build:
+    steps:
+      - {run: "echo hidden"}
+      - run: |
+          echo one
+          echo two
+          echo three
+          echo four
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            one();
+            two();
+            three();
+            four();

@@ -81,6 +81,11 @@ pub(super) fn run(
         GITHUB_ACTIONS_PINNED_HASH => {
             github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)
         }
+        GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES => {
+            github_actions_max_inline_script_lines::check_with_files_sources_and_deferred_suppression(
+                root, config, files, sources, defer_suppression,
+            )
+        }
         GITHUB_ACTIONS_SCRIPT_EXPRESSIONS => {
             github_actions_script_expressions::check_with_files_and_sources(
                 root, config, files, sources,

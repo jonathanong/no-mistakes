@@ -9,6 +9,7 @@ macro_rules! filesystem_rules {
             GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => github_actions_composite_step_schema::check_with_files => "",
             GITHUB_ACTIONS_JOB_TIMEOUTS => github_actions_job_timeouts::check_with_files => "",
             GITHUB_ACTIONS_JOB_PERMISSIONS => github_actions_job_permissions::check_with_files => "",
+            GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES => github_actions_max_inline_script_lines::check_with_files => "",
             GITHUB_ACTIONS_STEP_TIMEOUTS => github_actions_step_timeouts::check_with_files => "",
             GITHUB_ACTIONS_PINNED_HASH => github_actions_pinned_hash::check_with_files => "",
             GITHUB_ACTIONS_SCRIPT_EXPRESSIONS => github_actions_script_expressions::check_with_files => "",

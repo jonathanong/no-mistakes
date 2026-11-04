@@ -1,0 +1,10 @@
+on: [push, pull_request_target]
+jobs:
+  report:
+    steps:
+      - name: Render a report
+        run: |
+          cat <<'REPORT'
+          build result
+          REPORT
+          echo '${{ github.run_id }}'

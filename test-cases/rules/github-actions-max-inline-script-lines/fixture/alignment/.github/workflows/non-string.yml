@@ -1,0 +1,21 @@
+name: non-string
+on: push
+jobs:
+  build:
+    steps:
+      - run: 42
+      - run: |
+          echo one
+          echo two
+          echo three
+          echo four
+      - uses: actions/github-script@v7
+        with:
+          script: 42
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            one();
+            two();
+            three();
+            four();

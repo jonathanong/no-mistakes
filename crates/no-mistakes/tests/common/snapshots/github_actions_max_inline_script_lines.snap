@@ -1,0 +1,232 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "boundary": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/prepare/action.yaml",
+          "line": 13,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. Use $GITHUB_ACTION_PATH for a script beside the action; a repo-relative path depends on the caller's checkout.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "script: >"
+        },
+        {
+          "file": ".github/actions/prepare/action.yaml",
+          "line": 6,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. Use $GITHUB_ACTION_PATH for a script beside the action; a repo-relative path depends on the caller's checkout.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/scripts.yml",
+          "line": 14,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- run: |"
+        },
+        {
+          "file": ".github/workflows/scripts.yml",
+          "line": 19,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- run: >-"
+        },
+        {
+          "file": ".github/workflows/scripts.yml",
+          "line": 27,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "script: |"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "contexts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/pull-request-target.yml",
+          "line": 6,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. The moved script must come from the trusted ref, never the PR head.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/trigger-list.yml",
+          "line": 6,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. The moved script must come from the trusted ref, never the PR head.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/workflow-run.yml",
+          "line": 9,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently. The moved script must come from the trusted ref, never the PR head.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "continuations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/continued.yml",
+          "line": 13,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/continued.yml",
+          "line": 27,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/continued.yml",
+          "line": 33,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |"
+        },
+        {
+          "file": ".github/workflows/continued.yml",
+          "line": 39,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: echo one \\"
+        },
+        {
+          "file": ".github/workflows/scalar-modifiers.yml",
+          "line": 25,
+          "message": "Inline script has 4 non-blank lines, exceeding maxLines 3; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "run: |2-"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/default.yml",
+          "line": 15,
+          "message": "Inline script has 11 non-blank lines, exceeding maxLines 10; move it into a file and call that file so it can be linted and tested independently.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- run: |"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no-scripts": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unreadable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 2,
+          "message": "Cannot read GitHub Actions YAML as UTF-8 (invalid utf-8 sequence of 1 bytes from index 13); restore a readable file so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unsupported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/alias.yml",
+          "line": 10,
+          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "- run: *script"
+        },
+        {
+          "file": ".github/workflows/flow.yml",
+          "line": 1,
+          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": "jobs: {build: {steps: [{run: \"one\\ntwo\\nthree\\nfour\"}]}}"
+        },
+        {
+          "file": ".github/workflows/invalid.yml",
+          "line": 2,
+          "message": "Invalid YAML (did not find expected node content at line 2 column 1, while parsing a flow node); fix the YAML so inline script length can be checked.",
+          "rule": "github-actions-max-inline-script-lines",
+          "sourceLine": ""
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
