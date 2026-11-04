@@ -206,15 +206,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": ".github/workflows/alias.yml",
-          "line": 1,
-          "message": "Script bodies could not be aligned to source locations; rewrite anchors, aliases, and flow-style steps as ordinary block-style run or with.script bodies so inline script length can be checked.",
+          "line": 10,
+          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
           "rule": "github-actions-max-inline-script-lines",
-          "sourceLine": "env:"
+          "sourceLine": "- run: *script"
         },
         {
           "file": ".github/workflows/flow.yml",
           "line": 1,
-          "message": "Script bodies could not be aligned to source locations; rewrite anchors, aliases, and flow-style steps as ordinary block-style run or with.script bodies so inline script length can be checked.",
+          "message": "Script body could not be aligned to its source location; rewrite anchors, aliases, and flow-style steps as an ordinary block-style run or with.script body so inline script length can be checked.",
           "rule": "github-actions-max-inline-script-lines",
           "sourceLine": "jobs: {build: {steps: [{run: \"one\\ntwo\\nthree\\nfour\"}]}}"
         },
