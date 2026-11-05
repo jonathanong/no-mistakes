@@ -38,6 +38,16 @@ fn postgres_executor_recall_check_json_snapshot() {
                 rules_path(registry, "configs", "registry.yml"),
             ),
             (
+                "malformed_dollar_token_stays_visible",
+                rules_path(lock, "fixture", "fail-invalid-dollar-token"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
+                "unclosed_sql_comment_preserves_exemption",
+                rules_path(lock, "fixture", "pass-unclosed-sql-comment"),
+                rules_path(lock, "configs", "default.yml"),
+            ),
+            (
                 "lock_whitespace_and_comments",
                 rules_path(lock, "fixture", "fail-lock-trivia"),
                 rules_path(lock, "configs", "default.yml"),

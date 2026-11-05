@@ -146,6 +146,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "malformed_dollar_token_stays_visible": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "query(`SELECT $not_a_tag FROM items WHERE id=ANY($1) FOR UPDATE`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "nested_sql_comment_marker_exempts": {
     "exitCode": 0,
     "report": {
@@ -395,6 +416,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "lock-ordering"
         }
       ],
+      "warnings": []
+    }
+  },
+  "unclosed_sql_comment_preserves_exemption": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
       "warnings": []
     }
   },

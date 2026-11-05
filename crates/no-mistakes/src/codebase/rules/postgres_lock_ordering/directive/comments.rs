@@ -32,7 +32,7 @@ pub(crate) fn comment_contains_directive(text: &str, directive: &str) -> bool {
 }
 
 fn quoted_end(bytes: &[u8], start: usize) -> Option<usize> {
-    let quote = *bytes.get(start)?;
+    let quote = bytes[start];
     if matches!(quote, b'\'' | b'"' | b'`') {
         let escape = quote == b'`'
             || quote == b'\''
