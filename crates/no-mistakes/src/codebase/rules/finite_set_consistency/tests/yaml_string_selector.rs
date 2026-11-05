@@ -1,7 +1,8 @@
 use super::super::extract::{
     extract_sql_enum, extract_ts_const_object_keys, extract_ts_const_object_property,
-    extract_ts_string_union, extract_yaml_string_selector,
+    extract_ts_string_union,
 };
+use super::super::test_support::extract_yaml_string_selector;
 use std::collections::BTreeSet;
 use std::path::Path;
 

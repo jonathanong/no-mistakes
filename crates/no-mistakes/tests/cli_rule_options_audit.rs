@@ -34,6 +34,8 @@ fn rule_options_json_matches_snapshot() {
         "doc-missing-file",
         "doc-substring-present",
         "doc-substring-filtered",
+        "doc-required-file-filtered",
+        "doc-project-substrings",
         "renamed-entry-extensions",
         "renamed-entry-scope",
         "renamed-both-names",
@@ -126,6 +128,7 @@ fn options_change_only_the_declared_policy() {
         "email-empty-domains",
         "version-blank-anchors",
         "doc-substring-present",
+        "doc-substring-filtered",
     ] {
         assert_eq!(report(name)["rules"], serde_json::json!([]), "{name}");
     }
@@ -137,6 +140,21 @@ fn options_change_only_the_declared_policy() {
             .unwrap()
             .contains("missing required substring"));
     }
+    assert_eq!(
+        report("doc-required-file-filtered")["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    let project = report("doc-project-substrings");
+    let files: Vec<_> = project["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    assert_eq!(files, ["web/guide.md", "web/missing.md"]);
     let renamed = report("renamed-entry-overrides");
     let files: Vec<_> = renamed["rules"]
         .as_array()
@@ -160,7 +178,7 @@ fn options_change_only_the_declared_policy() {
     }
     let email = report("email-html-forms");
     let findings = email["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 8, "{email}");
+    assert_eq!(findings.len(), 9, "{email}");
     assert!(findings.iter().all(|f| f["target"] == "example.com"));
     assert!(findings
         .iter()

@@ -80,7 +80,9 @@ rules:
 
 Each `requiredSubstrings` entry checks its file independently of `requiredFiles`.
 A missing selected file is reported; `requiredHeading` applies only to
-`requiredFiles`. Common file filters retain their existing missing-file semantics.
+`requiredFiles`. Substring-only targets honor rule/project include, exclude, roots, and skipped
+directories. Missing in-scope substring targets report; excluded targets stay
+silent. Explicit `requiredFiles` retain their existing missing-file semantics.
 
 ## Valid example
 

@@ -5,8 +5,6 @@ pub(super) use super::markdown::extract_markdown_table_code_cells;
 use super::object::{const_object_body, top_level_object_keys, top_level_property_values};
 pub(super) use super::ts_array::{extract_ts_array_literal, extract_ts_const_array_property};
 use super::ts_union;
-#[cfg(test)]
-pub(super) use super::yaml::{extract_yaml_sequence, extract_yaml_string_selector};
 use super::SetSpec;
 use super::TS_CALL_FIRST_STRING_ARGUMENT;
 use crate::codebase::dependencies::graph::TsFactLookup;

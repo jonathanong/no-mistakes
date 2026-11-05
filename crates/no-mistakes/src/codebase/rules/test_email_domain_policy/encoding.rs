@@ -19,7 +19,7 @@ impl DecodedLine<'_> {
 
 pub(super) fn decode(source: &str) -> DecodedLine<'_> {
     static ENTITY: LazyLock<regex::Regex> = LazyLock::new(|| {
-        regex::Regex::new(r"&(?:#[xX][0-9a-fA-F]+|#[0-9]+|[A-Za-z][A-Za-z0-9]+);")
+        regex::Regex::new(r"&(?:#[xX][0-9a-fA-F]+;?|#[0-9]+;?|[A-Za-z][A-Za-z0-9]+;)")
             .expect("HTML entity regex")
     });
     if !source.contains('&') {

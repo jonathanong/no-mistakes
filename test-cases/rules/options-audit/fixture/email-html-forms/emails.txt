@@ -8,3 +8,4 @@ allow&#64;example.com
 &copy; person&#64;example.com; person@example.com
 person&unknown;example.com
 person&#64;example.com &copy;
+person&#64example&#46com

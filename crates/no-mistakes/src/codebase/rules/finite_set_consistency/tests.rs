@@ -171,7 +171,7 @@ comparisons:
 }
 
 #[test]
-fn ignores_incomplete_set_specs_and_comparisons() {
+fn ignores_unknown_kinds_and_unresolved_comparison_names() {
     let root = fixture_root("fixture");
     let files = vec![root.join("src/types.ts")];
     let findings = check_with_files(
@@ -179,7 +179,7 @@ fn ignores_incomplete_set_specs_and_comparisons() {
         &config(
             r#"
 sets:
-  - name: ""
+  - name: routes
     file: src/types.ts
     kind: ts-string-union
     target: RouteName

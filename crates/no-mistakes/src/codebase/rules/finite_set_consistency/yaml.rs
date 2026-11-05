@@ -1,13 +1,5 @@
 use std::collections::BTreeSet;
 
-#[cfg(test)]
-pub(super) fn extract_yaml_sequence(source: &str, key: &str) -> BTreeSet<String> {
-    let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(source) else {
-        return BTreeSet::new();
-    };
-    extract_yaml_sequence_value(&value, key)
-}
-
 pub(super) fn extract_yaml_sequence_value(
     value: &serde_yaml::Value,
     key: &str,
@@ -32,14 +24,6 @@ pub(super) fn extract_yaml_sequence_value(
 /// structural, such as `["a.b"]`, `["[]"]`, or `["0"]`. Invalid selectors and
 /// non-string terminal values are deliberately ignored, so callers can use
 /// `minSize` to make required inventories fail closed.
-#[cfg(test)]
-pub(super) fn extract_yaml_string_selector(source: &str, selector: &str) -> BTreeSet<String> {
-    let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(source) else {
-        return BTreeSet::new();
-    };
-    extract_yaml_string_selector_value(&value, selector)
-}
-
 pub(super) fn extract_yaml_string_selector_value(
     value: &serde_yaml::Value,
     selector: &str,

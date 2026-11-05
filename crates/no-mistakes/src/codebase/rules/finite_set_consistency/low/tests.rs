@@ -172,7 +172,7 @@ fn unsupported_shapes_still_require_readable_sources_and_valid_call_targets() {
 }
 
 #[test]
-fn each_other_extractor_kind_is_explicitly_unknown_including_empty_names() {
+fn each_other_extractor_kind_is_unknown_and_empty_names_fail() {
     let kinds = [
         "ts-string-union",
         "ts-const-object-keys",
@@ -193,7 +193,17 @@ fn each_other_extractor_kind_is_explicitly_unknown_including_empty_names() {
         assert_eq!(output.advisories.len(), 1, "{kind}");
         assert!(output.advisories[0].message.contains(kind));
         config.rules[0].options["sets"].as_sequence_mut().unwrap()[3]["name"] = "".into();
-        assert!(run(&config, &files, &sources, true).advisories.is_empty());
+        let error = diagnostics_with_files_sources_and_facts(
+            &root(),
+            &config,
+            &files,
+            &sources,
+            None,
+            true,
+        )
+        .err()
+        .unwrap();
+        assert!(error.to_string().contains("sets[3].name"), "{error:#}");
     }
 }
 

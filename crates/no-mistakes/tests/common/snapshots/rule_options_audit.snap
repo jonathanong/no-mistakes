@@ -21,6 +21,52 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "doc-project-substrings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/guide.md",
+          "line": 1,
+          "message": "web/guide.md: missing required substring \"Install\"",
+          "rule": "doc-consistency",
+          "sourceLine": "# Guide"
+        },
+        {
+          "file": "web/missing.md",
+          "line": 1,
+          "message": "file not found or untracked",
+          "rule": "doc-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "doc-required-file-filtered": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "guide.md",
+          "line": 1,
+          "message": "file not found or untracked",
+          "rule": "doc-consistency",
+          "sourceLine": "# Guide"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "doc-substring-alone": {
     "exitCode": 1,
     "report": {
@@ -42,22 +88,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "doc-substring-filtered": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "guide.md",
-          "line": 1,
-          "message": "file not found or untracked",
-          "rule": "doc-consistency",
-          "sourceLine": "# Guide"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -192,6 +230,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "emails.txt: test email fixtures must not use `example.com`",
           "rule": "test-email-domain-policy",
           "sourceLine": "&copy; person&#64;example.com; person@example.com",
+          "target": "example.com"
+        },
+        {
+          "file": "emails.txt",
+          "import": "person&#64example&#46com",
+          "line": 11,
+          "message": "emails.txt: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "sourceLine": "person&#64example&#46com",
           "target": "example.com"
         },
         {

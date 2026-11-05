@@ -193,3 +193,6 @@ mod ts_array_tests;
 #[cfg(test)]
 #[path = "finite_set_consistency/low/tests.rs"]
 mod low_tests;
+
+#[cfg(test)]
+mod test_support;
