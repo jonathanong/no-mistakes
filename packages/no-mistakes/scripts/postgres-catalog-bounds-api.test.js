@@ -10,19 +10,19 @@ test(
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     for (const [directory, config, expected] of [
-      ["catalog-resolution", "key-resolution.yml", 5],
-      ["catalog-resolution", "key-operators.yml", 2],
+      ["catalog-resolution", "key-resolution.yml", 6],
+      ["catalog-resolution", "key-operators.yml", 4],
       ["catalog-resolution", "key-booleans.yml", 1],
       ["catalog-resolution", "view-bounds.yml", 1],
       ["catalog-resolution", "view-allow.yml", 0],
       ["catalog-resolution", "view-suppression.yml", 0],
       ["catalog-resolution-identity", "view-identity.yml", 1],
-      ["schemaless-key-resolution", "qualified-bare-tables.yml", 3],
-      ["column-policy", "../../configs/column-bounds.yml", 6],
+      ["schemaless-key-resolution", "qualified-bare-tables.yml", 4],
+      ["column-policy", "../../configs/column-bounds.yml", 8],
       ["column-policy", "../../configs/column-bounds-composite-prefix.yml", 1],
       ["column-policy", "../../configs/recursive-depth.yml", 10],
       ["../variants/correlated-append", ".no-mistakes.yml", 1],
-      ["../variants/correlated-append", "undeclared.yml", 2],
+      ["../variants/correlated-append", "undeclared.yml", 3],
       ["../variants/correlated-append", "advise.yml", 0],
     ]) {
       const root = join(
@@ -33,13 +33,13 @@ test(
       const options = { root, config, includeSqlVerdicts: true };
       const standalone = await cjs.check(options);
       assert.equal(standalone.rules.length, expected, config);
-      const groupedTargets = {
-        "key-resolution.yml": "table:public.ambiguous_left, table:public.ambiguous_right",
-        "key-operators.yml": "table:public.customer_accounts, table:public.owner_jobs",
-        "qualified-bare-tables.yml": "table:a, table:b",
+      const relationTargets = {
+        "key-resolution.yml": ["table:public.ambiguous_left", "table:public.ambiguous_right"],
+        "key-operators.yml": ["table:public.customer_accounts", "table:public.owner_jobs"],
+        "qualified-bare-tables.yml": ["table:a", "table:b"],
       };
-      if (groupedTargets[config]) {
-        assert.ok(standalone.rules.some((finding) => finding.target === groupedTargets[config]));
+      for (const target of relationTargets[config] || []) {
+        assert.ok(standalone.rules.some((finding) => finding.target === target), `${config}: ${target}`);
       }
       assert.deepEqual(await esm.check(options), standalone, config);
       const project = await cjs.analyzeProject({
