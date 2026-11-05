@@ -53,56 +53,50 @@ fn postgres_bounded_statements_join_roots_check_json_snapshot() {
     assert_eq!(
         targets_at("sql/pk-left-inner-chain.sql"),
         [
-            "table:public.genericitems",
-            "table:public.genericitems",
-            "table:public.posts",
-            "table:public.posts",
+            "table:genericitems",
+            "table:genericitems",
+            "table:posts",
+            "table:posts",
         ],
         "{report}"
     );
     assert_eq!(
         targets_at("sql/unique-composite.sql"),
-        ["table:public.genericitems", "table:public.posts"],
+        ["table:genericitems", "table:posts"],
         "{report}"
     );
     assert_eq!(
         targets_at("sql/unproven-keys.sql"),
         [
-            "table:public.genericitems",
-            "table:public.genericitems",
-            "table:public.genericitems",
-            "table:public.posts",
-            "table:public.posts",
-            "table:public.posts",
-            "table:public.users",
-            "table:public.users",
-            "table:public.users",
-            "table:public.users",
+            "table:genericitems",
+            "table:genericitems",
+            "table:genericitems",
+            "table:posts",
+            "table:posts",
+            "table:posts",
+            "table:users",
+            "table:users",
+            "table:users",
         ],
         "{report}"
     );
     assert_eq!(
         targets_at("sql/join-direction-controls.sql"),
         [
-            "table:public.genericitems",
-            "table:public.genericitems",
-            "table:public.genericitems",
-            "table:public.posts",
-            "table:public.posts",
-            "table:public.topics",
-            "table:public.users",
+            "table:genericitems",
+            "table:genericitems",
+            "table:genericitems",
+            "table:posts",
+            "table:posts",
+            "table:topics",
+            "table:users",
         ],
         "{report}"
     );
-    assert!(
-        targets_at("sql/cte-derived-self.sql")
-            .iter()
-            .all(|target| target == "table:public.posts"),
-        "a lookup-side relation must not be promoted to a root: {report}"
-    );
-    assert!(
-        !targets_at("sql/cte-derived-self.sql").is_empty(),
-        "nested read roots must be retained: {report}"
+    assert_eq!(
+        targets_at("sql/cte-derived-self.sql"),
+        ["table:posts", "table:posts", "table:posts"],
+        "nested reads and the self-join driver must remain roots: {report}"
     );
     assert!(targets_at("sql/limited-control.sql").is_empty(), "{report}");
 }
