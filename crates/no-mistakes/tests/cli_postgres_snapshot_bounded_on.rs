@@ -13,7 +13,7 @@ fn report(config: &str, exit: i32) -> Value {
         .arg(&root)
         .arg("--config")
         .arg(root.join(config))
-        .args(["--format", "json"])
+        .args(["--include-sql-verdicts", "--format", "json"])
         .output()
         .unwrap();
     let report: Value = serde_json::from_slice(&output.stdout).unwrap();
@@ -91,4 +91,17 @@ fn postgres_bounded_statements_on_clause_roots_check_json_snapshot() {
     let embedded = self::report("embedded.yml", 0);
     assert!(embedded["rules"].as_array().unwrap().is_empty());
     assert!(embedded["advisories"].as_array().unwrap().is_empty());
+    let selects = embedded["sqlVerdicts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|verdict| verdict["subcheck"] == "select")
+        .collect::<Vec<_>>();
+    assert_eq!(selects.len(), 3, "{embedded}");
+    assert!(
+        selects.iter().all(|verdict| {
+            verdict["status"] == "proven-clear" && verdict["evidence"] == "exact"
+        }),
+        "{embedded}"
+    );
 }
