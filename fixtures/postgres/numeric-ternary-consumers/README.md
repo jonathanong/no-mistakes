@@ -8,10 +8,13 @@ The concrete statements exercise bounded reads, explicit columns, required
 predicates, generated timestamp rewrites and writes, transformed UUIDs,
 non-idempotent INSERTs, conflict ordering, test mutations, OFFSET, lock ordering,
 literal LIMIT shape policy, annotation heads, and JSON relation identifiers.
-The provenance rules are intentional negative controls: finite numeric literals
-must not manufacture environment or mutable registry provenance.
+The final two trusted-tag calls embed a raw numeric-precision template beside
+an environment or mutable-registry relation hole. Recovering the inner numeric
+ternary makes the outer SQL parseable, exposing both provenance findings. Numeric
+type precision requires a literal; an unrecovered placeholder fails parsing.
+Literal-only statements remain negative controls for identifier provenance.
 
-The final statement is deliberately invalid SQL with a recovered locking clause.
+The preceding untagged locking statement is deliberately invalid SQL with a recovered locking clause.
 Lock ordering must retain its unparseable finding under both policies. Other
 consumers retain independently decidable facts while ignore suppresses unknowns.
 The fail configuration uses the annotation rule's legacy `report` spelling.

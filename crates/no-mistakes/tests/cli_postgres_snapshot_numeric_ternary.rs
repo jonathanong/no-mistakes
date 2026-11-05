@@ -20,6 +20,8 @@ const CONSUMERS: &[&str] = &[
     "postgres-sql-shape-policy",
     "postgres-require-query-annotation",
     "postgres-json-relation-ids",
+    "postgres-no-unbounded-sql-identifier",
+    "postgres-no-mutable-sql-registry",
 ];
 
 fn fixture() -> PathBuf {

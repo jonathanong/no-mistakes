@@ -3,29 +3,32 @@ effort: max
 rules:
   - rule: postgres-bounded-statements
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       schemaCatalogPath: "schema.json"
       sqlInclude: ["schema.sql"]
   - rule: postgres-explicit-columns
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       schemaCatalogPath: "schema.json"
       sqlInclude: ["schema.sql"]
       maxColumns: 0
   - rule: postgres-required-predicates
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       schemaCatalogPath: "schema.json"
       sqlInclude: ["schema.sql"]
@@ -33,116 +36,130 @@ rules:
       partitionKeys: "off"
   - rule: postgres-generated-column-predicates
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       sqlInclude: ["schema.sql"]
       extraGeneratedColumns: [{table: "accounts", column: "created_at", sourceColumn: "id"}]
       requireArgumentIsPrimaryKey: false
   - rule: postgres-no-transformed-uuid-predicates
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       schemaCatalogPath: "schema.json"
       sqlInclude: ["schema.sql"]
   - rule: postgres-idempotent-insert
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       sqlInclude: ["schema.sql"]
   - rule: postgres-sql-statement-policy
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       sqlInclude: ["schema.sql"]
       bannedStatements: ["TRUNCATE"]
   - rule: postgres-no-test-state-mutation
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       testGlobs: ["numeric.ts"]
   - rule: postgres-no-offset
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       sqlInclude: ["schema.sql"]
   - rule: postgres-no-generated-column-writes
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       sqlInclude: ["schema.sql"]
       extraGeneratedColumns: [{table: "accounts", column: "created_at"}]
   - rule: postgres-conflict-ordering
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       schemaCatalogPath: "schema.json"
       sqlInclude: ["schema.sql"]
   - rule: postgres-lock-ordering
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       schemaCatalogPath: "schema.json"
   - rule: postgres-sql-shape-policy
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
       sqlInclude: ["schema.sql"]
       bannedShapes: ["literal-limit"]
   - rule: postgres-require-query-annotation
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       unanalyzableSql: "ignore"
   - rule: postgres-json-relation-ids
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
       schemaCatalogPath: "schema.json"
       sqlInclude: ["schema.sql"]
       idKeyPattern: "Id$"
   - rule: postgres-no-unbounded-sql-identifier
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
   - rule: postgres-no-mutable-sql-registry
     scope: repository
-    include: ["numeric.ts", "schema.sql", "schema.json"]
+    include: ["numeric.ts", "schema.sql", "schema.json", "tables.ts", "mutate.ts"]
     options:
       importSpecifier: "@example/db"
       executorNames: ["query"]
+      trustedSqlTags: [{module: "@example/db", name: "sql"}]
